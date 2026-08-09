@@ -2,6 +2,8 @@
 
 Maruti Labの作品紹介と、PromptTerm CLOCKの配布を行う公式サイトです。
 
+公開URL: https://maruti-lab-site.mt-kiryu.workers.dev
+
 ## 公開ページ
 
 - `/` — Maruti Labトップ、YURAMEKI、PromptTerm CLOCK、SwiftCrop、COLOR RE:FINE、PromptTerm Sticker
