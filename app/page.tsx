@@ -29,7 +29,7 @@ export default function Home() {
     <main>
       <header className="siteHeader">
         <a className="brand" href="#top" aria-label="Maruti Lab トップ">
-          <span className="brandMark">M</span>
+          <span className="brandMark"><img src="/works/maruti-lab-ink-bottle.jpg" alt="" /></span>
           <span>Maruti Lab</span>
         </a>
         <nav aria-label="メインナビゲーション">
