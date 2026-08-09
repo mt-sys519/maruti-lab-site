@@ -20,7 +20,7 @@ export default function ClockPage() {
       <div><span>02</span><h3>CLOCK MODE</h3><p>端末の外枠を消し、時計だけを静かにデスクトップへ残せます。</p></div>
       <div><span>03</span><h3>LOCAL & QUIET</h3><p>アカウント、広告、通信、Telemetryなし。すべて端末内で動作します。</p></div>
     </section>
-    <section className="downloadSection"><div><p className="eyebrow">DOWNLOAD</p><h2>PromptTerm CLOCK 1.0.0</h2><p>未署名の個人制作アプリです。Windows SmartScreenが警告を表示する場合があります。ファイルの同一性はSHA-256で確認できます。</p></div><div className="downloadActions"><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>セットアップをダウンロード</a><a href="/downloads/SHA256SUMS.txt" download>SHA-256を確認</a><code>28D02F8B39B84AF300388E425F74CAB001BDFEC1DC4271114120D7089C55D927</code></div></section>
+    <section className="downloadSection"><div><p className="eyebrow">DOWNLOAD</p><h2>PromptTerm CLOCK 1.0.0</h2><p>未署名の個人制作アプリのため、Windows SmartScreenの青い警告画面が表示される場合があります。その場合は「詳細情報」を開き、「実行」を選択してください。ファイルの同一性はSHA-256で確認できます。</p></div><div className="downloadActions"><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>セットアップをダウンロード</a><a href="/downloads/SHA256SUMS.txt" download>SHA-256を確認</a><code>77776D63B362F07AAAC809EBAA76215C004976E80CCE51F497EE972B44487164</code></div></section>
     <footer><div className="footerBrand">Maruti Lab</div><div className="footerLinks"><a href="/">Works</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/privacy">Privacy</a><a href="/disclaimer">Disclaimer</a></div><small>© 2026 Maruti Lab</small></footer>
   </main>;
 }
