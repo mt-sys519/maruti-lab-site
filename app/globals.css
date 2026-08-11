@@ -136,6 +136,11 @@ footer{padding-top:34px;padding-bottom:34px}
 .clockHeroImage img{object-fit:contain!important;object-position:center!important;padding:0!important}
 @media(max-width:1040px){.clockHero{height:auto;max-height:none;grid-template-columns:1fr}.clockHeroImage{min-height:56vw;order:-1}.clockHeroCopy h1{white-space:normal}}
 
+/* Embedded browser edition of PromptTerm CLOCK. */
+.clockHeroLive{min-height:0;position:relative;z-index:1;overflow:hidden;background:#020604}
+.clockHeroLive iframe{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;background:#020604}
+@media(max-width:1040px){.clockHeroLive{min-height:66.667vw;order:-1}}
+
 /* CLOCK page typography must remain readable, including technical notes. */
 .clockPage .eyebrow{font-size:11px;line-height:1.5}
 .clockHeader>a:last-child{font-size:12px}

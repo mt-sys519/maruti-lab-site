@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
-import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "PromptTerm CLOCK",
@@ -12,7 +11,15 @@ export default function ClockPage() {
     <header className="siteHeader clockHeader"><a className="brand" href="/"><span className="brandMark"><img src="/icon-512.png" alt="" /></span><span>Maruti Lab</span></a><a href="/">Worksへ戻る</a></header>
     <section className="clockHero">
       <div className="clockHeroCopy"><p className="eyebrow">WINDOWS DESKTOP APP · FREE</p><h1>PromptTerm<br />CLOCK</h1><p className="clockLead">秒まで刻み続ける、<br />6管の端末時計。</p><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>Windows版を無料ダウンロード <small>v1.0.0 · 1.8MB</small></a><p className="downloadNote">Windows 10 / 11・64bit · 登録不要 · オフライン動作</p></div>
-      <div className="clockHeroImage"><Image src="/works/promptterm-clock-green-hero.jpg" alt="CLOCK MODEでGREENに発光するPromptTerm CLOCKの6管表示" fill priority sizes="(max-width: 800px) 100vw, 60vw" /></div>
+      <div className="clockHeroLive">
+        <iframe
+          src="/demos/promptterm-clock.html"
+          title="現在時刻を表示するPromptTerm CLOCKのライブデモ"
+          loading="eager"
+          allow="fullscreen"
+          allowFullScreen
+        />
+      </div>
     </section>
     <section className="clockStatement"><p className="eyebrow">A CHRONOMETRIC TERMINAL</p><h2>時計ではなく、<br />時間を表示する端末。</h2><p>PromptTermという架空の端末環境に組み込まれたクロックモジュール。GREEN、AMBER、BLUE、REDの発光色と、4種類の分切替エフェクトを備えています。</p></section>
     <section className="clockSpecs">
