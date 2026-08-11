@@ -145,6 +145,12 @@ footer{padding-top:34px;padding-bottom:34px}
 .clockPreview:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(126,242,58,.018) 0,rgba(126,242,58,.018) 1px,transparent 1px,transparent 4px)}
 .clockPreview iframe{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;pointer-events:none;background:#020504}
 
+/* Keep the product name inside its own column at every desktop width. */
+.featureClock{grid-template-columns:minmax(430px,.9fr) minmax(0,1.3fr)}
+.clockCopy{min-width:0;container-type:inline-size}
+.clockCopy h2{max-width:100%;font-size:clamp(44px,15cqi,72px);white-space:nowrap}
+@media(max-width:900px){.featureClock{grid-template-columns:1fr}.clockCopy h2{font-size:clamp(44px,12vw,72px)}}
+
 /* CLOCK page typography must remain readable, including technical notes. */
 .clockPage .eyebrow{font-size:11px;line-height:1.5}
 .clockHeader>a:last-child{font-size:12px}
