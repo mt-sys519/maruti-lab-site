@@ -141,6 +141,10 @@ footer{padding-top:34px;padding-bottom:34px}
 .clockHeroLive iframe{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;background:#020604}
 @media(max-width:1040px){.clockHeroLive{min-height:66.667vw;order:-1}}
 
+.clockPreview{position:absolute;inset:0;display:block;overflow:hidden;background:radial-gradient(circle at 50% 48%,#07120a 0,#020504 68%)}
+.clockPreview:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(126,242,58,.018) 0,rgba(126,242,58,.018) 1px,transparent 1px,transparent 4px)}
+.clockPreview iframe{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;pointer-events:none;background:#020504}
+
 /* CLOCK page typography must remain readable, including technical notes. */
 .clockPage .eyebrow{font-size:11px;line-height:1.5}
 .clockHeader>a:last-child{font-size:12px}

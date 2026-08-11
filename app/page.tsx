@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { LabHero } from "./LabHero";
+import { ClockPreview } from "./ClockPreview";
 
 const yuramekiUrl = "https://yurameki.tokyo/";
 
@@ -63,7 +64,7 @@ export default function Home() {
           <a className="lightButton" href="/clock">作品を見る・ダウンロード</a>
         </div>
         <a className="clockImage imageLink" href="/clock" aria-label="PromptTerm CLOCKの作品ページを開く">
-          <Image src="/works/promptterm-clock.png" alt="PromptTerm CLOCKの6管時計画面" fill sizes="(max-width: 800px) 100vw, 58vw" />
+          <ClockPreview />
         </a>
       </section>
 
