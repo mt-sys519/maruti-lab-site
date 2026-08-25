@@ -58,6 +58,8 @@ test("renders the MarutiBit BLANK game page", async () => {
   assert.match(html, /四則演算の穴埋めパズル/);
   assert.match(html, /GAME 002/);
   assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
+  assert.match(html, /bitBlankLogo/);
+  assert.match(html, /<a href="\/bit"><small>001<\/small>ANGLE<\/a>/);
 });
 
 test("builds a score card and keeps the complete score and URL in the share payload", async () => {

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { BlankGame } from "../BlankGame";
 
 export const metadata: Metadata = {
@@ -23,20 +22,26 @@ export default function BlankPage() {
   return (
     <main className="bitPage">
       <header className="bitHeader">
-        <Link className="bitBrand" href="/bit" aria-label="MarutiBit トップ">
+        <a className="bitBrand" href="/bit" aria-label="MarutiBit トップ">
           <span>Maruti</span><b>Bit</b>
-        </Link>
+        </a>
         <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
       </header>
 
       <nav className="bitSeriesNav" aria-label="ゲームを選ぶ">
-        <Link href="/bit"><small>001</small>ANGLE</Link>
-        <Link className="isActive" href="/bit/blank"><small>002</small>BLANK</Link>
+        <a href="/bit"><small>001</small>ANGLE</a>
+        <a className="isActive" href="/bit/blank"><small>002</small>BLANK</a>
       </nav>
 
       <section className="bitIntro bitBlankIntro">
         <p className="bitSerial">MB / GAME 002</p>
-        <h1><span>BLANK</span></h1>
+        <h1>
+          <svg className="bitBlankLogo" viewBox="0 0 72 64" aria-hidden="true" focusable="false">
+            <rect x="9" y="5" width="54" height="54" />
+            <path d="M17 51.5h12" />
+          </svg>
+          <span>BLANK</span>
+        </h1>
         <p><strong>四則演算の穴埋めパズル。</strong><br />式の「？」に入る数字を逆算する、全5問のミニゲーム。</p>
       </section>
 
