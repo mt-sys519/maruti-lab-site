@@ -28,42 +28,70 @@ const levelNotes: Record<Difficulty, string> = {
 const emptyBest: Record<Difficulty, number> = { beginner: 0, intermediate: 0, advanced: 0 };
 const initialProblem: Problem = {
   difficulty: "beginner",
-  left: 48,
-  right: 47,
-  apex: [85],
-  answer: 85,
-  explanation: ["三角形の内角の和は180°", "x = 180° − 48° − 47°", "x = 85°"],
+  left: 60,
+  right: 50,
+  apex: [70],
+  answer: 70,
+  explanation: ["三角形の内角の和は180°", "x = 180° − 60° − 50°", "x = 70°"],
 };
 
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function makeProblem(difficulty: Difficulty): Problem {
+function randomStep(min: number, max: number, step: number) {
+  return randomInt(Math.ceil(min / step), Math.floor(max / step)) * step;
+}
+
+function checkedProblem(problem: Problem): Problem {
+  const apexTotal = problem.apex.reduce((total, angle) => total + angle, 0);
+  const expectedParts = problem.difficulty === "beginner" ? 1 : problem.difficulty === "intermediate" ? 2 : 3;
+  if (
+    problem.left + problem.right + apexTotal !== 180
+    || problem.apex.at(-1) !== problem.answer
+    || problem.apex.length !== expectedParts
+  ) {
+    throw new Error("Invalid ANGLE problem geometry");
+  }
+  return problem;
+}
+
+function makeProblem(difficulty: Difficulty, questionIndex: number): Problem {
+  if (questionIndex === 0) {
+    if (difficulty === "intermediate") {
+      return checkedProblem({ difficulty, left: 40, right: 50, apex: [30, 60], answer: 60, explanation: ["左の三角形から、底辺の角は 110°", "一直線の隣り合う角は 70°", "x = 180° − 70° − 50° = 60°"] });
+    }
+    if (difficulty === "advanced") {
+      return checkedProblem({ difficulty, left: 30, right: 40, apex: [20, 30, 60], answer: 60, explanation: ["左の三角形から、1つ目の底辺角は 130°", "一直線と中央の三角形から、次の底辺角は 100°", "最後の三角形から x = 180° − 80° − 40° = 60°"] });
+    }
+    return checkedProblem({ difficulty, left: 60, right: 50, apex: [70], answer: 70, explanation: ["三角形の内角の和は180°", "x = 180° − 60° − 50°", "x = 70°"] });
+  }
+
+  const step = questionIndex === 1 ? 10 : questionIndex === 2 ? 5 : 1;
   for (let attempt = 0; attempt < 100; attempt += 1) {
     if (difficulty === "beginner") {
-      const left = randomInt(28, 76);
-      const right = randomInt(28, 76);
+      const left = randomStep(30, 75, step);
+      const right = randomStep(30, 75, step);
       const answer = 180 - left - right;
       if (answer >= 28 && answer <= 110) {
-        return {
+        return checkedProblem({
           difficulty,
           left,
           right,
           apex: [answer],
           answer,
           explanation: [`三角形の内角の和は180°`, `x = 180° − ${left}° − ${right}°`, `x = ${answer}°`],
-        };
+        });
       }
     }
 
     if (difficulty === "intermediate") {
-      const left = randomInt(22, 62);
-      const right = randomInt(22, 62);
-      const known = randomInt(18, 54);
+      const left = randomStep(25, 60, step);
+      const right = randomStep(25, 60, step);
+      const known = randomStep(20, 50, step);
       const answer = 180 - left - right - known;
       if (answer >= 16 && answer <= 72) {
-        return {
+        return checkedProblem({
           difficulty,
           left,
           right,
@@ -74,18 +102,18 @@ function makeProblem(difficulty: Difficulty): Problem {
             `一直線の隣り合う角から、右側の角は ${left + known}°`,
             `x = 180° − ${left + known}° − ${right}° = ${answer}°`,
           ],
-        };
+        });
       }
     }
 
     if (difficulty === "advanced") {
-      const left = randomInt(18, 48);
-      const right = randomInt(18, 48);
-      const first = randomInt(14, 34);
-      const second = randomInt(14, 34);
+      const left = randomStep(20, 45, step);
+      const right = randomStep(20, 45, step);
+      const first = randomStep(15, 35, step);
+      const second = randomStep(15, 35, step);
       const answer = 180 - left - right - first - second;
       if (answer >= 12 && answer <= 52) {
-        return {
+        return checkedProblem({
           difficulty,
           left,
           right,
@@ -96,18 +124,18 @@ function makeProblem(difficulty: Difficulty): Problem {
             `一直線と中央の三角形を使い、次の底辺角を ${180 - left - first - second}° と求める`,
             `最後の三角形から x = ${answer}°`,
           ],
-        };
+        });
       }
     }
   }
 
   if (difficulty === "intermediate") {
-    return { difficulty, left: 40, right: 50, apex: [30, 60], answer: 60, explanation: ["左の三角形から底辺角を求める", "一直線の隣り合う角を求める", "最後の三角形から x = 60°"] };
+    return checkedProblem({ difficulty, left: 40, right: 50, apex: [30, 60], answer: 60, explanation: ["左の三角形から底辺角を求める", "一直線の隣り合う角を求める", "最後の三角形から x = 60°"] });
   }
   if (difficulty === "advanced") {
-    return { difficulty, left: 40, right: 40, apex: [30, 30, 40], answer: 40, explanation: ["左から1つ目の底辺角を求める", "中央の三角形から次の底辺角を求める", "最後の三角形から x = 40°"] };
+    return checkedProblem({ difficulty, left: 40, right: 40, apex: [30, 30, 40], answer: 40, explanation: ["左から1つ目の底辺角を求める", "中央の三角形から次の底辺角を求める", "最後の三角形から x = 40°"] });
   }
-  return { difficulty, left: 60, right: 50, apex: [70], answer: 70, explanation: ["三角形の内角の和は180°", "x = 180° − 60° − 50°", "x = 70°"] };
+  return checkedProblem({ difficulty, left: 60, right: 50, apex: [70], answer: 70, explanation: ["三角形の内角の和は180°", "x = 180° − 60° − 50°", "x = 70°"] });
 }
 
 function AngleDiagram({ problem }: { problem: Problem }) {
@@ -174,28 +202,77 @@ function AngleDiagram({ problem }: { problem: Problem }) {
       }
       ctx.stroke();
 
-      ctx.fillStyle = "#183d55";
-      ctx.font = `600 ${Math.max(13, Math.min(19, rect.width / 28))}px "Yu Gothic UI", sans-serif`;
-      ctx.textAlign = "left";
-      ctx.fillText(`${problem.left}°`, A.x + 16, A.y - 15);
-      ctx.textAlign = "right";
-      ctx.fillText(`${problem.right}°`, B.x - 16, B.y - 15);
+      const shortArc = (vertex: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }, radius: number, color: string) => {
+        const start = Math.atan2(p1.y - vertex.y, p1.x - vertex.x);
+        const end = Math.atan2(p2.y - vertex.y, p2.x - vertex.x);
+        let delta = end - start;
+        while (delta <= -Math.PI) delta += Math.PI * 2;
+        while (delta > Math.PI) delta -= Math.PI * 2;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(vertex.x, vertex.y, radius, start, start + delta, delta < 0);
+        ctx.stroke();
+        ctx.restore();
+        return start + delta / 2;
+      };
+
+      const roundedRect = (x: number, y: number, width: number, height: number, radius: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      };
+
+      const labelFontSize = Math.max(13, Math.min(18, rect.width / 28));
+      const drawTag = (text: string, x: number, y: number) => {
+        ctx.save();
+        ctx.font = `600 ${labelFontSize}px "Yu Gothic UI", sans-serif`;
+        const width = ctx.measureText(text).width + 14;
+        const height = labelFontSize + 10;
+        roundedRect(x - width / 2, y - height / 2, width, height, 4);
+        ctx.fillStyle = "rgba(241, 238, 229, .96)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(24, 61, 85, .22)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "#183d55";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x, y + 1);
+        ctx.restore();
+      };
+
+      const leftMiddle = shortArc(A, B, C, 27, "#183d55");
+      drawTag(`${problem.left}°`, A.x + Math.cos(leftMiddle) * 56, A.y + Math.sin(leftMiddle) * 56);
+      const rightMiddle = shortArc(B, A, C, 27, "#183d55");
+      drawTag(`${problem.right}°`, B.x + Math.cos(rightMiddle) * 56, B.y + Math.sin(rightMiddle) * 56);
 
       const rayPoints = [A, ...basePoints.slice(1, -1), B];
       problem.apex.forEach((value, index) => {
         const p1 = rayPoints[index];
         const p2 = rayPoints[index + 1];
-        const angle1 = Math.atan2(p1.y - C.y, p1.x - C.x);
-        const angle2 = Math.atan2(p2.y - C.y, p2.x - C.x);
-        const middle = (angle1 + angle2) / 2;
-        const radius = Math.max(40, Math.min(58, rect.width / 8.5));
+        const unknown = index === problem.apex.length - 1;
+        const middle = shortArc(C, p1, p2, 25 + index * 2, unknown ? "#a94235" : "#183d55");
+        const radius = Math.max(54, Math.min(68, rect.width / 7.4)) + index * 38;
         const x = C.x + Math.cos(middle) * radius;
         const y = C.y + Math.sin(middle) * radius;
-        const unknown = index === problem.apex.length - 1;
         if (unknown) {
+          ctx.fillStyle = "rgba(241, 238, 229, .98)";
+          ctx.beginPath();
+          ctx.arc(x, y, 23, 0, Math.PI * 2);
+          ctx.fill();
           ctx.fillStyle = "#a94235";
           ctx.beginPath();
-          ctx.arc(x, y, 18, 0, Math.PI * 2);
+          ctx.arc(x, y, 17, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#fff";
           ctx.font = "700 18px \"Yu Gothic UI\", sans-serif";
@@ -203,11 +280,7 @@ function AngleDiagram({ problem }: { problem: Problem }) {
           ctx.textBaseline = "middle";
           ctx.fillText("?", x, y + 1);
         } else {
-          ctx.fillStyle = "#183d55";
-          ctx.font = `600 ${Math.max(12, Math.min(17, rect.width / 31))}px "Yu Gothic UI", sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(`${value}°`, x, y);
+          drawTag(`${value}°`, x, y);
         }
       });
     };
@@ -258,7 +331,7 @@ export function AngleGame() {
 
   const begin = (level = difficulty) => {
     setDifficulty(level);
-    setProblem(makeProblem(level));
+    setProblem(makeProblem(level, 0));
     setQuestion(0);
     setAnswer("");
     setCorrect(0);
@@ -294,7 +367,7 @@ export function AngleGame() {
       return;
     }
     setQuestion((current) => current + 1);
-    setProblem(makeProblem(difficulty));
+    setProblem(makeProblem(difficulty, question + 1));
     setAnswer("");
     setElapsed(0);
     setStartedAt(Date.now());
@@ -329,7 +402,7 @@ export function AngleGame() {
         <div className="bitBoard bitBoardPreview"><AngleDiagram problem={problem} /></div>
         <div className="bitModeSelect" aria-label="難易度を選択">
           {(Object.keys(levelNames) as Difficulty[]).map((level) => (
-            <button key={level} type="button" className={difficulty === level ? "isActive" : ""} onClick={() => { setDifficulty(level); setProblem(makeProblem(level)); }}>
+            <button key={level} type="button" className={difficulty === level ? "isActive" : ""} onClick={() => { setDifficulty(level); setProblem(makeProblem(level, 0)); }}>
               {levelNames[level]}<small>{levelNotes[level]}</small>
             </button>
           ))}
