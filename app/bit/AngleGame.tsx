@@ -309,9 +309,10 @@ export function AngleGame() {
   const [lastError, setLastError] = useState(0);
   const [startedAt, setStartedAt] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
   const [best, setBest] = useState<Record<Difficulty, number>>(emptyBest);
   const [shareStatus, setShareStatus] = useState("");
-  const { enabled: soundEnabled, toggle: toggleSound, playAnswer } = useMathSeriesAudio(phase === "complete" ? "result" : "thinking");
+  const { enabled: soundEnabled, toggle: toggleSound, playAnswer, playTap } = useMathSeriesAudio(phase === "complete" ? "result" : "thinking");
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -341,9 +342,11 @@ export function AngleGame() {
     setLastCorrect(false);
     setLastError(0);
     setElapsed(0);
+    setTotalTime(0);
     setShareStatus("");
     setStartedAt(Date.now());
     setPhase("playing");
+    playTap("action");
   };
 
   const submit = () => {
@@ -351,7 +354,10 @@ export function AngleGame() {
     const value = Number(answer);
     const isCorrect = value === problem.answer;
     const error = Math.abs(value - problem.answer);
-    const speedBonus = isCorrect ? Math.max(0, 500 - Math.floor(elapsed / 1000) * 20) : 0;
+    const answerElapsed = Date.now() - startedAt;
+    const speedBonus = isCorrect ? Math.max(0, 500 - Math.floor(answerElapsed / 1000) * 20) : 0;
+    setElapsed(answerElapsed);
+    setTotalTime((current) => current + answerElapsed);
     playAnswer(isCorrect);
     setLastCorrect(isCorrect);
     setLastError(error);
@@ -361,6 +367,7 @@ export function AngleGame() {
   };
 
   const next = () => {
+    playTap("action");
     if (question === TOTAL_QUESTIONS - 1) {
       const nextBest = Math.max(best[difficulty], score);
       const updated = { ...best, [difficulty]: nextBest };
@@ -379,11 +386,19 @@ export function AngleGame() {
 
   const addDigit = (digit: string) => {
     if (phase !== "playing") return;
+    playTap("key");
     setAnswer((current) => `${current}${digit}`.replace(/^0+(?=\d)/, "").slice(0, 3));
   };
 
+  const removeDigit = () => {
+    if (phase !== "playing") return;
+    playTap("key");
+    setAnswer((current) => current.slice(0, -1));
+  };
+
   const share = async () => {
-    const text = `MarutiBit「ANGLE」${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT`;
+    playTap("action");
+    const text = `MarutiBit「ANGLE」${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
     const url = "https://marutilab.com/bit";
     try {
       if (navigator.share) {
@@ -405,15 +420,18 @@ export function AngleGame() {
     </button>
   );
 
+  const resultTier = correct === TOTAL_QUESTIONS ? "excellent" : correct >= 3 ? "good" : "retry";
+  const resultTitle = resultTier === "excellent" ? "EXCELLENT" : resultTier === "good" ? "GOOD RUN" : "NEXT TRY";
+
   if (phase === "select") {
     return (
       <section className="bitGameShell" aria-label="ANGLEゲーム">
         {soundButton}
         <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>3 LEVELS</strong></div>
-        <div className="bitBoard bitBoardPreview"><AngleDiagram problem={problem} /></div>
+        <div className="bitBoard bitBoardPreview bitReadyBoard"><span aria-hidden="true">?</span><p>STARTで問題を表示</p></div>
         <div className="bitModeSelect" aria-label="難易度を選択">
           {(Object.keys(levelNames) as Difficulty[]).map((level) => (
-            <button key={level} type="button" className={difficulty === level ? "isActive" : ""} onClick={() => { setDifficulty(level); setProblem(makeProblem(level, 0)); }}>
+            <button key={level} type="button" className={difficulty === level ? "isActive" : ""} onClick={() => { playTap("key"); setDifficulty(level); }}>
               {levelNames[level]}<small>{levelNotes[level]}</small>
             </button>
           ))}
@@ -428,11 +446,16 @@ export function AngleGame() {
     return (
       <section className="bitGameShell bitResult" aria-labelledby="bit-result-title">
         {soundButton}
+        <div className={`bitCelebration is-${resultTier}`} aria-hidden="true">
+          <div className="bitCelebrationMark">{resultTitle}</div>
+          <div className="bitParticles">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
+        </div>
         <p className="bitResultOverline">RESULT / {levelNames[difficulty]}</p>
         <h2 id="bit-result-title">{score.toLocaleString()}</h2>
         <p className="bitScoreLabel">SCORE</p>
         <div className="bitResultStats">
           <div><span>CORRECT</span><strong>{correct} / {TOTAL_QUESTIONS}</strong></div>
+          <div><span>TIME</span><strong>{(totalTime / 1000).toFixed(1)}s</strong></div>
           <div><span>BEST</span><strong>{Math.max(best[difficulty], score).toLocaleString()}</strong></div>
         </div>
         <button className="bitRetry" type="button" onClick={() => begin(difficulty)}>もう一度</button>
@@ -455,7 +478,7 @@ export function AngleGame() {
 
       {phase === "answered" ? (
         <div className={`bitAnswerResult ${lastCorrect ? "isCorrect" : "isWrong"}`} aria-live="polite">
-          <div className="bitVerdict"><span>{lastCorrect ? "CORRECT" : "NOT QUITE"}</span><strong>{problem.answer}°</strong>{!lastCorrect ? <small>誤差 {lastError}°</small> : null}</div>
+          <div className="bitVerdict"><b className="bitJudgeMark" aria-hidden="true">{lastCorrect ? "○" : "×"}</b><span>{lastCorrect ? "CORRECT" : "NOT QUITE"}</span><strong>{problem.answer}°</strong>{!lastCorrect ? <small>誤差 {lastError}°</small> : null}</div>
           <ol>{problem.explanation.map((step) => <li key={step}>{step}</li>)}</ol>
           <button type="button" onClick={next}>{question === TOTAL_QUESTIONS - 1 ? "結果を見る" : "次の問題"}</button>
         </div>
@@ -468,7 +491,7 @@ export function AngleGame() {
           </div>
           <div className="bitKeypad" aria-label="数字入力">
             {[1,2,3,4,5,6,7,8,9].map((digit) => <button key={digit} type="button" onClick={() => addDigit(String(digit))}>{digit}</button>)}
-            <button type="button" aria-label="一文字削除" onClick={() => setAnswer((current) => current.slice(0, -1))}>⌫</button>
+            <button type="button" aria-label="一文字削除" onClick={removeDigit}>⌫</button>
             <button type="button" onClick={() => addDigit("0")}>0</button>
             <button className="bitSubmit" type="button" onClick={submit} disabled={!answer}>決定</button>
           </div>

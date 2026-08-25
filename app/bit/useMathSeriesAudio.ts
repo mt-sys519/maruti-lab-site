@@ -20,7 +20,7 @@ class MathSeriesAudioEngine {
       if (!AudioContextConstructor) throw new Error("Web Audio is not supported");
       this.context = new AudioContextConstructor();
       this.master = this.context.createGain();
-      this.master.gain.value = 0.085;
+      this.master.gain.value = 0.32;
       this.master.connect(this.context.destination);
     }
     if (this.context.state === "suspended") await this.context.resume();
@@ -105,6 +105,17 @@ class MathSeriesAudioEngine {
     }
   }
 
+  playTap(kind: "key" | "action" = "key") {
+    if (!this.context) return;
+    const now = this.context.currentTime + 0.008;
+    if (kind === "action") {
+      this.tone(523.25, now, 0.11, 0.055, "triangle");
+      this.tone(659.25, now + 0.045, 0.16, 0.035, "sine");
+      return;
+    }
+    this.tone(740, now, 0.055, 0.04, "triangle");
+  }
+
   stop() {
     if (this.timer !== null) window.clearInterval(this.timer);
     this.timer = null;
@@ -146,11 +157,15 @@ export function useMathSeriesAudio(scene: MathAudioScene) {
     engineRef.current?.playAnswer(correct);
   }, []);
 
+  const playTap = useCallback((kind: "key" | "action" = "key") => {
+    engineRef.current?.playTap(kind);
+  }, []);
+
   useEffect(() => {
     if (enabled) engineRef.current?.setScene(scene);
   }, [enabled, scene]);
 
   useEffect(() => () => engineRef.current?.stop(), []);
 
-  return { enabled, toggle, playAnswer };
+  return { enabled, toggle, playAnswer, playTap };
 }

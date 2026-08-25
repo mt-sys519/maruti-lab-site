@@ -34,9 +34,9 @@ export default function Home() {
           <span>Maruti Lab</span>
         </a>
         <nav aria-label="メインナビゲーション">
-          <a href="#works">Works</a>
+          <a className="navWithMark" href="#works"><span className="navMark navWorksMark" aria-hidden="true" />Works</a>
           <a className="navWithMark" href="/bit"><span className="navMark navGameMark" aria-hidden="true" />MarutiBit</a>
-          <a href="#about">About</a>
+          <a className="navWithMark" href="#about"><span className="navMark navAboutMark" aria-hidden="true" />About</a>
           <a className="supportLink navWithMark" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer"><span className="navMark navCoffeeMark" aria-hidden="true" />Coffee</a>
         </nav>
       </header>
