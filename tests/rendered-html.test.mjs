@@ -50,8 +50,19 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /OFF/);
 });
 
+test("renders the MarutiBit BLANK game page", async () => {
+  const response = await render("/bit/blank");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /BLANK/);
+  assert.match(html, /四則演算の穴埋めパズル/);
+  assert.match(html, /GAME 002/);
+  assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
+});
+
 test("builds a score card and keeps the complete score and URL in the share payload", async () => {
   const source = await readFile(new URL("../app/bit/AngleGame.tsx", import.meta.url), "utf8");
+  const blankSource = await readFile(new URL("../app/bit/BlankGame.tsx", import.meta.url), "utf8");
   const cardSource = await readFile(new URL("../app/bit/shared/createResultCard.ts", import.meta.url), "utf8");
   assert.match(source, /createResultCard/);
   assert.match(source, /const shareText = `\$\{text\}\\n\$\{url\}`/);
@@ -61,6 +72,8 @@ test("builds a score card and keeps the complete score and URL in the share payl
   assert.match(source, /files: \[shareCard\], title, text: shareText/);
   assert.match(source, /\{ title, text: shareText \}/);
   assert.match(source, /data-card-ready=/);
+  assert.match(blankSource, /四則演算の空欄を逆算する\$\{TOTAL_QUESTIONS\}問チャレンジ/);
+  assert.match(blankSource, /https:\/\/marutilab\.com\/bit\/blank/);
   assert.match(cardSource, /CARD_WIDTH = 1200/);
   assert.match(cardSource, /CARD_HEIGHT = 630/);
   assert.match(cardSource, /new File\(\[blob\]/);

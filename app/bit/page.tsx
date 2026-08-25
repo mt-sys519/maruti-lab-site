@@ -29,6 +29,11 @@ export default function MarutiBitPage() {
         <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
       </header>
 
+      <nav className="bitSeriesNav" aria-label="ゲームを選ぶ">
+        <Link className="isActive" href="/bit"><small>001</small>ANGLE</Link>
+        <Link href="/bit/blank"><small>002</small>BLANK</Link>
+      </nav>
+
       <section className="bitIntro">
         <p className="bitSerial">MB / GAME 001</p>
         <h1>
