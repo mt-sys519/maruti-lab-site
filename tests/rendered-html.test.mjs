@@ -15,8 +15,8 @@ test("renders the Maruti Lab works page", async () => {
   assert.match(html, /Maruti Lab/);
   assert.match(html, /YURAMEKI/);
   assert.match(html, /PromptTerm/);
-  assert.match(html, /navGameMark/);
-  assert.match(html, /navCoffeeMark/);
+  assert.match(html, /class="navIcon"[^>]*>🎮/);
+  assert.match(html, /class="navIcon"[^>]*>☕/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
@@ -36,6 +36,7 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /MarutiBit/);
   assert.doesNotMatch(html, /maruti-lab-og\.jpg/);
   assert.match(html, /ANGLE/);
+  assert.match(html, /bitTitleTriangle/);
   assert.match(html, /初級/);
   assert.match(html, /中級/);
   assert.match(html, /上級/);

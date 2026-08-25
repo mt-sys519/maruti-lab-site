@@ -229,8 +229,10 @@ function AngleDiagram({ problem }: { problem: Problem }) {
       const maxY = Math.max(...points.map((point) => point.y));
       const rawWidth = Math.max(0.1, maxX - minX);
       const rawHeight = Math.max(0.1, maxY - minY);
-      const padX = Math.max(52, rect.width * 0.1);
-      const padY = Math.max(50, rect.height * 0.14);
+      // Labels sit up to 55px beyond their vertices, so the annotation area
+      // needs its own safety margin in addition to the geometry bounds.
+      const padX = Math.max(82, rect.width * 0.14);
+      const padY = Math.max(78, rect.height * 0.18);
       const scale = Math.min((rect.width - padX * 2) / rawWidth, (rect.height - padY * 2) / rawHeight);
       const centerX = (minX + maxX) / 2;
       const centerY = (minY + maxY) / 2;
@@ -284,7 +286,9 @@ function AngleDiagram({ problem }: { problem: Problem }) {
         ctx.font = `600 ${labelSize}px "Yu Gothic UI", sans-serif`;
         const width = ctx.measureText(text).width + 14;
         const height = labelSize + 10;
-        roundedRect(x - width / 2, y - height / 2, width, height, 4);
+        const safeX = Math.max(width / 2 + 4, Math.min(rect.width - width / 2 - 4, x));
+        const safeY = Math.max(height / 2 + 4, Math.min(rect.height - height / 2 - 4, y));
+        roundedRect(safeX - width / 2, safeY - height / 2, width, height, 4);
         ctx.fillStyle = "rgba(241,238,229,.97)";
         ctx.fill();
         ctx.strokeStyle = "rgba(24,61,85,.22)";
@@ -293,7 +297,7 @@ function AngleDiagram({ problem }: { problem: Problem }) {
         ctx.fillStyle = "#183d55";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(text, x, y + 1);
+        ctx.fillText(text, safeX, safeY + 1);
         ctx.restore();
       };
 
@@ -308,9 +312,11 @@ function AngleDiagram({ problem }: { problem: Problem }) {
         }
         const middle = shortArc(vertex, p1, p2, 24, label.unknown ? "#a94235" : "#183d55");
         const distance = label.unknown ? 55 : 52;
-        const x = vertex.x + Math.cos(middle) * distance;
-        const y = vertex.y + Math.sin(middle) * distance;
+        const rawX = vertex.x + Math.cos(middle) * distance;
+        const rawY = vertex.y + Math.sin(middle) * distance;
         if (label.unknown) {
+          const x = Math.max(26, Math.min(rect.width - 26, rawX));
+          const y = Math.max(26, Math.min(rect.height - 26, rawY));
           ctx.fillStyle = "rgba(241,238,229,.98)";
           ctx.beginPath();
           ctx.arc(x, y, 22, 0, Math.PI * 2);
@@ -325,7 +331,7 @@ function AngleDiagram({ problem }: { problem: Problem }) {
           ctx.textBaseline = "middle";
           ctx.fillText("?", x, y + 1);
         } else if (label.text) {
-          drawTag(label.text, x, y);
+          drawTag(label.text, rawX, rawY);
         }
       });
     };
@@ -359,6 +365,7 @@ export function AngleGame() {
   const [totalTime, setTotalTime] = useState(0);
   const [best, setBest] = useState<Record<Difficulty, number>>(emptyBest);
   const [shareStatus, setShareStatus] = useState("");
+  const [animatedScore, setAnimatedScore] = useState(0);
   const { enabled: soundEnabled, toggle: toggleSound, playAnswer, playTap } = useMathSeriesAudio(phase === "complete" ? "result" : "thinking");
 
   useEffect(() => {
@@ -379,6 +386,21 @@ export function AngleGame() {
     return () => window.clearInterval(timer);
   }, [phase, startedAt]);
 
+  useEffect(() => {
+    if (phase !== "complete") return;
+    const duration = 900;
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimatedScore(Math.round(score * eased));
+      if (progress < 1) frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [phase, score]);
+
   const begin = (level = difficulty) => {
     setDifficulty(level);
     setProblem(makeProblem(level, 0));
@@ -391,6 +413,7 @@ export function AngleGame() {
     setElapsed(0);
     setTotalTime(0);
     setShareStatus("");
+    setAnimatedScore(0);
     setStartedAt(Date.now());
     setPhase("playing");
     playTap("action");
@@ -503,11 +526,12 @@ export function AngleGame() {
       <section className="bitGameShell bitResult" aria-labelledby="bit-result-title">
         {soundButton}
         <div className={`bitCelebration is-${resultTier}`} aria-hidden="true">
+          <i className="bitResultBurst" />
           <div className="bitCelebrationMark">{resultTitle}</div>
-          <div className="bitParticles">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
+          <div className="bitParticles">{Array.from({ length: 20 }, (_, index) => <i key={index} />)}</div>
         </div>
         <p className="bitResultOverline">RESULT / {levelNames[difficulty]}</p>
-        <h2 id="bit-result-title">{score.toLocaleString()}</h2>
+        <h2 id="bit-result-title">{animatedScore.toLocaleString()}</h2>
         <p className="bitScoreLabel">SCORE</p>
         <div className="bitResultStats">
           <div><span>CORRECT</span><strong>{correct} / {TOTAL_QUESTIONS}</strong></div>

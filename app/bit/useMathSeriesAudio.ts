@@ -20,7 +20,7 @@ class MathSeriesAudioEngine {
       if (!AudioContextConstructor) throw new Error("Web Audio is not supported");
       this.context = new AudioContextConstructor();
       this.master = this.context.createGain();
-      this.master.gain.value = 0.55;
+      this.master.gain.value = 0.62;
       this.master.connect(this.context.destination);
     }
     if (this.context.state === "suspended") await this.context.resume();
@@ -34,7 +34,7 @@ class MathSeriesAudioEngine {
     this.step = 0;
     if (this.timer !== null) window.clearInterval(this.timer);
     this.playSceneStep();
-    const beat = scene === "thinking" ? 500 : 560;
+    const beat = scene === "thinking" ? 455 : 560;
     this.timer = window.setInterval(() => this.playSceneStep(), beat);
   }
 
@@ -71,13 +71,14 @@ class MathSeriesAudioEngine {
     if (!this.context) return;
     const now = this.context.currentTime + 0.025;
     if (this.scene === "thinking") {
-      const chords = [
-        [130.81, 196, 246.94],
-        [146.83, 220, 261.63],
-      ];
-      if (this.step % 4 === 0) this.chord(chords[(this.step / 4) % chords.length], now, 1.8, 0.032);
+      // 132 BPM: short pulses and a clipped off-beat figure keep the player
+      // alert without turning the loop into a melody or a relaxation pad.
+      const pulse = [130.81, 146.83, 164.81, 146.83];
+      const ostinato = [659.25, 783.99, 698.46, 880, 783.99, 698.46, 659.25, 783.99];
+      this.tone(pulse[this.step % pulse.length], now, 0.2, this.step % 4 === 0 ? 0.075 : 0.052, "triangle");
       this.softClick(now, this.step % 4 === 0);
-      if (this.step % 4 === 2) this.triangleAccent(now, this.step % 8 === 2 ? 1046.5 : 1174.66);
+      this.tone(ostinato[this.step % ostinato.length], now + 0.205, 0.115, 0.044, "triangle");
+      if (this.step % 8 === 6) this.triangleAccent(now + 0.19, 1174.66);
     } else {
       const resultChords = [
         [174.61, 220, 261.63],
