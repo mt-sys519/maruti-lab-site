@@ -31,6 +31,7 @@ export default function MarutiBitPage() {
       <nav className="bitSeriesNav" aria-label="ゲームを選ぶ">
         <a className="isActive" href="/bit"><small>001</small>ANGLE</a>
         <a href="/bit/blank"><small>002</small>BLANK</a>
+        <a href="/bit/sequence"><small>003</small>SEQUENCE</a>
       </nav>
 
       <section className="bitIntro">

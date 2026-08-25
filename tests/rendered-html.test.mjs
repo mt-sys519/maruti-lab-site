@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { blankProblemSignature, isBlankProblemValid, makeBlankProblem } from "../app/bit/blankProblems.ts";
+import { isSequenceProblemValid, makeSequenceProblem, sequenceProblemSignature } from "../app/bit/sequenceProblems.ts";
 import { createUniqueQuestionSession } from "../app/bit/shared/questionSession.ts";
 
 async function render(path = "/") {
@@ -64,9 +65,22 @@ test("renders the MarutiBit BLANK game page", async () => {
   assert.match(html, /<a href="\/bit"><small>001<\/small>ANGLE<\/a>/);
 });
 
+test("renders the MarutiBit SEQUENCE game page", async () => {
+  const response = await render("/bit/sequence");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /SEQUENCE/);
+  assert.match(html, /数の並びを読むパズル/);
+  assert.match(html, /GAME 003/);
+  assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
+  assert.match(html, /bitSequenceLogo/);
+  assert.match(html, /<a href="\/bit\/blank"><small>002<\/small>BLANK<\/a>/);
+});
+
 test("builds a score card and keeps the complete score and URL in the share payload", async () => {
   const source = await readFile(new URL("../app/bit/AngleGame.tsx", import.meta.url), "utf8");
   const blankSource = await readFile(new URL("../app/bit/BlankGame.tsx", import.meta.url), "utf8");
+  const sequenceSource = await readFile(new URL("../app/bit/SequenceGame.tsx", import.meta.url), "utf8");
   const cardSource = await readFile(new URL("../app/bit/shared/createResultCard.ts", import.meta.url), "utf8");
   assert.match(source, /createResultCard/);
   assert.match(source, /const shareText = `\$\{text\}\\n\$\{url\}`/);
@@ -78,6 +92,8 @@ test("builds a score card and keeps the complete score and URL in the share payl
   assert.match(source, /data-card-ready=/);
   assert.match(blankSource, /四則演算の空欄を逆算する\$\{TOTAL_QUESTIONS\}問チャレンジ/);
   assert.match(blankSource, /https:\/\/marutilab\.com\/bit\/blank/);
+  assert.match(sequenceSource, /数列の規則を見抜く\$\{TOTAL_QUESTIONS\}問チャレンジ/);
+  assert.match(sequenceSource, /https:\/\/marutilab\.com\/bit\/sequence/);
   assert.match(cardSource, /CARD_WIDTH = 1200/);
   assert.match(cardSource, /CARD_HEIGHT = 630/);
   assert.match(cardSource, /new File\(\[blob\]/);
@@ -123,6 +139,20 @@ test("validates thousands of BLANK equations across all difficulties", () => {
       assert.equal(Number.isInteger(problem.answer), true);
       assert.ok(problem.answer > 0);
       signatures.add(blankProblemSignature(problem));
+    }
+    assert.ok(signatures.size > 20, `${difficulty} should generate varied questions`);
+  }
+});
+
+test("validates thousands of SEQUENCE problems across all difficulties", () => {
+  for (const difficulty of ["beginner", "intermediate", "advanced"]) {
+    const signatures = new Set();
+    for (let index = 0; index < 2000; index += 1) {
+      const problem = makeSequenceProblem(difficulty, index % 5);
+      assert.equal(isSequenceProblemValid(problem), true);
+      assert.equal(Number.isInteger(problem.answer), true);
+      assert.ok(problem.answer > 0 && problem.answer <= 999);
+      signatures.add(sequenceProblemSignature(problem));
     }
     assert.ok(signatures.size > 20, `${difficulty} should generate varied questions`);
   }
