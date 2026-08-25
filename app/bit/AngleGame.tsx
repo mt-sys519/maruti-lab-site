@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useMathSeriesAudio } from "./useMathSeriesAudio";
 
 type Difficulty = "beginner" | "intermediate" | "advanced";
 type Phase = "select" | "playing" | "answered" | "complete";
@@ -310,6 +311,7 @@ export function AngleGame() {
   const [elapsed, setElapsed] = useState(0);
   const [best, setBest] = useState<Record<Difficulty, number>>(emptyBest);
   const [shareStatus, setShareStatus] = useState("");
+  const { enabled: soundEnabled, toggle: toggleSound, playAnswer } = useMathSeriesAudio(phase === "complete" ? "result" : "thinking");
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -350,6 +352,7 @@ export function AngleGame() {
     const isCorrect = value === problem.answer;
     const error = Math.abs(value - problem.answer);
     const speedBonus = isCorrect ? Math.max(0, 500 - Math.floor(elapsed / 1000) * 20) : 0;
+    playAnswer(isCorrect);
     setLastCorrect(isCorrect);
     setLastError(error);
     setCorrect((current) => current + (isCorrect ? 1 : 0));
@@ -395,9 +398,17 @@ export function AngleGame() {
     }
   };
 
+  const soundButton = (
+    <button className={`bitSound ${soundEnabled ? "isOn" : ""}`} type="button" aria-pressed={soundEnabled} onClick={() => { void toggleSound(); }}>
+      <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>
+      BGM <strong>{soundEnabled ? "ON" : "OFF"}</strong>
+    </button>
+  );
+
   if (phase === "select") {
     return (
       <section className="bitGameShell" aria-label="ANGLEゲーム">
+        {soundButton}
         <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>3 LEVELS</strong></div>
         <div className="bitBoard bitBoardPreview"><AngleDiagram problem={problem} /></div>
         <div className="bitModeSelect" aria-label="難易度を選択">
@@ -416,6 +427,7 @@ export function AngleGame() {
   if (phase === "complete") {
     return (
       <section className="bitGameShell bitResult" aria-labelledby="bit-result-title">
+        {soundButton}
         <p className="bitResultOverline">RESULT / {levelNames[difficulty]}</p>
         <h2 id="bit-result-title">{score.toLocaleString()}</h2>
         <p className="bitScoreLabel">SCORE</p>
@@ -433,6 +445,7 @@ export function AngleGame() {
 
   return (
     <section className="bitGameShell" aria-label="ANGLEゲーム">
+      {soundButton}
       <div className="bitGameTop">
         <div><span>LEVEL</span><strong>{levelNames[difficulty]}</strong></div>
         <div><span>QUESTION</span><strong>{String(question + 1).padStart(2, "0")} / 05</strong></div>
