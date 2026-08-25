@@ -415,7 +415,7 @@ export function AngleGame() {
     void createResultCard({
       series: "MarutiBit",
       gameNumber: "GAME 001",
-      gameTitle: "TRIANGLE",
+      gameTitle: "ANGLE",
       level: levelNames[difficulty],
       score,
       correct: `${correct} / ${TOTAL_QUESTIONS}`,
@@ -501,7 +501,7 @@ export function AngleGame() {
 
   const share = async () => {
     playTap("action");
-    const text = `MarutiBit「TRIANGLE」${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
+    const text = `MarutiBit「ANGLE」${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
     const url = "https://marutilab.com/bit";
     const shareText = `${text}\n${url}`;
     try {

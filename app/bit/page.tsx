@@ -31,11 +31,7 @@ export default function MarutiBitPage() {
 
       <section className="bitIntro">
         <p className="bitSerial">MB / GAME 001</p>
-        <h1>
-          <span className="srOnly">TRIANGLE</span>
-          <span className="bitTriMark" aria-hidden="true"><b>TRI</b></span>
-          <span aria-hidden="true">ANGLE</span>
-        </h1>
+        <h1>ANGLE</h1>
         <p><strong>三角形の角度パズル。</strong><br />示された角度から「？」を求める、全5問のミニゲーム。</p>
       </section>
 
