@@ -322,10 +322,11 @@ function AngleDiagram({ problem }: { problem: Problem }) {
           return;
         }
         const middle = shortArc(vertex, p1, p2, 24, label.unknown ? "#a94235" : "#183d55");
-        const distance = label.unknown ? 55 : 52;
-        // Known values stay beside the interior arc. The question marker sits
-        // outside the vertex so it can never cover a value inside the figure.
-        const direction = label.unknown ? -1 : 1;
+        const distance = label.unknown ? 55 : 48;
+        // Keep every value outside the geometry. In chained problems, placing
+        // values inside narrow triangles makes adjacent labels converge and
+        // cover one another around the shared vertex.
+        const direction = -1;
         const rawX = vertex.x + Math.cos(middle) * distance * direction;
         const rawY = vertex.y + Math.sin(middle) * distance * direction;
         if (label.unknown) {
