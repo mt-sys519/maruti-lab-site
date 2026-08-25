@@ -3,6 +3,7 @@ export type ResultCardData = {
   gameNumber: string;
   gameTitle: string;
   gameDescription: string;
+  questions: number;
   level: string;
   score: number;
   correct: string;
@@ -99,7 +100,7 @@ export async function createResultCard(data: ResultCardData) {
   ctx.fillStyle = "#a94235";
   ctx.font = '700 17px "Yu Gothic UI", sans-serif';
   ctx.letterSpacing = "3px";
-  ctx.fillText("10 QUESTIONS", 698, 345);
+  ctx.fillText(`${data.questions} QUESTIONS`, 698, 345);
 
   drawMetric(ctx, 700, "CORRECT", data.correct);
   drawMetric(ctx, 900, "TIME", data.time);

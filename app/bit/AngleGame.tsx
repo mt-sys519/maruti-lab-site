@@ -427,6 +427,7 @@ export function AngleGame() {
       gameNumber: "GAME 001",
       gameTitle: "ANGLE",
       gameDescription: "三角形の角度を求めるゲーム",
+      questions: TOTAL_QUESTIONS,
       level: levelNames[difficulty],
       score,
       correct: `${correct} / ${TOTAL_QUESTIONS}`,
@@ -513,7 +514,7 @@ export function AngleGame() {
   const share = async () => {
     playTap("action");
     const title = "MarutiBit「ANGLE」";
-    const text = `${title}\n三角形の角度を求める10問チャレンジ｜${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
+    const text = `${title}\n三角形の角度を求める${TOTAL_QUESTIONS}問チャレンジ｜${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
     const url = "https://marutilab.com/bit";
     const shareText = `${text}\n${url}`;
     try {
