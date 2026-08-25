@@ -24,5 +24,18 @@ test("renders the PromptTerm CLOCK download page", async () => {
   const html = await response.text();
   assert.match(html, /PromptTerm CLOCK/);
   assert.match(html, /PromptTerm_CLOCK_1\.0\.0_setup\.exe/);
-  assert.match(html, /28D02F8B39B84AF300388E425F74CAB001BDFEC1DC4271114120D7089C55D927/);
+  assert.match(html, /E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E/);
+});
+
+test("renders the MarutiBit ANGLE game page", async () => {
+  const response = await render("/bit");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /MarutiBit/);
+  assert.doesNotMatch(html, /maruti-lab-og\.jpg/);
+  assert.match(html, /ANGLE/);
+  assert.match(html, /初級/);
+  assert.match(html, /中級/);
+  assert.match(html, /上級/);
+  assert.match(html, /START/);
 });
