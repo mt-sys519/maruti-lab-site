@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createResultCard } from "./shared/createResultCard";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
+import { createUniqueQuestionSession, loadRecentQuestionSignatures, rememberQuestionSignatures } from "./shared/questionSession";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { useMathSeriesAudio } from "./useMathSeriesAudio";
 
@@ -68,9 +69,8 @@ function checkedProblem(problem: Problem): Problem {
   return problem;
 }
 
-function makeProblem(difficulty: Difficulty, questionIndex: number): Problem {
-  if (questionIndex === 0) {
-    if (difficulty === "intermediate") {
+function tutorialProblem(difficulty: Difficulty): Problem {
+  if (difficulty === "intermediate") {
       return checkedProblem({
         difficulty,
         layout: "chain",
@@ -86,8 +86,8 @@ function makeProblem(difficulty: Difficulty, questionIndex: number): Problem {
           "右の三角形：x = 180° − 70° − 50° = 60°",
         ],
       });
-    }
-    if (difficulty === "advanced") {
+  }
+  if (difficulty === "advanced") {
       return checkedProblem({
         difficulty,
         layout: "chain",
@@ -104,11 +104,12 @@ function makeProblem(difficulty: Difficulty, questionIndex: number): Problem {
           "Eの対頂角も60°。右の三角形：x = 180° − 60° − 40° = 80°",
         ],
       });
-    }
-    return initialProblem;
   }
+  return initialProblem;
+}
 
-  const step = questionIndex === 1 ? 10 : questionIndex === 2 ? 5 : 1;
+function makeProblem(difficulty: Difficulty, questionIndex: number): Problem {
+  const step = questionIndex <= 1 ? 10 : questionIndex === 2 ? 5 : 1;
   for (let attempt = 0; attempt < 200; attempt += 1) {
     if (difficulty === "beginner") {
       const left = randomStep(30, 75, step);
@@ -156,7 +157,14 @@ function makeProblem(difficulty: Difficulty, questionIndex: number): Problem {
     }
   }
 
-  return makeProblem(difficulty, 0);
+  throw new Error("Could not generate a valid ANGLE problem");
+}
+
+function problemSignature(problem: Problem) {
+  if (problem.layout === "single") {
+    return `single:${[problem.left, problem.right].sort((a, b) => a - b).join(":")}`;
+  }
+  return `chain:${problem.difficulty}:${[problem.a, problem.c].sort((a, b) => a - b).join(":")}:${problem.b}:${problem.h ?? "-"}`;
 }
 
 function AngleDiagram({ problem }: { problem: Problem }) {
@@ -358,6 +366,7 @@ function AngleDiagram({ problem }: { problem: Problem }) {
 
 export function AngleGame() {
   const gameShellRef = useRef<HTMLElement>(null);
+  const sessionRef = useRef<Problem[]>([initialProblem]);
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [phase, setPhase] = useState<Phase>("select");
   const [problem, setProblem] = useState<Problem>(initialProblem);
@@ -440,8 +449,19 @@ export function AngleGame() {
   }, [correct, difficulty, phase, score, totalTime]);
 
   const begin = (level = difficulty) => {
+    const historyKey = `marutibit:angle:recent:${level}`;
+    const recent = loadRecentQuestionSignatures(historyKey);
+    const session = createUniqueQuestionSession({
+      count: TOTAL_QUESTIONS,
+      recentSignatures: recent,
+      tutorial: tutorialProblem(level),
+      create: (index) => makeProblem(level, index),
+      signature: problemSignature,
+    });
+    sessionRef.current = session.questions;
+    rememberQuestionSignatures(historyKey, session.signatures, recent);
     setDifficulty(level);
-    setProblem(makeProblem(level, 0));
+    setProblem(session.questions[0]);
     setQuestion(0);
     setAnswer("");
     setCorrect(0);
@@ -492,7 +512,7 @@ export function AngleGame() {
       return;
     }
     setQuestion((current) => current + 1);
-    setProblem(makeProblem(difficulty, question + 1));
+    setProblem(sessionRef.current[question + 1]);
     setAnswer("");
     setElapsed(0);
     setStartedAt(Date.now());

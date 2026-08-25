@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { blankProblemSignature, isBlankProblemValid, makeBlankProblem } from "../app/bit/blankProblems.ts";
+import { createUniqueQuestionSession } from "../app/bit/shared/questionSession.ts";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -87,4 +89,41 @@ test("pauses active games on page visibility changes and requires manual resume"
   assert.match(source, /addEventListener\("visibilitychange"/);
   assert.match(source, /const resume = useCallback/);
   assert.doesNotMatch(source, /visibilityState === "visible"[^]*setPaused\(false\)/);
+});
+
+test("builds unique five-question sessions and avoids recent history", () => {
+  const values = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+  const first = createUniqueQuestionSession({
+    count: 5,
+    recentSignatures: [],
+    tutorial: { id: "TUTORIAL" },
+    create: (_index, attempt) => ({ id: values[attempt % values.length] }),
+    signature: (question) => question.id,
+  });
+  assert.deepEqual(first.signatures, ["TUTORIAL", "A", "B", "C", "D"]);
+  assert.equal(new Set(first.signatures).size, 5);
+
+  const next = createUniqueQuestionSession({
+    count: 5,
+    recentSignatures: ["A", "B", "C", "D", "E"],
+    tutorial: { id: "TUTORIAL" },
+    create: (_index, attempt) => ({ id: values[attempt % values.length] }),
+    signature: (question) => question.id,
+  });
+  assert.deepEqual(next.signatures, ["F", "G", "H", "I", "J"]);
+  assert.doesNotMatch(next.signatures.join(""), /TUTORIAL/);
+});
+
+test("validates thousands of BLANK equations across all difficulties", () => {
+  for (const difficulty of ["beginner", "intermediate", "advanced"]) {
+    const signatures = new Set();
+    for (let index = 0; index < 2000; index += 1) {
+      const problem = makeBlankProblem(difficulty, index % 5);
+      assert.equal(isBlankProblemValid(problem), true);
+      assert.equal(Number.isInteger(problem.answer), true);
+      assert.ok(problem.answer > 0);
+      signatures.add(blankProblemSignature(problem));
+    }
+    assert.ok(signatures.size > 20, `${difficulty} should generate varied questions`);
+  }
 });
