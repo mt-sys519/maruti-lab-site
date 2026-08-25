@@ -2,6 +2,7 @@ export type ResultCardData = {
   series: string;
   gameNumber: string;
   gameTitle: string;
+  gameDescription: string;
   level: string;
   score: number;
   correct: string;
@@ -90,6 +91,15 @@ export async function createResultCard(data: ResultCardData) {
   ctx.font = '600 64px "Yu Gothic UI", sans-serif';
   ctx.letterSpacing = "0px";
   ctx.fillText(data.level, 694, 222);
+
+  ctx.fillStyle = "#52635c";
+  ctx.font = '600 25px "Yu Gothic UI", sans-serif';
+  ctx.letterSpacing = "1px";
+  ctx.fillText(data.gameDescription, 696, 302);
+  ctx.fillStyle = "#a94235";
+  ctx.font = '700 17px "Yu Gothic UI", sans-serif';
+  ctx.letterSpacing = "3px";
+  ctx.fillText("10 QUESTIONS", 698, 345);
 
   drawMetric(ctx, 700, "CORRECT", data.correct);
   drawMetric(ctx, 900, "TIME", data.time);

@@ -55,8 +55,10 @@ test("builds a score card and keeps the complete score and URL in the share payl
   const cardSource = await readFile(new URL("../app/bit/shared/createResultCard.ts", import.meta.url), "utf8");
   assert.match(source, /createResultCard/);
   assert.match(source, /const shareText = `\$\{text\}\\n\$\{url\}`/);
-  assert.match(source, /files: \[shareCard\], text: shareText/);
-  assert.match(source, /\{ text: shareText \}/);
+  assert.match(source, /三角形の角度を求める10問チャレンジ/);
+  assert.match(cardSource, /gameDescription/);
+  assert.match(source, /files: \[shareCard\], title, text: shareText/);
+  assert.match(source, /\{ title, text: shareText \}/);
   assert.match(source, /data-card-ready=/);
   assert.match(cardSource, /CARD_WIDTH = 1200/);
   assert.match(cardSource, /CARD_HEIGHT = 630/);

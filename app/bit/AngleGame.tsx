@@ -426,6 +426,7 @@ export function AngleGame() {
       series: "MarutiBit",
       gameNumber: "GAME 001",
       gameTitle: "ANGLE",
+      gameDescription: "三角形の角度を求めるゲーム",
       level: levelNames[difficulty],
       score,
       correct: `${correct} / ${TOTAL_QUESTIONS}`,
@@ -511,7 +512,8 @@ export function AngleGame() {
 
   const share = async () => {
     playTap("action");
-    const text = `MarutiBit「ANGLE」${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
+    const title = "MarutiBit「ANGLE」";
+    const text = `${title}\n三角形の角度を求める10問チャレンジ｜${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
     const url = "https://marutilab.com/bit";
     const shareText = `${text}\n${url}`;
     try {
@@ -520,7 +522,7 @@ export function AngleGame() {
         if (shareCard && typeof navigator.canShare === "function") {
           try { canShareCard = navigator.canShare({ files: [shareCard] }); } catch { /* Fall back to text sharing. */ }
         }
-        await navigator.share(canShareCard ? { files: [shareCard], text: shareText } : { text: shareText });
+        await navigator.share(canShareCard ? { files: [shareCard], title, text: shareText } : { title, text: shareText });
         setShareStatus(canShareCard ? "結果カードを共有しました" : "結果を共有しました");
       } else {
         await navigator.clipboard.writeText(shareText);
