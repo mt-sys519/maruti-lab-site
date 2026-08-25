@@ -20,7 +20,7 @@ class MathSeriesAudioEngine {
       if (!AudioContextConstructor) throw new Error("Web Audio is not supported");
       this.context = new AudioContextConstructor();
       this.master = this.context.createGain();
-      this.master.gain.value = 0.32;
+      this.master.gain.value = 0.55;
       this.master.connect(this.context.destination);
     }
     if (this.context.state === "suspended") await this.context.resume();
@@ -34,7 +34,7 @@ class MathSeriesAudioEngine {
     this.step = 0;
     if (this.timer !== null) window.clearInterval(this.timer);
     this.playSceneStep();
-    const beat = scene === "thinking" ? 760 : 640;
+    const beat = scene === "thinking" ? 500 : 560;
     this.timer = window.setInterval(() => this.playSceneStep(), beat);
   }
 
@@ -75,9 +75,9 @@ class MathSeriesAudioEngine {
         [130.81, 196, 246.94],
         [146.83, 220, 261.63],
       ];
-      if (this.step % 4 === 0) this.chord(chords[(this.step / 4) % chords.length], now, 2.75, 0.018);
+      if (this.step % 4 === 0) this.chord(chords[(this.step / 4) % chords.length], now, 1.8, 0.032);
       this.softClick(now, this.step % 4 === 0);
-      if (this.step % 8 === 2) this.triangleAccent(now, 1046.5);
+      if (this.step % 4 === 2) this.triangleAccent(now, this.step % 8 === 2 ? 1046.5 : 1174.66);
     } else {
       const resultChords = [
         [174.61, 220, 261.63],
@@ -85,9 +85,9 @@ class MathSeriesAudioEngine {
         [164.81, 207.65, 261.63],
         [220, 261.63, 329.63],
       ];
-      if (this.step % 4 === 0) this.chord(resultChords[(this.step / 4) % resultChords.length], now, 2.35, 0.022);
+      if (this.step % 4 === 0) this.chord(resultChords[(this.step / 4) % resultChords.length], now, 2.05, 0.034);
       const arpeggio = [523.25, 659.25, 783.99, 659.25];
-      this.tone(arpeggio[this.step % arpeggio.length], now, 0.7, 0.027, "triangle");
+      this.tone(arpeggio[this.step % arpeggio.length], now, 0.6, 0.038, "triangle");
       if (this.step % 8 === 6) this.triangleAccent(now, 1174.66);
     }
     this.step = (this.step + 1) % 16;
@@ -109,11 +109,11 @@ class MathSeriesAudioEngine {
     if (!this.context) return;
     const now = this.context.currentTime + 0.008;
     if (kind === "action") {
-      this.tone(523.25, now, 0.11, 0.055, "triangle");
-      this.tone(659.25, now + 0.045, 0.16, 0.035, "sine");
+      this.tone(523.25, now, 0.11, 0.085, "triangle");
+      this.tone(659.25, now + 0.045, 0.16, 0.055, "sine");
       return;
     }
-    this.tone(740, now, 0.055, 0.04, "triangle");
+    this.tone(740, now, 0.055, 0.07, "triangle");
   }
 
   stop() {

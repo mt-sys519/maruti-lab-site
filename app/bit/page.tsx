@@ -4,17 +4,17 @@ import { AngleGame } from "./AngleGame";
 
 export const metadata: Metadata = {
   title: "MarutiBit — ANGLE",
-  description: "線と角度を読み解く、短い幾何パズル。初級・中級・上級の3段階。",
+  description: "三角形の角度を順番に解く、全5問の図形パズル。初級・中級・上級の3段階。",
   openGraph: {
     title: "MarutiBit — ANGLE",
-    description: "線と角度を読み解く、短い幾何パズル。",
+    description: "三角形の角度を順番に解く、全5問の図形パズル。",
     url: "/bit",
     images: [],
   },
   twitter: {
     card: "summary",
     title: "MarutiBit — ANGLE",
-    description: "線と角度を読み解く、短い幾何パズル。",
+    description: "三角形の角度を順番に解く、全5問の図形パズル。",
     images: [],
   },
 };
@@ -26,13 +26,13 @@ export default function MarutiBitPage() {
         <Link className="bitBrand" href="/bit" aria-label="MarutiBit トップ">
           <span>Maruti</span><b>Bit</b>
         </Link>
-        <Link className="bitBack" href="/">Maruti Labへ戻る</Link>
+        <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
       </header>
 
       <section className="bitIntro">
         <p className="bitSerial">MB / GAME 001</p>
         <h1>ANGLE</h1>
-        <p>線を追い、角度をつなぐ。<br />未知の角をひとつ見つける。</p>
+        <p><strong>三角形の角度パズル。</strong><br />示された角度から「？」を求める、全5問のミニゲーム。</p>
       </section>
 
       <AngleGame />
