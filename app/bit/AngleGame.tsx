@@ -357,6 +357,7 @@ function AngleDiagram({ problem }: { problem: Problem }) {
 }
 
 export function AngleGame() {
+  const gameShellRef = useRef<HTMLElement>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [phase, setPhase] = useState<Phase>("select");
   const [problem, setProblem] = useState<Problem>(initialProblem);
@@ -393,6 +394,15 @@ export function AngleGame() {
     const timer = window.setInterval(update, 100);
     return () => window.clearInterval(timer);
   }, [pagePaused, phase, startedAt]);
+
+  useEffect(() => {
+    if (phase !== "playing") return;
+    const frame = window.requestAnimationFrame(() => {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      gameShellRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [phase, question]);
 
   useEffect(() => {
     if (phase !== "complete") return;
@@ -489,14 +499,14 @@ export function AngleGame() {
 
   const addDigit = (digit: string) => {
     if (phase !== "playing") return;
-    playTap("key");
     setAnswer((current) => `${current}${digit}`.replace(/^0+(?=\d)/, "").slice(0, 3));
+    playTap("key");
   };
 
   const removeDigit = () => {
     if (phase !== "playing") return;
-    playTap("key");
     setAnswer((current) => current.slice(0, -1));
+    playTap("key");
   };
 
   const share = async () => {
@@ -590,7 +600,7 @@ export function AngleGame() {
   }
 
   return (
-    <section className="bitGameShell" aria-label="ANGLEゲーム">
+    <section ref={gameShellRef} className="bitGameShell" aria-label="ANGLEゲーム">
       {pauseOverlay}
       {gameControls}
       <div className="bitGameTop">

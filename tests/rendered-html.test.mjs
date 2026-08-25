@@ -37,6 +37,7 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /MarutiBit/);
   assert.doesNotMatch(html, /maruti-lab-og\.jpg/);
   assert.match(html, /ANGLE/);
+  assert.match(html, /bitAngleLogo/);
   assert.doesNotMatch(html, /bitTriMark/);
   assert.doesNotMatch(html, /TRIANGLE/);
   assert.match(html, /初級/);
