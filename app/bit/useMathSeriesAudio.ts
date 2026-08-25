@@ -9,6 +9,7 @@ type OscillatorKind = OscillatorType;
 class MathSeriesAudioEngine {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
+  private echoInput: GainNode | null = null;
   private timer: number | null = null;
   private scene: MathAudioScene = "thinking";
   private step = 0;
@@ -20,8 +21,24 @@ class MathSeriesAudioEngine {
       if (!AudioContextConstructor) throw new Error("Web Audio is not supported");
       this.context = new AudioContextConstructor();
       this.master = this.context.createGain();
-      this.master.gain.value = 0.62;
-      this.master.connect(this.context.destination);
+      this.master.gain.value = 0.6;
+      const toneFilter = this.context.createBiquadFilter();
+      toneFilter.type = "lowpass";
+      toneFilter.frequency.value = 5400;
+      toneFilter.Q.value = 0.45;
+      this.master.connect(toneFilter).connect(this.context.destination);
+
+      const delay = this.context.createDelay(0.5);
+      const feedback = this.context.createGain();
+      const wet = this.context.createGain();
+      this.echoInput = this.context.createGain();
+      delay.delayTime.value = 0.145;
+      feedback.gain.value = 0.16;
+      wet.gain.value = 0.14;
+      this.echoInput.gain.value = 0.24;
+      this.echoInput.connect(delay);
+      delay.connect(feedback).connect(delay);
+      delay.connect(wet).connect(this.master);
     }
     if (this.context.state === "suspended") await this.context.resume();
     this.setScene(scene);
@@ -47,7 +64,9 @@ class MathSeriesAudioEngine {
     envelope.gain.setValueAtTime(0.0001, start);
     envelope.gain.exponentialRampToValueAtTime(volume, start + Math.min(0.045, duration * 0.2));
     envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    oscillator.connect(envelope).connect(this.master);
+    oscillator.connect(envelope);
+    envelope.connect(this.master);
+    if (this.echoInput) envelope.connect(this.echoInput);
     oscillator.start(start);
     oscillator.stop(start + duration + 0.03);
   }
@@ -74,10 +93,12 @@ class MathSeriesAudioEngine {
       // 132 BPM: short pulses and a clipped off-beat figure keep the player
       // alert without turning the loop into a melody or a relaxation pad.
       const pulse = [130.81, 146.83, 164.81, 146.83];
-      const ostinato = [659.25, 783.99, 698.46, 880, 783.99, 698.46, 659.25, 783.99];
+      const ostinato = [659.25, 783.99, 698.46, 880, 783.99, 698.46, 587.33, 698.46, 659.25, 880, 783.99, 698.46, 659.25, 587.33, 698.46, 783.99];
       this.tone(pulse[this.step % pulse.length], now, 0.2, this.step % 4 === 0 ? 0.075 : 0.052, "triangle");
       this.softClick(now, this.step % 4 === 0);
-      this.tone(ostinato[this.step % ostinato.length], now + 0.205, 0.115, 0.044, "triangle");
+      const pluck = ostinato[this.step % ostinato.length];
+      this.tone(pluck, now + 0.205, 0.115, this.step % 4 === 3 ? 0.035 : 0.044, "triangle");
+      this.tone(pluck * 2, now + 0.21, 0.075, 0.009, "sine");
       if (this.step % 8 === 6) this.triangleAccent(now + 0.19, 1174.66);
     } else {
       const resultChords = [
@@ -130,6 +151,7 @@ class MathSeriesAudioEngine {
     }
     this.context = null;
     this.master = null;
+    this.echoInput = null;
   }
 }
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render(path = "/") {
@@ -36,7 +37,8 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /MarutiBit/);
   assert.doesNotMatch(html, /maruti-lab-og\.jpg/);
   assert.match(html, /ANGLE/);
-  assert.match(html, /bitTitleTriangle/);
+  assert.match(html, /aria-label="TRIANGLE"/);
+  assert.match(html, /bitTitlePrefix/);
   assert.match(html, /初級/);
   assert.match(html, /中級/);
   assert.match(html, /上級/);
@@ -45,4 +47,11 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /三角形の「？」を求める/);
   assert.match(html, /SOUND/);
   assert.match(html, /OFF/);
+});
+
+test("keeps the complete score and URL in one share payload", async () => {
+  const source = await readFile(new URL("../app/bit/AngleGame.tsx", import.meta.url), "utf8");
+  assert.match(source, /const shareText = `\$\{text\}\\n\$\{url\}`/);
+  assert.match(source, /navigator\.share\(\{ text: shareText \}\)/);
+  assert.doesNotMatch(source, /navigator\.share\(\{[^}]*\burl\b/);
 });

@@ -312,8 +312,11 @@ function AngleDiagram({ problem }: { problem: Problem }) {
         }
         const middle = shortArc(vertex, p1, p2, 24, label.unknown ? "#a94235" : "#183d55");
         const distance = label.unknown ? 55 : 52;
-        const rawX = vertex.x + Math.cos(middle) * distance;
-        const rawY = vertex.y + Math.sin(middle) * distance;
+        // Known values stay beside the interior arc. The question marker sits
+        // outside the vertex so it can never cover a value inside the figure.
+        const direction = label.unknown ? -1 : 1;
+        const rawX = vertex.x + Math.cos(middle) * distance * direction;
+        const rawY = vertex.y + Math.sin(middle) * distance * direction;
         if (label.unknown) {
           const x = Math.max(26, Math.min(rect.width - 26, rawX));
           const y = Math.max(26, Math.min(rect.height - 26, rawY));
@@ -474,14 +477,17 @@ export function AngleGame() {
 
   const share = async () => {
     playTap("action");
-    const text = `MarutiBit「ANGLE」${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
+    const text = `MarutiBit「TRIANGLE」${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
     const url = "https://marutilab.com/bit";
+    const shareText = `${text}\n${url}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "MarutiBit — ANGLE", text, url });
+        // Some share targets discard `text` when `url` is supplied separately.
+        // A single text payload keeps the score and URL together everywhere.
+        await navigator.share({ text: shareText });
         setShareStatus("共有しました");
       } else {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
+        await navigator.clipboard.writeText(shareText);
         setShareStatus("結果をコピーしました");
       }
     } catch (error) {
