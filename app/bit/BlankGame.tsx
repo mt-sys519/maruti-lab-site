@@ -28,6 +28,7 @@ function Expression({ problem }: { problem: Problem }) {
 
 export function BlankGame() {
   const gameShellRef = useRef<HTMLElement>(null);
+  const answerPadRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<Problem[]>([initialProblem]);
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [phase, setPhase] = useState<Phase>("select");
@@ -70,7 +71,12 @@ export function BlankGame() {
     if (phase !== "playing") return;
     const frame = window.requestAnimationFrame(() => {
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      gameShellRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      const shell = gameShellRef.current;
+      const answerPad = answerPadRef.current;
+      if (!shell || !answerPad) return;
+      const shellTop = window.scrollY + shell.getBoundingClientRect().top - 12;
+      const answerBottom = window.scrollY + answerPad.getBoundingClientRect().bottom + 12;
+      window.scrollTo({ top: Math.max(shellTop, answerBottom - window.innerHeight), behavior: reducedMotion ? "auto" : "smooth" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [phase, question]);
@@ -245,7 +251,7 @@ export function BlankGame() {
           <button type="button" onClick={next}>{question === TOTAL_QUESTIONS - 1 ? "結果を見る" : "次の問題"}</button>
         </div>
       ) : (
-        <div className="bitAnswerPad">
+        <div ref={answerPadRef} className="bitAnswerPad">
           <div className="bitInputRow"><label htmlFor="blank-answer">ANSWER</label><div><input id="blank-answer" value={answer} onChange={(event) => setAnswer(event.target.value.replace(/\D/g, "").slice(0, 3))} onKeyDown={(event) => { if (event.key === "Enter") submit(); }} inputMode="numeric" pattern="[0-9]*" autoComplete="off" aria-label="空欄に入る数字" /></div><time>{(elapsed / 1000).toFixed(1)}s</time></div>
           <div className="bitKeypad" aria-label="数字入力">{[1,2,3,4,5,6,7,8,9].map((digit) => <button key={digit} type="button" onClick={() => addDigit(String(digit))}>{digit}</button>)}<button type="button" aria-label="一文字削除" onClick={removeDigit}>⌫</button><button type="button" onClick={() => addDigit("0")}>0</button><button className="bitSubmit" type="button" onClick={submit} disabled={!answer}>決定</button></div>
         </div>

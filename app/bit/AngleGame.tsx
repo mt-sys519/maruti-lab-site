@@ -322,7 +322,7 @@ function AngleDiagram({ problem }: { problem: Problem }) {
           return;
         }
         const middle = shortArc(vertex, p1, p2, 24, label.unknown ? "#a94235" : "#183d55");
-        const distance = label.unknown ? 55 : 48;
+        const distance = label.unknown ? 44 : 34;
         // Keep every value outside the geometry. In chained problems, placing
         // values inside narrow triangles makes adjacent labels converge and
         // cover one another around the shared vertex.
@@ -367,6 +367,7 @@ function AngleDiagram({ problem }: { problem: Problem }) {
 
 export function AngleGame() {
   const gameShellRef = useRef<HTMLElement>(null);
+  const answerPadRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<Problem[]>([initialProblem]);
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [phase, setPhase] = useState<Phase>("select");
@@ -409,7 +410,12 @@ export function AngleGame() {
     if (phase !== "playing") return;
     const frame = window.requestAnimationFrame(() => {
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      gameShellRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      const shell = gameShellRef.current;
+      const answerPad = answerPadRef.current;
+      if (!shell || !answerPad) return;
+      const shellTop = window.scrollY + shell.getBoundingClientRect().top - 12;
+      const answerBottom = window.scrollY + answerPad.getBoundingClientRect().bottom + 12;
+      window.scrollTo({ top: Math.max(shellTop, answerBottom - window.innerHeight), behavior: reducedMotion ? "auto" : "smooth" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [phase, question]);
@@ -641,7 +647,7 @@ export function AngleGame() {
           <button type="button" onClick={next}>{question === TOTAL_QUESTIONS - 1 ? "結果を見る" : "次の問題"}</button>
         </div>
       ) : (
-        <div className="bitAnswerPad">
+        <div ref={answerPadRef} className="bitAnswerPad">
           <div className="bitInputRow">
             <label htmlFor="angle-answer">ANSWER</label>
             <div><input id="angle-answer" value={answer} onChange={(event) => setAnswer(event.target.value.replace(/\D/g, "").slice(0, 3))} onKeyDown={(event) => { if (event.key === "Enter") submit(); }} inputMode="numeric" pattern="[0-9]*" autoComplete="off" aria-label="角度の答え" /><span>°</span></div>
