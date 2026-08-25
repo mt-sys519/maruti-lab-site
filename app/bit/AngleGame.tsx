@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createResultCard } from "./shared/createResultCard";
+import { GamePauseOverlay } from "./shared/GamePauseOverlay";
+import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { useMathSeriesAudio } from "./useMathSeriesAudio";
 
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -368,8 +371,10 @@ export function AngleGame() {
   const [totalTime, setTotalTime] = useState(0);
   const [best, setBest] = useState<Record<Difficulty, number>>(emptyBest);
   const [shareStatus, setShareStatus] = useState("");
+  const [shareCard, setShareCard] = useState<File | null>(null);
   const [animatedScore, setAnimatedScore] = useState(0);
-  const { enabled: soundEnabled, toggle: toggleSound, playAnswer, playTap } = useMathSeriesAudio(phase === "complete" ? "result" : "thinking");
+  const { paused: pagePaused, resume: resumePage } = useVisibilityPause(phase !== "select");
+  const { enabled: soundEnabled, toggle: toggleSound, playAnswer, playTap, resume: resumeAudio } = useMathSeriesAudio(phase === "complete" ? "result" : "thinking", pagePaused);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -382,12 +387,12 @@ export function AngleGame() {
   }, []);
 
   useEffect(() => {
-    if (phase !== "playing") return;
+    if (phase !== "playing" || pagePaused) return;
     const update = () => setElapsed(Date.now() - startedAt);
     update();
     const timer = window.setInterval(update, 100);
     return () => window.clearInterval(timer);
-  }, [phase, startedAt]);
+  }, [pagePaused, phase, startedAt]);
 
   useEffect(() => {
     if (phase !== "complete") return;
@@ -404,6 +409,24 @@ export function AngleGame() {
     return () => window.cancelAnimationFrame(frame);
   }, [phase, score]);
 
+  useEffect(() => {
+    if (phase !== "complete") return;
+    let cancelled = false;
+    void createResultCard({
+      series: "MarutiBit",
+      gameNumber: "GAME 001",
+      gameTitle: "TRIANGLE",
+      level: levelNames[difficulty],
+      score,
+      correct: `${correct} / ${TOTAL_QUESTIONS}`,
+      time: `${(totalTime / 1000).toFixed(1)}s`,
+      url: "https://marutilab.com/bit",
+    }).then((file) => {
+      if (!cancelled) setShareCard(file);
+    });
+    return () => { cancelled = true; };
+  }, [correct, difficulty, phase, score, totalTime]);
+
   const begin = (level = difficulty) => {
     setDifficulty(level);
     setProblem(makeProblem(level, 0));
@@ -416,6 +439,7 @@ export function AngleGame() {
     setElapsed(0);
     setTotalTime(0);
     setShareStatus("");
+    setShareCard(null);
     setAnimatedScore(0);
     setStartedAt(Date.now());
     setPhase("playing");
@@ -482,10 +506,12 @@ export function AngleGame() {
     const shareText = `${text}\n${url}`;
     try {
       if (navigator.share) {
-        // Some share targets discard `text` when `url` is supplied separately.
-        // A single text payload keeps the score and URL together everywhere.
-        await navigator.share({ text: shareText });
-        setShareStatus("共有しました");
+        let canShareCard = false;
+        if (shareCard && typeof navigator.canShare === "function") {
+          try { canShareCard = navigator.canShare({ files: [shareCard] }); } catch { /* Fall back to text sharing. */ }
+        }
+        await navigator.share(canShareCard ? { files: [shareCard], text: shareText } : { text: shareText });
+        setShareStatus(canShareCard ? "結果カードを共有しました" : "結果を共有しました");
       } else {
         await navigator.clipboard.writeText(shareText);
         setShareStatus("結果をコピーしました");
@@ -493,6 +519,14 @@ export function AngleGame() {
     } catch (error) {
       if ((error as DOMException).name !== "AbortError") setShareStatus("共有できませんでした");
     }
+  };
+
+  const resumeFromPause = async () => {
+    const pausedFor = resumePage();
+    if (!pausedFor) return;
+    if (phase === "playing") setStartedAt((current) => current + pausedFor);
+    await resumeAudio();
+    playTap("action");
   };
 
   const soundButton = (
@@ -504,10 +538,12 @@ export function AngleGame() {
   const gameControls = <div className="bitGameControls">{soundButton}<button className="bitQuit" type="button" onClick={quit}>ゲームをやめる</button></div>;
   const resultTier = correct === TOTAL_QUESTIONS ? "excellent" : correct >= 3 ? "good" : "retry";
   const resultTitle = resultTier === "excellent" ? "EXCELLENT" : resultTier === "good" ? "GOOD RUN" : "NEXT TRY";
+  const pauseOverlay = <GamePauseOverlay active={pagePaused} onResume={() => { void resumeFromPause(); }} />;
 
   if (phase === "select") {
     return (
       <section className="bitGameShell" aria-label="ANGLEゲーム">
+        {pauseOverlay}
         {soundButton}
         <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>5 QUESTIONS</strong></div>
         <div className="bitGameSummary">
@@ -530,6 +566,7 @@ export function AngleGame() {
   if (phase === "complete") {
     return (
       <section className="bitGameShell bitResult" aria-labelledby="bit-result-title">
+        {pauseOverlay}
         {soundButton}
         <div className={`bitCelebration is-${resultTier}`} aria-hidden="true">
           <i className="bitResultBurst" />
@@ -545,7 +582,7 @@ export function AngleGame() {
           <div><span>BEST</span><strong>{Math.max(best[difficulty], score).toLocaleString()}</strong></div>
         </div>
         <button className="bitRetry" type="button" onClick={() => begin(difficulty)}>もう一度</button>
-        <button className="bitShare" type="button" onClick={share}>結果をシェア</button>
+        <button className="bitShare" type="button" data-card-ready={shareCard ? "true" : "false"} onClick={share}>結果カードをシェア</button>
         <button className="bitChange" type="button" onClick={() => setPhase("select")}>難易度を変える</button>
         <p className="bitShareStatus" aria-live="polite">{shareStatus}</p>
       </section>
@@ -554,6 +591,7 @@ export function AngleGame() {
 
   return (
     <section className="bitGameShell" aria-label="ANGLEゲーム">
+      {pauseOverlay}
       {gameControls}
       <div className="bitGameTop">
         <div><span>LEVEL</span><strong>{levelNames[difficulty]}</strong></div>

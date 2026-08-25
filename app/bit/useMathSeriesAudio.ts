@@ -23,10 +23,16 @@ class MathSeriesAudioEngine {
       this.master = this.context.createGain();
       this.master.gain.value = 0.6;
       const toneFilter = this.context.createBiquadFilter();
+      const compressor = this.context.createDynamicsCompressor();
       toneFilter.type = "lowpass";
       toneFilter.frequency.value = 5400;
       toneFilter.Q.value = 0.45;
-      this.master.connect(toneFilter).connect(this.context.destination);
+      compressor.threshold.value = -22;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 3;
+      compressor.attack.value = 0.006;
+      compressor.release.value = 0.24;
+      this.master.connect(toneFilter).connect(compressor).connect(this.context.destination);
 
       const delay = this.context.createDelay(0.5);
       const feedback = this.context.createGain();
@@ -51,7 +57,7 @@ class MathSeriesAudioEngine {
     this.step = 0;
     if (this.timer !== null) window.clearInterval(this.timer);
     this.playSceneStep();
-    const beat = scene === "thinking" ? 455 : 560;
+    const beat = scene === "thinking" ? 455 : 520;
     this.timer = window.setInterval(() => this.playSceneStep(), beat);
   }
 
@@ -102,14 +108,18 @@ class MathSeriesAudioEngine {
       if (this.step % 8 === 6) this.triangleAccent(now + 0.19, 1174.66);
     } else {
       const resultChords = [
-        [174.61, 220, 261.63],
-        [196, 246.94, 293.66],
-        [164.81, 207.65, 261.63],
-        [220, 261.63, 329.63],
+        [349.23, 440, 523.25],
+        [392, 493.88, 587.33],
+        [329.63, 415.3, 523.25],
+        [440, 523.25, 659.25],
       ];
-      if (this.step % 4 === 0) this.chord(resultChords[(this.step / 4) % resultChords.length], now, 2.05, 0.034);
-      const arpeggio = [523.25, 659.25, 783.99, 659.25];
-      this.tone(arpeggio[this.step % arpeggio.length], now, 0.6, 0.038, "triangle");
+      if (this.step % 4 === 0) {
+        const chord = resultChords[(this.step / 4) % resultChords.length];
+        this.chord(chord, now, 1.55, 0.062);
+        this.tone(chord[0] / 2, now, 1.35, 0.026, "sine");
+      }
+      const arpeggio = [659.25, 783.99, 987.77, 783.99];
+      this.tone(arpeggio[this.step % arpeggio.length], now, 0.44, 0.052, "triangle");
       if (this.step % 8 === 6) this.triangleAccent(now, 1174.66);
     }
     this.step = (this.step + 1) % 16;
@@ -138,6 +148,18 @@ class MathSeriesAudioEngine {
     this.tone(740, now, 0.055, 0.07, "triangle");
   }
 
+  async suspend() {
+    if (this.timer !== null) window.clearInterval(this.timer);
+    this.timer = null;
+    if (this.context?.state === "running") await this.context.suspend();
+  }
+
+  async resume(scene: MathAudioScene) {
+    if (!this.context) return;
+    if (this.context.state === "suspended") await this.context.resume();
+    this.setScene(scene);
+  }
+
   stop() {
     if (this.timer !== null) window.clearInterval(this.timer);
     this.timer = null;
@@ -155,7 +177,7 @@ class MathSeriesAudioEngine {
   }
 }
 
-export function useMathSeriesAudio(scene: MathAudioScene) {
+export function useMathSeriesAudio(scene: MathAudioScene, paused = false) {
   const [enabled, setEnabled] = useState(false);
   const engineRef = useRef<MathSeriesAudioEngine | null>(null);
 
@@ -184,11 +206,20 @@ export function useMathSeriesAudio(scene: MathAudioScene) {
     engineRef.current?.playTap(kind);
   }, []);
 
+  const resume = useCallback(async () => {
+    await engineRef.current?.resume(scene);
+  }, [scene]);
+
   useEffect(() => {
-    if (enabled) engineRef.current?.setScene(scene);
-  }, [enabled, scene]);
+    if (!enabled) return;
+    if (paused) {
+      void engineRef.current?.suspend();
+    } else {
+      engineRef.current?.setScene(scene);
+    }
+  }, [enabled, paused, scene]);
 
   useEffect(() => () => engineRef.current?.stop(), []);
 
-  return { enabled, toggle, playAnswer, playTap };
+  return { enabled, toggle, playAnswer, playTap, resume };
 }

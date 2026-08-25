@@ -37,8 +37,8 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /MarutiBit/);
   assert.doesNotMatch(html, /maruti-lab-og\.jpg/);
   assert.match(html, /ANGLE/);
-  assert.match(html, /aria-label="TRIANGLE"/);
-  assert.match(html, /bitTitlePrefix/);
+  assert.match(html, /bitTriMark/);
+  assert.match(html, /TRIANGLE/);
   assert.match(html, /初級/);
   assert.match(html, /中級/);
   assert.match(html, /上級/);
@@ -49,9 +49,23 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /OFF/);
 });
 
-test("keeps the complete score and URL in one share payload", async () => {
+test("builds a score card and keeps the complete score and URL in the share payload", async () => {
   const source = await readFile(new URL("../app/bit/AngleGame.tsx", import.meta.url), "utf8");
+  const cardSource = await readFile(new URL("../app/bit/shared/createResultCard.ts", import.meta.url), "utf8");
+  assert.match(source, /createResultCard/);
   assert.match(source, /const shareText = `\$\{text\}\\n\$\{url\}`/);
-  assert.match(source, /navigator\.share\(\{ text: shareText \}\)/);
-  assert.doesNotMatch(source, /navigator\.share\(\{[^}]*\burl\b/);
+  assert.match(source, /files: \[shareCard\], text: shareText/);
+  assert.match(source, /\{ text: shareText \}/);
+  assert.match(source, /data-card-ready=/);
+  assert.match(cardSource, /CARD_WIDTH = 1200/);
+  assert.match(cardSource, /CARD_HEIGHT = 630/);
+  assert.match(cardSource, /new File\(\[blob\]/);
+});
+
+test("pauses active games on page visibility changes and requires manual resume", async () => {
+  const source = await readFile(new URL("../app/bit/shared/useVisibilityPause.ts", import.meta.url), "utf8");
+  assert.match(source, /document\.hidden/);
+  assert.match(source, /addEventListener\("visibilitychange"/);
+  assert.match(source, /const resume = useCallback/);
+  assert.doesNotMatch(source, /visibilityState === "visible"[^]*setPaused\(false\)/);
 });
