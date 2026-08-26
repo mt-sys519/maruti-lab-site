@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BlankGame } from "../BlankGame";
+import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
   title: "MarutiBit — BLANK",
@@ -28,11 +29,7 @@ export default function BlankPage() {
         <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
       </header>
 
-      <nav className="bitSeriesNav" aria-label="ゲームを選ぶ">
-        <a href="/bit"><small>001</small>ANGLE</a>
-        <a className="isActive" href="/bit/blank"><small>002</small>BLANK</a>
-        <a href="/bit/sequence"><small>003</small>SEQUENCE</a>
-      </nav>
+      <BitSeriesNav active="blank" />
 
       <section className="bitIntro bitBlankIntro">
         <p className="bitSerial">MB / GAME 002</p>

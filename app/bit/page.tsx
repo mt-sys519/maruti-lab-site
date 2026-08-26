@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AngleGame } from "./AngleGame";
+import { BitSeriesNav } from "./BitSeriesNav";
 
 export const metadata: Metadata = {
   title: "MarutiBit — ANGLE",
@@ -28,11 +29,7 @@ export default function MarutiBitPage() {
         <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
       </header>
 
-      <nav className="bitSeriesNav" aria-label="ゲームを選ぶ">
-        <a className="isActive" href="/bit"><small>001</small>ANGLE</a>
-        <a href="/bit/blank"><small>002</small>BLANK</a>
-        <a href="/bit/sequence"><small>003</small>SEQUENCE</a>
-      </nav>
+      <BitSeriesNav active="angle" />
 
       <section className="bitIntro">
         <p className="bitSerial">MB / GAME 001</p>

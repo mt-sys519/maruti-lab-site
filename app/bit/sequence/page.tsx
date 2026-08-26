@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SequenceGame } from "../SequenceGame";
+import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
   title: "MarutiBit — SEQUENCE",
@@ -15,11 +16,7 @@ export default function SequencePage() {
         <a className="bitBrand" href="/bit" aria-label="MarutiBit トップ"><span>Maruti</span><b>Bit</b></a>
         <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
       </header>
-      <nav className="bitSeriesNav" aria-label="ゲームを選ぶ">
-        <a href="/bit"><small>001</small>ANGLE</a>
-        <a href="/bit/blank"><small>002</small>BLANK</a>
-        <a className="isActive" href="/bit/sequence"><small>003</small>SEQUENCE</a>
-      </nav>
+      <BitSeriesNav active="sequence" />
       <section className="bitIntro bitSequenceIntro">
         <p className="bitSerial">MB / GAME 003</p>
         <h1>
