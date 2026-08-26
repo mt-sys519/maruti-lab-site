@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import styles from "./LabHero.module.css";
 
 const bitGames = [
@@ -12,8 +12,6 @@ const bitGames = [
 
 export function LabHero() {
   const hero = useRef<HTMLElement>(null);
-  const gameIndex = useRef<HTMLDivElement>(null);
-  const [indexActive, setIndexActive] = useState(false);
   const gameCount = String(bitGames.length).padStart(2, "0");
 
   function trackPointer(event: React.PointerEvent<HTMLElement>) {
@@ -26,14 +24,6 @@ export function LabHero() {
     event.preventDefault();
     const destination = bitGames[Math.floor(Math.random() * bitGames.length)];
     window.location.href = destination.href;
-  }
-
-  function showGameIndex(event: React.MouseEvent<HTMLAnchorElement>) {
-    event.preventDefault();
-    setIndexActive(true);
-    gameIndex.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    gameIndex.current?.focus({ preventScroll: true });
-    window.setTimeout(() => setIndexActive(false), 1100);
   }
 
   function gameVisual(name: string) {
@@ -56,11 +46,11 @@ export function LabHero() {
         <p className={styles.copy}>考える。見抜く。打ち込む。<br />ひと息で遊べる、小さなゲームを少しずつ増やしています。</p>
         <div className={styles.actions}>
           <a className={styles.primary} href="/bit" onClick={chooseRandomGame}>ランダムで遊ぶ</a>
-          <a className={styles.secondary} href="#bit-games" onClick={showGameIndex} aria-controls="bit-games">ゲームを選ぶ</a>
+          <a className={styles.secondary} href="/bit">ゲームを選ぶ</a>
         </div>
       </div>
 
-      <div id="bit-games" ref={gameIndex} tabIndex={-1} className={`${styles.index} ${indexActive ? styles.indexActive : ""}`} aria-label="MarutiBitのゲーム一覧">
+      <div id="bit-games" className={styles.index} aria-label="MarutiBitのゲーム一覧">
         <div className={styles.indexHead}><span>GAME INDEX</span><strong>{gameCount} / ONLINE</strong></div>
         <div className={styles.games}>
           {bitGames.map((game) => (
