@@ -58,17 +58,42 @@
 }
 .indexHead { padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(21, 33, 29, .35); color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; }
 .indexHead strong { color: #a94235; font-size: 8px; }
+.index:focus { outline: 0; }
+.indexActive { animation: selectIndex 1.05s cubic-bezier(.16, 1, .3, 1); }
 .games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
-.games a { min-width: 0; padding: clamp(22px, 3vw, 42px); display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid rgba(21, 33, 29, .26); border-bottom: 1px solid rgba(21, 33, 29, .26); transition: background-color .16s ease, color .16s ease; }
+.games a { min-width: 0; padding: clamp(16px, 2vw, 28px); display: flex; flex-direction: column; justify-content: space-between; gap: 10px; border-right: 1px solid rgba(21, 33, 29, .26); border-bottom: 1px solid rgba(21, 33, 29, .26); transition: background-color .16s ease, color .16s ease; }
 .games a:nth-child(2n) { border-right: 0; }
 .games a:nth-last-child(-n+2) { border-bottom: 0; }
 .games a:hover, .games a:focus-visible { background: #183d55; color: #f1eee5; outline: 0; }
-.games span { font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: #a94235; }
-.games strong { overflow-wrap: anywhere; font: 500 clamp(24px, 2.35vw, 38px)/.92 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.035em; }
-.games small { font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; color: #66736c; }
-.games a:hover span, .games a:focus-visible span { color: #e48e80; }
-.games a:hover small, .games a:focus-visible small { color: #c7d2cc; }
+.gameNumber { font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: #a94235; }
+.gameName { overflow-wrap: anywhere; font: 500 clamp(21px, 2vw, 34px)/.92 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.035em; }
+.gameKind { font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; color: #66736c; }
+.games a:hover .gameNumber, .games a:focus-visible .gameNumber { color: #e48e80; }
+.games a:hover .gameKind, .games a:focus-visible .gameKind { color: #c7d2cc; }
+.visual { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: clamp(58px, 7vh, 88px); color: #183d55; }
+.angleVisual i { position: absolute; display: block; width: 66px; height: 1px; background: currentColor; transform-origin: left center; }
+.angleVisual i:nth-child(1) { left: calc(50% - 33px); bottom: 12px; }
+.angleVisual i:nth-child(2) { left: calc(50% - 33px); bottom: 12px; transform: rotate(-59deg); }
+.angleVisual i:nth-child(3) { right: calc(50% - 33px); bottom: 12px; transform-origin: right center; transform: rotate(59deg); }
+.angleVisual b { position: absolute; top: 0; color: #a94235; font: 600 17px/1 "Yu Gothic UI", sans-serif; }
+.blankVisual, .sequenceVisual { gap: clamp(5px, 1vw, 11px); font: 500 clamp(18px, 2vw, 27px)/1 "Arial Narrow", sans-serif; }
+.blankVisual i { color: #6c7771; font-style: normal; font-size: .65em; }
+.blankVisual b, .sequenceVisual b { display: grid; place-items: center; width: 1.5em; height: 1.5em; border-radius: 50%; background: #a94235; color: #fff; }
+.sequenceVisual i { font-style: normal; }
+.rainVisual { align-items: flex-start; flex-direction: column; padding: 10px 15%; border: 1px solid currentColor; background: #07100b; color: #86f15a; font-family: Consolas, monospace; }
+.rainVisual i { font-style: normal; font-size: 8px; opacity: .55; }
+.rainVisual span, .rainVisual b { align-self: center; font-size: clamp(11px, 1.2vw, 15px); letter-spacing: .13em; }
+.rainVisual b { opacity: .48; transform: translateY(4px); }
+.games a:hover .visual, .games a:focus-visible .visual { color: #f1eee5; }
+.games a:hover .blankVisual b, .games a:focus-visible .blankVisual b, .games a:hover .sequenceVisual b, .games a:focus-visible .sequenceVisual b { background: #e48e80; }
+.games a:hover .rainVisual, .games a:focus-visible .rainVisual { color: #86f15a; border-color: #86f15a; }
 .readout { grid-column: 2/-1; }
+
+@keyframes selectIndex {
+  0% { box-shadow: 12px 12px 0 rgba(24, 61, 85, .08); }
+  35% { box-shadow: 12px 12px 0 rgba(169, 66, 53, .26), 0 0 0 3px rgba(169, 66, 53, .16); }
+  100% { box-shadow: 12px 12px 0 rgba(24, 61, 85, .08); }
+}
 
 @media (max-width: 1100px) {
   .bitHomeHero.bitHomeHero { grid-template-columns: 42px minmax(0, 1fr); grid-template-rows: auto auto 62px; }
@@ -87,7 +112,8 @@
   .actions { align-items: stretch; flex-direction: column; margin-top: 32px; }
   .actions a { width: 100%; }
   .index { margin: 0 14px 40px; min-height: 500px; grid-template-rows: 48px 1fr; }
-  .games a { padding: 20px 14px; }
+  .games a { padding: 14px 11px; gap: 8px; }
   .games strong { font-size: clamp(21px, 7vw, 30px); }
+  .visual { height: 68px; }
   .readout { padding: 0 10px; }
 }
