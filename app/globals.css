@@ -256,6 +256,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .inputRainResult{margin:0 auto}.inputRainResultStats{grid-template-columns:repeat(4,1fr)}
 .inputRainResultStats div:nth-child(3){border-right:1px solid rgba(21,33,29,.25)}
 .inputRainInputToggle{grid-template-columns:repeat(2,1fr)}
+.inputRainDifficultySelect{grid-template-columns:repeat(4,1fr)}
+@media(max-width:700px){.inputRainDifficultySelect{grid-template-columns:repeat(2,1fr)}}
 .inputRainSpaceHint{display:block;margin-top:5px;font:600 8px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.18em;opacity:.72}
 .inputRainRankMark{margin-top:26px;font:700 clamp(110px,19vw,190px)/.78 "Arial Narrow","Yu Gothic UI",sans-serif;letter-spacing:-.02em;color:var(--bit-blue)}
 .inputRainRankMark.is-excellent{color:var(--bit-red)}.inputRainRankMark.is-good{color:var(--bit-blue)}.inputRainRankMark.is-retry{color:#70776f}

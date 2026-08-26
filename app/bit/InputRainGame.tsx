@@ -38,6 +38,7 @@ const levels: Record<InputRainDifficulty, {
   beginner: { label: "初級", note: "短い端末語", seconds: 20, fallBase: 4600, fallPerChar: 250, scoreFactor: 3 },
   intermediate: { label: "中級", note: "短い操作文", seconds: 40, fallBase: 6000, fallPerChar: 210, scoreFactor: 1.6 },
   advanced: { label: "上級", note: "端末ログ", seconds: 60, fallBase: 9000, fallPerChar: 170, scoreFactor: 1 },
+  pro: { label: "PRO", note: "長文ログ", seconds: 180, fallBase: 15500, fallPerChar: 150, scoreFactor: 1 / 3 },
 };
 
 const romaji: Record<string, string[]> = {
@@ -206,7 +207,9 @@ export function InputRainGame() {
   const {
     enabled: soundEnabled,
     toggle: toggleSound,
-    playType,
+    playTypeKey,
+    playTypeFlick,
+    playBackspace,
     playAccept,
     playMiss,
     playCountdownTick,
@@ -456,6 +459,7 @@ export function InputRainGame() {
       }
       if (event.key === "Backspace") {
         event.preventDefault();
+        if (typed) playBackspace();
         setTyped((value) => value.slice(0, -1));
         return;
       }
@@ -470,12 +474,12 @@ export function InputRainGame() {
         return;
       }
       setTyped(candidate);
-      playType();
+      playTypeKey();
       if (status.complete) completePrompt();
     };
     window.addEventListener("keydown", onKeyDown, { passive: false });
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [completePrompt, feedback, inputMode, paused, playType, registerInputError, tokens, typed]);
+  }, [completePrompt, feedback, inputMode, paused, playBackspace, playTypeKey, registerInputError, tokens, typed]);
 
   // Space starts the run from the select screen, mirroring the START button.
   useEffect(() => {
@@ -503,15 +507,17 @@ export function InputRainGame() {
       return;
     }
     const value = mobileTyped + char;
-    playType();
+    playTypeFlick();
     setMobileTyped(value);
     if (value === target) completePrompt();
-  }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playType, registerInputError]);
+  }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playTypeFlick, registerInputError]);
 
   const deleteFlickChar = useCallback(() => {
     if (phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle") return;
+    if (!mobileTyped) return;
+    playBackspace();
     setMobileTyped((value) => value.slice(0, -1));
-  }, [inputMode, paused, feedback]);
+  }, [inputMode, mobileTyped, paused, feedback, playBackspace]);
 
   const mutateFlickChar = useCallback(() => {
     if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle" || !mobileTyped) return;
@@ -525,10 +531,10 @@ export function InputRainGame() {
       return;
     }
     const candidate = mobileTyped.slice(0, -1) + mutated;
-    playType();
+    playTypeFlick();
     setMobileTyped(candidate);
     if (candidate === target) completePrompt();
-  }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playType, registerInputError]);
+  }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playTypeFlick, registerInputError]);
 
   const resumeGame = useCallback(() => {
     resumePage();
@@ -592,7 +598,7 @@ export function InputRainGame() {
 
       {phase === "select" && (
         <>
-          <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>3 MODES</strong></div>
+          <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>{Object.keys(levels).length} MODES</strong></div>
           <div className="inputRainTerminal inputRainTerminalPreview" aria-label="ゲーム説明">
             <div className="inputRainChrome"><b>Pt</b><span>PROMPTTERM / INPUT CHANNEL</span><small>STANDBY</small></div>
             <div className="inputRainReady">
@@ -610,7 +616,7 @@ export function InputRainGame() {
               フリック<small>スマホのかな入力</small>
             </button>
           </div>
-          <div className="bitModeSelect">
+          <div className="bitModeSelect inputRainDifficultySelect">
             {(Object.keys(levels) as InputRainDifficulty[]).map((key) => (
               <button key={key} type="button" className={difficulty === key ? "isActive" : undefined} onClick={() => setDifficulty(key)}>
                 {levels[key].label}<small>{levels[key].seconds} SEC / {levels[key].note}</small>

@@ -13,9 +13,15 @@ const AUDIO_SRC = {
   acceptRain: "/audio/input-rain/accept-rain.wav",
 };
 
+const TYPE_PC_FILES = [1, 2, 3, 4, 5].map((n) => `/audio/input-rain/type-pc-0${n}.wav`);
+const TYPE_FLICK_FILES = [1, 2, 3, 4].map((n) => `/audio/input-rain/type-flick-0${n}.wav`);
+const BACKSPACE_FILES = [1, 2].map((n) => `/audio/input-rain/backspace-0${n}.wav`);
+
 const LOOP_VOLUME = 0.7;
 const ONE_SHOT_VOLUME = 0.9;
 const GO_VOLUME = 0.55;
+const TYPE_VOLUME = 0.5;
+const BACKSPACE_VOLUME = 0.45;
 const FADE_IN_MS = 650;
 const FADE_OUT_MS = 450;
 
@@ -102,6 +108,35 @@ class OneShot {
   }
 }
 
+/**
+ * A pool of short one-shot variants (e.g. several key-thock recordings) played at random
+ * so rapid typing doesn't sound mechanically identical. Each play() spins up a fresh
+ * HTMLAudioElement instead of reusing one, so overlapping hits during fast typing don't
+ * cut each other off.
+ */
+class VariantPool {
+  private files: string[];
+  private warm: HTMLAudioElement[];
+
+  constructor(files: string[]) {
+    this.files = files;
+    // Kept referenced (not just constructed) so the browser actually finishes
+    // preloading each variant instead of aborting once the object is GC'd.
+    this.warm = files.map((src) => {
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      return audio;
+    });
+  }
+
+  play(volume: number) {
+    const src = this.files[Math.floor(Math.random() * this.files.length)];
+    const audio = new Audio(src);
+    audio.volume = volume;
+    void audio.play().catch((error) => logPlayFailure(src, error));
+  }
+}
+
 /** Synthesized per-keystroke feedback; unrelated to the authored BGM/stinger files. */
 class KeyFeedbackEngine {
   private context: AudioContext | null = null;
@@ -162,10 +197,6 @@ class KeyFeedbackEngine {
     source.start();
   }
 
-  type() {
-    this.noise(0.014, 0.035, 5200);
-  }
-
   miss() {
     this.noise(0.08, 0.065, 1100);
     this.tone(92.5, 0.18, 0.045, "sine");
@@ -188,6 +219,9 @@ export function useInputRainAudio(paused = false) {
   const countdownRef = useRef<OneShot | null>(null);
   const goRef = useRef<OneShot | null>(null);
   const acceptRef = useRef<OneShot | null>(null);
+  const typePcRef = useRef<VariantPool | null>(null);
+  const typeFlickRef = useRef<VariantPool | null>(null);
+  const backspaceRef = useRef<VariantPool | null>(null);
   const activeLoopRef = useRef<LoopKind>(null);
 
   useEffect(() => {
@@ -196,6 +230,9 @@ export function useInputRainAudio(paused = false) {
     countdownRef.current = new OneShot(AUDIO_SRC.countdown);
     goRef.current = new OneShot(AUDIO_SRC.go);
     acceptRef.current = new OneShot(AUDIO_SRC.acceptRain);
+    typePcRef.current = new VariantPool(TYPE_PC_FILES);
+    typeFlickRef.current = new VariantPool(TYPE_FLICK_FILES);
+    backspaceRef.current = new VariantPool(BACKSPACE_FILES);
     return () => {
       bgmRef.current?.teardown();
       resultBgmRef.current?.teardown();
@@ -233,12 +270,14 @@ export function useInputRainAudio(paused = false) {
     }
   }, [enabled, savePreference]);
 
-  const playType = useCallback(() => { void ensureFeedback().then((engine) => engine?.type()); }, [ensureFeedback]);
   const playMiss = useCallback(() => { void ensureFeedback().then((engine) => engine?.miss()); }, [ensureFeedback]);
 
   const playAccept = useCallback(() => { if (enabled) acceptRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
   const playCountdownTick = useCallback(() => { if (enabled) countdownRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
   const playGo = useCallback(() => { if (enabled) goRef.current?.play(GO_VOLUME); }, [enabled]);
+  const playTypeKey = useCallback(() => { if (enabled) typePcRef.current?.play(TYPE_VOLUME); }, [enabled]);
+  const playTypeFlick = useCallback(() => { if (enabled) typeFlickRef.current?.play(TYPE_VOLUME); }, [enabled]);
+  const playBackspace = useCallback(() => { if (enabled) backspaceRef.current?.play(BACKSPACE_VOLUME); }, [enabled]);
 
   const startBgm = useCallback(() => {
     activeLoopRef.current = "bgm";
@@ -292,7 +331,9 @@ export function useInputRainAudio(paused = false) {
   return {
     enabled,
     toggle,
-    playType,
+    playTypeKey,
+    playTypeFlick,
+    playBackspace,
     playAccept,
     playMiss,
     playCountdownTick,
