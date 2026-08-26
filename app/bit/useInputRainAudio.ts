@@ -17,13 +17,15 @@ const TYPE_PC_FILES = [1, 2, 3, 4, 5].map((n) => `/audio/input-rain/type-pc-0${n
 const TYPE_FLICK_FILES = [1, 2, 3, 4].map((n) => `/audio/input-rain/type-flick-0${n}.wav`);
 const BACKSPACE_FILES = [1, 2].map((n) => `/audio/input-rain/backspace-0${n}.wav`);
 
-const LOOP_VOLUME = 0.7;
-const ONE_SHOT_VOLUME = 0.9;
-const GO_VOLUME = 0.55;
-const TYPE_VOLUME = 0.5;
-const BACKSPACE_VOLUME = 0.45;
+const LOOP_VOLUME = 0.48;
+const ONE_SHOT_VOLUME = 0.65;
+const GO_VOLUME = 0.4;
+const TYPE_VOLUME = 0.38;
+const BACKSPACE_VOLUME = 0.32;
 const FADE_IN_MS = 650;
 const FADE_OUT_MS = 450;
+const BGM_BASS_CUT_DB = -9;
+const BGM_BASS_CUT_HZ = 140;
 
 function logPlayFailure(src: string, error: unknown) {
   console.warn(`[input-rain audio] play() failed for ${src}`, error);
@@ -33,12 +35,49 @@ function logPlayFailure(src: string, error: unknown) {
 class LoopTrack {
   private audio: HTMLAudioElement;
   private fadeToken = 0;
+  private gainNode: GainNode | null = null;
+  private currentVolume = 0;
 
-  constructor(src: string, loop: boolean) {
+  // tameBass routes playback through a lowshelf filter instead of straight to the
+  // element's own output, to knock down an overly punchy kick drum in the mix that
+  // plain HTMLMediaElement.volume can't selectively target (it's a flat attenuation).
+  constructor(src: string, loop: boolean, tameBass = false) {
     this.audio = new Audio(src);
     this.audio.loop = loop;
     this.audio.preload = "auto";
     this.audio.volume = 0;
+    if (tameBass) this.setupBassFilter();
+  }
+
+  private setupBassFilter() {
+    try {
+      const AudioContextConstructor = window.AudioContext
+        || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextConstructor) return;
+      const context = new AudioContextConstructor();
+      const source = context.createMediaElementSource(this.audio);
+      const bassCut = context.createBiquadFilter();
+      bassCut.type = "lowshelf";
+      bassCut.frequency.value = BGM_BASS_CUT_HZ;
+      bassCut.gain.value = BGM_BASS_CUT_DB;
+      const gainNode = context.createGain();
+      gainNode.gain.value = 0;
+      source.connect(bassCut).connect(gainNode).connect(context.destination);
+      this.audio.volume = 1;
+      this.gainNode = gainNode;
+    } catch (error) {
+      logPlayFailure(this.audio.src, error);
+    }
+  }
+
+  private getVolume() {
+    return this.currentVolume;
+  }
+
+  private setVolume(value: number) {
+    this.currentVolume = value;
+    if (this.gainNode) this.gainNode.gain.value = value;
+    else this.audio.volume = value;
   }
 
   // Driven by setInterval rather than requestAnimationFrame so the fade still runs
@@ -46,13 +85,13 @@ class LoopTrack {
   // to a near-stop but timers keep firing.
   private fadeTo(target: number, duration: number, onDone?: () => void) {
     const token = (this.fadeToken += 1);
-    const start = this.audio.volume;
+    const start = this.getVolume();
     const startTime = performance.now();
     const STEP_MS = 30;
     const timer = window.setInterval(() => {
       if (token !== this.fadeToken) { window.clearInterval(timer); return; }
       const t = duration <= 0 ? 1 : Math.min(1, (performance.now() - startTime) / duration);
-      this.audio.volume = start + (target - start) * t;
+      this.setVolume(start + (target - start) * t);
       if (t >= 1) { window.clearInterval(timer); onDone?.(); }
     }, STEP_MS);
   }
@@ -60,12 +99,14 @@ class LoopTrack {
   async playFromStart(volume: number) {
     this.fadeToken += 1;
     this.audio.currentTime = 0;
-    this.audio.volume = 0;
+    this.setVolume(0);
+    if (this.gainNode?.context.state === "suspended") await this.gainNode.context.resume();
     try { await this.audio.play(); } catch (error) { logPlayFailure(this.audio.src, error); }
     this.fadeTo(volume, FADE_IN_MS);
   }
 
   async resumeInPlace(volume: number) {
+    if (this.gainNode?.context.state === "suspended") await this.gainNode.context.resume();
     if (this.audio.paused) {
       try { await this.audio.play(); } catch (error) { logPlayFailure(this.audio.src, error); }
     }
@@ -85,9 +126,16 @@ class LoopTrack {
     });
   }
 
-  teardown() {
+  /** Immediately stops playback without tearing down the audio graph, so the track can
+   * still be resumed later (used when switching between the game and result loops). */
+  stop() {
     this.fadeToken += 1;
     this.audio.pause();
+  }
+
+  teardown() {
+    this.stop();
+    if (this.gainNode) void this.gainNode.context.close();
   }
 }
 
@@ -225,7 +273,7 @@ export function useInputRainAudio(paused = false) {
   const activeLoopRef = useRef<LoopKind>(null);
 
   useEffect(() => {
-    bgmRef.current = new LoopTrack(AUDIO_SRC.bgm, true);
+    bgmRef.current = new LoopTrack(AUDIO_SRC.bgm, true, true);
     resultBgmRef.current = new LoopTrack(AUDIO_SRC.resultBgm, false);
     countdownRef.current = new OneShot(AUDIO_SRC.countdown);
     goRef.current = new OneShot(AUDIO_SRC.go);
@@ -281,13 +329,13 @@ export function useInputRainAudio(paused = false) {
 
   const startBgm = useCallback(() => {
     activeLoopRef.current = "bgm";
-    resultBgmRef.current?.teardown();
+    resultBgmRef.current?.stop();
     if (enabled && !paused) void bgmRef.current?.playFromStart(LOOP_VOLUME);
   }, [enabled, paused]);
 
   const startResultBgm = useCallback(() => {
     activeLoopRef.current = "resultBgm";
-    bgmRef.current?.teardown();
+    bgmRef.current?.stop();
     if (enabled && !paused) void resultBgmRef.current?.playFromStart(LOOP_VOLUME);
   }, [enabled, paused]);
 

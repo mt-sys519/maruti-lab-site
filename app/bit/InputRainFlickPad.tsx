@@ -49,16 +49,22 @@ export function InputRainFlickPad({ onCommit, onDelete, onMutate, disabled }: In
     }
   }, []);
 
-  const finishPointer = useCallback((commit: boolean) => {
+  // Resolve the final direction from the net displacement at release, not the last
+  // pointermove sample: a fast, light tap can pick up a stray pointermove reading past
+  // the threshold from touch-sensor jitter, which previously left the key "stuck" on a
+  // flick direction that never actually happened, dropping the tap entirely.
+  const finishPointer = useCallback((commit: boolean, event?: { clientX: number; clientY: number }) => {
     const state = activeRef.current;
     activeRef.current = null;
     setActive(null);
     if (!commit || !state) return;
-    const char = state.chars[state.dir];
+    const rawDir = event ? resolveDir(event.clientX - state.startX, event.clientY - state.startY) : state.dir;
+    const dir = state.chars[rawDir] ? rawDir : "tap";
+    const char = state.chars[dir];
     if (char) onCommit(char);
   }, [onCommit]);
 
-  const handlePointerUp = useCallback(() => finishPointer(true), [finishPointer]);
+  const handlePointerUp = useCallback((event: React.PointerEvent<HTMLButtonElement>) => finishPointer(true, event), [finishPointer]);
   const handlePointerCancel = useCallback(() => finishPointer(false), [finishPointer]);
 
   return (

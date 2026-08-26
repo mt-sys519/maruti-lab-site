@@ -629,7 +629,7 @@ export function InputRainGame() {
       )}
 
       {(phase === "countdown" || phase === "playing") && (
-        <div className={`inputRainTerminal${paused ? " isPaused" : ""}${feedback === "error" ? " isError" : ""}`}>
+        <div className={`inputRainTerminal${paused ? " isPaused" : ""}${feedback === "error" ? " isError" : ""}${difficulty === "pro" ? " isPro" : ""}`}>
           <div className="inputRainChrome"><b>Pt</b><span>PROMPTTERM / INPUT RAIN</span><small>{phase === "countdown" ? "SYNC" : level.label}</small></div>
           <div className="inputRainHud">
             <span>TIME <strong>{remaining.toFixed(1).padStart(4, "0")}</strong></span>
