@@ -19,6 +19,7 @@ const BACKSPACE_FILES = [1, 2].map((n) => `/audio/input-rain/backspace-0${n}.wav
 
 const LOOP_VOLUME = 0.48;
 const ONE_SHOT_VOLUME = 0.65;
+const ACCEPT_VOLUME = 0.52;
 const GO_VOLUME = 0.4;
 const TYPE_VOLUME = 0.38;
 const BACKSPACE_VOLUME = 0.32;
@@ -320,7 +321,7 @@ export function useInputRainAudio(paused = false) {
 
   const playMiss = useCallback(() => { void ensureFeedback().then((engine) => engine?.miss()); }, [ensureFeedback]);
 
-  const playAccept = useCallback(() => { if (enabled) acceptRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
+  const playAccept = useCallback(() => { if (enabled) acceptRef.current?.play(ACCEPT_VOLUME); }, [enabled]);
   const playCountdownTick = useCallback(() => { if (enabled) countdownRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
   const playGo = useCallback(() => { if (enabled) goRef.current?.play(GO_VOLUME); }, [enabled]);
   const playTypeKey = useCallback(() => { if (enabled) typePcRef.current?.play(TYPE_VOLUME); }, [enabled]);

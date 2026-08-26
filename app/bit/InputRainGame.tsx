@@ -382,13 +382,18 @@ export function InputRainGame() {
     setPhase("countdown");
     resumePage();
     stopAllLoops();
-    // In flick mode the shell (terminal + flick pad) usually runs taller than a phone's
-    // viewport, so aligning to the top left the pad itself below the fold - and how far
-    // below varied with the mobile browser's chrome (URL bar, etc.), which is what made
-    // the opening position feel inconsistent. Aligning to the bottom guarantees the pad
-    // is on-screen and ready to use as soon as the round starts.
-    window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: inputMode === "flick" ? "end" : "start" }));
-  }, [inputMode, level.seconds, loadBag, resumePage, stopAllLoops]);
+    window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
+  }, [level.seconds, loadBag, resumePage, stopAllLoops]);
+
+  // The flick pad only mounts once "playing" starts (the countdown screen doesn't show
+  // it), so the shell is still its short, pad-less height when startRun's own scroll
+  // fires - correcting to "end" there landed on the countdown UI's shape and barely
+  // moved. Re-settling here, once the pad has actually mounted and the shell is at its
+  // full (usually taller-than-viewport) height, is what actually keeps the pad on-screen.
+  useEffect(() => {
+    if (phase !== "playing" || inputMode !== "flick") return;
+    window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "end" }));
+  }, [phase, inputMode]);
 
   const registerInputError = useCallback(() => {
     if (feedback === "error") return;
