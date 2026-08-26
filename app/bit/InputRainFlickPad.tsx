@@ -67,6 +67,23 @@ export function InputRainFlickPad({ onCommit, onDelete, onMutate, disabled }: In
   const handlePointerUp = useCallback((event: React.PointerEvent<HTMLButtonElement>) => finishPointer(true, event), [finishPointer]);
   const handlePointerCancel = useCallback(() => finishPointer(false), [finishPointer]);
 
+  // The mutate key used a plain onClick, but a browser's native click-after-touch
+  // synthesis silently drops the click if the finger drifts even a couple pixels during
+  // contact (a far stricter tolerance than the char keys' own 22px threshold) - exactly
+  // the kind of jitter fast typing produces. Driving it through the same pointer events
+  // as the char keys removes that native heuristic from the equation.
+  const handleMutatePointerDown = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    if (disabled) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, [disabled]);
+
+  const handleMutatePointerUp = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    if (disabled) return;
+    event.preventDefault();
+    onMutate();
+  }, [disabled, onMutate]);
+
   return (
     <div className="inputRainFlickPad" aria-label="かなフリックパッド">
       <div className="inputRainFlickGrid">
@@ -76,10 +93,9 @@ export function InputRainFlickPad({ onCommit, onDelete, onMutate, disabled }: In
             type="button"
             className={`inputRainFlickKey${key.kind === "mutate" ? " isMutate" : ""}`}
             disabled={disabled}
-            onClick={key.kind === "mutate" ? onMutate : undefined}
-            onPointerDown={key.kind === "char" ? (event) => handlePointerDown(event, key) : undefined}
+            onPointerDown={key.kind === "char" ? (event) => handlePointerDown(event, key) : handleMutatePointerDown}
             onPointerMove={key.kind === "char" ? handlePointerMove : undefined}
-            onPointerUp={key.kind === "char" ? handlePointerUp : undefined}
+            onPointerUp={key.kind === "char" ? handlePointerUp : handleMutatePointerUp}
             onPointerCancel={key.kind === "char" ? handlePointerCancel : undefined}
           >
             <span className="inputRainFlickKeyMain">{key.kind === "char" ? key.chars.tap : key.label}</span>
