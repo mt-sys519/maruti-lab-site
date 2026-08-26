@@ -1,0 +1,14 @@
+.actions { display: flex; align-items: center; gap: clamp(18px, 3vw, 38px); }
+.support { display: inline-flex; align-items: center; gap: 8px; padding: 8px 1px 6px; color: var(--bit-red); border-bottom: 1px solid transparent; font-size: 11px; letter-spacing: .06em; }
+.support b { font: 400 14px/1 "Segoe UI Emoji", "Yu Gothic UI", sans-serif; }
+.support:hover { border-color: var(--bit-red); }
+
+@media (max-width: 640px) {
+  .actions { gap: 10px; }
+  .support { font-size: 8px; gap: 4px; }
+  .support b { font-size: 12px; }
+  .actions :global(.bitBack) { gap: 6px; font-size: 8px; }
+  .actions :global(.bitBack)::before { width: 10px; }
+  .actions :global(.bitBack) { white-space: nowrap; }
+  :global(.bitHeader) { padding-left: 12px; padding-right: 12px; }
+}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SequenceGame } from "../SequenceGame";
+import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -12,10 +13,7 @@ export const metadata: Metadata = {
 export default function SequencePage() {
   return (
     <main className="bitPage">
-      <header className="bitHeader">
-        <a className="bitBrand" href="/bit" aria-label="MarutiBit トップ"><span>Maruti</span><b>Bit</b></a>
-        <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
-      </header>
+      <BitHeader />
       <BitSeriesNav active="sequence" />
       <section className="bitIntro bitSequenceIntro">
         <p className="bitSerial">MB / GAME 003</p>

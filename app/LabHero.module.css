@@ -1,0 +1,93 @@
+.bitHomeHero.bitHomeHero {
+  grid-template-columns: 54px minmax(320px, .82fr) minmax(430px, 1.18fr) 0;
+  grid-template-rows: minmax(0, 1fr) 74px;
+  background-color: #e9e4d7;
+  background-image:
+    linear-gradient(rgba(24, 61, 85, .075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 61, 85, .075) 1px, transparent 1px),
+    radial-gradient(circle at var(--pointer-x) var(--pointer-y), rgba(169, 66, 53, .13), transparent 27%);
+  background-size: 32px 32px, 32px 32px, 100% 100%;
+}
+
+.intro {
+  grid-column: 2;
+  padding: clamp(58px, 8vh, 100px) clamp(30px, 4.8vw, 76px);
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.intro :global(.labKicker) { margin-bottom: 34px; }
+.intro h1 {
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  color: #183d55;
+  font: 500 clamp(70px, 8vw, 120px)/.78 Georgia, "Yu Mincho", serif;
+  letter-spacing: -.055em;
+}
+.intro h1 b {
+  margin-left: .04em;
+  color: #a94235;
+  font: 700 .72em/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: -.06em;
+}
+.lead { margin: 38px 0 0; font-size: clamp(20px, 2vw, 29px); line-height: 1.55; }
+.copy { margin: 20px 0 0; color: #53615a; font: 400 13px/2 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }
+.actions { display: flex; align-items: center; gap: 14px; margin-top: 42px; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .08em; }
+.actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 50px; padding: 0 22px; }
+.primary { background: #a94235; color: #fff; }
+.primary:hover { background: #92392e; }
+.secondary { border: 1px solid rgba(24, 61, 85, .52); color: #183d55; }
+.secondary:hover { background: rgba(24, 61, 85, .06); }
+
+.index {
+  grid-column: 3;
+  align-self: stretch;
+  margin: clamp(34px, 5vh, 62px) clamp(32px, 4vw, 68px) clamp(34px, 5vh, 62px) 0;
+  border: 1px solid rgba(21, 33, 29, .58);
+  background: rgba(241, 238, 229, .8);
+  box-shadow: 12px 12px 0 rgba(24, 61, 85, .08);
+  display: grid;
+  grid-template-rows: 54px 1fr;
+  position: relative;
+  z-index: 2;
+  scroll-margin-top: 24px;
+}
+.indexHead { padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(21, 33, 29, .35); color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; }
+.indexHead strong { color: #a94235; font-size: 8px; }
+.games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
+.games a { min-width: 0; padding: clamp(22px, 3vw, 42px); display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid rgba(21, 33, 29, .26); border-bottom: 1px solid rgba(21, 33, 29, .26); transition: background-color .16s ease, color .16s ease; }
+.games a:nth-child(2n) { border-right: 0; }
+.games a:nth-last-child(-n+2) { border-bottom: 0; }
+.games a:hover, .games a:focus-visible { background: #183d55; color: #f1eee5; outline: 0; }
+.games span { font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: #a94235; }
+.games strong { overflow-wrap: anywhere; font: 500 clamp(24px, 2.35vw, 38px)/.92 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.035em; }
+.games small { font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; color: #66736c; }
+.games a:hover span, .games a:focus-visible span { color: #e48e80; }
+.games a:hover small, .games a:focus-visible small { color: #c7d2cc; }
+.readout { grid-column: 2/-1; }
+
+@media (max-width: 1100px) {
+  .bitHomeHero.bitHomeHero { grid-template-columns: 42px minmax(0, 1fr); grid-template-rows: auto auto 62px; }
+  .intro { grid-column: 2; padding-bottom: 48px; }
+  .index { grid-column: 2; margin: 0 clamp(28px, 5vw, 60px) 54px; min-height: 560px; }
+  .readout { grid-column: 2; }
+}
+
+@media (max-width: 640px) {
+  .bitHomeHero.bitHomeHero { grid-template-columns: 28px minmax(0, 1fr); }
+  .intro { padding: 52px 20px 42px; }
+  .intro :global(.labKicker) { margin-bottom: 28px; }
+  .intro h1 { font-size: clamp(58px, 19vw, 82px); }
+  .lead { margin-top: 30px; font-size: 20px; }
+  .copy { font-size: 12px; }
+  .actions { align-items: stretch; flex-direction: column; margin-top: 32px; }
+  .actions a { width: 100%; }
+  .index { margin: 0 14px 40px; min-height: 500px; grid-template-rows: 48px 1fr; }
+  .games a { padding: 20px 14px; }
+  .games strong { font-size: clamp(21px, 7vw, 30px); }
+  .readout { padding: 0 10px; }
+}

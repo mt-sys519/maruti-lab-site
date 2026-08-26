@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BlankGame } from "../BlankGame";
+import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -22,12 +23,7 @@ export const metadata: Metadata = {
 export default function BlankPage() {
   return (
     <main className="bitPage">
-      <header className="bitHeader">
-        <a className="bitBrand" href="/bit" aria-label="MarutiBit トップ">
-          <span>Maruti</span><b>Bit</b>
-        </a>
-        <a className="bitBack" href="https://marutilab.com/">Maruti Labへ戻る</a>
-      </header>
+      <BitHeader />
 
       <BitSeriesNav active="blank" />
 
