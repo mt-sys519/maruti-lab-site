@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export type MathAudioScene = "thinking" | "result";
 
+const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
+const SOUND_CHANGE_EVENT = "marutibit:sound-change";
+
 type OscillatorKind = OscillatorType;
 
 class MathSeriesAudioEngine {
@@ -181,11 +184,17 @@ export function useMathSeriesAudio(scene: MathAudioScene, paused = false) {
   const [enabled, setEnabled] = useState(false);
   const engineRef = useRef<MathSeriesAudioEngine | null>(null);
 
+  const savePreference = useCallback((next: boolean) => {
+    try { localStorage.setItem(SOUND_STORAGE_KEY, next ? "true" : "false"); } catch { /* Local storage is optional. */ }
+    window.dispatchEvent(new CustomEvent<boolean>(SOUND_CHANGE_EVENT, { detail: next }));
+  }, []);
+
   const toggle = useCallback(async () => {
     if (enabled) {
       engineRef.current?.stop();
       engineRef.current = null;
       setEnabled(false);
+      savePreference(false);
       return;
     }
     const engine = new MathSeriesAudioEngine();
@@ -193,22 +202,61 @@ export function useMathSeriesAudio(scene: MathAudioScene, paused = false) {
       await engine.start(scene);
       engineRef.current = engine;
       setEnabled(true);
+      savePreference(true);
     } catch {
       engine.stop();
     }
-  }, [enabled, scene]);
+  }, [enabled, savePreference, scene]);
 
   const playAnswer = useCallback((correct: boolean) => {
     engineRef.current?.playAnswer(correct);
   }, []);
 
   const playTap = useCallback((kind: "key" | "action" = "key") => {
-    engineRef.current?.playTap(kind);
-  }, []);
+    if (!enabled) return;
+    if (engineRef.current) {
+      engineRef.current.playTap(kind);
+      return;
+    }
+    const engine = new MathSeriesAudioEngine();
+    engineRef.current = engine;
+    void engine.start(scene).then(() => engine.playTap(kind)).catch(() => {
+      engine.stop();
+      if (engineRef.current === engine) engineRef.current = null;
+    });
+  }, [enabled, scene]);
 
   const resume = useCallback(async () => {
-    await engineRef.current?.resume(scene);
-  }, [scene]);
+    if (!enabled) return;
+    if (!engineRef.current) {
+      const engine = new MathSeriesAudioEngine();
+      engineRef.current = engine;
+      await engine.start(scene);
+      return;
+    }
+    await engineRef.current.resume(scene);
+  }, [enabled, scene]);
+
+  useEffect(() => {
+    const applyPreference = (next: boolean) => {
+      setEnabled(next);
+      if (!next) {
+        engineRef.current?.stop();
+        engineRef.current = null;
+      }
+    };
+    try { applyPreference(localStorage.getItem(SOUND_STORAGE_KEY) === "true"); } catch { /* Keep the default OFF. */ }
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === SOUND_STORAGE_KEY) applyPreference(event.newValue === "true");
+    };
+    const onSoundChange = (event: Event) => applyPreference(Boolean((event as CustomEvent<boolean>).detail));
+    window.addEventListener("storage", onStorage);
+    window.addEventListener(SOUND_CHANGE_EVENT, onSoundChange);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(SOUND_CHANGE_EVENT, onSoundChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
