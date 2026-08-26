@@ -1,8 +1,7 @@
 /**
  * Character map for INPUT RAIN's in-game 12-key flick pad. No OS IME involved — this
- * commits hiragana directly. Direction convention (verified against the standard
- * established when iPhone adopted flick input in 2008): tap = あ段, up = い段,
- * right = う段, down = え段, left = お段.
+ * commits hiragana directly. Direction convention (per explicit spec): tap = あ段,
+ * left = い段, up = う段, right = え段, down = お段.
  */
 
 export type FlickDir = "tap" | "up" | "right" | "down" | "left";
@@ -23,17 +22,17 @@ export type FlickKeyDef = FlickCharKey | FlickFunctionKey;
 
 /** Row-major 4x3 layout: あかさ / たなは / まやら / 濁点・小 わ 、。 */
 export const FLICK_KEYS: FlickKeyDef[] = [
-  { id: "a", kind: "char", chars: { tap: "あ", up: "い", right: "う", down: "え", left: "お" } },
-  { id: "ka", kind: "char", chars: { tap: "か", up: "き", right: "く", down: "け", left: "こ" } },
-  { id: "sa", kind: "char", chars: { tap: "さ", up: "し", right: "す", down: "せ", left: "そ" } },
-  { id: "ta", kind: "char", chars: { tap: "た", up: "ち", right: "つ", down: "て", left: "と" } },
-  { id: "na", kind: "char", chars: { tap: "な", up: "に", right: "ぬ", down: "ね", left: "の" } },
-  { id: "ha", kind: "char", chars: { tap: "は", up: "ひ", right: "ふ", down: "へ", left: "ほ" } },
-  { id: "ma", kind: "char", chars: { tap: "ま", up: "み", right: "む", down: "め", left: "も" } },
-  { id: "ya", kind: "char", chars: { tap: "や", right: "ゆ", left: "よ" } },
-  { id: "ra", kind: "char", chars: { tap: "ら", up: "り", right: "る", down: "れ", left: "ろ" } },
+  { id: "a", kind: "char", chars: { tap: "あ", left: "い", up: "う", right: "え", down: "お" } },
+  { id: "ka", kind: "char", chars: { tap: "か", left: "き", up: "く", right: "け", down: "こ" } },
+  { id: "sa", kind: "char", chars: { tap: "さ", left: "し", up: "す", right: "せ", down: "そ" } },
+  { id: "ta", kind: "char", chars: { tap: "た", left: "ち", up: "つ", right: "て", down: "と" } },
+  { id: "na", kind: "char", chars: { tap: "な", left: "に", up: "ぬ", right: "ね", down: "の" } },
+  { id: "ha", kind: "char", chars: { tap: "は", left: "ひ", up: "ふ", right: "へ", down: "ほ" } },
+  { id: "ma", kind: "char", chars: { tap: "ま", left: "み", up: "む", right: "め", down: "も" } },
+  { id: "ya", kind: "char", chars: { tap: "や", up: "ゆ", down: "よ" } },
+  { id: "ra", kind: "char", chars: { tap: "ら", left: "り", up: "る", right: "れ", down: "ろ" } },
   { id: "mutate", kind: "mutate", label: "゛゜小" },
-  { id: "wa", kind: "char", chars: { tap: "わ", right: "ん", down: "ー", left: "を" } },
+  { id: "wa", kind: "char", chars: { tap: "わ", left: "を", up: "ー", down: "ん" } },
   { id: "punct", kind: "char", chars: { tap: "、", up: "！", right: "。", down: "？" } },
 ];
 

@@ -47,7 +47,7 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /中級/);
   assert.match(html, /上級/);
   assert.match(html, /START/);
-  assert.match(html, /href="https:\/\/marutilab\.com\/"[^>]*>Maruti Labへ戻る/);
+  assert.match(html, /href="\/"[^>]*>Maruti Labへ戻る/);
   assert.match(html, /三角形の「？」を求める/);
   assert.match(html, /SOUND/);
   assert.match(html, /OFF/);

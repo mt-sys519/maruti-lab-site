@@ -10,10 +10,12 @@ const AUDIO_SRC = {
   resultBgm: "/audio/input-rain/result-bgm.wav",
   countdown: "/audio/input-rain/countdown.wav",
   go: "/audio/input-rain/go.wav",
+  acceptRain: "/audio/input-rain/accept-rain.wav",
 };
 
 const LOOP_VOLUME = 0.7;
 const ONE_SHOT_VOLUME = 0.9;
+const GO_VOLUME = 0.55;
 const FADE_IN_MS = 650;
 const FADE_OUT_MS = 450;
 
@@ -160,38 +162,8 @@ class KeyFeedbackEngine {
     source.start();
   }
 
-  /** A filtered-noise "shhoon" sweep: a rain-like whoosh with a falling filter cutoff. */
-  private sweepNoise(duration: number, peakVolume: number, fromFreq: number, toFreq: number) {
-    if (!this.context || !this.master) return;
-    const start = this.context.currentTime;
-    const length = Math.max(1, Math.round(this.context.sampleRate * duration));
-    const buffer = this.context.createBuffer(1, length, this.context.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let index = 0; index < length; index += 1) data[index] = Math.random() * 2 - 1;
-    const source = this.context.createBufferSource();
-    source.buffer = buffer;
-    const filter = this.context.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.Q.value = 0.85;
-    filter.frequency.setValueAtTime(fromFreq, start);
-    filter.frequency.exponentialRampToValueAtTime(toFreq, start + duration);
-    const envelope = this.context.createGain();
-    envelope.gain.setValueAtTime(0.0001, start);
-    envelope.gain.exponentialRampToValueAtTime(peakVolume, start + duration * 0.16);
-    envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    source.connect(filter).connect(envelope).connect(this.master);
-    source.start(start);
-    source.stop(start + duration + 0.02);
-  }
-
   type() {
     this.noise(0.014, 0.035, 5200);
-  }
-
-  accept() {
-    this.sweepNoise(0.3, 0.16, 5400, 700);
-    this.tone(1975.5, 0.09, 0.032, "sine", 0.03);
-    this.tone(2637, 0.07, 0.022, "sine", 0.1);
   }
 
   miss() {
@@ -215,6 +187,7 @@ export function useInputRainAudio(paused = false) {
   const resultBgmRef = useRef<LoopTrack | null>(null);
   const countdownRef = useRef<OneShot | null>(null);
   const goRef = useRef<OneShot | null>(null);
+  const acceptRef = useRef<OneShot | null>(null);
   const activeLoopRef = useRef<LoopKind>(null);
 
   useEffect(() => {
@@ -222,6 +195,7 @@ export function useInputRainAudio(paused = false) {
     resultBgmRef.current = new LoopTrack(AUDIO_SRC.resultBgm, false);
     countdownRef.current = new OneShot(AUDIO_SRC.countdown);
     goRef.current = new OneShot(AUDIO_SRC.go);
+    acceptRef.current = new OneShot(AUDIO_SRC.acceptRain);
     return () => {
       bgmRef.current?.teardown();
       resultBgmRef.current?.teardown();
@@ -260,11 +234,11 @@ export function useInputRainAudio(paused = false) {
   }, [enabled, savePreference]);
 
   const playType = useCallback(() => { void ensureFeedback().then((engine) => engine?.type()); }, [ensureFeedback]);
-  const playAccept = useCallback(() => { void ensureFeedback().then((engine) => engine?.accept()); }, [ensureFeedback]);
   const playMiss = useCallback(() => { void ensureFeedback().then((engine) => engine?.miss()); }, [ensureFeedback]);
 
+  const playAccept = useCallback(() => { if (enabled) acceptRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
   const playCountdownTick = useCallback(() => { if (enabled) countdownRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
-  const playGo = useCallback(() => { if (enabled) goRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
+  const playGo = useCallback(() => { if (enabled) goRef.current?.play(GO_VOLUME); }, [enabled]);
 
   const startBgm = useCallback(() => {
     activeLoopRef.current = "bgm";

@@ -199,7 +199,7 @@ export function InputRainGame() {
   const [result, setResult] = useState<RunResult>(emptyResult);
   const [shareCard, setShareCard] = useState<File | null>(null);
   const [shareStatus, setShareStatus] = useState("");
-  const { paused: pagePaused, resume: resumePage } = useVisibilityPause(phase === "playing");
+  const { paused: pagePaused, resume: resumePage } = useVisibilityPause(phase === "playing" || phase === "countdown");
   const paused = manualPaused || pagePaused;
   const {
     enabled: soundEnabled,
@@ -302,7 +302,7 @@ export function InputRainGame() {
   }, [phase, countdown, playCountdownTick]);
 
   useEffect(() => {
-    if (phase !== "countdown") return;
+    if (phase !== "countdown" || paused) return;
     if (countdown > 1) {
       const timer = window.setTimeout(() => setCountdown((value) => value - 1), 650);
       return () => window.clearTimeout(timer);
@@ -316,7 +316,7 @@ export function InputRainGame() {
       nextPrompt();
     }, 650);
     return () => window.clearTimeout(timer);
-  }, [countdown, level.seconds, nextPrompt, phase, playGo, startBgm]);
+  }, [countdown, level.seconds, nextPrompt, paused, phase, playGo, startBgm]);
 
   useEffect(() => {
     if (phase !== "playing") return;

@@ -14,6 +14,14 @@ export function useVisibilityPause(active: boolean) {
 
   useEffect(() => {
     activeRef.current = active;
+    // Covers becoming active while the tab is already hidden (e.g. a phase change
+    // that happens to land while backgrounded) — no future visibilitychange event
+    // would fire to catch this otherwise.
+    if (active && document.hidden && !pausedRef.current) {
+      pausedRef.current = true;
+      pausedAtRef.current = Date.now();
+      setPaused(true);
+    }
   }, [active]);
 
   useEffect(() => {
