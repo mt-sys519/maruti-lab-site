@@ -180,6 +180,8 @@ export function InputRainGame() {
   const completionTimerRef = useRef<number | null>(null);
   const gameEndRef = useRef(0);
   const pauseStartedRef = useRef(0);
+  const fallDeadlineRef = useRef(0);
+  const fallPauseStartedRef = useRef(0);
   const phaseRef = useRef<Phase>("select");
   const promptBagRef = useRef<number[]>([]);
   const statsRef = useRef({ ...emptyStats });
@@ -277,6 +279,8 @@ export function InputRainGame() {
     setTyped("");
     setMobileTyped("");
     setFeedback("idle");
+    fallDeadlineRef.current = 0;
+    fallPauseStartedRef.current = 0;
   }, [pickPrompt]);
 
   const finishRun = useCallback(() => {
@@ -419,6 +423,27 @@ export function InputRainGame() {
       if (phaseRef.current === "playing") nextPrompt();
     }, 360);
   }, [feedback, nextPrompt, paused, playMiss]);
+
+  // Backstop for the fall timeout: some mobile browsers don't reliably fire
+  // animationend on a CSS animation that was paused (backgrounded) mid-flight, which
+  // left the prompt stuck on screen with no way to advance. This setTimeout mirrors
+  // --fall-duration and pause-compensates the same way the main game timer does, so it
+  // fires the timeout even if the CSS animation's own end event never arrives.
+  useEffect(() => {
+    if (phase !== "playing" || !current) return;
+    if (fallDeadlineRef.current === 0) fallDeadlineRef.current = performance.now() + fallDuration;
+    if (paused) {
+      if (!fallPauseStartedRef.current) fallPauseStartedRef.current = performance.now();
+      return;
+    }
+    if (fallPauseStartedRef.current) {
+      fallDeadlineRef.current += performance.now() - fallPauseStartedRef.current;
+      fallPauseStartedRef.current = 0;
+    }
+    const remaining = Math.max(0, fallDeadlineRef.current - performance.now());
+    const timer = window.setTimeout(handleTimeout, remaining);
+    return () => window.clearTimeout(timer);
+  }, [promptId, phase, paused, current, fallDuration, handleTimeout]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

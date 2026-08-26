@@ -32,7 +32,7 @@ export const FLICK_KEYS: FlickKeyDef[] = [
   { id: "ya", kind: "char", chars: { tap: "や", up: "ゆ", down: "よ" } },
   { id: "ra", kind: "char", chars: { tap: "ら", left: "り", up: "る", right: "れ", down: "ろ" } },
   { id: "mutate", kind: "mutate", label: "゛゜小" },
-  { id: "wa", kind: "char", chars: { tap: "わ", left: "を", up: "ー", down: "ん" } },
+  { id: "wa", kind: "char", chars: { tap: "わ", left: "を", up: "ん", right: "ー" } },
   { id: "punct", kind: "char", chars: { tap: "、", up: "！", right: "。", down: "？" } },
 ];
 
