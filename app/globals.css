@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root{--paper:#f2f0e9;--paper-deep:#e8e4da;--ink:#1c211e;--muted:#686d68;--line:#c8c7bf;--verm:#ad4434;--green:#557066;--terminal:#050806;--terminal-green:#7ef23a}
+:root{--paper:#f2f0e9;--paper-deep:#e8e4da;--ink:#1c211e;--muted:#686d68;--line:#c8c7bf;--verm:#ad4434;--green:#557066;--terminal:#050806;--terminal-green:#7ef23a;--bit-paper:#e9e4d7;--bit-ink:#15211d;--bit-blue:#183d55;--bit-red:#a94235}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;background:var(--paper)}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:"Yu Mincho","Hiragino Mincho ProN","Noto Serif JP",Georgia,serif}
