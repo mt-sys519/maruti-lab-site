@@ -202,9 +202,11 @@ export function InputRainGame() {
     playType,
     playAccept,
     playMiss,
-    playResult,
-    resume: resumeAudio,
-    suspend: suspendAudio,
+    playCountdownTick,
+    playGo,
+    startBgm,
+    startResultBgm,
+    stopAllLoops,
   } = useInputRainAudio(paused || phase === "select");
 
   const level = levels[difficulty];
@@ -281,7 +283,7 @@ export function InputRainGame() {
     phaseRef.current = "complete";
     setPhase("complete");
     setManualPaused(false);
-    void suspendAudio();
+    startResultBgm();
     const stats = statsRef.current;
     const speed = Math.round(stats.correctChars / (level.seconds / 60));
     const accuracy = stats.correctChars + stats.misses ? stats.correctChars / (stats.correctChars + stats.misses) * 100 : 0;
@@ -289,8 +291,14 @@ export function InputRainGame() {
     setResult(finalResult);
     setShareCard(null);
     setShareStatus("");
-    void resumeAudio().then(() => playResult()).then(() => window.setTimeout(() => { void suspendAudio(); }, 900));
-  }, [inputMode, level.seconds, playResult, resumeAudio, suspendAudio]);
+  }, [inputMode, level.seconds, startResultBgm]);
+
+  // Kept separate from the timer-advance effect below so it fires exactly once per
+  // displayed countdown number, not whenever an unrelated dependency changes.
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    playCountdownTick();
+  }, [phase, countdown, playCountdownTick]);
 
   useEffect(() => {
     if (phase !== "countdown") return;
@@ -302,11 +310,12 @@ export function InputRainGame() {
       phaseRef.current = "playing";
       setPhase("playing");
       gameEndRef.current = performance.now() + level.seconds * 1000;
-      void resumeAudio();
+      playGo();
+      startBgm();
       nextPrompt();
     }, 650);
     return () => window.clearTimeout(timer);
-  }, [countdown, level.seconds, nextPrompt, phase, resumeAudio]);
+  }, [countdown, level.seconds, nextPrompt, phase, playGo, startBgm]);
 
   useEffect(() => {
     if (phase !== "playing") return;
@@ -364,9 +373,9 @@ export function InputRainGame() {
     phaseRef.current = "countdown";
     setPhase("countdown");
     resumePage();
-    void resumeAudio();
+    stopAllLoops();
     window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
-  }, [level.seconds, loadBag, resumeAudio, resumePage]);
+  }, [level.seconds, loadBag, resumePage, stopAllLoops]);
 
   const registerInputError = useCallback(() => {
     if (feedback === "error") return;
@@ -440,6 +449,20 @@ export function InputRainGame() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [completePrompt, feedback, inputMode, paused, playType, registerInputError, tokens, typed]);
 
+  // Space starts the run from the select screen, mirroring the START button.
+  useEffect(() => {
+    const onSpaceStart = (event: KeyboardEvent) => {
+      if (phaseRef.current !== "select" || event.repeat) return;
+      if (event.code !== "Space" && event.key !== " ") return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "BUTTON" || target.isContentEditable)) return;
+      event.preventDefault();
+      startRun();
+    };
+    window.addEventListener("keydown", onSpaceStart);
+    return () => window.removeEventListener("keydown", onSpaceStart);
+  }, [startRun]);
+
   const handleMobileValue = useCallback((rawValue: string) => {
     if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle") return;
     const value = normalizeKana(rawValue);
@@ -457,9 +480,8 @@ export function InputRainGame() {
   const resumeGame = useCallback(() => {
     resumePage();
     setManualPaused(false);
-    void resumeAudio();
     if (inputMode === "flick") window.setTimeout(() => nativeInputRef.current?.focus({ preventScroll: true }), 40);
-  }, [inputMode, resumeAudio, resumePage]);
+  }, [inputMode, resumePage]);
 
   const quitRun = useCallback(() => {
     if (completionTimerRef.current !== null) window.clearTimeout(completionTimerRef.current);
@@ -468,8 +490,8 @@ export function InputRainGame() {
     setManualPaused(false);
     setCurrent(null);
     setFeedback("idle");
-    void suspendAudio();
-  }, [suspendAudio]);
+    stopAllLoops();
+  }, [stopAllLoops]);
 
   const shareResult = useCallback(async () => {
     const url = "https://marutilab.com/bit/input-rain";
@@ -531,7 +553,7 @@ export function InputRainGame() {
               </button>
             ))}
           </div>
-          <button type="button" className="bitStart" onClick={startRun}>START</button>
+          <button type="button" className="bitStart" onClick={startRun}>START<small className="inputRainSpaceHint">SPACE TO START</small></button>
           <p className="bitRule">入力方式はこの端末に記憶され、次回も同じ設定で始まります。物理キーボードを接続した場合は「キーボード」を選んでください。</p>
         </>
       )}

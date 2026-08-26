@@ -5,11 +5,99 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
 const SOUND_CHANGE_EVENT = "marutibit:sound-change";
 
-class InputRainAudioEngine {
+const AUDIO_SRC = {
+  bgm: "/audio/input-rain/game-bgm.wav",
+  resultBgm: "/audio/input-rain/result-bgm.wav",
+  countdown: "/audio/input-rain/countdown.wav",
+  go: "/audio/input-rain/go.wav",
+};
+
+const LOOP_VOLUME = 0.7;
+const ONE_SHOT_VOLUME = 0.9;
+const FADE_IN_MS = 650;
+const FADE_OUT_MS = 450;
+
+/** A single loopable audio file with fade-in/out and pause-in-place support. */
+class LoopTrack {
+  private audio: HTMLAudioElement;
+  private fadeToken = 0;
+
+  constructor(src: string) {
+    this.audio = new Audio(src);
+    this.audio.loop = true;
+    this.audio.preload = "auto";
+    this.audio.volume = 0;
+  }
+
+  private fadeTo(target: number, duration: number, onDone?: () => void) {
+    const token = (this.fadeToken += 1);
+    const start = this.audio.volume;
+    const startTime = performance.now();
+    const step = (now: number) => {
+      if (token !== this.fadeToken) return;
+      const t = duration <= 0 ? 1 : Math.min(1, (now - startTime) / duration);
+      this.audio.volume = start + (target - start) * t;
+      if (t < 1) window.requestAnimationFrame(step);
+      else onDone?.();
+    };
+    window.requestAnimationFrame(step);
+  }
+
+  async playFromStart(volume: number) {
+    this.fadeToken += 1;
+    this.audio.currentTime = 0;
+    this.audio.volume = 0;
+    try { await this.audio.play(); } catch { /* Blocked until the next user gesture. */ }
+    this.fadeTo(volume, FADE_IN_MS);
+  }
+
+  async resumeInPlace(volume: number) {
+    if (this.audio.paused) {
+      try { await this.audio.play(); } catch { /* Blocked until the next user gesture. */ }
+    }
+    this.fadeTo(volume, FADE_IN_MS);
+  }
+
+  /** Fades out and pauses, keeping playback position for a later resumeInPlace(). */
+  pauseFaded() {
+    this.fadeTo(0, FADE_OUT_MS, () => this.audio.pause());
+  }
+
+  /** Fades out, pauses, and rewinds so the next playFromStart() begins clean. */
+  stopFaded() {
+    this.fadeTo(0, FADE_OUT_MS, () => {
+      this.audio.pause();
+      this.audio.currentTime = 0;
+    });
+  }
+
+  teardown() {
+    this.fadeToken += 1;
+    this.audio.pause();
+  }
+}
+
+/** A short, non-looping cue that always restarts from the top when played. */
+class OneShot {
+  private audio: HTMLAudioElement;
+
+  constructor(src: string) {
+    this.audio = new Audio(src);
+    this.audio.preload = "auto";
+  }
+
+  play(volume: number) {
+    this.audio.pause();
+    this.audio.currentTime = 0;
+    this.audio.volume = volume;
+    void this.audio.play().catch(() => { /* Blocked until the next user gesture. */ });
+  }
+}
+
+/** Synthesized per-keystroke feedback; unrelated to the authored BGM/stinger files. */
+class KeyFeedbackEngine {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
-  private pulseTimer: number | null = null;
-  private step = 0;
 
   async start() {
     if (!this.context) {
@@ -31,7 +119,6 @@ class InputRainAudioEngine {
       this.master = master;
     }
     if (this.context.state === "suspended") await this.context.resume();
-    this.startPulse();
   }
 
   private tone(frequency: number, duration: number, volume: number, type: OscillatorType = "sine", delay = 0) {
@@ -67,18 +154,6 @@ class InputRainAudioEngine {
     source.start();
   }
 
-  private startPulse() {
-    if (this.pulseTimer !== null) return;
-    const pulse = () => {
-      const low = [65.41, 73.42, 82.41, 73.42][this.step % 4];
-      this.tone(low, 0.16, this.step % 4 === 0 ? 0.05 : 0.028, "triangle");
-      if (this.step % 2 === 1) this.tone(1046.5, 0.028, 0.012, "sine", 0.11);
-      this.step = (this.step + 1) % 16;
-    };
-    pulse();
-    this.pulseTimer = window.setInterval(pulse, 430);
-  }
-
   type() {
     this.noise(0.014, 0.035, 5200);
   }
@@ -93,59 +168,59 @@ class InputRainAudioEngine {
     this.tone(92.5, 0.18, 0.045, "sine");
   }
 
-  result() {
-    [392, 523.25, 659.25].forEach((frequency, index) => this.tone(frequency, 0.65, 0.045, index === 1 ? "triangle" : "sine", index * 0.07));
-  }
-
-  async suspend() {
-    if (this.pulseTimer !== null) window.clearInterval(this.pulseTimer);
-    this.pulseTimer = null;
-    if (this.context?.state === "running") await this.context.suspend();
-  }
-
-  async resume() {
-    if (!this.context) return;
-    if (this.context.state === "suspended") await this.context.resume();
-    this.startPulse();
-  }
-
   stop() {
-    if (this.pulseTimer !== null) window.clearInterval(this.pulseTimer);
-    this.pulseTimer = null;
     if (this.context) void this.context.close();
     this.context = null;
     this.master = null;
   }
 }
 
+type LoopKind = "bgm" | "resultBgm" | null;
+
 export function useInputRainAudio(paused = false) {
   const [enabled, setEnabled] = useState(false);
-  const engineRef = useRef<InputRainAudioEngine | null>(null);
+  const feedbackRef = useRef<KeyFeedbackEngine | null>(null);
+  const bgmRef = useRef<LoopTrack | null>(null);
+  const resultBgmRef = useRef<LoopTrack | null>(null);
+  const countdownRef = useRef<OneShot | null>(null);
+  const goRef = useRef<OneShot | null>(null);
+  const activeLoopRef = useRef<LoopKind>(null);
+
+  useEffect(() => {
+    bgmRef.current = new LoopTrack(AUDIO_SRC.bgm);
+    resultBgmRef.current = new LoopTrack(AUDIO_SRC.resultBgm);
+    countdownRef.current = new OneShot(AUDIO_SRC.countdown);
+    goRef.current = new OneShot(AUDIO_SRC.go);
+    return () => {
+      bgmRef.current?.teardown();
+      resultBgmRef.current?.teardown();
+    };
+  }, []);
 
   const savePreference = useCallback((next: boolean) => {
     try { localStorage.setItem(SOUND_STORAGE_KEY, next ? "true" : "false"); } catch { /* Optional. */ }
     window.dispatchEvent(new CustomEvent<boolean>(SOUND_CHANGE_EVENT, { detail: next }));
   }, []);
 
-  const ensure = useCallback(async () => {
+  const ensureFeedback = useCallback(async () => {
     if (!enabled) return null;
-    if (!engineRef.current) engineRef.current = new InputRainAudioEngine();
-    await engineRef.current.start();
-    return engineRef.current;
+    if (!feedbackRef.current) feedbackRef.current = new KeyFeedbackEngine();
+    await feedbackRef.current.start();
+    return feedbackRef.current;
   }, [enabled]);
 
   const toggle = useCallback(async () => {
     if (enabled) {
-      engineRef.current?.stop();
-      engineRef.current = null;
+      feedbackRef.current?.stop();
+      feedbackRef.current = null;
       setEnabled(false);
       savePreference(false);
       return;
     }
-    const engine = new InputRainAudioEngine();
+    const engine = new KeyFeedbackEngine();
     try {
       await engine.start();
-      engineRef.current = engine;
+      feedbackRef.current = engine;
       setEnabled(true);
       savePreference(true);
     } catch {
@@ -153,19 +228,47 @@ export function useInputRainAudio(paused = false) {
     }
   }, [enabled, savePreference]);
 
-  const playType = useCallback(() => { void ensure().then((engine) => engine?.type()); }, [ensure]);
-  const playAccept = useCallback(() => { void ensure().then((engine) => engine?.accept()); }, [ensure]);
-  const playMiss = useCallback(() => { void ensure().then((engine) => engine?.miss()); }, [ensure]);
-  const playResult = useCallback(() => { void ensure().then((engine) => engine?.result()); }, [ensure]);
-  const resume = useCallback(async () => { await ensure(); }, [ensure]);
-  const suspend = useCallback(async () => { await engineRef.current?.suspend(); }, []);
+  const playType = useCallback(() => { void ensureFeedback().then((engine) => engine?.type()); }, [ensureFeedback]);
+  const playAccept = useCallback(() => { void ensureFeedback().then((engine) => engine?.accept()); }, [ensureFeedback]);
+  const playMiss = useCallback(() => { void ensureFeedback().then((engine) => engine?.miss()); }, [ensureFeedback]);
+
+  const playCountdownTick = useCallback(() => { if (enabled) countdownRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
+  const playGo = useCallback(() => { if (enabled) goRef.current?.play(ONE_SHOT_VOLUME); }, [enabled]);
+
+  const startBgm = useCallback(() => {
+    activeLoopRef.current = "bgm";
+    resultBgmRef.current?.teardown();
+    if (enabled && !paused) void bgmRef.current?.playFromStart(LOOP_VOLUME);
+  }, [enabled, paused]);
+
+  const startResultBgm = useCallback(() => {
+    activeLoopRef.current = "resultBgm";
+    bgmRef.current?.teardown();
+    if (enabled && !paused) void resultBgmRef.current?.playFromStart(LOOP_VOLUME);
+  }, [enabled, paused]);
+
+  const stopAllLoops = useCallback(() => {
+    activeLoopRef.current = null;
+    bgmRef.current?.stopFaded();
+    resultBgmRef.current?.stopFaded();
+  }, []);
+
+  // Keep whichever loop is "active" in sync with the shared mute flag and the pause state,
+  // fading out (keeping position) on pause/mute and fading back in on resume/unmute.
+  useEffect(() => {
+    const active = activeLoopRef.current;
+    const track = active === "bgm" ? bgmRef.current : active === "resultBgm" ? resultBgmRef.current : null;
+    if (!track) return;
+    if (!enabled || paused) track.pauseFaded();
+    else void track.resumeInPlace(LOOP_VOLUME);
+  }, [enabled, paused]);
 
   useEffect(() => {
     const apply = (next: boolean) => {
       setEnabled(next);
       if (!next) {
-        engineRef.current?.stop();
-        engineRef.current = null;
+        feedbackRef.current?.stop();
+        feedbackRef.current = null;
       }
     };
     try { apply(localStorage.getItem(SOUND_STORAGE_KEY) === "true"); } catch { /* Default OFF. */ }
@@ -179,13 +282,18 @@ export function useInputRainAudio(paused = false) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!enabled || !engineRef.current) return;
-    if (paused) void engineRef.current.suspend();
-    else void engineRef.current.resume();
-  }, [enabled, paused]);
+  useEffect(() => () => feedbackRef.current?.stop(), []);
 
-  useEffect(() => () => engineRef.current?.stop(), []);
-
-  return { enabled, toggle, playType, playAccept, playMiss, playResult, resume, suspend };
+  return {
+    enabled,
+    toggle,
+    playType,
+    playAccept,
+    playMiss,
+    playCountdownTick,
+    playGo,
+    startBgm,
+    startResultBgm,
+    stopAllLoops,
+  };
 }
