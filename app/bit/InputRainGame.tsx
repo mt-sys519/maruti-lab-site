@@ -7,6 +7,8 @@ import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { inputRainPrompts, type InputRainDifficulty, type InputRainPrompt } from "./inputRainPrompts";
 import { useInputRainAudio } from "./useInputRainAudio";
 import { spawnDissolve, spawnMaterialize } from "./inputRainParticles";
+import { InputRainFlickPad } from "./InputRainFlickPad";
+import { isReachableTowards, nextMutation } from "./inputRainFlickMap";
 
 type Phase = "select" | "countdown" | "playing" | "complete";
 type InputMode = "keyboard" | "flick";
@@ -173,7 +175,6 @@ const emptyStats = { accepted: 0, score: 0, misses: 0, correctChars: 0, combo: 0
 
 export function InputRainGame() {
   const gameShellRef = useRef<HTMLElement>(null);
-  const nativeInputRef = useRef<HTMLInputElement>(null);
   const particleLayerRef = useRef<HTMLDivElement>(null);
   const promptGlyphsRef = useRef<HTMLDivElement>(null);
   const completionTimerRef = useRef<number | null>(null);
@@ -198,7 +199,6 @@ export function InputRainGame() {
   const [result, setResult] = useState<RunResult>(emptyResult);
   const [shareCard, setShareCard] = useState<File | null>(null);
   const [shareStatus, setShareStatus] = useState("");
-  const [composing, setComposing] = useState(false);
   const { paused: pagePaused, resume: resumePage } = useVisibilityPause(phase === "playing");
   const paused = manualPaused || pagePaused;
   const {
@@ -276,12 +276,8 @@ export function InputRainGame() {
     setPromptId((value) => value + 1);
     setTyped("");
     setMobileTyped("");
-    if (nativeInputRef.current) nativeInputRef.current.value = "";
     setFeedback("idle");
-    window.setTimeout(() => {
-      if (inputMode === "flick") nativeInputRef.current?.focus({ preventScroll: true });
-    }, 30);
-  }, [inputMode, pickPrompt]);
+  }, [pickPrompt]);
 
   const finishRun = useCallback(() => {
     if (phaseRef.current !== "playing") return;
@@ -470,25 +466,49 @@ export function InputRainGame() {
     return () => window.removeEventListener("keydown", onSpaceStart);
   }, [startRun]);
 
-  const handleMobileValue = useCallback((rawValue: string) => {
+  const appendFlickChar = useCallback((char: string) => {
     if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle") return;
-    const value = normalizeKana(rawValue);
     const target = normalizeKana(current.reading);
-    if (!target.startsWith(value)) {
+    // Allow any base form on the same dakuten/handakuten/small-kana cycle as the
+    // expected character — e.g. base "そ" is a valid step toward target "ぞ", since the
+    // mutate key still needs to be pressed to get there.
+    const expected = target[mobileTyped.length];
+    if (!isReachableTowards(char, expected)) {
       registerInputError();
-      if (nativeInputRef.current) nativeInputRef.current.value = mobileTyped;
       return;
     }
-    if (value.length > mobileTyped.length) playType();
+    const value = mobileTyped + char;
+    playType();
     setMobileTyped(value);
     if (value === target) completePrompt();
+  }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playType, registerInputError]);
+
+  const deleteFlickChar = useCallback(() => {
+    if (phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle") return;
+    setMobileTyped((value) => value.slice(0, -1));
+  }, [inputMode, paused, feedback]);
+
+  const mutateFlickChar = useCallback(() => {
+    if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle" || !mobileTyped) return;
+    const lastChar = mobileTyped.slice(-1);
+    const mutated = nextMutation(lastChar);
+    if (mutated === lastChar) return;
+    const target = normalizeKana(current.reading);
+    const expected = target[mobileTyped.length - 1];
+    if (!isReachableTowards(mutated, expected)) {
+      registerInputError();
+      return;
+    }
+    const candidate = mobileTyped.slice(0, -1) + mutated;
+    playType();
+    setMobileTyped(candidate);
+    if (candidate === target) completePrompt();
   }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playType, registerInputError]);
 
   const resumeGame = useCallback(() => {
     resumePage();
     setManualPaused(false);
-    if (inputMode === "flick") window.setTimeout(() => nativeInputRef.current?.focus({ preventScroll: true }), 40);
-  }, [inputMode, resumePage]);
+  }, [resumePage]);
 
   const quitRun = useCallback(() => {
     if (completionTimerRef.current !== null) window.clearTimeout(completionTimerRef.current);
@@ -578,7 +598,7 @@ export function InputRainGame() {
       )}
 
       {(phase === "countdown" || phase === "playing") && (
-        <div className={`inputRainTerminal${paused ? " isPaused" : ""}${feedback === "error" ? " isError" : ""}`} onPointerDown={() => { if (inputMode === "flick" && phase === "playing") nativeInputRef.current?.focus({ preventScroll: true }); }}>
+        <div className={`inputRainTerminal${paused ? " isPaused" : ""}${feedback === "error" ? " isError" : ""}`}>
           <div className="inputRainChrome"><b>Pt</b><span>PROMPTTERM / INPUT RAIN</span><small>{phase === "countdown" ? "SYNC" : level.label}</small></div>
           <div className="inputRainHud">
             <span>TIME <strong>{remaining.toFixed(1).padStart(4, "0")}</strong></span>
@@ -603,11 +623,16 @@ export function InputRainGame() {
                 <span>PT&gt;</span>
                 <p>{inputMode === "keyboard" ? typed : mobileTyped}<i>▋</i></p>
                 <small>{inputMode === "keyboard" ? "KEYBOARD" : "FLICK / KANA"}</small>
-                {inputMode === "flick" && (
-                  <input ref={nativeInputRef} className="inputRainNative" lang="ja" inputMode="text" enterKeyHint="done" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} aria-label="かなで入力" onCompositionStart={() => setComposing(true)} onCompositionEnd={(event) => { setComposing(false); handleMobileValue(event.currentTarget.value); }} onChange={(event) => { if (!composing) handleMobileValue(event.currentTarget.value); }} />
-                )}
               </div>
               <div className="inputRainStatus"><span>INPUT / {inputMode === "keyboard" ? "ROMAJI" : "KANA"}</span><span>ACCEPT / LIVE</span><span>{feedback === "accepted" ? "ACCEPTED" : feedback === "error" ? "REJECTED" : feedback === "timeout" ? "LOST" : "READY"}</span></div>
+              {inputMode === "flick" && (
+                <InputRainFlickPad
+                  onCommit={appendFlickChar}
+                  onDelete={deleteFlickChar}
+                  onMutate={mutateFlickChar}
+                  disabled={paused || feedback !== "idle" || phase !== "playing"}
+                />
+              )}
             </>
           )}
           <GamePauseOverlay active={paused} onResume={resumeGame} onRestart={startRun} onQuit={quitRun} />

@@ -17,6 +17,10 @@ const ONE_SHOT_VOLUME = 0.9;
 const FADE_IN_MS = 650;
 const FADE_OUT_MS = 450;
 
+function logPlayFailure(src: string, error: unknown) {
+  console.warn(`[input-rain audio] play() failed for ${src}`, error);
+}
+
 /** A single loopable audio file with fade-in/out and pause-in-place support. */
 class LoopTrack {
   private audio: HTMLAudioElement;
@@ -29,31 +33,33 @@ class LoopTrack {
     this.audio.volume = 0;
   }
 
+  // Driven by setInterval rather than requestAnimationFrame so the fade still runs
+  // (and stays audible) in a backgrounded/unfocused tab, where rAF can be throttled
+  // to a near-stop but timers keep firing.
   private fadeTo(target: number, duration: number, onDone?: () => void) {
     const token = (this.fadeToken += 1);
     const start = this.audio.volume;
     const startTime = performance.now();
-    const step = (now: number) => {
-      if (token !== this.fadeToken) return;
-      const t = duration <= 0 ? 1 : Math.min(1, (now - startTime) / duration);
+    const STEP_MS = 30;
+    const timer = window.setInterval(() => {
+      if (token !== this.fadeToken) { window.clearInterval(timer); return; }
+      const t = duration <= 0 ? 1 : Math.min(1, (performance.now() - startTime) / duration);
       this.audio.volume = start + (target - start) * t;
-      if (t < 1) window.requestAnimationFrame(step);
-      else onDone?.();
-    };
-    window.requestAnimationFrame(step);
+      if (t >= 1) { window.clearInterval(timer); onDone?.(); }
+    }, STEP_MS);
   }
 
   async playFromStart(volume: number) {
     this.fadeToken += 1;
     this.audio.currentTime = 0;
     this.audio.volume = 0;
-    try { await this.audio.play(); } catch { /* Blocked until the next user gesture. */ }
+    try { await this.audio.play(); } catch (error) { logPlayFailure(this.audio.src, error); }
     this.fadeTo(volume, FADE_IN_MS);
   }
 
   async resumeInPlace(volume: number) {
     if (this.audio.paused) {
-      try { await this.audio.play(); } catch { /* Blocked until the next user gesture. */ }
+      try { await this.audio.play(); } catch (error) { logPlayFailure(this.audio.src, error); }
     }
     this.fadeTo(volume, FADE_IN_MS);
   }
@@ -90,7 +96,7 @@ class OneShot {
     this.audio.pause();
     this.audio.currentTime = 0;
     this.audio.volume = volume;
-    void this.audio.play().catch(() => { /* Blocked until the next user gesture. */ });
+    void this.audio.play().catch((error) => logPlayFailure(this.audio.src, error));
   }
 }
 
@@ -154,13 +160,38 @@ class KeyFeedbackEngine {
     source.start();
   }
 
+  /** A filtered-noise "shhoon" sweep: a rain-like whoosh with a falling filter cutoff. */
+  private sweepNoise(duration: number, peakVolume: number, fromFreq: number, toFreq: number) {
+    if (!this.context || !this.master) return;
+    const start = this.context.currentTime;
+    const length = Math.max(1, Math.round(this.context.sampleRate * duration));
+    const buffer = this.context.createBuffer(1, length, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let index = 0; index < length; index += 1) data[index] = Math.random() * 2 - 1;
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+    const filter = this.context.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.Q.value = 0.85;
+    filter.frequency.setValueAtTime(fromFreq, start);
+    filter.frequency.exponentialRampToValueAtTime(toFreq, start + duration);
+    const envelope = this.context.createGain();
+    envelope.gain.setValueAtTime(0.0001, start);
+    envelope.gain.exponentialRampToValueAtTime(peakVolume, start + duration * 0.16);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    source.connect(filter).connect(envelope).connect(this.master);
+    source.start(start);
+    source.stop(start + duration + 0.02);
+  }
+
   type() {
     this.noise(0.014, 0.035, 5200);
   }
 
   accept() {
-    this.tone(523.25, 0.14, 0.07, "triangle");
-    this.tone(783.99, 0.25, 0.052, "sine", 0.07);
+    this.sweepNoise(0.3, 0.16, 5400, 700);
+    this.tone(1975.5, 0.09, 0.032, "sine", 0.03);
+    this.tone(2637, 0.07, 0.022, "sine", 0.1);
   }
 
   miss() {
