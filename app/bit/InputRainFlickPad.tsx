@@ -31,7 +31,11 @@ export function InputRainFlickPad({ onCommit, onDelete, onMutate, disabled }: In
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLButtonElement>, key: FlickKeyDef) => {
     if (disabled || key.kind !== "char") return;
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
+    // Can throw (NotFoundError) if the pointer was already released by the time this
+    // runs - e.g. a fast tap racing a pointercancel. Losing capture just means a finger
+    // sliding off the button won't keep reporting to it, which is a harmless edge case;
+    // an uncaught throw here would otherwise abort the whole gesture.
+    try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* Ignore. */ }
     const state: ActiveState = { keyId: key.id, dir: "tap", startX: event.clientX, startY: event.clientY, chars: key.chars };
     activeRef.current = state;
     setActive(state);
@@ -75,7 +79,7 @@ export function InputRainFlickPad({ onCommit, onDelete, onMutate, disabled }: In
   const handleMutatePointerDown = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
     if (disabled) return;
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* Ignore. */ }
   }, [disabled]);
 
   const handleMutatePointerUp = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {

@@ -382,8 +382,13 @@ export function InputRainGame() {
     setPhase("countdown");
     resumePage();
     stopAllLoops();
-    window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
-  }, [level.seconds, loadBag, resumePage, stopAllLoops]);
+    // In flick mode the shell (terminal + flick pad) usually runs taller than a phone's
+    // viewport, so aligning to the top left the pad itself below the fold - and how far
+    // below varied with the mobile browser's chrome (URL bar, etc.), which is what made
+    // the opening position feel inconsistent. Aligning to the bottom guarantees the pad
+    // is on-screen and ready to use as soon as the round starts.
+    window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: inputMode === "flick" ? "end" : "start" }));
+  }, [inputMode, level.seconds, loadBag, resumePage, stopAllLoops]);
 
   const registerInputError = useCallback(() => {
     if (feedback === "error") return;
