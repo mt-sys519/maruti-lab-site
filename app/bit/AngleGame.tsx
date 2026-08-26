@@ -575,6 +575,7 @@ export function AngleGame() {
       SOUND <strong>{soundEnabled ? "ON" : "OFF"}</strong>
     </button>
   );
+  const soundOnlyControls = <div className="bitGameControls">{soundButton}</div>;
   const gameControls = <div className="bitGameControls">{soundButton}<button className="bitQuit" type="button" onClick={quit}>ゲームをやめる</button></div>;
   const resultTier = correct === TOTAL_QUESTIONS ? "excellent" : correct >= 3 ? "good" : "retry";
   const resultTitle = resultTier === "excellent" ? "EXCELLENT" : resultTier === "good" ? "GOOD RUN" : "NEXT TRY";
@@ -584,7 +585,7 @@ export function AngleGame() {
     return (
       <section className="bitGameShell" aria-label="ANGLEゲーム">
         {pauseOverlay}
-        {soundButton}
+        {soundOnlyControls}
         <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>5 QUESTIONS</strong></div>
         <div className="bitGameSummary">
           <div className="bitExampleEquation" aria-label="60度 足す 50度 足す 未知の角度は 180度"><span>60°</span><b>＋</b><span>50°</span><b>＋</b><em>?</em><b>＝</b><span>180°</span></div>
@@ -607,7 +608,7 @@ export function AngleGame() {
     return (
       <section className="bitGameShell bitResult" aria-labelledby="bit-result-title">
         {pauseOverlay}
-        {soundButton}
+        {soundOnlyControls}
         <div className={`bitCelebration is-${resultTier}`} aria-hidden="true">
           <i className="bitResultBurst" />
           <div className="bitCelebrationMark">{resultTitle}</div>

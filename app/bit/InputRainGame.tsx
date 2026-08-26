@@ -6,6 +6,7 @@ import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { inputRainPrompts, type InputRainDifficulty, type InputRainPrompt } from "./inputRainPrompts";
 import { useInputRainAudio } from "./useInputRainAudio";
+import { spawnDissolve, spawnMaterialize } from "./inputRainParticles";
 
 type Phase = "select" | "countdown" | "playing" | "complete";
 type InputMode = "keyboard" | "flick";
@@ -157,7 +158,9 @@ function shuffle(length: number) {
   return indexes;
 }
 
-function computeRank(score: number, accuracy: number) {
+function computeRank(score: number, accuracy: number, misses: number) {
+  if (score >= 18000 && accuracy >= 99.5 && misses <= 2) return "SSS";
+  if (score >= 13000 && accuracy >= 98.5) return "SS";
   if (score >= 9000 && accuracy >= 97) return "S";
   if (score >= 6500 && accuracy >= 92) return "A";
   if (score >= 4200 && accuracy >= 85) return "B";
@@ -171,6 +174,8 @@ const emptyStats = { accepted: 0, score: 0, misses: 0, correctChars: 0, combo: 0
 export function InputRainGame() {
   const gameShellRef = useRef<HTMLElement>(null);
   const nativeInputRef = useRef<HTMLInputElement>(null);
+  const particleLayerRef = useRef<HTMLDivElement>(null);
+  const promptGlyphsRef = useRef<HTMLDivElement>(null);
   const completionTimerRef = useRef<number | null>(null);
   const gameEndRef = useRef(0);
   const pauseStartedRef = useRef(0);
@@ -287,7 +292,7 @@ export function InputRainGame() {
     const stats = statsRef.current;
     const speed = Math.round(stats.correctChars / (level.seconds / 60));
     const accuracy = stats.correctChars + stats.misses ? stats.correctChars / (stats.correctChars + stats.misses) * 100 : 0;
-    const finalResult = { accepted: stats.accepted, score: stats.score, speed, accuracy, maxCombo: stats.maxCombo, rank: computeRank(stats.score, accuracy), inputMode };
+    const finalResult = { accepted: stats.accepted, score: stats.score, speed, accuracy, maxCombo: stats.maxCombo, rank: computeRank(stats.score, accuracy, stats.misses), inputMode };
     setResult(finalResult);
     setShareCard(null);
     setShareStatus("");
@@ -398,6 +403,7 @@ export function InputRainGame() {
     statsRef.current.maxCombo = Math.max(statsRef.current.maxCombo, nextCombo);
     statsRef.current.score += Math.round(count * 100 * level.scoreFactor * multiplier);
     setDisplayStats({ ...statsRef.current });
+    spawnDissolve(particleLayerRef.current, promptGlyphsRef.current?.querySelectorAll(".inputRainGlyph") ?? [], "accept");
     setFeedback("accepted");
     playAccept();
     completionTimerRef.current = window.setTimeout(() => {
@@ -410,6 +416,7 @@ export function InputRainGame() {
     statsRef.current.misses += 1;
     statsRef.current.combo = 0;
     setDisplayStats({ ...statsRef.current });
+    spawnDissolve(particleLayerRef.current, promptGlyphsRef.current?.querySelectorAll(".inputRainGlyph") ?? [], "miss");
     setFeedback("timeout");
     playMiss();
     completionTimerRef.current = window.setTimeout(() => {
@@ -514,8 +521,20 @@ export function InputRainGame() {
     }
   }, [level.label, result, shareCard]);
 
+  // Drops a few noise particles into the freshly-rendered prompt glyphs, echoing the fall.
+  // A short timeout (rather than requestAnimationFrame) waits for layout without depending
+  // on the tab actually compositing a frame.
+  useEffect(() => {
+    if (!current || phase !== "playing") return;
+    const timer = window.setTimeout(() => {
+      spawnMaterialize(particleLayerRef.current, promptGlyphsRef.current?.querySelectorAll(".inputRainGlyph") ?? []);
+    }, 16);
+    return () => window.clearTimeout(timer);
+  }, [promptId, current, phase]);
+
   const glyphs = current ? [...current.text] : [];
-  const resultMood = result.rank === "S" || result.rank === "A" ? "is-excellent" : result.rank === "B" || result.rank === "C" ? "is-good" : "is-retry";
+  const isTopRank = result.rank === "SSS" || result.rank === "SS" || result.rank === "S" || result.rank === "A";
+  const resultMood = isTopRank ? "is-excellent" : result.rank === "B" || result.rank === "C" ? "is-good" : "is-retry";
 
   return (
     <section ref={gameShellRef} className="bitGameShell inputRainGameShell" data-card-ready={shareCard ? "true" : "false"}>
@@ -573,11 +592,12 @@ export function InputRainGame() {
             <>
               <div className="inputRainLane">
                 <div key={promptId} className={`inputRainDrop is-${feedback}`} style={{ "--fall-duration": `${fallDuration}ms` } as React.CSSProperties} onAnimationEnd={(event) => { if (event.target === event.currentTarget && event.animationName === "inputRainFall") handleTimeout(); }}>
-                  <div className="inputRainPrompt" aria-live="polite">
+                  <div ref={promptGlyphsRef} className="inputRainPrompt" aria-live="polite">
                     {glyphs.map((glyph, index) => <span key={`${promptId}-${index}`} className="inputRainGlyph" data-glyph={glyph} style={{ "--glyph-index": index } as React.CSSProperties}>{glyph}</span>)}
                   </div>
                   <div className="inputRainGuide"><small>{inputMode === "keyboard" ? "ROMAJI" : "KANA"}</small><span className="isDone">{guide.slice(0, guideProgress)}</span><span>{guide.slice(guideProgress)}</span><i>▋</i></div>
                 </div>
+                <div ref={particleLayerRef} className="inputRainParticleLayer" aria-hidden="true" />
               </div>
               <div className="inputRainEntry">
                 <span>PT&gt;</span>
@@ -599,10 +619,10 @@ export function InputRainGame() {
           <div className={`bitCelebration ${resultMood}`}>
             <div className="bitResultBurst" />
             <div className="bitParticles" aria-hidden="true">{Array.from({ length: 20 }, (_, index) => <i key={index} />)}</div>
-            <span className="bitCelebrationMark">{result.rank === "S" || result.rank === "A" ? "CHANNEL CLEARED" : result.rank === "D" ? "RETRY ADVISED" : "RUN COMPLETE"}</span>
+            <span className="bitCelebrationMark">{result.rank === "SSS" ? "LEGENDARY CLEAR" : isTopRank ? "CHANNEL CLEARED" : result.rank === "D" ? "RETRY ADVISED" : "RUN COMPLETE"}</span>
           </div>
           <p className="bitResultOverline">INPUT RAIN / {level.label} / {inputModeLabels[result.inputMode]}</p>
-          <div className={`inputRainRankMark ${resultMood}`}>{result.rank}</div>
+          <div className={`inputRainRankMark ${resultMood}${result.rank === "SSS" ? " is-legendary" : ""}`}>{result.rank}</div>
           <p className="inputRainRankCaption">RANK</p>
           <h2 className="inputRainScoreValue">{result.score.toLocaleString()}</h2>
           <p className="bitScoreLabel">SCORE</p>

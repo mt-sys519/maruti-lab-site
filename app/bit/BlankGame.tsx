@@ -196,6 +196,7 @@ export function BlankGame() {
       <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundEnabled ? "ON" : "OFF"}</strong>
     </button>
   );
+  const soundOnlyControls = <div className="bitGameControls">{soundButton}</div>;
   const pauseOverlay = <GamePauseOverlay active={pagePaused} onResume={() => { void resumeFromPause(); }} />;
   const resultTier = correct === TOTAL_QUESTIONS ? "excellent" : correct >= 3 ? "good" : "retry";
   const resultTitle = resultTier === "excellent" ? "EXCELLENT" : resultTier === "good" ? "GOOD RUN" : "NEXT TRY";
@@ -203,7 +204,7 @@ export function BlankGame() {
   if (phase === "select") {
     return (
       <section className="bitGameShell" aria-label="BLANKゲーム">
-        {pauseOverlay}{soundButton}
+        {pauseOverlay}{soundOnlyControls}
         <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>{TOTAL_QUESTIONS} QUESTIONS</strong></div>
         <div className="bitGameSummary">
           <div className="bitExampleEquation" aria-label="12足す空欄は20"><span>12</span><b>＋</b><em>?</em><b>＝</b><span>20</span></div>
@@ -225,7 +226,7 @@ export function BlankGame() {
   if (phase === "complete") {
     return (
       <section className="bitGameShell bitResult" aria-labelledby="blank-result-title">
-        {pauseOverlay}{soundButton}
+        {pauseOverlay}{soundOnlyControls}
         <div className={`bitCelebration is-${resultTier}`} aria-hidden="true"><i className="bitResultBurst" /><div className="bitCelebrationMark">{resultTitle}</div><div className="bitParticles">{Array.from({ length: 20 }, (_, index) => <i key={index} />)}</div></div>
         <p className="bitResultOverline">RESULT / {levelNames[difficulty]}</p>
         <h2 id="blank-result-title">{animatedScore.toLocaleString()}</h2><p className="bitScoreLabel">SCORE</p>

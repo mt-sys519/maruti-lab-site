@@ -22,9 +22,9 @@ class LoopTrack {
   private audio: HTMLAudioElement;
   private fadeToken = 0;
 
-  constructor(src: string) {
+  constructor(src: string, loop: boolean) {
     this.audio = new Audio(src);
-    this.audio.loop = true;
+    this.audio.loop = loop;
     this.audio.preload = "auto";
     this.audio.volume = 0;
   }
@@ -187,8 +187,8 @@ export function useInputRainAudio(paused = false) {
   const activeLoopRef = useRef<LoopKind>(null);
 
   useEffect(() => {
-    bgmRef.current = new LoopTrack(AUDIO_SRC.bgm);
-    resultBgmRef.current = new LoopTrack(AUDIO_SRC.resultBgm);
+    bgmRef.current = new LoopTrack(AUDIO_SRC.bgm, true);
+    resultBgmRef.current = new LoopTrack(AUDIO_SRC.resultBgm, false);
     countdownRef.current = new OneShot(AUDIO_SRC.countdown);
     goRef.current = new OneShot(AUDIO_SRC.go);
     return () => {
