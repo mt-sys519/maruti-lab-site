@@ -105,7 +105,7 @@ export default function Home() {
 
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/privacy">Privacy</a><a href="/disclaimer">Disclaimer</a></div>
+        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/disclaimer">Disclaimer</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>

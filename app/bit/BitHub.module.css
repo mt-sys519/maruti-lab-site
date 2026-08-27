@@ -1,4 +1,4 @@
-.hero { min-height: 460px; padding: clamp(64px, 9vw, 120px) clamp(24px, 8vw, 120px); display: grid; grid-template-columns: .42fr minmax(0, 1.2fr) .42fr; gap: clamp(28px, 5vw, 80px); align-items: center; border-bottom: 1px solid rgba(21,33,29,.48); }
+.hero { min-height: 340px; padding: clamp(40px, 5.5vw, 76px) clamp(24px, 8vw, 120px); display: grid; grid-template-columns: .42fr minmax(0, 1.2fr) .42fr; gap: clamp(28px, 5vw, 80px); align-items: center; border-bottom: 1px solid rgba(21,33,29,.48); }
 .hero > p { margin: 0; align-self: start; color: #58675f; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
 .hero > div { grid-column: 2; }
 .hero h1 { max-width: 760px; margin: 0; color: var(--bit-blue); font: 600 clamp(34px, 4.4vw, 62px)/1.45 "Yu Mincho", serif; letter-spacing: .01em; }
@@ -42,7 +42,7 @@
   .catalog > header p { grid-column: 1/-1; }
 }
 @media (max-width: 640px) {
-  .hero { padding-top: 52px; padding-bottom: 58px; }
+  .hero { padding-top: 40px; padding-bottom: 44px; }
   .hero h1 { font-size: clamp(30px, 9vw, 42px); }
   .grid { grid-template-columns: 1fr; }
   .card { min-height: 315px; }

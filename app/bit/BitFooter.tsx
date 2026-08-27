@@ -11,6 +11,7 @@ export function BitFooter({ label = "MARUTIBIT / SERIES INDEX" }: BitFooterProps
       <span>{label}</span>
       <nav aria-label="MarutiBit フッター">
         <a href="/">Maruti Lab</a>
+        <a href="/contact">Contact</a>
         <a href="/privacy">Privacy</a>
         <a href="/disclaimer">Disclaimer</a>
       </nav>
