@@ -45,7 +45,7 @@
 
 .index {
   grid-column: 3;
-  align-self: stretch;
+  align-self: center;
   margin: clamp(34px, 5vh, 62px) clamp(32px, 4vw, 68px) clamp(34px, 5vh, 62px) 0;
   border: 1px solid rgba(21, 33, 29, .58);
   background: rgba(241, 238, 229, .8);
