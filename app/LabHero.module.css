@@ -1,5 +1,5 @@
 .bitHomeHero.bitHomeHero {
-  grid-template-columns: 54px minmax(320px, .82fr) minmax(430px, 1.18fr) 0;
+  grid-template-columns: 54px minmax(340px, 1.08fr) minmax(360px, .92fr) 0;
   grid-template-rows: minmax(0, 1fr) 74px;
   background-color: #e9e4d7;
   background-image:
@@ -31,8 +31,8 @@
 .intro h1 b {
   margin-left: .04em;
   color: #a94235;
-  font: 700 .72em/1 "Yu Gothic UI", sans-serif;
-  letter-spacing: -.06em;
+  font: 700 .72em/1 Georgia, "Yu Mincho", serif;
+  letter-spacing: -.02em;
 }
 .lead { margin: 38px 0 0; font-size: clamp(20px, 2vw, 29px); line-height: 1.55; }
 .copy { margin: 20px 0 0; color: #53615a; font: 400 13px/2 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }
