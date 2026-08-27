@@ -301,6 +301,21 @@ export function InputRainGame() {
     setShareStatus("");
   }, [inputMode, level.seconds, startResultBgm]);
 
+  // The result screen isn't covered by useVisibilityPause (there's no timer or pause
+  // overlay to show there), so backgrounding/locking the phone during it previously left
+  // the result BGM playing indefinitely. Just stop it outright - there's nothing to
+  // resume back into on this screen.
+  useEffect(() => {
+    if (phase !== "complete") return;
+    const onHidden = () => { if (document.hidden) stopAllLoops(); };
+    document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("pagehide", onHidden);
+    return () => {
+      document.removeEventListener("visibilitychange", onHidden);
+      window.removeEventListener("pagehide", onHidden);
+    };
+  }, [phase, stopAllLoops]);
+
   // Kept separate from the timer-advance effect below so it fires exactly once per
   // displayed countdown number, not whenever an unrelated dependency changes.
   useEffect(() => {
@@ -535,10 +550,17 @@ export function InputRainGame() {
   const mutateFlickChar = useCallback(() => {
     if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle" || !mobileTyped) return;
     const lastChar = mobileTyped.slice(-1);
-    const mutated = nextMutation(lastChar);
-    if (mutated === lastChar) return;
     const target = normalizeKana(current.reading);
     const expected = target[mobileTyped.length - 1];
+    // If the last character is already the exact target (e.g. "す" when "す" is correct),
+    // mutating it can only move it away from the right answer (e.g. into "ず") - reject
+    // that outright instead of accepting it as just another reachable cycle member.
+    if (lastChar === expected) {
+      registerInputError();
+      return;
+    }
+    const mutated = nextMutation(lastChar);
+    if (mutated === lastChar) return;
     if (!isReachableTowards(mutated, expected)) {
       registerInputError();
       return;
@@ -656,10 +678,11 @@ export function InputRainGame() {
             <>
               <div className="inputRainLane">
                 <div key={promptId} className={`inputRainDrop is-${feedback}`} style={{ "--fall-duration": `${fallDuration}ms` } as React.CSSProperties} onAnimationEnd={(event) => { if (event.target === event.currentTarget && event.animationName === "inputRainFall") handleTimeout(); }}>
+                  {inputMode === "keyboard" && <div className="inputRainFurigana">{current?.reading}</div>}
                   <div ref={promptGlyphsRef} className="inputRainPrompt" aria-live="polite">
                     {glyphs.map((glyph, index) => <span key={`${promptId}-${index}`} className="inputRainGlyph" data-glyph={glyph} style={{ "--glyph-index": index } as React.CSSProperties}>{glyph}</span>)}
                   </div>
-                  <div className="inputRainGuide"><small>{inputMode === "keyboard" ? "ROMAJI" : "KANA"}</small><span className="isDone">{guide.slice(0, guideProgress)}</span><span>{guide.slice(guideProgress)}</span><i>▋</i></div>
+                  <div className={`inputRainGuide${inputMode === "keyboard" ? " isRomaji" : ""}`}><small>{inputMode === "keyboard" ? "ROMAJI" : "KANA"}</small><span className="isDone">{guide.slice(0, guideProgress)}</span><span>{guide.slice(guideProgress)}</span><i>▋</i></div>
                 </div>
                 <div ref={particleLayerRef} className="inputRainParticleLayer" aria-hidden="true" />
               </div>
