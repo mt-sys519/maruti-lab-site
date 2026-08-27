@@ -5,6 +5,7 @@ import { createResultCard } from "./shared/createResultCard";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { createUniqueQuestionSession, loadRecentQuestionSignatures, rememberQuestionSignatures } from "./shared/questionSession";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
+import { XShareButton } from "./shared/XShareButton";
 import { useMathSeriesAudio } from "./useMathSeriesAudio";
 
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -448,7 +449,7 @@ export function AngleGame() {
       score,
       correct: `${correct} / ${TOTAL_QUESTIONS}`,
       time: `${(totalTime / 1000).toFixed(1)}s`,
-      url: "https://marutilab.com/bit",
+      url: "https://marutilab.com/bit/angle",
     }).then((file) => {
       if (!cancelled) setShareCard(file);
     });
@@ -542,7 +543,7 @@ export function AngleGame() {
     playTap("action");
     const title = "MarutiBit「ANGLE」";
     const text = `${title}\n三角形の角度を求める${TOTAL_QUESTIONS}問チャレンジ｜${levelNames[difficulty]}\nSCORE ${score} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`;
-    const url = "https://marutilab.com/bit";
+    const url = "https://marutilab.com/bit/angle";
     const shareText = `${text}\n${url}`;
     try {
       if (navigator.share) {
@@ -624,6 +625,7 @@ export function AngleGame() {
         </div>
         <button className="bitRetry" type="button" onClick={() => begin(difficulty)}>もう一度</button>
         <button className="bitShare" type="button" data-card-ready={shareCard ? "true" : "false"} onClick={share}>結果カードをシェア</button>
+        <XShareButton text={`MarutiBit「ANGLE」\n${levelNames[difficulty]} / SCORE ${score.toLocaleString()} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`} url="https://marutilab.com/bit/angle" />
         <button className="bitChange" type="button" onClick={() => setPhase("select")}>難易度を変える</button>
         <p className="bitShareStatus" aria-live="polite">{shareStatus}</p>
       </section>

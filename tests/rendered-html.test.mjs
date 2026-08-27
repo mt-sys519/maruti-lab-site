@@ -33,12 +33,23 @@ test("renders the PromptTerm CLOCK download page", async () => {
   assert.match(html, /E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E/);
 });
 
-test("renders the MarutiBit ANGLE game page", async () => {
+test("renders the MarutiBit series index", async () => {
   const response = await render("/bit");
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /MarutiBit/);
-  assert.doesNotMatch(html, /maruti-lab-og\.jpg/);
+  assert.match(html, /ゲームを選ぶ/);
+  assert.match(html, /href="\/bit\/angle"/);
+  assert.match(html, /href="\/bit\/blank"/);
+  assert.match(html, /href="\/bit\/sequence"/);
+  assert.match(html, /href="\/bit\/input-rain"/);
+  assert.match(html, /\/og\/bit\/index\.png/);
+});
+
+test("renders the MarutiBit ANGLE game page", async () => {
+  const response = await render("/bit/angle");
+  assert.equal(response.status, 200);
+  const html = await response.text();
   assert.match(html, /ANGLE/);
   assert.match(html, /bitAngleLogo/);
   assert.doesNotMatch(html, /bitTriMark/);
@@ -47,7 +58,8 @@ test("renders the MarutiBit ANGLE game page", async () => {
   assert.match(html, /中級/);
   assert.match(html, /上級/);
   assert.match(html, /START/);
-  assert.match(html, /href="\/"[^>]*>Maruti Labへ戻る/);
+  assert.match(html, /href="\/"[^>]*>Maruti Lab/);
+  assert.match(html, /href="\/bit"[^>]*aria-label="MarutiBit トップ"/);
   assert.match(html, /三角形の「？」を求める/);
   assert.match(html, /SOUND/);
   assert.match(html, /OFF/);
@@ -62,7 +74,7 @@ test("renders the MarutiBit BLANK game page", async () => {
   assert.match(html, /GAME 002/);
   assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
   assert.match(html, /bitBlankLogo/);
-  assert.match(html, /<a href="\/bit"><small>001<\/small>ANGLE<\/a>/);
+  assert.match(html, /<a href="\/bit\/angle"><small>001<\/small>ANGLE<\/a>/);
 });
 
 test("renders the MarutiBit SEQUENCE game page", async () => {

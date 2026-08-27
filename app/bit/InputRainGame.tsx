@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createResultCard } from "./shared/createResultCard";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
+import { XShareButton } from "./shared/XShareButton";
 import { inputRainPrompts, type InputRainDifficulty, type InputRainPrompt } from "./inputRainPrompts";
 import { useInputRainAudio } from "./useInputRainAudio";
 import { spawnDissolve, spawnMaterialize } from "./inputRainParticles";
@@ -747,6 +748,7 @@ export function InputRainGame() {
           </div>
           <button type="button" className="bitRetry" onClick={startRun}>同じ難易度でもう一度</button>
           <button type="button" className="bitShare" onClick={() => void shareResult()}>結果をシェア</button>
+          <XShareButton text={`MarutiBit「INPUT RAIN」\n${level.label} / SCORE ${result.score.toLocaleString()} / RANK ${result.rank} / ${result.accepted} INPUTS / ACCURACY ${result.accuracy.toFixed(1)}%`} url="https://marutilab.com/bit/input-rain" />
           <button type="button" className="bitChange" onClick={quitRun}>難易度を変える</button>
           <p className="bitShareStatus" aria-live="polite">{shareStatus}</p>
         </div>

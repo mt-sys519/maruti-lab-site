@@ -1,14 +1,8 @@
 "use client";
 
 import { useRef } from "react";
+import { bitGames } from "./bit/games";
 import styles from "./LabHero.module.css";
-
-const bitGames = [
-  { number: "001", name: "ANGLE", kind: "角度", href: "/bit" },
-  { number: "002", name: "BLANK", kind: "穴埋め", href: "/bit/blank" },
-  { number: "003", name: "SEQUENCE", kind: "数列", href: "/bit/sequence" },
-  { number: "004", name: "INPUT RAIN", kind: "入力", href: "/bit/input-rain" },
-];
 
 export function LabHero() {
   const hero = useRef<HTMLElement>(null);

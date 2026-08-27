@@ -1,29 +1,31 @@
 import type { Metadata } from "next";
 import { BlankGame } from "../BlankGame";
+import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
   title: "MarutiBit — BLANK",
   description: "四則演算の空欄を逆算して埋める、全5問の計算パズル。初級・中級・上級の3段階。",
+  alternates: { canonical: "/bit/blank" },
   openGraph: {
     title: "MarutiBit — BLANK",
     description: "四則演算の空欄を逆算して埋める、全5問の計算パズル。",
     url: "/bit/blank",
-    images: [],
+    images: [{ url: "/og/bit/blank.png", width: 1200, height: 630, alt: "MarutiBit BLANK" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "MarutiBit — BLANK",
     description: "四則演算の空欄を逆算して埋める、全5問の計算パズル。",
-    images: [],
+    images: ["/og/bit/blank.png"],
   },
 };
 
 export default function BlankPage() {
   return (
     <main className="bitPage">
-      <BitHeader />
+      <BitHeader current="BLANK" />
 
       <BitSeriesNav active="blank" />
 
@@ -41,10 +43,7 @@ export default function BlankPage() {
 
       <BlankGame />
 
-      <footer className="bitFooter">
-        <span>MARUTIBIT / GAME 002</span>
-        <span>© 2026 MARUTI LAB</span>
-      </footer>
+      <BitFooter label="MARUTIBIT / GAME 002" />
     </main>
   );
 }

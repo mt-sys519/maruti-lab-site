@@ -1,0 +1,2 @@
+.button { width: 100%; margin-top: 8px; padding: 17px; border: 1px solid rgba(21,33,29,.58); background: #101615; color: #fff; cursor: pointer; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; }
+.button:hover, .button:focus-visible { background: #202927; outline: 1px solid rgba(21,33,29,.26); outline-offset: 2px; }

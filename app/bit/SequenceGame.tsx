@@ -5,6 +5,7 @@ import { createResultCard } from "./shared/createResultCard";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { createUniqueQuestionSession, loadRecentQuestionSignatures, rememberQuestionSignatures } from "./shared/questionSession";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
+import { XShareButton } from "./shared/XShareButton";
 import { useMathSeriesAudio } from "./useMathSeriesAudio";
 import { makeSequenceProblem, sequenceProblemSignature, tutorials, type Difficulty, type SequenceProblem } from "./sequenceProblems";
 
@@ -235,6 +236,7 @@ export function SequenceGame() {
         <div className="bitResultStats"><div><span>CORRECT</span><strong>{correct} / {TOTAL_QUESTIONS}</strong></div><div><span>TIME</span><strong>{(totalTime / 1000).toFixed(1)}s</strong></div><div><span>BEST</span><strong>{Math.max(best[difficulty], score).toLocaleString()}</strong></div></div>
         <button className="bitRetry" type="button" onClick={() => begin(difficulty)}>もう一度</button>
         <button className="bitShare" type="button" data-card-ready={shareCard ? "true" : "false"} onClick={share}>結果カードをシェア</button>
+        <XShareButton text={`MarutiBit「SEQUENCE」\n${levelNames[difficulty]} / SCORE ${score.toLocaleString()} / ${correct} CORRECT / TIME ${(totalTime / 1000).toFixed(1)}s`} url="https://marutilab.com/bit/sequence" />
         <button className="bitChange" type="button" onClick={() => setPhase("select")}>難易度を変える</button>
         <p className="bitShareStatus" aria-live="polite">{shareStatus}</p>
       </section>
