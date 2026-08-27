@@ -19,12 +19,11 @@ function resolveDir(dx: number, dy: number): FlickDir {
 
 type InputRainFlickPadProps = {
   onCommit: (char: string) => void;
-  onDelete: () => void;
   onMutate: () => void;
   disabled?: boolean;
 };
 
-export function InputRainFlickPad({ onCommit, onDelete, onMutate, disabled }: InputRainFlickPadProps) {
+export function InputRainFlickPad({ onCommit, onMutate, disabled }: InputRainFlickPadProps) {
   const [active, setActive] = useState<ActiveState | null>(null);
   const activeRef = useRef<ActiveState | null>(null);
 
@@ -122,7 +121,6 @@ export function InputRainFlickPad({ onCommit, onDelete, onMutate, disabled }: In
           </button>
         ))}
       </div>
-      <button type="button" className="inputRainFlickDelete" disabled={disabled} onClick={onDelete} aria-label="1文字削除">⌫</button>
     </div>
   );
 }

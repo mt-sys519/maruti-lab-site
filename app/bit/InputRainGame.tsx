@@ -522,13 +522,6 @@ export function InputRainGame() {
     if (value === target) completePrompt();
   }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playTypeFlick, registerInputError]);
 
-  const deleteFlickChar = useCallback(() => {
-    if (phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle") return;
-    if (!mobileTyped) return;
-    playBackspace();
-    setMobileTyped((value) => value.slice(0, -1));
-  }, [inputMode, mobileTyped, paused, feedback, playBackspace]);
-
   const mutateFlickChar = useCallback(() => {
     if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle" || !mobileTyped) return;
     const lastChar = mobileTyped.slice(-1);
@@ -669,7 +662,6 @@ export function InputRainGame() {
               {inputMode === "flick" && (
                 <InputRainFlickPad
                   onCommit={appendFlickChar}
-                  onDelete={deleteFlickChar}
                   onMutate={mutateFlickChar}
                   disabled={paused || feedback !== "idle" || phase !== "playing"}
                 />
