@@ -13,6 +13,7 @@ export function BitFooter({ label = "MARUTIBIT / SERIES INDEX" }: BitFooterProps
         <a href="/">Maruti Lab</a>
         <a href="/contact">Contact</a>
         <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
         <a href="/disclaimer">Disclaimer</a>
       </nav>
       <span>© 2026 MARUTI LAB</span>
