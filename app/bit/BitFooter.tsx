@@ -1,4 +1,4 @@
-import Link from "next/link";
+/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import styles from "./BitFooter.module.css";
 
 type BitFooterProps = {
@@ -10,9 +10,9 @@ export function BitFooter({ label = "MARUTIBIT / SERIES INDEX" }: BitFooterProps
     <footer className={`bitFooter ${styles.footer}`}>
       <span>{label}</span>
       <nav aria-label="MarutiBit フッター">
-        <Link href="/">Maruti Lab</Link>
-        <Link href="/privacy">Privacy</Link>
-        <Link href="/disclaimer">Disclaimer</Link>
+        <a href="/">Maruti Lab</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/disclaimer">Disclaimer</a>
       </nav>
       <span>© 2026 MARUTI LAB</span>
     </footer>

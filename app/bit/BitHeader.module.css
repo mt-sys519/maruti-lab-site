@@ -1,4 +1,4 @@
-.hierarchy { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.hierarchy { display: flex; align-items: center; gap: 20px; min-width: 0; }
 .hierarchy > span { color: #92968f; font-size: 10px; }
 .hierarchy > strong { overflow: hidden; max-width: 180px; color: #68736e; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; text-overflow: ellipsis; white-space: nowrap; }
 .actions { display: flex; align-items: center; gap: clamp(18px, 3vw, 38px); }
