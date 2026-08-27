@@ -5,19 +5,19 @@ import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
-  title: "MarutiBit — BLANK",
-  description: "四則演算の空欄を逆算して埋める、全5問の計算パズル。初級・中級・上級の3段階。",
+  title: "MarutiBit — BLANK（空欄補完ゲーム）",
+  description: "四則演算の空欄を逆算して埋める空欄補完ゲーム。全5問の計算パズル、初級・中級・上級の3段階。",
   alternates: { canonical: "/bit/blank" },
   openGraph: {
-    title: "MarutiBit — BLANK",
-    description: "四則演算の空欄を逆算して埋める、全5問の計算パズル。",
+    title: "MarutiBit — BLANK（空欄補完ゲーム）",
+    description: "四則演算の空欄を逆算して埋める空欄補完ゲーム。全5問の計算パズル。",
     url: "/bit/blank",
     images: [{ url: "/og/bit/blank.png", width: 1200, height: 630, alt: "MarutiBit BLANK" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarutiBit — BLANK",
-    description: "四則演算の空欄を逆算して埋める、全5問の計算パズル。",
+    title: "MarutiBit — BLANK（空欄補完ゲーム）",
+    description: "四則演算の空欄を逆算して埋める空欄補完ゲーム。全5問の計算パズル。",
     images: ["/og/bit/blank.png"],
   },
 };
@@ -38,7 +38,7 @@ export default function BlankPage() {
           </svg>
           <span>BLANK</span>
         </h1>
-        <p><strong>四則演算の穴埋めパズル。</strong><br />式の「？」に入る数字を逆算する、全5問のミニゲーム。</p>
+        <p><strong>空欄補完ゲーム。</strong><br />四則演算の式にある「？」に入る数字を逆算する、全5問のミニゲーム。</p>
       </section>
 
       <BlankGame />

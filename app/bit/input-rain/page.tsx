@@ -5,19 +5,19 @@ import { BitSeriesNav } from "../BitSeriesNav";
 import { InputRainGame } from "../InputRainGame";
 
 export const metadata: Metadata = {
-  title: "MarutiBit — INPUT RAIN",
-  description: "PromptTermの端末入力を、文字が落ちきる前に打ち込むタイピングゲーム。初級・中級・上級の3段階。",
+  title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
+  description: "PromptTermの端末入力を、文字が落ちきる前に打ち込むタイピング／フリック入力ゲーム。初級・中級・上級・PROの4段階。",
   alternates: { canonical: "/bit/input-rain" },
   openGraph: {
-    title: "MarutiBit — INPUT RAIN",
-    description: "落下する端末入力を処理する、PromptTermタイピングゲーム。",
+    title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
+    description: "落下する端末入力を処理する、PromptTermのタイピング／フリック入力ゲーム。",
     url: "/bit/input-rain",
     images: [{ url: "/og/bit/input-rain.png", width: 1200, height: 630, alt: "MarutiBit INPUT RAIN" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarutiBit — INPUT RAIN",
-    description: "落下する端末入力を処理する、PromptTermタイピングゲーム。",
+    title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
+    description: "落下する端末入力を処理する、PromptTermのタイピング／フリック入力ゲーム。",
     images: ["/og/bit/input-rain.png"],
   },
 };
@@ -33,7 +33,7 @@ export default function InputRainPage() {
           <span className="inputRainTitleMark" aria-hidden="true"><i /><i /><i /></span>
           <span>INPUT RAIN</span>
         </h1>
-        <p><strong>落下する端末入力を処理。</strong><br />届いた文字列を、消える前に入力する。</p>
+        <p><strong>タイピング／フリック入力ゲーム。</strong><br />落下する端末入力を、消える前に入力する。</p>
       </section>
       <InputRainGame />
       <BitFooter label="MARUTIBIT / GAME 004" />

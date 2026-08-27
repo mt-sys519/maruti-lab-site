@@ -73,7 +73,7 @@ test("renders the MarutiBit BLANK game page", async () => {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /BLANK/);
-  assert.match(html, /四則演算の穴埋めパズル/);
+  assert.match(html, /空欄補完ゲーム/);
   assert.match(html, /GAME 002/);
   assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
   assert.match(html, /bitBlankLogo/);
@@ -85,7 +85,7 @@ test("renders the MarutiBit SEQUENCE game page", async () => {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /SEQUENCE/);
-  assert.match(html, /数の並びを読むパズル/);
+  assert.match(html, /順番推理ゲーム/);
   assert.match(html, /GAME 003/);
   assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
   assert.match(html, /bitSequenceLogo/);

@@ -5,11 +5,11 @@ import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
-  title: "MarutiBit — SEQUENCE",
-  description: "数の並びに隠れた規則を見抜く、全5問の数列パズル。初級・中級・上級の3段階。",
+  title: "MarutiBit — SEQUENCE（順番推理ゲーム）",
+  description: "数の並びに隠れた規則を見抜く順番推理ゲーム。全5問の数列パズル、初級・中級・上級の3段階。",
   alternates: { canonical: "/bit/sequence" },
-  openGraph: { title: "MarutiBit — SEQUENCE", description: "数の並びに隠れた規則を見抜く、全5問の数列パズル。", url: "/bit/sequence", images: [{ url: "/og/bit/sequence.png", width: 1200, height: 630, alt: "MarutiBit SEQUENCE" }] },
-  twitter: { card: "summary_large_image", title: "MarutiBit — SEQUENCE", description: "数の並びに隠れた規則を見抜く、全5問の数列パズル。", images: ["/og/bit/sequence.png"] },
+  openGraph: { title: "MarutiBit — SEQUENCE（順番推理ゲーム）", description: "数の並びに隠れた規則を見抜く順番推理ゲーム。全5問の数列パズル。", url: "/bit/sequence", images: [{ url: "/og/bit/sequence.png", width: 1200, height: 630, alt: "MarutiBit SEQUENCE" }] },
+  twitter: { card: "summary_large_image", title: "MarutiBit — SEQUENCE（順番推理ゲーム）", description: "数の並びに隠れた規則を見抜く順番推理ゲーム。全5問の数列パズル。", images: ["/og/bit/sequence.png"] },
 };
 
 export default function SequencePage() {
@@ -26,7 +26,7 @@ export default function SequencePage() {
           </svg>
           <span>SEQUENCE</span>
         </h1>
-        <p><strong>数の並びを読むパズル。</strong><br />隠れた規則を見つけて「？」を求める、全5問のミニゲーム。</p>
+        <p><strong>順番推理ゲーム。</strong><br />数の並びに隠れた規則を見つけて「？」を求める、全5問のミニゲーム。</p>
       </section>
       <SequenceGame />
       <BitFooter label="MARUTIBIT / GAME 003" />
