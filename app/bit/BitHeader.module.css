@@ -10,8 +10,8 @@
   .hierarchy { gap: 7px; }
   .hierarchy :global(.brand) { gap: 7px; font-size: 10px; }
   .hierarchy :global(.brandMark) { width: 28px; height: 28px; border-radius: 5px; }
-  .hierarchy :global(.bitBrand) { font-size: 17px; }
-  .hierarchy :global(.bitBrand) b { font-size: 16px; }
+  .hierarchy :global(.bitBrand) { font-size: 14px; }
+  .hierarchy :global(.bitBrand) b { font-size: 13px; }
   .hierarchy > strong { display: none; }
   .currentSeparator { display: none; }
   .actions { gap: 10px; }
