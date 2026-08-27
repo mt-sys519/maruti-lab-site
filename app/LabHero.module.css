@@ -1,4 +1,9 @@
 .bitHomeHero.bitHomeHero {
+  /* The base .labHero this is layered on sets min-height: calc(100svh - 86px), sized for
+     the original full-screen product-photo hero. This section is a teaser + quick nav,
+     not a banner, so it should size to its own (now much shorter) content instead of
+     always padding out to fill the viewport regardless of how little is in it. */
+  min-height: 0;
   grid-template-columns: 54px minmax(340px, 1.08fr) minmax(360px, .92fr) 0;
   grid-template-rows: minmax(0, 1fr) 74px;
   background-color: #e9e4d7;
