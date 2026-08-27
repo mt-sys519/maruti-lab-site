@@ -382,6 +382,19 @@ export function InputRainGame() {
     }).then((file) => setShareCard(file));
   }, [level.label, level.seconds, phase, result]);
 
+  // Skips the scroll entirely when the shell already fits on screen (common on a wide
+  // desktop viewport) - forcing a scroll there ate up what little scroll range the page
+  // had, so a player who then tried to nudge the view back up manually had nowhere to go.
+  const scrollShellIntoView = useCallback((block: ScrollLogicalPosition) => {
+    window.requestAnimationFrame(() => {
+      const el = gameShellRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.top >= 0 && rect.bottom <= window.innerHeight) return;
+      el.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block });
+    });
+  }, []);
+
   const startRun = useCallback(() => {
     if (completionTimerRef.current !== null) window.clearTimeout(completionTimerRef.current);
     statsRef.current = { ...emptyStats };
@@ -397,8 +410,8 @@ export function InputRainGame() {
     setPhase("countdown");
     resumePage();
     stopAllLoops();
-    window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
-  }, [level.seconds, loadBag, resumePage, stopAllLoops]);
+    scrollShellIntoView("start");
+  }, [level.seconds, loadBag, resumePage, scrollShellIntoView, stopAllLoops]);
 
   // The flick pad only mounts once "playing" starts (the countdown screen doesn't show
   // it), so the shell is still its short, pad-less height when startRun's own scroll
@@ -407,8 +420,8 @@ export function InputRainGame() {
   // full (usually taller-than-viewport) height, is what actually keeps the pad on-screen.
   useEffect(() => {
     if (phase !== "playing" || inputMode !== "flick") return;
-    window.requestAnimationFrame(() => gameShellRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "end" }));
-  }, [phase, inputMode]);
+    scrollShellIntoView("end");
+  }, [phase, inputMode, scrollShellIntoView]);
 
   const registerInputError = useCallback(() => {
     if (feedback === "error") return;
@@ -421,7 +434,10 @@ export function InputRainGame() {
   }, [feedback, playMiss]);
 
   const completePrompt = useCallback(() => {
-    if (!current || feedback !== "idle" || phaseRef.current !== "playing") return;
+    // Only block while the prompt is actually transitioning away (just accepted, or just
+    // timed out) - the brief "error" shake after a miss doesn't replace the prompt, so it
+    // shouldn't stop a correct keystroke typed a moment later from completing it.
+    if (!current || feedback === "accepted" || feedback === "timeout" || phaseRef.current !== "playing") return;
     const count = cleanCharacterCount(current.reading);
     const nextCombo = statsRef.current.combo + count;
     const multiplier = 1 + Math.min(0.5, Math.floor(nextCombo / 10) * 0.05);
@@ -440,7 +456,7 @@ export function InputRainGame() {
   }, [current, feedback, level.scoreFactor, nextPrompt, playAccept]);
 
   const handleTimeout = useCallback(() => {
-    if (phaseRef.current !== "playing" || paused || feedback !== "idle") return;
+    if (phaseRef.current !== "playing" || paused || feedback === "accepted" || feedback === "timeout") return;
     statsRef.current.misses += 1;
     statsRef.current.combo = 0;
     setDisplayStats({ ...statsRef.current });
@@ -475,7 +491,10 @@ export function InputRainGame() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (phaseRef.current !== "playing" || inputMode !== "keyboard" || paused || feedback !== "idle") return;
+      // Same reasoning as completePrompt: don't let the brief post-miss "error" shake
+      // swallow the very next (correct) keystroke - only an actual prompt transition
+      // (accepted/timeout) should pause input.
+      if (phaseRef.current !== "playing" || inputMode !== "keyboard" || paused || feedback === "accepted" || feedback === "timeout") return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.key === "Escape") {
         event.preventDefault();
@@ -498,6 +517,7 @@ export function InputRainGame() {
         registerInputError();
         return;
       }
+      if (feedback === "error") setFeedback("idle");
       setTyped(candidate);
       playTypeKey();
       if (status.complete) completePrompt();
@@ -521,7 +541,7 @@ export function InputRainGame() {
   }, [startRun]);
 
   const appendFlickChar = useCallback((char: string) => {
-    if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle") return;
+    if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback === "accepted" || feedback === "timeout") return;
     const target = normalizeKana(current.reading);
     // Without a delete key, a base form left un-mutated stops being reachable the moment
     // another character is typed after it (mutate only ever touches the last character),
@@ -542,13 +562,14 @@ export function InputRainGame() {
       return;
     }
     const value = mobileTyped + char;
+    if (feedback === "error") setFeedback("idle");
     playTypeFlick();
     setMobileTyped(value);
     if (value === target) completePrompt();
   }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playTypeFlick, registerInputError]);
 
   const mutateFlickChar = useCallback(() => {
-    if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback !== "idle" || !mobileTyped) return;
+    if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback === "accepted" || feedback === "timeout" || !mobileTyped) return;
     const lastChar = mobileTyped.slice(-1);
     const target = normalizeKana(current.reading);
     const expected = target[mobileTyped.length - 1];
@@ -566,6 +587,7 @@ export function InputRainGame() {
       return;
     }
     const candidate = mobileTyped.slice(0, -1) + mutated;
+    if (feedback === "error") setFeedback("idle");
     playTypeFlick();
     setMobileTyped(candidate);
     if (candidate === target) completePrompt();
