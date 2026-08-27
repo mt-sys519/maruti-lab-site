@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <section><h2>アクセス時に送信される情報</h2><p>当サイトの閲覧時には、配信・保守・不正アクセス対策のため、IPアドレス、ブラウザや端末の種類、閲覧日時、参照元などがホスティング事業者のサーバーログに記録される場合があります。これらはサイトの安定運用と安全確保のために利用されます。</p></section>
         <section><h2>Cookieとアクセス解析</h2><p>当サイトは、Googleアナリティクスを利用してアクセス状況を解析しています。Googleアナリティクスは、Cookie等を利用して匿名のアクセス情報を収集します。収集した情報は、当サイトの利用状況の把握およびサイト改善の目的にのみ使用します。収集された情報の取り扱いについては、Googleのプライバシーポリシーに基づいて管理されます。詳細は<a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Googleのプライバシーポリシー</a>をご確認ください。</p></section>
         <section><h2>外部サービスへのリンク</h2><p>当サイトには、X、note、Buy Me a Coffee、LINE STOREおよび各プロダクトサイトへのリンクがあります。移動先で取り扱われる情報には、各サービスのプライバシーポリシーが適用されます。</p></section>
-        <section><h2>お問い合わせ</h2><p>本方針に関する連絡は、<a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">Maruti Lab公式X（@maruti_lab）</a>からお願いします。</p></section>
+        <section><h2>お問い合わせ</h2><p>本方針に関する連絡は、<a href="/contact">お問い合わせフォーム</a>からお願いします。フォームでは、お名前・メールアドレス・お問い合わせ内容をご入力いただきます。送信には外部フォームサービスのFormspreeを利用しており、送信いただいた情報はお問い合わせへの対応の目的にのみ使用します。</p></section>
         <section><h2>改定</h2><p>サービス内容や法令の変更に応じて、本方針を改定することがあります。重要な変更は当サイト上でお知らせします。</p></section>
         <p className="legalUpdated">制定日：2026年8月9日</p>
       </article>

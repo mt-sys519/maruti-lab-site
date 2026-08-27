@@ -3,8 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://marutilab.com";
-// TODO: replace with the real GA4 measurement ID before relying on this data.
-const GA_MEASUREMENT_ID = "G-XXXXXXXXXX";
+const GA_MEASUREMENT_ID = "G-HCHV1Y4GPS";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
