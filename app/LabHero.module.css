@@ -30,14 +30,13 @@
   align-items: baseline;
   margin: 0;
   color: #183d55;
-  font: 500 clamp(70px, 8vw, 120px)/.78 Georgia, "Yu Mincho", serif;
-  letter-spacing: -.055em;
+  font: 800 clamp(70px, 8vw, 120px)/.78 "Inter", sans-serif;
+  letter-spacing: -.03em;
+  font-feature-settings: "cv11" 1;
 }
 .intro h1 b {
-  margin-left: .04em;
   color: #a94235;
-  font: 700 .72em/1 Georgia, "Yu Mincho", serif;
-  letter-spacing: -.02em;
+  font-weight: 800;
 }
 .lead { margin: 38px 0 0; font-size: clamp(20px, 2vw, 29px); line-height: 1.55; }
 .copy { margin: 20px 0 0; color: #53615a; font: 400 13px/2 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }

@@ -32,6 +32,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ja">
       <body>
+        {/* React 19 hoists these into <head> regardless of where they render - used for
+            the "MarutiBit" wordmark (header + home hero), which switched from a serif
+            fallback stack to Inter. The next/next/no-page-custom-font rule assumes the
+            Pages Router, where a <link> outside _document.js only loads on one route;
+            here this is the root layout, so it's already applied to every route. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap" />
         {children}
         {/* Loaded once here in the root layout, so every route under Maruti Lab -
             the top-level site, the MarutiBit hub, and each individual game page -
