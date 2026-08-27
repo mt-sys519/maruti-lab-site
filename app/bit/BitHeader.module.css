@@ -8,13 +8,13 @@
 
 @media (max-width: 640px) {
   .hierarchy { gap: 7px; }
-  .hierarchy :global(.brand) { gap: 7px; font-size: 10px; }
-  .hierarchy :global(.brandMark) { width: 28px; height: 28px; border-radius: 5px; }
   .hierarchy :global(.bitBrand) { font-size: 14px; }
   .hierarchy :global(.bitBrand) b { font-size: 13px; }
   .hierarchy > strong { display: none; }
   .currentSeparator { display: none; }
   .actions { gap: 10px; }
+  .actions :global(.brand) { gap: 7px; font-size: 10px; }
+  .actions :global(.brandMark) { width: 28px; height: 28px; border-radius: 5px; }
   .support { gap: 0; padding: 8px; border: 0; }
   .support span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .support b { font-size: 15px; }
