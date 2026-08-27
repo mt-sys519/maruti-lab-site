@@ -39,3 +39,7 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# local tooling / build cache (not part of the site)
+.claude/
+*.tsbuildinfo
