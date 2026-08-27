@@ -1,8 +1,7 @@
-.hero { min-height: 460px; padding: clamp(64px, 9vw, 120px) clamp(24px, 8vw, 120px); display: grid; grid-template-columns: .42fr 1fr .9fr; gap: clamp(28px, 5vw, 80px); align-items: end; border-bottom: 1px solid rgba(21,33,29,.48); }
+.hero { min-height: 460px; padding: clamp(64px, 9vw, 120px) clamp(24px, 8vw, 120px); display: grid; grid-template-columns: .42fr minmax(0, 1.2fr) .42fr; gap: clamp(28px, 5vw, 80px); align-items: center; border-bottom: 1px solid rgba(21,33,29,.48); }
 .hero > p { margin: 0; align-self: start; color: #58675f; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
-.hero h1 { display: flex; align-items: baseline; margin: 0; color: var(--bit-blue); font: 500 clamp(72px, 9vw, 126px)/.78 Georgia, "Yu Mincho", serif; letter-spacing: -.055em; }
-.hero h1 b { margin-left: .04em; color: var(--bit-red); font: 700 .72em/1 "Yu Gothic UI", sans-serif; letter-spacing: -.06em; }
-.hero h2 { margin: 0; color: var(--bit-blue); font: 600 clamp(20px, 2vw, 28px)/1.55 "Yu Mincho", serif; }
+.hero > div { grid-column: 2; }
+.hero h1 { max-width: 760px; margin: 0; color: var(--bit-blue); font: 600 clamp(34px, 4.4vw, 62px)/1.45 "Yu Mincho", serif; letter-spacing: .01em; }
 .hero div > p { margin: 20px 0 0; color: #53615a; font: 400 12px/2 "Yu Gothic UI", sans-serif; }
 .hero div > a { display: inline-flex; margin-top: 30px; min-height: 46px; align-items: center; padding: 0 20px; background: var(--bit-red); color: #fff; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; }
 .catalog { padding: clamp(58px, 8vw, 110px) clamp(20px, 6vw, 90px) clamp(80px, 10vw, 140px); }
@@ -38,12 +37,13 @@
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: 0; align-items: start; }
   .hero > p { align-self: auto; }
+  .hero > div { grid-column: 1; }
   .catalog > header { grid-template-columns: 1fr auto; gap: 16px; }
   .catalog > header p { grid-column: 1/-1; }
 }
 @media (max-width: 640px) {
   .hero { padding-top: 52px; padding-bottom: 58px; }
-  .hero h1 { font-size: clamp(62px, 19vw, 88px); }
+  .hero h1 { font-size: clamp(30px, 9vw, 42px); }
   .grid { grid-template-columns: 1fr; }
   .card { min-height: 315px; }
   .catalog > header h2 { font-size: 30px; }

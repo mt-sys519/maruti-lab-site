@@ -1,8 +1,6 @@
 .hierarchy { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
 .hierarchy > span { color: #92968f; font-size: 10px; }
 .hierarchy > strong { overflow: hidden; max-width: 180px; color: #68736e; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; text-overflow: ellipsis; white-space: nowrap; }
-.lab { padding: 7px 0 5px; border-bottom: 1px solid currentColor; font: 600 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .1em; }
-.lab:hover { color: var(--bit-red); }
 .actions { display: flex; align-items: center; gap: clamp(18px, 3vw, 38px); }
 .support { display: inline-flex; align-items: center; gap: 8px; padding: 8px 1px 6px; color: var(--bit-red); border-bottom: 1px solid transparent; font-size: 11px; letter-spacing: .06em; }
 .support b { font: 400 14px/1 "Segoe UI Emoji", "Yu Gothic UI", sans-serif; }
@@ -10,7 +8,8 @@
 
 @media (max-width: 640px) {
   .hierarchy { gap: 7px; }
-  .lab { font-size: 8px; }
+  .hierarchy :global(.brand) { gap: 7px; font-size: 10px; }
+  .hierarchy :global(.brandMark) { width: 28px; height: 28px; border-radius: 5px; }
   .hierarchy :global(.bitBrand) { font-size: 17px; }
   .hierarchy :global(.bitBrand) b { font-size: 16px; }
   .hierarchy > strong { display: none; }
