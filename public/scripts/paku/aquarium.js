@@ -3834,7 +3834,10 @@ class CyberAquarium {
     
     // 環境制御変数
     this.lighting = 0.8;
-    this.lightColor = "#00E5FF";
+    // PAKU: NATURAL only. This was "#00E5FF" (electric cyan) unconditionally - not
+    // gated by themeMode at all - and gets screen-blended over the whole static
+    // background/terrain layer, tinting it cyan regardless of theme.
+    this.lightColor = "#FFF6E0";
     this.lightFlicker = 0.28; // 内部固定値。UIパラメータではない。
     this.lightDrop = 0;
     this.nextLightFlickerAt = 0;
