@@ -75,8 +75,7 @@ const WATER_COLUMN_PROFILES = {
 };
 
 function applyNaturalLineSoftness(ctx) {
-  const aq = typeof window !== "undefined" ? window.aquariumInstance : null;
-  if (!aq || aq.themeMode !== "light") return false;
+  // PAKU: NATURAL only, unconditionally.
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   return true;
@@ -117,7 +116,7 @@ class DataPacket {
   }
   update() {
     const aq = window.aquariumInstance;
-    const isNatural = aq?.themeMode === "light";
+    const isNatural = true; // PAKU: NATURAL only, unconditionally.
     if (isNatural && !this.settled) {
       // 薄いフレークが沈みながらゆっくり回転し、水中でわずかに横へ流れる。
       this.flakeAngle += this.flakeSpin;
@@ -147,7 +146,7 @@ class DataPacket {
   draw(ctx) {
     const aq = window.aquariumInstance;
     const scale = aq ? aq.scale : 1.0;
-    const isNatural = aq?.themeMode === "light";
+    const isNatural = true; // PAKU: NATURAL only, unconditionally.
     ctx.save();
 
     if (isNatural) {
@@ -225,7 +224,7 @@ class Bubble {
   draw(ctx) {
     const aq = window.aquariumInstance;
     const scale = aq ? aq.scale : 1.0;
-    const isNatural = aq ? aq.themeMode === "light" : false;
+    const isNatural = true; // PAKU: NATURAL only, unconditionally.
     ctx.save();
     if (isNatural) {
       ctx.strokeStyle = `rgba(64, 151, 177, ${Math.max(0, this.alpha * 0.72)})`;
@@ -1448,7 +1447,7 @@ class CyberFish {
     const renderPos = renderOptions && renderOptions.renderPos ? renderOptions.renderPos : this.pos;
     ctx.translate(renderPos.x, renderPos.y);
     const aq = window.aquariumInstance;
-    const isNaturalTheme = !!(aq && aq.themeMode === "light");
+    const isNaturalTheme = true; // PAKU: NATURAL only, unconditionally.
     if (isNaturalTheme) applyNaturalLineSoftness(ctx);
     const actionNow = aq && aq.lastTime ? aq.lastTime : ((typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now());
     const feedVisual = this.getFeedingVisual(actionNow);
@@ -3212,7 +3211,7 @@ class CyberPlant {
       });
     } else if (this.id === "eleocharis-mini") {
       this.parts.forEach((blade) => {
-        const natural = window.aquariumInstance?.themeMode === "light";
+        const natural = true; // PAKU: NATURAL only, unconditionally.
         ctx.strokeStyle = natural
           ? (blade.tone > 0.5 ? "rgba(72,132,82,0.68)" : "rgba(59,116,73,0.64)")
           : (blade.tone > 0.5 ? "rgba(98,238,154,0.56)" : "rgba(62,211,130,0.50)");
@@ -3303,7 +3302,7 @@ class CyberPlant {
     if (this.id === "eleocharis-mini") {
       this.motionParts.forEach((blade) => {
         const s = Math.sin(this.phase + blade.phase) * 2.2;
-        ctx.strokeStyle = window.aquariumInstance?.themeMode === "light" ? "rgba(94,150,98,0.26)" : "rgba(105,240,164,0.26)";
+        ctx.strokeStyle = "rgba(94,150,98,0.26)"; // PAKU: NATURAL only, unconditionally.
         ctx.lineWidth = Math.max(0.55, blade.width * 0.55);
         ctx.beginPath();
         ctx.moveTo(blade.baseX + blade.bend * 0.30, -blade.length * 0.56);
@@ -5070,25 +5069,15 @@ class CyberAquarium {
   }
 
   drawCyberAirCache(ctx, timestamp = performance.now()) {
-    if (this.themeMode === "light") {
-      if (this.airLayerCanvas) this.airLayerCanvas.style.display = "none";
-      return;
-    }
-    // AIR is already behind the main fish canvas as a low-res DOM layer. The main
-    // render loop only asks it to refresh at its own 6–12fps cadence; no per-frame
-    // drawImage/scaling transfer is performed here.
-    this.renderCyberAirLayer(timestamp);
+    // PAKU: NATURAL only - never renders the CYBER text-particle AIR layer.
+    if (this.airLayerCanvas) this.airLayerCanvas.style.display = "none";
   }
 
   drawWaterBackground(ctx) {
     const w = this.drawWidth;
     const h = this.drawHeight;
 
-    if (this.themeMode !== "light") {
-      ctx.fillStyle = this.getThemePalette().staticBg;
-      ctx.fillRect(0, 0, w, h);
-      return;
-    }
+    // PAKU: NATURAL only - the CYBER branch (dark static background fill) never runs.
 
     // NATURAL: flat blueではなく、上部の光・中層の透明感・底側の深みを一枚で作る。
     const water = ctx.createLinearGradient(0, 0, 0, h);
@@ -5356,29 +5345,25 @@ class CyberAquarium {
         const plan = this.landscapeOverrides?.[asset.id];
 
         if (plan.strategy === "carpet") {
-          window.BotanicalEngine.drawCarpet(ctx, asset.id, plan.xRatio, plan.widthRatio, plan.density, terrainHeight, this.drawWidth, this.scale, this.themeMode);
+          window.BotanicalEngine.drawCarpet(ctx, asset.id, plan.xRatio, plan.widthRatio, plan.density, terrainHeight, this.drawWidth, this.scale, "light");
         } else if (plan.strategy === "colony") {
-          window.BotanicalEngine.drawColony(ctx, asset.id, plan.xRatio, plan.widthRatio, plan.density, plan.scale || 1, terrainHeight, this.drawWidth, this.scale, this.themeMode);
+          window.BotanicalEngine.drawColony(ctx, asset.id, plan.xRatio, plan.widthRatio, plan.density, plan.scale || 1, terrainHeight, this.drawWidth, this.scale, "light");
         } else if (plan.strategy === "scattered") {
           const count = Math.max(1, Math.min(cfg.count || 1, plan.instances?.length || 1));
           for (let i=0;i<count;i++) {
             const inst = plan.instances[i];
             if (!inst) continue;
             const x = inst.xRatio * this.drawWidth;
-            window.BotanicalEngine.drawAsset(ctx, asset.id, x, terrainHeight(x), this.scale * (inst.scale || 1), this.themeMode);
+            window.BotanicalEngine.drawAsset(ctx, asset.id, x, terrainHeight(x), this.scale * (inst.scale || 1), "light");
           }
         } else {
           const x = plan.xRatio * this.drawWidth;
-          window.BotanicalEngine.drawAsset(ctx, asset.id, x, terrainHeight(x), this.scale * (plan.scale || 1), this.themeMode);
+          window.BotanicalEngine.drawAsset(ctx, asset.id, x, terrainHeight(x), this.scale * (plan.scale || 1), "light");
         }
       }
 
-      if (this.themeMode !== "light" && window.BotanicalEngine?.applyCyberTreatment) {
-        // Context is translated to global aquarium coordinates, preserving the original vertical gradient.
-        window.BotanicalEngine.applyCyberTreatment(ctx, this.drawWidth, this.drawHeight);
-      }
+      // PAKU: NATURAL only - the CYBER glow/treatment pass never runs.
       ctx.restore();
-      if (this.themeMode !== "light") this.bakeCyberPlantGlow(zone);
     }
 
     if (this.staticPlantLayerCanvas) this.staticPlantLayerCanvas.style.display = "none";
@@ -5483,37 +5468,10 @@ class CyberAquarium {
   }
 
   updateLightFlicker(timestamp) {
-    // 古い安定器の自然なランダムフリッカー。ユーザー調整はさせない。
-    // ノーマルモードでは表示不良っぽく見えやすいので無効化。
-    if (this.themeMode === "light") {
-      this.lightPulse += (1 - this.lightPulse) * 0.45;
-      this.lightFlickerUntil = 0;
-      this.nextLightFlickerAt = timestamp + 12000;
-      return;
-    }
-    if (!this.nextLightFlickerAt) {
-      this.nextLightFlickerAt = timestamp + 5500 + Math.random() * 10500;
-    }
-
-    if (timestamp >= this.nextLightFlickerAt) {
-      const strength = 0.18 + Math.random() * 0.24;
-      const burstLength = 55 + Math.random() * 105;
-      this.lightFlickerUntil = timestamp + burstLength;
-      this.lightDrop = strength;
-      this.lightFlickerSeed = Math.random() * 1000;
-      if (window.cyberAudio) window.cyberAudio.playLightCrackle(strength);
-
-      // 普段は静か。たまに短い二度目の揺れが来る。
-      this.nextLightFlickerAt = timestamp + 6500 + Math.random() * 15500;
-      if (Math.random() < 0.18) this.nextLightFlickerAt = timestamp + 550 + Math.random() * 900;
-    }
-
-    if (timestamp < this.lightFlickerUntil) {
-      const fast = 0.45 + Math.abs(Math.sin((timestamp + this.lightFlickerSeed) * 0.11)) * 0.55;
-      this.lightPulse = Math.max(0.55, 1 - this.lightDrop * fast);
-    } else {
-      this.lightPulse += (1 - this.lightPulse) * 0.32;
-    }
+    // PAKU: NATURAL only, unconditionally - the CYBER flicker/crackle never runs.
+    this.lightPulse += (1 - this.lightPulse) * 0.45;
+    this.lightFlickerUntil = 0;
+    this.nextLightFlickerAt = timestamp + 12000;
   }
 
   ensureDarkLayer() {
@@ -5698,31 +5656,18 @@ class CyberAquarium {
   }
 
   getThemePalette() {
-    if (this.themeMode === "light") {
-      return {
-        staticBg: "rgba(218, 236, 236, 0.78)",
-        tankGridFar: "rgba(78, 145, 155, 0.08)",
-        tankGridNear: "rgba(78, 145, 155, 0.13)",
-        surfaceMain: "rgba(104, 180, 188, 0.20)",
-        surfaceRays: "rgba(118, 191, 196, 0.045)",
-        terrainStroke: "rgba(53, 150, 103, 0.30)",
-        terrainFill: "rgba(198, 214, 191, 0.94)",
-        terrainGrid: "rgba(53, 150, 103, 0.12)",
-        gravel: "rgba(59, 145, 94, 0.24)",
-        darkOverlay: "rgb(12, 24, 32)"
-      };
-    }
+    // PAKU: NATURAL only, unconditionally - the CYBER palette never returns.
     return {
-      staticBg: "rgba(0, 5, 12, 0.72)",
-      tankGridFar: "rgba(0,243,255,0.045)",
-      tankGridNear: "rgba(0,243,255,0.07)",
-      surfaceMain: "rgba(0, 243, 255, 0.22)",
-      surfaceRays: "rgba(0, 243, 255, 0.025)",
-      terrainStroke: "rgba(0, 255, 136, 0.28)",
-      terrainFill: "rgba(3, 6, 12, 0.90)",
-      terrainGrid: "rgba(0, 255, 136, 0.08)",
-      gravel: "rgba(57,255,20,0.28)",
-      darkOverlay: "rgb(0,3,8)"
+      staticBg: "rgba(218, 236, 236, 0.78)",
+      tankGridFar: "rgba(78, 145, 155, 0.08)",
+      tankGridNear: "rgba(78, 145, 155, 0.13)",
+      surfaceMain: "rgba(104, 180, 188, 0.20)",
+      surfaceRays: "rgba(118, 191, 196, 0.045)",
+      terrainStroke: "rgba(53, 150, 103, 0.30)",
+      terrainFill: "rgba(198, 214, 191, 0.94)",
+      terrainGrid: "rgba(53, 150, 103, 0.12)",
+      gravel: "rgba(59, 145, 94, 0.24)",
+      darkOverlay: "rgb(12, 24, 32)"
     };
   }
 
@@ -5807,7 +5752,7 @@ class CyberAquarium {
     // コリドラスが探れる細粒砂。静的レイヤーへ焼くので数を増やしても毎フレーム負荷にならない。
     const count = Math.max(90, Math.min(230, Math.floor(this.drawWidth / 8)));
     const rng = landscapeRng((this.landscapeSeed ^ 0xd1b54a32) >>> 0);
-    const light = this.themeMode === "light";
+    const light = true; // PAKU: NATURAL only, unconditionally.
     for (let i = 0; i < count; i++) {
       const x = rng() * this.drawWidth;
       const y = this.getTerrainHeight(x) + (1 + rng() * 10) * this.scale;
@@ -5953,7 +5898,7 @@ class CyberAquarium {
 
     // 1. 気泡の更新
     const bubbleChance = 0.02 + this.bubblerRate * 0.12;
-    const bubbleCap = this.themeMode === "light" ? 72 : 48;
+    const bubbleCap = 72; // PAKU: NATURAL only, unconditionally.
     if (this.bubbles.length < bubbleCap && Math.random() < bubbleChance) {
       const tank = this.getTankBounds();
       const bx = tank.left + Math.random() * (tank.right - tank.left);
@@ -6093,33 +6038,10 @@ class CyberAquarium {
   }
 
   updateCyberFishFx(timestamp) {
-    if (this.themeMode === "light") {
-      if (this.cyberFishFxActive?.fish) this.cyberFishFxActive.fish.cyberFx = null;
-      this.cyberFishFxActive = null;
-      this.cyberFishFxNextAt = timestamp + 2400 + Math.random() * 3600;
-      return;
-    }
-
-    const active = this.cyberFishFxActive;
-    if (active) {
-      if (timestamp >= active.endAt || !this.fishes.includes(active.fish)) {
-        if (active.fish) active.fish.cyberFx = null;
-        this.cyberFishFxActive = null;
-        this.cyberFishFxNextAt = timestamp + 3600 + Math.random() * 5600;
-      }
-      return;
-    }
-
-    if (timestamp < this.cyberFishFxNextAt) return;
-    const candidates = this.fishes;
-    if (!candidates.length) {
-      this.cyberFishFxNextAt = timestamp + 4000;
-      return;
-    }
-
-    const fish = candidates[Math.floor(Math.random() * candidates.length)];
-    const mode = Math.random() < 0.52 ? "GLITCH" : "RAIN";
-    this.startCyberFishFx(fish, mode, timestamp);
+    // PAKU: NATURAL only - the CYBER RAIN/GLITCH fish effect never starts.
+    if (this.cyberFishFxActive?.fish) this.cyberFishFxActive.fish.cyberFx = null;
+    this.cyberFishFxActive = null;
+    this.cyberFishFxNextAt = timestamp + 2400 + Math.random() * 3600;
   }
 
   renderFishFxSnapshot(fish) {
@@ -6278,16 +6200,8 @@ class CyberAquarium {
   }
 
   drawCyberFishWithFx(ctx, fish, timestamp) {
-    if (this.themeMode === "light") {
-      fish.draw(this.getFishStyleContext(ctx, fish, false), 1.0);
-      return;
-    }
-    if (!fish.cyberFx) {
-      fish.draw(this.getFishStyleContext(ctx, fish, true), 1.0);
-      return;
-    }
-    if (fish.cyberFx.mode === "RAIN") this.drawCyberRainFish(ctx, fish, timestamp);
-    else this.drawCyberGlitchFish(ctx, fish, timestamp);
+    // PAKU: NATURAL only, unconditionally - the CYBER RAIN/GLITCH fish draw never runs.
+    fish.draw(this.getFishStyleContext(ctx, fish, false), 1.0);
   }
 
   drawFishBand(ctx, bandIndex, timestamp) {
@@ -6371,7 +6285,7 @@ class CyberAquarium {
     // 底面イベントは前景草より手前。砂埃はコリドラスの足元、エビはカーペット表面に見える。
     this.dustParticles.forEach(d => d.draw(ctx));
     this.scanWaves.forEach(w => w.draw(ctx));
-    if (this.themeMode === "light") this.bubbles.forEach(b => b.draw(ctx));
+    this.bubbles.forEach(b => b.draw(ctx)); // PAKU: NATURAL only, unconditionally.
     this.packets.forEach(p => p.draw(ctx));
     this.drawFishBand(ctx, 3, timestamp);
     this.drawFishBand(ctx, 4, timestamp);
@@ -6451,7 +6365,7 @@ class CyberAquarium {
   // 細粒砂の底床。コリドラスの採餌面を広く残す。
   drawBottomTerrain(ctx) {
     const scale = this.scale;
-    const light = this.themeMode === "light";
+    const light = true; // PAKU: NATURAL only, unconditionally - see themeMode note near class start.
     ctx.save();
 
     const w = this.drawWidth;
