@@ -12,7 +12,6 @@ const CANVAS_ID = "paku-aquarium-canvas";
 
 type PakuAquarium = {
   themeMode: string;
-  airLayerCanvas?: HTMLCanvasElement | null;
   lighting: number;
   bubblerRate: number;
   speciesConfig: Record<string, { enabled: boolean; count?: number; max?: number }>;
@@ -88,11 +87,9 @@ export function PakuGame() {
   const [soundOn, setSoundOn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenSupported, setFullscreenSupported] = useState(false);
-  const [debugInfo, setDebugInfo] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    const cleanupFns: (() => void)[] = [];
     (async () => {
       await loadPakuEngine();
       if (cancelled || startedRef.current || typeof CyberAquarium === "undefined") return;
@@ -131,28 +128,10 @@ export function PakuGame() {
       window.cyberAudio?.setHumEnabled(true);
 
       setReady(true);
-
-      // Temporary on-screen diagnostic for the CYBER-theme report - polls continuously
-      // (not just once) so a screenshot taken any time later still reflects the live
-      // state, and checks the AIR canvas directly since that's the visible symptom.
-      // Remove once resolved.
-      const describe = () => {
-        let stored = "n/a";
-        try { stored = window.localStorage.getItem("cyberAquariumTheme") ?? "(null)"; } catch { /* ignore */ }
-        setDebugInfo(
-          `t=${Math.round(performance.now() / 1000)}s aq=${aquarium.themeMode} audio=${window.cyberAudio?.themeMode} ls=${stored} `
-          + `sameRef=${window.aquariumInstance === aquarium} airDisplay=${aquarium.airLayerCanvas?.style.display ?? "(none)"} `
-          + `tags=${document.querySelectorAll("script[data-paku-file]").length} v=${ENGINE_VERSION}`,
-        );
-      };
-      describe();
-      const debugTimer = window.setInterval(describe, 1000);
-      cleanupFns.push(() => window.clearInterval(debugTimer));
     })();
 
     return () => {
       cancelled = true;
-      cleanupFns.forEach((fn) => fn());
       aquariumRef.current?.stop();
       if (window.aquariumInstance === aquariumRef.current) window.aquariumInstance = undefined;
     };
@@ -260,7 +239,6 @@ export function PakuGame() {
         <div ref={tapFxRef} className="bitPakuTapFx" aria-hidden="true" />
         {!ready && <p className="bitPakuLoading">水槽を準備中…</p>}
       </div>
-      {debugInfo && <p style={{ margin: "8px 0 0", padding: "8px", background: "#300", color: "#f88", fontSize: "10px", wordBreak: "break-all" }}>DEBUG: {debugInfo}</p>}
     </section>
   );
 }
