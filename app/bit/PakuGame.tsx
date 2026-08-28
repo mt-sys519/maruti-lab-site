@@ -115,10 +115,10 @@ export function PakuGame() {
       aquarium.lighting = 0.82;
       aquarium.bubblerRate = 0.65;
 
+      // TEMP DIAGNOSTIC: every species disabled - empty tank, to isolate whether
+      // the reported CYBER look comes from the background/water/terrain itself
+      // or specifically from fish rendering. Revert once the test is done.
       Object.keys(aquarium.speciesConfig).forEach((id) => { aquarium.speciesConfig[id].enabled = false; });
-      aquarium.speciesConfig["neon-tetra"] = { enabled: true, count: 9, max: 30 };
-      aquarium.speciesConfig["corydoras"] = { enabled: true, count: 3, max: 12 };
-      aquarium.speciesConfig["african-lampeye"] = { enabled: true, count: 6, max: 24 };
 
       aquarium.spawnPopulation();
 
