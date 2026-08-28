@@ -96,6 +96,8 @@ export function PakuGame() {
   const { paused, resume } = useVisibilityPause(ready);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenSupported, setFullscreenSupported] = useState(false);
+  const [controlsIdle, setControlsIdle] = useState(false);
+  const idleTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,6 +196,40 @@ export function PakuGame() {
     }
   }, [paused]);
 
+  // Watching the tank has no taps/scrolling to keep the OS awake, so the
+  // screen would otherwise sleep mid-view. Hold a wake lock only while the
+  // tank is actually running; release it the moment it's paused/hidden so
+  // this doesn't fight the OS the rest of the time.
+  useEffect(() => {
+    if (!ready || paused || !("wakeLock" in navigator)) return;
+    let sentinel: WakeLockSentinel | null = null;
+    let cancelled = false;
+    async function acquire() {
+      try {
+        const lock = await navigator.wakeLock.request("screen");
+        if (cancelled) { void lock.release(); return; }
+        sentinel = lock;
+      } catch { /* Unsupported, or refused (e.g. low battery) - fine either way. */ }
+    }
+    void acquire();
+    function handleVisibility() {
+      if (document.visibilityState === "visible" && !sentinel) void acquire();
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", handleVisibility);
+      void sentinel?.release();
+    };
+  }, [ready, paused]);
+
+  function wakeControls() {
+    if (!isFullscreen) return;
+    if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
+    setControlsIdle((was) => (was ? false : was));
+  }
+
   function resumeFromPause() {
     resume();
     aquariumRef.current?.start();
@@ -241,7 +277,11 @@ export function PakuGame() {
 
     function handleFullscreenChange() {
       const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
-      setIsFullscreen(current === tankRef.current);
+      const active = current === tankRef.current;
+      setIsFullscreen(active);
+      setControlsIdle(false);
+      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+      if (active) idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
     }
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
@@ -307,10 +347,12 @@ export function PakuGame() {
         className="bitPakuTank"
         aria-label="ネオンテトラの水槽"
         onPointerDown={(event) => {
+          wakeControls();
           if ((event.target as HTMLElement).closest("button,input")) return;
           event.preventDefault();
           feedAt(event.clientX, event.clientY);
         }}
+        onPointerMove={wakeControls}
         onContextMenu={(event) => event.preventDefault()}
       >
         <canvas id={CANVAS_ID} className="bitPakuCanvas" />
@@ -322,7 +364,12 @@ export function PakuGame() {
           // once fullscreen starts, with no way back except an OS gesture the
           // viewer may not know. This duplicate lives inside the tank so it
           // stays on screen and tappable the whole time fullscreen is active.
-          <button className="bitPakuExitFullscreen" type="button" onClick={toggleFullscreen} aria-label="全画面表示を終了">
+          <button
+            className={`bitPakuExitFullscreen ${controlsIdle ? "isIdle" : ""}`}
+            type="button"
+            onClick={toggleFullscreen}
+            aria-label="全画面表示を終了"
+          >
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
               <path d="M7 2v5H2M13 2v5h5M7 18v-5H2M13 18v-5h5" />
             </svg>
