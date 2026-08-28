@@ -11,7 +11,6 @@
 .catalog > header span { text-align: right; color: var(--bit-red); }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid rgba(21,33,29,.55); background: rgba(21,33,29,.28); gap: 1px; box-shadow: 12px 12px 0 rgba(24,61,85,.08); }
 .card { min-height: 350px; padding: clamp(22px, 3vw, 40px); display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; gap: 18px; background: rgba(241,238,229,.9); transition: background-color .18s ease, color .18s ease; }
-.spanFull { grid-column: 1 / -1; }
 .card:hover, .card:focus-visible { background: var(--bit-blue); color: #f1eee5; outline: 0; }
 .number { color: var(--bit-red); font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
 .visual { grid-column: 1/-1; position: relative; min-height: 110px; display: flex; align-items: center; justify-content: center; color: var(--bit-blue); }
@@ -29,11 +28,9 @@
 .rain i { font-style: normal; font-size: 9px; opacity: .55; }
 .rain span, .rain b { align-self: center; font-size: clamp(16px, 2.4vw, 27px); letter-spacing: .14em; }
 .rain b { opacity: .45; transform: translateY(7px); }
-.paku { width: min(100%, 220px); margin: auto; }
-.paku i { position: absolute; display: block; width: 34px; height: 14px; background: currentColor; clip-path: polygon(0 50%, 70% 0%, 100% 20%, 78% 50%, 100% 80%, 70% 100%); }
-.paku i:nth-child(1) { top: 28%; left: 18%; transform: rotate(-6deg); }
-.paku i:nth-child(2) { top: 48%; left: 44%; opacity: .78; transform: rotate(4deg) scale(.82); }
-.paku i:nth-child(3) { top: 62%; left: 22%; opacity: .6; transform: rotate(-10deg) scale(.64); }
+.paku svg { display: block; width: clamp(72px, 9vw, 108px); height: auto; overflow: visible; }
+.paku svg path { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.paku svg circle { fill: currentColor; stroke: none; }
 .card > div:last-of-type p { margin: 0 0 10px; color: #66736c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .card > div:last-of-type h3 { margin: 0; font: 500 clamp(32px, 4.5vw, 62px)/.9 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.04em; }
 .card > div:last-of-type span { display: block; margin-top: 18px; max-width: 330px; color: #5d6963; font: 400 11px/1.8 "Yu Gothic UI", sans-serif; }

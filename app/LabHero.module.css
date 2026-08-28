@@ -87,11 +87,6 @@
 .rainVisual i { font-style: normal; font-size: 8px; opacity: .55; }
 .rainVisual span, .rainVisual b { align-self: center; font-size: clamp(11px, 1.2vw, 15px); letter-spacing: .13em; }
 .rainVisual b { opacity: .48; transform: translateY(4px); }
-.pakuVisual { width: min(100%, 190px); }
-.pakuVisual i { position: absolute; display: block; width: 26px; height: 11px; background: currentColor; clip-path: polygon(0 50%, 70% 0%, 100% 20%, 78% 50%, 100% 80%, 70% 100%); }
-.pakuVisual i:nth-child(1) { top: 26%; left: 20%; transform: rotate(-6deg); }
-.pakuVisual i:nth-child(2) { top: 48%; left: 46%; opacity: .78; transform: rotate(4deg) scale(.8); }
-.pakuVisual i:nth-child(3) { top: 64%; left: 24%; opacity: .6; transform: rotate(-10deg) scale(.62); }
 .games a:hover .visual, .games a:focus-visible .visual { color: #f1eee5; }
 .games a:hover .blankVisual b, .games a:focus-visible .blankVisual b, .games a:hover .sequenceVisual b, .games a:focus-visible .sequenceVisual b { background: #e48e80; }
 .games a:hover .rainVisual, .games a:focus-visible .rainVisual { color: #86f15a; border-color: #86f15a; }
