@@ -148,6 +148,15 @@ export function PakuGame() {
     };
   }, []);
 
+  // Just unlocks the AudioContext under the browser's autoplay policy (needs a
+  // user gesture) - does NOT touch mute state, so an explicit SOUND OFF stays
+  // off across taps instead of getting silently re-enabled by feeding.
+  function unlockAudioContext() {
+    const audio = window.cyberAudio;
+    if (!audio || audio.isMuted) return;
+    if (audio.ctx?.state === "suspended") audio.ctx.resume();
+  }
+
   function enableAudio() {
     const audio = window.cyberAudio;
     if (!audio) return;
@@ -201,7 +210,7 @@ export function PakuGame() {
   }
 
   function feedAt(clientX: number, clientY: number) {
-    enableAudio();
+    unlockAudioContext();
     const tank = tankRef.current;
     const aquarium = aquariumRef.current;
     if (!tank || !aquarium) return;

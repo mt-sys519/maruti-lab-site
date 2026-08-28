@@ -296,9 +296,9 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitPakuFullscreen{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid rgba(21,33,29,.32);background:transparent;color:#617069;cursor:pointer}
 .bitPakuFullscreen svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .bitPakuFullscreen:hover,.bitPakuFullscreen[aria-pressed="true"]{border-color:rgba(169,66,53,.56);color:var(--bit-red)}
-.bitPakuTank{position:relative;height:clamp(420px,58vw,620px);overflow:hidden;border:1px solid rgba(21,33,29,.45);background:#d7e8e7;touch-action:none}
+.bitPakuTank{position:relative;height:clamp(420px,58vw,620px);overflow:hidden;border:1px solid rgba(21,33,29,.45);background:#d7e8e7;touch-action:none;color-scheme:light;forced-color-adjust:none}
 .bitPakuTank:fullscreen,.bitPakuTank:-webkit-full-screen{width:100vw;height:100vh;border:0}
-.bitPakuCanvas{position:relative;z-index:2;display:block;width:100%;height:100%}
+.bitPakuCanvas{position:relative;z-index:2;display:block;width:100%;height:100%;color-scheme:light;forced-color-adjust:none;isolation:isolate}
 .bitPakuLoading{position:absolute;z-index:9;inset:0;margin:0;display:grid;place-items:center;color:rgba(21,33,29,.5);font:600 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.14em;background:rgba(217,232,231,.75)}
 .bitPakuTapFx{position:absolute;z-index:7;width:22px;height:22px;border-radius:50%;border:1px solid rgba(21,33,29,.45);pointer-events:none;opacity:0;transform:translate(-50%,-50%)}
 .bitPakuTapFx.isGo{animation:bitPakuTap .55s ease-out}
