@@ -11,11 +11,11 @@ const ENGINE_VERSION = "7";
 const CANVAS_ID = "paku-aquarium-canvas";
 
 type PakuAquarium = {
-  themeMode: string;
   lighting: number;
   bubblerRate: number;
   speciesConfig: Record<string, { enabled: boolean; count?: number; max?: number }>;
   fishes: { id: string; size: number }[];
+  setTheme: (mode: string) => void;
   spawnPopulation: () => void;
   start: () => void;
   stop: () => void;
@@ -98,7 +98,11 @@ export function PakuGame() {
       aquariumRef.current = aquarium;
       window.aquariumInstance = aquarium;
 
-      aquarium.themeMode = "light";
+      // setTheme() (not a raw themeMode assignment) is what actually invalidates the
+      // cached background/gravel static layer - skipping it left that layer baked
+      // from the constructor's dark-mode default while per-frame fish draws (which
+      // read themeMode live) correctly showed light mode.
+      aquarium.setTheme("light");
       aquarium.lighting = 0.82;
       aquarium.bubblerRate = 0.65;
 
