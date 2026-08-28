@@ -11,6 +11,7 @@ const ENGINE_VERSION = "7";
 const CANVAS_ID = "paku-aquarium-canvas";
 
 type PakuAquarium = {
+  themeMode: string;
   lighting: number;
   bubblerRate: number;
   speciesConfig: Record<string, { enabled: boolean; count?: number; max?: number }>;
@@ -86,6 +87,7 @@ export function PakuGame() {
   const [soundOn, setSoundOn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenSupported, setFullscreenSupported] = useState(false);
+  const [debugInfo, setDebugInfo] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +129,18 @@ export function PakuGame() {
       window.cyberAudio?.setHumEnabled(true);
 
       setReady(true);
+
+      // Temporary on-screen diagnostic for the CYBER-theme report - remove once resolved.
+      const describe = () => {
+        let stored = "n/a";
+        try { stored = window.localStorage.getItem("cyberAquariumTheme") ?? "(null)"; } catch { /* ignore */ }
+        setDebugInfo(
+          `aq=${aquarium.themeMode} audio=${window.cyberAudio?.themeMode} ls=${stored} `
+          + `tags=${document.querySelectorAll("script[data-paku-file]").length} v=${ENGINE_VERSION} ua=${navigator.userAgent}`,
+        );
+      };
+      describe();
+      window.setTimeout(describe, 1500);
     })();
 
     return () => {
@@ -238,6 +252,7 @@ export function PakuGame() {
         <div ref={tapFxRef} className="bitPakuTapFx" aria-hidden="true" />
         {!ready && <p className="bitPakuLoading">水槽を準備中…</p>}
       </div>
+      {debugInfo && <p style={{ margin: "8px 0 0", padding: "8px", background: "#300", color: "#f88", fontSize: "10px", wordBreak: "break-all" }}>DEBUG: {debugInfo}</p>}
     </section>
   );
 }
