@@ -7,6 +7,10 @@ type ActiveState = { keyId: string; dir: FlickDir; startX: number; startY: numbe
 
 const FLICK_THRESHOLD = 22;
 const DIRECTIONS: FlickDir[] = ["up", "left", "tap", "right", "down"];
+// あ/い/う/え/お reading order - what a repeated plain tap (no flick) on the same
+// key cycles through, mirroring old multi-tap phone input as a fallback for
+// players who mash a key instead of flicking it.
+const TAP_CYCLE_ORDER: FlickDir[] = ["tap", "left", "up", "right", "down"];
 
 function resolveDir(dx: number, dy: number): FlickDir {
   if (Math.hypot(dx, dy) < FLICK_THRESHOLD) return "tap";
@@ -18,7 +22,7 @@ function resolveDir(dx: number, dy: number): FlickDir {
 }
 
 type InputRainFlickPadProps = {
-  onCommit: (char: string) => void;
+  onCommit: (char: string, replaceLast?: boolean) => void;
   onMutate: () => void;
   disabled?: boolean;
 };
@@ -26,6 +30,10 @@ type InputRainFlickPadProps = {
 export function InputRainFlickPad({ onCommit, onMutate, disabled }: InputRainFlickPadProps) {
   const [active, setActive] = useState<ActiveState | null>(null);
   const activeRef = useRef<ActiveState | null>(null);
+  // Tracks a still-open tap-cycle: which key it's on, and how far around its
+  // あ/い/う/え/お order the last plain tap landed. Any flick, any other key, or
+  // the mutate key ends it - only a repeated plain tap on the same key advances it.
+  const lastTapRef = useRef<{ keyId: string; cycleIndex: number } | null>(null);
 
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLButtonElement>, key: FlickKeyDef) => {
     if (disabled || key.kind !== "char") return;
@@ -64,7 +72,27 @@ export function InputRainFlickPad({ onCommit, onMutate, disabled }: InputRainFli
     const rawDir = event ? resolveDir(event.clientX - state.startX, event.clientY - state.startY) : state.dir;
     const dir = state.chars[rawDir] ? rawDir : "tap";
     const char = state.chars[dir];
-    if (char) onCommit(char);
+    if (!char) return;
+
+    if (dir !== "tap") {
+      // A flick is its own precise, one-shot gesture - it always inserts a new
+      // character and never continues (or starts) a same-key tap cycle.
+      lastTapRef.current = null;
+      onCommit(char);
+      return;
+    }
+
+    const cycle = TAP_CYCLE_ORDER.filter((candidate) => state.chars[candidate]);
+    const last = lastTapRef.current;
+    if (last && last.keyId === state.keyId && cycle.length > 1) {
+      const cycleIndex = (last.cycleIndex + 1) % cycle.length;
+      const nextChar = state.chars[cycle[cycleIndex]];
+      lastTapRef.current = { keyId: state.keyId, cycleIndex };
+      if (nextChar) onCommit(nextChar, true);
+      return;
+    }
+    lastTapRef.current = { keyId: state.keyId, cycleIndex: 0 };
+    onCommit(char);
   }, [onCommit]);
 
   const handlePointerUp = useCallback((event: React.PointerEvent<HTMLButtonElement>) => finishPointer(true, event), [finishPointer]);
@@ -84,6 +112,10 @@ export function InputRainFlickPad({ onCommit, onMutate, disabled }: InputRainFli
   const handleMutatePointerUp = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
     if (disabled) return;
     event.preventDefault();
+    // Mutating turns the last character into a variant outside the plain tap
+    // cycle, so a same-key tap right after should start a fresh cycle, not
+    // resume one keyed to the character mutate just replaced.
+    lastTapRef.current = null;
     onMutate();
   }, [disabled, onMutate]);
 
