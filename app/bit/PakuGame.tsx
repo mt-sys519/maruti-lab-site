@@ -12,6 +12,7 @@ const CANVAS_ID = "paku-aquarium-canvas";
 
 type PakuAquarium = {
   themeMode: string;
+  airLayerCanvas?: HTMLCanvasElement | null;
   lighting: number;
   bubblerRate: number;
   speciesConfig: Record<string, { enabled: boolean; count?: number; max?: number }>;
@@ -91,6 +92,7 @@ export function PakuGame() {
 
   useEffect(() => {
     let cancelled = false;
+    const cleanupFns: (() => void)[] = [];
     (async () => {
       await loadPakuEngine();
       if (cancelled || startedRef.current || typeof CyberAquarium === "undefined") return;
@@ -130,21 +132,27 @@ export function PakuGame() {
 
       setReady(true);
 
-      // Temporary on-screen diagnostic for the CYBER-theme report - remove once resolved.
+      // Temporary on-screen diagnostic for the CYBER-theme report - polls continuously
+      // (not just once) so a screenshot taken any time later still reflects the live
+      // state, and checks the AIR canvas directly since that's the visible symptom.
+      // Remove once resolved.
       const describe = () => {
         let stored = "n/a";
         try { stored = window.localStorage.getItem("cyberAquariumTheme") ?? "(null)"; } catch { /* ignore */ }
         setDebugInfo(
-          `aq=${aquarium.themeMode} audio=${window.cyberAudio?.themeMode} ls=${stored} `
-          + `tags=${document.querySelectorAll("script[data-paku-file]").length} v=${ENGINE_VERSION} ua=${navigator.userAgent}`,
+          `t=${Math.round(performance.now() / 1000)}s aq=${aquarium.themeMode} audio=${window.cyberAudio?.themeMode} ls=${stored} `
+          + `sameRef=${window.aquariumInstance === aquarium} airDisplay=${aquarium.airLayerCanvas?.style.display ?? "(none)"} `
+          + `tags=${document.querySelectorAll("script[data-paku-file]").length} v=${ENGINE_VERSION}`,
         );
       };
       describe();
-      window.setTimeout(describe, 1500);
+      const debugTimer = window.setInterval(describe, 1000);
+      cleanupFns.push(() => window.clearInterval(debugTimer));
     })();
 
     return () => {
       cancelled = true;
+      cleanupFns.forEach((fn) => fn());
       aquariumRef.current?.stop();
       if (window.aquariumInstance === aquariumRef.current) window.aquariumInstance = undefined;
     };
