@@ -25,6 +25,7 @@ type PakuAquarium = {
 
 type PakuAudio = {
   isMuted: boolean;
+  themeMode: string;
   ctx?: { state: string; resume: () => void };
   setMute: (muted: boolean) => void;
   setThemeMode: (mode: string) => void;
@@ -99,11 +100,18 @@ export function PakuGame() {
       aquariumRef.current = aquarium;
       window.aquariumInstance = aquarium;
 
-      // setTheme() (not a raw themeMode assignment) is what actually invalidates the
-      // cached background/gravel static layer - skipping it left that layer baked
-      // from the constructor's dark-mode default while per-frame fish draws (which
-      // read themeMode live) correctly showed light mode.
+      // setTheme() first, while themeMode is still a normal read/write property -
+      // this is what actually invalidates the cached background/gravel layer,
+      // persists to localStorage, etc. Then lock it down: on at least one real
+      // device, themeMode has read back as "light" everywhere it was checked
+      // directly yet the tank still rendered CYBER (dark background, text-based
+      // AIR bubbles), with no reproduction possible here across devices,
+      // viewport emulation, or a direct read of the deployed bundle. Rather than
+      // continue chasing a timing/identity bug that can't be observed from here,
+      // remove the possibility outright: make themeMode a getter that can only
+      // ever read "light", however it happens elsewhere.
       aquarium.setTheme("light");
+      Object.defineProperty(aquarium, "themeMode", { get: () => "light", set: () => {}, configurable: true });
       aquarium.lighting = 0.82;
       aquarium.bubblerRate = 0.65;
 
@@ -123,6 +131,9 @@ export function PakuGame() {
       aquarium.start();
 
       window.cyberAudio?.setThemeMode("light");
+      if (window.cyberAudio) {
+        Object.defineProperty(window.cyberAudio, "themeMode", { get: () => "light", set: () => {}, configurable: true });
+      }
       window.cyberAudio?.updateBubblerRate(0.65);
       window.cyberAudio?.setMasterVolume(0.9);
       window.cyberAudio?.setHumEnabled(true);
