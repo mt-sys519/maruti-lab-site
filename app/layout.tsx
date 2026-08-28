@@ -12,6 +12,11 @@ const GA_MEASUREMENT_ID = "G-HCHV1Y4GPS";
 // This opts the whole site out of that heuristic.
 export const viewport: Viewport = {
   colorScheme: "light",
+  // Without this, the layout viewport is clamped to the OS safe area no matter
+  // what fullscreen CSS says - PAKU's fullscreen tank couldn't reach past the
+  // status bar strip at the top even with inset:0, because the page was never
+  // allowed to draw there in the first place.
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
