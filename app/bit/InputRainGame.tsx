@@ -544,33 +544,28 @@ export function InputRainGame() {
     return () => window.removeEventListener("keydown", onSpaceStart);
   }, [startRun]);
 
-  const appendFlickChar = useCallback((char: string, replaceLast = false) => {
+  const appendFlickChar = useCallback((char: string) => {
     if (!current || phaseRef.current !== "playing" || inputMode !== "flick" || paused || feedback === "accepted" || feedback === "timeout") return;
-    if (replaceLast && !mobileTyped) return;
     const target = normalizeKana(current.reading);
-    // A same-key tap cycle (あ→い→う→え→お...) replaces the character it just
-    // committed rather than appending a new one - re-validate against the same
-    // position that character occupied, not the position after it.
-    const base = replaceLast ? mobileTyped.slice(0, -1) : mobileTyped;
     // Without a delete key, a base form left un-mutated stops being reachable the moment
     // another character is typed after it (mutate only ever touches the last character),
     // which would otherwise let a run advance past a wrong dakuten/small-kana without ever
     // completing it. So a still-pending mutation blocks any new character - matching a
     // real phone's flick input, where the modifier key only ever applies to what you just
     // committed, not something further back.
-    if (base && base.slice(-1) !== target[base.length - 1]) {
+    if (mobileTyped && mobileTyped.slice(-1) !== target[mobileTyped.length - 1]) {
       registerInputError();
       return;
     }
     // Allow any base form on the same dakuten/handakuten/small-kana cycle as the
     // expected character — e.g. base "そ" is a valid step toward target "ぞ", since the
     // mutate key still needs to be pressed to get there.
-    const expected = target[base.length];
+    const expected = target[mobileTyped.length];
     if (!isReachableTowards(char, expected)) {
       registerInputError();
       return;
     }
-    const value = base + char;
+    const value = mobileTyped + char;
     if (feedback === "error") setFeedback("idle");
     playTypeFlick();
     setMobileTyped(value);
