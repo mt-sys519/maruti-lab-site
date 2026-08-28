@@ -3814,7 +3814,7 @@ class CyberObstacle {
 class CyberAquarium {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext("2d", { alpha: true, desynchronized: true });
+    this.ctx = this.canvas.getContext("2d", { alpha: true });
     
     this.fishes = [];
     this.plants = [];
@@ -4995,7 +4995,7 @@ class CyberAquarium {
       layer.style.zIndex = spec.z;
       this.canvas.parentElement.insertBefore(layer, this.canvas);
       this[prop] = layer;
-      this[ctxProp] = layer.getContext("2d", { alpha: true, desynchronized: true });
+      this[ctxProp] = layer.getContext("2d", { alpha: true });
     }
     const pw = Math.max(1, Math.round(this.drawWidth * this.pixelRatio));
     const ph = Math.max(1, Math.round(this.drawHeight * this.pixelRatio));
@@ -5027,7 +5027,7 @@ class CyberAquarium {
         zIndex: "2"
       });
       this.canvas.parentElement.insertBefore(this.airLayerCanvas, this.canvas);
-      this.airLayerCtx = this.airLayerCanvas.getContext("2d", { alpha: true, desynchronized: true });
+      this.airLayerCtx = this.airLayerCanvas.getContext("2d", { alpha: true });
     }
     this.airLayerCanvas.style.display = this.themeMode === "light" ? "none" : "block";
     // Data fragments are intentionally background-detail. Rasterize them below 1x and
@@ -5251,7 +5251,7 @@ class CyberAquarium {
       const canvas = document.createElement("canvas");
       canvas.setAttribute("aria-hidden", "true");
       this.plantZoneCanvases[zone] = canvas;
-      this.plantZoneContexts[zone] = canvas.getContext("2d", { alpha:true, desynchronized:true });
+      this.plantZoneContexts[zone] = canvas.getContext("2d", { alpha:true });
     }
     const canvas = this.plantZoneCanvases[zone];
     const ctx = this.plantZoneContexts[zone];

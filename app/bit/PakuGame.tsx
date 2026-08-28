@@ -7,7 +7,7 @@ const ENGINE_FILES = ["database.js", "botanical-engine.js", "audio.js", "particl
 // Bumped whenever these static files change, so a browser that already cached
 // an older copy (common on repeated same-URL loads while testing on a phone)
 // is forced to fetch the current one instead of silently reusing a stale build.
-const ENGINE_VERSION = "10";
+const ENGINE_VERSION = "11";
 const CANVAS_ID = "paku-aquarium-canvas";
 
 type PakuAquarium = {
@@ -115,10 +115,10 @@ export function PakuGame() {
       aquarium.lighting = 0.82;
       aquarium.bubblerRate = 0.65;
 
-      // TEMP DIAGNOSTIC: every species disabled - empty tank, to isolate whether
-      // the reported CYBER look comes from the background/water/terrain itself
-      // or specifically from fish rendering. Revert once the test is done.
       Object.keys(aquarium.speciesConfig).forEach((id) => { aquarium.speciesConfig[id].enabled = false; });
+      aquarium.speciesConfig["neon-tetra"] = { enabled: true, count: 9, max: 30 };
+      aquarium.speciesConfig["corydoras"] = { enabled: true, count: 3, max: 12 };
+      aquarium.speciesConfig["african-lampeye"] = { enabled: true, count: 6, max: 24 };
 
       aquarium.spawnPopulation();
 
