@@ -272,7 +272,8 @@ class Plankton {
     this.vel = new Vector((Math.random() - 0.5) * 0.15, (Math.random() - 0.5) * 0.15);
     this.size = 1 + Math.random() * 1.8;
     this.phase = Math.random() * 100;
-    this.color = Math.random() > 0.4 ? "rgba(0, 243, 255, 0.35)" : "rgba(57, 255, 20, 0.3)";
+    // PAKU: NATURAL only - was cyber cyan/neon-green with no themeMode check.
+    this.color = Math.random() > 0.4 ? "rgba(150, 178, 172, 0.30)" : "rgba(168, 186, 160, 0.26)";
   }
   update(w, h, tempFactor) {
     this.phase += 0.008;
@@ -312,9 +313,14 @@ class DustParticle {
   draw(ctx) {
     const scale = window.aquariumInstance ? window.aquariumInstance.scale : 1.0;
     ctx.save();
-    ctx.fillStyle = `rgba(0, 255, 136, ${this.alpha})`;
-    ctx.font = `${this.size * scale}px monospace`;
-    ctx.fillText(this.char, this.pos.x, this.pos.y);
+    // PAKU: NATURAL only. This drew a neon-green "0"/"1" GLYPH with no themeMode
+    // check of any kind - so every corydoras foraging pass sent text characters
+    // drifting up from the substrate, reading exactly like CYBER "AIR" bubbles.
+    // Now a soft silt puff instead.
+    ctx.fillStyle = `rgba(196, 180, 148, ${Math.max(0, this.alpha) * 0.55})`;
+    ctx.beginPath();
+    ctx.arc(this.pos.x, this.pos.y, Math.max(0.6, this.size * scale * 0.30), 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 }
