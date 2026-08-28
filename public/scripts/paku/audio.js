@@ -737,6 +737,9 @@ class CyberAudioEngine {
   // 泡のはじける水音の合成
   playBubbleSound() {
     if (!this.isInitialized || this.isMuted) return;
+    // Guards the setTimeout-delayed calls above too, in case suspend lands
+    // in the gap between the interval tick firing and this actually running.
+    if (!this.ctx || this.ctx.state !== "running") return;
     if (this.themeMode !== "light") {
       this.playCyberBubbleSound();
       return;
@@ -792,7 +795,12 @@ class CyberAudioEngine {
     if (this.bubblerInterval) clearInterval(this.bubblerInterval);
     
     this.bubblerInterval = setInterval(() => {
+      // ctx.currentTime freezes while suspended (e.g. phone locked/tab hidden).
+      // Without this check, every tick below still schedules sounds against
+      // that frozen "now", which all pile up and fire at once - as one loud
+      // burst - the instant the context resumes.
       if (this.isMuted || !this.isInitialized || this.bubblerRate <= 0.05) return;
+      if (!this.ctx || this.ctx.state !== "running") return;
       
       // NATURALは従来の気泡群。CYBERは連打すると泡の破裂音に聞こえるため、
       // 1回ずつ長めのデータ・ベント音を流す。

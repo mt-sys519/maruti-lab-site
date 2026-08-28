@@ -9,7 +9,7 @@ const ENGINE_FILES = ["database.js", "botanical-engine.js", "audio.js", "particl
 // Bumped whenever these static files change, so a browser that already cached
 // an older copy (common on repeated same-URL loads while testing on a phone)
 // is forced to fetch the current one instead of silently reusing a stale build.
-const ENGINE_VERSION = "12";
+const ENGINE_VERSION = "13";
 const CANVAS_ID = "paku-aquarium-canvas";
 // Shared with the other MarutiBit games' sound hooks, so toggling sound
 // anywhere carries over here too instead of PAKU tracking its own separate,
