@@ -24,7 +24,8 @@ export function LabHero() {
     if (name === "ANGLE") return <span className={`${styles.visual} ${styles.angleVisual}`} aria-hidden="true"><i /><i /><i /><b>?</b></span>;
     if (name === "BLANK") return <span className={`${styles.visual} ${styles.blankVisual}`} aria-hidden="true"><span>8</span><i>+</i><b>?</b><i>=</i><span>13</span></span>;
     if (name === "SEQUENCE") return <span className={`${styles.visual} ${styles.sequenceVisual}`} aria-hidden="true"><span>2</span><i>4</i><span>8</span><b>?</b></span>;
-    return <span className={`${styles.visual} ${styles.rainVisual}`} aria-hidden="true"><i>PT&gt;</i><span>INPUT</span><b>RAIN</b></span>;
+    if (name === "INPUT RAIN") return <span className={`${styles.visual} ${styles.rainVisual}`} aria-hidden="true"><i>PT&gt;</i><span>INPUT</span><b>RAIN</b></span>;
+    return <span className={`${styles.visual} ${styles.pakuVisual}`} aria-hidden="true"><i /><i /><i /></span>;
   }
 
   return (
@@ -47,14 +48,20 @@ export function LabHero() {
       <div id="bit-games" className={styles.index} aria-label="MarutiBitのゲーム一覧">
         <div className={styles.indexHead}><span>GAME INDEX</span><strong>{gameCount} / ONLINE</strong></div>
         <div className={styles.games}>
-          {bitGames.map((game) => (
-            <a href={game.href} key={game.name}>
-              <span className={styles.gameNumber}>{game.number}</span>
-              {gameVisual(game.name)}
-              <strong className={styles.gameName}>{game.name}</strong>
-              <small className={styles.gameKind}>{game.kind}</small>
-            </a>
-          ))}
+          {bitGames.map((game, index) => {
+            const itemsInLastRow = bitGames.length % 2 === 0 ? 2 : bitGames.length % 2;
+            const isLastRow = index >= bitGames.length - itemsInLastRow;
+            const isTrailingSolo = itemsInLastRow === 1 && isLastRow;
+            const rowClass = [isLastRow && styles.isLastRow, isTrailingSolo && styles.spanFull].filter(Boolean).join(" ");
+            return (
+              <a href={game.href} key={game.name} className={rowClass || undefined}>
+                <span className={styles.gameNumber}>{game.number}</span>
+                {gameVisual(game.name)}
+                <strong className={styles.gameName}>{game.name}</strong>
+                <small className={styles.gameKind}>{game.kind}</small>
+              </a>
+            );
+          })}
         </div>
       </div>
 
