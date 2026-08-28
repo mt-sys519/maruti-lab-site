@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { GamePauseOverlay } from "./shared/GamePauseOverlay";
+import { useVisibilityPause } from "./shared/useVisibilityPause";
 
 const ENGINE_BASE = "/scripts/paku";
 const ENGINE_FILES = ["database.js", "botanical-engine.js", "audio.js", "particle-core.js", "aquarium.js"];
@@ -9,6 +11,11 @@ const ENGINE_FILES = ["database.js", "botanical-engine.js", "audio.js", "particl
 // is forced to fetch the current one instead of silently reusing a stale build.
 const ENGINE_VERSION = "12";
 const CANVAS_ID = "paku-aquarium-canvas";
+// Shared with the other MarutiBit games' sound hooks, so toggling sound
+// anywhere carries over here too instead of PAKU tracking its own separate,
+// unpersisted on/off state.
+const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
+const SOUND_CHANGE_EVENT = "marutibit:sound-change";
 
 type PakuAquarium = {
   themeMode: string;
@@ -26,7 +33,7 @@ type PakuAquarium = {
 type PakuAudio = {
   isMuted: boolean;
   themeMode: string;
-  ctx?: { state: string; resume: () => void };
+  ctx?: { state: string; resume: () => void; suspend: () => void };
   setMute: (muted: boolean) => void;
   setThemeMode: (mode: string) => void;
   updateBubblerRate: (rate: number) => void;
@@ -86,6 +93,7 @@ export function PakuGame() {
   const startedRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
+  const { paused, resume } = useVisibilityPause(ready);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenSupported, setFullscreenSupported] = useState(false);
 
@@ -138,6 +146,11 @@ export function PakuGame() {
       window.cyberAudio?.setMasterVolume(0.9);
       window.cyberAudio?.setHumEnabled(true);
 
+      let storedSoundOn = false;
+      try { storedSoundOn = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true"; } catch { /* Local storage is optional. */ }
+      window.cyberAudio?.setMute(!storedSoundOn);
+      setSoundOn(storedSoundOn);
+
       setReady(true);
     })();
 
@@ -148,6 +161,45 @@ export function PakuGame() {
     };
   }, []);
 
+  // Stay in sync with the shared sound preference - other MarutiBit games, or
+  // this same game in another tab.
+  useEffect(() => {
+    function applyPreference(next: boolean) {
+      const audio = window.cyberAudio;
+      if (!audio) return;
+      audio.setMute(!next);
+      setSoundOn(next);
+    }
+    function onStorage(event: StorageEvent) {
+      if (event.key === SOUND_STORAGE_KEY) applyPreference(event.newValue === "true");
+    }
+    function onSoundChange(event: Event) {
+      applyPreference(Boolean((event as CustomEvent<boolean>).detail));
+    }
+    window.addEventListener("storage", onStorage);
+    window.addEventListener(SOUND_CHANGE_EVENT, onSoundChange);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(SOUND_CHANGE_EVENT, onSoundChange);
+    };
+  }, []);
+
+  // Matches the other games' pause behavior: fully stop the simulation (not
+  // just mute it) while the tab/screen is hidden, and require an explicit tap
+  // to resume instead of silently continuing in the background.
+  useEffect(() => {
+    if (paused) {
+      aquariumRef.current?.stop();
+      if (window.cyberAudio?.ctx?.state === "running") void window.cyberAudio.ctx.suspend();
+    }
+  }, [paused]);
+
+  function resumeFromPause() {
+    resume();
+    aquariumRef.current?.start();
+    if (soundOn && window.cyberAudio?.ctx?.state === "suspended") void window.cyberAudio.ctx.resume();
+  }
+
   // Just unlocks the AudioContext under the browser's autoplay policy (needs a
   // user gesture) - does NOT touch mute state, so an explicit SOUND OFF stays
   // off across taps instead of getting silently re-enabled by feeding.
@@ -155,6 +207,11 @@ export function PakuGame() {
     const audio = window.cyberAudio;
     if (!audio || audio.isMuted) return;
     if (audio.ctx?.state === "suspended") audio.ctx.resume();
+  }
+
+  function saveSoundPreference(next: boolean) {
+    try { window.localStorage.setItem(SOUND_STORAGE_KEY, next ? "true" : "false"); } catch { /* Local storage is optional. */ }
+    window.dispatchEvent(new CustomEvent<boolean>(SOUND_CHANGE_EVENT, { detail: next }));
   }
 
   function enableAudio() {
@@ -171,8 +228,8 @@ export function PakuGame() {
   function toggleSound() {
     const audio = window.cyberAudio;
     if (!audio) return;
-    if (audio.isMuted) enableAudio();
-    else { audio.setMute(true); setSoundOn(false); }
+    if (audio.isMuted) { enableAudio(); saveSoundPreference(true); }
+    else { audio.setMute(true); setSoundOn(false); saveSoundPreference(false); }
   }
 
   useEffect(() => {
@@ -231,6 +288,7 @@ export function PakuGame() {
 
   return (
     <section className="bitGameShell bitPakuShell" aria-label="PAKUゲーム">
+      <GamePauseOverlay active={paused} onResume={resumeFromPause} />
       <div className="bitGameControls">
         <button className={`bitSound ${soundOn ? "isOn" : ""}`} type="button" aria-pressed={soundOn} onClick={toggleSound}>
           <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundOn ? "ON" : "OFF"}</strong>
@@ -258,6 +316,18 @@ export function PakuGame() {
         <canvas id={CANVAS_ID} className="bitPakuCanvas" />
         <div ref={tapFxRef} className="bitPakuTapFx" aria-hidden="true" />
         {!ready && <p className="bitPakuLoading">水槽を準備中…</p>}
+        {isFullscreen && (
+          // The Fullscreen API only displays this element's own subtree - the
+          // toolbar button above (a sibling of .bitPakuTank) becomes invisible
+          // once fullscreen starts, with no way back except an OS gesture the
+          // viewer may not know. This duplicate lives inside the tank so it
+          // stays on screen and tappable the whole time fullscreen is active.
+          <button className="bitPakuExitFullscreen" type="button" onClick={toggleFullscreen} aria-label="全画面表示を終了">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <path d="M7 2v5H2M13 2v5h5M7 18v-5H2M13 18v-5h5" />
+            </svg>
+          </button>
+        )}
       </div>
     </section>
   );
