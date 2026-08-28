@@ -1,9 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://marutilab.com";
 const GA_MEASUREMENT_ID = "G-HCHV1Y4GPS";
+
+// The site has no dark-mode styling at all, but Android Chrome's "force dark"
+// heuristic will still repaint unstyled pages (canvas included) toward dark
+// when the OS is in dark mode - most visible on PAKU's aquarium canvas, whose
+// background went black while fish drawn on top kept their real colors.
+// This opts the whole site out of that heuristic.
+export const viewport: Viewport = {
+  colorScheme: "light",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
