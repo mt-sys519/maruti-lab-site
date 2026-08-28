@@ -1037,7 +1037,7 @@ class CyberAudioEngine {
     osc.frequency.setValueAtTime(startFreq, now);
     osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.05);
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.07, now + 0.006);
+    gain.gain.linearRampToValueAtTime(0.045, now + 0.006);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
     osc.connect(gain);
     gain.connect(this.masterGain);
@@ -1052,8 +1052,8 @@ class CyberAudioEngine {
       noiseFilter.frequency.setValueAtTime(2200 + Math.random() * 800, now);
       noiseFilter.Q.setValueAtTime(5, now);
       const noiseGain = this.ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.01, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.025);
+      noiseGain.gain.setValueAtTime(0.007, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0006, now + 0.025);
       noiseSource.connect(noiseFilter);
       noiseFilter.connect(noiseGain);
       noiseGain.connect(this.masterGain);
