@@ -78,14 +78,6 @@ function hiragana(value: string) {
   return value.replace(/[ァ-ヶ]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0x60));
 }
 
-// With the IME set to fullwidth-alphanumeric, physical letter/digit/punctuation keys
-// report their fullwidth form in event.key (e.g. "Ａ" instead of "a") even with no
-// composition popup active, so the romaji matcher below would otherwise see nothing
-// it recognizes and silently drop every keystroke.
-function toHalfWidth(value: string) {
-  return value.replace(/[！-～]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0xfee0));
-}
-
 function normalizeKana(value: string) {
   return hiragana(value).replace(/\s+/g, "").replace(/，/g, "、").replace(/．/g, "。");
 }
@@ -517,7 +509,10 @@ export function InputRainGame() {
         return;
       }
       if (event.key.length !== 1) return;
-      const character = toHalfWidth(event.key).toLowerCase();
+      // With the IME set to fullwidth-alphanumeric, physical keys report their fullwidth
+      // form here (e.g. "Ａ" instead of "a") even with no composition popup active - NFKC
+      // folds that back to ASCII before the romaji matcher below ever sees it.
+      const character = event.key.normalize("NFKC").toLowerCase();
       if (!/[a-z,.'-]/.test(character)) return;
       event.preventDefault();
       const candidate = typed + character;
