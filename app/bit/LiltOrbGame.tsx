@@ -916,29 +916,32 @@ export function LiltOrbGame() {
     }
 
     let startingAudio = false;
+    // Confirmed on-device (Redmi Note 13 Pro 5G, Chrome for Android): on a
+    // fresh page load, actx.resume()'s promise can simply hang and never
+    // settle - not reject, just never resolve - a known Android Chrome
+    // quirk. A single resume() call with no retry (the previous version of
+    // this function) then waits forever with `running` stuck false, which
+    // matches the reported "sound never comes on no matter how much you
+    // touch it" exactly. So: keep calling resume() every ~700ms, checking
+    // actx.state directly rather than trusting any single promise, until it
+    // actually reports "running".
+    function attemptResume() {
+      if (running || !actx) return;
+      if (actx.state !== "suspended") {
+        running = true;
+        startingAudio = false;
+        scheduleAmbientTick();
+        scheduleCyberArp();
+        return;
+      }
+      startingAudio = true;
+      actx.resume().catch(() => { /* Retried on the timer below regardless. */ });
+      window.setTimeout(attemptResume, 700);
+    }
     function startAudio() {
       if (running || startingAudio) return;
       ensureEngine();
-      // PAKU's own audio engine learned this the hard way (see its setMute):
-      // on some browsers, nodes created/started while the context is still
-      // suspended never produce sound even after it later resumes - so every
-      // node-creating function here is gated behind `running`, and `running`
-      // must only flip to true once we know resume() has actually finished,
-      // not the instant it's fired off. Firing it and immediately scheduling
-      // anyway (the previous version of this function) raced that gap.
-      if (actx!.state === "suspended") {
-        startingAudio = true;
-        actx!.resume().then(() => {
-          startingAudio = false;
-          running = true;
-          scheduleAmbientTick();
-          scheduleCyberArp();
-        }).catch(() => { startingAudio = false; });
-      } else {
-        running = true;
-        scheduleAmbientTick();
-        scheduleCyberArp();
-      }
+      attemptResume();
     }
 
     engineRef.current = {
