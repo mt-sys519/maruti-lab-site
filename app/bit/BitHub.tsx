@@ -20,11 +20,22 @@ function GameVisual({ id }: { id: (typeof bitGames)[number]["id"] }) {
     </span>
   );
   if (id === "input-rain") return <span className={`${styles.visual} ${styles.rain}`} aria-hidden="true"><i>PT&gt;</i><span>INPUT</span><b>RAIN</b></span>;
-  return (
+  if (id === "paku") return (
     <span className={`${styles.visual} ${styles.paku}`} aria-hidden="true">
       <svg viewBox="0 0 24 24" focusable="false">
         <path d="M3.5 12 C7 7.5 12 6.7 16.2 9.2 L21 6.6 L19.4 12 L21 17.4 L16.2 14.8 C12 17.3 7 16.5 3.5 12 Z" />
         <circle cx="8.1" cy="11" r="1" />
+      </svg>
+    </span>
+  );
+  return (
+    <span className={`${styles.visual} ${styles.liltorb}`} aria-hidden="true">
+      <svg viewBox="0 0 100 100" focusable="false">
+        <circle className={styles.orbRing} cx="50" cy="50" r="34" />
+        <circle className={styles.orbDot} cx="38" cy="42" r="2.6" />
+        <circle className={styles.orbDot} cx="59" cy="35" r="1.9" />
+        <circle className={styles.orbDot} cx="61" cy="59" r="2.3" />
+        <circle className={styles.orbDot} cx="42" cy="62" r="1.7" />
       </svg>
     </span>
   );

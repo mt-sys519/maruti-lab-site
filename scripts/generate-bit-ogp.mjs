@@ -127,6 +127,23 @@ const pakuVisual = `<g transform="translate(650 150)" filter="url(#shadow)">
   <text x="24" y="278" fill="#476c70" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="3">TAP TO FEED / AQUARIUM ONLINE</text>
 </g>`;
 
+const liltOrbDots = Array.from({ length: 46 }).map((_, i) => {
+  const angle = (i * 137.5) % 360; // golden angle keeps the scatter even, not clumped
+  const rad = Math.sqrt(i / 46) * 118;
+  const x = 180 + Math.cos((angle * Math.PI) / 180) * rad;
+  const y = 165 + Math.sin((angle * Math.PI) / 180) * rad;
+  const r = 1.4 + (i % 5) * 0.7;
+  const opacity = 0.35 + (i % 7) * 0.09;
+  return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#8ef2ff" opacity="${opacity.toFixed(2)}"/>`;
+}).join("");
+
+const liltOrbVisual = `<g transform="translate(700 145)" filter="url(#shadow)">
+  <rect width="360" height="340" rx="4" fill="${palette.dark}" stroke="#3a5058"/>
+  <circle cx="180" cy="165" r="140" fill="none" stroke="#2c4048" stroke-width="1"/>
+  ${liltOrbDots}
+  <text x="24" y="312" fill="#7fa3ad" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">TOUCH TO GATHER</text>
+</g>`;
+
 const images = [
   ["index.png", shell({ serial: "SERIES INDEX", title: "Maruti Bit", subtitle: "短い時間で、考える。見抜く。打ち込む。", visual: hubVisual })],
   ["angle.png", shell({ serial: "GAME 001", title: "ANGLE", subtitle: "三角形の角度を求める、全5問。", visual: angleVisual })],
@@ -134,6 +151,7 @@ const images = [
   ["sequence.png", shell({ serial: "GAME 003", title: "SEQUENCE", subtitle: "数の並びに隠れた規則を見抜く、全5問。", visual: sequenceVisual })],
   ["input-rain.png", shell({ serial: "GAME 004", title: "INPUT RAIN", subtitle: "降る文字列を打ち返すタイピングゲーム。", visual: rainVisual })],
   ["paku.png", shell({ serial: "GAME 005", title: "PAKU", subtitle: "水槽の熱帯魚に、タップで餌をあげる。", visual: pakuVisual })],
+  ["liltorb.png", shell({ serial: "GAME 006", title: "LILT ORB", subtitle: "触れると粒子が集まる、癒しと刺激の球体トイ。", visual: liltOrbVisual })],
 ];
 
 for (const [filename, svg] of images) {

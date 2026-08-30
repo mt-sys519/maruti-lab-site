@@ -31,6 +31,9 @@
 .paku svg { display: block; width: clamp(72px, 9vw, 108px); height: auto; overflow: visible; }
 .paku svg path { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .paku svg circle { fill: currentColor; stroke: none; }
+.liltorb svg { display: block; width: clamp(72px, 8vw, 100px); height: auto; overflow: visible; }
+.liltorb .orbRing { fill: none; stroke: currentColor; stroke-width: 1.4; vector-effect: non-scaling-stroke; opacity: .55; }
+.liltorb .orbDot { fill: currentColor; stroke: none; }
 .card > div:last-of-type p { margin: 0 0 10px; color: #66736c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .card > div:last-of-type h3 { margin: 0; font: 500 clamp(32px, 4.5vw, 62px)/.9 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.04em; }
 .card > div:last-of-type span { display: block; margin-top: 18px; max-width: 330px; color: #5d6963; font: 400 11px/1.8 "Yu Gothic UI", sans-serif; }
