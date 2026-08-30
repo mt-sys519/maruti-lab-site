@@ -955,24 +955,26 @@ export function LiltOrbGame() {
         <button className={`bitSound ${soundOn ? "isOn" : ""}`} type="button" aria-pressed={soundOn} onClick={toggleSound}>
           <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundOn ? "ON" : "OFF"}</strong>
         </button>
-        <button
-          className={`bitLiltOrbTheme ${natural ? "isNatural" : ""}`}
-          type="button"
-          aria-pressed={natural}
-          onClick={() => setNatural((v) => !v)}
-        >
-          <svg className="bitLiltOrbThemeIcon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-            <path d="M4 7h10.5l-3-3M16 13H5.5l3 3" />
-          </svg>
-          {natural ? "NATURAL" : "CYBER"}
-        </button>
-        {fullscreenSupported && (
-          <button className="bitPakuFullscreen" type="button" aria-pressed={isFullscreen} onClick={toggleFullscreen} aria-label="全画面表示を切り替え">
-            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-              <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
+        <div className="bitLiltOrbControlsRight">
+          <button
+            className={`bitLiltOrbTheme ${natural ? "isNatural" : ""}`}
+            type="button"
+            aria-pressed={natural}
+            onClick={() => setNatural((v) => !v)}
+          >
+            <svg className="bitLiltOrbThemeIcon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <path d="M4 7h10.5l-3-3M16 13H5.5l3 3" />
             </svg>
+            {natural ? "NATURAL" : "CYBER"}
           </button>
-        )}
+          {fullscreenSupported && (
+            <button className="bitPakuFullscreen" type="button" aria-pressed={isFullscreen} onClick={toggleFullscreen} aria-label="全画面表示を切り替え">
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <div
