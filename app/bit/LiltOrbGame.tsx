@@ -855,16 +855,21 @@ export function LiltOrbGame() {
     }
     specialMomentTimer = window.setTimeout(scheduleSpecialMoment, 8000 + Math.random() * 8000);
 
-    function startAudio() {
-      if (running) return;
-      running = true;
+    // Builds the whole node graph eagerly at mount rather than waiting for
+    // first touch. Confirmed on-device (not a scheduling artifact): touching
+    // repeatedly during the first ~7s after a fresh page load produces no
+    // sound at all regardless of what's scheduled, yet switching CYBER<->
+    // NATURAL afterward is instant every time - this points at the
+    // AudioContext's actual output pipeline having several seconds of
+    // hardware/session cold-start latency on first use on this device, not
+    // anything about which sounds get scheduled when. Building the graph
+    // ahead of time gives that cold start a chance to happen in the
+    // background instead of being felt as "I touched it and had to wait."
+    // The context still starts (and stays) suspended under autoplay policy
+    // until a real gesture resumes it in startAudio() below.
+    function ensureEngine() {
+      if (actx) return;
       actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      // Some mobile browsers create a new AudioContext already suspended even
-      // inside a genuine user gesture - without this, the graph below gets
-      // built and its gains ramped correctly, but nothing actually plays
-      // until some later click/tap happens to also satisfy the browser's
-      // autoplay heuristic.
-      if (actx.state === "suspended") void actx.resume();
       master = actx.createGain();
       master.gain.setValueAtTime(0, actx.currentTime);
       // Short, not silent-feeling: ambient NATURAL chimes are sparse (the
@@ -902,7 +907,14 @@ export function LiltOrbGame() {
       delayFilter.frequency.value = 2600;
       delay.connect(feedback); feedback.connect(delayFilter); delayFilter.connect(delay);
       delay.connect(master);
+    }
+    try { ensureEngine(); } catch { /* Some browsers may refuse to construct an AudioContext this early - startAudio() retries on first touch. */ }
 
+    function startAudio() {
+      if (running) return;
+      running = true;
+      ensureEngine();
+      if (actx!.state === "suspended") void actx!.resume();
       scheduleAmbientTick();
       scheduleCyberArp();
     }
