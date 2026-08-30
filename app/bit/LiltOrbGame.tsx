@@ -88,10 +88,20 @@ export function LiltOrbGame() {
 
   // Exposed so the pause overlay / resume-from-pause handler (defined outside
   // the mount effect) can reach into the running engine.
-  const engineRef = useRef<{ setOutputGain: (on: boolean) => void; suspend: () => void; resumeAudio: () => void } | null>(null);
+  const engineRef = useRef<{ setOutputGain: (on: boolean) => void; suspend: () => void; resumeAudio: () => void; getDebugInfo: () => string } | null>(null);
+  // TEMPORARY on-screen diagnostic for a hard-to-reproduce mobile sound bug -
+  // remove once resolved. Lets the user read out the actual engine state
+  // instead of guessing blind from a description of the symptom.
+  const [debugText, setDebugText] = useState("");
 
   useEffect(() => { naturalRef.current = natural; }, [natural]);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setDebugText(engineRef.current?.getDebugInfo() ?? "ctx:none running:false");
+    }, 400);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     function applyPreference(next: boolean) {
@@ -942,6 +952,9 @@ export function LiltOrbGame() {
       resumeAudio() {
         if (actx && actx.state === "suspended") void actx.resume();
       },
+      getDebugInfo() {
+        return `ctx:${actx ? actx.state : "none"} running:${running} starting:${startingAudio} out:${outputGain ? outputGain.gain.value.toFixed(2) : "-"}`;
+      },
     };
 
     setReady(true);
@@ -999,6 +1012,7 @@ export function LiltOrbGame() {
         <canvas ref={canvasRef} className="bitLiltOrbCanvas" />
         {!ready && <p className="bitPakuLoading">粒子を準備中…</p>}
         <p className={`bitLiltOrbHint ${hasInteracted ? "isHidden" : ""}`} aria-hidden="true">なぞって、はなす</p>
+        <p className="bitLiltOrbDebug" aria-hidden="true">{debugText}</p>
         {isFullscreen && (
           <button
             className={`bitLiltOrbExitFullscreen ${controlsIdle ? "isIdle" : ""}`}
