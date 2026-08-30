@@ -57,7 +57,10 @@ class CyberAudioEngine {
       this.ambientGain.gain.setValueAtTime(this.humEnabled ? 0.04 : 0.0, this.ctx.currentTime);
       this.ambientGain.connect(this.masterGain);
 
-      this.setupAmbientDrone();
+      // setupAmbientDrone() は呼ばない、まだ。init() はここで(必ず suspended な)
+      // 生成直後の AudioContext に対して呼ばれるので、ここでオシレーターを
+      // start() すると蛍光管系と同じ「suspended 中に作った常時音がブラウザ依存で
+      // 鳴らない」問題を踏む。resume 後の applyState() 側で一度だけ生成する。
       this.generateNoiseBuffer();
       this.isInitialized = true;
       this.applyThemeAudioProfile();
@@ -1010,6 +1013,15 @@ class CyberAudioEngine {
         this.startLightAgingScheduler();
         // PAKU: skip the fluorescent-tube "starter" crackle on every sound-on -
         // it reads as a stray noise burst in this cozy reskin, not a lighting rig.
+
+        // HUM(環境ハミング)のオシレーターも同じ理由でここまで遅延させる - 以前は
+        // init() 内で(まだ確実に suspended な)コンテキストに対して start() して
+        // いたため、蛍光管と同じ問題を踏んでいて「鳴ったり鳴らなかったり」の
+        // 原因になっていた。
+        if (!this.ambientDroneStarted) {
+          this.setupAmbientDrone();
+          this.ambientDroneStarted = true;
+        }
       }
     };
 
