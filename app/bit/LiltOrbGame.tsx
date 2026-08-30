@@ -699,7 +699,7 @@ export function LiltOrbGame() {
       const dur = 0.028 + Math.random() * 0.026;
       const g = actx!.createGain();
       g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(0.013, time + 0.003);
+      g.gain.linearRampToValueAtTime(0.026, time + 0.003);
       g.gain.exponentialRampToValueAtTime(0.0004, time + dur);
       osc.connect(g);
       const pan = actx!.createStereoPanner();
@@ -857,7 +857,11 @@ export function LiltOrbGame() {
       if (actx.state === "suspended") void actx.resume();
       master = actx.createGain();
       master.gain.setValueAtTime(0, actx.currentTime);
-      master.gain.linearRampToValueAtTime(1, actx.currentTime + 1.5);
+      // Short, not silent-feeling: ambient NATURAL chimes are sparse (the
+      // next one can be 4-7s away), so a long fade-in used to mask the very
+      // first chime almost entirely - the audible "start" only ever arrived
+      // at the second one, reading as several seconds of silence after touch.
+      master.gain.linearRampToValueAtTime(1, actx.currentTime + 0.25);
 
       cyberBus = actx.createGain();
       cyberBus.gain.value = 1;
