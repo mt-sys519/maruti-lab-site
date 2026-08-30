@@ -5,9 +5,13 @@ import styles from "./XShareButton.module.css";
 type XShareButtonProps = {
   text: string;
   url: string;
+  // "block": full-width button for a results screen (the original, default use).
+  // "compact": small toolbar pill for games with no results screen (e.g. PAKU),
+  // sized to sit next to the sound/fullscreen buttons instead of its own row.
+  variant?: "block" | "compact";
 };
 
-export function XShareButton({ text, url }: XShareButtonProps) {
+export function XShareButton({ text, url, variant = "block" }: XShareButtonProps) {
   function openComposer() {
     const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     // window.open(..., "_blank") can silently fail to produce a new tab on some
@@ -18,5 +22,6 @@ export function XShareButton({ text, url }: XShareButtonProps) {
     if (!win) window.location.href = intent;
   }
 
-  return <button className={styles.button} type="button" onClick={openComposer}>X SHARE</button>;
+  const className = variant === "compact" ? styles.compact : styles.button;
+  return <button className={className} type="button" onClick={openComposer}>X SHARE</button>;
 }

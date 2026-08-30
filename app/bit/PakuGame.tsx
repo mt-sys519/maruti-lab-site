@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
+import { XShareButton } from "./shared/XShareButton";
+import { ShareButton } from "./shared/ShareButton";
 
 const ENGINE_BASE = "/scripts/paku";
 const ENGINE_FILES = ["database.js", "botanical-engine.js", "audio.js", "particle-core.js", "aquarium.js"];
@@ -375,6 +377,18 @@ export function PakuGame() {
             </svg>
           </button>
         )}
+      </div>
+      <div className="bitPakuShareRow">
+        <ShareButton
+          title="MarutiBit「PAKU」"
+          text="水槽の熱帯魚にタップで餌をあげるエサやりゲーム"
+          url="https://marutilab.com/bit/paku"
+        />
+        <XShareButton
+          variant="compact"
+          text={"MarutiBit「PAKU」\n水槽の熱帯魚にタップで餌をあげるエサやりゲーム"}
+          url="https://marutilab.com/bit/paku"
+        />
       </div>
     </section>
   );

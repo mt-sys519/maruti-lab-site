@@ -297,6 +297,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitPakuFullscreen svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .bitPakuFullscreen:hover,.bitPakuFullscreen[aria-pressed="true"]{border-color:rgba(169,66,53,.56);color:var(--bit-red)}
 .bitPakuTank{position:relative;height:clamp(420px,58vw,620px);overflow:hidden;border:1px solid rgba(21,33,29,.45);background:#d7e8e7;touch-action:none;color-scheme:light;forced-color-adjust:none}
+.bitPakuShareRow{display:flex;gap:8px;margin-top:14px}
+.bitPakuShareRow>button{flex:1}
 .bitPakuTank:fullscreen,.bitPakuTank:-webkit-full-screen{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;background:#d7e8e7}
 @supports (height:100dvh){.bitPakuTank:fullscreen,.bitPakuTank:-webkit-full-screen{height:100dvh}}
 .bitPakuCanvas{position:relative;z-index:2;display:block;width:100%;height:100%;color-scheme:light;forced-color-adjust:none;isolation:isolate}
