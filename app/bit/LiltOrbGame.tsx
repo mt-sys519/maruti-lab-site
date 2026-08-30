@@ -947,7 +947,7 @@ export function LiltOrbGame() {
         <p className={`bitLiltOrbHint ${hasInteracted ? "isHidden" : ""}`} aria-hidden="true">なぞって、はなす</p>
         {isFullscreen && (
           <button
-            className={`bitPakuExitFullscreen ${controlsIdle ? "isIdle" : ""}`}
+            className={`bitLiltOrbExitFullscreen ${controlsIdle ? "isIdle" : ""}`}
             type="button"
             onClick={toggleFullscreen}
             aria-label="全画面表示を終了"
