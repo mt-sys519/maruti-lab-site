@@ -392,7 +392,6 @@ export function LiltOrbGame() {
         const cyberWarmGlow = 1 + (!natural ? warmth * 1.3 : 0);
 
         if (p.lastX !== null && (p.spark || p.starBoost > 0.05) && (depth > 0.62 || p.starBoost > 0.05)) {
-          ctx!.shadowBlur = 0;
           ctx!.strokeStyle = `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},${alpha * (natural ? 0.2 : 0.22) + p.starBoost * 0.5})`;
           ctx!.lineWidth = Math.max(0.35, pr * (0.44 + p.starBoost * 0.6));
           ctx!.beginPath();
@@ -402,11 +401,18 @@ export function LiltOrbGame() {
         }
         p.lastX = sx; p.lastY = sy;
 
+        // Glow used to be Canvas2D's shadowBlur/shadowColor - one of the most
+        // expensive things a canvas can do per-shape, and with 1200+ particles
+        // (compounded by CYBER's additive 'lighter' blending) it dropped this
+        // to a handful of FPS on mid-range Android hardware (reported on a
+        // Redmi Note 13 Pro 5G, 4GB RAM). A plain low-alpha circle behind the
+        // particle reads as glow too, at a fraction of the cost.
         if (wantsGlow) {
-          ctx!.shadowColor = `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},${Math.min(1, (natural ? 0.55 : 0.66) * alpha * cyberWarmGlow)})`;
-          ctx!.shadowBlur = (p.spark ? (natural ? 3.6 : 4.2) : (natural ? 2.2 : 2.2) + p.starBoost * 6) * cyberWarmGlow;
-        } else {
-          ctx!.shadowBlur = 0;
+          const glowAlpha = Math.min(1, (natural ? 0.3 : 0.34) * alpha * cyberWarmGlow) * (p.spark ? 1.15 : 1);
+          ctx!.fillStyle = `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},${glowAlpha})`;
+          ctx!.beginPath();
+          ctx!.arc(sx, sy, pr * (1.8 + p.starBoost * 1.4), 0, Math.PI * 2);
+          ctx!.fill();
         }
         ctx!.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
         ctx!.beginPath();
@@ -414,7 +420,6 @@ export function LiltOrbGame() {
         ctx!.fill();
 
         if (natural && warmth > 0.02) {
-          ctx!.shadowBlur = 0;
           ctx!.lineWidth = Math.max(0.35, pr * 0.16) * warmth;
           ctx!.strokeStyle = `rgba(255,255,255,${0.55 * warmth * (0.5 + centerFactor * 0.5)})`;
           ctx!.beginPath();
@@ -423,7 +428,6 @@ export function LiltOrbGame() {
         }
 
         if ((p.spark || p.band > 0.91) && depth > 0.66) {
-          ctx!.shadowBlur = 0;
           ctx!.fillStyle = `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},${alpha * (natural ? 0.14 : 0.1) * cyberWarmGlow})`;
           ctx!.beginPath();
           ctx!.arc(sx, sy, pr * 2.8, 0, Math.PI * 2);
@@ -844,6 +848,13 @@ export function LiltOrbGame() {
       if (running) return;
       running = true;
       actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      // Some mobile browsers create a new AudioContext already suspended even
+      // inside a genuine user gesture - without this, the graph below gets
+      // built and its gains ramped correctly, but nothing actually plays
+      // until some later click/tap happens to also satisfy the browser's
+      // autoplay heuristic (reported as "sound stays off until toggling the
+      // SOUND button", even with the preference already ON after a reload).
+      if (actx.state === "suspended") void actx.resume();
       master = actx.createGain();
       master.gain.setValueAtTime(0, actx.currentTime);
       master.gain.linearRampToValueAtTime(1, actx.currentTime + 1.5);
