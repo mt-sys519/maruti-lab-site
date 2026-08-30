@@ -855,18 +855,14 @@ export function LiltOrbGame() {
     }
     specialMomentTimer = window.setTimeout(scheduleSpecialMoment, 8000 + Math.random() * 8000);
 
-    // Builds the whole node graph eagerly at mount rather than waiting for
-    // first touch. Confirmed on-device (not a scheduling artifact): touching
-    // repeatedly during the first ~7s after a fresh page load produces no
-    // sound at all regardless of what's scheduled, yet switching CYBER<->
-    // NATURAL afterward is instant every time - this points at the
-    // AudioContext's actual output pipeline having several seconds of
-    // hardware/session cold-start latency on first use on this device, not
-    // anything about which sounds get scheduled when. Building the graph
-    // ahead of time gives that cold start a chance to happen in the
-    // background instead of being felt as "I touched it and had to wait."
-    // The context still starts (and stays) suspended under autoplay policy
-    // until a real gesture resumes it in startAudio() below.
+    // Built lazily, strictly inside the first real touch gesture (see
+    // startAudio) - constructing it any earlier, outside a gesture, is a
+    // known mobile-browser autoplay-policy trap: some browsers never
+    // properly unlock a context that wasn't created within the gesture that
+    // later calls resume() on it, even though resume() itself succeeds.
+    // Confirmed by trying the eager version on-device: sound stopped working
+    // entirely (not just delayed) until navigating away and back unlocked
+    // the origin some other way.
     function ensureEngine() {
       if (actx) return;
       actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -908,7 +904,6 @@ export function LiltOrbGame() {
       delay.connect(feedback); feedback.connect(delayFilter); delayFilter.connect(delay);
       delay.connect(master);
     }
-    try { ensureEngine(); } catch { /* Some browsers may refuse to construct an AudioContext this early - startAudio() retries on first touch. */ }
 
     let startingAudio = false;
     function startAudio() {

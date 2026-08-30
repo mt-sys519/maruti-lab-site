@@ -65,7 +65,7 @@ export function BitHub() {
             <a href={game.href} className={styles.card} key={game.id}>
               <span className={styles.number}>{game.number}</span>
               <GameVisual id={game.id} />
-              <div><p>{game.kind}</p><h3>{game.name}</h3><span>{game.description}</span></div>
+              <div><p>{game.kind}</p><h3>{game.name} <small className={styles.kana}>‐{game.kana}‐</small></h3><span>{game.description}</span></div>
               <b className={styles.play}>PLAY</b>
             </a>
           ))}

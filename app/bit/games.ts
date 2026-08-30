@@ -1,10 +1,10 @@
 export const bitGames = [
-  { id: "angle", number: "001", name: "ANGLE", kind: "角度当てゲーム", href: "/bit/angle", description: "三角形を組み合わせ、示された角度から答えを導く。", featured: true },
-  { id: "blank", number: "002", name: "BLANK", kind: "空欄補完ゲーム", href: "/bit/blank", description: "四則演算の空欄に入る数字を逆算する。", featured: true },
-  { id: "sequence", number: "003", name: "SEQUENCE", kind: "順番推理ゲーム", href: "/bit/sequence", description: "数の並びに隠れた規則を見抜く。", featured: true },
-  { id: "input-rain", number: "004", name: "INPUT RAIN", kind: "タイピング／フリック入力ゲーム", href: "/bit/input-rain", description: "落下する端末入力を、消える前に打ち込む。", featured: true },
-  { id: "paku", number: "005", name: "PAKU", kind: "エサやりゲーム", href: "/bit/paku", description: "水槽の熱帯魚に、タップで餌をあげる。", featured: false },
-  { id: "liltorb", number: "006", name: "LILT ORB", kind: "粒子操作トイ", href: "/bit/liltorb", description: "触れると粒子が集まる、癒しと刺激の球体トイ。", featured: false },
+  { id: "angle", number: "001", name: "ANGLE", kana: "アングル", kind: "角度当てゲーム", href: "/bit/angle", description: "三角形を組み合わせ、示された角度から答えを導く。", featured: true },
+  { id: "blank", number: "002", name: "BLANK", kana: "ブランク", kind: "空欄補完ゲーム", href: "/bit/blank", description: "四則演算の空欄に入る数字を逆算する。", featured: true },
+  { id: "sequence", number: "003", name: "SEQUENCE", kana: "シークエンス", kind: "順番推理ゲーム", href: "/bit/sequence", description: "数の並びに隠れた規則を見抜く。", featured: true },
+  { id: "input-rain", number: "004", name: "INPUT RAIN", kana: "インプットレイン", kind: "タイピング／フリック入力ゲーム", href: "/bit/input-rain", description: "落下する端末入力を、消える前に打ち込む。", featured: true },
+  { id: "paku", number: "005", name: "PAKU", kana: "パク", kind: "エサやりゲーム", href: "/bit/paku", description: "水槽の熱帯魚に、タップで餌をあげる。", featured: false },
+  { id: "liltorb", number: "006", name: "LILT ORB", kana: "リルトオーブ", kind: "粒子操作トイ", href: "/bit/liltorb", description: "触れると粒子が集まる、癒しと刺激の球体トイ。", featured: false },
 ] as const;
 
 // The home hero only teases a handful of games (not the whole, ever-growing

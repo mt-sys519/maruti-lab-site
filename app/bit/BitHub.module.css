@@ -36,6 +36,8 @@
 .liltorb .orbDot { fill: currentColor; stroke: none; }
 .card > div:last-of-type p { margin: 0 0 10px; color: #66736c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .card > div:last-of-type h3 { margin: 0; font: 500 clamp(32px, 4.5vw, 62px)/.9 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.04em; }
+.kana { font: 500 12px/1 "Yu Gothic UI", sans-serif; letter-spacing: .06em; color: #7c8983; vertical-align: middle; }
+.card:hover .kana, .card:focus-visible .kana { color: #a9b7b0; }
 .card > div:last-of-type span { display: block; margin-top: 18px; max-width: 330px; color: #5d6963; font: 400 11px/1.8 "Yu Gothic UI", sans-serif; }
 .card:hover > div:last-of-type p, .card:focus-visible > div:last-of-type p, .card:hover > div:last-of-type span, .card:focus-visible > div:last-of-type span { color: #c5d0ca; }
 .play { align-self: end; padding-bottom: 4px; border-bottom: 1px solid currentColor; font: 700 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
