@@ -103,12 +103,37 @@ const rainVisual = `<g transform="translate(650 154)" filter="url(#shadow)">
   </g>
 </g>`;
 
+const pakuVisual = `<g transform="translate(650 150)" filter="url(#shadow)">
+  <rect width="475" height="305" rx="4" fill="#d7e8e7" stroke="${palette.ink}" stroke-opacity=".7"/>
+  <path d="M0 86C95 58 169 104 265 78S395 62 475 88M0 208C86 182 157 226 249 202S386 185 475 215" fill="none" stroke="#5f9da1" stroke-opacity=".25" stroke-width="2"/>
+  <g fill="none" stroke="#24586a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(87 112)">
+      <path d="M0 0C24-28 68-28 94 0C68 28 24 28 0 0Z"/><path d="M94 0 126-25 119 0 126 25Z"/>
+      <circle cx="22" cy="-5" r="3" fill="#24586a" stroke="none"/>
+    </g>
+    <g transform="translate(285 205) scale(.78)">
+      <path d="M0 0C24-28 68-28 94 0C68 28 24 28 0 0Z"/><path d="M94 0 126-25 119 0 126 25Z"/>
+      <circle cx="22" cy="-5" r="3" fill="#24586a" stroke="none"/>
+    </g>
+    <g transform="translate(349 92) scale(-.56 .56)">
+      <path d="M0 0C24-28 68-28 94 0C68 28 24 28 0 0Z"/><path d="M94 0 126-25 119 0 126 25Z"/>
+      <circle cx="22" cy="-5" r="3" fill="#24586a" stroke="none"/>
+    </g>
+  </g>
+  <g fill="${palette.accent}"><circle cx="240" cy="78" r="5"/><circle cx="226" cy="62" r="3"/><circle cx="250" cy="49" r="4"/></g>
+  <g transform="translate(240 105)" fill="none" stroke="#5f9da1" stroke-width="2" opacity=".7">
+    <ellipse rx="28" ry="10"/><ellipse rx="52" ry="19" opacity=".55"/><ellipse rx="78" ry="29" opacity=".3"/>
+  </g>
+  <text x="24" y="278" fill="#476c70" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="3">TAP TO FEED / AQUARIUM ONLINE</text>
+</g>`;
+
 const images = [
   ["index.png", shell({ serial: "SERIES INDEX", title: "Maruti Bit", subtitle: "短い時間で、考える。見抜く。打ち込む。", visual: hubVisual })],
   ["angle.png", shell({ serial: "GAME 001", title: "ANGLE", subtitle: "三角形の角度を求める、全5問。", visual: angleVisual })],
   ["blank.png", shell({ serial: "GAME 002", title: "BLANK", subtitle: "式の空欄を見抜く、全5問。", visual: blankVisual })],
   ["sequence.png", shell({ serial: "GAME 003", title: "SEQUENCE", subtitle: "数の並びに隠れた規則を見抜く、全5問。", visual: sequenceVisual })],
   ["input-rain.png", shell({ serial: "GAME 004", title: "INPUT RAIN", subtitle: "降る文字列を打ち返すタイピングゲーム。", visual: rainVisual })],
+  ["paku.png", shell({ serial: "GAME 005", title: "PAKU", subtitle: "水槽の熱帯魚に、タップで餌をあげる。", visual: pakuVisual })],
 ];
 
 for (const [filename, svg] of images) {

@@ -49,6 +49,16 @@ test("renders the MarutiBit series index", async () => {
   assert.match(html, /\/og\/bit\/index\.png/);
 });
 
+test("renders the MarutiBit PAKU page with its dedicated social preview", async () => {
+  const response = await render("/bit/paku");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /PAKU/);
+  assert.match(html, /GAME 005/);
+  assert.match(html, /https:\/\/marutilab\.com\/og\/bit\/paku\.png/);
+  assert.match(html, /twitter:card" content="summary_large_image/);
+});
+
 test("renders the MarutiBit ANGLE game page", async () => {
   const response = await render("/bit/angle");
   assert.equal(response.status, 200);
