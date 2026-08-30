@@ -852,8 +852,7 @@ export function LiltOrbGame() {
       // inside a genuine user gesture - without this, the graph below gets
       // built and its gains ramped correctly, but nothing actually plays
       // until some later click/tap happens to also satisfy the browser's
-      // autoplay heuristic (reported as "sound stays off until toggling the
-      // SOUND button", even with the preference already ON after a reload).
+      // autoplay heuristic.
       if (actx.state === "suspended") void actx.resume();
       master = actx.createGain();
       master.gain.setValueAtTime(0, actx.currentTime);
@@ -939,6 +938,9 @@ export function LiltOrbGame() {
           aria-pressed={natural}
           onClick={() => setNatural((v) => !v)}
         >
+          <svg className="bitLiltOrbThemeIcon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M4 7h10.5l-3-3M16 13H5.5l3 3" />
+          </svg>
           {natural ? "NATURAL" : "CYBER"}
         </button>
         {fullscreenSupported && (
