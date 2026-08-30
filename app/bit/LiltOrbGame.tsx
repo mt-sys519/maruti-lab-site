@@ -910,13 +910,30 @@ export function LiltOrbGame() {
     }
     try { ensureEngine(); } catch { /* Some browsers may refuse to construct an AudioContext this early - startAudio() retries on first touch. */ }
 
+    let startingAudio = false;
     function startAudio() {
-      if (running) return;
-      running = true;
+      if (running || startingAudio) return;
       ensureEngine();
-      if (actx!.state === "suspended") void actx!.resume();
-      scheduleAmbientTick();
-      scheduleCyberArp();
+      // PAKU's own audio engine learned this the hard way (see its setMute):
+      // on some browsers, nodes created/started while the context is still
+      // suspended never produce sound even after it later resumes - so every
+      // node-creating function here is gated behind `running`, and `running`
+      // must only flip to true once we know resume() has actually finished,
+      // not the instant it's fired off. Firing it and immediately scheduling
+      // anyway (the previous version of this function) raced that gap.
+      if (actx!.state === "suspended") {
+        startingAudio = true;
+        actx!.resume().then(() => {
+          startingAudio = false;
+          running = true;
+          scheduleAmbientTick();
+          scheduleCyberArp();
+        }).catch(() => { startingAudio = false; });
+      } else {
+        running = true;
+        scheduleAmbientTick();
+        scheduleCyberArp();
+      }
     }
 
     engineRef.current = {
