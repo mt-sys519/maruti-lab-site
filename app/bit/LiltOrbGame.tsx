@@ -74,8 +74,8 @@ export function LiltOrbGame() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
-  const [natural, setNatural] = useState(false);
-  const naturalRef = useRef(false);
+  const [natural, setNatural] = useState(true);
+  const naturalRef = useRef(true);
   const [soundOn, setSoundOn] = useState(false);
   const soundOnRef = useRef(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -772,7 +772,11 @@ export function LiltOrbGame() {
         const now2 = actx.currentTime;
         if (natural) {
           const norm = (smoothedAngle + Math.PI) / (Math.PI * 2);
-          const idx = Math.floor(norm * DRAG_SCALE.length) % DRAG_SCALE.length;
+          // JS's % can return negative results (unlike a true modulo), which happens
+          // whenever smoothedAngle overshoots slightly past -PI - the extra +length
+          // guards against indexing DRAG_SCALE with a negative number (-> undefined
+          // -> a non-finite frequency handed to setTargetAtTime, which throws).
+          const idx = ((Math.floor(norm * DRAG_SCALE.length) % DRAG_SCALE.length) + DRAG_SCALE.length) % DRAG_SCALE.length;
           const freq = DRAG_SCALE[idx];
           dragOsc1!.frequency.setTargetAtTime(freq, now2, 0.06);
           dragOsc2!.frequency.setTargetAtTime(freq * 1.004, now2, 0.06);
