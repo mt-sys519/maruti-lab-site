@@ -562,15 +562,26 @@ export function LiltOrbGame() {
       carrier.stop(time + dur + 0.2); modulator.stop(time + dur + 0.2);
     }
 
+    let ambientTickCount = 0;
     function scheduleAmbientTick() {
       if (!actx || !running || !naturalRef.current) return;
       const now = actx.currentTime;
-      const cluster = Math.random() < 0.08 ? 3 : 1;
+      // The very first tick after touch is deliberately denser than normal -
+      // NATURAL otherwise opens with a single chime and then goes quiet for
+      // 3.8-7s, so if that one chime is ever lost (a slow-to-wake audio
+      // pipeline on some phones, reported as several seconds of apparent
+      // silence after touching the orb), the next chance to notice sound is
+      // whatever that long gap happens to roll. A short burst here, like
+      // CYBER's opening arpeggio already has, gives several chances in the
+      // first second instead of betting everything on just one.
+      const isFirstTick = ambientTickCount === 0;
+      ambientTickCount++;
+      const cluster = isFirstTick ? 4 : Math.random() < 0.08 ? 3 : 1;
       const baseFreq = pickScaleFreq();
       for (let i = 0; i < cluster; i++) {
         const freq = cluster > 1 ? pickScaleFreq() : baseFreq;
         const velocity = 0.4 + Math.random() * 0.75;
-        const t = now + 0.05 + i * (0.09 + Math.random() * 0.08);
+        const t = now + 0.05 + i * (isFirstTick ? 0.32 + Math.random() * 0.1 : 0.09 + Math.random() * 0.08);
         playChime(t, freq, velocity);
       }
       if (cluster === 1 && Math.random() < 0.22) playRimTone(now + 0.3 + Math.random() * 0.6);
