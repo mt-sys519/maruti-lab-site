@@ -4,9 +4,21 @@ import { bitGames } from "./games";
 import styles from "./BitHub.module.css";
 
 function GameVisual({ id }: { id: (typeof bitGames)[number]["id"] }) {
-  if (id === "angle") return <span className={`${styles.visual} ${styles.angle}`} aria-hidden="true"><i /><i /><i /><b>?</b></span>;
-  if (id === "blank") return <span className={`${styles.visual} ${styles.blank}`} aria-hidden="true"><span>8</span><i>＋</i><b>?</b><i>＝</i><span>13</span></span>;
-  if (id === "sequence") return <span className={`${styles.visual} ${styles.sequence}`} aria-hidden="true"><span>2</span><i>4</i><span>8</span><b>?</b></span>;
+  if (id === "angle") return (
+    <span className={`${styles.visual} ${styles.angle}`} aria-hidden="true">
+      <svg viewBox="0 0 100 76" focusable="false">
+        <path className={styles.triangle} d="M12 66 L92 66 L60 14 Z" />
+        <path className={styles.arc} d="M34 66 A22 22 0 0 0 27 50" />
+        <text className={styles.q} x="43" y="58" textAnchor="middle">?</text>
+      </svg>
+    </span>
+  );
+  if (id === "blank") return <span className={`${styles.visual} ${styles.blank}`} aria-hidden="true"><span>8</span><i>＋</i><b className={styles.slot}>?</b><i>＝</i><span>13</span></span>;
+  if (id === "sequence") return (
+    <span className={`${styles.visual} ${styles.sequence}`} aria-hidden="true">
+      <span className={styles.numSmall}>2</span><span className={styles.numMed}>4</span><span className={styles.numLarge}>8</span><b className={styles.slot}>?</b>
+    </span>
+  );
   if (id === "input-rain") return <span className={`${styles.visual} ${styles.rain}`} aria-hidden="true"><i>PT&gt;</i><span>INPUT</span><b>RAIN</b></span>;
   return (
     <span className={`${styles.visual} ${styles.paku}`} aria-hidden="true">
