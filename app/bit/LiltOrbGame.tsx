@@ -244,6 +244,17 @@ export function LiltOrbGame() {
       try { canvas!.setPointerCapture(event.pointerId); } catch { /* Already released. */ }
       setHasInteracted(true);
       startAudio();
+      // Also fire a resume() attempt synchronously, right here inside this
+      // actual pointerdown handler, on every single tap/drag-start - not
+      // just the first one. Confirmed on-device: rapid repeated tapping
+      // brings sound on in ~1s, while dragging (one gesture, then just
+      // pointermove) can take ~8s even with the timer-based retry in
+      // attemptResume() already running. That strongly suggests Android
+      // Chrome only really acts on resume() calls made synchronously inside
+      // a trusted gesture - the same call fired from a setTimeout callback
+      // (as the retry loop does) is likely mostly ignored. More gestures ->
+      // more genuinely-trusted resume() attempts -> faster unlock.
+      if (actx && !running && actx.state === "suspended") void actx.resume();
     }
     function handlePointerMove(event: PointerEvent) {
       if (pointerActive) pointer = screenToLocal(event.clientX, event.clientY);
@@ -257,6 +268,9 @@ export function LiltOrbGame() {
         if (dist < 14 && dur < 280) registerTap(performance.now());
       }
       pointerDownPos = null;
+      // Same reasoning as the pointerdown handler: pointerup is also a
+      // trusted gesture, so take the extra free chance while waiting.
+      if (actx && !running && actx.state === "suspended") void actx.resume();
     }
     function handlePointerCancel() {
       pointerActive = false;
