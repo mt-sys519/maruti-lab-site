@@ -10,6 +10,11 @@
 .rainTopLeft { left: 60.5%; top: 5%; width: 17.5%; height: 28%; }
 .rainTopRight { left: 80.5%; top: 5%; width: 18.5%; height: 28%; }
 .rainLower { left: 72%; top: 39%; width: 27%; height: 27%; }
+/* The upper panes read as the more distant part of the window; the lower
+   pane sits right against the fire escape in the foreground. Without a
+   size/opacity difference the two read as the same rain at fullscreen size. */
+.rainTopLeft .drop, .rainTopRight .drop { opacity: .3; width: 1px; }
+.rainLower .drop { opacity: .55; width: 2px; }
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
 .terminal { position: absolute; z-index: 4; left: 13.3%; top: 48.3%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }

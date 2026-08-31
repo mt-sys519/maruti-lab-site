@@ -237,16 +237,30 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
   }, [applyGain]);
 
   useEffect(() => {
+    // A momentary visibilitychange flicker (OS focus steal, a fullscreen
+    // transition, an alt-tab that bounces right back) shouldn't drop the
+    // dark ".pause" overlay over the room for a single frame - only pause
+    // once hidden actually sticks for a bit.
+    let hideTimer = 0;
     const onVisibility = () => {
-      if (!enteredRef.current || !document.hidden) return;
-      const rig = rigRef.current;
-      rig?.rainElement.pause();
-      rig?.chimeElement.pause();
-      if (rig?.context.state === "running") void rig.context.suspend();
-      setPaused(true);
+      if (!enteredRef.current) return;
+      if (!document.hidden) {
+        window.clearTimeout(hideTimer);
+        return;
+      }
+      hideTimer = window.setTimeout(() => {
+        const rig = rigRef.current;
+        rig?.rainElement.pause();
+        rig?.chimeElement.pause();
+        if (rig?.context.state === "running") void rig.context.suspend();
+        setPaused(true);
+      }, 500);
     };
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.clearTimeout(hideTimer);
+    };
   }, []);
 
   useEffect(() => () => {
