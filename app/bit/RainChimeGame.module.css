@@ -33,12 +33,6 @@
    Not worth the risk in a band this cramped - no rain pane renders below
    the crossbar at all; the Steel Tongue Drum's occasional hits are audio
    only. */
-/* room-keyboard.webp's window has its own extra center mullion the other
-   three scenes don't (a separate art inconsistency, not yet fixed) -
-   measuring rainSky against the other three would draw rain straight over
-   that bar in this one scene, so it's hidden for it rather than patched
-   around a mismatch the art itself needs to resolve. */
-.artboard[data-scene="keyboard"] .rainSky { display: none; }
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
 .terminal { position: absolute; z-index: 4; left: 13.8%; top: 42.5%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
