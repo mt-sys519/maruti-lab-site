@@ -130,6 +130,11 @@ export function RainChimeGame() {
           </div>
         </div>
       </div>
+
+      <aside className={styles.note}>
+        <p>ABOUT THIS ROOM</p>
+        <div><strong>1996年、11番街。雨が音楽になるまで。</strong>雨、風鈴、非常階段のSteel Tongue Drumが、少しずつ違う間隔で鳴ります。猫も、気が向いたときだけ動きます。</div>
+      </aside>
     </section>
   );
 }
