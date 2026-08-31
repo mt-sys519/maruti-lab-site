@@ -4,16 +4,27 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import styles from "./RainChimeGame.module.css";
 import { useRainChimeAudio } from "./useRainChimeAudio";
 
-const rainDrops = Array.from({ length: 54 }, (_, index) => ({
+const rainDrops = Array.from({ length: 20 }, (_, index) => ({
   x: (index * 37 + 11) % 100,
   delay: ((index * 29) % 100) / 17,
   duration: 0.68 + ((index * 17) % 31) / 38,
   length: 9 + ((index * 13) % 25),
 }));
 
+type RoomScene = "lap" | "glance" | "keyboard" | "windowsill";
+
+const roomFrames: Array<{ scene: RoomScene; src: string; className: string }> = [
+  { scene: "lap", src: "/games/rain-chime/room-lap.webp", className: styles.lapFrame },
+  { scene: "glance", src: "/games/rain-chime/room-glance.webp", className: styles.glanceFrame },
+  { scene: "keyboard", src: "/games/rain-chime/room-keyboard.webp", className: styles.keyboardFrame },
+  { scene: "windowsill", src: "/games/rain-chime/room-windowsill.webp", className: styles.windowsillFrame },
+];
+
 export function RainChimeGame() {
   const shellRef = useRef<HTMLElement>(null);
-  const [catAtKeyboard, setCatAtKeyboard] = useState(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const artboardRef = useRef<HTMLDivElement>(null);
+  const [scene, setScene] = useState<RoomScene>("lap");
   const [drumPulse, setDrumPulse] = useState(0);
   const onDrumPulse = useCallback(() => setDrumPulse((value) => value + 1), []);
   const { entered, soundOn, paused, enter, toggleSound, resume } = useRainChimeAudio(onDrumPulse);
@@ -21,23 +32,48 @@ export function RainChimeGame() {
 
   useEffect(() => {
     if (!entered) return;
-    let returnTimer = 0;
-    let walkTimer = 0;
-    const scheduleWalk = () => {
-      walkTimer = window.setTimeout(() => {
-        setCatAtKeyboard(true);
-        returnTimer = window.setTimeout(() => {
-          setCatAtKeyboard(false);
-          scheduleWalk();
-        }, 7000 + Math.random() * 5000);
-      }, 38000 + Math.random() * 42000);
+    let sceneTimer = 0;
+    const scheduleScene = (first = false) => {
+      const delay = first ? 9000 + Math.random() * 7000 : 18000 + Math.random() * 26000;
+      sceneTimer = window.setTimeout(() => {
+        const roll = Math.random();
+        const next: RoomScene = roll < 0.38 ? "glance" : roll < 0.7 ? "keyboard" : "windowsill";
+        setScene(next);
+        const duration = next === "glance" ? 3600 + Math.random() * 2200 : 8000 + Math.random() * 5000;
+        sceneTimer = window.setTimeout(() => {
+          setScene("lap");
+          scheduleScene();
+        }, duration);
+      }, delay);
     };
-    scheduleWalk();
+    scheduleScene(true);
     return () => {
-      window.clearTimeout(walkTimer);
-      window.clearTimeout(returnTimer);
+      window.clearTimeout(sceneTimer);
     };
   }, [entered]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const artboard = artboardRef.current;
+    if (!viewport || !artboard) return;
+    const updateArtboard = () => {
+      const width = viewport.clientWidth;
+      const height = viewport.clientHeight;
+      if (!width || !height) return;
+      const imageRatio = 16 / 9;
+      const viewportRatio = width / height;
+      const renderedWidth = viewportRatio > imageRatio ? width : height * imageRatio;
+      const renderedHeight = viewportRatio > imageRatio ? width / imageRatio : height;
+      artboard.style.width = `${renderedWidth}px`;
+      artboard.style.height = `${renderedHeight}px`;
+      artboard.style.left = `${(width - renderedWidth) / 2}px`;
+      artboard.style.top = `${(height - renderedHeight) / 2}px`;
+    };
+    const observer = new ResizeObserver(updateArtboard);
+    observer.observe(viewport);
+    updateArtboard();
+    return () => observer.disconnect();
+  }, []);
 
   const toggleFullscreen = useCallback(async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
@@ -46,26 +82,30 @@ export function RainChimeGame() {
 
   return (
     <section ref={shellRef} className={styles.shell} aria-label="RAIN CHIME 鑑賞画面">
-      <div className={`${styles.viewport} ${catAtKeyboard ? styles.catAtKeyboard : ""}`}>
-        <img className={`${styles.frame} ${styles.lapFrame}`} src="/games/rain-chime/room-lap.webp" alt="1996年のニューヨーク、雨の窓辺で女性と黒猫が過ごす部屋" />
-        <img className={`${styles.frame} ${styles.keyboardFrame}`} src="/games/rain-chime/room-keyboard.webp" alt="" aria-hidden="true" />
-        <div className={styles.shade} aria-hidden="true" />
-        <div className={styles.rain} aria-hidden="true">
-          {drops.map((drop, index) => (
-            <i
-              className={styles.drop}
-              key={index}
-              style={{
-                "--x": drop.x,
-                "--delay": drop.delay,
-                "--duration": drop.duration,
-                "--length": drop.length,
-              } as CSSProperties}
+      <div ref={viewportRef} className={styles.viewport}>
+        <div ref={artboardRef} className={styles.artboard} data-scene={scene}>
+          {roomFrames.map((frame) => (
+            <img
+              key={frame.scene}
+              className={`${styles.frame} ${frame.className}`}
+              src={frame.src}
+              alt={frame.scene === "lap" ? "1996年のニューヨーク、開いた窓辺で女性と黒猫が雨を眺める部屋" : ""}
+              aria-hidden={frame.scene === "lap" ? undefined : "true"}
             />
           ))}
+          <div className={`${styles.rainPane} ${styles.rainTopLeft}`} aria-hidden="true">
+            {drops.map((drop, index) => <i className={styles.drop} key={`tl-${index}`} style={{ "--x": drop.x, "--delay": drop.delay, "--duration": drop.duration, "--length": drop.length } as CSSProperties} />)}
+          </div>
+          <div className={`${styles.rainPane} ${styles.rainTopRight}`} aria-hidden="true">
+            {drops.map((drop, index) => <i className={styles.drop} key={`tr-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .4, "--duration": drop.duration * 1.08, "--length": drop.length } as CSSProperties} />)}
+          </div>
+          <div className={`${styles.rainPane} ${styles.rainLower}`} aria-hidden="true">
+            {drops.map((drop, index) => <i className={styles.drop} key={`lo-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .8, "--duration": drop.duration * .94, "--length": drop.length } as CSSProperties} />)}
+          </div>
+          <div className={styles.terminal} aria-hidden="true"><span>PT&gt;</span><i className={styles.cursor} /></div>
+          <i key={drumPulse} className={`${styles.drumPulse} ${drumPulse ? styles.isActive : ""}`} aria-hidden="true" />
         </div>
-        <div className={styles.terminal} aria-hidden="true"><span>PT&gt;</span><i className={styles.cursor} /></div>
-        <i key={drumPulse} className={`${styles.drumPulse} ${drumPulse ? styles.isActive : ""}`} aria-hidden="true" />
+        <div className={styles.shade} aria-hidden="true" />
         <div className={styles.topReadout} aria-hidden="true"><span>11TH AVE / NEW YORK / 1996</span><span>WINDOW CHANNEL / RAIN</span></div>
 
         {!entered && (

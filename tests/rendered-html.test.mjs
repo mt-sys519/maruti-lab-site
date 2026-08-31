@@ -76,6 +76,9 @@ test("renders the MarutiBit RAIN CHIME room with its dedicated social preview", 
   const html = await response.text();
   assert.match(html, /RAIN CHIME/);
   assert.match(html, /GAME 007/);
+  assert.match(html, /bitIntro bitRainChimeIntro/);
+  assert.match(html, /bitGameShell/);
+  assert.match(html, /眺めるアンビエント/);
   assert.match(html, /LISTEN/);
   assert.match(html, /ENTER SILENT/);
   assert.match(html, /room-lap\.webp/);
@@ -83,14 +86,23 @@ test("renders the MarutiBit RAIN CHIME room with its dedicated social preview", 
   assert.match(html, /twitter:card" content="summary_large_image/);
 });
 
-test("keeps RAIN CHIME audio generative, shared, and paused in the background", async () => {
+test("uses recorded rain and wind chimes while keeping the drum generative, shared, and paused", async () => {
   const source = await readFile(new URL("../app/bit/useRainChimeAudio.ts", import.meta.url), "utf8");
   assert.match(source, /marutibit:sound-enabled/);
-  assert.match(source, /5500 \+ Math\.random\(\) \* 10500/);
-  assert.match(source, /8500 \+ Math\.random\(\) \* 14500/);
+  assert.match(source, /\/audio\/rain-chime\/rain-open-window\.mp3/);
+  assert.match(source, /\/audio\/rain-chime\/wind-chimes-real\.mp3/);
+  assert.match(source, /rainGain\.gain\.value = 0\.94/);
+  assert.match(source, /3200 \+ Math\.random\(\) \* 5800/);
+  assert.match(source, /chimeElement\.loop = false/);
+  assert.match(source, /chimeGain\.gain\.value = 0\.62/);
+  assert.match(source, /100000 \+ Math\.random\(\) \* 100000/);
+  assert.match(source, /chimeElement\.currentTime = 0/);
+  assert.doesNotMatch(source, /const playChime =/);
+  assert.match(source, /makeImpactNoise/);
   assert.match(source, /document\.hidden/);
   assert.match(source, /context\.suspend\(\)/);
-  assert.doesNotMatch(source, /new Audio\(/);
+  assert.match(source, /rainElement\.pause\(\)/);
+  assert.match(source, /chimeElement\.pause\(\)/);
 });
 
 test("renders the MarutiBit ANGLE game page", async () => {

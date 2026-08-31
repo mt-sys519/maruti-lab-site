@@ -1,15 +1,19 @@
 .shell { --rain-blue: #7fb5c7; width: min(1480px, 100%); margin: 0 auto; background: #071016; color: #dce7e6; }
 .viewport { position: relative; aspect-ratio: 16 / 9; overflow: hidden; isolation: isolate; background: #05090c; box-shadow: 0 26px 70px rgba(5, 12, 17, .28); }
-.frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; transition: opacity .3s steps(3, end); }
-.keyboardFrame { opacity: 0; }
-.catAtKeyboard .keyboardFrame { opacity: 1; }
-.catAtKeyboard .lapFrame { opacity: 0; }
+.artboard { position: absolute; z-index: 1; overflow: hidden; }
+.frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0; image-rendering: pixelated; transition: opacity .36s steps(3, end); }
+.lapFrame { opacity: 1; }
+.artboard[data-scene="glance"] .lapFrame, .artboard[data-scene="keyboard"] .lapFrame, .artboard[data-scene="windowsill"] .lapFrame { opacity: 0; }
+.artboard[data-scene="glance"] .glanceFrame, .artboard[data-scene="keyboard"] .keyboardFrame, .artboard[data-scene="windowsill"] .windowsillFrame { opacity: 1; }
 .shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(2,8,12,.05), transparent 42%, rgba(2,7,10,.18)); }
-.rain { position: absolute; z-index: 3; left: 49%; right: 0; top: 0; height: 70%; overflow: hidden; pointer-events: none; }
+.rainPane { position: absolute; z-index: 3; overflow: hidden; pointer-events: none; }
+.rainTopLeft { left: 60.5%; top: 5%; width: 17.5%; height: 28%; }
+.rainTopRight { left: 80.5%; top: 5%; width: 18.5%; height: 28%; }
+.rainLower { left: 72%; top: 39%; width: 27%; height: 27%; }
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
-@keyframes fall { to { transform: translate3d(-8px, 100vh, 0); } }
-.terminal { position: absolute; z-index: 4; left: 13.3%; top: 48.3%; display: flex; align-items: center; gap: .4em; color: #62c77c; font: 700 clamp(5px, .72vw, 11px)/1 "Courier New", monospace; text-shadow: 0 0 6px rgba(76, 220, 116, .7); pointer-events: none; }
-.cursor { display: block; width: .62em; height: 1em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
+@keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
+.terminal { position: absolute; z-index: 4; left: 13.3%; top: 48.3%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
+.cursor { display: block; width: .48em; height: .86em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
 @keyframes blink { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
 .drumPulse { position: absolute; z-index: 4; left: 84.7%; top: 58%; width: 4%; aspect-ratio: 1; border: 1px solid rgba(147, 214, 224, .9); border-radius: 50%; opacity: 0; pointer-events: none; }
 .drumPulse.isActive { animation: pulse 2.6s ease-out; }
@@ -41,7 +45,6 @@
 @media (max-width: 700px) {
   .shell { width: 100%; }
   .viewport { aspect-ratio: 4 / 3; }
-  .frame { object-position: 58% center; }
   .topReadout span:last-child { display: none; }
   .entryPanel { padding: 24px 18px; }
   .entry h1 { font-size: clamp(34px, 12vw, 58px); }

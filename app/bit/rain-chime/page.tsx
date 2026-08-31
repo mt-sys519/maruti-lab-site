@@ -28,7 +28,14 @@ export default function RainChimePage() {
     <main className="bitPage">
       <BitHeader current="RAIN CHIME" />
       <BitSeriesNav active="rain-chime" />
-      <RainChimeGame />
+      <section className="bitIntro bitRainChimeIntro">
+        <p className="bitSerial">MB / GAME 007</p>
+        <h1><span>RAIN CHIME</span></h1>
+        <p><strong>眺めるアンビエント。</strong><br />1996年のニューヨーク。雨、風鈴、Steel Tongue Drumがつくる部屋の時間。</p>
+      </section>
+      <div className="bitGameShell">
+        <RainChimeGame />
+      </div>
       <BitFooter label="MARUTIBIT / GAME 007" />
     </main>
   );

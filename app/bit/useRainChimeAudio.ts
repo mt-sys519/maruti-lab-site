@@ -4,25 +4,33 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
 const SOUND_CHANGE_EVENT = "marutibit:sound-change";
+const RAIN_RECORDING = "/audio/rain-chime/rain-open-window.mp3";
+const CHIME_RECORDING = "/audio/rain-chime/wind-chimes-real.mp3";
 
 type AudioRig = {
   context: AudioContext;
   master: GainNode;
-  rain: AudioBufferSourceNode[];
+  rainElement: HTMLAudioElement;
+  chimeElement: HTMLAudioElement;
+  impactNoise: AudioBuffer;
   timers: number[];
 };
 
-function makeNoiseBuffer(context: AudioContext) {
-  const length = context.sampleRate * 3;
+function makeImpactNoise(context: AudioContext) {
+  const length = Math.floor(context.sampleRate * 0.12);
   const buffer = context.createBuffer(1, length, context.sampleRate);
   const data = buffer.getChannelData(0);
-  let last = 0;
   for (let index = 0; index < length; index += 1) {
-    const white = Math.random() * 2 - 1;
-    last = last * 0.82 + white * 0.18;
-    data[index] = white * 0.42 + last * 0.58;
+    const decay = 1 - index / length;
+    data[index] = (Math.random() * 2 - 1) * decay * decay;
   }
   return buffer;
+}
+
+function connectAtWindow(context: AudioContext, node: AudioNode, master: GainNode, pan: number) {
+  const panner = context.createStereoPanner();
+  panner.pan.value = pan;
+  node.connect(panner).connect(master);
 }
 
 export function useRainChimeAudio(onDrumPulse: () => void) {
@@ -45,106 +53,128 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     if (!rig) return;
     const now = rig.context.currentTime;
     rig.master.gain.cancelScheduledValues(now);
-    rig.master.gain.setTargetAtTime(next ? 0.72 : 0.0001, now, 0.08);
+    rig.master.gain.setTargetAtTime(next ? 0.9 : 0.0001, now, 0.06);
+    if (!next) {
+      rig.rainElement.pause();
+      rig.chimeElement.pause();
+    } else if (enteredRef.current) {
+      void rig.rainElement.play().catch(() => undefined);
+    }
   }, []);
 
-  const playChime = useCallback(() => {
+  const playChimeRecording = useCallback(() => {
     const rig = rigRef.current;
-    if (!rig || rig.context.state === "closed") return;
-    const { context, master } = rig;
-    const now = context.currentTime;
-    const notes = [659.25, 783.99, 987.77, 1174.66, 1318.51];
-    const frequency = notes[Math.floor(Math.random() * notes.length)];
-    [1, 2.01, 3.98].forEach((multiple, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.value = frequency * multiple;
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime([0.065, 0.025, 0.009][index], now + 0.025 + index * 0.018);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2 + index * 0.7);
-      oscillator.connect(gain).connect(master);
-      oscillator.start(now + index * 0.035);
-      oscillator.stop(now + 4.2);
-    });
+    if (!rig || !soundRef.current || document.hidden || rig.context.state !== "running") return;
+    rig.chimeElement.currentTime = 0;
+    void rig.chimeElement.play().catch(() => undefined);
   }, []);
 
   const playDrum = useCallback(() => {
     const rig = rigRef.current;
-    if (!rig || rig.context.state === "closed") return;
+    if (!rig || !soundRef.current || rig.context.state === "closed") return;
     pulseRef.current();
-    const { context, master } = rig;
+    const { context, master, impactNoise } = rig;
     const now = context.currentTime;
-    const notes = [130.81, 146.83, 174.61, 196, 220, 261.63];
-    const frequency = notes[Math.floor(Math.random() * notes.length)];
-    [
-      { multiple: 1, level: 0.16, type: "sine" as OscillatorType },
-      { multiple: 2.01, level: 0.045, type: "sine" as OscillatorType },
-      { multiple: 3.93, level: 0.014, type: "triangle" as OscillatorType },
-    ].forEach(({ multiple, level, type }, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency * multiple, now);
-      oscillator.frequency.exponentialRampToValueAtTime(frequency * multiple * 0.992, now + 2.8);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(level, now + 0.012 + index * 0.006);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.4 - index * 0.35);
-      oscillator.connect(gain).connect(master);
-      oscillator.start(now);
-      oscillator.stop(now + 3.7);
-    });
+    const notes = [130.81, 155.56, 174.61, 196, 233.08, 261.63];
+    const drops = 1 + Math.floor(Math.random() * 3);
+    for (let drop = 0; drop < drops; drop += 1) {
+      const start = now + drop * (0.2 + Math.random() * 0.3);
+      const frequency = notes[Math.floor(Math.random() * notes.length)];
+      const strength = 0.78 + Math.random() * 0.34;
+
+      const click = context.createBufferSource();
+      const clickFilter = context.createBiquadFilter();
+      const clickGain = context.createGain();
+      click.buffer = impactNoise;
+      clickFilter.type = "bandpass";
+      clickFilter.frequency.value = 1600 + Math.random() * 1800;
+      clickFilter.Q.value = 0.75;
+      clickGain.gain.setValueAtTime(0.075 * strength, start);
+      clickGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.055);
+      click.connect(clickFilter).connect(clickGain);
+      connectAtWindow(context, clickGain, master, 0.62);
+      click.start(start);
+
+      [
+        { multiple: 1, level: 0.19, decay: 3.1, type: "sine" as OscillatorType },
+        { multiple: 1.51, level: 0.07, decay: 2.1, type: "sine" as OscillatorType },
+        { multiple: 2.03, level: 0.033, decay: 1.45, type: "triangle" as OscillatorType },
+        { multiple: 2.48, level: 0.016, decay: 1.0, type: "sine" as OscillatorType },
+      ].forEach(({ multiple, level, decay, type }) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency * multiple, start);
+        oscillator.frequency.exponentialRampToValueAtTime(frequency * multiple * 0.994, start + decay);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(level * strength, start + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + decay);
+        oscillator.connect(gain);
+        connectAtWindow(context, gain, master, 0.68);
+        oscillator.start(start);
+        oscillator.stop(start + decay + 0.1);
+      });
+    }
   }, []);
 
   const schedule = useCallback((rig: AudioRig) => {
-    const scheduleChime = () => {
-      const delay = 5500 + Math.random() * 10500;
-      const timer = window.setTimeout(() => {
-        if (enteredRef.current) playChime();
-        scheduleChime();
-      }, delay);
+    const addTimer = (callback: () => void, delay: number) => {
+      const timer = window.setTimeout(callback, delay);
       rig.timers.push(timer);
     };
-    const scheduleDrum = () => {
-      const delay = 8500 + Math.random() * 14500;
-      const timer = window.setTimeout(() => {
-        if (enteredRef.current) playDrum();
-        scheduleDrum();
-      }, delay);
-      rig.timers.push(timer);
-    };
-    scheduleChime();
+    const scheduleDrum = () => addTimer(() => {
+      if (enteredRef.current) playDrum();
+      scheduleDrum();
+    }, 3200 + Math.random() * 5800);
+    const scheduleChime = (first = false) => addTimer(() => {
+      if (enteredRef.current) playChimeRecording();
+      scheduleChime();
+    }, first ? 8000 + Math.random() * 12000 : 100000 + Math.random() * 100000);
+    addTimer(playDrum, 2300);
     scheduleDrum();
-  }, [playChime, playDrum]);
+    scheduleChime(true);
+  }, [playChimeRecording, playDrum]);
 
   const ensureAudio = useCallback(() => {
     if (rigRef.current) return rigRef.current;
-    const context = new AudioContext();
+    const AudioContextConstructor = window.AudioContext
+      || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextConstructor) throw new Error("Web Audio is not supported");
+    const context = new AudioContextConstructor();
     const master = context.createGain();
-    master.gain.value = soundRef.current ? 0.72 : 0.0001;
-    master.connect(context.destination);
+    const limiter = context.createDynamicsCompressor();
+    master.gain.value = soundRef.current ? 0.9 : 0.0001;
+    limiter.threshold.value = -7;
+    limiter.knee.value = 12;
+    limiter.ratio.value = 4;
+    limiter.attack.value = 0.004;
+    limiter.release.value = 0.18;
+    master.connect(limiter).connect(context.destination);
 
-    const buffer = makeNoiseBuffer(context);
-    const rain: AudioBufferSourceNode[] = [];
-    [
-      { type: "lowpass" as BiquadFilterType, frequency: 5200, gain: 0.23, rate: 1 },
-      { type: "highpass" as BiquadFilterType, frequency: 2600, gain: 0.055, rate: 0.87 },
-    ].forEach((layer) => {
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      const gain = context.createGain();
-      source.buffer = buffer;
-      source.loop = true;
-      source.playbackRate.value = layer.rate;
-      filter.type = layer.type;
-      filter.frequency.value = layer.frequency;
-      gain.gain.value = layer.gain;
-      source.connect(filter).connect(gain).connect(master);
-      source.start();
-      rain.push(source);
-    });
+    const rainElement = new Audio(RAIN_RECORDING);
+    rainElement.loop = true;
+    rainElement.preload = "auto";
+    rainElement.volume = 1;
+    const rainSource = context.createMediaElementSource(rainElement);
+    const rainGain = context.createGain();
+    rainGain.gain.value = 0.94;
+    rainSource.connect(rainGain).connect(master);
 
-    const rig = { context, master, rain, timers: [] };
+    const chimeElement = new Audio(CHIME_RECORDING);
+    chimeElement.loop = false;
+    chimeElement.preload = "auto";
+    chimeElement.volume = 0.82;
+    const chimeSource = context.createMediaElementSource(chimeElement);
+    const chimeFilter = context.createBiquadFilter();
+    const chimeGain = context.createGain();
+    const chimePanner = context.createStereoPanner();
+    chimeFilter.type = "highpass";
+    chimeFilter.frequency.value = 240;
+    chimeGain.gain.value = 0.62;
+    chimePanner.pan.value = 0.58;
+    chimeSource.connect(chimeFilter).connect(chimeGain).connect(chimePanner).connect(master);
+
+    const rig = { context, master, rainElement, chimeElement, impactNoise: makeImpactNoise(context), timers: [] };
     rigRef.current = rig;
     schedule(rig);
     return rig;
@@ -155,15 +185,22 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     window.dispatchEvent(new CustomEvent<boolean>(SOUND_CHANGE_EVENT, { detail: next }));
   }, []);
 
+  const startSoundscape = useCallback(async (rig: AudioRig) => {
+    if (!soundRef.current) return;
+    const playPromise = rig.rainElement.play();
+    if (rig.context.state === "suspended") await rig.context.resume();
+    await playPromise.catch(() => undefined);
+  }, []);
+
   const enter = useCallback(async (withSound: boolean) => {
     enteredRef.current = true;
     setEntered(true);
     applyGain(withSound);
     storePreference(withSound);
     const rig = ensureAudio();
-    if (rig.context.state === "suspended") await rig.context.resume();
+    await startSoundscape(rig);
     setPaused(false);
-  }, [applyGain, ensureAudio, storePreference]);
+  }, [applyGain, ensureAudio, startSoundscape, storePreference]);
 
   const toggleSound = useCallback(async () => {
     const next = !soundRef.current;
@@ -171,16 +208,16 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     storePreference(next);
     if (next && enteredRef.current) {
       const rig = ensureAudio();
-      if (rig.context.state === "suspended") await rig.context.resume();
+      await startSoundscape(rig);
       setPaused(false);
     }
-  }, [applyGain, ensureAudio, storePreference]);
+  }, [applyGain, ensureAudio, startSoundscape, storePreference]);
 
   const resume = useCallback(async () => {
     const rig = rigRef.current;
-    if (rig && rig.context.state === "suspended") await rig.context.resume();
+    if (rig) await startSoundscape(rig);
     setPaused(false);
-  }, []);
+  }, [startSoundscape]);
 
   useEffect(() => {
     const preferenceTimer = window.setTimeout(() => {
@@ -203,6 +240,8 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     const onVisibility = () => {
       if (!enteredRef.current || !document.hidden) return;
       const rig = rigRef.current;
+      rig?.rainElement.pause();
+      rig?.chimeElement.pause();
       if (rig?.context.state === "running") void rig.context.suspend();
       setPaused(true);
     };
@@ -215,7 +254,12 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     const rig = rigRef.current;
     if (!rig) return;
     rig.timers.forEach(window.clearTimeout);
-    rig.rain.forEach((source) => { try { source.stop(); } catch { /* Already stopped. */ } });
+    rig.rainElement.pause();
+    rig.chimeElement.pause();
+    rig.rainElement.removeAttribute("src");
+    rig.chimeElement.removeAttribute("src");
+    rig.rainElement.load();
+    rig.chimeElement.load();
     void rig.context.close();
     rigRef.current = null;
   }, []);
