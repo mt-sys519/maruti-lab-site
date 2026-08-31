@@ -78,12 +78,12 @@ function angleIcon(scale) {
 }
 function blankIcon(scale) {
   return `<g transform="scale(${scale})" font-family="Georgia, serif">
-    <text x="-46" y="6" text-anchor="middle" dominant-baseline="middle" fill="${palette.ink}" font-size="18">8</text>
-    <text x="-28" y="6" text-anchor="middle" dominant-baseline="middle" fill="${palette.line}" font-size="16">＋</text>
+    <text x="-46" y="6" text-anchor="middle" fill="${palette.ink}" font-size="18">8</text>
+    <text x="-28" y="6" text-anchor="middle" fill="${palette.line}" font-size="14">＋</text>
     <rect x="-14" y="-11" width="22" height="22" rx="3" fill="none" stroke="${palette.accent}" stroke-width="1.6" stroke-dasharray="3 2.4"/>
-    <text x="-3" y="6" text-anchor="middle" dominant-baseline="middle" fill="${palette.accent}" font-family="'Yu Gothic UI', sans-serif" font-size="13" font-weight="700">?</text>
-    <text x="20" y="6" text-anchor="middle" dominant-baseline="middle" fill="${palette.line}" font-size="16">＝</text>
-    <text x="42" y="6" text-anchor="middle" dominant-baseline="middle" fill="${palette.ink}" font-size="18">13</text>
+    <text x="-3" y="6" text-anchor="middle" fill="${palette.accent}" font-family="'Yu Gothic UI', sans-serif" font-size="13" font-weight="700">?</text>
+    <text x="20" y="6" text-anchor="middle" fill="${palette.line}" font-size="14">＝</text>
+    <text x="42" y="6" text-anchor="middle" fill="${palette.ink}" font-size="18">13</text>
   </g>`;
 }
 function sequenceIcon(scale) {
