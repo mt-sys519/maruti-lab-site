@@ -7,17 +7,23 @@
 .artboard[data-scene="glance"] .glanceFrame, .artboard[data-scene="keyboard"] .keyboardFrame, .artboard[data-scene="windowsill"] .windowsillFrame { opacity: 1; }
 .shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(2,8,12,.05), transparent 42%, rgba(2,7,10,.18)); }
 .rainPane { position: absolute; z-index: 3; overflow: hidden; pointer-events: none; }
-/* The window at this height is the neighboring building's wall and fire
-   escape ladder on the left, open sky on the right - measured directly off
-   room-lap.webp, the wall/ladder's diagonal edge runs from about x=63.7% at
-   the top of this band to x=71.25% at the bottom. rainSky spans the full
-   61%-99% width but clips to that diagonal so rain only falls in the sky,
-   not straight through the ladder. The fire escape platform below the
-   window ledge isn't in the open rain at all - no rain pane renders there;
-   the Steel Tongue Drum's occasional hits are audio only. */
+/* Measured off room-lap.webp by compositing the pane's own clip-path
+   polygon back onto the source image and checking it against the actual
+   beam/ladder/crossbar pixels, not eyeballed percentages: the window's top
+   casing beam is dark wood, not sky, and its lower edge sits at y=~8%
+   (a first pass at top:5% drew rain straight over the beam). The
+   wall/ladder's diagonal edge runs from x=~63.7% at y=8% down to x=~73.1%
+   at y=39.8%, which is the window's horizontal crossbar - the true bottom
+   of this band, not the y=33% the pane stopped at before (which left a
+   strip of real sky between 33-39.8% with no rain at all). rainSky spans
+   the full 61%-99% width down to the crossbar and clips to that diagonal
+   so rain only falls in the actual sky gap next to the ladder. The fire
+   escape platform below the window ledge isn't in the open rain at all -
+   no rain pane renders there; the Steel Tongue Drum's occasional hits are
+   audio only. */
 .rainSky {
-  left: 61%; top: 5%; width: 38%; height: 28%;
-  clip-path: polygon(7% 0%, 100% 0%, 100% 100%, 27% 100%);
+  left: 61%; top: 8%; width: 38%; height: 31.8%;
+  clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 32% 100%);
 }
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
