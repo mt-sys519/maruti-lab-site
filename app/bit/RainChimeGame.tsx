@@ -117,7 +117,7 @@ export function RainChimeGame() {
 
       <aside className={styles.note}>
         <p>ABOUT THIS ROOM</p>
-        <div><strong>ニューヨーク、11番街。静かに雨音を聴く夜。</strong></div>
+        <div><strong>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</strong></div>
       </aside>
     </section>
   );
