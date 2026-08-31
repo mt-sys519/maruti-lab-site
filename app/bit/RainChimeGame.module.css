@@ -7,18 +7,19 @@
 .artboard[data-scene="glance"] .glanceFrame, .artboard[data-scene="keyboard"] .keyboardFrame, .artboard[data-scene="windowsill"] .windowsillFrame { opacity: 1; }
 .shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(2,8,12,.05), transparent 42%, rgba(2,7,10,.18)); }
 .rainPane { position: absolute; z-index: 3; overflow: hidden; pointer-events: none; }
-.rainTopRight { left: 80.5%; top: 5%; width: 18.5%; height: 28%; }
-.rainLower { left: 72%; top: 39%; width: 27%; height: 27%; }
-/* rainTopRight is the one part of the window that's genuinely open sky -
-   full rain belongs only there. The rest of the window at that height is
-   the neighboring building's wall and the fire escape ladder (near,
-   sheltered), so it gets none; there used to be a second "top left" pane
-   drawing full rain straight over that wall and ladder. The fire escape
-   platform below the ledge isn't in the open rain either - it only gets the
-   occasional drip off the iron railing above (see .drip), which is what the
-   Steel Tongue Drum's stray hits are supposed to be. */
+/* The window at this height is the neighboring building's wall and fire
+   escape ladder on the left, open sky on the right - measured directly off
+   room-lap.webp, the wall/ladder's diagonal edge runs from about x=63.7% at
+   the top of this band to x=71.25% at the bottom. rainSky spans the full
+   61%-99% width but clips to that diagonal so rain only falls in the sky,
+   not straight through the ladder. The fire escape platform below the
+   window ledge isn't in the open rain at all - no rain pane renders there;
+   the Steel Tongue Drum's occasional hits are audio only. */
+.rainSky {
+  left: 61%; top: 5%; width: 38%; height: 28%;
+  clip-path: polygon(7% 0%, 100% 0%, 100% 100%, 27% 100%);
+}
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
-.drip { --x: 50; --delay: 0; --duration: 4; --length: 6; position: absolute; top: -6%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .36; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
 .terminal { position: absolute; z-index: 4; left: 13.3%; top: 48.3%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
 .cursor { display: block; width: .2em; height: .86em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
@@ -66,6 +67,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drop, .drip { animation-duration: 3s; opacity: .22; }
+  .drop { animation-duration: 3s; opacity: .22; }
   .frame { transition: none; }
 }

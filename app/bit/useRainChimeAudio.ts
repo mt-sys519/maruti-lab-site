@@ -41,6 +41,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
   const [paused, setPaused] = useState(false);
   const rigRef = useRef<AudioRig | null>(null);
   const enteredRef = useRef(false);
+  const enteredAtRef = useRef(0);
   const soundRef = useRef(false);
   const pulseRef = useRef(onDrumPulse);
 
@@ -223,6 +224,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
 
   const enter = useCallback(async (withSound: boolean) => {
     enteredRef.current = true;
+    enteredAtRef.current = Date.now();
     setEntered(true);
     applyGain(withSound);
     storePreference(withSound);
@@ -271,9 +273,14 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     // room for a single frame - only pause once hidden actually sticks for
     // a bit. requestFullscreen()'s own transition animation is one common
     // source of that flicker and can run well past 500ms on some browsers,
-    // which meant the room paused itself immediately, every time, right
-    // after going fullscreen - so a fullscreenchange grants a longer grace
-    // window on top of the debounce.
+    // so a fullscreenchange grants a longer grace window on top of the
+    // debounce. Entering itself is also given a grace window: the room was
+    // reported starting paused every time it was opened, which points at
+    // *something* firing a hidden flicker right around the LISTEN click
+    // (the loading delay while the rain recording is fetched/decoded is
+    // exactly when a user is most likely to tab away) - whatever the exact
+    // cause, the room should always get to actually start before anything
+    // can pause it.
     let hideTimer = 0;
     let fullscreenGraceUntil = 0;
     const onFullscreenChange = () => {
@@ -287,6 +294,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
       }
       hideTimer = window.setTimeout(() => {
         if (Date.now() < fullscreenGraceUntil) return;
+        if (Date.now() - enteredAtRef.current < 4000) return;
         const rig = rigRef.current;
         if (rig) stopRain(rig);
         rig?.chimeElement.pause();
