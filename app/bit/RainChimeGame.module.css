@@ -7,13 +7,14 @@
 .artboard[data-scene="glance"] .glanceFrame, .artboard[data-scene="keyboard"] .keyboardFrame, .artboard[data-scene="windowsill"] .windowsillFrame { opacity: 1; }
 .shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(2,8,12,.05), transparent 42%, rgba(2,7,10,.18)); }
 .rainPane { position: absolute; z-index: 3; overflow: hidden; pointer-events: none; }
-.rainTopLeft { left: 60.5%; top: 5%; width: 17.5%; height: 28%; }
 .rainTopRight { left: 80.5%; top: 5%; width: 18.5%; height: 28%; }
 .rainLower { left: 72%; top: 39%; width: 27%; height: 27%; }
-/* The two upper panes are just the left/right halves of the same open sky
-   seen through the window - it's the same rain at the same distance, so it
-   gets the same weight in both. The fire escape sits under the window
-   ledge, so it isn't in the open rain at all - the lower pane gets only the
+/* rainTopRight is the one part of the window that's genuinely open sky -
+   full rain belongs only there. The rest of the window at that height is
+   the neighboring building's wall and the fire escape ladder (near,
+   sheltered), so it gets none; there used to be a second "top left" pane
+   drawing full rain straight over that wall and ladder. The fire escape
+   platform below the ledge isn't in the open rain either - it only gets the
    occasional drip off the iron railing above (see .drip), which is what the
    Steel Tongue Drum's stray hits are supposed to be. */
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }

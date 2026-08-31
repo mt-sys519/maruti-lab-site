@@ -106,9 +106,6 @@ export function RainChimeGame() {
               aria-hidden={frame.scene === "lap" ? undefined : "true"}
             />
           ))}
-          <div className={`${styles.rainPane} ${styles.rainTopLeft}`} aria-hidden="true">
-            {drops.map((drop, index) => <i className={styles.drop} key={`tl-${index}`} style={{ "--x": drop.x, "--delay": drop.delay, "--duration": drop.duration, "--length": drop.length } as CSSProperties} />)}
-          </div>
           <div className={`${styles.rainPane} ${styles.rainTopRight}`} aria-hidden="true">
             {drops.map((drop, index) => <i className={styles.drop} key={`tr-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .4, "--duration": drop.duration * 1.08, "--length": drop.length } as CSSProperties} />)}
           </div>
