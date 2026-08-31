@@ -10,7 +10,9 @@ const CHIME_RECORDING = "/audio/rain-chime/wind-chimes-real.mp3";
 type AudioRig = {
   context: AudioContext;
   master: GainNode;
-  rainElement: HTMLAudioElement;
+  rainGain: GainNode;
+  rainBufferPromise: Promise<AudioBuffer>;
+  rainSource: AudioBufferSourceNode | null;
   chimeElement: HTMLAudioElement;
   impactNoise: AudioBuffer;
   timers: number[];
@@ -46,6 +48,33 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     pulseRef.current = onDrumPulse;
   }, [onDrumPulse]);
 
+  // AudioBufferSourceNode.loop repeats the decoded buffer sample-accurately;
+  // an <audio loop> element instead restarts via the media pipeline, which
+  // audibly stutters at the seam on most browsers. Rain is the one layer
+  // that's always looping, so it's the one that has to be gapless.
+  const stopRain = useCallback((rig: AudioRig) => {
+    if (!rig.rainSource) return;
+    try {
+      rig.rainSource.stop();
+    } catch {
+      /* Already stopped. */
+    }
+    rig.rainSource.disconnect();
+    rig.rainSource = null;
+  }, []);
+
+  const startRain = useCallback(async (rig: AudioRig) => {
+    if (rig.rainSource) return;
+    const buffer = await rig.rainBufferPromise;
+    if (rigRef.current !== rig || rig.rainSource) return;
+    const source = rig.context.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(rig.rainGain);
+    source.start(0, Math.random() * buffer.duration);
+    rig.rainSource = source;
+  }, []);
+
   const applyGain = useCallback((next: boolean) => {
     soundRef.current = next;
     setSoundOn(next);
@@ -55,12 +84,12 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     rig.master.gain.cancelScheduledValues(now);
     rig.master.gain.setTargetAtTime(next ? 0.9 : 0.0001, now, 0.06);
     if (!next) {
-      rig.rainElement.pause();
+      stopRain(rig);
       rig.chimeElement.pause();
     } else if (enteredRef.current) {
-      void rig.rainElement.play().catch(() => undefined);
+      void startRain(rig);
     }
-  }, []);
+  }, [startRain, stopRain]);
 
   const playChimeRecording = useCallback(() => {
     const rig = rigRef.current;
@@ -71,7 +100,10 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
 
   const playDrum = useCallback(() => {
     const rig = rigRef.current;
-    if (!rig || !soundRef.current || rig.context.state === "closed") return;
+    // Scheduling notes while suspended queues them at a frozen currentTime;
+    // they'd all fire in a pile the instant the context resumes. Only
+    // schedule while genuinely running.
+    if (!rig || !soundRef.current || rig.context.state !== "running") return;
     pulseRef.current();
     const { context, master, impactNoise } = rig;
     const now = context.currentTime;
@@ -151,14 +183,12 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     limiter.release.value = 0.18;
     master.connect(limiter).connect(context.destination);
 
-    const rainElement = new Audio(RAIN_RECORDING);
-    rainElement.loop = true;
-    rainElement.preload = "auto";
-    rainElement.volume = 1;
-    const rainSource = context.createMediaElementSource(rainElement);
     const rainGain = context.createGain();
     rainGain.gain.value = 0.94;
-    rainSource.connect(rainGain).connect(master);
+    rainGain.connect(master);
+    const rainBufferPromise = fetch(RAIN_RECORDING)
+      .then((response) => response.arrayBuffer())
+      .then((data) => context.decodeAudioData(data));
 
     const chimeElement = new Audio(CHIME_RECORDING);
     chimeElement.loop = false;
@@ -174,7 +204,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     chimePanner.pan.value = 0.58;
     chimeSource.connect(chimeFilter).connect(chimeGain).connect(chimePanner).connect(master);
 
-    const rig = { context, master, rainElement, chimeElement, impactNoise: makeImpactNoise(context), timers: [] };
+    const rig: AudioRig = { context, master, rainGain, rainBufferPromise, rainSource: null, chimeElement, impactNoise: makeImpactNoise(context), timers: [] };
     rigRef.current = rig;
     schedule(rig);
     return rig;
@@ -187,10 +217,9 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
 
   const startSoundscape = useCallback(async (rig: AudioRig) => {
     if (!soundRef.current) return;
-    const playPromise = rig.rainElement.play();
     if (rig.context.state === "suspended") await rig.context.resume();
-    await playPromise.catch(() => undefined);
-  }, []);
+    await startRain(rig);
+  }, [startRain]);
 
   const enter = useCallback(async (withSound: boolean) => {
     enteredRef.current = true;
@@ -250,7 +279,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
       }
       hideTimer = window.setTimeout(() => {
         const rig = rigRef.current;
-        rig?.rainElement.pause();
+        if (rig) stopRain(rig);
         rig?.chimeElement.pause();
         if (rig?.context.state === "running") void rig.context.suspend();
         setPaused(true);
@@ -261,22 +290,20 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
       document.removeEventListener("visibilitychange", onVisibility);
       window.clearTimeout(hideTimer);
     };
-  }, []);
+  }, [stopRain]);
 
   useEffect(() => () => {
     enteredRef.current = false;
     const rig = rigRef.current;
     if (!rig) return;
     rig.timers.forEach(window.clearTimeout);
-    rig.rainElement.pause();
+    stopRain(rig);
     rig.chimeElement.pause();
-    rig.rainElement.removeAttribute("src");
     rig.chimeElement.removeAttribute("src");
-    rig.rainElement.load();
     rig.chimeElement.load();
     void rig.context.close();
     rigRef.current = null;
-  }, []);
+  }, [stopRain]);
 
   return { entered, soundOn, paused, enter, toggleSound, resume };
 }

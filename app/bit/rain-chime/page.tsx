@@ -31,7 +31,7 @@ export default function RainChimePage() {
       <section className="bitIntro bitRainChimeIntro">
         <p className="bitSerial">MB / GAME 007</p>
         <h1><span>RAIN CHIME</span></h1>
-        <p><strong>眺めるアンビエント。</strong><br />1996年のニューヨーク。雨、風鈴、Steel Tongue Drumがつくる部屋の時間。</p>
+        <p><strong>眺めるアンビエント。</strong><br />1996年のニューヨーク。雨、ウインドチャイム、タングドラムがつくる部屋の時間。</p>
       </section>
       <div className="bitGameShell">
         <RainChimeGame />

@@ -10,15 +10,18 @@
 .rainTopLeft { left: 60.5%; top: 5%; width: 17.5%; height: 28%; }
 .rainTopRight { left: 80.5%; top: 5%; width: 18.5%; height: 28%; }
 .rainLower { left: 72%; top: 39%; width: 27%; height: 27%; }
-/* The upper panes read as the more distant part of the window; the lower
-   pane sits right against the fire escape in the foreground. Without a
-   size/opacity difference the two read as the same rain at fullscreen size. */
+/* The upper panes are the open sky through the window and get full rain;
+   they're lighter/thinner than they used to be so they read as the more
+   distant part of the view. The fire escape sits under the window ledge, so
+   it isn't in the open rain at all - the lower pane gets only the occasional
+   drip off the iron railing above (see .drip), which is what the Steel
+   Tongue Drum's stray hits are supposed to be. */
 .rainTopLeft .drop, .rainTopRight .drop { opacity: .3; width: 1px; }
-.rainLower .drop { opacity: .55; width: 2px; }
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
+.drip { --x: 50; --delay: 0; --duration: 4; --length: 6; position: absolute; top: -6%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .36; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
 .terminal { position: absolute; z-index: 4; left: 13.3%; top: 48.3%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
-.cursor { display: block; width: .48em; height: .86em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
+.cursor { display: block; width: .2em; height: .86em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
 @keyframes blink { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
 .drumPulse { position: absolute; z-index: 4; left: 84.7%; top: 58%; width: 4%; aspect-ratio: 1; border: 1px solid rgba(147, 214, 224, .9); border-radius: 50%; opacity: 0; pointer-events: none; }
 .drumPulse.isActive { animation: pulse 2.6s ease-out; }
@@ -63,6 +66,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drop { animation-duration: 3s; opacity: .22; }
+  .drop, .drip { animation-duration: 3s; opacity: .22; }
   .frame { transition: none; }
 }

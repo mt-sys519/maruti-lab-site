@@ -101,8 +101,15 @@ test("uses recorded rain and wind chimes while keeping the drum generative, shar
   assert.match(source, /makeImpactNoise/);
   assert.match(source, /document\.hidden/);
   assert.match(source, /context\.suspend\(\)/);
-  assert.match(source, /rainElement\.pause\(\)/);
   assert.match(source, /chimeElement\.pause\(\)/);
+  // Rain loops via a decoded AudioBufferSourceNode (sample-accurate, gapless)
+  // rather than an <audio loop> element, which audibly stutters at the seam.
+  assert.match(source, /decodeAudioData/);
+  assert.match(source, /source\.loop = true/);
+  assert.match(source, /rainSource\.stop\(\)/);
+  // Notes must not be scheduled while the context is suspended, or they all
+  // fire in a pile the instant it resumes.
+  assert.match(source, /rig\.context\.state !== "running"/);
 });
 
 test("renders the MarutiBit ANGLE game page", async () => {

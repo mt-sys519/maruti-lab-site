@@ -11,6 +11,18 @@ const rainDrops = Array.from({ length: 20 }, (_, index) => ({
   length: 9 + ((index * 13) % 25),
 }));
 
+// The fire escape sits under the window ledge, so it isn't getting rained
+// on directly - just the occasional drip off the iron railing above, which
+// is what the Steel Tongue Drum's stray hits are meant to be. A handful of
+// slow, widely-spaced drips reads as that; the same dense shower as the open
+// sky above it read as rain falling right where it structurally couldn't.
+const dripDrops = Array.from({ length: 4 }, (_, index) => ({
+  x: 16 + index * 24,
+  delay: index * 3.6,
+  duration: 3.4 + index * 0.8,
+  length: 6,
+}));
+
 type RoomScene = "lap" | "glance" | "keyboard" | "windowsill";
 
 const roomFrames: Array<{ scene: RoomScene; src: string; className: string }> = [
@@ -29,6 +41,7 @@ export function RainChimeGame() {
   const onDrumPulse = useCallback(() => setDrumPulse((value) => value + 1), []);
   const { entered, soundOn, paused, enter, toggleSound, resume } = useRainChimeAudio(onDrumPulse);
   const drops = useMemo(() => rainDrops, []);
+  const drips = useMemo(() => dripDrops, []);
 
   useEffect(() => {
     if (!entered) return;
@@ -100,7 +113,7 @@ export function RainChimeGame() {
             {drops.map((drop, index) => <i className={styles.drop} key={`tr-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .4, "--duration": drop.duration * 1.08, "--length": drop.length } as CSSProperties} />)}
           </div>
           <div className={`${styles.rainPane} ${styles.rainLower}`} aria-hidden="true">
-            {drops.map((drop, index) => <i className={styles.drop} key={`lo-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .8, "--duration": drop.duration * .94, "--length": drop.length } as CSSProperties} />)}
+            {drips.map((drip, index) => <i className={styles.drip} key={`lo-${index}`} style={{ "--x": drip.x, "--delay": drip.delay, "--duration": drip.duration, "--length": drip.length } as CSSProperties} />)}
           </div>
           <div className={styles.terminal} aria-hidden="true"><span>PT&gt;</span><i className={styles.cursor} /></div>
           <i key={drumPulse} className={`${styles.drumPulse} ${drumPulse ? styles.isActive : ""}`} aria-hidden="true" />
