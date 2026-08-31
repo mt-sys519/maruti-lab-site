@@ -96,9 +96,6 @@ export function RainChimeGame() {
           <div className={`${styles.rainPane} ${styles.rainSky}`} aria-hidden="true">
             {drops.map((drop, index) => <i className={styles.drop} key={`sky-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .4, "--duration": drop.duration * 1.08, "--length": drop.length } as CSSProperties} />)}
           </div>
-          <div className={`${styles.rainPane} ${styles.rainSkyLower}`} aria-hidden="true">
-            {drops.map((drop, index) => <i className={styles.drop} key={`skylo-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .7, "--duration": drop.duration * .96, "--length": drop.length } as CSSProperties} />)}
-          </div>
           <div className={styles.terminal} aria-hidden="true"><span>PT&gt;</span><i className={styles.cursor} /></div>
           <i key={drumPulse} className={`${styles.drumPulse} ${drumPulse ? styles.isActive : ""}`} aria-hidden="true" />
         </div>
