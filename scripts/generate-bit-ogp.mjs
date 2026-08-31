@@ -88,7 +88,7 @@ function blankIcon(scale) {
 }
 function sequenceIcon(scale) {
   return `<g transform="scale(${scale})" font-family="Georgia, serif" font-size="18">
-    <text x="-48" y="2.9" text-anchor="middle" fill="${palette.ink}">2</text>
+    <text x="-48" y="6.1" text-anchor="middle" fill="${palette.ink}" font-size="24">2</text>
     <text x="-22" y="3" text-anchor="middle" fill="${palette.ink}">4</text>
     <text x="4" y="6" text-anchor="middle" fill="${palette.ink}">8</text>
     <rect x="20" y="-11" width="22" height="22" rx="3" fill="none" stroke="${palette.accent}" stroke-width="1.6" stroke-dasharray="3 2.4"/>
