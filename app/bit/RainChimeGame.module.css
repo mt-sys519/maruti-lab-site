@@ -10,13 +10,12 @@
 .rainTopLeft { left: 60.5%; top: 5%; width: 17.5%; height: 28%; }
 .rainTopRight { left: 80.5%; top: 5%; width: 18.5%; height: 28%; }
 .rainLower { left: 72%; top: 39%; width: 27%; height: 27%; }
-/* The upper panes are the open sky through the window and get full rain;
-   they're lighter/thinner than they used to be so they read as the more
-   distant part of the view. The fire escape sits under the window ledge, so
-   it isn't in the open rain at all - the lower pane gets only the occasional
-   drip off the iron railing above (see .drip), which is what the Steel
-   Tongue Drum's stray hits are supposed to be. */
-.rainTopLeft .drop, .rainTopRight .drop { opacity: .3; width: 1px; }
+/* The two upper panes are just the left/right halves of the same open sky
+   seen through the window - it's the same rain at the same distance, so it
+   gets the same weight in both. The fire escape sits under the window
+   ledge, so it isn't in the open rain at all - the lower pane gets only the
+   occasional drip off the iron railing above (see .drip), which is what the
+   Steel Tongue Drum's stray hits are supposed to be. */
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 .drip { --x: 50; --delay: 0; --duration: 4; --length: 6; position: absolute; top: -6%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .36; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
