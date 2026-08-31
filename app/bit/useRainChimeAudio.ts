@@ -203,7 +203,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     chimeFilter.type = "highpass";
     chimeFilter.frequency.value = 240;
     chimeGain.gain.value = 0.62;
-    chimePanner.pan.value = 0.58;
+    chimePanner.pan.value = 0.24;
     chimeSource.connect(chimeFilter).connect(chimeGain).connect(chimePanner).connect(master);
 
     const rig: AudioRig = { context, master, rainGain, rainBufferPromise, rainSource: null, chimeElement, impactNoise: makeImpactNoise(context), timers: [] };
