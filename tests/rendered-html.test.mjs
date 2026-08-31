@@ -46,6 +46,7 @@ test("renders the MarutiBit series index", async () => {
   assert.match(html, /href="\/bit\/blank"/);
   assert.match(html, /href="\/bit\/sequence"/);
   assert.match(html, /href="\/bit\/input-rain"/);
+  assert.match(html, /href="\/bit\/rain-chime"/);
   assert.match(html, /\/og\/bit\/index\.png/);
 });
 
@@ -67,6 +68,29 @@ test("renders the MarutiBit LILT ORB page with its dedicated social preview", as
   assert.match(html, /GAME 006/);
   assert.match(html, /https:\/\/marutilab\.com\/og\/bit\/liltorb\.png/);
   assert.match(html, /twitter:card" content="summary_large_image/);
+});
+
+test("renders the MarutiBit RAIN CHIME room with its dedicated social preview", async () => {
+  const response = await render("/bit/rain-chime");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /RAIN CHIME/);
+  assert.match(html, /GAME 007/);
+  assert.match(html, /LISTEN/);
+  assert.match(html, /ENTER SILENT/);
+  assert.match(html, /room-lap\.webp/);
+  assert.match(html, /https:\/\/marutilab\.com\/og\/bit\/rain-chime\.png/);
+  assert.match(html, /twitter:card" content="summary_large_image/);
+});
+
+test("keeps RAIN CHIME audio generative, shared, and paused in the background", async () => {
+  const source = await readFile(new URL("../app/bit/useRainChimeAudio.ts", import.meta.url), "utf8");
+  assert.match(source, /marutibit:sound-enabled/);
+  assert.match(source, /5500 \+ Math\.random\(\) \* 10500/);
+  assert.match(source, /8500 \+ Math\.random\(\) \* 14500/);
+  assert.match(source, /document\.hidden/);
+  assert.match(source, /context\.suspend\(\)/);
+  assert.doesNotMatch(source, /new Audio\(/);
 });
 
 test("renders the MarutiBit ANGLE game page", async () => {

@@ -28,7 +28,7 @@ function GameVisual({ id }: { id: (typeof bitGames)[number]["id"] }) {
       </svg>
     </span>
   );
-  return (
+  if (id === "liltorb") return (
     <span className={`${styles.visual} ${styles.liltorb}`} aria-hidden="true">
       <svg viewBox="0 0 100 100" focusable="false">
         <circle className={styles.orbRing} cx="50" cy="50" r="34" />
@@ -39,6 +39,7 @@ function GameVisual({ id }: { id: (typeof bitGames)[number]["id"] }) {
       </svg>
     </span>
   );
+  return <span className={`${styles.visual} ${styles.rainChime}`} aria-hidden="true"><img src="/games/rain-chime/room-lap.webp" alt="" /></span>;
 }
 
 export function BitHub() {

@@ -1,0 +1,60 @@
+.shell { --rain-blue: #7fb5c7; width: min(1480px, 100%); margin: 0 auto; background: #071016; color: #dce7e6; }
+.viewport { position: relative; aspect-ratio: 16 / 9; overflow: hidden; isolation: isolate; background: #05090c; box-shadow: 0 26px 70px rgba(5, 12, 17, .28); }
+.frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; transition: opacity .3s steps(3, end); }
+.keyboardFrame { opacity: 0; }
+.catAtKeyboard .keyboardFrame { opacity: 1; }
+.catAtKeyboard .lapFrame { opacity: 0; }
+.shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(2,8,12,.05), transparent 42%, rgba(2,7,10,.18)); }
+.rain { position: absolute; z-index: 3; left: 49%; right: 0; top: 0; height: 70%; overflow: hidden; pointer-events: none; }
+.drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
+@keyframes fall { to { transform: translate3d(-8px, 100vh, 0); } }
+.terminal { position: absolute; z-index: 4; left: 13.3%; top: 48.3%; display: flex; align-items: center; gap: .4em; color: #62c77c; font: 700 clamp(5px, .72vw, 11px)/1 "Courier New", monospace; text-shadow: 0 0 6px rgba(76, 220, 116, .7); pointer-events: none; }
+.cursor { display: block; width: .62em; height: 1em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
+@keyframes blink { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
+.drumPulse { position: absolute; z-index: 4; left: 84.7%; top: 58%; width: 4%; aspect-ratio: 1; border: 1px solid rgba(147, 214, 224, .9); border-radius: 50%; opacity: 0; pointer-events: none; }
+.drumPulse.isActive { animation: pulse 2.6s ease-out; }
+@keyframes pulse { 0% { opacity: .78; transform: scale(.35); } 100% { opacity: 0; transform: scale(4.8); } }
+.topReadout { position: absolute; z-index: 5; top: 3.4%; left: 2.3%; right: 2.3%; display: flex; justify-content: space-between; color: rgba(222, 235, 235, .72); font: 600 clamp(6px, .7vw, 10px)/1 "Courier New", monospace; letter-spacing: .17em; text-shadow: 0 1px 3px #000; pointer-events: none; }
+.entry { position: absolute; z-index: 8; inset: 0; display: grid; place-items: center; padding: 22px; background: rgba(3, 9, 13, .72); backdrop-filter: blur(5px); }
+.entryPanel { width: min(92%, 560px); padding: clamp(28px, 5vw, 54px); border: 1px solid rgba(173, 202, 207, .45); background: rgba(6, 16, 22, .88); text-align: center; box-shadow: 14px 14px 0 rgba(0, 0, 0, .2); }
+.serial { margin: 0; color: #7fa8ad; font: 600 9px/1 "Courier New", monospace; letter-spacing: .25em; }
+.entry h1 { margin: 20px 0 0; color: #edf4ef; font: 500 clamp(42px, 8vw, 82px)/.9 Georgia, serif; letter-spacing: .08em; }
+.entryText { margin: 24px auto 0; color: #a9bec0; font: 400 clamp(11px, 1.4vw, 14px)/2 "Yu Gothic UI", sans-serif; }
+.entryActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 28px; }
+.entryActions button { min-height: 48px; border: 1px solid #70939a; background: transparent; color: #dce9e8; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .13em; cursor: pointer; }
+.entryActions button:first-child { border-color: #b46450; background: #a84d3c; color: #fff; }
+.entryActions button:active { transform: translateY(1px); }
+.controls { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 clamp(14px, 3vw, 34px); border-top: 1px solid #26363d; background: #081218; color: #769098; }
+.controls p { margin: 0; font: 600 8px/1.6 "Courier New", monospace; letter-spacing: .16em; }
+.buttons { display: flex; align-items: stretch; gap: 1px; }
+.buttons button { min-height: 34px; padding: 0 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; cursor: pointer; }
+.buttons button[aria-pressed="true"] { border-color: #65a67c; color: #8bd6a4; }
+.pause { position: absolute; z-index: 10; inset: 0; display: grid; place-items: center; background: rgba(3, 9, 13, .8); }
+.pause div { text-align: center; }
+.pause p { margin: 0 0 18px; color: #9db2b5; font: 600 10px/1 "Courier New", monospace; letter-spacing: .2em; }
+.pause button { padding: 15px 24px; border: 1px solid #7fa0a5; background: #0b1a21; color: #e5eeee; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .14em; cursor: pointer; }
+.note { display: grid; grid-template-columns: .5fr 1fr; gap: clamp(28px, 6vw, 90px); padding: clamp(54px, 8vw, 96px) clamp(24px, 8vw, 110px); border-top: 1px solid #26363d; background: #0a151b; }
+.note p { margin: 0; color: #6f8b90; font: 600 8px/1 "Courier New", monospace; letter-spacing: .2em; }
+.note div { color: #a7bbbd; font: 400 13px/2 "Yu Gothic UI", sans-serif; }
+.note strong { display: block; margin-bottom: 18px; color: #dce8e5; font: 500 clamp(22px, 3vw, 38px)/1.5 "Yu Mincho", serif; }
+
+@media (max-width: 700px) {
+  .shell { width: 100%; }
+  .viewport { aspect-ratio: 4 / 3; }
+  .frame { object-position: 58% center; }
+  .topReadout span:last-child { display: none; }
+  .entryPanel { padding: 24px 18px; }
+  .entry h1 { font-size: clamp(34px, 12vw, 58px); }
+  .entryText { margin-top: 16px; line-height: 1.7; }
+  .entryActions { margin-top: 18px; }
+  .entryActions button { min-height: 42px; font-size: 8px; }
+  .controls { align-items: flex-start; flex-direction: column; padding-top: 12px; padding-bottom: 12px; }
+  .buttons { width: 100%; }
+  .buttons button { flex: 1; }
+  .note { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop { animation-duration: 3s; opacity: .22; }
+  .frame { transition: none; }
+}
