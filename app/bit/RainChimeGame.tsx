@@ -25,9 +25,7 @@ export function RainChimeGame() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const artboardRef = useRef<HTMLDivElement>(null);
   const [scene, setScene] = useState<RoomScene>("lap");
-  const [drumPulse, setDrumPulse] = useState(0);
-  const onDrumPulse = useCallback(() => setDrumPulse((value) => value + 1), []);
-  const { entered, soundOn, paused, toggleSound, resume } = useRainChimeAudio(onDrumPulse);
+  const { entered, soundOn, paused, toggleSound, resume } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
 
   useEffect(() => {
@@ -102,7 +100,6 @@ export function RainChimeGame() {
             {drops.map((drop, index) => <i className={styles.drop} key={`sky-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .4, "--duration": drop.duration * 1.08, "--length": drop.length } as CSSProperties} />)}
           </div>
           <div className={styles.terminal} aria-hidden="true"><span>PT&gt;</span><i className={styles.cursor} /></div>
-          <i key={drumPulse} className={`${styles.drumPulse} ${drumPulse ? styles.isActive : ""}`} aria-hidden="true" />
           <i className={styles.lampFlicker} aria-hidden="true" />
         </div>
         <div className={styles.shade} aria-hidden="true" />

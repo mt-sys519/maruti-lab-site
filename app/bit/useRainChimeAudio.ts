@@ -35,7 +35,7 @@ function connectAtWindow(context: AudioContext, node: AudioNode, master: GainNod
   node.connect(panner).connect(master);
 }
 
-export function useRainChimeAudio(onDrumPulse: () => void) {
+export function useRainChimeAudio() {
   const [entered, setEntered] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -43,12 +43,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
   const enteredRef = useRef(false);
   const enteredAtRef = useRef(0);
   const soundRef = useRef(false);
-  const pulseRef = useRef(onDrumPulse);
   const stopResumeRetryRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    pulseRef.current = onDrumPulse;
-  }, [onDrumPulse]);
 
   // AudioBufferSourceNode.loop repeats the decoded buffer sample-accurately;
   // an <audio loop> element instead restarts via the media pipeline, which
@@ -106,7 +101,6 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     // they'd all fire in a pile the instant the context resumes. Only
     // schedule while genuinely running.
     if (!rig || !soundRef.current || rig.context.state !== "running") return;
-    pulseRef.current();
     const { context, master, impactNoise } = rig;
     const now = context.currentTime;
     const notes = [130.81, 155.56, 174.61, 196, 233.08, 261.63];

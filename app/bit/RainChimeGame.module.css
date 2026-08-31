@@ -47,9 +47,6 @@
   93% { opacity: .5; }
   94% { opacity: .12; }
 }
-.drumPulse { position: absolute; z-index: 4; left: 84.7%; top: 58%; width: 4%; aspect-ratio: 1; border: 1px solid rgba(147, 214, 224, .9); border-radius: 50%; opacity: 0; pointer-events: none; }
-.drumPulse.isActive { animation: pulse 2.6s ease-out; }
-@keyframes pulse { 0% { opacity: .78; transform: scale(.35); } 100% { opacity: 0; transform: scale(4.8); } }
 .topReadout { position: absolute; z-index: 5; top: 3.4%; left: 2.3%; right: 2.3%; display: flex; justify-content: space-between; color: rgba(222, 235, 235, .72); font: 600 clamp(6px, .7vw, 10px)/1 "Courier New", monospace; letter-spacing: .17em; text-shadow: 0 1px 3px #000; pointer-events: none; }
 .controls { display: flex; align-items: center; justify-content: space-between; padding: 13px clamp(14px, 3vw, 34px); border-bottom: 1px solid #26363d; background: #081218; color: #769098; }
 .controls button { padding: 10px 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; cursor: pointer; }
