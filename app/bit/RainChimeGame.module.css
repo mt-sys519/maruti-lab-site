@@ -57,10 +57,10 @@
 .entryActions button { min-height: 48px; border: 1px solid #70939a; background: transparent; color: #dce9e8; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .13em; cursor: pointer; }
 .entryActions button:first-child { border-color: #b46450; background: #a84d3c; color: #fff; }
 .entryActions button:active { transform: translateY(1px); }
-.controls { position: absolute; z-index: 6; left: 0; right: 0; bottom: 0; min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 clamp(14px, 3vw, 34px); background: linear-gradient(0deg, rgba(3, 9, 13, .82), rgba(3, 9, 13, .5) 78%, transparent); color: #a9bec2; pointer-events: none; }
-.controls p { margin: 0; font: 600 8px/1.6 "Courier New", monospace; letter-spacing: .16em; text-shadow: 0 1px 3px #000; }
-.buttons { display: flex; align-items: stretch; gap: 1px; pointer-events: auto; }
-.buttons button { min-height: 34px; padding: 0 13px; border: 1px solid rgba(149, 171, 176, .4); background: rgba(8, 18, 24, .55); color: #cddcde; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; cursor: pointer; }
+.controls { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 clamp(14px, 3vw, 34px); border-bottom: 1px solid #26363d; background: #081218; color: #769098; }
+.controls p { margin: 0; font: 600 8px/1.6 "Courier New", monospace; letter-spacing: .16em; }
+.buttons { display: flex; align-items: stretch; gap: 1px; }
+.buttons button { min-height: 34px; padding: 0 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; cursor: pointer; }
 .buttons button[aria-pressed="true"] { border-color: #65a67c; color: #8bd6a4; }
 .pause { position: absolute; z-index: 10; inset: 0; display: grid; place-items: center; background: rgba(3, 9, 13, .8); }
 .pause div { text-align: center; }
@@ -80,7 +80,9 @@
   .entryText { margin-top: 16px; line-height: 1.7; }
   .entryActions { margin-top: 18px; }
   .entryActions button { min-height: 42px; font-size: 8px; }
-  .controls p { display: none; }
+  .controls { align-items: flex-start; flex-direction: column; padding-top: 12px; padding-bottom: 12px; }
+  .buttons { width: 100%; }
+  .buttons button { flex: 1; }
   .note { grid-template-columns: 1fr; }
 }
 

@@ -82,6 +82,14 @@ export function RainChimeGame() {
 
   return (
     <section ref={shellRef} className={styles.shell} aria-label="AVENUE 鑑賞画面">
+      <div className={styles.controls}>
+        <p>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</p>
+        <div className={styles.buttons}>
+          <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
+          <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
+        </div>
+      </div>
+
       <div ref={viewportRef} className={styles.viewport}>
         <div ref={artboardRef} className={styles.artboard} data-scene={scene}>
           {roomFrames.map((frame) => (
@@ -121,14 +129,6 @@ export function RainChimeGame() {
             <div><p>THE ROOM IS PAUSED</p><button type="button" onClick={() => void resume()}>RETURN TO THE ROOM</button></div>
           </div>
         )}
-
-        <div className={styles.controls}>
-          <p>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</p>
-          <div className={styles.buttons}>
-            <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
-            <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
-          </div>
-        </div>
       </div>
 
       <aside className={styles.note}>
