@@ -5,7 +5,7 @@ export const bitGames = [
   { id: "input-rain", number: "004", name: "INPUT RAIN", kana: "インプットレイン", kind: "タイピング／フリック入力ゲーム", href: "/bit/input-rain", description: "落下する端末入力を、消える前に打ち込む。", featured: true },
   { id: "paku", number: "005", name: "PAKU", kana: "パク", kind: "エサやりゲーム", href: "/bit/paku", description: "水槽の熱帯魚に、タップで餌をあげる。", featured: false },
   { id: "liltorb", number: "006", name: "LILT ORB", kana: "リルトオーブ", kind: "粒子操作トイ", href: "/bit/liltorb", description: "触れると粒子が集まる、癒しと刺激の球体トイ。", featured: false },
-  { id: "rain-chime", number: "007", name: "RAIN CHIME", kana: "レインチャイム", kind: "ピクセルアート・アンビエント", href: "/bit/rain-chime", description: "1996年の雨の部屋で、偶然生まれる音を眺めて聴く。", featured: false },
+  { id: "rain-chime", number: "007", name: "AVENUE", kana: "アベニュー", kind: "ピクセルアート・アンビエント", href: "/bit/rain-chime", description: "1996年の雨の部屋で、偶然生まれる音を眺めて聴く。", featured: false },
 ] as const;
 
 // The home hero only teases a handful of games (not the whole, ever-growing

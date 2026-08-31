@@ -70,11 +70,11 @@ test("renders the MarutiBit LILT ORB page with its dedicated social preview", as
   assert.match(html, /twitter:card" content="summary_large_image/);
 });
 
-test("renders the MarutiBit RAIN CHIME room with its dedicated social preview", async () => {
+test("renders the MarutiBit AVENUE room with its dedicated social preview", async () => {
   const response = await render("/bit/rain-chime");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /RAIN CHIME/);
+  assert.match(html, /AVENUE/);
   assert.match(html, /GAME 007/);
   assert.match(html, /bitIntro bitRainChimeIntro/);
   assert.match(html, /bitGameShell/);

@@ -81,7 +81,7 @@ export function RainChimeGame() {
   }, []);
 
   return (
-    <section ref={shellRef} className={styles.shell} aria-label="RAIN CHIME 鑑賞画面">
+    <section ref={shellRef} className={styles.shell} aria-label="AVENUE 鑑賞画面">
       <div ref={viewportRef} className={styles.viewport}>
         <div ref={artboardRef} className={styles.artboard} data-scene={scene}>
           {roomFrames.map((frame) => (
@@ -106,7 +106,7 @@ export function RainChimeGame() {
           <div className={styles.entry}>
             <div className={styles.entryPanel}>
               <p className={styles.serial}>MARUTI BIT / GAME 007</p>
-              <h1>RAIN CHIME</h1>
+              <h1>AVENUE</h1>
               <p className={styles.entryText}>雨の夜を、しばらく聴く。<br />音は同じ順番では鳴りません。</p>
               <div className={styles.entryActions}>
                 <button type="button" onClick={() => void enter(true)}>LISTEN</button>
@@ -121,20 +121,15 @@ export function RainChimeGame() {
             <div><p>THE ROOM IS PAUSED</p><button type="button" onClick={() => void resume()}>RETURN TO THE ROOM</button></div>
           </div>
         )}
-      </div>
 
-      <div className={styles.controls}>
-        <p>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</p>
-        <div className={styles.buttons}>
-          <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
-          <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
+        <div className={styles.controls}>
+          <p>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</p>
+          <div className={styles.buttons}>
+            <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
+            <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
+          </div>
         </div>
       </div>
-
-      <aside className={styles.note}>
-        <p>ABOUT THIS ROOM</p>
-        <div><strong>1996年、11番街。雨が音楽になるまで。</strong>固定された曲はありません。雨、風鈴、非常階段のSteel Tongue Drumが、少しずつ違う間隔で鳴ります。猫も、気が向いたときだけ動きます。</div>
-      </aside>
     </section>
   );
 }
