@@ -83,10 +83,8 @@ export function RainChimeGame() {
   return (
     <section ref={shellRef} className={styles.shell} aria-label="AVENUE 鑑賞画面">
       <div className={styles.controls}>
-        <div className={styles.buttons}>
-          <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
-          <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
-        </div>
+        <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
+        <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
       </div>
 
       <div ref={viewportRef} className={styles.viewport}>
@@ -119,7 +117,7 @@ export function RainChimeGame() {
 
       <aside className={styles.note}>
         <p>ABOUT THIS ROOM</p>
-        <div><strong>1996年、11番街。雨が音楽になるまで。</strong></div>
+        <div><strong>ニューヨーク、11番街。静かに雨音を聴く夜。</strong></div>
       </aside>
     </section>
   );

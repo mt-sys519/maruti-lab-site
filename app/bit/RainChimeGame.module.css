@@ -41,28 +41,25 @@
 .artboard[data-scene="keyboard"] .rainSky { display: none; }
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
-.terminal { position: absolute; z-index: 4; left: 14.5%; top: 42.5%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
+.terminal { position: absolute; z-index: 4; left: 13.8%; top: 42.5%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
 .cursor { display: block; width: .2em; height: .86em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
 @keyframes blink { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
 /* Desk lamp bulb, measured off room-lap.webp: the bright glow sits around
    x:5-11%, y:43-49%. A soft dark disc fades in briefly over it on an
    irregular cycle rather than a steady pulse, reading as a flicker. */
-.lampFlicker { position: absolute; z-index: 3; left: 3.5%; top: 42%; width: 8%; height: 9%; border-radius: 50%; background: #120d07; opacity: 0; filter: blur(5px); pointer-events: none; animation: lampFlicker 6.4s ease-in-out infinite; }
+.lampFlicker { position: absolute; z-index: 3; left: 3.5%; top: 42%; width: 8%; height: 9%; border-radius: 50%; background: #120d07; opacity: 0; filter: blur(5px); pointer-events: none; animation: lampFlicker 26s ease-in-out infinite; }
 @keyframes lampFlicker {
-  0%, 78%, 81%, 88%, 91%, 100% { opacity: 0; }
-  79% { opacity: .5; }
-  80% { opacity: .1; }
-  89% { opacity: .32; }
-  90% { opacity: 0; }
+  0%, 92%, 95%, 100% { opacity: 0; }
+  93% { opacity: .5; }
+  94% { opacity: .12; }
 }
 .drumPulse { position: absolute; z-index: 4; left: 84.7%; top: 58%; width: 4%; aspect-ratio: 1; border: 1px solid rgba(147, 214, 224, .9); border-radius: 50%; opacity: 0; pointer-events: none; }
 .drumPulse.isActive { animation: pulse 2.6s ease-out; }
 @keyframes pulse { 0% { opacity: .78; transform: scale(.35); } 100% { opacity: 0; transform: scale(4.8); } }
 .topReadout { position: absolute; z-index: 5; top: 3.4%; left: 2.3%; right: 2.3%; display: flex; justify-content: space-between; color: rgba(222, 235, 235, .72); font: 600 clamp(6px, .7vw, 10px)/1 "Courier New", monospace; letter-spacing: .17em; text-shadow: 0 1px 3px #000; pointer-events: none; }
-.controls { min-height: 40px; display: flex; align-items: center; justify-content: flex-start; gap: 18px; padding: 0 clamp(14px, 3vw, 34px); border-bottom: 1px solid #26363d; background: #081218; color: #769098; }
-.buttons { display: flex; align-items: stretch; gap: 1px; }
-.buttons button { min-height: 34px; padding: 0 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; cursor: pointer; }
-.buttons button[aria-pressed="true"] { border-color: #65a67c; color: #8bd6a4; }
+.controls { min-height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 3vw, 34px); border-bottom: 1px solid #26363d; background: #081218; color: #769098; }
+.controls button { min-height: 34px; padding: 0 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; cursor: pointer; }
+.controls button[aria-pressed="true"] { border-color: #65a67c; color: #8bd6a4; }
 .pause { position: absolute; z-index: 10; inset: 0; display: grid; place-items: center; background: rgba(3, 9, 13, .8); }
 .pause div { text-align: center; }
 .pause p { margin: 0 0 18px; color: #9db2b5; font: 600 10px/1 "Courier New", monospace; letter-spacing: .2em; }
@@ -76,6 +73,8 @@
   .shell { width: 100%; }
   .viewport { aspect-ratio: 4 / 3; }
   .topReadout span:last-child { display: none; }
+  .controls { padding: 0; }
+  .controls button { flex: 1; min-height: 40px; }
   .note { grid-template-columns: 1fr; }
 }
 
