@@ -12,7 +12,10 @@ export const metadata: Metadata = {
     title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
     description: "落下する端末入力を処理する、PromptTermのタイピング／フリック入力ゲーム。",
     url: "/bit/input-rain",
-    images: [{ url: "/og/bit/input-rain.png", width: 1200, height: 630, alt: "MarutiBit INPUT RAIN" }],
+    images: [
+      { url: "/og/bit/input-rain.png", width: 1200, height: 630, alt: "MarutiBit INPUT RAIN" },
+      { url: "/og/bit/input-rain-square.png", width: 630, height: 630, alt: "MarutiBit INPUT RAIN" },
+    ],
   },
   twitter: {
     card: "summary_large_image",

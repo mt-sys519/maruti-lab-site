@@ -8,7 +8,13 @@ export const metadata: Metadata = {
   title: "MarutiBit — SEQUENCE（順番推理ゲーム）",
   description: "数の並びに隠れた規則を見抜く順番推理ゲーム。全5問の数列パズル、初級・中級・上級の3段階。",
   alternates: { canonical: "/bit/sequence" },
-  openGraph: { title: "MarutiBit — SEQUENCE（順番推理ゲーム）", description: "数の並びに隠れた規則を見抜く順番推理ゲーム。全5問の数列パズル。", url: "/bit/sequence", images: [{ url: "/og/bit/sequence.png", width: 1200, height: 630, alt: "MarutiBit SEQUENCE" }] },
+  openGraph: {
+    title: "MarutiBit — SEQUENCE（順番推理ゲーム）", description: "数の並びに隠れた規則を見抜く順番推理ゲーム。全5問の数列パズル。", url: "/bit/sequence",
+    images: [
+      { url: "/og/bit/sequence.png", width: 1200, height: 630, alt: "MarutiBit SEQUENCE" },
+      { url: "/og/bit/sequence-square.png", width: 630, height: 630, alt: "MarutiBit SEQUENCE" },
+    ],
+  },
   twitter: { card: "summary_large_image", title: "MarutiBit — SEQUENCE（順番推理ゲーム）", description: "数の並びに隠れた規則を見抜く順番推理ゲーム。全5問の数列パズル。", images: ["/og/bit/sequence.png"] },
 };
 

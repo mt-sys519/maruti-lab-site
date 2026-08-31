@@ -11,7 +11,13 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/bit/angle" },
-  openGraph: { title, description, url: "/bit/angle", images: [{ url: "/og/bit/angle.png", width: 1200, height: 630, alt: "MarutiBit ANGLE" }] },
+  openGraph: {
+    title, description, url: "/bit/angle",
+    images: [
+      { url: "/og/bit/angle.png", width: 1200, height: 630, alt: "MarutiBit ANGLE" },
+      { url: "/og/bit/angle-square.png", width: 630, height: 630, alt: "MarutiBit ANGLE" },
+    ],
+  },
   twitter: { card: "summary_large_image", title, description, images: ["/og/bit/angle.png"] },
 };
 

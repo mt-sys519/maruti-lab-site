@@ -12,7 +12,10 @@ export const metadata: Metadata = {
     title: "MarutiBit — PAKU（エサやりゲーム）",
     description: "水槽の熱帯魚にタップで餌をあげるエサやりゲーム。",
     url: "/bit/paku",
-    images: [{ url: "/og/bit/paku.png", width: 1200, height: 630, alt: "MarutiBit PAKU" }],
+    images: [
+      { url: "/og/bit/paku.png", width: 1200, height: 630, alt: "MarutiBit PAKU" },
+      { url: "/og/bit/paku-square.png", width: 630, height: 630, alt: "MarutiBit PAKU" },
+    ],
   },
   twitter: {
     card: "summary_large_image",

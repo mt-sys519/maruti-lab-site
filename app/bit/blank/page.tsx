@@ -12,7 +12,10 @@ export const metadata: Metadata = {
     title: "MarutiBit — BLANK（空欄補完ゲーム）",
     description: "四則演算の空欄を逆算して埋める空欄補完ゲーム。全5問の計算パズル。",
     url: "/bit/blank",
-    images: [{ url: "/og/bit/blank.png", width: 1200, height: 630, alt: "MarutiBit BLANK" }],
+    images: [
+      { url: "/og/bit/blank.png", width: 1200, height: 630, alt: "MarutiBit BLANK" },
+      { url: "/og/bit/blank-square.png", width: 630, height: 630, alt: "MarutiBit BLANK" },
+    ],
   },
   twitter: {
     card: "summary_large_image",
