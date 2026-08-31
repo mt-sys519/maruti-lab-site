@@ -266,11 +266,19 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
   }, [applyGain]);
 
   useEffect(() => {
-    // A momentary visibilitychange flicker (OS focus steal, a fullscreen
-    // transition, an alt-tab that bounces right back) shouldn't drop the
-    // dark ".pause" overlay over the room for a single frame - only pause
-    // once hidden actually sticks for a bit.
+    // A momentary visibilitychange flicker (OS focus steal, an alt-tab that
+    // bounces right back) shouldn't drop the dark ".pause" overlay over the
+    // room for a single frame - only pause once hidden actually sticks for
+    // a bit. requestFullscreen()'s own transition animation is one common
+    // source of that flicker and can run well past 500ms on some browsers,
+    // which meant the room paused itself immediately, every time, right
+    // after going fullscreen - so a fullscreenchange grants a longer grace
+    // window on top of the debounce.
     let hideTimer = 0;
+    let fullscreenGraceUntil = 0;
+    const onFullscreenChange = () => {
+      fullscreenGraceUntil = Date.now() + 1200;
+    };
     const onVisibility = () => {
       if (!enteredRef.current) return;
       if (!document.hidden) {
@@ -278,6 +286,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
         return;
       }
       hideTimer = window.setTimeout(() => {
+        if (Date.now() < fullscreenGraceUntil) return;
         const rig = rigRef.current;
         if (rig) stopRain(rig);
         rig?.chimeElement.pause();
@@ -286,8 +295,10 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
       }, 500);
     };
     document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
       window.clearTimeout(hideTimer);
     };
   }, [stopRain]);
