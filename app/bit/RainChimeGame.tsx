@@ -5,7 +5,7 @@ import styles from "./RainChimeGame.module.css";
 import { useRainChimeAudio } from "./useRainChimeAudio";
 
 const rainDrops = Array.from({ length: 20 }, (_, index) => ({
-  x: (index * 37 + 11) % 100,
+  x: 61 + ((index * 37 + 11) % 100) * 0.35,
   delay: ((index * 29) % 100) / 17,
   duration: 0.68 + ((index * 17) % 31) / 38,
   length: 9 + ((index * 13) % 25),
@@ -98,7 +98,7 @@ export function RainChimeGame() {
               aria-hidden={frame.scene === "lap" ? undefined : "true"}
             />
           ))}
-          <div className={`${styles.rainPane} ${styles.rainSky}`} aria-hidden="true">
+          <div className={styles.rainPane} aria-hidden="true">
             {drops.map((drop, index) => <i className={styles.drop} key={`sky-${index}`} style={{ "--x": drop.x, "--delay": drop.delay + .4, "--duration": drop.duration * 1.08, "--length": drop.length } as CSSProperties} />)}
           </div>
           <div className={styles.terminal} aria-hidden="true"><span>PT&gt;</span><i className={styles.cursor} /></div>

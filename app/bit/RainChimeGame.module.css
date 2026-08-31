@@ -6,35 +6,35 @@
 .artboard[data-scene="glance"] .lapFrame, .artboard[data-scene="keyboard"] .lapFrame, .artboard[data-scene="windowsill"] .lapFrame { opacity: 0; }
 .artboard[data-scene="glance"] .glanceFrame, .artboard[data-scene="keyboard"] .keyboardFrame, .artboard[data-scene="windowsill"] .windowsillFrame { opacity: 1; }
 .shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(2,8,12,.05), transparent 42%, rgba(2,7,10,.18)); }
-.rainPane { position: absolute; z-index: 3; overflow: hidden; pointer-events: none; }
-/* Measured off room-lap.webp by compositing the pane's own clip-path
-   polygon back onto the source image and checking it against the actual
-   beam/ladder/crossbar pixels. Earlier passes placed the top and right
-   edges right at the measured frame boundary with no tolerance, which
-   still read as rain-on-the-frame once actually looking at it live and
-   zoomed in - browser sub-pixel rounding and screenshot compression make
-   a zero-margin boundary unreliable to verify. Deliberately pulled the
-   top and right edges in further (11%/96% instead of 8%/99%) to leave a
-   visible gap between the rain and the frame, rather than an exact-but-
-   fragile fit. Bottom stays at the y=39.8% crossbar (confirmed solid
-   twice). The wall/ladder's diagonal is re-derived for the new top. The
-   fire escape platform below the window ledge isn't in the open rain at
-   all - no rain pane renders there; the Steel Tongue Drum's occasional
-   hits are audio only. */
-.rainSky {
-  left: 61%; top: 11%; width: 35%; height: 28.8%;
-  clip-path: polygon(10.3% 0%, 100% 0%, 100% 100%, 34.6% 100%);
+/* Two CODEX-drawn alpha masks (960x540, matching room-lap.webp exactly)
+   replace the old hand-measured clip-path polygon: rain-outside-mask.png
+   marks only the open sky/cityscape actually visible through the window
+   (frame, wind chime, ladder, drum all cut out), rain-glass-mask.png
+   marks only the glass pane surface (also with the chime cut out, since
+   it hangs in front of the glass). The pane covers the whole artboard and
+   the masks alone decide where the rain shows, so no per-scene pane
+   position/size measurement is needed anymore. windowsill swaps in a
+   variant outside-mask with the cat's silhouette also cut out, since the
+   cat sits inside the window opening in that scene. */
+.rainPane {
+  position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none;
+  mask-repeat: no-repeat, no-repeat;
+  mask-size: 100% 100%, 100% 100%;
+  mask-position: 0 0, 0 0;
+  mask-composite: add;
+  mask-image: url("/games/rain-chime/rain-outside-mask.png"), url("/games/rain-chime/rain-glass-mask.png");
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-size: 100% 100%, 100% 100%;
+  -webkit-mask-position: 0 0, 0 0;
+  -webkit-mask-composite: source-over;
+  -webkit-mask-image: url("/games/rain-chime/rain-outside-mask.png"), url("/games/rain-chime/rain-glass-mask.png");
 }
-/* Below the crossbar is the fire escape platform, the drum, and the
-   interior windowsill (with the books) right behind it in the same narrow
-   strip - a "clear sky right of the drum" pane was tried here and pulled
-   back out because its bottom edge landed right at the platform/sill
-   transition with no safety margin, so rain visibly fell on the books.
-   Not worth the risk in a band this cramped - no rain pane renders below
-   the crossbar at all; the Steel Tongue Drum's occasional hits are audio
-   only. */
-.drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
-@keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
+.artboard[data-scene="windowsill"] .rainPane {
+  mask-image: url("/games/rain-chime/rain-outside-mask-windowsill.png"), url("/games/rain-chime/rain-glass-mask.png");
+  -webkit-mask-image: url("/games/rain-chime/rain-outside-mask-windowsill.png"), url("/games/rain-chime/rain-glass-mask.png");
+}
+.drop { --x: 78; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -10%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
+@keyframes fall { to { transform: translate3d(-8px, 430px, 0); } }
 .terminal { position: absolute; z-index: 4; left: 13.8%; top: 42.5%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
 .cursor { display: block; width: .2em; height: .86em; background: currentColor; animation: blink 1.05s steps(1, end) infinite; }
 @keyframes blink { 0%, 48% { opacity: 1; } 49%, 100% { opacity: 0; } }
