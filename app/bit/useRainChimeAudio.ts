@@ -222,6 +222,41 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     await startRain(rig);
   }, [startRain]);
 
+  // AudioContext.resume() called outside a real user gesture (e.g. from the
+  // mount effect below, honoring a stored "sound on" preference on a fresh
+  // page load) can resolve without the context ever actually reaching
+  // "running" on some browsers - the UI reads as ON but nothing plays.
+  // Confirmed via the same failure mode documented for LILT ORB's
+  // AudioContext: it self-corrects the instant a real gesture calls
+  // resume() again (clicking the SOUND button once toggled it off, a
+  // second click - now gesture-synchronous - actually started audio).
+  // Retry on a timer, and again synchronously on the page's first real
+  // gesture, so it recovers without needing that manual toggle.
+  const retryStuckResume = useCallback((rig: AudioRig) => {
+    let retryId = 0;
+    const tryOnce = () => {
+      if (rig.context.state === "running") {
+        window.clearInterval(retryId);
+        return;
+      }
+      void rig.context.resume();
+      if (soundRef.current) void startRain(rig);
+    };
+    retryId = window.setInterval(tryOnce, 700);
+    const onFirstGesture = () => {
+      if (rig.context.state === "suspended") void rig.context.resume().then(() => {
+        if (soundRef.current) void startRain(rig);
+      });
+    };
+    document.addEventListener("pointerdown", onFirstGesture);
+    document.addEventListener("keydown", onFirstGesture);
+    return () => {
+      window.clearInterval(retryId);
+      document.removeEventListener("pointerdown", onFirstGesture);
+      document.removeEventListener("keydown", onFirstGesture);
+    };
+  }, [startRain]);
+
   const toggleSound = useCallback(async () => {
     const next = !soundRef.current;
     applyGain(next);
@@ -247,6 +282,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     enteredAtRef.current = Date.now();
     setEntered(true);
     const rig = ensureAudio();
+    const stopResumeRetry = retryStuckResume(rig);
     const preferenceTimer = window.setTimeout(() => {
       let stored = false;
       try { stored = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true"; } catch { /* Default OFF. */ }
@@ -260,11 +296,12 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     window.addEventListener("storage", onStorage);
     window.addEventListener(SOUND_CHANGE_EVENT, onSoundChange);
     return () => {
+      stopResumeRetry();
       window.clearTimeout(preferenceTimer);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(SOUND_CHANGE_EVENT, onSoundChange);
     };
-  }, [applyGain, ensureAudio, startSoundscape]);
+  }, [applyGain, ensureAudio, startSoundscape, retryStuckResume]);
 
   useEffect(() => {
     // A momentary visibilitychange flicker (OS focus steal, an alt-tab that
