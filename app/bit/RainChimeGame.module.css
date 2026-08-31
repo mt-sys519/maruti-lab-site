@@ -25,6 +25,20 @@
   left: 61%; top: 8%; width: 38%; height: 31.8%;
   clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 32% 100%);
 }
+/* Below the crossbar, the fire escape platform and the drum sitting on it
+   block most of the view - but there's a clear strip of sky/skyline to the
+   right of the drum, from the crossbar down to the sill, that's just as
+   open as the sky above it. Verified the same way (composited back onto
+   the source art): x:93.5-99% clears the drum's right edge with room to
+   spare. */
+.rainSkyLower { left: 93.5%; top: 39.8%; width: 5.5%; height: 26%; }
+/* room-keyboard.webp's window has its own extra center mullion the other
+   three scenes don't (a separate art inconsistency, not yet fixed) -
+   measuring rain panes against the other three would draw rain straight
+   over that bar in this one scene, so both panes are hidden for it rather
+   than patched around a mismatch the art itself needs to resolve. */
+.artboard[data-scene="keyboard"] .rainSky,
+.artboard[data-scene="keyboard"] .rainSkyLower { display: none; }
 .drop { --x: 50; --delay: 0; --duration: 1; --length: 18; position: absolute; top: -18%; left: calc(var(--x) * 1%); width: 1px; height: calc(var(--length) * 1px); opacity: .42; background: linear-gradient(180deg, transparent, #bde6f0); animation: fall calc(var(--duration) * 1s) linear calc(var(--delay) * -1s) infinite; }
 @keyframes fall { to { transform: translate3d(-8px, 360px, 0); } }
 .terminal { position: absolute; z-index: 4; left: 13.3%; top: 48.3%; display: flex; align-items: center; gap: .28em; color: #62c77c; font: 700 clamp(4px, .58vw, 9px)/1 "Courier New", monospace; text-shadow: 0 0 5px rgba(76, 220, 116, .62); pointer-events: none; }
