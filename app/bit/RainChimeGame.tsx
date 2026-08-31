@@ -27,7 +27,7 @@ export function RainChimeGame() {
   const [scene, setScene] = useState<RoomScene>("lap");
   const [drumPulse, setDrumPulse] = useState(0);
   const onDrumPulse = useCallback(() => setDrumPulse((value) => value + 1), []);
-  const { entered, soundOn, paused, enter, toggleSound, resume } = useRainChimeAudio(onDrumPulse);
+  const { entered, soundOn, paused, toggleSound, resume } = useRainChimeAudio(onDrumPulse);
   const drops = useMemo(() => rainDrops, []);
 
   useEffect(() => {
@@ -83,7 +83,6 @@ export function RainChimeGame() {
   return (
     <section ref={shellRef} className={styles.shell} aria-label="AVENUE 鑑賞画面">
       <div className={styles.controls}>
-        <p>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</p>
         <div className={styles.buttons}>
           <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
           <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
@@ -106,23 +105,10 @@ export function RainChimeGame() {
           </div>
           <div className={styles.terminal} aria-hidden="true"><span>PT&gt;</span><i className={styles.cursor} /></div>
           <i key={drumPulse} className={`${styles.drumPulse} ${drumPulse ? styles.isActive : ""}`} aria-hidden="true" />
+          <i className={styles.lampFlicker} aria-hidden="true" />
         </div>
         <div className={styles.shade} aria-hidden="true" />
         <div className={styles.topReadout} aria-hidden="true"><span>11TH AVE / NEW YORK / 1996</span><span>WINDOW CHANNEL / RAIN</span></div>
-
-        {!entered && (
-          <div className={styles.entry}>
-            <div className={styles.entryPanel}>
-              <p className={styles.serial}>MARUTI BIT / GAME 007</p>
-              <h1>AVENUE</h1>
-              <p className={styles.entryText}>雨の夜を、しばらく聴く。<br />音は同じ順番では鳴りません。</p>
-              <div className={styles.entryActions}>
-                <button type="button" onClick={() => void enter(true)}>LISTEN</button>
-                <button type="button" onClick={() => void enter(false)}>ENTER SILENT</button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {entered && paused && (
           <div className={styles.pause}>
@@ -133,7 +119,7 @@ export function RainChimeGame() {
 
       <aside className={styles.note}>
         <p>ABOUT THIS ROOM</p>
-        <div><strong>1996年、11番街。雨が音楽になるまで。</strong>雨、風鈴、非常階段のSteel Tongue Drumが、少しずつ違う間隔で鳴ります。猫も、気が向いたときだけ動きます。</div>
+        <div><strong>1996年、11番街。雨が音楽になるまで。</strong></div>
       </aside>
     </section>
   );

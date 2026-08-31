@@ -79,8 +79,8 @@ test("renders the MarutiBit AVENUE room with its dedicated social preview", asyn
   assert.match(html, /bitIntro bitRainChimeIntro/);
   assert.match(html, /bitGameShell/);
   assert.match(html, /眺めるアンビエント/);
-  assert.match(html, /LISTEN/);
-  assert.match(html, /ENTER SILENT/);
+  assert.match(html, /SOUND/);
+  assert.match(html, /FULLSCREEN/);
   assert.match(html, /room-lap\.webp/);
   assert.match(html, /https:\/\/marutilab\.com\/og\/bit\/rain-chime\.png/);
   assert.match(html, /twitter:card" content="summary_large_image/);

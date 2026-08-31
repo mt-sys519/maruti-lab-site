@@ -222,22 +222,11 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     await startRain(rig);
   }, [startRain]);
 
-  const enter = useCallback(async (withSound: boolean) => {
-    enteredRef.current = true;
-    enteredAtRef.current = Date.now();
-    setEntered(true);
-    applyGain(withSound);
-    storePreference(withSound);
-    const rig = ensureAudio();
-    await startSoundscape(rig);
-    setPaused(false);
-  }, [applyGain, ensureAudio, startSoundscape, storePreference]);
-
   const toggleSound = useCallback(async () => {
     const next = !soundRef.current;
     applyGain(next);
     storePreference(next);
-    if (next && enteredRef.current) {
+    if (next) {
       const rig = ensureAudio();
       await startSoundscape(rig);
       setPaused(false);
@@ -250,9 +239,19 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     setPaused(false);
   }, [startSoundscape]);
 
+  // No entry gate, matching the other MarutiBit games: the room is "entered"
+  // from mount, and the shared sound preference (read here, same key other
+  // games write) decides whether it starts playing right away.
   useEffect(() => {
+    enteredRef.current = true;
+    enteredAtRef.current = Date.now();
+    setEntered(true);
+    const rig = ensureAudio();
     const preferenceTimer = window.setTimeout(() => {
-      try { applyGain(window.localStorage.getItem(SOUND_STORAGE_KEY) === "true"); } catch { /* Default OFF. */ }
+      let stored = false;
+      try { stored = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true"; } catch { /* Default OFF. */ }
+      applyGain(stored);
+      if (stored) void startSoundscape(rig);
     }, 0);
     const onStorage = (event: StorageEvent) => {
       if (event.key === SOUND_STORAGE_KEY) applyGain(event.newValue === "true");
@@ -265,7 +264,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(SOUND_CHANGE_EVENT, onSoundChange);
     };
-  }, [applyGain]);
+  }, [applyGain, ensureAudio, startSoundscape]);
 
   useEffect(() => {
     // A momentary visibilitychange flicker (OS focus steal, an alt-tab that
@@ -324,5 +323,5 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     rigRef.current = null;
   }, [stopRain]);
 
-  return { entered, soundOn, paused, enter, toggleSound, resume };
+  return { entered, soundOn, paused, toggleSound, resume };
 }
