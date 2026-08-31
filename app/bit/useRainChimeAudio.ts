@@ -44,6 +44,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
   const enteredAtRef = useRef(0);
   const soundRef = useRef(false);
   const pulseRef = useRef(onDrumPulse);
+  const stopResumeRetryRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     pulseRef.current = onDrumPulse;
@@ -282,7 +283,7 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     enteredAtRef.current = Date.now();
     setEntered(true);
     const rig = ensureAudio();
-    const stopResumeRetry = retryStuckResume(rig);
+    stopResumeRetryRef.current = retryStuckResume(rig);
     const preferenceTimer = window.setTimeout(() => {
       let stored = false;
       try { stored = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true"; } catch { /* Default OFF. */ }
@@ -296,12 +297,39 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
     window.addEventListener("storage", onStorage);
     window.addEventListener(SOUND_CHANGE_EVENT, onSoundChange);
     return () => {
-      stopResumeRetry();
+      stopResumeRetryRef.current?.();
+      stopResumeRetryRef.current = null;
       window.clearTimeout(preferenceTimer);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(SOUND_CHANGE_EVENT, onSoundChange);
     };
   }, [applyGain, ensureAudio, startSoundscape, retryStuckResume]);
+
+  // A browser-back restore from bfcache (the whole page frozen and revived,
+  // not a real reload) fires "pageshow" with persisted=true. The page's
+  // AudioContext gets suspended by the browser while frozen, but by then the
+  // original retryStuckResume's interval has long since cleared itself
+  // (it stops the moment the context first reaches "running"), so nothing is
+  // left actively trying to resume it - the UI still reads sound-on from the
+  // React state that was frozen along with the page, but nothing plays until
+  // a fresh click happens to land on the still-attached first-gesture
+  // listener. Re-arm a fresh retry loop here so it recovers on its own.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      let rig = rigRef.current;
+      if (rig && rig.context.state === "closed") rig = null;
+      if (!rig) {
+        rigRef.current = null;
+        rig = ensureAudio();
+      }
+      stopResumeRetryRef.current?.();
+      stopResumeRetryRef.current = retryStuckResume(rig);
+      if (soundRef.current) void startSoundscape(rig);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [ensureAudio, retryStuckResume, startSoundscape]);
 
   useEffect(() => {
     // A momentary visibilitychange flicker (OS focus steal, an alt-tab that
