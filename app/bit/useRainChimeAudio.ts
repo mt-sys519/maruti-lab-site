@@ -122,17 +122,17 @@ export function useRainChimeAudio(onDrumPulse: () => void) {
       clickFilter.type = "bandpass";
       clickFilter.frequency.value = 1600 + Math.random() * 1800;
       clickFilter.Q.value = 0.75;
-      clickGain.gain.setValueAtTime(0.075 * strength, start);
+      clickGain.gain.setValueAtTime(0.062 * strength, start);
       clickGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.055);
       click.connect(clickFilter).connect(clickGain);
       connectAtWindow(context, clickGain, master, 0.62);
       click.start(start);
 
       [
-        { multiple: 1, level: 0.19, decay: 3.1, type: "sine" as OscillatorType },
-        { multiple: 1.51, level: 0.07, decay: 2.1, type: "sine" as OscillatorType },
-        { multiple: 2.03, level: 0.033, decay: 1.45, type: "triangle" as OscillatorType },
-        { multiple: 2.48, level: 0.016, decay: 1.0, type: "sine" as OscillatorType },
+        { multiple: 1, level: 0.156, decay: 3.1, type: "sine" as OscillatorType },
+        { multiple: 1.51, level: 0.057, decay: 2.1, type: "sine" as OscillatorType },
+        { multiple: 2.03, level: 0.027, decay: 1.45, type: "triangle" as OscillatorType },
+        { multiple: 2.48, level: 0.013, decay: 1.0, type: "sine" as OscillatorType },
       ].forEach(({ multiple, level, decay, type }) => {
         const oscillator = context.createOscillator();
         const gain = context.createGain();

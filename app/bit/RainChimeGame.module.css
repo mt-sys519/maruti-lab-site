@@ -67,7 +67,7 @@
 .note { display: grid; grid-template-columns: .5fr 1fr; align-items: center; gap: clamp(28px, 6vw, 90px); padding: clamp(18px, 3vw, 28px) clamp(24px, 8vw, 110px); border-top: 1px solid #26363d; background: #0a151b; }
 .note p { margin: 0; color: #6f8b90; font: 600 8px/1 "Courier New", monospace; letter-spacing: .2em; }
 .note div { color: #a7bbbd; font: 400 13px/2 "Yu Gothic UI", sans-serif; }
-.note strong { display: block; color: #6f8b90; font: 600 clamp(10px, 1.1vw, 13px)/1.9 "Courier New", monospace; letter-spacing: .14em; }
+.note strong { display: block; color: #6f8b90; font: 600 clamp(9px, .95vw, 11px)/1.9 "Courier New", monospace; letter-spacing: .14em; }
 
 @media (max-width: 700px) {
   .shell { width: 100%; }
