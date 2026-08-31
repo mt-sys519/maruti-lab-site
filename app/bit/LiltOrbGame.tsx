@@ -617,7 +617,7 @@ export function LiltOrbGame() {
 
       const g = actx!.createGain();
       g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(0.03 * velocity, time + 0.006);
+      g.gain.linearRampToValueAtTime(0.09 * velocity, time + 0.006);
       g.gain.exponentialRampToValueAtTime(0.0005, time + 0.34);
 
       const pan = actx!.createStereoPanner();
@@ -724,7 +724,7 @@ export function LiltOrbGame() {
       const dur = 0.028 + Math.random() * 0.026;
       const g = actx!.createGain();
       g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(0.026, time + 0.003);
+      g.gain.linearRampToValueAtTime(0.08, time + 0.003);
       g.gain.exponentialRampToValueAtTime(0.0004, time + dur);
       osc.connect(g);
       const pan = actx!.createStereoPanner();
