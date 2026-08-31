@@ -127,22 +127,42 @@ const pakuVisual = `<g transform="translate(650 150)" filter="url(#shadow)">
   <text x="24" y="278" fill="#476c70" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="3">TAP TO FEED / AQUARIUM ONLINE</text>
 </g>`;
 
-const liltOrbDots = Array.from({ length: 46 }).map((_, i) => {
-  const angle = (i * 137.5) % 360; // golden angle keeps the scatter even, not clumped
-  const rad = Math.sqrt(i / 46) * 118;
-  const x = 180 + Math.cos((angle * Math.PI) / 180) * rad;
-  const y = 165 + Math.sin((angle * Math.PI) / 180) * rad;
-  const r = 1.4 + (i % 5) * 0.7;
-  const opacity = 0.35 + (i % 7) * 0.09;
-  return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#8ef2ff" opacity="${opacity.toFixed(2)}"/>`;
-}).join("");
+// Mirrors the actual /bit hub card icon exactly (see GameVisual's "liltorb"
+// case in app/bit/BitHub.tsx: a ring + 4 particle dots), just scaled up,
+// rather than an unrelated illustration invented separately for the OGP.
+function liltOrbIcon(scale) {
+  return `<g transform="scale(${scale}) translate(-50 -50)">
+    <circle cx="50" cy="50" r="34" fill="none" stroke="#4a6a72" stroke-width="${(1.4 / scale).toFixed(2)}"/>
+    <circle cx="38" cy="42" r="2.6" fill="#8ef2ff"/>
+    <circle cx="59" cy="35" r="1.9" fill="#8ef2ff"/>
+    <circle cx="61" cy="59" r="2.3" fill="#8ef2ff"/>
+    <circle cx="42" cy="62" r="1.7" fill="#8ef2ff"/>
+  </g>`;
+}
 
-const liltOrbVisual = `<g transform="translate(700 145)" filter="url(#shadow)">
-  <rect width="360" height="340" rx="4" fill="${palette.dark}" stroke="#3a5058"/>
-  <circle cx="180" cy="165" r="140" fill="none" stroke="#2c4048" stroke-width="1"/>
-  ${liltOrbDots}
+const liltOrbVisual = `<g transform="translate(755 140)" filter="url(#shadow)">
+  <rect width="330" height="330" rx="4" fill="${palette.dark}" stroke="#3a5058"/>
+  <g transform="translate(165 165)">${liltOrbIcon(3.4)}</g>
   <text x="24" y="312" fill="#7fa3ad" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">TOUCH TO GATHER</text>
 </g>`;
+
+// Square variant: some unfurlers (Slack/Discord/LINE) prefer or fall back to
+// a 1:1 og:image rather than the 1200x630 default.
+function squareShell({ serial, title, subtitle, visual }) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="630" height="630" viewBox="0 0 630 630">
+    ${grid()}
+    <rect width="630" height="630" fill="${palette.dark}"/>
+    <rect width="630" height="630" fill="url(#grid)"/>
+    <rect x="24" y="24" width="582" height="582" rx="5" fill="none" stroke="#3a5058"/>
+    <text x="48" y="60" fill="#9db4bb" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">MARUTI BIT / ${escapeXml(serial)}</text>
+    <circle cx="582" cy="52" r="4" fill="${palette.accent}"/>
+    ${visual}
+    <text x="48" y="524" fill="#eef6f7" font-family="Georgia, 'Times New Roman', serif" font-size="46" letter-spacing="2">${escapeXml(title)}</text>
+    <text x="50" y="560" fill="#8ea6ac" font-family="'Yu Gothic UI', 'Noto Sans JP', sans-serif" font-size="16" letter-spacing="1">${escapeXml(subtitle)}</text>
+  </svg>`;
+}
+
+const liltOrbSquareVisual = `<g transform="translate(315 250)" filter="url(#shadow)">${liltOrbIcon(6.2)}</g>`;
 
 const images = [
   ["index.png", shell({ serial: "SERIES INDEX", title: "Maruti Bit", subtitle: "短い時間で、考える。見抜く。打ち込む。", visual: hubVisual })],
@@ -152,6 +172,7 @@ const images = [
   ["input-rain.png", shell({ serial: "GAME 004", title: "INPUT RAIN", subtitle: "降る文字列を打ち返すタイピングゲーム。", visual: rainVisual })],
   ["paku.png", shell({ serial: "GAME 005", title: "PAKU", subtitle: "水槽の熱帯魚に、タップで餌をあげる。", visual: pakuVisual })],
   ["liltorb.png", shell({ serial: "GAME 006", title: "LILT ORB", subtitle: "触れると粒子が集まる、癒しと刺激の球体トイ。", visual: liltOrbVisual })],
+  ["liltorb-square.png", squareShell({ serial: "GAME 006", title: "LILT ORB", subtitle: "触れると粒子が集まる、癒しと刺激の球体トイ。", visual: liltOrbSquareVisual })],
 ];
 
 for (const [filename, svg] of images) {

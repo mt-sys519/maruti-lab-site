@@ -12,7 +12,10 @@ export const metadata: Metadata = {
     title: "MarutiBit — LILT ORB（粒子操作トイ）",
     description: "触れると粒子が集まる、癒しと刺激の球体トイ。",
     url: "/bit/liltorb",
-    images: [{ url: "/og/bit/liltorb.png", width: 1200, height: 630, alt: "MarutiBit LILT ORB" }],
+    images: [
+      { url: "/og/bit/liltorb.png", width: 1200, height: 630, alt: "MarutiBit LILT ORB" },
+      { url: "/og/bit/liltorb-square.png", width: 630, height: 630, alt: "MarutiBit LILT ORB" },
+    ],
   },
   twitter: {
     card: "summary_large_image",
