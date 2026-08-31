@@ -116,7 +116,7 @@ export function RainChimeGame() {
       </div>
 
       <aside className={styles.note}>
-        <p>ABOUT THIS ROOM</p>
+        <p>SOUND SOURCES</p>
         <div><strong>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</strong></div>
       </aside>
     </section>
