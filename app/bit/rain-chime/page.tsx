@@ -30,7 +30,16 @@ export default function RainChimePage() {
       <BitSeriesNav active="rain-chime" />
       <section className="bitIntro bitRainChimeIntro">
         <p className="bitSerial">MB / GAME 007</p>
-        <h1><span>AVENUE</span></h1>
+        <h1>
+          <svg className="bitAvenueLogo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M7 5.5 H17" />
+            <path d="M9 5.5 V16" />
+            <path d="M12 5.5 V19" />
+            <path d="M15 5.5 V14.5" />
+            <circle className="bitAvenueLogoDot" cx="12" cy="21.3" r="1" />
+          </svg>
+          <span>AVENUE</span>
+        </h1>
         <p><strong>眺めるアンビエント。</strong><br />雨、ウインドチャイム、タングドラムがつくる部屋の時間。</p>
       </section>
       <div className="bitGameShell">
