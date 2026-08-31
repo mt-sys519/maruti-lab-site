@@ -9,21 +9,21 @@
 .rainPane { position: absolute; z-index: 3; overflow: hidden; pointer-events: none; }
 /* Measured off room-lap.webp by compositing the pane's own clip-path
    polygon back onto the source image and checking it against the actual
-   beam/ladder/crossbar pixels, not eyeballed percentages: the window's top
-   casing beam is dark wood, not sky, and its lower edge sits at y=~8%
-   (a first pass at top:5% drew rain straight over the beam). The
-   wall/ladder's diagonal edge runs from x=~63.7% at y=8% down to x=~73.1%
-   at y=39.8%, which is the window's horizontal crossbar - the true bottom
-   of this band, not the y=33% the pane stopped at before (which left a
-   strip of real sky between 33-39.8% with no rain at all). rainSky spans
-   the full 61%-99% width down to the crossbar and clips to that diagonal
-   so rain only falls in the actual sky gap next to the ladder. The fire
-   escape platform below the window ledge isn't in the open rain at all -
-   no rain pane renders there; the Steel Tongue Drum's occasional hits are
-   audio only. */
+   beam/ladder/crossbar pixels. Earlier passes placed the top and right
+   edges right at the measured frame boundary with no tolerance, which
+   still read as rain-on-the-frame once actually looking at it live and
+   zoomed in - browser sub-pixel rounding and screenshot compression make
+   a zero-margin boundary unreliable to verify. Deliberately pulled the
+   top and right edges in further (11%/96% instead of 8%/99%) to leave a
+   visible gap between the rain and the frame, rather than an exact-but-
+   fragile fit. Bottom stays at the y=39.8% crossbar (confirmed solid
+   twice). The wall/ladder's diagonal is re-derived for the new top. The
+   fire escape platform below the window ledge isn't in the open rain at
+   all - no rain pane renders there; the Steel Tongue Drum's occasional
+   hits are audio only. */
 .rainSky {
-  left: 61%; top: 8%; width: 38%; height: 31.8%;
-  clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 32% 100%);
+  left: 61%; top: 11%; width: 35%; height: 28.8%;
+  clip-path: polygon(10.3% 0%, 100% 0%, 100% 100%, 34.6% 100%);
 }
 /* Below the crossbar is the fire escape platform, the drum, and the
    interior windowsill (with the books) right behind it in the same narrow
