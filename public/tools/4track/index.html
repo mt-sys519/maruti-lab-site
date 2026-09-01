@@ -224,6 +224,10 @@ body{
   <button class="btn" id="btn-play">▶ 再生</button>
   <button class="btn" id="btn-stop">■ 停止</button>
   <button class="btn" id="btn-loop">⟳ ループ</button>
+  <span class="if" style="margin-left:4px;">
+    <label>BPM<input type="number" id="projectBpmInput" value="120" min="20" max="300"></label>
+  </span>
+  <button class="btn" id="btn-click" type="button" title="メトロノームクリック(再生時のみ、書き出しには含まれません)">🔔 クリック</button>
   <div class="sep"></div>
   <button class="btn btn-green" id="btn-export">⬇ WAV書き出し</button>
   <div class="sep"></div>
@@ -267,6 +271,12 @@ body{
       <button class="btn" id="btn-add-sel" disabled>✂ 選択範囲追加</button>
       <button class="btn" id="btn-add-all" disabled>＋ 全体追加</button>
       <button class="btn" id="btn-sel-clear" disabled style="padding:3px 7px">✕</button>
+      <span class="if" style="margin-left:6px;">
+        <label>BPM<input type="number" id="stretchSrcBpm" value="120" min="20" max="300"></label>
+        <span style="color:#b0a284;">→</span>
+        <input type="number" id="stretchDstBpm" value="120" min="20" max="300">
+      </span>
+      <button class="btn" id="btn-stretch" disabled title="音程を変えずにテンポだけ変更した新しいサンプルを作成">⏱ テンポ変更</button>
     </div>
     <div id="wv-container">
       <canvas id="wv-canvas"></canvas>
@@ -368,6 +378,8 @@ const S = {
   masterVolume: 1,
   lofiOn: false,
   lofiAmount: 0.3,
+  projectBpm: 120,
+  clickOn: false,
 };
 
 // ════════════════════════════════════════════════════
@@ -499,6 +511,7 @@ function updateAddBtns(){
   document.getElementById('btn-add-all').disabled=!has;
   document.getElementById('btn-sel-clear').disabled=!hasSel;
   document.getElementById('btn-wv-preview').disabled=!has;
+  document.getElementById('btn-stretch').disabled=!has;
 }
 
 document.getElementById('btn-sel-clear').addEventListener('click',()=>{
@@ -1193,6 +1206,79 @@ function addClip(sample,tId,startT,trimStart,trimEnd){
 }
 
 // ════════════════════════════════════════════════════
+// TIME STRETCH (WSOLA — tempo change without pitch change)
+// Offline, one-shot: produces a new sample in the library. No real-time
+// worklet / live tempo dragging — that's a much bigger feature.
+// ════════════════════════════════════════════════════
+function wsolaStretchChannel(input, ratio, sampleRate){
+  const inputLength=input.length;
+  const outputLength=Math.max(1,Math.round(inputLength*ratio));
+  const windowSize=Math.max(64,Math.round(sampleRate*0.03)); // ~30ms grain
+  const hopOut=Math.round(windowSize/2);                     // 50% overlap (Hann COLA)
+  const hopIn=Math.max(1,Math.round(hopOut/ratio));          // analysis hop scaled by ratio
+  const searchRadius=Math.max(1,Math.round(sampleRate*0.006)); // ~6ms alignment search
+
+  const win=new Float32Array(windowSize);
+  for(let i=0;i<windowSize;i++) win[i]=0.5-0.5*Math.cos((2*Math.PI*i)/(windowSize-1));
+
+  const out=new Float32Array(outputLength+windowSize);
+  let prevTail=null, outPos=0, idealIn=0;
+
+  while(outPos<outputLength){
+    let start=Math.round(idealIn);
+    if(prevTail){
+      let bestOffset=0, bestScore=-Infinity;
+      const overlapLen=Math.min(hopOut,windowSize);
+      for(let off=-searchRadius; off<=searchRadius; off++){
+        const candStart=start+off;
+        if(candStart<0||candStart+windowSize>inputLength) continue;
+        let score=0;
+        for(let k=0;k<overlapLen;k++) score+=input[candStart+k]*prevTail[k];
+        if(score>bestScore){ bestScore=score; bestOffset=off; }
+      }
+      start=start+bestOffset;
+    }
+    start=Math.max(0,Math.min(inputLength-windowSize,start));
+    for(let k=0;k<windowSize;k++) out[outPos+k]+=input[start+k]*win[k];
+    const overlapLen=Math.min(hopOut,windowSize);
+    prevTail=input.subarray(start+windowSize-overlapLen,start+windowSize);
+    outPos+=hopOut;
+    idealIn+=hopIn;
+  }
+  return out.subarray(0,outputLength);
+}
+
+function timeStretchBuffer(buffer, ratio, ctx){
+  const outLength=Math.max(1,Math.round(buffer.length*ratio));
+  const outBuffer=ctx.createBuffer(buffer.numberOfChannels,outLength,buffer.sampleRate);
+  for(let ch=0; ch<buffer.numberOfChannels; ch++){
+    outBuffer.copyToChannel(wsolaStretchChannel(buffer.getChannelData(ch),ratio,buffer.sampleRate),ch);
+  }
+  return outBuffer;
+}
+
+document.getElementById('btn-stretch').addEventListener('click',()=>{
+  const sample=S.samples.find(s=>s.id===S.selSampleId); if(!sample) return;
+  const srcBpm=parseFloat(document.getElementById('stretchSrcBpm').value);
+  const dstBpm=parseFloat(document.getElementById('stretchDstBpm').value);
+  if(!srcBpm||!dstBpm||srcBpm<=0||dstBpm<=0){ setStatus('BPMを正しく入力してください'); return; }
+  const ratio=srcBpm/dstBpm; // output/input length: faster target BPM → shorter output
+  setStatus('テンポ変更中…');
+  try{
+    const ctx=getCtx();
+    const stretched=timeStretchBuffer(sample.buffer, ratio, ctx);
+    const baseName=sample.name.replace(/\.[^.]+$/,'');
+    const newSample={id:uid(), name:`${baseName}_${dstBpm}bpm.wav`, buffer:stretched, color:SCOLORS[S.samples.length%SCOLORS.length]};
+    S.samples.push(newSample);
+    renderSampleList();
+    selectSample(newSample.id);
+    setStatus(`テンポ変更したサンプルを作成しました (${srcBpm}→${dstBpm}BPM, ${stretched.duration.toFixed(2)}s)`);
+  }catch(err){
+    setStatus('テンポ変更に失敗しました: '+err.message);
+  }
+});
+
+// ════════════════════════════════════════════════════
 // MASTER LO-FI FX (tape saturation / rolloff / hiss / wow-flutter)
 // One shared function builds the chain for both live playback and
 // OfflineAudioContext export, so the two always sound identical.
@@ -1212,6 +1298,24 @@ function makeNoiseBuffer(ctx){
   const data=buf.getChannelData(0);
   for(let i=0;i<len;i++) data[i]=Math.random()*2-1;
   return buf;
+}
+
+// ── Metronome click (monitoring only — not included in WAV export) ──
+let clickBufDown=null, clickBufBeat=null;
+function makeClickBuffer(ctx, freq){
+  const len=Math.round(ctx.sampleRate*0.03);
+  const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    const t=i/ctx.sampleRate;
+    data[i]=Math.sin(2*Math.PI*freq*t)*Math.exp(-t*90);
+  }
+  return buf;
+}
+function getClickBuffer(ctx, isDownbeat){
+  if(isDownbeat){ if(!clickBufDown) clickBufDown=makeClickBuffer(ctx,1600); return clickBufDown; }
+  if(!clickBufBeat) clickBufBeat=makeClickBuffer(ctx,1000);
+  return clickBufBeat;
 }
 // amount: 0..1. sourceSink: array to push started source/oscillator nodes into
 // so the caller can stop() them later (S.sources for live playback).
@@ -1351,6 +1455,24 @@ function startPlayback(offset=0){
     S.sources.push(src);
   });
 
+  if(S.clickOn && S.projectBpm>0){
+    const secPerBeat=60/S.projectBpm;
+    const clickGain=ctx.createGain();
+    clickGain.gain.value=0.5;
+    clickGain.connect(ctx.destination); // dry, bypasses master/LO-FI — a monitoring click, not part of the mix
+    let beatIndex=Math.floor(offset/secPerBeat);
+    for(; beatIndex*secPerBeat<=total; beatIndex++){
+      const t=beatIndex*secPerBeat;
+      if(t<offset) continue;
+      const when=now+(t-offset);
+      const src=ctx.createBufferSource();
+      src.buffer=getClickBuffer(ctx, beatIndex%4===0);
+      src.connect(clickGain);
+      src.start(when);
+      S.sources.push(src);
+    }
+  }
+
   const meterBuf=new Float32Array(masterAnalyser.fftSize);
   const tick=()=>{
     const elapsed=ctx.currentTime-S.playCtxT+S.playOff;
@@ -1386,6 +1508,14 @@ document.getElementById('btn-stop').addEventListener('click',()=>{
 document.getElementById('btn-loop').addEventListener('click',()=>{
   S.looping=!S.looping;
   document.getElementById('btn-loop').classList.toggle('active',S.looping);
+});
+
+document.getElementById('projectBpmInput').addEventListener('change',e=>{
+  S.projectBpm=parseFloat(e.target.value)||120;
+});
+document.getElementById('btn-click').addEventListener('click',()=>{
+  S.clickOn=!S.clickOn;
+  document.getElementById('btn-click').classList.toggle('active',S.clickOn);
 });
 
 // ── Master vol / meter / clip lamp ────────
