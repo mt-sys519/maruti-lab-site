@@ -86,7 +86,7 @@ test("renders the MarutiBit AVENUE room with its dedicated social preview", asyn
   assert.match(html, /twitter:card" content="summary_large_image/);
 });
 
-test("uses recorded rain and wind chimes while keeping the drum generative, shared, and paused", async () => {
+test("uses recorded rain and wind chimes while keeping the drum generative and shared, playing in the background", async () => {
   const source = await readFile(new URL("../app/bit/useRainChimeAudio.ts", import.meta.url), "utf8");
   assert.match(source, /marutibit:sound-enabled/);
   assert.match(source, /\/audio\/rain-chime\/rain-open-window\.mp3/);
@@ -99,9 +99,10 @@ test("uses recorded rain and wind chimes while keeping the drum generative, shar
   assert.match(source, /chimeElement\.currentTime = 0/);
   assert.doesNotMatch(source, /const playChime =/);
   assert.match(source, /makeImpactNoise/);
-  assert.match(source, /document\.hidden/);
-  assert.match(source, /context\.suspend\(\)/);
-  assert.match(source, /chimeElement\.pause\(\)/);
+  // The room keeps playing when the tab is backgrounded - it must not pause
+  // on visibilitychange or suspend the AudioContext while hidden.
+  assert.doesNotMatch(source, /addEventListener\("visibilitychange"/);
+  assert.doesNotMatch(source, /context\.suspend\(\)/);
   // Rain loops via a decoded AudioBufferSourceNode (sample-accurate, gapless)
   // rather than an <audio loop> element, which audibly stutters at the seam.
   assert.match(source, /decodeAudioData/);

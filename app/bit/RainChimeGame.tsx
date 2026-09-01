@@ -25,7 +25,7 @@ export function RainChimeGame() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const artboardRef = useRef<HTMLDivElement>(null);
   const [scene, setScene] = useState<RoomScene>("lap");
-  const { entered, soundOn, paused, toggleSound, resume } = useRainChimeAudio();
+  const { entered, soundOn, toggleSound } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
 
   useEffect(() => {
@@ -104,12 +104,6 @@ export function RainChimeGame() {
         </div>
         <div className={styles.shade} aria-hidden="true" />
         <div className={styles.topReadout} aria-hidden="true"><span>11TH AVE / NEW YORK / 1996</span><span>WINDOW CHANNEL / RAIN</span></div>
-
-        {entered && paused && (
-          <div className={styles.pause}>
-            <div><p>THE ROOM IS PAUSED</p><button type="button" onClick={() => void resume()}>RETURN TO THE ROOM</button></div>
-          </div>
-        )}
       </div>
 
       <aside className={styles.note}>

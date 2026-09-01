@@ -38,10 +38,8 @@ function connectAtWindow(context: AudioContext, node: AudioNode, master: GainNod
 export function useRainChimeAudio() {
   const [entered, setEntered] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
-  const [paused, setPaused] = useState(false);
   const rigRef = useRef<AudioRig | null>(null);
   const enteredRef = useRef(false);
-  const enteredAtRef = useRef(0);
   const soundRef = useRef(false);
   const stopResumeRetryRef = useRef<(() => void) | null>(null);
 
@@ -90,7 +88,7 @@ export function useRainChimeAudio() {
 
   const playChimeRecording = useCallback(() => {
     const rig = rigRef.current;
-    if (!rig || !soundRef.current || document.hidden || rig.context.state !== "running") return;
+    if (!rig || !soundRef.current || rig.context.state !== "running") return;
     rig.chimeElement.currentTime = 0;
     void rig.chimeElement.play().catch(() => undefined);
   }, []);
@@ -259,22 +257,14 @@ export function useRainChimeAudio() {
     if (next) {
       const rig = ensureAudio();
       await startSoundscape(rig);
-      setPaused(false);
     }
   }, [applyGain, ensureAudio, startSoundscape, storePreference]);
-
-  const resume = useCallback(async () => {
-    const rig = rigRef.current;
-    if (rig) await startSoundscape(rig);
-    setPaused(false);
-  }, [startSoundscape]);
 
   // No entry gate, matching the other MarutiBit games: the room is "entered"
   // from mount, and the shared sound preference (read here, same key other
   // games write) decides whether it starts playing right away.
   useEffect(() => {
     enteredRef.current = true;
-    enteredAtRef.current = Date.now();
     setEntered(true);
     const rig = ensureAudio();
     stopResumeRetryRef.current = retryStuckResume(rig);
@@ -325,50 +315,6 @@ export function useRainChimeAudio() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, [ensureAudio, retryStuckResume, startSoundscape]);
 
-  useEffect(() => {
-    // A momentary visibilitychange flicker (OS focus steal, an alt-tab that
-    // bounces right back) shouldn't drop the dark ".pause" overlay over the
-    // room for a single frame - only pause once hidden actually sticks for
-    // a bit. requestFullscreen()'s own transition animation is one common
-    // source of that flicker and can run well past 500ms on some browsers,
-    // so a fullscreenchange grants a longer grace window on top of the
-    // debounce. Entering itself is also given a grace window: the room was
-    // reported starting paused every time it was opened, which points at
-    // *something* firing a hidden flicker right around the LISTEN click
-    // (the loading delay while the rain recording is fetched/decoded is
-    // exactly when a user is most likely to tab away) - whatever the exact
-    // cause, the room should always get to actually start before anything
-    // can pause it.
-    let hideTimer = 0;
-    let fullscreenGraceUntil = 0;
-    const onFullscreenChange = () => {
-      fullscreenGraceUntil = Date.now() + 1200;
-    };
-    const onVisibility = () => {
-      if (!enteredRef.current) return;
-      if (!document.hidden) {
-        window.clearTimeout(hideTimer);
-        return;
-      }
-      hideTimer = window.setTimeout(() => {
-        if (Date.now() < fullscreenGraceUntil) return;
-        if (Date.now() - enteredAtRef.current < 4000) return;
-        const rig = rigRef.current;
-        if (rig) stopRain(rig);
-        rig?.chimeElement.pause();
-        if (rig?.context.state === "running") void rig.context.suspend();
-        setPaused(true);
-      }, 500);
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-      window.clearTimeout(hideTimer);
-    };
-  }, [stopRain]);
-
   useEffect(() => () => {
     enteredRef.current = false;
     const rig = rigRef.current;
@@ -382,5 +328,5 @@ export function useRainChimeAudio() {
     rigRef.current = null;
   }, [stopRain]);
 
-  return { entered, soundOn, paused, toggleSound, resume };
+  return { entered, soundOn, toggleSound };
 }
