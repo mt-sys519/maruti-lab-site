@@ -65,9 +65,6 @@
   .shell { width: 100%; }
   .viewport { aspect-ratio: 4 / 3; }
   .topReadout span:last-child { display: none; }
-  .controls { padding: 0; flex-direction: column; }
-  .controlsLeft { width: 100%; }
-  .controls button, .controlsLeft button { flex: 1; min-height: 40px; }
   .note { grid-template-columns: 1fr; }
 }
 
