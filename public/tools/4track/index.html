@@ -10,7 +10,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  background:#171310;color:#ecdfc3;
+  background:#F3E9D2;color:#2B2118;
   font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;
   display:flex;flex-direction:column;height:100vh;overflow:hidden;
   user-select:none;
@@ -18,23 +18,23 @@ body{
 
 /* ── Toolbar ─────────────────────────────── */
 #toolbar{
-  background:linear-gradient(180deg,#3a3226,#241f19 65%,#1c1712);
-  border-bottom:2px solid #14100c;
+  background:linear-gradient(180deg,#F7EFDC,#EDE0C0 100%);
+  border-bottom:2px solid #D6C39A;
   padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;min-height:80px;flex-wrap:wrap;row-gap:8px;
   box-shadow:inset 0 -3px 6px rgba(0,0,0,.3);
 }
 #toolbar h1{display:flex;align-items:center;gap:10px;white-space:nowrap;margin-right:6px;}
 #toolbar h1 .logo-icon-svg{height:52px;width:auto;display:block;flex-shrink:0;}
 #toolbar h1 .logo-text{display:flex;flex-direction:column;line-height:1.15;}
-#toolbar h1 .logo-title{font-family:'Courier New',monospace;font-size:21px;font-weight:900;letter-spacing:1px;color:#ecdfc3;}
-#toolbar h1 .logo-sub{font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.2px;color:#c9a45c;}
-.sep{width:1px;height:44px;background:#4a3f2e;margin:0 2px;flex-shrink:0;}
+#toolbar h1 .logo-title{font-family:'Courier New',monospace;font-size:21px;font-weight:900;letter-spacing:1px;color:#2B2118;}
+#toolbar h1 .logo-sub{font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.2px;color:#B5522A;}
+.sep{width:1px;height:44px;background:#D6C39A;margin:0 2px;flex-shrink:0;}
 
 #toolbar .btn{padding:12px 22px;font-size:15px;font-weight:600;border-radius:8px;}
 #toolbar .if label{font-size:11px;}
 #toolbar .if input[type=number]{width:58px;font-size:16px;font-weight:700;padding:7px 5px;}
 #status{
-  margin-left:auto;color:#b0a284;font-size:12px;
+  margin-left:auto;color:#8A7554;font-size:12px;
   max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 
@@ -47,7 +47,7 @@ body{
   padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer;
 }
 .meter-wrap{width:80px;height:14px;background:#0b0906;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
-.meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#7fae6f,#d9c15a 75%,#c65b4e 92%);}
+.meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);}
 .clip-lamp{
   width:16px;height:16px;border-radius:50%;background:#3a1512;border:1px solid #000;
   box-shadow:inset 0 0 2px rgba(0,0,0,.8);flex-shrink:0;
@@ -64,33 +64,34 @@ body{
 .knob .tick{position:absolute;top:3px;left:50%;width:3px;height:10px;background:#ff6b35;transform-origin:1.5px 18px;margin-left:-1.5px;border-radius:1.5px;}
 .knob-val{font-family:'Courier New',monospace;font-size:11px;color:#b0a284;min-width:30px;}
 .btn{
-  background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
+  background:#FFFBF0;border:1px solid #D6C39A;color:#2B2118;
   padding:3px 11px;border-radius:5px;cursor:pointer;font-size:11px;
   transition:background .12s,border-color .12s;white-space:nowrap;
+  box-shadow:0 1px 0 rgba(43,33,24,.08);
 }
-.btn:hover{background:#4a3f2e}
+.btn:hover{background:#EDE0C0}
 .btn:disabled{opacity:.3;cursor:default}
 .btn.active{background:#ff6b35;border-color:#ff6b35;color:#000;font-weight:600}
-.btn-green{border-color:#7fae6f;color:#7fae6f}
-.btn-green:hover{background:#7fae6f;color:#000}
-.btn-red{border-color:#c65b4e;color:#c65b4e}
-.btn-red:hover{background:#c65b4e;color:#fff}
+.btn-green{border-color:#3FA34D;color:#3FA34D}
+.btn-green:hover{background:#3FA34D;color:#000}
+.btn-red{border-color:#D94F3D;color:#D94F3D}
+.btn-red:hover{background:#D94F3D;color:#fff}
 
 /* ── Main (top half) ─────────────────────── */
 #main{display:flex;flex:0 0 244px;overflow:hidden;min-height:0}
 
 /* Sample panel */
 #sample-panel{
-  width:196px;flex-shrink:0;background:#2b241c;
-  border-right:1px solid #4a3f2e;display:flex;flex-direction:column;
+  width:196px;flex-shrink:0;background:#F3E9D2;
+  border-right:1px solid #D6C39A;display:flex;flex-direction:column;
 }
 .ph{
-  padding:5px 9px;color:#b0a284;font-size:10px;
-  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #4a3f2e;flex-shrink:0;
+  padding:5px 9px;color:#8A7554;font-size:10px;
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #D6C39A;flex-shrink:0;
 }
 #drop-zone{
-  border:2px dashed #4a3f2e;border-radius:5px;margin:7px;padding:8px;
-  text-align:center;color:#b0a284;font-size:10px;line-height:1.7;
+  border:2px dashed #D6C39A;border-radius:5px;margin:7px;padding:8px;
+  text-align:center;color:#8A7554;font-size:10px;line-height:1.7;
   cursor:pointer;transition:all .14s;
 }
 #drop-zone.dov{border-color:#ff6b35;color:#ff6b35;background:rgba(255,107,53,.06)}
@@ -99,28 +100,28 @@ body{
   padding:4px 7px;border-radius:4px;cursor:grab;
   border:1px solid transparent;margin-bottom:2px;
 }
-.si:hover{background:#362e22}
-.si.sel{background:#362e22;border-color:#ff6b35}
+.si:hover{background:#EDE0C0}
+.si.sel{background:#EDE0C0;border-color:#ff6b35}
 .si-name{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.si-dur{font-size:10px;color:#b0a284;margin-top:1px}
+.si-dur{font-size:10px;color:#8A7554;margin-top:1px}
 .si-wave{width:100%;height:20px;display:block;margin-top:3px;border-radius:2px}
 
 /* Waveform editor */
 #editor-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 #wv-hd{
-  padding:4px 9px;background:#2b241c;border-bottom:1px solid #4a3f2e;
+  padding:4px 9px;background:#F3E9D2;border-bottom:1px solid #D6C39A;
   display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;min-height:30px;
 }
-#wv-label{color:#b0a284;font-size:10px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#wv-label{color:#8A7554;font-size:10px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #add-track-sel{
-  background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
+  background:#FFFBF0;border:1px solid #D6C39A;color:#2B2118;
   padding:2px 4px;border-radius:4px;font-size:10px;cursor:pointer;
 }
 #wv-container{flex:0 0 72px;min-height:0;background:#171310;display:flex;flex-direction:column;position:relative}
 #wv-canvas{display:block;width:100%;flex:1;min-height:0;cursor:crosshair}
 #wv-info{
-  padding:3px 9px;font-size:10px;color:#b0a284;
-  background:#2b241c;border-top:1px solid #4a3f2e;flex-shrink:0;
+  padding:3px 9px;font-size:10px;color:#8A7554;
+  background:#F3E9D2;border-top:1px solid #D6C39A;flex-shrink:0;
 }
 
 /* ── Tempo (flagship feature) ─────────────── */
@@ -131,7 +132,7 @@ body{
 }
 .tempo-icon{font-size:24px;flex-shrink:0;}
 .tempo-fields{display:flex;align-items:flex-end;gap:8px;}
-.tempo-fields label{display:flex;flex-direction:column;gap:3px;font-size:9px;color:#b0a284;letter-spacing:.3px;white-space:nowrap;}
+.tempo-fields label{display:flex;flex-direction:column;gap:3px;font-size:9px;color:#8A7554;letter-spacing:.3px;white-space:nowrap;}
 .tempo-fields input[type=number]{
   width:66px;font-size:19px;font-weight:700;text-align:center;
   background:#171310;border:1px solid #4a3f2e;color:#ecdfc3;border-radius:6px;padding:6px 4px;
@@ -142,8 +143,8 @@ body{
   background:#ff6b35;border-color:#ff6b35;color:#171310;
 }
 .tempo-apply:hover:not(:disabled){background:#ff8555;}
-.tempo-apply:disabled{opacity:1;background:#362e22;border-color:#4a3f2e;color:#6b5f47;}
-.tempo-note{font-size:10px;color:#b0a284;max-width:220px;line-height:1.5;}
+.tempo-apply:disabled{opacity:1;background:#EDE0C0;border-color:#D6C39A;color:#B0A284;}
+.tempo-note{font-size:10px;color:#8A7554;max-width:220px;line-height:1.5;}
 
 /* ── Timeline (bottom half) ──────────────── */
 #tl-outer{
@@ -180,55 +181,55 @@ body{
   font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   cursor:text;min-width:0;
 }
-.th-name:focus{outline:none;background:#362e22;border-radius:3px;padding:0 2px}
+.th-name:focus{outline:none;background:#EDE0C0;border-radius:3px;padding:0 2px}
 .th-btns{display:flex;gap:4px;align-items:center}
 .th-btn{
-  padding:2px 6px;border-radius:3px;border:1px solid #4a3f2e;background:#362e22;
-  color:#b0a284;font-size:10px;font-weight:700;cursor:pointer;line-height:1.2;
+  padding:2px 6px;border-radius:3px;border:1px solid #D6C39A;background:#FFFBF0;
+  color:#8A7554;font-size:10px;font-weight:700;cursor:pointer;line-height:1.2;
   transition:all .1s;
 }
-.th-btn:hover{border-color:#b0a284;color:#ecdfc3}
-.th-btn.muted{background:#6b5f47;border-color:#6b5f47;color:#000}
-.th-btn.soloed{background:#d9c15a;border-color:#d9c15a;color:#000}
-.th-btn.rec-armed{background:#c65b4e;border-color:#c65b4e;color:#fff;animation:recblink .8s ease-in-out infinite}
-.th-btn.rec-on{background:#c65b4e;border-color:#c65b4e;color:#fff}
+.th-btn:hover{border-color:#8A7554;color:#2B2118}
+.th-btn.muted{background:#A89A7C;border-color:#A89A7C;color:#000}
+.th-btn.soloed{background:#F0B429;border-color:#F0B429;color:#000}
+.th-btn.rec-armed{background:#D94F3D;border-color:#D94F3D;color:#fff;animation:recblink .8s ease-in-out infinite}
+.th-btn.rec-on{background:#D94F3D;border-color:#D94F3D;color:#fff}
 @keyframes recblink{0%,100%{opacity:1}50%{opacity:.4}}
-.th-vol-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#b0a284}
-.th-vol-row input[type=range]{width:62px;accent-color:#7fae6f;cursor:pointer}
-.th-pan-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#b0a284}
+.th-vol-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#8A7554}
+.th-vol-row input[type=range]{width:62px;accent-color:#3FA34D;cursor:pointer}
+.th-pan-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#8A7554}
 .th-pan-row input[type=range]{width:62px;accent-color:#ff6b35;cursor:pointer}
 .th-pan-row .pv{min-width:26px;font-size:9px;font-family:'Courier New',monospace;}
-.th-eq-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#b0a284}
+.th-eq-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#8A7554}
 .th-eq-row select{
-  flex:1;min-width:0;background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
+  flex:1;min-width:0;background:#FFFBF0;border:1px solid #D6C39A;color:#2B2118;
   padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
 }
-.th-level-wrap{height:6px;background:#362e22;border-radius:3px;overflow:hidden;margin-top:1px}
-.th-level-bar{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#7fae6f,#d9c15a,#c65b4e);transition:width .04s}
-.th-rec-time{font-size:10px;color:#c65b4e;font-weight:600;position:absolute;right:6px;top:5px}
+.th-level-wrap{height:6px;background:#EDE0C0;border-radius:3px;overflow:hidden;margin-top:1px}
+.th-level-bar{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#3FA34D,#F0B429,#D94F3D);transition:width .04s}
+.th-rec-time{font-size:10px;color:#D94F3D;font-weight:600;position:absolute;right:6px;top:5px}
 
 /* ── Inspector ───────────────────────────── */
 #inspector{
-  background:#2b241c;border-top:1px solid #4a3f2e;
+  background:#F3E9D2;border-top:1px solid #D6C39A;
   padding:5px 12px;display:flex;align-items:center;gap:14px;
   flex-shrink:0;flex-wrap:wrap;min-height:34px;
 }
-#ins-label{font-size:10px;color:#b0a284;white-space:nowrap}
+#ins-label{font-size:10px;color:#8A7554;white-space:nowrap}
 #ins-fields{display:none;align-items:center;gap:14px;flex-wrap:wrap}
 .if{display:flex;align-items:center;gap:4px;font-size:10px}
-.if label{color:#b0a284;white-space:nowrap}
+.if label{color:#8A7554;white-space:nowrap}
 .if input[type=range]{width:80px;accent-color:#ff6b35;cursor:pointer}
 .if input[type=number]{
-  width:48px;background:#362e22;border:1px solid #4a3f2e;
-  color:#ecdfc3;padding:2px 4px;border-radius:3px;font-size:10px;
+  width:48px;background:#FFFBF0;border:1px solid #D6C39A;
+  color:#2B2118;padding:2px 4px;border-radius:3px;font-size:10px;
 }
 .iv{color:#ff6b35;min-width:28px;font-size:10px}
 
 /* Scrollbars */
 ::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:#171310}
-::-webkit-scrollbar-thumb{background:#4a3f2e;border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:#6b5f47}
+::-webkit-scrollbar-track{background:#EDE0C0}
+::-webkit-scrollbar-thumb{background:#D6C39A;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#B8A888}
 </style>
 </head>
 <body>
@@ -238,16 +239,16 @@ body{
   <h1>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="80 75 138 90" class="logo-icon-svg">
       <g transform="translate(148,120) scale(78)">
-        <rect x="-0.78" y="-0.48" width="1.55" height="0.96" rx="0.04" fill="#C4A06E"/>
-        <rect x="-0.65" y="0.23" width="1.30" height="0.15" fill="#16110E"/>
-        <rect x="-0.65" y="-0.35" width="1.30" height="0.50" fill="#0E0A08"/>
-        <circle cx="-0.26" cy="-0.10" r="0.15" fill="#E6D3B7"/>
-        <circle cx="-0.26" cy="-0.10" r="0.05" fill="#0E0A08"/>
-        <circle cx="-0.26" cy="-0.10" r="0.02" fill="#16110E"/>
-        <circle cx="0.26" cy="-0.10" r="0.15" fill="#E6D3B7"/>
-        <circle cx="0.26" cy="-0.10" r="0.09" fill="#0E0A08"/>
-        <circle cx="0.26" cy="-0.10" r="0.02" fill="#16110E"/>
-        <rect x="-0.09" y="-0.32" width="0.19" height="0.03" fill="#E6D3B7"/>
+        <rect x="-0.78" y="-0.48" width="1.55" height="0.96" rx="0.04" fill="#241710"/>
+        <rect x="-0.65" y="0.23" width="1.30" height="0.15" fill="#C4A06E"/>
+        <rect x="-0.65" y="-0.35" width="1.30" height="0.50" fill="#140E0B"/>
+        <circle cx="-0.26" cy="-0.10" r="0.15" fill="#C4A06E"/>
+        <circle cx="-0.26" cy="-0.10" r="0.05" fill="#140E0B"/>
+        <circle cx="-0.26" cy="-0.10" r="0.02" fill="#241710"/>
+        <circle cx="0.26" cy="-0.10" r="0.15" fill="#C4A06E"/>
+        <circle cx="0.26" cy="-0.10" r="0.09" fill="#140E0B"/>
+        <circle cx="0.26" cy="-0.10" r="0.02" fill="#241710"/>
+        <rect x="-0.09" y="-0.32" width="0.19" height="0.03" fill="#C4A06E"/>
       </g>
     </svg>
     <span class="logo-text">
@@ -383,12 +384,10 @@ const NUM_TRK  = 4;     // fixed track count
 const EDGE_PX  = 7;     // resize handle width (px) — reserved, clip move only for now
 
 const TCOLORS = [
-  '#b5563c','#7fae6f','#ff6b35','#d9c15a',
-  '#c9a45c','#8fc47a','#c65b4e','#8a6a3c',
+  '#FF7A29','#1CADA0','#F0B429','#3FA34D',
 ];
 const SCOLORS = [
-  '#d9a45c','#8fc47a','#e0a15c','#d9c15a',
-  '#cbb37a','#9dbf7a','#d97b6c','#e8dcc0',
+  '#FF7A29','#1CADA0','#F0B429','#3FA34D','#3A6EA5','#D94F3D','#8B5FA8','#E8A33D',
 ];
 
 // ════════════════════════════════════════════════════
@@ -496,7 +495,7 @@ function drawWv(){
   // waveform
   const data=sample.buffer.getChannelData(0);
   const step=data.length/W;
-  c.strokeStyle='#f0c98a'; c.lineWidth=1; c.beginPath();
+  c.strokeStyle='#FFC670'; c.lineWidth=1; c.beginPath();
   for(let x=0;x<W;x++){
     let mn=1,mx=-1;
     const s0=Math.floor(x*step), s1=Math.floor((x+1)*step);
