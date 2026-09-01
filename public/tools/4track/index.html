@@ -121,7 +121,13 @@ body{
   border-top:1px solid #4a3f2e;height:392px;
 }
 #tl-top{display:flex;flex-shrink:0;height:20px;background:#2b241c;border-bottom:1px solid #4a3f2e}
-#tl-corner{width:162px;flex-shrink:0;border-right:1px solid #4a3f2e;display:flex;align-items:center;padding:0 8px;font-size:9px;color:#6b5f47;letter-spacing:.3px}
+#tl-corner{width:162px;flex-shrink:0;border-right:1px solid #4a3f2e;display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 8px;font-size:9px;color:#6b5f47;letter-spacing:.3px}
+.zoom-controls{display:flex;gap:3px;}
+.zoom-controls button{
+  width:16px;height:16px;line-height:14px;padding:0;border:1px solid #4a3f2e;border-radius:2px;
+  background:#362e22;color:#b0a284;font-size:10px;font-weight:700;cursor:pointer;
+}
+.zoom-controls button:hover{border-color:#b0a284;color:#ecdfc3}
 #ruler-scroll{flex:1;overflow:hidden}
 #ruler-canvas{display:block;height:20px}
 #tl-body{display:flex;flex:1;overflow:hidden}
@@ -273,7 +279,13 @@ body{
 <!-- ── Timeline ───────────────────────── -->
 <div id="tl-outer">
   <div id="tl-top">
-    <div id="tl-corner">TIME</div>
+    <div id="tl-corner">
+      <span>TIME</span>
+      <span class="zoom-controls">
+        <button id="zoomOutButton" type="button" aria-label="縮小" title="縮小 (Ctrl+-)">－</button>
+        <button id="zoomInButton" type="button" aria-label="拡大" title="拡大 (Ctrl+=)">＋</button>
+      </span>
+    </div>
     <div id="ruler-scroll"><canvas id="ruler-canvas" height="20"></canvas></div>
   </div>
   <div id="tl-body">
@@ -1525,9 +1537,16 @@ document.addEventListener('keydown',e=>{
     S.clips=S.clips.filter(c=>c.id!==S.selClipId);
     S.selClipId=null;updateInspector();fitTimeline();
   }
-  if((e.key==='='||e.key==='+')&&e.ctrlKey){e.preventDefault();S.pps=Math.min(S.pps*1.4,1200);fitTimeline();}
-  if(e.key==='-'&&e.ctrlKey){e.preventDefault();S.pps=Math.max(S.pps/1.4,10);fitTimeline();}
+  if((e.key==='='||e.key==='+')&&e.ctrlKey){e.preventDefault();zoomTimeline(1.4);}
+  if(e.key==='-'&&e.ctrlKey){e.preventDefault();zoomTimeline(1/1.4);}
 });
+
+function zoomTimeline(factor){
+  S.pps=Math.max(10,Math.min(1200,S.pps*factor));
+  fitTimeline();
+}
+document.getElementById('zoomInButton').addEventListener('click',()=>zoomTimeline(1.4));
+document.getElementById('zoomOutButton').addEventListener('click',()=>zoomTimeline(1/1.4));
 
 // ════════════════════════════════════════════════════
 // RESIZE & INIT
