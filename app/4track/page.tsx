@@ -97,7 +97,7 @@ export default function FourTrackPage() {
       <aside className={styles.notes} aria-label="利用上の注意">
         <div><span>LOCAL</span><p>音源とマイク録音はブラウザ内で処理され、Maruti Labのサーバーへ送信されません。</p></div>
         <div><span>MIC</span><p>録音機能はブラウザのマイク許可が必要です。許可はいつでも端末側で取り消せます。</p></div>
-        <div><span>SAVE</span><p>作業内容はページを閉じると失われます。必要な音源はWAVで保存してください。</p></div>
+        <div><span>SAVE</span><p>作業内容はブラウザに自動保存され、次に開いたときに復元されます。別端末・別ブラウザには引き継がれないため、完成したら必ずWAVで書き出してください。</p></div>
       </aside>
 
       <footer className={styles.footer}>
