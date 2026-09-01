@@ -25,7 +25,7 @@ export function RainChimeGame() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const artboardRef = useRef<HTMLDivElement>(null);
   const [scene, setScene] = useState<RoomScene>("lap");
-  const { entered, soundOn, toggleSound } = useRainChimeAudio();
+  const { entered, soundOn, paused, backgroundPlayOn, toggleSound, toggleBackgroundPlay, resume } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
 
   useEffect(() => {
@@ -81,7 +81,10 @@ export function RainChimeGame() {
   return (
     <section ref={shellRef} className={styles.shell} aria-label="AVENUE 鑑賞画面">
       <div className={styles.controls}>
-        <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
+        <div className={styles.controlsLeft}>
+          <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
+          <button type="button" aria-pressed={backgroundPlayOn} onClick={toggleBackgroundPlay}>BACKGROUND {backgroundPlayOn ? "ON" : "OFF"}</button>
+        </div>
         <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
       </div>
 
@@ -104,6 +107,12 @@ export function RainChimeGame() {
         </div>
         <div className={styles.shade} aria-hidden="true" />
         <div className={styles.topReadout} aria-hidden="true"><span>11TH AVE / NEW YORK / 1996</span><span>WINDOW CHANNEL / RAIN</span></div>
+
+        {entered && paused && (
+          <div className={styles.pause}>
+            <div><p>THE ROOM IS PAUSED</p><button type="button" onClick={() => void resume()}>RETURN TO THE ROOM</button></div>
+          </div>
+        )}
       </div>
 
       <aside className={styles.note}>

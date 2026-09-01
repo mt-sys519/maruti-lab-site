@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
 const SOUND_CHANGE_EVENT = "marutibit:sound-change";
+const BACKGROUND_PLAY_STORAGE_KEY = "marutibit:rain-chime:background-play";
 const RAIN_RECORDING = "/audio/rain-chime/rain-open-window.mp3";
 const CHIME_RECORDING = "/audio/rain-chime/wind-chimes-real.mp3";
 
@@ -38,9 +39,13 @@ function connectAtWindow(context: AudioContext, node: AudioNode, master: GainNod
 export function useRainChimeAudio() {
   const [entered, setEntered] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [backgroundPlayOn, setBackgroundPlayOn] = useState(false);
   const rigRef = useRef<AudioRig | null>(null);
   const enteredRef = useRef(false);
+  const enteredAtRef = useRef(0);
   const soundRef = useRef(false);
+  const backgroundPlayRef = useRef(false);
   const stopResumeRetryRef = useRef<(() => void) | null>(null);
 
   // AudioBufferSourceNode.loop repeats the decoded buffer sample-accurately;
@@ -89,6 +94,7 @@ export function useRainChimeAudio() {
   const playChimeRecording = useCallback(() => {
     const rig = rigRef.current;
     if (!rig || !soundRef.current || rig.context.state !== "running") return;
+    if (document.hidden && !backgroundPlayRef.current) return;
     rig.chimeElement.currentTime = 0;
     void rig.chimeElement.play().catch(() => undefined);
   }, []);
@@ -257,17 +263,36 @@ export function useRainChimeAudio() {
     if (next) {
       const rig = ensureAudio();
       await startSoundscape(rig);
+      setPaused(false);
     }
   }, [applyGain, ensureAudio, startSoundscape, storePreference]);
+
+  const toggleBackgroundPlay = useCallback(() => {
+    const next = !backgroundPlayRef.current;
+    backgroundPlayRef.current = next;
+    setBackgroundPlayOn(next);
+    try { window.localStorage.setItem(BACKGROUND_PLAY_STORAGE_KEY, next ? "true" : "false"); } catch { /* Optional. */ }
+  }, []);
+
+  const resume = useCallback(async () => {
+    const rig = rigRef.current;
+    if (rig) await startSoundscape(rig);
+    setPaused(false);
+  }, [startSoundscape]);
 
   // No entry gate, matching the other MarutiBit games: the room is "entered"
   // from mount, and the shared sound preference (read here, same key other
   // games write) decides whether it starts playing right away.
   useEffect(() => {
     enteredRef.current = true;
+    enteredAtRef.current = Date.now();
     setEntered(true);
     const rig = ensureAudio();
     stopResumeRetryRef.current = retryStuckResume(rig);
+    let storedBackgroundPlay = false;
+    try { storedBackgroundPlay = window.localStorage.getItem(BACKGROUND_PLAY_STORAGE_KEY) === "true"; } catch { /* Default OFF. */ }
+    backgroundPlayRef.current = storedBackgroundPlay;
+    setBackgroundPlayOn(storedBackgroundPlay);
     const preferenceTimer = window.setTimeout(() => {
       let stored = false;
       try { stored = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true"; } catch { /* Default OFF. */ }
@@ -315,6 +340,42 @@ export function useRainChimeAudio() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, [ensureAudio, retryStuckResume, startSoundscape]);
 
+  // Off by default: hiding the tab pauses the room after a short debounce,
+  // same as before. Turning BACKGROUND PLAY on skips this entirely, so the
+  // room keeps generating rain/chime/drum while the tab is in the
+  // background - the intended use for that toggle.
+  useEffect(() => {
+    let hideTimer = 0;
+    let fullscreenGraceUntil = 0;
+    const onFullscreenChange = () => {
+      fullscreenGraceUntil = Date.now() + 1200;
+    };
+    const onVisibility = () => {
+      if (!enteredRef.current) return;
+      if (!document.hidden) {
+        window.clearTimeout(hideTimer);
+        return;
+      }
+      hideTimer = window.setTimeout(() => {
+        if (backgroundPlayRef.current) return;
+        if (Date.now() < fullscreenGraceUntil) return;
+        if (Date.now() - enteredAtRef.current < 4000) return;
+        const rig = rigRef.current;
+        if (rig) stopRain(rig);
+        rig?.chimeElement.pause();
+        if (rig?.context.state === "running") void rig.context.suspend();
+        setPaused(true);
+      }, 500);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      window.clearTimeout(hideTimer);
+    };
+  }, [stopRain]);
+
   useEffect(() => () => {
     enteredRef.current = false;
     const rig = rigRef.current;
@@ -328,5 +389,5 @@ export function useRainChimeAudio() {
     rigRef.current = null;
   }, [stopRain]);
 
-  return { entered, soundOn, toggleSound };
+  return { entered, soundOn, paused, backgroundPlayOn, toggleSound, toggleBackgroundPlay, resume };
 }

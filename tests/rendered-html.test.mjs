@@ -86,7 +86,7 @@ test("renders the MarutiBit AVENUE room with its dedicated social preview", asyn
   assert.match(html, /twitter:card" content="summary_large_image/);
 });
 
-test("uses recorded rain and wind chimes while keeping the drum generative and shared, playing in the background", async () => {
+test("uses recorded rain and wind chimes while keeping the drum generative, shared, and pausable unless BACKGROUND PLAY is on", async () => {
   const source = await readFile(new URL("../app/bit/useRainChimeAudio.ts", import.meta.url), "utf8");
   assert.match(source, /marutibit:sound-enabled/);
   assert.match(source, /\/audio\/rain-chime\/rain-open-window\.mp3/);
@@ -99,10 +99,14 @@ test("uses recorded rain and wind chimes while keeping the drum generative and s
   assert.match(source, /chimeElement\.currentTime = 0/);
   assert.doesNotMatch(source, /const playChime =/);
   assert.match(source, /makeImpactNoise/);
-  // The room keeps playing when the tab is backgrounded - it must not pause
-  // on visibilitychange or suspend the AudioContext while hidden.
-  assert.doesNotMatch(source, /addEventListener\("visibilitychange"/);
-  assert.doesNotMatch(source, /context\.suspend\(\)/);
+  assert.match(source, /document\.hidden/);
+  assert.match(source, /context\.suspend\(\)/);
+  assert.match(source, /chimeElement\.pause\(\)/);
+  // BACKGROUND PLAY is a separate, off-by-default toggle: pausing on hidden
+  // only happens while backgroundPlayRef is false.
+  assert.match(source, /marutibit:rain-chime:background-play/);
+  assert.match(source, /const \[backgroundPlayOn, setBackgroundPlayOn\] = useState\(false\)/);
+  assert.match(source, /if \(backgroundPlayRef\.current\) return;/);
   // Rain loops via a decoded AudioBufferSourceNode (sample-accurate, gapless)
   // rather than an <audio loop> element, which audibly stutters at the seam.
   assert.match(source, /decodeAudioData/);

@@ -49,8 +49,13 @@
 }
 .topReadout { position: absolute; z-index: 5; top: 3.4%; left: 2.3%; right: 2.3%; display: flex; justify-content: space-between; color: rgba(222, 235, 235, .72); font: 600 clamp(6px, .7vw, 10px)/1 "Courier New", monospace; letter-spacing: .17em; text-shadow: 0 1px 3px #000; pointer-events: none; }
 .controls { display: flex; align-items: center; justify-content: space-between; padding: 13px clamp(14px, 3vw, 34px); border-bottom: 1px solid #26363d; background: #081218; color: #769098; }
+.controlsLeft { display: flex; align-items: center; gap: 10px; }
 .controls button { padding: 10px 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; cursor: pointer; }
 .controls button[aria-pressed="true"] { border-color: #65a67c; color: #8bd6a4; }
+.pause { position: absolute; z-index: 10; inset: 0; display: grid; place-items: center; background: rgba(3, 9, 13, .8); }
+.pause div { text-align: center; }
+.pause p { margin: 0 0 18px; color: #9db2b5; font: 600 10px/1 "Courier New", monospace; letter-spacing: .2em; }
+.pause button { padding: 15px 24px; border: 1px solid #7fa0a5; background: #0b1a21; color: #e5eeee; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .14em; cursor: pointer; }
 .note { display: grid; grid-template-columns: .5fr 1fr; align-items: center; gap: clamp(28px, 6vw, 90px); padding: clamp(18px, 3vw, 28px) clamp(24px, 8vw, 110px); border-top: 1px solid #26363d; background: #0a151b; }
 .note p { margin: 0; color: #6f8b90; font: 600 clamp(10px, 1.05vw, 12px)/1 "Courier New", monospace; letter-spacing: .2em; }
 .note div { color: #a7bbbd; font: 400 13px/2 "Yu Gothic UI", sans-serif; }
@@ -60,8 +65,9 @@
   .shell { width: 100%; }
   .viewport { aspect-ratio: 4 / 3; }
   .topReadout span:last-child { display: none; }
-  .controls { padding: 0; }
-  .controls button { flex: 1; min-height: 40px; }
+  .controls { padding: 0; flex-direction: column; }
+  .controlsLeft { width: 100%; }
+  .controls button, .controlsLeft button { flex: 1; min-height: 40px; }
   .note { grid-template-columns: 1fr; }
 }
 
