@@ -20,41 +20,49 @@ body{
 #toolbar{
   background:linear-gradient(180deg,#3a3226,#241f19 65%,#1c1712);
   border-bottom:2px solid #14100c;
-  padding:6px 12px;display:flex;align-items:center;gap:7px;flex-shrink:0;height:52px;
+  padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;min-height:80px;flex-wrap:wrap;row-gap:8px;
   box-shadow:inset 0 -3px 6px rgba(0,0,0,.3);
 }
-#toolbar h1{display:flex;align-items:center;gap:8px;white-space:nowrap;margin-right:4px;}
-#toolbar h1 .logo-icon-svg{height:38px;width:auto;display:block;flex-shrink:0;}
-#toolbar h1 .logo-text{display:flex;flex-direction:column;line-height:1.1;}
-#toolbar h1 .logo-title{font-family:'Courier New',monospace;font-size:16px;font-weight:900;letter-spacing:1px;color:#ecdfc3;}
-#toolbar h1 .logo-sub{font-family:'Courier New',monospace;font-size:10px;font-weight:700;letter-spacing:1.2px;color:#c9a45c;}
-.sep{width:1px;height:28px;background:#4a3f2e;margin:0 3px}
+#toolbar h1{display:flex;align-items:center;gap:10px;white-space:nowrap;margin-right:6px;}
+#toolbar h1 .logo-icon-svg{height:52px;width:auto;display:block;flex-shrink:0;}
+#toolbar h1 .logo-text{display:flex;flex-direction:column;line-height:1.15;}
+#toolbar h1 .logo-title{font-family:'Courier New',monospace;font-size:21px;font-weight:900;letter-spacing:1px;color:#ecdfc3;}
+#toolbar h1 .logo-sub{font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.2px;color:#c9a45c;}
+.sep{width:1px;height:44px;background:#4a3f2e;margin:0 2px;flex-shrink:0;}
+
+#toolbar .btn{padding:12px 22px;font-size:15px;font-weight:600;border-radius:8px;}
+#toolbar .if label{font-size:11px;}
+#toolbar .if input[type=number]{width:58px;font-size:16px;font-weight:700;padding:7px 5px;}
+#status{
+  margin-left:auto;color:#b0a284;font-size:12px;
+  max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 
 /* ── Master / LO-FI (toolbar) ────────────── */
-#master-box{display:flex;align-items:center;gap:8px;padding:3px 8px;border:1px solid #4a3f2e;border-radius:5px;background:rgba(0,0,0,.2);}
-#master-box .mb-label{font-family:'Courier New',monospace;font-size:9px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
-#master-box input[type=range]{accent-color:#ff6b35;width:64px;cursor:pointer;}
+#master-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:rgba(0,0,0,.2);}
+#master-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
+#master-box input[type=range]{accent-color:#ff6b35;width:84px;height:20px;cursor:pointer;}
 .eq-select-master{
   background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
-  padding:2px 4px;border-radius:4px;font-size:10px;cursor:pointer;
+  padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer;
 }
-.meter-wrap{width:64px;height:10px;background:#0b0906;border:1px solid #000;border-radius:2px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
+.meter-wrap{width:80px;height:14px;background:#0b0906;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
 .meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#7fae6f,#d9c15a 75%,#c65b4e 92%);}
 .clip-lamp{
-  width:11px;height:11px;border-radius:50%;background:#3a1512;border:1px solid #000;
+  width:16px;height:16px;border-radius:50%;background:#3a1512;border:1px solid #000;
   box-shadow:inset 0 0 2px rgba(0,0,0,.8);flex-shrink:0;
 }
 .clip-lamp.on{background:#ff4433;box-shadow:0 0 6px #ff4433,inset 0 0 2px rgba(0,0,0,.5);}
 
-#lofi-box{display:flex;align-items:center;gap:7px;padding:3px 8px;border:1px solid #4a3f2e;border-radius:5px;background:rgba(0,0,0,.2);}
-#lofi-box .mb-label{font-family:'Courier New',monospace;font-size:9px;font-weight:700;color:#ff6b35;letter-spacing:1px;cursor:pointer;}
+#lofi-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:rgba(0,0,0,.2);}
+#lofi-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;cursor:pointer;}
 .knob{
-  width:30px;height:30px;border-radius:50%;position:relative;cursor:ns-resize;flex-shrink:0;
+  width:42px;height:42px;border-radius:50%;position:relative;cursor:ns-resize;flex-shrink:0;
   background:radial-gradient(circle at 35% 30%,#6b5f47,#241f19 70%);
   border:1px solid #000;box-shadow:0 1px 2px rgba(0,0,0,.6);
 }
-.knob .tick{position:absolute;top:2px;left:50%;width:2px;height:7px;background:#ff6b35;transform-origin:1px 13px;margin-left:-1px;border-radius:1px;}
-.knob-val{font-family:'Courier New',monospace;font-size:9px;color:#b0a284;min-width:26px;}
+.knob .tick{position:absolute;top:3px;left:50%;width:3px;height:10px;background:#ff6b35;transform-origin:1.5px 18px;margin-left:-1.5px;border-radius:1.5px;}
+.knob-val{font-family:'Courier New',monospace;font-size:11px;color:#b0a284;min-width:30px;}
 .btn{
   background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:3px 11px;border-radius:5px;cursor:pointer;font-size:11px;
@@ -67,10 +75,6 @@ body{
 .btn-green:hover{background:#7fae6f;color:#000}
 .btn-red{border-color:#c65b4e;color:#c65b4e}
 .btn-red:hover{background:#c65b4e;color:#fff}
-#status{
-  margin-left:auto;color:#b0a284;font-size:10px;
-  max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
 
 /* ── Main (top half) ─────────────────────── */
 #main{display:flex;flex:0 0 244px;overflow:hidden;min-height:0}
