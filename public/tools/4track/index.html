@@ -54,6 +54,13 @@ body{
 }
 .clip-lamp.on{background:#ff4433;box-shadow:0 0 6px #ff4433,inset 0 0 2px rgba(0,0,0,.5);}
 
+#metronome-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:rgba(0,0,0,.2);}
+#metronome-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
+.metro-field{display:flex;flex-direction:column;gap:2px;font-size:9px;color:#b0a284;letter-spacing:.3px;}
+.metro-field input[type=number],.metro-field select{
+  background:#171310;border:1px solid #4a3f2e;color:#ecdfc3;
+  padding:6px 6px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;width:58px;
+}
 #lofi-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:rgba(0,0,0,.2);}
 #lofi-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;cursor:pointer;}
 .knob{
@@ -260,10 +267,22 @@ body{
   <button class="btn" id="btn-play">▶ 再生</button>
   <button class="btn" id="btn-stop">■ 停止</button>
   <button class="btn" id="btn-loop">⟳ ループ</button>
-  <span class="if" style="margin-left:4px;">
-    <label>BPM<input type="number" id="projectBpmInput" value="120" min="20" max="300"></label>
-  </span>
-  <button class="btn" id="btn-click" type="button" title="メトロノームクリック(再生時のみ、書き出しには含まれません)">🔔 クリック</button>
+  <div class="sep"></div>
+  <div id="metronome-box">
+    <span class="mb-label">🔔 CLICK</span>
+    <label class="metro-field"><span>BPM</span><input type="number" id="projectBpmInput" value="120" min="20" max="300"></label>
+    <label class="metro-field"><span>拍子</span>
+      <select id="beatsPerBarSelect">
+        <option value="2">2拍</option>
+        <option value="3">3拍</option>
+        <option value="4" selected>4拍</option>
+        <option value="5">5拍</option>
+        <option value="6">6拍</option>
+        <option value="7">7拍</option>
+      </select>
+    </label>
+    <button class="btn" id="btn-click" type="button" title="メトロノームクリック(再生時のみ、書き出しには含まれません)">ON/OFF</button>
+  </div>
   <div class="sep"></div>
   <button class="btn btn-green" id="btn-export">⬇ WAV書き出し</button>
   <div class="sep"></div>
@@ -378,7 +397,7 @@ body{
 // ════════════════════════════════════════════════════
 // CONSTANTS
 // ════════════════════════════════════════════════════
-const TRACK_H  = 92;    // track row height (px)
+const TRACK_H  = 114;   // track row height (px) — must match .th{height} in CSS
 const RULER_H  = 20;    // ruler height (px)
 const NUM_TRK  = 4;     // fixed track count
 const EDGE_PX  = 7;     // resize handle width (px) — reserved, clip move only for now
@@ -418,6 +437,7 @@ const S = {
   lofiOn: false,
   lofiAmount: 0.3,
   projectBpm: 120,
+  beatsPerBar: 4,
   clickOn: false,
   masterEq: 'none',
 };
@@ -1614,7 +1634,7 @@ function startPlayback(offset=0){
       if(t<offset) continue;
       const when=now+(t-offset);
       const src=ctx.createBufferSource();
-      src.buffer=getClickBuffer(ctx, beatIndex%4===0);
+      src.buffer=getClickBuffer(ctx, beatIndex%S.beatsPerBar===0);
       src.connect(clickGain);
       src.start(when);
       S.sources.push(src);
@@ -1660,6 +1680,9 @@ document.getElementById('btn-loop').addEventListener('click',()=>{
 
 document.getElementById('projectBpmInput').addEventListener('change',e=>{
   S.projectBpm=parseFloat(e.target.value)||120;
+});
+document.getElementById('beatsPerBarSelect').addEventListener('change',e=>{
+  S.beatsPerBar=parseInt(e.target.value,10)||4;
 });
 document.getElementById('btn-click').addEventListener('click',()=>{
   S.clickOn=!S.clickOn;
@@ -1909,7 +1932,7 @@ async function doAutosave(){
       tracks: S.tracks.map(t=>({id:t.id,name:t.name,volume:t.volume,pan:t.pan,eq:t.eq,muted:t.muted,solo:t.solo})),
       clips: S.clips.map(c=>({id:c.id,sampleId:c.sampleId,trackId:c.trackId,startTime:c.startTime,trimStart:c.trimStart,trimEnd:c.trimEnd,volume:c.volume,fadeIn:c.fadeIn,fadeOut:c.fadeOut})),
       targetTrackId: S.targetTrackId,
-      masterVolume: S.masterVolume, lofiOn: S.lofiOn, lofiAmount: S.lofiAmount, projectBpm: S.projectBpm, masterEq: S.masterEq,
+      masterVolume: S.masterVolume, lofiOn: S.lofiOn, lofiAmount: S.lofiAmount, projectBpm: S.projectBpm, beatsPerBar: S.beatsPerBar, masterEq: S.masterEq,
       nextUid: _id,
     };
     await idbPut('meta','project', meta);
@@ -1947,6 +1970,7 @@ async function restoreFromDb(){
     S.lofiOn=!!meta.lofiOn;
     S.lofiAmount=meta.lofiAmount??0.3;
     S.projectBpm=meta.projectBpm??120;
+    S.beatsPerBar=meta.beatsPerBar??4;
     S.masterEq=meta.masterEq||'none';
     if(meta.nextUid) _id=Math.max(_id, meta.nextUid);
     return S.samples.length>0 || S.clips.length>0;
@@ -1971,6 +1995,7 @@ restoreFromDb().then(restored=>{
   document.getElementById('lofi-on').checked=S.lofiOn;
   updateLofiKnobUI();
   document.getElementById('projectBpmInput').value=S.projectBpm;
+  document.getElementById('beatsPerBarSelect').value=S.beatsPerBar;
   document.getElementById('master-eq').value=S.masterEq;
   const sel=document.getElementById('add-track-sel');
   if(sel) sel.value=S.targetTrackId;
