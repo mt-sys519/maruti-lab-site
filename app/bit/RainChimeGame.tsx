@@ -121,6 +121,7 @@ export function RainChimeGame() {
   }, []);
 
   return (
+    <>
     <section className={styles.shell} aria-label="AVENUE 鑑賞画面">
       <div className={styles.controls}>
         <div className={styles.controlsLeft}>
@@ -169,18 +170,19 @@ export function RainChimeGame() {
         <p>SOUND SOURCES</p>
         <div><strong>RAIN / WIND CHIME / STEEL TONGUE DRUM<br />GENERATIVE AMBIENCE — NO FIXED LOOP</strong></div>
       </aside>
-      <div className="bitPakuShareRow">
-        <ShareButton
-          title="MarutiBit「AVENUE」"
-          text="雨、ウインドチャイム、タングドラムがつくる部屋を眺めるピクセルアート・アンビエント"
-          url="https://marutilab.com/bit/avenue"
-        />
-        <XShareButton
-          variant="compact"
-          text={"MarutiBit「AVENUE」\n雨、ウインドチャイム、タングドラムがつくる部屋を眺めるピクセルアート・アンビエント"}
-          url="https://marutilab.com/bit/avenue"
-        />
-      </div>
     </section>
+    <div className="bitPakuShareRow">
+      <ShareButton
+        title="MarutiBit「AVENUE」"
+        text="雨、ウインドチャイム、タングドラムがつくる部屋を眺めるピクセルアート・アンビエント"
+        url="https://marutilab.com/bit/avenue"
+      />
+      <XShareButton
+        variant="compact"
+        text={"MarutiBit「AVENUE」\n雨、ウインドチャイム、タングドラムがつくる部屋を眺めるピクセルアート・アンビエント"}
+        url="https://marutilab.com/bit/avenue"
+      />
+    </div>
+    </>
   );
 }

@@ -74,21 +74,13 @@
 .pause p { margin: 0 0 18px; color: #9db2b5; font: 600 10px/1 "Courier New", monospace; letter-spacing: .2em; }
 .pause button { padding: 15px 24px; border: 1px solid #7fa0a5; background: #0b1a21; color: #e5eeee; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .14em; cursor: pointer; }
 .note { display: grid; grid-template-columns: .5fr 1fr; align-items: center; gap: clamp(28px, 6vw, 90px); padding: clamp(18px, 3vw, 28px) clamp(24px, 8vw, 110px); border-top: 1px solid #26363d; background: #0a151b; }
-/* ShareButton/XShareButton assume the light page background PAKU and LILT
-   ORB sit on (dark, low-contrast text on transparent). AVENUE's whole shell
-   is dark, so without this override the share row is nearly invisible here -
-   same components, just recolored to the shell's own palette (matching
-   .controls button) rather than a different implementation. */
-.shell :global(.bitPakuShareRow) { padding: 0 clamp(14px, 3vw, 34px) 16px; background: #0a151b; }
-.shell :global(.bitPakuShareRow) button { border-color: #30454d; background: transparent; color: #95abb0; }
-.shell :global(.bitPakuShareRow) button:hover, .shell :global(.bitPakuShareRow) button:focus-visible { border-color: #65a67c; color: #8bd6a4; outline: none; }
 .note p { margin: 0; color: #6f8b90; font: 600 clamp(10px, 1.05vw, 12px)/1 "Courier New", monospace; letter-spacing: .2em; }
 .note div { color: #a7bbbd; font: 400 13px/2 "Yu Gothic UI", sans-serif; }
 .note strong { display: block; color: #6f8b90; font: 600 clamp(10px, 1.05vw, 12px)/1.9 "Courier New", monospace; letter-spacing: .14em; }
 
 @media (max-width: 700px) {
   .shell { width: 100%; }
-  .viewport { aspect-ratio: 4 / 3; }
+  .viewport { aspect-ratio: 4 / 5; }
   .topReadout span:last-child { display: none; }
   .note { grid-template-columns: 1fr; }
 }
