@@ -1,5 +1,15 @@
 .shell { --rain-blue: #7fb5c7; width: min(1480px, 100%); margin: 0 auto; background: #071016; color: #dce7e6; }
 .viewport { position: relative; aspect-ratio: 16 / 9; overflow: hidden; isolation: isolate; background: #05090c; box-shadow: 0 26px 70px rgba(5, 12, 17, .28); }
+/* Fullscreens just the room image, not the controls bar/note/share row below
+   it - matching PAKU and LILT ORB's tank/canvas-only fullscreen pattern
+   instead of putting the whole page section into fullscreen. */
+.viewport:fullscreen, .viewport:-webkit-full-screen { position: fixed; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; max-width: none; max-height: none; margin: 0; border: 0; }
+@supports (height: 100dvh) {
+  .viewport:fullscreen, .viewport:-webkit-full-screen { height: 100dvh; }
+}
+.exitFullscreen { position: absolute; z-index: 8; top: 10px; right: 10px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid #30454d; border-radius: 999px; background: rgba(8, 18, 24, .82); backdrop-filter: blur(5px); color: #95abb0; cursor: pointer; }
+.exitFullscreen svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.exitFullscreen:hover, .exitFullscreen:focus-visible { border-color: #65a67c; color: #8bd6a4; outline: none; }
 .artboard { position: absolute; z-index: 1; overflow: hidden; }
 .frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0; image-rendering: pixelated; transition: opacity .36s steps(3, end); }
 .lapFrame { opacity: 1; }

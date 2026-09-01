@@ -13,6 +13,16 @@ const rainDrops = Array.from({ length: 20 }, (_, index) => ({
   length: 9 + ((index * 13) % 25),
 }));
 
+declare global {
+  interface Document {
+    webkitFullscreenElement?: Element | null;
+    webkitExitFullscreen?: () => Promise<void>;
+  }
+  interface HTMLElement {
+    webkitRequestFullscreen?: () => Promise<void>;
+  }
+}
+
 type RoomScene = "lap" | "glance" | "keyboard" | "windowsill";
 
 const roomFrames: Array<{ scene: RoomScene; src: string; className: string }> = [
@@ -23,12 +33,28 @@ const roomFrames: Array<{ scene: RoomScene; src: string; className: string }> = 
 ];
 
 export function RainChimeGame() {
-  const shellRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const artboardRef = useRef<HTMLDivElement>(null);
   const [scene, setScene] = useState<RoomScene>("lap");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { entered, soundOn, paused, backgroundPlayOn, toggleSound, toggleBackgroundPlay, resume } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
+
+  // iOS Safari historically only exposes the webkit-prefixed Fullscreen API,
+  // and (unlike Android Chrome) doesn't reliably reflect requestFullscreen()
+  // on arbitrary elements without it - mirrors PAKU/LILT ORB's fallback.
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
+      setIsFullscreen(current === viewportRef.current);
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!entered) return;
@@ -76,18 +102,26 @@ export function RainChimeGame() {
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else await shellRef.current?.requestFullscreen();
+    const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
+    if (current) {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else await document.webkitExitFullscreen?.();
+    } else {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      if (viewport.requestFullscreen) await viewport.requestFullscreen();
+      else await viewport.webkitRequestFullscreen?.();
+    }
   }, []);
 
   return (
-    <section ref={shellRef} className={styles.shell} aria-label="AVENUE 鑑賞画面">
+    <section className={styles.shell} aria-label="AVENUE 鑑賞画面">
       <div className={styles.controls}>
         <div className={styles.controlsLeft}>
           <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
           <button type="button" aria-pressed={backgroundPlayOn} onClick={toggleBackgroundPlay}>BACKGROUND {backgroundPlayOn ? "ON" : "OFF"}</button>
         </div>
-        <button type="button" onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
+        <button type="button" aria-pressed={isFullscreen} onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
       </div>
 
       <div ref={viewportRef} className={styles.viewport}>
@@ -114,6 +148,14 @@ export function RainChimeGame() {
           <div className={styles.pause}>
             <div><p>THE ROOM IS PAUSED</p><button type="button" onClick={() => void resume()}>RETURN TO THE ROOM</button></div>
           </div>
+        )}
+
+        {isFullscreen && (
+          <button className={styles.exitFullscreen} type="button" onClick={() => void toggleFullscreen()} aria-label="全画面表示を終了">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <path d="M7 2v5H2M13 2v5h5M7 18v-5H2M13 18v-5h5" />
+            </svg>
+          </button>
         )}
       </div>
 
