@@ -34,6 +34,10 @@ body{
 #master-box{display:flex;align-items:center;gap:8px;padding:3px 8px;border:1px solid #4a3f2e;border-radius:5px;background:rgba(0,0,0,.2);}
 #master-box .mb-label{font-family:'Courier New',monospace;font-size:9px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
 #master-box input[type=range]{accent-color:#ff6b35;width:64px;cursor:pointer;}
+.eq-select-master{
+  background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
+  padding:2px 4px;border-radius:4px;font-size:10px;cursor:pointer;
+}
 .meter-wrap{width:64px;height:10px;background:#0b0906;border:1px solid #000;border-radius:2px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
 .meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#7fae6f,#d9c15a 75%,#c65b4e 92%);}
 .clip-lamp{
@@ -163,7 +167,7 @@ body{
 
 /* Track header */
 .th{
-  height:92px;border-bottom:1px solid #4a3f2e;
+  height:114px;border-bottom:1px solid #4a3f2e;
   display:flex;flex-direction:column;padding:4px 6px;gap:2px;flex-shrink:0;
   position:relative;overflow:hidden;
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.12));
@@ -190,6 +194,11 @@ body{
 .th-pan-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#b0a284}
 .th-pan-row input[type=range]{width:62px;accent-color:#ff6b35;cursor:pointer}
 .th-pan-row .pv{min-width:26px;font-size:9px;font-family:'Courier New',monospace;}
+.th-eq-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#b0a284}
+.th-eq-row select{
+  flex:1;min-width:0;background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
+  padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
+}
 .th-level-wrap{height:6px;background:#362e22;border-radius:3px;overflow:hidden;margin-top:1px}
 .th-level-bar{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#7fae6f,#d9c15a,#c65b4e);transition:width .04s}
 .th-rec-time{font-size:10px;color:#c65b4e;font-weight:600;position:absolute;right:6px;top:5px}
@@ -259,6 +268,7 @@ body{
     <input type="range" id="master-vol" min="0" max="1.5" step="0.01" value="1">
     <div class="meter-wrap"><div class="meter-fill" id="master-meter-fill"></div></div>
     <div class="clip-lamp" id="clip-lamp" title="CLIP"></div>
+    <select id="master-eq" class="eq-select-master" title="マスターEQプリセット"></select>
   </div>
 
   <div id="lofi-box">
@@ -406,6 +416,7 @@ const S = {
   lofiAmount: 0.3,
   projectBpm: 120,
   clickOn: false,
+  masterEq: 'none',
 };
 
 // ════════════════════════════════════════════════════
@@ -423,7 +434,7 @@ function getCtx(){
 // ════════════════════════════════════════════════════
 function mkTrack(name, colorIdx){
   return {
-    id:uid(), name, volume:1, pan:0, muted:false, solo:false,
+    id:uid(), name, volume:1, pan:0, eq:'none', muted:false, solo:false,
     color: TCOLORS[colorIdx % TCOLORS.length],
     rec:{
       state:'idle',          // 'idle'|'armed'|'recording'
@@ -900,13 +911,22 @@ function makeHeaderEl(tr){
   panSlider.addEventListener('dblclick',()=>{ tr.pan=0; panSlider.value=0; panVal.textContent=panLabel(0); });
   panRow.append(panLbl,panSlider,panVal);
 
+  // EQ row
+  const eqRow=document.createElement('div'); eqRow.className='th-eq-row';
+  const eqLbl=document.createElement('span'); eqLbl.textContent='EQ'; eqLbl.style.width='16px';
+  const eqSelect=document.createElement('select');
+  eqSelect.innerHTML=eqOptionsHtml();
+  eqSelect.value=tr.eq;
+  eqSelect.addEventListener('change',()=>{ tr.eq=eqSelect.value; });
+  eqRow.append(eqLbl,eqSelect);
+
   // Level meter
   const levelWrap=document.createElement('div'); levelWrap.className='th-level-wrap';
   levelWrap.style.display='none';
   const levelBar=document.createElement('div'); levelBar.className='th-level-bar';
   levelWrap.appendChild(levelBar);
 
-  div.append(nameEl,btns,volRow,panRow,levelWrap);
+  div.append(nameEl,btns,volRow,panRow,eqRow,levelWrap);
   return div;
 }
 
@@ -1367,6 +1387,34 @@ document.getElementById('btn-stretch').addEventListener('click',()=>{
 });
 
 // ════════════════════════════════════════════════════
+// EQ PRESETS — 3-band (low shelf / mid peak / high shelf), fixed
+// frequencies. Presets, not a parametric editor — pick a flavor, not knobs.
+// Same builder used for tracks and master, live playback and export.
+// ════════════════════════════════════════════════════
+const EQ_PRESETS = {
+  none:    {label:'NONE',    low:0,   mid:0,   high:0  },
+  rock:    {label:'ROCK',    low:4,   mid:-2,  high:3  },
+  pop:     {label:'POP',     low:2,   mid:2,   high:1  },
+  jazz:    {label:'JAZZ',    low:3,   mid:1,   high:0.5},
+  dance:   {label:'DANCE',   low:6,   mid:-3,  high:4  },
+  classic: {label:'CLASSIC', low:2,   mid:0,   high:2  },
+  hicut:   {label:'HI-CUT',  low:0,   mid:0,   high:-10},
+  locut:   {label:'LO-CUT',  low:-10, mid:0,   high:0  },
+  cheap:   {label:'CHEAP',   low:-6,  mid:3,   high:-6 },
+};
+function buildEqChain(ctx, presetKey){
+  const p=EQ_PRESETS[presetKey]||EQ_PRESETS.none;
+  const low=ctx.createBiquadFilter(); low.type='lowshelf'; low.frequency.value=100; low.gain.value=p.low;
+  const mid=ctx.createBiquadFilter(); mid.type='peaking'; mid.frequency.value=1000; mid.Q.value=0.7; mid.gain.value=p.mid;
+  const high=ctx.createBiquadFilter(); high.type='highshelf'; high.frequency.value=8000; high.gain.value=p.high;
+  low.connect(mid); mid.connect(high);
+  return {input:low, output:high};
+}
+function eqOptionsHtml(){
+  return Object.keys(EQ_PRESETS).map(key=>`<option value="${key}">${EQ_PRESETS[key].label}</option>`).join('');
+}
+
+// ════════════════════════════════════════════════════
 // MASTER LO-FI FX (tape saturation / rolloff / hiss / wow-flutter)
 // One shared function builds the chain for both live playback and
 // OfflineAudioContext export, so the two always sound identical.
@@ -1490,17 +1538,25 @@ function startPlayback(offset=0){
   // Master bus: track sum → master vol → (optional LO-FI) → analyser → destination
   const masterGain=ctx.createGain();
   masterGain.gain.value=S.masterVolume;
+  const masterEqChain=buildEqChain(ctx, S.masterEq);
   const masterAnalyser=ctx.createAnalyser();
   masterAnalyser.fftSize=512;
+  masterGain.connect(masterEqChain.input);
   if(S.lofiOn){
     const chain=buildLofiChain(ctx, S.lofiAmount, S.sources);
-    masterGain.connect(chain.input);
+    masterEqChain.output.connect(chain.input);
     chain.output.connect(masterAnalyser);
   } else {
-    masterGain.connect(masterAnalyser);
+    masterEqChain.output.connect(masterAnalyser);
   }
   masterAnalyser.connect(ctx.destination);
   S.masterAnalyser=masterAnalyser;
+
+  const trackEqChains=S.tracks.map(t=>{
+    const chain=buildEqChain(ctx, t.eq);
+    chain.output.connect(masterGain);
+    return chain;
+  });
 
   S.clips.forEach(clip=>{
     const tr=S.tracks.find(t=>t.id===clip.trackId);if(!tr) return;
@@ -1515,12 +1571,13 @@ function startPlayback(offset=0){
     const remaining=clipDur-withinOff;
     const schedAt=now+Math.max(0,clip.startTime-offset);
 
+    const trIdx=S.tracks.indexOf(tr);
     const src=ctx.createBufferSource();
     const gainNode=ctx.createGain();
     const trGain=ctx.createGain();
     const trPan=ctx.createStereoPanner();
     src.buffer=sample.buffer;
-    src.connect(gainNode); gainNode.connect(trGain); trGain.connect(trPan); trPan.connect(masterGain);
+    src.connect(gainNode); gainNode.connect(trGain); trGain.connect(trPan); trPan.connect(trackEqChains[trIdx].input);
     trGain.gain.value=tr.volume;
     trPan.pan.value=tr.pan;
 
@@ -1615,6 +1672,11 @@ masterVolSlider.addEventListener('input',()=>{ S.masterVolume=parseFloat(masterV
 function setMasterMeter(rms){ masterMeterFill.style.width=Math.min(100,rms*220)+'%'; }
 function setClipLamp(on){ clipLamp.classList.toggle('on',!!on); }
 
+const masterEqSelect=document.getElementById('master-eq');
+masterEqSelect.innerHTML=eqOptionsHtml();
+masterEqSelect.value=S.masterEq;
+masterEqSelect.addEventListener('change',()=>{ S.masterEq=masterEqSelect.value; });
+
 // ── LO-FI on/off + amount knob ─────────────
 const lofiOnCb=document.getElementById('lofi-on');
 const lofiKnob=document.getElementById('lofi-knob');
@@ -1668,22 +1730,25 @@ document.getElementById('btn-export').addEventListener('click',async()=>{
     // export always matches what was heard.
     const masterGain=offCtx.createGain();
     masterGain.gain.value=S.masterVolume;
+    const masterEqChain=buildEqChain(offCtx, S.masterEq);
+    masterGain.connect(masterEqChain.input);
     if(S.lofiOn){
       const chain=buildLofiChain(offCtx, S.lofiAmount, null);
-      masterGain.connect(chain.input);
+      masterEqChain.output.connect(chain.input);
       chain.output.connect(offCtx.destination);
     } else {
-      masterGain.connect(offCtx.destination);
+      masterEqChain.output.connect(offCtx.destination);
     }
 
-    // per-track gain+pan nodes
+    // per-track gain+pan+EQ nodes
     const trGains={};
     S.tracks.forEach(tr=>{
       const g=offCtx.createGain();
       g.gain.value=tr.volume;
       const p=offCtx.createStereoPanner();
       p.pan.value=tr.pan;
-      g.connect(p); p.connect(masterGain);
+      const eqChain=buildEqChain(offCtx, tr.eq);
+      g.connect(p); p.connect(eqChain.input); eqChain.output.connect(masterGain);
       trGains[tr.id]=g;
     });
 
@@ -1838,10 +1903,10 @@ async function doAutosave(){
     }
     const meta={
       sampleOrder: S.samples.map(s=>s.id),
-      tracks: S.tracks.map(t=>({id:t.id,name:t.name,volume:t.volume,pan:t.pan,muted:t.muted,solo:t.solo})),
+      tracks: S.tracks.map(t=>({id:t.id,name:t.name,volume:t.volume,pan:t.pan,eq:t.eq,muted:t.muted,solo:t.solo})),
       clips: S.clips.map(c=>({id:c.id,sampleId:c.sampleId,trackId:c.trackId,startTime:c.startTime,trimStart:c.trimStart,trimEnd:c.trimEnd,volume:c.volume,fadeIn:c.fadeIn,fadeOut:c.fadeOut})),
       targetTrackId: S.targetTrackId,
-      masterVolume: S.masterVolume, lofiOn: S.lofiOn, lofiAmount: S.lofiAmount, projectBpm: S.projectBpm,
+      masterVolume: S.masterVolume, lofiOn: S.lofiOn, lofiAmount: S.lofiAmount, projectBpm: S.projectBpm, masterEq: S.masterEq,
       nextUid: _id,
     };
     await idbPut('meta','project', meta);
@@ -1868,7 +1933,7 @@ async function restoreFromDb(){
     if(meta.tracks){
       meta.tracks.forEach((t,i)=>{
         if(!S.tracks[i]) return;
-        Object.assign(S.tracks[i], {name:t.name,volume:t.volume,pan:t.pan,muted:t.muted,solo:t.solo});
+        Object.assign(S.tracks[i], {name:t.name,volume:t.volume,pan:t.pan,eq:t.eq||'none',muted:t.muted,solo:t.solo});
       });
     }
     const validSampleIds=new Set(S.samples.map(s=>s.id));
@@ -1879,6 +1944,7 @@ async function restoreFromDb(){
     S.lofiOn=!!meta.lofiOn;
     S.lofiAmount=meta.lofiAmount??0.3;
     S.projectBpm=meta.projectBpm??120;
+    S.masterEq=meta.masterEq||'none';
     if(meta.nextUid) _id=Math.max(_id, meta.nextUid);
     return S.samples.length>0 || S.clips.length>0;
   }catch(err){ console.error('restore failed', err); return false; }
@@ -1902,6 +1968,7 @@ restoreFromDb().then(restored=>{
   document.getElementById('lofi-on').checked=S.lofiOn;
   updateLofiKnobUI();
   document.getElementById('projectBpmInput').value=S.projectBpm;
+  document.getElementById('master-eq').value=S.masterEq;
   const sel=document.getElementById('add-track-sel');
   if(sel) sel.value=S.targetTrackId;
   fitTimeline();
