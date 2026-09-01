@@ -126,9 +126,17 @@ export function RainChimeGame() {
       <div className={styles.controls}>
         <div className={styles.controlsLeft}>
           <button type="button" aria-pressed={soundOn} onClick={() => void toggleSound()}>SOUND {soundOn ? "ON" : "OFF"}</button>
-          <button type="button" aria-pressed={backgroundPlayOn} onClick={toggleBackgroundPlay}>BACKGROUND {backgroundPlayOn ? "ON" : "OFF"}</button>
+          <button type="button" aria-pressed={backgroundPlayOn} onClick={toggleBackgroundPlay}>
+            <span className={styles.fullLabel}>BACKGROUND {backgroundPlayOn ? "ON" : "OFF"}</span>
+            <span className={styles.shortLabel}>BG {backgroundPlayOn ? "ON" : "OFF"}</span>
+          </button>
         </div>
-        <button type="button" aria-pressed={isFullscreen} onClick={() => void toggleFullscreen()}>FULLSCREEN</button>
+        <button type="button" aria-pressed={isFullscreen} onClick={() => void toggleFullscreen()} aria-label="全画面表示を切り替え">
+          <svg className={styles.fullscreenIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
+          </svg>
+          <span className={styles.fullscreenLabel}>FULLSCREEN</span>
+        </button>
       </div>
 
       <div ref={viewportRef} className={styles.viewport}>

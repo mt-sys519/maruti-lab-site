@@ -69,6 +69,8 @@
 .controlsLeft { display: flex; align-items: center; gap: 10px; }
 .controls button { padding: 10px 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; white-space: nowrap; cursor: pointer; }
 .controls button[aria-pressed="true"] { border-color: #65a67c; color: #8bd6a4; }
+.shortLabel, .fullscreenIcon { display: none; }
+.fullscreenIcon { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
 .pause { position: absolute; z-index: 10; inset: 0; display: grid; place-items: center; background: rgba(3, 9, 13, .8); }
 .pause div { text-align: center; }
 .pause p { margin: 0 0 18px; color: #9db2b5; font: 600 10px/1 "Courier New", monospace; letter-spacing: .2em; }
@@ -86,6 +88,10 @@
   .controls { padding: 11px 10px; }
   .controlsLeft { gap: 6px; }
   .controls button { padding: 9px 8px; font-size: 7px; letter-spacing: .06em; }
+  .fullLabel { display: none; }
+  .shortLabel { display: inline; }
+  .fullscreenLabel { display: none; }
+  .fullscreenIcon { display: inline-block; }
 }
 
 @media (prefers-reduced-motion: reduce) {
