@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import styles from "./RainChimeGame.module.css";
 import { useRainChimeAudio } from "./useRainChimeAudio";
+import { ShareButton } from "./shared/ShareButton";
+import { XShareButton } from "./shared/XShareButton";
 
 const rainDrops = Array.from({ length: 20 }, (_, index) => ({
   x: 61 + ((index * 37 + 11) % 100) * 0.35,
@@ -113,6 +115,18 @@ export function RainChimeGame() {
             <div><p>THE ROOM IS PAUSED</p><button type="button" onClick={() => void resume()}>RETURN TO THE ROOM</button></div>
           </div>
         )}
+      </div>
+      <div className="bitPakuShareRow">
+        <ShareButton
+          title="MarutiBit「AVENUE」"
+          text="雨、ウインドチャイム、タングドラムがつくる部屋を眺めるピクセルアート・アンビエント"
+          url="https://marutilab.com/bit/rain-chime"
+        />
+        <XShareButton
+          variant="compact"
+          text={"MarutiBit「AVENUE」\n雨、ウインドチャイム、タングドラムがつくる部屋を眺めるピクセルアート・アンビエント"}
+          url="https://marutilab.com/bit/rain-chime"
+        />
       </div>
 
       <aside className={styles.note}>
