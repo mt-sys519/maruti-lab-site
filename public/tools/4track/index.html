@@ -19,7 +19,7 @@ body{
 /* ── Toolbar ─────────────────────────────── */
 #toolbar{
   background:linear-gradient(180deg,#F7EFDC,#EDE0C0 100%);
-  border-bottom:2px solid #D6C39A;
+  border-bottom:2px solid #2B2118;
   padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;min-height:80px;flex-wrap:wrap;row-gap:8px;
   box-shadow:inset 0 -3px 6px rgba(0,0,0,.3);
 }
@@ -28,7 +28,7 @@ body{
 #toolbar h1 .logo-text{display:flex;flex-direction:column;line-height:1.15;}
 #toolbar h1 .logo-title{font-family:'Courier New',monospace;font-size:21px;font-weight:900;letter-spacing:1px;color:#2B2118;}
 #toolbar h1 .logo-sub{font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.2px;color:#B5522A;}
-.sep{width:1px;height:44px;background:#D6C39A;margin:0 2px;flex-shrink:0;}
+.sep{width:1px;height:44px;background:#2B2118;margin:0 2px;flex-shrink:0;}
 
 #toolbar .btn{padding:12px 22px;font-size:15px;font-weight:600;border-radius:8px;}
 #toolbar .if label{font-size:11px;}
@@ -71,7 +71,7 @@ body{
 .knob .tick{position:absolute;top:3px;left:50%;width:3px;height:10px;background:#ff6b35;transform-origin:1.5px 18px;margin-left:-1.5px;border-radius:1.5px;}
 .knob-val{font-family:'Courier New',monospace;font-size:11px;color:#b0a284;min-width:30px;}
 .btn{
-  background:#FFFBF0;border:1px solid #D6C39A;color:#2B2118;
+  background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:3px 11px;border-radius:5px;cursor:pointer;font-size:11px;
   transition:background .12s,border-color .12s;white-space:nowrap;
   box-shadow:0 1px 0 rgba(43,33,24,.08);
@@ -90,14 +90,14 @@ body{
 /* Sample panel */
 #sample-panel{
   width:196px;flex-shrink:0;background:#F3E9D2;
-  border-right:1px solid #D6C39A;display:flex;flex-direction:column;
+  border-right:1px solid #2B2118;display:flex;flex-direction:column;
 }
 .ph{
   padding:5px 9px;color:#8A7554;font-size:10px;
-  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #D6C39A;flex-shrink:0;
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #2B2118;flex-shrink:0;
 }
 #drop-zone{
-  border:2px dashed #D6C39A;border-radius:5px;margin:7px;padding:8px;
+  border:2px dashed #2B2118;border-radius:5px;margin:7px;padding:8px;
   text-align:center;color:#8A7554;font-size:10px;line-height:1.7;
   cursor:pointer;transition:all .14s;
 }
@@ -116,19 +116,19 @@ body{
 /* Waveform editor */
 #editor-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 #wv-hd{
-  padding:4px 9px;background:#F3E9D2;border-bottom:1px solid #D6C39A;
+  padding:4px 9px;background:#F3E9D2;border-bottom:1px solid #2B2118;
   display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;min-height:30px;
 }
 #wv-label{color:#8A7554;font-size:10px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #add-track-sel{
-  background:#FFFBF0;border:1px solid #D6C39A;color:#2B2118;
+  background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:2px 4px;border-radius:4px;font-size:10px;cursor:pointer;
 }
 #wv-container{flex:0 0 72px;min-height:0;background:#171310;display:flex;flex-direction:column;position:relative}
 #wv-canvas{display:block;width:100%;flex:1;min-height:0;cursor:crosshair}
 #wv-info{
   padding:3px 9px;font-size:10px;color:#8A7554;
-  background:#F3E9D2;border-top:1px solid #D6C39A;flex-shrink:0;
+  background:#F3E9D2;border-top:1px solid #2B2118;flex-shrink:0;
 }
 
 /* ── Tempo (flagship feature) ─────────────── */
@@ -142,7 +142,7 @@ body{
 .tempo-fields label{display:flex;flex-direction:column;gap:3px;font-size:9px;color:#8A7554;letter-spacing:.3px;white-space:nowrap;}
 .tempo-fields input[type=number]{
   width:66px;font-size:19px;font-weight:700;text-align:center;
-  background:#171310;border:1px solid #4a3f2e;color:#ecdfc3;border-radius:6px;padding:6px 4px;
+  background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;border-radius:6px;padding:6px 4px;
 }
 .tempo-arrow{font-size:19px;color:#ff6b35;padding-bottom:6px;}
 .tempo-apply{
@@ -150,7 +150,7 @@ body{
   background:#ff6b35;border-color:#ff6b35;color:#171310;
 }
 .tempo-apply:hover:not(:disabled){background:#ff8555;}
-.tempo-apply:disabled{opacity:1;background:#EDE0C0;border-color:#D6C39A;color:#B0A284;}
+.tempo-apply:disabled{opacity:1;background:#EDE0C0;border-color:#2B2118;color:#B0A284;}
 .tempo-note{font-size:10px;color:#8A7554;max-width:220px;line-height:1.5;}
 
 /* ── Timeline (bottom half) ──────────────── */
@@ -191,7 +191,7 @@ body{
 .th-name:focus{outline:none;background:#EDE0C0;border-radius:3px;padding:0 2px}
 .th-btns{display:flex;gap:4px;align-items:center}
 .th-btn{
-  padding:2px 6px;border-radius:3px;border:1px solid #D6C39A;background:#FFFBF0;
+  padding:2px 6px;border-radius:3px;border:1px solid #2B2118;background:#FFFBF0;
   color:#8A7554;font-size:10px;font-weight:700;cursor:pointer;line-height:1.2;
   transition:all .1s;
 }
@@ -208,7 +208,7 @@ body{
 .th-pan-row .pv{min-width:26px;font-size:9px;font-family:'Courier New',monospace;}
 .th-eq-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#8A7554}
 .th-eq-row select{
-  flex:1;min-width:0;background:#FFFBF0;border:1px solid #D6C39A;color:#2B2118;
+  flex:1;min-width:0;background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
 }
 .th-level-wrap{height:6px;background:#EDE0C0;border-radius:3px;overflow:hidden;margin-top:1px}
@@ -217,7 +217,7 @@ body{
 
 /* ── Inspector ───────────────────────────── */
 #inspector{
-  background:#F3E9D2;border-top:1px solid #D6C39A;
+  background:#F3E9D2;border-top:1px solid #2B2118;
   padding:5px 12px;display:flex;align-items:center;gap:14px;
   flex-shrink:0;flex-wrap:wrap;min-height:34px;
 }
@@ -227,7 +227,7 @@ body{
 .if label{color:#8A7554;white-space:nowrap}
 .if input[type=range]{width:80px;accent-color:#ff6b35;cursor:pointer}
 .if input[type=number]{
-  width:48px;background:#FFFBF0;border:1px solid #D6C39A;
+  width:48px;background:#FFFBF0;border:1px solid #2B2118;
   color:#2B2118;padding:2px 4px;border-radius:3px;font-size:10px;
 }
 .iv{color:#ff6b35;min-width:28px;font-size:10px}
@@ -235,7 +235,7 @@ body{
 /* Scrollbars */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:#EDE0C0}
-::-webkit-scrollbar-thumb{background:#D6C39A;border-radius:3px}
+::-webkit-scrollbar-thumb{background:#2B2118;border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#B8A888}
 </style>
 </head>
@@ -246,16 +246,16 @@ body{
   <h1>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="80 75 138 90" class="logo-icon-svg">
       <g transform="translate(148,120) scale(78)">
-        <rect x="-0.78" y="-0.48" width="1.55" height="0.96" rx="0.04" fill="#241710"/>
-        <rect x="-0.65" y="0.23" width="1.30" height="0.15" fill="#C4A06E"/>
+        <rect x="-0.78" y="-0.48" width="1.55" height="0.96" rx="0.04" fill="#2B2118"/>
+        <rect x="-0.65" y="0.23" width="1.30" height="0.15" fill="#ff6b35"/>
         <rect x="-0.65" y="-0.35" width="1.30" height="0.50" fill="#140E0B"/>
-        <circle cx="-0.26" cy="-0.10" r="0.15" fill="#C4A06E"/>
+        <circle cx="-0.26" cy="-0.10" r="0.15" fill="#ff6b35"/>
         <circle cx="-0.26" cy="-0.10" r="0.05" fill="#140E0B"/>
-        <circle cx="-0.26" cy="-0.10" r="0.02" fill="#241710"/>
-        <circle cx="0.26" cy="-0.10" r="0.15" fill="#C4A06E"/>
+        <circle cx="-0.26" cy="-0.10" r="0.02" fill="#2B2118"/>
+        <circle cx="0.26" cy="-0.10" r="0.15" fill="#ff6b35"/>
         <circle cx="0.26" cy="-0.10" r="0.09" fill="#140E0B"/>
-        <circle cx="0.26" cy="-0.10" r="0.02" fill="#241710"/>
-        <rect x="-0.09" y="-0.32" width="0.19" height="0.03" fill="#C4A06E"/>
+        <circle cx="0.26" cy="-0.10" r="0.02" fill="#2B2118"/>
+        <rect x="-0.09" y="-0.32" width="0.19" height="0.03" fill="#ff6b35"/>
       </g>
     </svg>
     <span class="logo-text">
@@ -638,7 +638,7 @@ function drawClipsCanvas(){
   // Track row backgrounds + separators
   S.tracks.forEach((tr,i)=>{
     const y=i*TRACK_H;
-    c.fillStyle = i%2===0?'#171310':'#0f1520';
+    c.fillStyle = i%2===0?'#171310':'#1c1712';
     c.fillRect(0,y,W,TRACK_H);
     if(tr.muted && !tr.solo){
       c.fillStyle='rgba(0,0,0,.35)'; c.fillRect(0,y,W,TRACK_H);
