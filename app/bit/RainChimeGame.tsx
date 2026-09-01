@@ -94,6 +94,12 @@ export function RainChimeGame() {
       artboard.style.height = `${renderedHeight}px`;
       artboard.style.left = `${(width - renderedWidth) / 2}px`;
       artboard.style.top = `${(height - renderedHeight) / 2}px`;
+      // Rain drops size/fall themselves off this (see .drop/@keyframes fall) so
+      // they scale with the artboard's actual rendered size instead of a fixed
+      // pixel distance calibrated for the normal (small) viewport - without it,
+      // fullscreen (where the artboard can render several times larger) makes
+      // drops fall only a fraction of the way down and look tiny/sparse.
+      artboard.style.setProperty("--art-h", `${renderedHeight}px`);
     };
     const observer = new ResizeObserver(updateArtboard);
     observer.observe(viewport);
