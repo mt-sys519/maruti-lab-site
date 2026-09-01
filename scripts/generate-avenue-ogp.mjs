@@ -27,7 +27,7 @@ function overlay(width, height, square = false) {
       <circle cx="${width - left}" cy="69" r="5" fill="#d3694e"/>
       <text x="${left}" y="${titleY}" fill="#f0f3ed" font-family="Georgia, serif" font-size="${titleSize}" font-weight="500" letter-spacing="5">AVENUE</text>
       <text x="${left}" y="${titleY + 50}" fill="#bed0d1" font-family="Yu Gothic, Meiryo, sans-serif" font-size="${square ? 19 : 23}" font-weight="500" letter-spacing="2">${escapeXml(subtitle)}</text>
-      <text x="${left}" y="${height - 54}" fill="#d7e5e5" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="4">MARUTILAB.COM/BIT/RAIN-CHIME</text>
+      <text x="${left}" y="${height - 54}" fill="#d7e5e5" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="4">MARUTILAB.COM/BIT/AVENUE</text>
     </svg>
   `);
 }
@@ -44,6 +44,6 @@ async function render(fileName, width, height, position) {
 }
 
 await mkdir(outputDirectory, { recursive: true });
-await render("rain-chime.png", 1200, 630, "centre");
-await render("rain-chime-square.png", 630, 630, "centre");
+await render("avenue.png", 1200, 630, "centre");
+await render("avenue-square.png", 630, 630, "centre");
 console.log("Generated AVENUE OGP images.");

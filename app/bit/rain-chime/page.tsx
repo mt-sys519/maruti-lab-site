@@ -1,51 +1,7 @@
-import type { Metadata } from "next";
-import { BitFooter } from "../BitFooter";
-import { BitHeader } from "../BitHeader";
-import { BitSeriesNav } from "../BitSeriesNav";
-import { RainChimeGame } from "../RainChimeGame";
+import { redirect } from "next/navigation";
 
-const title = "MarutiBit — AVENUE（ピクセルアート・アンビエント）";
-const description = "1996年のニューヨーク。雨、ウインドチャイム、Steel Tongue Drumを眺めて聴くピクセルアート・アンビエント。";
-
-export const metadata: Metadata = {
-  title,
-  description,
-  alternates: { canonical: "/bit/rain-chime" },
-  openGraph: {
-    title,
-    description,
-    url: "/bit/rain-chime",
-    images: [
-      { url: "/og/bit/rain-chime.png", width: 1200, height: 630, alt: "MarutiBit AVENUE" },
-      { url: "/og/bit/rain-chime-square.png", width: 630, height: 630, alt: "MarutiBit AVENUE" },
-    ],
-  },
-  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/rain-chime.png"] },
-};
-
-export default function RainChimePage() {
-  return (
-    <main className="bitPage">
-      <BitHeader current="AVENUE" />
-      <BitSeriesNav active="rain-chime" />
-      <section className="bitIntro bitRainChimeIntro">
-        <p className="bitSerial">MB / GAME 007</p>
-        <h1>
-          <svg className="bitAvenueLogo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M7 5.5 H17" />
-            <path d="M9 5.5 V16" />
-            <path d="M12 5.5 V19" />
-            <path d="M15 5.5 V14.5" />
-            <circle className="bitAvenueLogoDot" cx="12" cy="21.3" r="1" />
-          </svg>
-          <span>AVENUE</span>
-        </h1>
-        <p><strong>眺めるアンビエント。</strong><br />雨、ウインドチャイム、タングドラムがつくる部屋の時間。</p>
-      </section>
-      <div className="bitGameShell">
-        <RainChimeGame />
-      </div>
-      <BitFooter label="MARUTIBIT / GAME 007" />
-    </main>
-  );
+// AVENUE's URL moved to /bit/avenue - keep this stub so old links and
+// bookmarks to /bit/rain-chime still land on the page instead of 404ing.
+export default function RainChimeRedirectPage() {
+  redirect("/bit/avenue");
 }

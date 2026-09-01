@@ -46,7 +46,7 @@ test("renders the MarutiBit series index", async () => {
   assert.match(html, /href="\/bit\/blank"/);
   assert.match(html, /href="\/bit\/sequence"/);
   assert.match(html, /href="\/bit\/input-rain"/);
-  assert.match(html, /href="\/bit\/rain-chime"/);
+  assert.match(html, /href="\/bit\/avenue"/);
   assert.match(html, /\/og\/bit\/index\.png/);
 });
 
@@ -71,7 +71,7 @@ test("renders the MarutiBit LILT ORB page with its dedicated social preview", as
 });
 
 test("renders the MarutiBit AVENUE room with its dedicated social preview", async () => {
-  const response = await render("/bit/rain-chime");
+  const response = await render("/bit/avenue");
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /AVENUE/);
@@ -82,8 +82,14 @@ test("renders the MarutiBit AVENUE room with its dedicated social preview", asyn
   assert.match(html, /SOUND/);
   assert.match(html, /FULLSCREEN/);
   assert.match(html, /room-lap\.webp/);
-  assert.match(html, /https:\/\/marutilab\.com\/og\/bit\/rain-chime\.png/);
+  assert.match(html, /https:\/\/marutilab\.com\/og\/bit\/avenue\.png/);
   assert.match(html, /twitter:card" content="summary_large_image/);
+});
+
+test("redirects the old /bit/rain-chime URL to /bit/avenue", async () => {
+  const response = await render("/bit/rain-chime");
+  assert.ok([307, 308].includes(response.status));
+  assert.equal(response.headers.get("location"), "/bit/avenue");
 });
 
 test("uses recorded rain and wind chimes while keeping the drum generative, shared, and pausable unless BACKGROUND PLAY is on", async () => {
