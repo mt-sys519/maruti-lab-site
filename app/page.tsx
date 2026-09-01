@@ -46,10 +46,30 @@ export default function Home() {
           <span>Maruti Lab</span>
         </a>
         <nav aria-label="メインナビゲーション">
-          <a className="navWithMark" href="#works"><span className="navIcon" aria-hidden="true">▦</span>Works</a>
-          <a className="navWithMark" href="/bit"><span className="navIcon" aria-hidden="true">🎮</span>MarutiBit</a>
-          <a className="navWithMark" href="#about"><span className="navIcon" aria-hidden="true">ⓘ</span>About</a>
-          <a className="supportLink navWithMark" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer"><span className="navIcon" aria-hidden="true">☕</span>Coffee</a>
+          <a className="navWithMark" href="#works">
+            <span className="navIcon" aria-hidden="true">
+              <svg viewBox="0 0 18 18" focusable="false"><rect x="2.5" y="2.5" width="5.2" height="5.2" /><rect x="10.3" y="2.5" width="5.2" height="5.2" /><rect x="2.5" y="10.3" width="5.2" height="5.2" /><rect x="10.3" y="10.3" width="5.2" height="5.2" /></svg>
+            </span>
+            Works
+          </a>
+          <a className="navWithMark" href="/bit">
+            <span className="navIcon" aria-hidden="true">
+              <svg viewBox="0 0 18 18" focusable="false"><path d="M4.8 6.2h8.4a3 3 0 0 1 2.95 3.52l-.5 2.75a2.1 2.1 0 0 1-3.66.95L10.6 12H7.4l-1.39 1.42a2.1 2.1 0 0 1-3.66-.95l-.5-2.75A3 3 0 0 1 4.8 6.2Z" /><path d="M5.9 8.4v2.1M4.85 9.45h2.1" /><circle cx="12.1" cy="8.6" r=".55" fill="currentColor" stroke="none" /><circle cx="13.5" cy="10" r=".55" fill="currentColor" stroke="none" /></svg>
+            </span>
+            MarutiBit
+          </a>
+          <a className="navWithMark" href="#about">
+            <span className="navIcon" aria-hidden="true">
+              <svg viewBox="0 0 18 18" focusable="false"><circle cx="9" cy="9" r="6.4" /><path d="M9 8.3v4.1" /><circle cx="9" cy="5.9" r=".65" fill="currentColor" stroke="none" /></svg>
+            </span>
+            About
+          </a>
+          <a className="supportLink navWithMark" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">
+            <span className="navIcon" aria-hidden="true">
+              <svg viewBox="0 0 18 18" focusable="false"><path d="M3.6 7.2h8.3v3.4a3.6 3.6 0 0 1-3.6 3.6H7.2a3.6 3.6 0 0 1-3.6-3.6Z" /><path d="M11.9 8.1h1a1.9 1.9 0 0 1 0 3.8h-1" /><path d="M6 4.4c.4-.5.4-.9 0-1.4M8.4 4.4c.4-.5.4-.9 0-1.4" /></svg>
+            </span>
+            Coffee
+          </a>
         </nav>
       </header>
 
