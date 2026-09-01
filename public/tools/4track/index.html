@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="ブラウザだけで使える4トラック・カセットサンプラー。WAV・MP3の編集、マイク録音、PAN、LO-FI、WAV書き出しに対応。">
+<meta name="robots" content="noindex,nofollow">
+<title>4TRACK CASSETTE SAMPLER</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgNjIwIDQ0MCI+DQo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMTAsMjI4KSBzY2FsZSg5NCkiPg0KPHJlY3QgeD0iLTEuNjgiIHk9Ii0xLjA0IiB3aWR0aD0iMy4zNSIgaGVpZ2h0PSIyLjA4IiByeD0iMC4wOSIgZmlsbD0iIzI0MTcxMCIvPg0KPHJlY3QgeD0iLTEuNDEiIHk9IjAuNTAiIHdpZHRoPSIyLjgyIiBoZWlnaHQ9IjAuMzMiIGZpbGw9IiNDNEEwNkUiLz4NCjxyZWN0IHg9Ii0xLjQxIiB5PSItMC43NSIgd2lkdGg9IjIuODIiIGhlaWdodD0iMS4wOCIgZmlsbD0iIzE0MEUwQiIvPg0KPGNpcmNsZSBjeD0iLTAuNTciIGN5PSItMC4yMSIgcj0iMC4zMiIgZmlsbD0iI0M0QTA2RSIvPg0KPGNpcmNsZSBjeD0iLTAuNTciIGN5PSItMC4yMSIgcj0iMC4xMCIgZmlsbD0iIzE0MEUwQiIvPg0KPGNpcmNsZSBjeD0iLTAuNTciIGN5PSItMC4yMSIgcj0iMC4wNSIgZmlsbD0iIzI0MTcxMCIvPg0KPGNpcmNsZSBjeD0iMC41NyIgY3k9Ii0wLjIxIiByPSIwLjMyIiBmaWxsPSIjQzRBMDZFIi8+DQo8Y2lyY2xlIGN4PSIwLjU3IiBjeT0iLTAuMjEiIHI9IjAuMjAiIGZpbGw9IiMxNDBFMEIiLz4NCjxjaXJjbGUgY3g9IjAuNTciIGN5PSItMC4yMSIgcj0iMC4wNSIgZmlsbD0iIzI0MTcxMCIvPg0KPHJlY3QgeD0iLTAuMjAiIHk9Ii0wLjcwIiB3aWR0aD0iMC40MCIgaGVpZ2h0PSIwLjA2IiBmaWxsPSIjQzRBMDZFIi8+DQo8L2c+DQo8L3N2Zz4=">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#171310;color:#ecdfc3;
+  font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;
+  display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  user-select:none;
+}
+
+/* ── Toolbar ─────────────────────────────── */
+#toolbar{
+  background:linear-gradient(180deg,#3a3226,#241f19 65%,#1c1712);
+  border-bottom:2px solid #14100c;
+  padding:6px 12px;display:flex;align-items:center;gap:7px;flex-shrink:0;height:52px;
+  box-shadow:inset 0 -3px 6px rgba(0,0,0,.3);
+}
+#toolbar h1{display:flex;align-items:center;gap:8px;white-space:nowrap;margin-right:4px;}
+#toolbar h1 .logo-icon-svg{height:38px;width:auto;display:block;flex-shrink:0;}
+#toolbar h1 .logo-text{display:flex;flex-direction:column;line-height:1.1;}
+#toolbar h1 .logo-title{font-family:'Courier New',monospace;font-size:16px;font-weight:900;letter-spacing:1px;color:#ecdfc3;}
+#toolbar h1 .logo-sub{font-family:'Courier New',monospace;font-size:10px;font-weight:700;letter-spacing:1.2px;color:#c9a45c;}
+.sep{width:1px;height:28px;background:#4a3f2e;margin:0 3px}
+
+/* ── Master / LO-FI (toolbar) ────────────── */
+#master-box{display:flex;align-items:center;gap:8px;padding:3px 8px;border:1px solid #4a3f2e;border-radius:5px;background:rgba(0,0,0,.2);}
+#master-box .mb-label{font-family:'Courier New',monospace;font-size:9px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
+#master-box input[type=range]{accent-color:#ff6b35;width:64px;cursor:pointer;}
+.meter-wrap{width:64px;height:10px;background:#0b0906;border:1px solid #000;border-radius:2px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
+.meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#7fae6f,#d9c15a 75%,#c65b4e 92%);}
+.clip-lamp{
+  width:11px;height:11px;border-radius:50%;background:#3a1512;border:1px solid #000;
+  box-shadow:inset 0 0 2px rgba(0,0,0,.8);flex-shrink:0;
+}
+.clip-lamp.on{background:#ff4433;box-shadow:0 0 6px #ff4433,inset 0 0 2px rgba(0,0,0,.5);}
+
+#lofi-box{display:flex;align-items:center;gap:7px;padding:3px 8px;border:1px solid #4a3f2e;border-radius:5px;background:rgba(0,0,0,.2);}
+#lofi-box .mb-label{font-family:'Courier New',monospace;font-size:9px;font-weight:700;color:#ff6b35;letter-spacing:1px;cursor:pointer;}
+.knob{
+  width:30px;height:30px;border-radius:50%;position:relative;cursor:ns-resize;flex-shrink:0;
+  background:radial-gradient(circle at 35% 30%,#6b5f47,#241f19 70%);
+  border:1px solid #000;box-shadow:0 1px 2px rgba(0,0,0,.6);
+}
+.knob .tick{position:absolute;top:2px;left:50%;width:2px;height:7px;background:#ff6b35;transform-origin:1px 13px;margin-left:-1px;border-radius:1px;}
+.knob-val{font-family:'Courier New',monospace;font-size:9px;color:#b0a284;min-width:26px;}
+.btn{
+  background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
+  padding:3px 11px;border-radius:5px;cursor:pointer;font-size:11px;
+  transition:background .12s,border-color .12s;white-space:nowrap;
+}
+.btn:hover{background:#4a3f2e}
+.btn:disabled{opacity:.3;cursor:default}
+.btn.active{background:#ff6b35;border-color:#ff6b35;color:#000;font-weight:600}
+.btn-green{border-color:#7fae6f;color:#7fae6f}
+.btn-green:hover{background:#7fae6f;color:#000}
+.btn-red{border-color:#c65b4e;color:#c65b4e}
+.btn-red:hover{background:#c65b4e;color:#fff}
+#status{
+  margin-left:auto;color:#b0a284;font-size:10px;
+  max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* ── Main (top half) ─────────────────────── */
+#main{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* Sample panel */
+#sample-panel{
+  width:196px;flex-shrink:0;background:#2b241c;
+  border-right:1px solid #4a3f2e;display:flex;flex-direction:column;
+}
+.ph{
+  padding:5px 9px;color:#b0a284;font-size:10px;
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #4a3f2e;flex-shrink:0;
+}
+#drop-zone{
+  border:2px dashed #4a3f2e;border-radius:5px;margin:7px;padding:8px;
+  text-align:center;color:#b0a284;font-size:10px;line-height:1.7;
+  cursor:pointer;transition:all .14s;
+}
+#drop-zone.dov{border-color:#ff6b35;color:#ff6b35;background:rgba(255,107,53,.06)}
+#sample-list{flex:1;overflow-y:auto;padding:3px}
+.si{
+  padding:4px 7px;border-radius:4px;cursor:grab;
+  border:1px solid transparent;margin-bottom:2px;
+}
+.si:hover{background:#362e22}
+.si.sel{background:#362e22;border-color:#ff6b35}
+.si-name{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-dur{font-size:10px;color:#b0a284;margin-top:1px}
+.si-wave{width:100%;height:20px;display:block;margin-top:3px;border-radius:2px}
+
+/* Waveform editor */
+#editor-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#wv-hd{
+  padding:4px 9px;background:#2b241c;border-bottom:1px solid #4a3f2e;
+  display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;min-height:30px;
+}
+#wv-label{color:#b0a284;font-size:10px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#add-track-sel{
+  background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
+  padding:2px 4px;border-radius:4px;font-size:10px;cursor:pointer;
+}
+#wv-container{flex:1;min-height:0;background:#171310;display:flex;flex-direction:column;position:relative}
+#wv-canvas{display:block;width:100%;flex:1;cursor:crosshair;min-height:80px}
+#wv-info{
+  padding:3px 9px;font-size:10px;color:#b0a284;
+  background:#2b241c;border-top:1px solid #4a3f2e;flex-shrink:0;
+}
+
+/* ── Timeline (bottom half) ──────────────── */
+#tl-outer{
+  display:flex;flex-direction:column;flex-shrink:0;
+  border-top:1px solid #4a3f2e;height:392px;
+}
+#tl-top{display:flex;flex-shrink:0;height:20px;background:#2b241c;border-bottom:1px solid #4a3f2e}
+#tl-corner{width:162px;flex-shrink:0;border-right:1px solid #4a3f2e;display:flex;align-items:center;padding:0 8px;font-size:9px;color:#6b5f47;letter-spacing:.3px}
+#ruler-scroll{flex:1;overflow:hidden}
+#ruler-canvas{display:block;height:20px}
+#tl-body{display:flex;flex:1;overflow:hidden}
+#headers-col{
+  width:162px;flex-shrink:0;border-right:1px solid #4a3f2e;
+  overflow:hidden;display:flex;flex-direction:column;
+}
+#headers-inner{flex:1;overflow:hidden}
+#clips-scroll{flex:1;overflow:auto;cursor:default;position:relative}
+#tl-canvas{display:block}
+
+/* Track header */
+.th{
+  height:92px;border-bottom:1px solid #4a3f2e;
+  display:flex;flex-direction:column;padding:4px 6px;gap:2px;flex-shrink:0;
+  position:relative;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.12));
+}
+.th-name{
+  font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  cursor:text;min-width:0;
+}
+.th-name:focus{outline:none;background:#362e22;border-radius:3px;padding:0 2px}
+.th-btns{display:flex;gap:4px;align-items:center}
+.th-btn{
+  padding:2px 6px;border-radius:3px;border:1px solid #4a3f2e;background:#362e22;
+  color:#b0a284;font-size:10px;font-weight:700;cursor:pointer;line-height:1.2;
+  transition:all .1s;
+}
+.th-btn:hover{border-color:#b0a284;color:#ecdfc3}
+.th-btn.muted{background:#6b5f47;border-color:#6b5f47;color:#000}
+.th-btn.soloed{background:#d9c15a;border-color:#d9c15a;color:#000}
+.th-btn.rec-armed{background:#c65b4e;border-color:#c65b4e;color:#fff;animation:recblink .8s ease-in-out infinite}
+.th-btn.rec-on{background:#c65b4e;border-color:#c65b4e;color:#fff}
+@keyframes recblink{0%,100%{opacity:1}50%{opacity:.4}}
+.th-vol-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#b0a284}
+.th-vol-row input[type=range]{width:62px;accent-color:#7fae6f;cursor:pointer}
+.th-pan-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#b0a284}
+.th-pan-row input[type=range]{width:62px;accent-color:#ff6b35;cursor:pointer}
+.th-pan-row .pv{min-width:26px;font-size:9px;font-family:'Courier New',monospace;}
+.th-level-wrap{height:6px;background:#362e22;border-radius:3px;overflow:hidden;margin-top:1px}
+.th-level-bar{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#7fae6f,#d9c15a,#c65b4e);transition:width .04s}
+.th-rec-time{font-size:10px;color:#c65b4e;font-weight:600;position:absolute;right:6px;top:5px}
+
+/* ── Inspector ───────────────────────────── */
+#inspector{
+  background:#2b241c;border-top:1px solid #4a3f2e;
+  padding:5px 12px;display:flex;align-items:center;gap:14px;
+  flex-shrink:0;flex-wrap:wrap;min-height:34px;
+}
+#ins-label{font-size:10px;color:#b0a284;white-space:nowrap}
+#ins-fields{display:none;align-items:center;gap:14px;flex-wrap:wrap}
+.if{display:flex;align-items:center;gap:4px;font-size:10px}
+.if label{color:#b0a284;white-space:nowrap}
+.if input[type=range]{width:80px;accent-color:#ff6b35;cursor:pointer}
+.if input[type=number]{
+  width:48px;background:#362e22;border:1px solid #4a3f2e;
+  color:#ecdfc3;padding:2px 4px;border-radius:3px;font-size:10px;
+}
+.iv{color:#ff6b35;min-width:28px;font-size:10px}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#171310}
+::-webkit-scrollbar-thumb{background:#4a3f2e;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#6b5f47}
+</style>
+</head>
+<body>
+
+<!-- ── Toolbar ─────────────────────────── -->
+<div id="toolbar">
+  <h1>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="80 75 138 90" class="logo-icon-svg">
+      <g transform="translate(148,120) scale(78)">
+        <rect x="-0.78" y="-0.48" width="1.55" height="0.96" rx="0.04" fill="#C4A06E"/>
+        <rect x="-0.65" y="0.23" width="1.30" height="0.15" fill="#16110E"/>
+        <rect x="-0.65" y="-0.35" width="1.30" height="0.50" fill="#0E0A08"/>
+        <circle cx="-0.26" cy="-0.10" r="0.15" fill="#E6D3B7"/>
+        <circle cx="-0.26" cy="-0.10" r="0.05" fill="#0E0A08"/>
+        <circle cx="-0.26" cy="-0.10" r="0.02" fill="#16110E"/>
+        <circle cx="0.26" cy="-0.10" r="0.15" fill="#E6D3B7"/>
+        <circle cx="0.26" cy="-0.10" r="0.09" fill="#0E0A08"/>
+        <circle cx="0.26" cy="-0.10" r="0.02" fill="#16110E"/>
+        <rect x="-0.09" y="-0.32" width="0.19" height="0.03" fill="#E6D3B7"/>
+      </g>
+    </svg>
+    <span class="logo-text">
+      <span class="logo-title">4TRACK</span>
+      <span class="logo-sub">CASSETTE SAMPLER</span>
+    </span>
+  </h1>
+  <div class="sep"></div>
+  <button class="btn" id="btn-play">▶ 再生</button>
+  <button class="btn" id="btn-stop">■ 停止</button>
+  <button class="btn" id="btn-loop">⟳ ループ</button>
+  <div class="sep"></div>
+  <button class="btn btn-green" id="btn-export">⬇ WAV書き出し</button>
+  <div class="sep"></div>
+
+  <div id="master-box">
+    <span class="mb-label">MASTER</span>
+    <input type="range" id="master-vol" min="0" max="1.5" step="0.01" value="1">
+    <div class="meter-wrap"><div class="meter-fill" id="master-meter-fill"></div></div>
+    <div class="clip-lamp" id="clip-lamp" title="CLIP"></div>
+  </div>
+
+  <div id="lofi-box">
+    <label class="mb-label"><input type="checkbox" id="lofi-on" style="vertical-align:middle;margin-right:3px;">LO-FI</label>
+    <div class="knob" id="lofi-knob"><div class="tick" id="lofi-knob-tick"></div></div>
+    <span class="knob-val" id="lofi-knob-val">30%</span>
+  </div>
+
+  <span id="status">WAV / MP3 をドロップ、またはマイク録音で開始</span>
+</div>
+
+<!-- ── Main ───────────────────────────── -->
+<div id="main">
+
+  <!-- Sample Library -->
+  <div id="sample-panel">
+    <div class="ph">🎵 サンプル</div>
+    <div id="drop-zone" tabindex="0">
+      WAV / MP3 をドロップ<br>またはクリック
+      <input type="file" id="file-input" multiple accept=".wav,.mp3" style="display:none">
+    </div>
+    <div id="sample-list"></div>
+  </div>
+
+  <!-- Waveform Editor -->
+  <div id="editor-panel">
+    <div id="wv-hd">
+      <span id="wv-label">← サンプルを選択</span>
+      <button class="btn" id="btn-wv-preview" disabled>▷ プレビュー</button>
+      <span style="font-size:10px;color:#b0a284;">追加先:</span>
+      <select id="add-track-sel"></select>
+      <button class="btn" id="btn-add-sel" disabled>✂ 選択範囲追加</button>
+      <button class="btn" id="btn-add-all" disabled>＋ 全体追加</button>
+      <button class="btn" id="btn-sel-clear" disabled style="padding:3px 7px">✕</button>
+    </div>
+    <div id="wv-container">
+      <canvas id="wv-canvas"></canvas>
+    </div>
+    <div id="wv-info">選択: — / 全体: —</div>
+  </div>
+
+</div>
+
+<!-- ── Timeline ───────────────────────── -->
+<div id="tl-outer">
+  <div id="tl-top">
+    <div id="tl-corner">TIME</div>
+    <div id="ruler-scroll"><canvas id="ruler-canvas" height="20"></canvas></div>
+  </div>
+  <div id="tl-body">
+    <div id="headers-col">
+      <div id="headers-inner"></div>
+    </div>
+    <div id="clips-scroll">
+      <canvas id="tl-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── Inspector ──────────────────────── -->
+<div id="inspector">
+  <span id="ins-label">クリップ未選択</span>
+  <div id="ins-fields">
+    <div class="if">
+      <label>音量</label>
+      <input type="range" id="inp-vol" min="0" max="2" step="0.01" value="1">
+      <span class="iv" id="val-vol">100%</span>
+    </div>
+    <div class="if">
+      <label>FadeIn</label>
+      <input type="number" id="inp-fi" min="0" step="0.01" value="0">
+      <span style="color:#b0a284">s</span>
+    </div>
+    <div class="if">
+      <label>FadeOut</label>
+      <input type="number" id="inp-fo" min="0" step="0.01" value="0">
+      <span style="color:#b0a284">s</span>
+    </div>
+    <button class="btn btn-red" id="btn-del" style="padding:2px 9px;font-size:10px">🗑 削除</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════
+const TRACK_H  = 92;    // track row height (px)
+const RULER_H  = 20;    // ruler height (px)
+const NUM_TRK  = 4;     // fixed track count
+const EDGE_PX  = 7;     // resize handle width (px) — reserved, clip move only for now
+
+const TCOLORS = [
+  '#b5563c','#7fae6f','#ff6b35','#d9c15a',
+  '#c9a45c','#8fc47a','#c65b4e','#8a6a3c',
+];
+const SCOLORS = [
+  '#d9a45c','#8fc47a','#e0a15c','#d9c15a',
+  '#cbb37a','#9dbf7a','#d97b6c','#e8dcc0',
+];
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let _id = 0;
+const uid = () => ++_id;
+
+const S = {
+  samples: [],   // {id, name, buffer, color}
+  tracks: [],    // {id, name, volume, muted, solo, color, rec: {...}}
+  clips: [],     // {id, sampleId, trackId, startTime, trimStart, trimEnd, volume, fadeIn, fadeOut}
+  selSampleId: null,
+  selClipId:   null,
+  targetTrackId: null,
+  wvSel: {x1:0, x2:0, has:false, drag:false},
+  playing:  false,
+  looping:  false,
+  playCtxT: 0,   // audioCtx.currentTime at play start
+  playOff:  0,   // playhead offset in seconds
+  sources:  [],
+  raf:      null,
+  pps:      80,  // pixels per second
+  drag:     null,// clip drag
+  dropGhost:null,// library→timeline ghost
+  previewSrc:null,
+  masterVolume: 1,
+  lofiOn: false,
+  lofiAmount: 0.3,
+};
+
+// ════════════════════════════════════════════════════
+// AUDIO CONTEXT
+// ════════════════════════════════════════════════════
+let _actx = null;
+function getCtx(){
+  if(!_actx) _actx = new (window.AudioContext||window.webkitAudioContext)();
+  if(_actx.state==='suspended') _actx.resume();
+  return _actx;
+}
+
+// ════════════════════════════════════════════════════
+// TRACK INIT
+// ════════════════════════════════════════════════════
+function mkTrack(name, colorIdx){
+  return {
+    id:uid(), name, volume:1, pan:0, muted:false, solo:false,
+    color: TCOLORS[colorIdx % TCOLORS.length],
+    rec:{
+      state:'idle',          // 'idle'|'armed'|'recording'
+      mediaRecorder:null,
+      chunks:[],
+      stream:null,
+      analyser:null,
+      sourceNode:null,
+      startPlayOff:0,
+      startWallTime:0,
+      animFrame:null,
+    },
+  };
+}
+
+function initTracks(){
+  for(let i=0;i<NUM_TRK;i++) S.tracks.push(mkTrack(`TRACK ${i+1}`, i));
+  S.targetTrackId = S.tracks[0].id;
+}
+
+// ════════════════════════════════════════════════════
+// WAVEFORM CANVAS
+// ════════════════════════════════════════════════════
+const wvCanvas = document.getElementById('wv-canvas');
+const wvCtx    = wvCanvas.getContext('2d');
+
+function fitWvCanvas(){
+  const c = document.getElementById('wv-container');
+  wvCanvas.width  = Math.max(c.clientWidth,  1);
+  wvCanvas.height = Math.max(c.clientHeight, 1);
+  drawWv();
+}
+
+function drawWv(){
+  const W=wvCanvas.width, H=wvCanvas.height, c=wvCtx;
+  c.fillStyle='#171310'; c.fillRect(0,0,W,H);
+  const sample = S.samples.find(s=>s.id===S.selSampleId);
+  if(!sample){
+    c.fillStyle='#6b5f47'; c.font='12px system-ui'; c.textAlign='center';
+    c.fillText('← サンプルを選択してください', W/2, H/2); return;
+  }
+  // center line
+  c.strokeStyle='rgba(0,212,170,.1)'; c.lineWidth=1;
+  c.beginPath(); c.moveTo(0,H/2); c.lineTo(W,H/2); c.stroke();
+  // selection
+  if(S.wvSel.has||S.wvSel.drag){
+    const sx=Math.min(S.wvSel.x1,S.wvSel.x2), sw=Math.abs(S.wvSel.x2-S.wvSel.x1);
+    if(sw>1){
+      c.fillStyle='rgba(255,107,53,.15)'; c.fillRect(sx,0,sw,H);
+      c.strokeStyle='#ff6b35'; c.lineWidth=1;
+      c.beginPath(); c.moveTo(sx,0); c.lineTo(sx,H);
+      c.moveTo(sx+sw,0); c.lineTo(sx+sw,H); c.stroke();
+    }
+  }
+  // waveform
+  const data=sample.buffer.getChannelData(0);
+  const step=data.length/W;
+  c.strokeStyle='#f0c98a'; c.lineWidth=1; c.beginPath();
+  for(let x=0;x<W;x++){
+    let mn=1,mx=-1;
+    const s0=Math.floor(x*step), s1=Math.floor((x+1)*step);
+    for(let i=s0;i<s1;i++){const v=data[i]||0;if(v<mn)mn=v;if(v>mx)mx=v;}
+    const y1=((1-mx)/2)*H, y2=((1-mn)/2)*H;
+    if(x===0)c.moveTo(0,y1);
+    c.lineTo(x,y1); c.lineTo(x,y2);
+  }
+  c.stroke();
+}
+
+let _wvDown=false;
+wvCanvas.addEventListener('mousedown',e=>{
+  if(!S.selSampleId) return;
+  _wvDown=true;
+  S.wvSel={x1:e.offsetX,x2:e.offsetX,has:false,drag:true};
+  drawWv();
+});
+wvCanvas.addEventListener('mousemove',e=>{
+  if(!_wvDown) return;
+  S.wvSel.x2=e.offsetX; drawWv(); updateWvInfo();
+});
+wvCanvas.addEventListener('mouseup',e=>{
+  _wvDown=false; S.wvSel.x2=e.offsetX; S.wvSel.drag=false;
+  S.wvSel.has=Math.abs(S.wvSel.x2-S.wvSel.x1)>2;
+  drawWv(); updateWvInfo(); updateAddBtns();
+});
+wvCanvas.addEventListener('mouseleave',()=>{
+  if(_wvDown){ _wvDown=false; S.wvSel.drag=false; S.wvSel.has=Math.abs(S.wvSel.x2-S.wvSel.x1)>2; drawWv(); }
+});
+
+function selSecs(){
+  const sample=S.samples.find(s=>s.id===S.selSampleId);
+  if(!sample||!S.wvSel.has) return null;
+  const W=wvCanvas.width, dur=sample.buffer.duration;
+  const a=Math.min(S.wvSel.x1,S.wvSel.x2)/W*dur;
+  const b=Math.max(S.wvSel.x1,S.wvSel.x2)/W*dur;
+  return {start:a, end:b};
+}
+
+function updateWvInfo(){
+  const sample=S.samples.find(s=>s.id===S.selSampleId);
+  if(!sample){document.getElementById('wv-info').textContent='選択: — / 全体: —';return;}
+  const sel=selSecs();
+  const sr=sel?`${sel.start.toFixed(2)}s ~ ${sel.end.toFixed(2)}s (${(sel.end-sel.start).toFixed(2)}s)`:'—';
+  document.getElementById('wv-info').textContent=`選択: ${sr}　/　全体: ${sample.buffer.duration.toFixed(2)} s`;
+}
+
+function updateAddBtns(){
+  const has=!!S.selSampleId;
+  const sel=selSecs(); const hasSel=sel&&(sel.end-sel.start)>0.005;
+  document.getElementById('btn-add-sel').disabled=!hasSel;
+  document.getElementById('btn-add-all').disabled=!has;
+  document.getElementById('btn-sel-clear').disabled=!hasSel;
+  document.getElementById('btn-wv-preview').disabled=!has;
+}
+
+document.getElementById('btn-sel-clear').addEventListener('click',()=>{
+  S.wvSel={x1:0,x2:0,has:false,drag:false}; drawWv(); updateWvInfo(); updateAddBtns();
+});
+
+// ════════════════════════════════════════════════════
+// TIMELINE CANVASES
+// ════════════════════════════════════════════════════
+const clipsScroll = document.getElementById('clips-scroll');
+const tlCanvas    = document.getElementById('tl-canvas');
+const tlCtx       = tlCanvas.getContext('2d');
+const rulerCanvas = document.getElementById('ruler-canvas');
+const rulerCtx    = rulerCanvas.getContext('2d');
+const headersInner= document.getElementById('headers-inner');
+const rulerScroll = document.getElementById('ruler-scroll');
+
+function maxEndTime(){
+  if(!S.clips.length) return 0;
+  return Math.max(...S.clips.map(c=>c.startTime+(c.trimEnd-c.trimStart)));
+}
+
+function fitTimeline(){
+  const minW = clipsScroll.clientWidth || 600;
+  const W = Math.max(minW, maxEndTime()*S.pps + 400);
+  const H = S.tracks.length * TRACK_H;
+  tlCanvas.width=W; tlCanvas.height=H;
+  rulerCanvas.width=W;
+  drawTimeline();
+}
+
+// ── Timeline drawing ─────────────────────
+function drawTimeline(){
+  drawRuler();
+  drawClipsCanvas();
+}
+
+function drawRuler(){
+  const W=rulerCanvas.width, c=rulerCtx;
+  c.clearRect(0,0,W,RULER_H);
+  c.fillStyle='#2b241c'; c.fillRect(0,0,W,RULER_H);
+  const ti = S.pps>=100?0.5:S.pps>=50?1:2;
+  c.fillStyle='#b0a284'; c.font='9px system-ui'; c.textAlign='left';
+  for(let t=0; t*S.pps<W+1; t+=ti){
+    const x=Math.round(t*S.pps);
+    c.strokeStyle='#4a3f2e'; c.lineWidth=1;
+    c.beginPath(); c.moveTo(x, t%1===0?0:RULER_H-5); c.lineTo(x,RULER_H); c.stroke();
+    if(t%1===0){
+      const mm=Math.floor(t/60), ss=(t%60).toFixed(0).padStart(2,'0');
+      c.fillText(mm>0?`${mm}:${ss}`:`${t}s`, x+2, RULER_H-1);
+    }
+  }
+  // playhead on ruler
+  const ph=playheadSecs();
+  const px=ph*S.pps;
+  c.fillStyle='#ff6b35';
+  c.beginPath(); c.moveTo(px-5,0); c.lineTo(px+5,0); c.lineTo(px,7); c.closePath(); c.fill();
+}
+
+function drawClipsCanvas(){
+  const W=tlCanvas.width, H=tlCanvas.height, c=tlCtx;
+  c.clearRect(0,0,W,H);
+
+  // Track row backgrounds + separators
+  S.tracks.forEach((tr,i)=>{
+    const y=i*TRACK_H;
+    c.fillStyle = i%2===0?'#171310':'#0f1520';
+    c.fillRect(0,y,W,TRACK_H);
+    if(tr.muted && !tr.solo){
+      c.fillStyle='rgba(0,0,0,.35)'; c.fillRect(0,y,W,TRACK_H);
+    }
+    // separator
+    c.strokeStyle='#4a3f2e'; c.lineWidth=1;
+    c.beginPath(); c.moveTo(0,y+TRACK_H-.5); c.lineTo(W,y+TRACK_H-.5); c.stroke();
+  });
+
+  // Vertical grid
+  const ti=S.pps>=100?0.5:S.pps>=50?1:2;
+  for(let t=0; t*S.pps<W; t+=ti){
+    const x=Math.round(t*S.pps);
+    c.strokeStyle=t%1===0?'rgba(48,54,61,.5)':'rgba(48,54,61,.25)';
+    c.lineWidth=1; c.beginPath(); c.moveTo(x,0); c.lineTo(x,H); c.stroke();
+  }
+
+  // Detect solo
+  const hasSolo=S.tracks.some(t=>t.solo);
+
+  // Clips
+  const draggingId=S.drag?.clipId;
+  S.clips.forEach(clip=>{
+    if(clip.id===draggingId&&S.drag?.phase==='drag') return;
+    const tr=S.tracks.find(t=>t.id===clip.trackId); if(!tr) return;
+    const trIdx=S.tracks.indexOf(tr);
+    const sample=S.samples.find(s=>s.id===clip.sampleId); if(!sample) return;
+    const cx=clip.startTime*S.pps;
+    const cw=(clip.trimEnd-clip.trimStart)*S.pps;
+    const cy=trIdx*TRACK_H;
+    const dimmed=hasSolo&&!tr.solo||tr.muted;
+    drawClipBlock(c,clip,sample,tr,cx,cy,cw,clip.id===S.selClipId,dimmed);
+  });
+
+  // Drop ghost (sample library drag)
+  if(S.dropGhost){
+    const g=S.dropGhost;
+    const sample=S.samples.find(s=>s.id===g.sampleId);
+    const tr=S.tracks[g.trackIdx];
+    if(sample&&tr){
+      const cw=sample.buffer.duration*S.pps;
+      c.globalAlpha=.45;
+      drawClipBlock(c,null,sample,tr,g.x,g.trackIdx*TRACK_H,cw,false,false);
+      c.globalAlpha=1;
+    }
+  }
+
+  // Drag ghost
+  if(S.drag&&S.drag.phase==='drag'){
+    const clip=S.clips.find(x=>x.id===S.drag.clipId);
+    if(clip){
+      const sample=S.samples.find(s=>s.id===clip.sampleId);
+      const tr=S.tracks[S.drag.targetTrIdx];
+      if(sample&&tr){
+        const cw=(clip.trimEnd-clip.trimStart)*S.pps;
+        c.globalAlpha=.5;
+        drawClipBlock(c,clip,sample,tr,S.drag.ghostTime*S.pps,S.drag.targetTrIdx*TRACK_H,cw,true,false);
+        c.globalAlpha=1;
+      }
+    }
+  }
+
+  // Playhead
+  const ph=playheadSecs();
+  const px=ph*S.pps;
+  c.strokeStyle='#ff6b35'; c.lineWidth=2;
+  c.beginPath(); c.moveTo(px,0); c.lineTo(px,H); c.stroke();
+}
+
+function drawClipBlock(c,clip,sample,tr,cx,cy,cw,selected,dimmed){
+  const h=TRACK_H-1;
+  const col=sample.color;
+  // bg
+  c.fillStyle=selected?col:col+'77';
+  c.fillRect(cx,cy,Math.max(cw,2),h);
+  // border
+  c.strokeStyle=selected?'#fff':col;
+  c.lineWidth=selected?2:1;
+  c.strokeRect(cx+.5,cy+.5,Math.max(cw,2)-1,h-1);
+  if(cw>4){
+    // mini waveform
+    const buf=sample.buffer, ch0=buf.getChannelData(0);
+    const s0=Math.floor((clip?clip.trimStart:0)/buf.duration*buf.length);
+    const s1=Math.floor((clip?clip.trimEnd:buf.duration)/buf.duration*buf.length);
+    const span=s1-s0, ww=Math.min(cw-2,1200);
+    const step=span/ww;
+    c.strokeStyle='rgba(255,255,255,.28)'; c.lineWidth=1;
+    c.save(); c.beginPath(); c.rect(cx,cy,cw,h); c.clip(); c.beginPath();
+    for(let px2=0;px2<ww;px2++){
+      let mn=0,mx=0;
+      const a=s0+Math.floor(px2*step), b=s0+Math.floor((px2+1)*step);
+      for(let i=a;i<Math.min(b,s1);i++){const v=ch0[i]||0;if(v<mn)mn=v;if(v>mx)mx=v;}
+      const midY=cy+h/2;
+      c.moveTo(cx+1+px2,midY-mx*(h/2-2)); c.lineTo(cx+1+px2,midY-mn*(h/2-2));
+    }
+    c.stroke();
+    // label
+    if(cw>20){
+      c.fillStyle='rgba(255,255,255,.85)'; c.font='bold 9px system-ui'; c.textAlign='left';
+      c.fillText(sample.name.replace(/\.[^.]+$/,''), cx+4, cy+11);
+    }
+    c.restore();
+    // fades
+    if(clip&&clip.fadeIn>0){
+      const fw=Math.min(clip.fadeIn*S.pps,cw);
+      const g=c.createLinearGradient(cx,0,cx+fw,0);
+      g.addColorStop(0,'rgba(0,0,0,.8)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      c.fillStyle=g; c.fillRect(cx,cy,fw,h);
+    }
+    if(clip&&clip.fadeOut>0){
+      const fw=Math.min(clip.fadeOut*S.pps,cw);
+      const g=c.createLinearGradient(cx+cw-fw,0,cx+cw,0);
+      g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.8)');
+      c.fillStyle=g; c.fillRect(cx+cw-fw,cy,fw,h);
+    }
+  }
+  if(dimmed){ c.fillStyle='rgba(0,0,0,.4)'; c.fillRect(cx,cy,Math.max(cw,2),h); }
+}
+
+// ── Timeline mouse interaction ───────────
+function findClipAt(canvasX, canvasY){
+  const trIdx=Math.floor(canvasY/TRACK_H);
+  if(trIdx<0||trIdx>=S.tracks.length) return null;
+  const tr=S.tracks[trIdx];
+  const time=canvasX/S.pps;
+  for(let i=S.clips.length-1;i>=0;i--){
+    const cl=S.clips[i];
+    if(cl.trackId!==tr.id) continue;
+    const dur=cl.trimEnd-cl.trimStart;
+    if(time>=cl.startTime&&time<=cl.startTime+dur) return cl;
+  }
+  return null;
+}
+
+clipsScroll.addEventListener('mousedown',e=>{
+  const x=e.offsetX+clipsScroll.scrollLeft;
+  const y=e.offsetY+clipsScroll.scrollTop;
+  // ruler click → seek
+  if(e.offsetY<0){ S.playOff=Math.max(0,x/S.pps); if(S.playing)startPlayback(S.playOff); drawTimeline(); return; }
+  const clip=findClipAt(x,y);
+  if(clip){
+    S.selClipId=clip.id;
+    const grabOff=(x-clip.startTime*S.pps)/S.pps;
+    S.drag={clipId:clip.id,grabOffTime:grabOff,phase:'down',
+            ghostTime:clip.startTime,targetTrIdx:S.tracks.indexOf(S.tracks.find(t=>t.id===clip.trackId)),
+            startX:x,startY:y};
+    updateInspector(); drawTimeline();
+  } else {
+    S.selClipId=null; S.drag=null; updateInspector(); drawTimeline();
+  }
+});
+
+document.addEventListener('mousemove',e=>{
+  if(!S.drag) return;
+  // get position relative to canvas
+  const rect=clipsScroll.getBoundingClientRect();
+  const x=e.clientX-rect.left+clipsScroll.scrollLeft;
+  const y=e.clientY-rect.top +clipsScroll.scrollTop;
+  const dx=Math.abs(x-S.drag.startX), dy=Math.abs(y-S.drag.startY);
+  if(S.drag.phase==='down'&&(dx>4||dy>4)) S.drag.phase='drag';
+  if(S.drag.phase==='drag'){
+    S.drag.ghostTime=Math.max(0,(x/S.pps)-S.drag.grabOffTime);
+    S.drag.targetTrIdx=Math.max(0,Math.min(S.tracks.length-1,Math.floor(y/TRACK_H)));
+    drawClipsCanvas();
+  }
+});
+
+document.addEventListener('mouseup',()=>{
+  if(!S.drag) return;
+  if(S.drag.phase==='drag'){
+    const clip=S.clips.find(c=>c.id===S.drag.clipId);
+    if(clip){
+      clip.startTime=S.drag.ghostTime;
+      clip.trackId=S.tracks[S.drag.targetTrIdx].id;
+    }
+    fitTimeline();
+  }
+  S.drag=null;
+});
+
+// Ruler click → seek
+document.getElementById('ruler-scroll').addEventListener('click',e=>{
+  const x=e.offsetX+rulerScroll.scrollLeft;
+  S.playOff=Math.max(0,x/S.pps);
+  if(S.playing) startPlayback(S.playOff);
+  drawTimeline();
+});
+
+// Scroll sync
+clipsScroll.addEventListener('scroll',()=>{
+  rulerScroll.scrollLeft=clipsScroll.scrollLeft;
+  headersInner.scrollTop=clipsScroll.scrollTop;
+});
+
+// Drag from library
+clipsScroll.addEventListener('dragover',e=>{
+  e.preventDefault();
+  if(!window._dragSampleId) return;
+  const rect=clipsScroll.getBoundingClientRect();
+  const x=e.clientX-rect.left+clipsScroll.scrollLeft;
+  const y=e.clientY-rect.top +clipsScroll.scrollTop;
+  const trIdx=Math.max(0,Math.min(S.tracks.length-1,Math.floor(y/TRACK_H)));
+  S.dropGhost={sampleId:window._dragSampleId, x:Math.max(0,x), trackIdx:trIdx};
+  drawClipsCanvas();
+});
+clipsScroll.addEventListener('dragleave',()=>{ S.dropGhost=null; drawClipsCanvas(); });
+clipsScroll.addEventListener('drop',e=>{
+  e.preventDefault();
+  const sId=parseInt(e.dataTransfer.getData('sampleId'));
+  const sample=S.samples.find(s=>s.id===sId);
+  S.dropGhost=null;
+  if(!sample) return;
+  const rect=clipsScroll.getBoundingClientRect();
+  const x=e.clientX-rect.left+clipsScroll.scrollLeft;
+  const y=e.clientY-rect.top +clipsScroll.scrollTop;
+  const trIdx=Math.max(0,Math.min(S.tracks.length-1,Math.floor(y/TRACK_H)));
+  const tr=S.tracks[trIdx];
+  const startT=Math.max(0,x/S.pps);
+  addClip(sample,tr.id,startT,0,sample.buffer.duration);
+});
+
+// Double-click clip → load in waveform editor
+clipsScroll.addEventListener('dblclick',e=>{
+  const x=e.offsetX+clipsScroll.scrollLeft;
+  const y=e.offsetY+clipsScroll.scrollTop;
+  const clip=findClipAt(x,y);
+  if(clip) selectSample(clip.sampleId);
+});
+
+// ════════════════════════════════════════════════════
+// TRACK HEADERS (HTML)
+// ════════════════════════════════════════════════════
+function renderHeaders(){
+  headersInner.innerHTML='';
+  headersInner.style.height=(S.tracks.length*TRACK_H)+'px';
+  S.tracks.forEach(tr=>headersInner.appendChild(makeHeaderEl(tr)));
+  updateTrackSelect();
+}
+
+function makeHeaderEl(tr){
+  const div=document.createElement('div');
+  div.className='th'; div.dataset.tid=tr.id;
+  div.style.borderLeft=`3px solid ${tr.color}`;
+
+  const nameEl=document.createElement('div');
+  nameEl.className='th-name'; nameEl.contentEditable='true';
+  nameEl.spellcheck=false; nameEl.textContent=tr.name;
+  nameEl.addEventListener('blur',()=>{ tr.name=nameEl.textContent.trim()||tr.name; updateTrackSelect(); });
+  nameEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();nameEl.blur();}});
+
+  // REC time display
+  const recTimeEl=document.createElement('span');
+  recTimeEl.className='th-rec-time'; recTimeEl.style.display='none';
+  div.appendChild(recTimeEl);
+
+  // Buttons row
+  const btns=document.createElement('div'); btns.className='th-btns';
+
+  const recBtn=mkThBtn('REC','btn-rec');
+  recBtn.addEventListener('click',()=>toggleRec(tr.id));
+
+  const muteBtn=mkThBtn('M','btn-mute');
+  muteBtn.addEventListener('click',()=>{ tr.muted=!tr.muted; refreshHeader(tr.id); drawTimeline(); });
+
+  const soloBtn=mkThBtn('S','btn-solo');
+  soloBtn.addEventListener('click',()=>{ tr.solo=!tr.solo; refreshHeader(tr.id); drawTimeline(); });
+
+  btns.append(recBtn,muteBtn,soloBtn);
+
+  const volRow=document.createElement('div'); volRow.className='th-vol-row';
+  const volLbl=document.createElement('span'); volLbl.textContent='V'; volLbl.style.width='8px';
+  const volSlider=document.createElement('input');
+  volSlider.type='range'; volSlider.min=0; volSlider.max=1.5; volSlider.step=.01; volSlider.value=tr.volume;
+  const volVal=document.createElement('span'); volVal.className='pv';
+  volVal.textContent=Math.round(tr.volume*100)+'%';
+  volSlider.addEventListener('input',()=>{
+    tr.volume=parseFloat(volSlider.value);
+    volVal.textContent=Math.round(tr.volume*100)+'%';
+  });
+  volRow.append(volLbl,volSlider,volVal);
+
+  // Pan row
+  const panRow=document.createElement('div'); panRow.className='th-pan-row';
+  const panLbl=document.createElement('span'); panLbl.textContent='P'; panLbl.style.width='8px';
+  const panSlider=document.createElement('input');
+  panSlider.type='range'; panSlider.min=-1; panSlider.max=1; panSlider.step=.01; panSlider.value=tr.pan;
+  const panVal=document.createElement('span'); panVal.className='pv';
+  panVal.textContent=panLabel(tr.pan);
+  panSlider.addEventListener('input',()=>{
+    tr.pan=parseFloat(panSlider.value);
+    panVal.textContent=panLabel(tr.pan);
+  });
+  panSlider.addEventListener('dblclick',()=>{ tr.pan=0; panSlider.value=0; panVal.textContent=panLabel(0); });
+  panRow.append(panLbl,panSlider,panVal);
+
+  // Level meter
+  const levelWrap=document.createElement('div'); levelWrap.className='th-level-wrap';
+  levelWrap.style.display='none';
+  const levelBar=document.createElement('div'); levelBar.className='th-level-bar';
+  levelWrap.appendChild(levelBar);
+
+  div.append(nameEl,btns,volRow,panRow,levelWrap);
+  return div;
+}
+
+function panLabel(p){
+  if(Math.abs(p)<0.02) return 'C';
+  const pct=Math.round(Math.abs(p)*100);
+  return (p<0?'L':'R')+pct;
+}
+
+function mkThBtn(text,cls){
+  const b=document.createElement('button');
+  b.className='th-btn'; b.dataset.type=cls; b.textContent=text;
+  return b;
+}
+
+function refreshHeader(tId){
+  const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
+  const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
+  const rb=el.querySelector('[data-type="btn-rec"]');
+  const mb=el.querySelector('[data-type="btn-mute"]');
+  const sb=el.querySelector('[data-type="btn-solo"]');
+  if(rb){
+    rb.classList.toggle('rec-armed', tr.rec.state==='armed');
+    rb.classList.toggle('rec-on',    tr.rec.state==='recording');
+  }
+  if(mb) mb.classList.toggle('muted',tr.muted);
+  if(sb) sb.classList.toggle('soloed',tr.solo);
+}
+
+function updateTrackSelect(){
+  const sel=document.getElementById('add-track-sel');
+  const prev=sel.value;
+  sel.innerHTML='';
+  S.tracks.forEach(tr=>{
+    const opt=document.createElement('option'); opt.value=tr.id; opt.textContent=tr.name;
+    sel.appendChild(opt);
+  });
+  if(S.tracks.find(t=>t.id==prev)) sel.value=prev;
+  S.targetTrackId=parseInt(sel.value)||S.tracks[0]?.id;
+}
+
+document.getElementById('add-track-sel').addEventListener('change',e=>{
+  S.targetTrackId=parseInt(e.target.value);
+});
+
+// ════════════════════════════════════════════════════
+// MICROPHONE RECORDING
+// ════════════════════════════════════════════════════
+async function toggleRec(tId){
+  const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
+  if(tr.rec.state==='idle') await startRec(tId);
+  else stopRec(tId);
+}
+
+async function startRec(tId){
+  const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    const ctx=getCtx();
+
+    // Analyser for level meter
+    const srcNode=ctx.createMediaStreamSource(stream);
+    const analyser=ctx.createAnalyser();
+    analyser.fftSize=256; analyser.smoothingTimeConstant=.7;
+    srcNode.connect(analyser);
+
+    // MediaRecorder
+    const mimeType=
+      MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':
+      MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':
+      MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')?'audio/ogg;codecs=opus':'';
+    const mr=new MediaRecorder(stream, mimeType?{mimeType}:{});
+    tr.rec.chunks=[];
+    mr.ondataavailable=e=>{ if(e.data&&e.data.size>0) tr.rec.chunks.push(e.data); };
+    mr.onstop=()=>finalizeRec(tId);
+    mr.start(100);
+
+    tr.rec.mediaRecorder=mr;
+    tr.rec.stream=stream;
+    tr.rec.analyser=analyser;
+    tr.rec.sourceNode=srcNode;
+    tr.rec.startPlayOff=S.playOff;
+    tr.rec.startWallTime=Date.now();
+    tr.rec.state='recording';
+
+    refreshHeader(tId);
+    startLevelMeter(tId);
+    startRecTimer(tId);
+    setStatus(`🔴 録音中: ${tr.name}`);
+  } catch(err){
+    setStatus('マイクアクセスエラー: '+err.message);
+  }
+}
+
+function stopRec(tId){
+  const tr=S.tracks.find(t=>t.id===tId); if(!tr||tr.rec.state==='idle') return;
+  if(tr.rec.mediaRecorder&&tr.rec.mediaRecorder.state!=='inactive') tr.rec.mediaRecorder.stop();
+  tr.rec.stream?.getTracks().forEach(t=>t.stop());
+  tr.rec.sourceNode?.disconnect();
+  if(tr.rec.animFrame){cancelAnimationFrame(tr.rec.animFrame);tr.rec.animFrame=null;}
+  tr.rec.state='idle';
+  stopLevelMeter(tId);
+  stopRecTimer(tId);
+  refreshHeader(tId);
+}
+
+async function finalizeRec(tId){
+  const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
+  if(!tr.rec.chunks.length){setStatus('録音データなし');return;}
+  try{
+    const blob=new Blob(tr.rec.chunks,{type:tr.rec.mediaRecorder?.mimeType||'audio/webm'});
+    const ab=await blob.arrayBuffer();
+    const ctx=getCtx();
+    const buffer=await ctx.decodeAudioData(ab);
+    const dur=buffer.duration;
+    const name=`REC_${tr.name}_${new Date().toISOString().replace(/[:.]/g,'-').slice(11,19)}.wav`;
+    const sample={id:uid(), name, buffer, color:SCOLORS[S.samples.length%SCOLORS.length]};
+    S.samples.push(sample);
+    renderSampleList();
+    addClip(sample, tr.id, tr.rec.startPlayOff, 0, dur);
+    setStatus(`録音完了: ${name} (${dur.toFixed(2)}s) → ${tr.name}`);
+  } catch(err){
+    setStatus('録音デコードエラー: '+err.message);
+  }
+  tr.rec.chunks=[];
+}
+
+// Level meter animation
+function startLevelMeter(tId){
+  const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
+  const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
+  const levelWrap=el.querySelector('.th-level-wrap');
+  const levelBar=el.querySelector('.th-level-bar');
+  levelWrap.style.display='block';
+
+  const buf=new Uint8Array(tr.rec.analyser.frequencyBinCount);
+  function frame(){
+    if(tr.rec.state!=='recording'){levelWrap.style.display='none';return;}
+    tr.rec.analyser.getByteTimeDomainData(buf);
+    let rms=0;
+    for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;rms+=v*v;}
+    rms=Math.sqrt(rms/buf.length);
+    const pct=Math.min(100,rms*400);
+    levelBar.style.width=pct+'%';
+    tr.rec.animFrame=requestAnimationFrame(frame);
+  }
+  tr.rec.animFrame=requestAnimationFrame(frame);
+}
+
+function stopLevelMeter(tId){
+  const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
+  const lw=el.querySelector('.th-level-wrap'); if(lw) lw.style.display='none';
+}
+
+// Recording timer
+let _recTimerMap={};
+function startRecTimer(tId){
+  const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
+  const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
+  const recTimeEl=el.querySelector('.th-rec-time');
+  recTimeEl.style.display='block';
+  const t0=Date.now();
+  _recTimerMap[tId]=setInterval(()=>{
+    const d=(Date.now()-t0)/1000;
+    const mm=String(Math.floor(d/60)).padStart(2,'0');
+    const ss=String(Math.floor(d%60)).padStart(2,'0');
+    const ms=String(Math.floor((d%1)*10));
+    recTimeEl.textContent=`${mm}:${ss}.${ms}`;
+  },100);
+}
+function stopRecTimer(tId){
+  clearInterval(_recTimerMap[tId]);
+  const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
+  const recTimeEl=el.querySelector('.th-rec-time');
+  if(recTimeEl){recTimeEl.style.display='none';recTimeEl.textContent='';}
+}
+
+// ════════════════════════════════════════════════════
+// INSPECTOR
+// ════════════════════════════════════════════════════
+function updateInspector(){
+  const clip=S.clips.find(c=>c.id===S.selClipId);
+  const lbl=document.getElementById('ins-label');
+  const flds=document.getElementById('ins-fields');
+  if(!clip){lbl.textContent='クリップ未選択';flds.style.display='none';return;}
+  const sample=S.samples.find(s=>s.id===clip.sampleId);
+  const tr=S.tracks.find(t=>t.id===clip.trackId);
+  lbl.textContent=(sample?sample.name.replace(/\.[^.]+$/,''):'クリップ')+(tr?` [${tr.name}]`:'');
+  flds.style.display='flex';
+  document.getElementById('inp-vol').value=clip.volume;
+  document.getElementById('val-vol').textContent=Math.round(clip.volume*100)+'%';
+  document.getElementById('inp-fi').value=clip.fadeIn;
+  document.getElementById('inp-fo').value=clip.fadeOut;
+}
+
+document.getElementById('inp-vol').addEventListener('input',e=>{
+  const c=S.clips.find(c=>c.id===S.selClipId);if(!c)return;
+  c.volume=parseFloat(e.target.value);
+  document.getElementById('val-vol').textContent=Math.round(c.volume*100)+'%';
+  drawTimeline();
+});
+document.getElementById('inp-fi').addEventListener('change',e=>{
+  const c=S.clips.find(c=>c.id===S.selClipId);if(!c)return;
+  c.fadeIn=Math.max(0,parseFloat(e.target.value)||0);drawTimeline();
+});
+document.getElementById('inp-fo').addEventListener('change',e=>{
+  const c=S.clips.find(c=>c.id===S.selClipId);if(!c)return;
+  c.fadeOut=Math.max(0,parseFloat(e.target.value)||0);drawTimeline();
+});
+document.getElementById('btn-del').addEventListener('click',()=>{
+  S.clips=S.clips.filter(c=>c.id!==S.selClipId);
+  S.selClipId=null;updateInspector();fitTimeline();
+});
+
+// ════════════════════════════════════════════════════
+// SAMPLE LOADING
+// ════════════════════════════════════════════════════
+const dropZone =document.getElementById('drop-zone');
+const fileInput=document.getElementById('file-input');
+dropZone.addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',e=>loadFiles(e.target.files));
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dov');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dov'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();dropZone.classList.remove('dov');loadFiles(e.dataTransfer.files);});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{
+  e.preventDefault();
+  if(e.target===clipsScroll||clipsScroll.contains(e.target)) return;// handled by timeline
+  if(e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
+});
+
+async function loadFiles(files){
+  const ctx=getCtx();
+  for(const f of files){
+    if(!/\.(wav|mp3)$/i.test(f.name)) continue;
+    setStatus('読み込み中: '+f.name+'…');
+    try{
+      const ab=await f.arrayBuffer();
+      const buf=await ctx.decodeAudioData(ab);
+      const col=SCOLORS[S.samples.length%SCOLORS.length];
+      S.samples.push({id:uid(),name:f.name,buffer:buf,color:col});
+      renderSampleList();
+      setStatus(`完了: ${f.name} (${buf.duration.toFixed(2)}s)`);
+    }catch(err){setStatus('エラー: '+f.name+' — '+err.message);}
+  }
+}
+
+function renderSampleList(){
+  const list=document.getElementById('sample-list');
+  list.innerHTML='';
+  S.samples.forEach(sample=>{
+    const div=document.createElement('div');
+    div.className='si'+(sample.id===S.selSampleId?' sel':'');
+    div.draggable=true;
+    div.innerHTML=`
+      <div class="si-name" style="color:${sample.color}">${sample.name}</div>
+      <div class="si-dur">${sample.buffer.duration.toFixed(2)} s · ${(sample.buffer.sampleRate/1000).toFixed(1)} kHz</div>
+      <canvas class="si-wave" width="178" height="20"></canvas>
+    `;
+    div.addEventListener('click',()=>selectSample(sample.id));
+    div.addEventListener('dragstart',e=>{
+      window._dragSampleId=sample.id;
+      e.dataTransfer.setData('sampleId',''+sample.id);
+    });
+    div.addEventListener('dragend',()=>{ window._dragSampleId=null; S.dropGhost=null; drawClipsCanvas(); });
+    list.appendChild(div);
+    requestAnimationFrame(()=>{ const cv=div.querySelector('canvas'); if(cv) drawMiniWave(cv,sample); });
+  });
+}
+
+function drawMiniWave(canvas,sample){
+  const c=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  c.fillStyle='#171310';c.fillRect(0,0,W,H);
+  const data=sample.buffer.getChannelData(0),step=data.length/W;
+  c.strokeStyle=sample.color;c.lineWidth=1;c.beginPath();
+  for(let x=0;x<W;x++){
+    let mn=0,mx=0;
+    const s=Math.floor(x*step),e=Math.floor((x+1)*step);
+    for(let i=s;i<e;i++){const v=data[i]||0;if(v<mn)mn=v;if(v>mx)mx=v;}
+    const mid=H/2;c.moveTo(x,mid-mx*(mid-1));c.lineTo(x,mid-mn*(mid-1));
+  }
+  c.stroke();
+}
+
+function selectSample(id){
+  S.selSampleId=id;
+  S.wvSel={x1:0,x2:0,has:false,drag:false};
+  const sample=S.samples.find(s=>s.id===id);
+  document.getElementById('wv-label').textContent=sample?sample.name:'';
+  renderSampleList(); drawWv(); updateWvInfo(); updateAddBtns();
+}
+
+// ════════════════════════════════════════════════════
+// ADD CLIPS
+// ════════════════════════════════════════════════════
+document.getElementById('btn-add-sel').addEventListener('click',()=>{
+  const sample=S.samples.find(s=>s.id===S.selSampleId);if(!sample)return;
+  const sel=selSecs();if(!sel||(sel.end-sel.start)<0.005)return;
+  const tr=S.tracks.find(t=>t.id===S.targetTrackId)||S.tracks[0];
+  const startT=trackEndTime(tr.id);
+  addClip(sample,tr.id,startT,sel.start,sel.end);
+});
+document.getElementById('btn-add-all').addEventListener('click',()=>{
+  const sample=S.samples.find(s=>s.id===S.selSampleId);if(!sample)return;
+  const tr=S.tracks.find(t=>t.id===S.targetTrackId)||S.tracks[0];
+  const startT=trackEndTime(tr.id);
+  addClip(sample,tr.id,startT,0,sample.buffer.duration);
+});
+
+function trackEndTime(tId){
+  const tClips=S.clips.filter(c=>c.trackId===tId);
+  if(!tClips.length)return 0;
+  return Math.max(...tClips.map(c=>c.startTime+(c.trimEnd-c.trimStart)));
+}
+
+function addClip(sample,tId,startT,trimStart,trimEnd){
+  const clip={id:uid(),sampleId:sample.id,trackId:tId,
+    startTime:startT,trimStart,trimEnd,volume:1,fadeIn:0,fadeOut:0};
+  S.clips.push(clip); S.selClipId=clip.id;
+  const tr=S.tracks.find(t=>t.id===tId);
+  updateInspector(); fitTimeline();
+  setStatus(`追加: ${sample.name} → ${tr?.name||'?'} @ ${startT.toFixed(2)}s`);
+}
+
+// ════════════════════════════════════════════════════
+// MASTER LO-FI FX (tape saturation / rolloff / hiss / wow-flutter)
+// One shared function builds the chain for both live playback and
+// OfflineAudioContext export, so the two always sound identical.
+// ════════════════════════════════════════════════════
+function makeSatCurve(drive){
+  const n=1024, curve=new Float32Array(n);
+  const norm=Math.tanh(drive)||1;
+  for(let i=0;i<n;i++){
+    const x=(i/(n-1))*2-1;
+    curve[i]=Math.tanh(x*drive)/norm;
+  }
+  return curve;
+}
+function makeNoiseBuffer(ctx){
+  const len=ctx.sampleRate*2;
+  const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<len;i++) data[i]=Math.random()*2-1;
+  return buf;
+}
+// amount: 0..1. sourceSink: array to push started source/oscillator nodes into
+// so the caller can stop() them later (S.sources for live playback).
+// Wet/dry blended (never 100% wet) so the effect stays a light tape "color"
+// instead of a saturation/limiter that inflates loudness — even at amount=1
+// this should read as "warm cassette", not distortion.
+function buildLofiChain(ctx, amount, sourceSink){
+  const input=ctx.createGain();
+  const dry=ctx.createGain();
+  const wet=ctx.createGain();
+  const wetMix=amount*0.5; // full knob = 50% wet / 50% dry blend, at most
+  dry.gain.value=1-wetMix;
+  wet.gain.value=wetMix;
+  input.connect(dry);
+  input.connect(wet);
+
+  const shaper=ctx.createWaveShaper();
+  shaper.curve=makeSatCurve(1+amount*1.4); // light drive — color, not distortion
+  shaper.oversample='2x';
+  const lowpass=ctx.createBiquadFilter();
+  lowpass.type='lowpass';
+  lowpass.frequency.value = 19000 - amount*11000; // 19kHz clean → ~8kHz at full amount
+  const flutterDelay=ctx.createDelay(0.03);
+  flutterDelay.delayTime.value=0.006;
+  const flutterLFO=ctx.createOscillator();
+  flutterLFO.frequency.value=1.1+amount*2.5; // slow wow/flutter wobble
+  const flutterDepth=ctx.createGain();
+  flutterDepth.gain.value=amount*0.0012; // sub-2ms depth: subtle, not warbly
+  flutterLFO.connect(flutterDepth); flutterDepth.connect(flutterDelay.delayTime);
+  flutterLFO.start();
+  wet.connect(shaper); shaper.connect(lowpass); lowpass.connect(flutterDelay);
+
+  const hissBuf=makeNoiseBuffer(ctx);
+  const hissSrc=ctx.createBufferSource();
+  hissSrc.buffer=hissBuf; hissSrc.loop=true;
+  const hissFilter=ctx.createBiquadFilter();
+  hissFilter.type='highpass'; hissFilter.frequency.value=2500;
+  const hissGain=ctx.createGain();
+  hissGain.gain.value=amount*0.006; // faint tape hiss, not noticeable static
+  hissSrc.connect(hissFilter); hissFilter.connect(hissGain);
+  hissSrc.start();
+
+  const output=ctx.createGain();
+  dry.connect(output);
+  flutterDelay.connect(output);
+  hissGain.connect(output);
+
+  if(sourceSink){ sourceSink.push(hissSrc, flutterLFO); }
+  return {input, output};
+}
+
+// ════════════════════════════════════════════════════
+// PLAYBACK
+// ════════════════════════════════════════════════════
+function playheadSecs(){
+  if(S.playing) return getCtx().currentTime-S.playCtxT+S.playOff;
+  return S.playOff;
+}
+
+function stopPlayback(){
+  S.sources.forEach(s=>{try{s.stop();}catch(_){}});
+  S.sources=[];
+  if(S.raf){cancelAnimationFrame(S.raf);S.raf=null;}
+  S.playing=false;
+  S.masterAnalyser=null;
+  document.getElementById('btn-play').textContent='▶ 再生';
+  document.getElementById('btn-play').classList.remove('active');
+  setMasterMeter(0); setClipLamp(false);
+  drawTimeline();
+}
+
+function startPlayback(offset=0){
+  stopPlayback();
+  if(!S.clips.length) return;
+  const ctx=getCtx();
+  const now=ctx.currentTime;
+  S.playCtxT=now; S.playOff=offset; S.playing=true;
+  document.getElementById('btn-play').textContent='❚❚ 一時停止';
+  document.getElementById('btn-play').classList.add('active');
+
+  const hasSolo=S.tracks.some(t=>t.solo);
+  const total=maxEndTime();
+
+  // Master bus: track sum → master vol → (optional LO-FI) → analyser → destination
+  const masterGain=ctx.createGain();
+  masterGain.gain.value=S.masterVolume;
+  const masterAnalyser=ctx.createAnalyser();
+  masterAnalyser.fftSize=512;
+  if(S.lofiOn){
+    const chain=buildLofiChain(ctx, S.lofiAmount, S.sources);
+    masterGain.connect(chain.input);
+    chain.output.connect(masterAnalyser);
+  } else {
+    masterGain.connect(masterAnalyser);
+  }
+  masterAnalyser.connect(ctx.destination);
+  S.masterAnalyser=masterAnalyser;
+
+  S.clips.forEach(clip=>{
+    const tr=S.tracks.find(t=>t.id===clip.trackId);if(!tr) return;
+    if(tr.muted&&!tr.solo) return;
+    if(hasSolo&&!tr.solo) return;
+    const sample=S.samples.find(s=>s.id===clip.sampleId);if(!sample) return;
+    const clipDur=clip.trimEnd-clip.trimStart;
+    const clipEnd=clip.startTime+clipDur;
+    if(clipEnd<=offset) return; // already past
+
+    const withinOff=Math.max(0,offset-clip.startTime);
+    const remaining=clipDur-withinOff;
+    const schedAt=now+Math.max(0,clip.startTime-offset);
+
+    const src=ctx.createBufferSource();
+    const gainNode=ctx.createGain();
+    const trGain=ctx.createGain();
+    const trPan=ctx.createStereoPanner();
+    src.buffer=sample.buffer;
+    src.connect(gainNode); gainNode.connect(trGain); trGain.connect(trPan); trPan.connect(masterGain);
+    trGain.gain.value=tr.volume;
+    trPan.pan.value=tr.pan;
+
+    const vol=clip.volume;
+    if(clip.fadeIn>0&&withinOff<clip.fadeIn){
+      const fd=Math.min(clip.fadeIn-withinOff,remaining);
+      gainNode.gain.setValueAtTime(0.0001,schedAt);
+      gainNode.gain.linearRampToValueAtTime(vol,schedAt+fd);
+      if(fd<remaining) gainNode.gain.setValueAtTime(vol,schedAt+fd);
+    } else {
+      gainNode.gain.setValueAtTime(vol,schedAt);
+    }
+    if(clip.fadeOut>0){
+      const foAt=schedAt+Math.max(0,remaining-clip.fadeOut);
+      gainNode.gain.setValueAtTime(vol,foAt);
+      gainNode.gain.linearRampToValueAtTime(0.0001,schedAt+remaining);
+    }
+    src.start(schedAt,clip.trimStart+withinOff,remaining);
+    src.onended=()=>{S.sources=S.sources.filter(x=>x!==src);};
+    S.sources.push(src);
+  });
+
+  const meterBuf=new Float32Array(masterAnalyser.fftSize);
+  const tick=()=>{
+    const elapsed=ctx.currentTime-S.playCtxT+S.playOff;
+    drawTimeline();
+    if(S.masterAnalyser){
+      S.masterAnalyser.getFloatTimeDomainData(meterBuf);
+      let peak=0, sumSq=0;
+      for(let i=0;i<meterBuf.length;i++){ const v=meterBuf[i]; sumSq+=v*v; const a=Math.abs(v); if(a>peak)peak=a; }
+      const rms=Math.sqrt(sumSq/meterBuf.length);
+      setMasterMeter(rms);
+      if(peak>=0.98){ S.clipLampOffAt=performance.now()+1200; }
+      setClipLamp(S.clipLampOffAt && performance.now()<S.clipLampOffAt);
+    }
+    // auto-scroll playhead into view
+    const phPx=elapsed*S.pps;
+    if(phPx>clipsScroll.scrollLeft+clipsScroll.clientWidth-60)
+      clipsScroll.scrollLeft=phPx-60;
+    if(elapsed>=total){
+      if(S.looping){startPlayback(0);return;}
+      else{stopPlayback();S.playOff=0;drawTimeline();return;}
+    }
+    S.raf=requestAnimationFrame(tick);
+  };
+  S.raf=requestAnimationFrame(tick);
+}
+
+document.getElementById('btn-play').addEventListener('click',()=>{
+  if(S.playing) stopPlayback(); else startPlayback(S.playOff);
+});
+document.getElementById('btn-stop').addEventListener('click',()=>{
+  stopPlayback(); S.playOff=0; drawTimeline();
+});
+document.getElementById('btn-loop').addEventListener('click',()=>{
+  S.looping=!S.looping;
+  document.getElementById('btn-loop').classList.toggle('active',S.looping);
+});
+
+// ── Master vol / meter / clip lamp ────────
+const masterVolSlider=document.getElementById('master-vol');
+const masterMeterFill=document.getElementById('master-meter-fill');
+const clipLamp=document.getElementById('clip-lamp');
+masterVolSlider.value=S.masterVolume;
+masterVolSlider.addEventListener('input',()=>{ S.masterVolume=parseFloat(masterVolSlider.value); });
+function setMasterMeter(rms){ masterMeterFill.style.width=Math.min(100,rms*220)+'%'; }
+function setClipLamp(on){ clipLamp.classList.toggle('on',!!on); }
+
+// ── LO-FI on/off + amount knob ─────────────
+const lofiOnCb=document.getElementById('lofi-on');
+const lofiKnob=document.getElementById('lofi-knob');
+const lofiKnobTick=document.getElementById('lofi-knob-tick');
+const lofiKnobVal=document.getElementById('lofi-knob-val');
+function updateLofiKnobUI(){
+  lofiKnobTick.style.transform=`rotate(${-135+S.lofiAmount*270}deg)`;
+  lofiKnobVal.textContent=Math.round(S.lofiAmount*100)+'%';
+  lofiOnCb.checked=S.lofiOn;
+}
+lofiOnCb.addEventListener('change',()=>{ S.lofiOn=lofiOnCb.checked; });
+lofiKnob.addEventListener('mousedown',e=>{
+  const startY=e.clientY, startVal=S.lofiAmount;
+  function onMove(ev){
+    S.lofiAmount=Math.max(0,Math.min(1, startVal+(startY-ev.clientY)/130));
+    updateLofiKnobUI();
+  }
+  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+});
+updateLofiKnobUI();
+
+// Preview
+document.getElementById('btn-wv-preview').addEventListener('click',()=>{
+  const sample=S.samples.find(s=>s.id===S.selSampleId);if(!sample)return;
+  const ctx=getCtx();
+  const sel=selSecs();
+  const t0=sel&&(sel.end-sel.start)>0.005?sel.start:0;
+  const t1=sel&&(sel.end-sel.start)>0.005?sel.end:sample.buffer.duration;
+  if(S.previewSrc){try{S.previewSrc.stop();}catch(_){}}
+  const src=ctx.createBufferSource();
+  src.buffer=sample.buffer; src.connect(ctx.destination);
+  src.start(0,t0,t1-t0); S.previewSrc=src;
+});
+
+// ════════════════════════════════════════════════════
+// WAV EXPORT
+// ════════════════════════════════════════════════════
+document.getElementById('btn-export').addEventListener('click',async()=>{
+  if(!S.clips.length){setStatus('エクスポートするクリップがありません');return;}
+  setStatus('書き出し処理中…');
+  const total=maxEndTime();
+  if(total<=0){setStatus('クリップの長さが0です');return;}
+  const sr=getCtx().sampleRate;
+  try{
+    const offCtx=new OfflineAudioContext(2,Math.ceil(total*sr),sr);
+    const hasSolo=S.tracks.some(t=>t.solo);
+
+    // Master bus: same topology as live playback (buildLofiChain), so
+    // export always matches what was heard.
+    const masterGain=offCtx.createGain();
+    masterGain.gain.value=S.masterVolume;
+    if(S.lofiOn){
+      const chain=buildLofiChain(offCtx, S.lofiAmount, null);
+      masterGain.connect(chain.input);
+      chain.output.connect(offCtx.destination);
+    } else {
+      masterGain.connect(offCtx.destination);
+    }
+
+    // per-track gain+pan nodes
+    const trGains={};
+    S.tracks.forEach(tr=>{
+      const g=offCtx.createGain();
+      g.gain.value=tr.volume;
+      const p=offCtx.createStereoPanner();
+      p.pan.value=tr.pan;
+      g.connect(p); p.connect(masterGain);
+      trGains[tr.id]=g;
+    });
+
+    for(const clip of S.clips){
+      const tr=S.tracks.find(t=>t.id===clip.trackId);if(!tr)continue;
+      if(tr.muted&&!tr.solo) continue;
+      if(hasSolo&&!tr.solo) continue;
+      const sample=S.samples.find(s=>s.id===clip.sampleId);if(!sample)continue;
+      const clipDur=clip.trimEnd-clip.trimStart;
+      const src=offCtx.createBufferSource();
+      const gain=offCtx.createGain();
+      src.buffer=sample.buffer;
+      src.connect(gain); gain.connect(trGains[tr.id]);
+      const vol=clip.volume;
+      const absEnd=clip.startTime+clipDur;
+      if(clip.fadeIn>0){
+        gain.gain.setValueAtTime(0.0001,clip.startTime);
+        gain.gain.linearRampToValueAtTime(vol,clip.startTime+Math.min(clip.fadeIn,clipDur));
+        if(clip.fadeIn<clipDur) gain.gain.setValueAtTime(vol,clip.startTime+clip.fadeIn);
+      } else {
+        gain.gain.setValueAtTime(vol,clip.startTime);
+      }
+      if(clip.fadeOut>0){
+        gain.gain.setValueAtTime(vol,Math.max(clip.startTime,absEnd-clip.fadeOut));
+        gain.gain.linearRampToValueAtTime(0.0001,absEnd);
+      }
+      src.start(clip.startTime,clip.trimStart,clipDur);
+    }
+
+    const rendered=await offCtx.startRendering();
+    const wav=encodeWav(rendered);
+    const blob=new Blob([wav],{type:'audio/wav'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='output.wav'; a.click();
+    URL.revokeObjectURL(url);
+    setStatus(`書き出し完了: output.wav (${total.toFixed(2)}s, ${(wav.byteLength/1048576).toFixed(1)} MB)`);
+  }catch(err){setStatus('書き出しエラー: '+err.message);}
+});
+
+function encodeWav(buf){
+  const nCh=Math.min(buf.numberOfChannels,2),sr=buf.sampleRate;
+  const bpch=2,blk=nCh*bpch,brt=sr*blk,dLen=buf.length*blk;
+  const ab=new ArrayBuffer(44+dLen);const v=new DataView(ab);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');v.setUint32(4,36+dLen,true);ws(8,'WAVE');
+  ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);
+  v.setUint16(22,nCh,true);v.setUint32(24,sr,true);
+  v.setUint32(28,brt,true);v.setUint16(32,blk,true);v.setUint16(34,16,true);
+  ws(36,'data');v.setUint32(40,dLen,true);
+  let off=44;
+  for(let i=0;i<buf.length;i++){
+    for(let ch=0;ch<nCh;ch++){
+      const s=Math.max(-1,Math.min(1,buf.getChannelData(ch)[i]));
+      v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;
+    }
+  }
+  return ab;
+}
+
+// ════════════════════════════════════════════════════
+// ZOOM & CLEAR & KEYBOARD
+// ════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.contentEditable==='true') return;
+  if(e.code==='Space'){e.preventDefault();if(S.playing)stopPlayback();else startPlayback(S.playOff);}
+  if(e.code==='Escape'){stopPlayback();S.playOff=0;drawTimeline();}
+  if((e.code==='Delete'||e.code==='Backspace')&&S.selClipId){
+    S.clips=S.clips.filter(c=>c.id!==S.selClipId);
+    S.selClipId=null;updateInspector();fitTimeline();
+  }
+  if((e.key==='='||e.key==='+')&&e.ctrlKey){e.preventDefault();S.pps=Math.min(S.pps*1.4,1200);fitTimeline();}
+  if(e.key==='-'&&e.ctrlKey){e.preventDefault();S.pps=Math.max(S.pps/1.4,10);fitTimeline();}
+});
+
+// ════════════════════════════════════════════════════
+// RESIZE & INIT
+// ════════════════════════════════════════════════════
+function setStatus(m){document.getElementById('status').textContent=m;}
+
+const ro=new ResizeObserver(()=>{fitWvCanvas();fitTimeline();});
+ro.observe(document.getElementById('wv-container'));
+ro.observe(clipsScroll);
+
+// Init
+initTracks();
+renderHeaders();
+requestAnimationFrame(()=>{fitWvCanvas();fitTimeline();});
+</script>
+</body>
+</html>

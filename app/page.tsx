@@ -13,6 +13,7 @@ const works = [
     image: "/works/swiftcrop.png",
     href: "https://swiftcrop.jp/",
     action: "使ってみる",
+    external: true,
   },
   {
     number: "04",
@@ -22,6 +23,17 @@ const works = [
     image: "/works/color-refine.png",
     href: "https://color-refine.com/",
     action: "使ってみる",
+    external: true,
+  },
+  {
+    number: "06",
+    name: "4TRACK CASSETTE SAMPLER",
+    label: "BROWSER SAMPLER",
+    copy: "音を切る、並べる、録る。4トラック、PAN、マイク録音、LO-FIをブラウザだけで扱うサンプラー。",
+    image: "/og/4track.png",
+    href: "/4track",
+    action: "使ってみる",
+    external: false,
   },
 ];
 
@@ -72,17 +84,17 @@ export default function Home() {
       <section id="works" className="worksSection" aria-labelledby="works-title">
         <div className="sectionHeading">
           <p className="eyebrow">OTHER WORKS</p>
-          <h2 id="works-title">画像を扱う、ふたつの道具。</h2>
+          <h2 id="works-title">画像を整える。音を組む。</h2>
         </div>
         <div className="worksGrid">
           {works.map((work) => (
             <article className="workCard" key={work.name}>
-              <a className="cardImage imageLink" href={work.href} target="_blank" rel="noreferrer" aria-label={`${work.name}を開く`}><Image src={work.image} alt={`${work.name}の画面`} fill sizes="(max-width: 700px) 100vw, 66vw" /></a>
+              <a className="cardImage imageLink" href={work.href} target={work.external ? "_blank" : undefined} rel={work.external ? "noreferrer" : undefined} aria-label={`${work.name}を開く`}><Image src={work.image} alt={`${work.name}の画面`} fill sizes="(max-width: 700px) 100vw, 66vw" /></a>
               <div className="cardBody">
                 <div className="cardMeta"><span>{work.number}</span><span>{work.label}</span></div>
                 <h3>{work.name}</h3>
                 <p>{work.copy}</p>
-                <a className="cardLink refinedLink" href={work.href} target="_blank" rel="noreferrer"><span>{work.action}</span></a>
+                <a className="cardLink refinedLink" href={work.href} target={work.external ? "_blank" : undefined} rel={work.external ? "noreferrer" : undefined}><span>{work.action}</span></a>
               </div>
             </article>
           ))}
@@ -105,7 +117,7 @@ export default function Home() {
 
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>
