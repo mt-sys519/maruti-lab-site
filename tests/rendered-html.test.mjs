@@ -97,7 +97,7 @@ test("uses recorded rain, wind chimes, and tongue drum, kept generative via pitc
   assert.match(source, /marutibit:sound-enabled/);
   assert.match(source, /\/audio\/rain-chime\/rain-open-window\.mp3/);
   assert.match(source, /\/audio\/rain-chime\/wind-chimes-real\.mp3/);
-  assert.match(source, /rainGain\.gain\.value = 0\.94/);
+  assert.match(source, /rainGain\.gain\.value = 1\.05/);
   assert.match(source, /3200 \+ Math\.random\(\) \* 5800/);
   assert.match(source, /chimeElement\.loop = false/);
   assert.match(source, /chimeGain\.gain\.value = 0\.62/);

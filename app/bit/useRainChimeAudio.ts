@@ -156,7 +156,7 @@ export function useRainChimeAudio() {
     master.connect(limiter).connect(context.destination);
 
     const rainGain = context.createGain();
-    rainGain.gain.value = 0.94;
+    rainGain.gain.value = 1.05;
     rainGain.connect(master);
     const rainBufferPromise = fetch(RAIN_RECORDING)
       .then((response) => response.arrayBuffer())
