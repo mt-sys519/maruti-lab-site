@@ -297,7 +297,7 @@ body{
     <div id="tempo-panel">
       <span class="tempo-icon">⏱</span>
       <div class="tempo-fields">
-        <label>元のBPM<input type="number" id="stretchSrcBpm" value="120" min="20" max="300"></label>
+        <label>元のBPM(自動推定・修正可)<input type="number" id="stretchSrcBpm" value="120" min="20" max="300"></label>
         <span class="tempo-arrow">→</span>
         <label>変更後のBPM<input type="number" id="stretchDstBpm" value="120" min="20" max="300"></label>
       </div>
@@ -1197,6 +1197,68 @@ function selectSample(id){
   const sample=S.samples.find(s=>s.id===id);
   document.getElementById('wv-label').textContent=sample?sample.name:'';
   renderSampleList(); drawWv(); updateWvInfo(); updateAddBtns();
+  if(sample) applyDetectedBpm(sample);
+}
+
+// Autocorrelation-based BPM estimate. Works well on clear rhythmic loops
+// (drums, percussion); unreliable on ambient/tonal material — it's a
+// starting guess for "元のBPM", not an authoritative reading. Cached on
+// the sample so re-selecting it doesn't recompute.
+function detectBpm(samples, sampleRate){
+  const targetSr=11025;
+  const factor=Math.max(1,Math.round(sampleRate/targetSr));
+  const dsLen=Math.floor(samples.length/factor);
+  if(dsLen<50) return 120;
+  const ds=new Float32Array(dsLen);
+  for(let i=0;i<dsLen;i++) ds[i]=samples[i*factor];
+  const sr=sampleRate/factor;
+
+  const frameSize=Math.round(sr*0.01);
+  const numFrames=Math.floor(dsLen/frameSize);
+  if(numFrames<20) return 120;
+  const energy=new Float32Array(numFrames);
+  for(let f=0;f<numFrames;f++){
+    let sum=0; const start=f*frameSize;
+    for(let i=0;i<frameSize;i++){ const v=ds[start+i]; sum+=v*v; }
+    energy[f]=Math.sqrt(sum/frameSize);
+  }
+  const onset=new Float32Array(numFrames);
+  for(let f=1;f<numFrames;f++) onset[f]=Math.max(0,energy[f]-energy[f-1]);
+
+  const frameRate=sr/frameSize;
+  const minLag=Math.max(1,Math.round(frameRate*60/200));
+  const maxLag=Math.min(numFrames-1,Math.round(frameRate*60/50));
+  if(maxLag<=minLag) return 120;
+
+  const scoreCache={};
+  function scoreLag(lag){
+    if(scoreCache[lag]!==undefined) return scoreCache[lag];
+    let score=0;
+    for(let f=0; f+lag<numFrames; f++) score+=onset[f]*onset[f+lag];
+    scoreCache[lag]=score;
+    return score;
+  }
+  let bestLag=minLag, bestScore=-Infinity;
+  for(let lag=minLag; lag<=maxLag; lag++){
+    const score=scoreLag(lag);
+    if(score>bestScore){ bestScore=score; bestLag=lag; }
+  }
+  let correctedLag=bestLag;
+  for(const div of [2,3,4]){
+    const candidate=Math.round(bestLag/div);
+    if(candidate<minLag) continue;
+    if(scoreLag(candidate)>=bestScore*0.65){ correctedLag=candidate; break; }
+  }
+  const bpm=(frameRate*60)/correctedLag;
+  if(!Number.isFinite(bpm)||bpm<=0) return 120;
+  return Math.max(50,Math.min(200,bpm));
+}
+
+function applyDetectedBpm(sample){
+  if(sample.detectedBpm==null){
+    sample.detectedBpm=detectBpm(sample.buffer.getChannelData(0), sample.buffer.sampleRate);
+  }
+  document.getElementById('stretchSrcBpm').value=Math.round(sample.detectedBpm);
 }
 
 // ════════════════════════════════════════════════════
@@ -1705,6 +1767,124 @@ document.getElementById('zoomInButton').addEventListener('click',()=>zoomTimelin
 document.getElementById('zoomOutButton').addEventListener('click',()=>zoomTimeline(1/1.4));
 
 // ════════════════════════════════════════════════════
+// AUTOSAVE / RESTORE (IndexedDB) — survives a page refresh.
+// Periodic snapshot every few seconds rather than hooking every single
+// mutation site; audio is stored WAV-encoded (reusing encodeWav/decodeAudioData
+// for a lossless round trip) since localStorage can't hold sample audio.
+// ════════════════════════════════════════════════════
+const AUTOSAVE_DB='sampler4track-autosave', AUTOSAVE_VERSION=1;
+let _dbPromise=null;
+function openAutosaveDb(){
+  if(_dbPromise) return _dbPromise;
+  _dbPromise=new Promise((resolve,reject)=>{
+    const req=indexedDB.open(AUTOSAVE_DB, AUTOSAVE_VERSION);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains('samples')) db.createObjectStore('samples');
+      if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+  return _dbPromise;
+}
+function idbPut(storeName,key,value){
+  return openAutosaveDb().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readwrite');
+    tx.objectStore(storeName).put(value,key);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=()=>reject(tx.error);
+  }));
+}
+function idbDelete(storeName,key){
+  return openAutosaveDb().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readwrite');
+    tx.objectStore(storeName).delete(key);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=()=>reject(tx.error);
+  }));
+}
+function idbGet(storeName,key){
+  return openAutosaveDb().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readonly');
+    const req=tx.objectStore(storeName).get(key);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  }));
+}
+function idbGetAll(storeName){
+  return openAutosaveDb().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readonly');
+    const store=tx.objectStore(storeName);
+    const keysReq=store.getAllKeys(), valsReq=store.getAll();
+    tx.oncomplete=()=>resolve({keys:keysReq.result, values:valsReq.result});
+    tx.onerror=()=>reject(tx.error);
+  }));
+}
+
+let savedSampleIds=new Set(); // which sample audio is already persisted — skip re-encoding unchanged buffers
+
+async function doAutosave(){
+  try{
+    for(const sample of S.samples){
+      if(savedSampleIds.has(sample.id)) continue;
+      const wav=encodeWav(sample.buffer);
+      await idbPut('samples', sample.id, {name:sample.name, color:sample.color, detectedBpm:sample.detectedBpm??null, wav});
+      savedSampleIds.add(sample.id);
+    }
+    const currentIds=new Set(S.samples.map(s=>s.id));
+    for(const id of Array.from(savedSampleIds)){
+      if(!currentIds.has(id)){ savedSampleIds.delete(id); await idbDelete('samples', id); }
+    }
+    const meta={
+      sampleOrder: S.samples.map(s=>s.id),
+      tracks: S.tracks.map(t=>({id:t.id,name:t.name,volume:t.volume,pan:t.pan,muted:t.muted,solo:t.solo})),
+      clips: S.clips.map(c=>({id:c.id,sampleId:c.sampleId,trackId:c.trackId,startTime:c.startTime,trimStart:c.trimStart,trimEnd:c.trimEnd,volume:c.volume,fadeIn:c.fadeIn,fadeOut:c.fadeOut})),
+      targetTrackId: S.targetTrackId,
+      masterVolume: S.masterVolume, lofiOn: S.lofiOn, lofiAmount: S.lofiAmount, projectBpm: S.projectBpm,
+      nextUid: _id,
+    };
+    await idbPut('meta','project', meta);
+  }catch(err){ console.error('autosave failed', err); }
+}
+
+async function restoreFromDb(){
+  try{
+    const meta=await idbGet('meta','project');
+    if(!meta) return false;
+    const ctx=getCtx();
+    const {keys, values}=await idbGetAll('samples');
+    const sampleMap={};
+    for(let i=0;i<keys.length;i++){
+      const rec=values[i];
+      try{
+        const audioBuf=await ctx.decodeAudioData(rec.wav.slice(0));
+        sampleMap[keys[i]]={id:keys[i], name:rec.name, color:rec.color, buffer:audioBuf, detectedBpm:rec.detectedBpm??null};
+        savedSampleIds.add(keys[i]);
+      }catch(e){ console.error('failed to restore sample', keys[i], e); }
+    }
+    S.samples=(meta.sampleOrder||[]).map(id=>sampleMap[id]).filter(Boolean);
+
+    if(meta.tracks){
+      meta.tracks.forEach((t,i)=>{
+        if(!S.tracks[i]) return;
+        Object.assign(S.tracks[i], {name:t.name,volume:t.volume,pan:t.pan,muted:t.muted,solo:t.solo});
+      });
+    }
+    const validSampleIds=new Set(S.samples.map(s=>s.id));
+    const validTrackIds=new Set(S.tracks.map(t=>t.id));
+    S.clips=(meta.clips||[]).filter(c=>validSampleIds.has(c.sampleId)&&validTrackIds.has(c.trackId));
+    S.targetTrackId=validTrackIds.has(meta.targetTrackId)?meta.targetTrackId:S.tracks[0].id;
+    S.masterVolume=meta.masterVolume??1;
+    S.lofiOn=!!meta.lofiOn;
+    S.lofiAmount=meta.lofiAmount??0.3;
+    S.projectBpm=meta.projectBpm??120;
+    if(meta.nextUid) _id=Math.max(_id, meta.nextUid);
+    return S.samples.length>0 || S.clips.length>0;
+  }catch(err){ console.error('restore failed', err); return false; }
+}
+
+// ════════════════════════════════════════════════════
 // RESIZE & INIT
 // ════════════════════════════════════════════════════
 function setStatus(m){document.getElementById('status').textContent=m;}
@@ -1715,7 +1895,19 @@ ro.observe(clipsScroll);
 
 // Init
 initTracks();
-renderHeaders();
+restoreFromDb().then(restored=>{
+  renderHeaders();
+  renderSampleList();
+  document.getElementById('master-vol').value=S.masterVolume;
+  document.getElementById('lofi-on').checked=S.lofiOn;
+  updateLofiKnobUI();
+  document.getElementById('projectBpmInput').value=S.projectBpm;
+  const sel=document.getElementById('add-track-sel');
+  if(sel) sel.value=S.targetTrackId;
+  fitTimeline();
+  if(restored) setStatus('前回の作業を復元しました');
+});
+setInterval(doAutosave, 3000);
 requestAnimationFrame(()=>{fitWvCanvas();fitTimeline();});
 </script>
 </body>
