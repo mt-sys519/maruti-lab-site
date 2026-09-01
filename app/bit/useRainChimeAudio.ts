@@ -114,7 +114,7 @@ export function useRainChimeAudio() {
       source.buffer = buffer;
       source.playbackRate.value = frequency / TONGUE_DRUM_BASE_FREQUENCY;
       const gain = context.createGain();
-      gain.gain.value = 0.55 * strength;
+      gain.gain.value = 0.34 * strength;
       source.connect(gain);
       connectAtWindow(context, gain, master, 0.6 + Math.random() * 0.1);
       source.start(start);
