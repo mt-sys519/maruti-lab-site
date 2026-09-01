@@ -92,7 +92,7 @@ test("redirects the old /bit/rain-chime URL to /bit/avenue", async () => {
   assert.equal(response.headers.get("location"), "/bit/avenue");
 });
 
-test("uses recorded rain and wind chimes while keeping the drum generative, shared, and pausable unless BACKGROUND PLAY is on", async () => {
+test("uses recorded rain, wind chimes, and tongue drum, kept generative via pitch-shifted retriggering, shared, and pausable unless BACKGROUND PLAY is on", async () => {
   const source = await readFile(new URL("../app/bit/useRainChimeAudio.ts", import.meta.url), "utf8");
   assert.match(source, /marutibit:sound-enabled/);
   assert.match(source, /\/audio\/rain-chime\/rain-open-window\.mp3/);
@@ -104,7 +104,12 @@ test("uses recorded rain and wind chimes while keeping the drum generative, shar
   assert.match(source, /100000 \+ Math\.random\(\) \* 100000/);
   assert.match(source, /chimeElement\.currentTime = 0/);
   assert.doesNotMatch(source, /const playChime =/);
-  assert.match(source, /makeImpactNoise/);
+  // The tongue drum is one real mallet-strike recording, pitch-shifted per
+  // note via playbackRate rather than synthesized oscillators.
+  assert.match(source, /\/audio\/rain-chime\/tongue-drum-real\.mp3/);
+  assert.match(source, /tongueDrumBufferPromise/);
+  assert.match(source, /source\.playbackRate\.value = frequency \/ TONGUE_DRUM_BASE_FREQUENCY/);
+  assert.doesNotMatch(source, /makeImpactNoise/);
   assert.match(source, /document\.hidden/);
   assert.match(source, /context\.suspend\(\)/);
   assert.match(source, /chimeElement\.pause\(\)/);

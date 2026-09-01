@@ -19,3 +19,14 @@ The recording is embedded as part of the interactive RAIN CHIME soundscape. It i
 - Retrieved: 2026-09-01
 
 The genuine metal wind-chime recording replaces the synthesized chime layer and is mixed into the interactive soundscape. It is not offered as a standalone download.
+
+# RAIN CHIME steel tongue drum recording
+
+- Asset: `C3 - steel tongue drum` (Sound 692569)
+- Creator: hollandm
+- Source: https://freesound.org/people/hollandm/sounds/692569/
+- Included web format: official Freesound HQ MP3 preview
+- License: Creative Commons 0 (CC0)
+- Retrieved: 2026-09-02
+
+A single real mallet-strike recording (10-inch steel tongue drum, key of F) replaces the synthesized tongue-drum oscillators. Notes are produced by pitch-shifting this one recording via playbackRate, same as before for the range of pitches the generative drum layer picks from. It is not offered as a standalone download.

@@ -7,6 +7,11 @@ const SOUND_CHANGE_EVENT = "marutibit:sound-change";
 const BACKGROUND_PLAY_STORAGE_KEY = "marutibit:rain-chime:background-play";
 const RAIN_RECORDING = "/audio/rain-chime/rain-open-window.mp3";
 const CHIME_RECORDING = "/audio/rain-chime/wind-chimes-real.mp3";
+const TONGUE_DRUM_RECORDING = "/audio/rain-chime/tongue-drum-real.mp3";
+// The recording is a single mallet strike (Freesound 692569, "C3 - steel
+// tongue drum"), pitched at C3. Other notes are produced by pitch-shifting
+// this one hit via playbackRate rather than recording every note.
+const TONGUE_DRUM_BASE_FREQUENCY = 130.81;
 
 type AudioRig = {
   context: AudioContext;
@@ -15,20 +20,9 @@ type AudioRig = {
   rainBufferPromise: Promise<AudioBuffer>;
   rainSource: AudioBufferSourceNode | null;
   chimeElement: HTMLAudioElement;
-  impactNoise: AudioBuffer;
+  tongueDrumBufferPromise: Promise<AudioBuffer>;
   timers: number[];
 };
-
-function makeImpactNoise(context: AudioContext) {
-  const length = Math.floor(context.sampleRate * 0.12);
-  const buffer = context.createBuffer(1, length, context.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let index = 0; index < length; index += 1) {
-    const decay = 1 - index / length;
-    data[index] = (Math.random() * 2 - 1) * decay * decay;
-  }
-  return buffer;
-}
 
 function connectAtWindow(context: AudioContext, node: AudioNode, master: GainNode, pan: number) {
   const panner = context.createStereoPanner();
@@ -99,13 +93,15 @@ export function useRainChimeAudio() {
     void rig.chimeElement.play().catch(() => undefined);
   }, []);
 
-  const playDrum = useCallback(() => {
+  const playDrum = useCallback(async () => {
     const rig = rigRef.current;
     // Scheduling notes while suspended queues them at a frozen currentTime;
     // they'd all fire in a pile the instant the context resumes. Only
     // schedule while genuinely running.
     if (!rig || !soundRef.current || rig.context.state !== "running") return;
-    const { context, master, impactNoise } = rig;
+    const buffer = await rig.tongueDrumBufferPromise;
+    if (rigRef.current !== rig || !soundRef.current || rig.context.state !== "running") return;
+    const { context, master } = rig;
     const now = context.currentTime;
     const notes = [130.81, 155.56, 174.61, 196, 233.08, 261.63];
     const drops = 1 + Math.floor(Math.random() * 3);
@@ -114,38 +110,14 @@ export function useRainChimeAudio() {
       const frequency = notes[Math.floor(Math.random() * notes.length)];
       const strength = 0.78 + Math.random() * 0.34;
 
-      const click = context.createBufferSource();
-      const clickFilter = context.createBiquadFilter();
-      const clickGain = context.createGain();
-      click.buffer = impactNoise;
-      clickFilter.type = "bandpass";
-      clickFilter.frequency.value = 1600 + Math.random() * 1800;
-      clickFilter.Q.value = 0.75;
-      clickGain.gain.setValueAtTime(0.075 * strength, start);
-      clickGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.055);
-      click.connect(clickFilter).connect(clickGain);
-      connectAtWindow(context, clickGain, master, 0.62);
-      click.start(start);
-
-      [
-        { multiple: 1, level: 0.19, decay: 3.1, type: "sine" as OscillatorType },
-        { multiple: 1.51, level: 0.07, decay: 2.1, type: "sine" as OscillatorType },
-        { multiple: 2.03, level: 0.033, decay: 1.45, type: "triangle" as OscillatorType },
-        { multiple: 2.48, level: 0.016, decay: 1.0, type: "sine" as OscillatorType },
-      ].forEach(({ multiple, level, decay, type }) => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = type;
-        oscillator.frequency.setValueAtTime(frequency * multiple, start);
-        oscillator.frequency.exponentialRampToValueAtTime(frequency * multiple * 0.994, start + decay);
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(level * strength, start + 0.008);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + decay);
-        oscillator.connect(gain);
-        connectAtWindow(context, gain, master, 0.68);
-        oscillator.start(start);
-        oscillator.stop(start + decay + 0.1);
-      });
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = frequency / TONGUE_DRUM_BASE_FREQUENCY;
+      const gain = context.createGain();
+      gain.gain.value = 0.55 * strength;
+      source.connect(gain);
+      connectAtWindow(context, gain, master, 0.6 + Math.random() * 0.1);
+      source.start(start);
     }
   }, []);
 
@@ -155,14 +127,14 @@ export function useRainChimeAudio() {
       rig.timers.push(timer);
     };
     const scheduleDrum = () => addTimer(() => {
-      if (enteredRef.current) playDrum();
+      if (enteredRef.current) void playDrum();
       scheduleDrum();
     }, 3200 + Math.random() * 5800);
     const scheduleChime = (first = false) => addTimer(() => {
       if (enteredRef.current) playChimeRecording();
       scheduleChime();
     }, first ? 8000 + Math.random() * 12000 : 100000 + Math.random() * 100000);
-    addTimer(playDrum, 2300);
+    addTimer(() => void playDrum(), 2300);
     scheduleDrum();
     scheduleChime(true);
   }, [playChimeRecording, playDrum]);
@@ -204,7 +176,11 @@ export function useRainChimeAudio() {
     chimePanner.pan.value = 0.24;
     chimeSource.connect(chimeFilter).connect(chimeGain).connect(chimePanner).connect(master);
 
-    const rig: AudioRig = { context, master, rainGain, rainBufferPromise, rainSource: null, chimeElement, impactNoise: makeImpactNoise(context), timers: [] };
+    const tongueDrumBufferPromise = fetch(TONGUE_DRUM_RECORDING)
+      .then((response) => response.arrayBuffer())
+      .then((data) => context.decodeAudioData(data));
+
+    const rig: AudioRig = { context, master, rainGain, rainBufferPromise, rainSource: null, chimeElement, tongueDrumBufferPromise, timers: [] };
     rigRef.current = rig;
     schedule(rig);
     return rig;
