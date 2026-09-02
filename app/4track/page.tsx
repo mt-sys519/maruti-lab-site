@@ -91,9 +91,26 @@ export default function FourTrackPage() {
         <ol>
           <li><span>01</span><div><strong>音源を読み込む</strong><p>WAVまたはMP3をドロップします。音源は外部へ送信されません。</p></div></li>
           <li><span>02</span><div><strong>範囲を選んで配置</strong><p>波形から使う部分を選び、4つのトラックへ追加します。</p></div></li>
-          <li><span>03</span><div><strong>音を整える</strong><p>音量、PAN、フェード、MASTERとLO-FIの質感を調整します。</p></div></li>
+          <li><span>03</span><div><strong>音を整える</strong><p>音量、PAN、EQ、テンポ、MASTERとLO-FIの質感を調整します。</p></div></li>
           <li><span>04</span><div><strong>WAVで書き出す</strong><p>完成したミックスを端末へ保存します。ページを閉じる前に書き出してください。</p></div></li>
         </ol>
+      </section>
+
+      <section className={styles.featureSection} aria-labelledby="features-title">
+        <h3 id="features-title">各部の使い方</h3>
+        <div className={styles.featureGrid}>
+          <div><strong>トラック操作</strong><p>各トラックのV(音量)・P(パン)・EQ・M(ミュート)・S(ソロ)・REC(マイク録音)をまとめて調整できます。</p></div>
+          <div><strong>レベルメーター</strong><p>緑→黄→赤で音の大きさを表示するL/Rメーター。黄色に入る手前が目安、赤は歪みの合図です。</p></div>
+          <div><strong>テンポを変える</strong><p>元のBPMを自動推定し、音程はそのまま、テンポだけ変えた新しいサンプルを作ります。</p></div>
+          <div><strong>センターにモノラル化</strong><p>マイク録音が左右どちらかに片寄ってしまった時、中央から鳴る新しいサンプルに変換します。</p></div>
+          <div><strong>MASTER</strong><p>全体の音量とEQプリセットを調整。クリップランプが赤く光ったら音量を下げてください。</p></div>
+          <div><strong>LO-FI</strong><p>テープのサチュレーションや劣化感を加えるエフェクトです。ON/OFFと強さを調整できます。</p></div>
+          <div><strong>CLICK(メトロノーム)</strong><p>BPMと拍子を設定してモニター用のクリック音を鳴らします。WAV書き出しには含まれません。</p></div>
+          <div><strong>ズーム</strong><p>タイムライン左上の+/-でクリップの表示倍率を変更できます。</p></div>
+          <div><strong>元に戻す・やり直す</strong><p>Ctrl+Z / Ctrl+Shift+Zまたはインスペクターのボタンで、クリップの追加・削除・移動・音量/フェード変更を取り消せます。</p></div>
+          <div><strong>プロジェクトをクリア</strong><p>サンプル・トラック・保存データを全消去します。確認ポップアップが出て、取り消しはできません。</p></div>
+          <div><strong>自動保存</strong><p>作業内容はブラウザに自動保存され、次に開いた時に復元されます。別端末・別ブラウザには引き継がれません。</p></div>
+        </div>
       </section>
 
       <aside className={styles.notes} aria-label="利用上の注意">
