@@ -108,14 +108,6 @@ export default function Home() {
         <p className="smallWork"><span>LINE STICKER</span><a href="https://store.line.me/stickershop/product/35520055/ja" target="_blank" rel="noreferrer">PromptTerm StickerをLINE STOREで見る</a></p>
       </section>
 
-      <section id="about" className="aboutSection" aria-labelledby="about-title">
-        <p className="eyebrow">LAB NOTE</p>
-        <div>
-          <h2 id="about-title">小さくつくる。<br />ちゃんと使えるところまで。</h2>
-          <p>画像を動かす。整える。色を戻す。時間を表示する。Maruti Labは、思いつきを実際に触れる道具へ変え、公開し、使いながら直していく個人ラボです。</p>
-        </div>
-      </section>
-
       <section id="yurameki" className="feature featureYurameki" aria-labelledby="yurameki-title">
         <a className="featureImage yuramekiImage imageLink" href={yuramekiUrl} target="_blank" rel="noreferrer" aria-label="YURAMEKIを開く">
           <Image src="/works/yurameki-breath.png" alt="YURAMEKIの呼吸する作例" fill sizes="(max-width: 800px) 100vw, 62vw" />
@@ -126,6 +118,14 @@ export default function Home() {
           <p className="workTagline">一枚の絵に、息を宿す。</p>
           <p>風、衣、髪、光の気配。息づく場所を静かに囲み、止まっていた一瞬へ時間を結びます。作品は端末の中だけで息づきます。</p>
           <a className="textButton refinedLink" href={yuramekiUrl} target="_blank" rel="noreferrer"><span>YURAMEKIを開く</span></a>
+        </div>
+      </section>
+
+      <section id="about" className="aboutSection" aria-labelledby="about-title">
+        <p className="eyebrow">LAB NOTE</p>
+        <div>
+          <h2 id="about-title">小さくつくる。<br />ちゃんと使えるところまで。</h2>
+          <p>画像を動かす。整える。色を戻す。時間を表示する。Maruti Labは、思いつきを実際に触れる道具へ変え、公開し、使いながら直していく個人ラボです。</p>
         </div>
       </section>
 
