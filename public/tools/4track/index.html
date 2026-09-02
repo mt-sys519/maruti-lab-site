@@ -1549,6 +1549,12 @@ function stopPlayback(){
   S.masterAnalyser=null;
   document.getElementById('btn-play').textContent='▶ 再生';
   document.getElementById('btn-play').classList.remove('active');
+  S.tracks.forEach(tr=>{
+    if(tr.rec.state==='recording') return;
+    const el=headersInner.querySelector(`[data-tid="${tr.id}"]`);
+    const lw=el&&el.querySelector('.th-level-wrap');
+    if(lw) lw.style.display='none';
+  });
   setMasterMeter(0); setClipLamp(false);
   drawTimeline();
 }
@@ -1582,10 +1588,19 @@ function startPlayback(offset=0){
   masterAnalyser.connect(ctx.destination);
   S.masterAnalyser=masterAnalyser;
 
-  const trackEqChains=S.tracks.map(t=>{
-    const chain=buildEqChain(ctx, t.eq);
-    chain.output.connect(masterGain);
-    return chain;
+  const trackEqChains=S.tracks.map(t=>buildEqChain(ctx, t.eq));
+  const trackMeters=S.tracks.map((tr,i)=>{
+    const chain=trackEqChains[i];
+    const analyser=ctx.createAnalyser();
+    analyser.fftSize=256; analyser.smoothingTimeConstant=.7;
+    chain.output.connect(analyser);
+    analyser.connect(masterGain);
+    const el=headersInner.querySelector(`[data-tid="${tr.id}"]`);
+    return {
+      trackId:tr.id, analyser, buf:new Float32Array(analyser.fftSize),
+      levelWrap:el&&el.querySelector('.th-level-wrap'),
+      levelBar:el&&el.querySelector('.th-level-bar'),
+    };
   });
 
   S.clips.forEach(clip=>{
@@ -1661,6 +1676,16 @@ function startPlayback(offset=0){
       if(peak>=0.98){ S.clipLampOffAt=performance.now()+1200; }
       setClipLamp(S.clipLampOffAt && performance.now()<S.clipLampOffAt);
     }
+    trackMeters.forEach(tm=>{
+      if(!tm.levelBar||!tm.levelWrap) return;
+      const tr=S.tracks.find(t=>t.id===tm.trackId);
+      if(tr&&tr.rec.state==='recording') return; // mic monitor owns this bar
+      tm.analyser.getFloatTimeDomainData(tm.buf);
+      let sumSq=0; for(let i=0;i<tm.buf.length;i++){ const v=tm.buf[i]; sumSq+=v*v; }
+      const rms=Math.sqrt(sumSq/tm.buf.length);
+      tm.levelWrap.style.display='block';
+      tm.levelBar.style.width=Math.min(100,rms*400)+'%';
+    });
     // auto-scroll playhead into view
     const phPx=elapsed*S.pps;
     if(phPx>clipsScroll.scrollLeft+clipsScroll.clientWidth-60)
