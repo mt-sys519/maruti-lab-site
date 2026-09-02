@@ -200,8 +200,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitPauseOverlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:22px;background:rgba(233,228,215,.91);backdrop-filter:blur(7px)}.bitPausePanel{width:min(100%,390px);padding:42px 30px 30px;border:1px solid rgba(21,33,29,.62);background:rgba(241,238,229,.96);text-align:center;box-shadow:9px 9px 0 rgba(35,35,35,.1)}.bitPausePanel p{margin:0;font:600 8px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:#66716c}.bitPausePanel h2{margin:16px 0 14px;font:600 clamp(46px,9vw,72px)/.85 "Arial Narrow","Yu Gothic UI",sans-serif;letter-spacing:.02em;color:var(--bit-blue)}.bitPausePanel span{display:block;font:400 11px/1.8 "Yu Gothic UI",sans-serif;color:#606b65}.bitPausePanel button{width:100%;margin-top:28px;padding:16px;border:0;background:var(--bit-red);color:#fff;font:700 11px/1 "Yu Gothic UI",sans-serif;letter-spacing:.14em;cursor:pointer}
 .bitHowToPlay{width:min(1120px,calc(100% - 40px));margin:0 auto clamp(24px,4vw,48px)}
 .bitHowToPlayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.bitHowToPlayCard{position:relative;overflow:hidden;padding:18px 18px 16px;border:2.5px solid #232323;border-radius:9px;background:#f1eee5;box-shadow:5px 5px 0 #FF7A5C;transition:transform .15s ease,box-shadow .15s ease}
-.bitHowToPlayCard:hover,.bitHowToPlayCard:focus-within{transform:translate(-2px,-2px);box-shadow:7px 7px 0 #FF7A5C}
+.bitHowToPlayCard{position:relative;overflow:hidden;padding:18px 18px 16px;border:2.5px solid #232323;border-radius:9px;background:#f1eee5;box-shadow:5px 5px 0 #232323;transition:transform .15s ease,box-shadow .15s ease}
+.bitHowToPlayCard:hover,.bitHowToPlayCard:focus-within{transform:translate(-2px,-2px);box-shadow:7px 7px 0 #232323}
 .bitHowToPlayNum{position:absolute;z-index:0;top:-16px;right:-2px;font:800 68px/1 "Baloo 2","Arial Narrow",sans-serif;color:#FF7A5C;opacity:.15;pointer-events:none}
 .bitHowToPlayHead{position:relative;z-index:1;display:flex;align-items:center;gap:8px;margin:0 0 12px}
 .bitHowToPlayIcon{display:inline-block;font-size:16px;line-height:1}
