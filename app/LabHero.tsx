@@ -1,13 +1,18 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { featuredBitGames } from "./bit/games";
+import { bitGames } from "./bit/games";
 import styles from "./LabHero.module.css";
+
+const PAGE_SIZE = 4;
+const totalPages = Math.ceil(bitGames.length / PAGE_SIZE);
 
 export function LabHero() {
   const hero = useRef<HTMLElement>(null);
-  const gameCount = String(featuredBitGames.length).padStart(2, "0");
+  const [page, setPage] = useState(0);
+  const gameCount = String(bitGames.length).padStart(2, "0");
+  const pageGames = bitGames.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   function trackPointer(event: React.PointerEvent<HTMLElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -15,9 +20,13 @@ export function LabHero() {
     event.currentTarget.style.setProperty("--pointer-y", `${((event.clientY - rect.top) / rect.height) * 100}%`);
   }
 
+  function goToPage(direction: -1 | 1) {
+    setPage((current) => (current + direction + totalPages) % totalPages);
+  }
+
   function chooseRandomGame(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
-    const destination = featuredBitGames[Math.floor(Math.random() * featuredBitGames.length)];
+    const destination = bitGames[Math.floor(Math.random() * bitGames.length)];
     window.location.href = destination.href;
   }
 
@@ -45,7 +54,27 @@ export function LabHero() {
         </svg>
       </span>
     );
-    return <span className={`${styles.visual} ${styles.rainVisual}`} aria-hidden="true"><i>PT&gt;</i><span>INPUT</span><b>RAIN</b></span>;
+    if (name === "LILT ORB") return (
+      <span className={`${styles.visual} ${styles.liltOrbVisual}`} aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <circle className={styles.orbRing} cx="12" cy="12" r="8.2" />
+          <circle className={styles.orbDot} cx="9.2" cy="10" r=".9" />
+          <circle className={styles.orbDot} cx="14.2" cy="8.6" r=".65" />
+          <circle className={styles.orbDot} cx="14.6" cy="14.1" r=".8" />
+          <circle className={styles.orbDot} cx="10.1" cy="14.9" r=".6" />
+        </svg>
+      </span>
+    );
+    if (name === "AVENUE") return (
+      <span className={`${styles.visual} ${styles.avenueVisual}`} aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M7 5.5H17" /><path d="M9 5.5V16" /><path d="M12 5.5V19" /><path d="M15 5.5V14.5" />
+          <circle className={styles.avenueDot} cx="12" cy="21.3" r="1" />
+        </svg>
+      </span>
+    );
+    if (name === "INPUT RAIN") return <span className={`${styles.visual} ${styles.rainVisual}`} aria-hidden="true"><i>PT&gt;</i><span>INPUT</span><b>RAIN</b></span>;
+    return null;
   }
 
   return (
@@ -66,11 +95,22 @@ export function LabHero() {
       </div>
 
       <div id="bit-games" className={styles.index} aria-label="MarutiBitのゲーム一覧">
-        <div className={styles.indexHead}><span>GAME INDEX</span><strong>{gameCount} / ONLINE</strong></div>
+        <div className={styles.indexHead}>
+          <span>GAME INDEX</span>
+          {totalPages > 1 ? (
+            <div className={styles.pager}>
+              <button type="button" onClick={() => goToPage(-1)} aria-label="前のゲームを表示">‹</button>
+              <strong>{gameCount} / ONLINE</strong>
+              <button type="button" onClick={() => goToPage(1)} aria-label="次のゲームを表示">›</button>
+            </div>
+          ) : (
+            <strong>{gameCount} / ONLINE</strong>
+          )}
+        </div>
         <div className={styles.games}>
-          {featuredBitGames.map((game, index) => {
-            const itemsInLastRow = featuredBitGames.length % 2 === 0 ? 2 : featuredBitGames.length % 2;
-            const isLastRow = index >= featuredBitGames.length - itemsInLastRow;
+          {pageGames.map((game, index) => {
+            const itemsInLastRow = pageGames.length % 2 === 0 ? 2 : pageGames.length % 2;
+            const isLastRow = index >= pageGames.length - itemsInLastRow;
             const isTrailingSolo = itemsInLastRow === 1 && isLastRow;
             const rowClass = [isLastRow && styles.isLastRow, isTrailingSolo && styles.spanFull].filter(Boolean).join(" ");
             return (
