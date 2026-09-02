@@ -45,6 +45,16 @@ export default function AnglePage() {
         about="三角形の内角にひそむ「？」の角度を答える、全5問の推理パズルです。"
         play="表示された角度をヒントに、数値キーパッドで答えを入力し「決定」で回答。初級は内角の和、中級・上級は対頂角や複数の三角形の関係を使って解きます。"
         rules="全5問。正解数と回答スピードでスコアが決まります。時間制限はありません。PC・スマホともにタップ／クリックで操作できます。"
+        icon={
+          <svg viewBox="0 0 24 24" focusable="false">
+            <rect x="3" y="3" width="18" height="18" rx="4.5" />
+            <circle cx="8" cy="8" r="1.7" />
+            <circle cx="16" cy="8" r="1.7" />
+            <circle cx="12" cy="12" r="1.7" />
+            <circle cx="8" cy="16" r="1.7" />
+            <circle cx="16" cy="16" r="1.7" />
+          </svg>
+        }
       />
       <BitCartridgeNav current="angle" />
       <BitFooter label="MARUTIBIT / GAME 001" />
