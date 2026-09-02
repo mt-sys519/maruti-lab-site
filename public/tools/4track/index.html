@@ -219,6 +219,7 @@ body{
 .th-btn.rec-armed{background:#D94F3D;border-color:#141B24;color:#fff;animation:recblink .8s ease-in-out infinite;transform:translate(1.5px,1.5px);box-shadow:0 0 0 #141B24}
 .th-btn.rec-on{background:#D94F3D;border-color:#141B24;color:#fff;transform:translate(1.5px,1.5px);box-shadow:0 0 0 #141B24}
 @keyframes recblink{0%,100%{opacity:1}50%{opacity:.4}}
+.btn.armed{background:#D94F3D;color:#fff;animation:recblink .7s ease-in-out infinite;}
 .th-vol-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#5C6B76}
 .th-vol-row input[type=range]{width:62px;accent-color:#3FA34D;cursor:pointer}
 .th-pan-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#5C6B76}
@@ -342,7 +343,7 @@ body{
       <input type="file" id="file-input" multiple accept=".wav,.mp3" style="display:none">
     </div>
     <div id="sample-list"></div>
-    <button class="btn btn-red" id="btn-clear-project" style="margin:6px;font-size:10px;padding:4px 8px;">🗑 プロジェクトをクリア</button>
+    <button class="btn btn-red" id="btn-clear-project" style="display:block;width:calc(100% - 14px);margin:7px;padding:7px 4px;font-size:11px;">🗑 プロジェクトをクリア</button>
   </div>
 
   <!-- Waveform Editor -->
@@ -2123,9 +2124,6 @@ async function restoreFromDb(){
 }
 
 async function clearProject(){
-  if(!confirm('プロジェクトを消去しますか？\nサンプル・トラック・保存データがすべて削除されます。')) return;
-  if(!confirm('本当によろしいですか？この操作は取り消せません。')) return;
-
   stopPlayback();
   try{
     const db=await openAutosaveDb();
@@ -2158,7 +2156,26 @@ async function clearProject(){
   setMasterMeter(0); setClipLamp(false);
   setStatus('プロジェクトを消去しました');
 }
-document.getElementById('btn-clear-project').addEventListener('click', clearProject);
+(function(){
+  const btn=document.getElementById('btn-clear-project');
+  const defaultLabel=btn.textContent;
+  let armed=false, armTimer=null;
+  function disarm(){
+    armed=false; clearTimeout(armTimer); armTimer=null;
+    btn.textContent=defaultLabel; btn.classList.remove('armed');
+  }
+  btn.addEventListener('click', async ()=>{
+    if(!armed){
+      armed=true;
+      btn.textContent='本当に消す？(もう一度押す)';
+      btn.classList.add('armed');
+      armTimer=setTimeout(disarm, 4000);
+      return;
+    }
+    disarm();
+    await clearProject();
+  });
+})();
 
 // ════════════════════════════════════════════════════
 // RESIZE & INIT
