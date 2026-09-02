@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { PakuGame } from "../PakuGame";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function PakuPage() {
   return (
-    <main className="bitPage">
+    <main className="bitPage" style={{ "--pkg-color": "#2BB3A3" } as CSSProperties}>
       <BitHeader current="PAKU" />
 
       <BitSeriesNav active="paku" />

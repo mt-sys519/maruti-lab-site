@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { SequenceGame } from "../SequenceGame";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function SequencePage() {
   return (
-    <main className="bitPage">
+    <main className="bitPage" style={{ "--pkg-color": "#7B8CDE" } as CSSProperties}>
       <BitHeader current="SEQUENCE" />
       <BitSeriesNav active="sequence" />
       <section className="bitIntro bitSequenceIntro">

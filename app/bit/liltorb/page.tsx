@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { LiltOrbGame } from "../LiltOrbGame";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function LiltOrbPage() {
   return (
-    <main className="bitPage">
+    <main className="bitPage" style={{ "--pkg-color": "#F2A0C1" } as CSSProperties}>
       <BitHeader current="LILT ORB" />
 
       <BitSeriesNav active="liltorb" />

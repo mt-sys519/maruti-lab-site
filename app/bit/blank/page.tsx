@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { BlankGame } from "../BlankGame";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function BlankPage() {
   return (
-    <main className="bitPage">
+    <main className="bitPage" style={{ "--pkg-color": "#F4C430" } as CSSProperties}>
       <BitHeader current="BLANK" />
 
       <BitSeriesNav active="blank" />

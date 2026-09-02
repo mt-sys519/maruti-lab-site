@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function InputRainPage() {
   return (
-    <main className="bitPage">
+    <main className="bitPage" style={{ "--pkg-color": "#6B3FA0" } as CSSProperties}>
       <BitHeader current="INPUT RAIN" />
       <BitSeriesNav active="input-rain" />
       <section className="bitIntro inputRainIntro">

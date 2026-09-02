@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function AvenuePage() {
   return (
-    <main className="bitPage">
+    <main className="bitPage" style={{ "--pkg-color": "#7B8CDE" } as CSSProperties}>
       <BitHeader current="AVENUE" />
       <BitSeriesNav active="avenue" />
       <section className="bitIntro bitRainChimeIntro">

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { AngleGame } from "../AngleGame";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function AnglePage() {
   return (
-    <main className="bitPage">
+    <main className="bitPage" style={{ "--pkg-color": "#FF7A5C" } as CSSProperties}>
       <BitHeader current="ANGLE" />
       <BitSeriesNav active="angle" />
       <section className="bitIntro">
