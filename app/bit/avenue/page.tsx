@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
+import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { RainChimeGame } from "../RainChimeGame";
 
@@ -47,6 +48,14 @@ export default function AvenuePage() {
       <div className="bitGameShell">
         <RainChimeGame />
       </div>
+      <BitHowToPlay
+        aboutLead={<>雨とウインドチャイムを<strong>眺めて聴く</strong>アンビエント。</>}
+        aboutSub="1996年、ニューヨークの部屋がテーマ。"
+        playLead={<>操作は<strong>ありません</strong>。眺めるだけ。</>}
+        playSub="SOUND / BGのオン・オフだけ切り替えられます。"
+        rulesLead={<>音は<strong>毎回変化</strong>する生成アンビエント。</>}
+        rulesSub="決まったループはありません。"
+      />
       <BitCartridgeNav current="avenue" />
       <BitFooter label="MARUTIBIT / GAME 007" />
     </main>

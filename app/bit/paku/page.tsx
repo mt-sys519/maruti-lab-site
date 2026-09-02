@@ -4,6 +4,7 @@ import { PakuGame } from "../PakuGame";
 import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
+import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -48,6 +49,14 @@ export default function PakuPage() {
 
       <PakuGame />
 
+      <BitHowToPlay
+        aboutLead={<>水槽で泳ぐ<strong>熱帯魚</strong>にエサをあげるだけ。</>}
+        aboutSub="勝敗・スコアはありません。"
+        playLead={<>水槽を<strong>タップ</strong>するとエサが落ちます。</>}
+        playSub="魚が寄ってきて食べる様子を眺めます。"
+        rulesLead={<>時間制限や得点は<strong>ありません</strong>。</>}
+        rulesSub="好きなだけ眺めて遊べます。"
+      />
       <BitCartridgeNav current="paku" />
       <BitFooter label="MARUTIBIT / GAME 005" />
     </main>

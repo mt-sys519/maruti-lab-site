@@ -4,6 +4,7 @@ import { LiltOrbGame } from "../LiltOrbGame";
 import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
+import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -51,6 +52,14 @@ export default function LiltOrbPage() {
 
       <LiltOrbGame />
 
+      <BitHowToPlay
+        aboutLead={<>なぞって粒子を引き寄せる<strong>感触トイ</strong>。</>}
+        aboutSub="NATURALは癒し、CYBERは刺激。"
+        playLead={<>画面を<strong>なぞって、はなす</strong>だけ。</>}
+        playSub="粒子が指に集まり、はなすと散らばります。"
+        rulesLead={<>勝敗や得点は<strong>ありません</strong>。</>}
+        rulesSub="テーマを切り替えて感触の違いを楽しめます。"
+      />
       <BitCartridgeNav current="liltorb" />
       <BitFooter label="MARUTIBIT / GAME 006" />
     </main>

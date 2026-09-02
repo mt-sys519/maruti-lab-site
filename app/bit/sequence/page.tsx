@@ -4,6 +4,7 @@ import { SequenceGame } from "../SequenceGame";
 import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
+import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -37,6 +38,15 @@ export default function SequencePage() {
         <p><strong>順番推理ゲーム。</strong><br />数の並びに隠れた規則を見つけて「？」を求める、全5問のミニゲーム。</p>
       </section>
       <SequenceGame />
+      <BitHowToPlay
+        aboutLead={<>数の並びに隠れた<strong>規則</strong>を見抜くパズル。</>}
+        aboutSub="全5問の数列パズル。"
+        playLead={<>数値キーパッドで<strong>「？」の数</strong>を入力し決定。</>}
+        playSub="等間隔や交互の規則を読み取ります。"
+        rulesLead={<><strong>正解数×回答速度</strong>でスコアが決まる。</>}
+        rulesSub="時間制限なし。答えはすべて正の整数。"
+        chips={["初級：等間隔", "中級：交互", "上級：2系列"]}
+      />
       <BitCartridgeNav current="sequence" />
       <BitFooter label="MARUTIBIT / GAME 003" />
     </main>

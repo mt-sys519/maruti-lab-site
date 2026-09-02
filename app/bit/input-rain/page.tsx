@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
+import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { InputRainGame } from "../InputRainGame";
 
@@ -41,6 +42,15 @@ export default function InputRainPage() {
         <p><strong>タイピング／フリック入力ゲーム。</strong><br />落下する端末入力を、消える前に入力する。</p>
       </section>
       <InputRainGame />
+      <BitHowToPlay
+        aboutLead={<>落ちてくる<strong>日本語</strong>を時間内に入力するゲーム。</>}
+        aboutSub="PromptTermの端末入力がテーマ。"
+        playLead={<><strong>ローマ字</strong>かフリックを選んでタイプ。</>}
+        playSub="文字が落ちきる前に入力を終えます。"
+        rulesLead={<>難易度ごとの<strong>制限時間</strong>でスコアが決まる。</>}
+        rulesSub="入力方式は端末に記憶されます。"
+        chips={["初級：20秒", "中級：40秒", "上級：60秒", "PRO：180秒"]}
+      />
       <BitCartridgeNav current="input-rain" />
       <BitFooter label="MARUTIBIT / GAME 004" />
     </main>

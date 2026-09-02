@@ -4,6 +4,7 @@ import { BlankGame } from "../BlankGame";
 import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
+import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -48,6 +49,15 @@ export default function BlankPage() {
 
       <BlankGame />
 
+      <BitHowToPlay
+        aboutLead={<>式にひそむ<strong>「？」</strong>を逆算するパズル。</>}
+        aboutSub="全5問の計算パズル。"
+        playLead={<>数値キーパッドで<strong>答えを入力</strong>し決定。</>}
+        playSub="初級は四則演算、上級は括弧を使います。"
+        rulesLead={<><strong>正解数×回答速度</strong>でスコアが決まる。</>}
+        rulesSub="時間制限なし。答えはすべて正の整数。"
+        chips={["初級：四則演算", "中級：計算順序", "上級：括弧あり"]}
+      />
       <BitCartridgeNav current="blank" />
       <BitFooter label="MARUTIBIT / GAME 002" />
     </main>
