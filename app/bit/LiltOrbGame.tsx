@@ -82,7 +82,8 @@ export function LiltOrbGame() {
   const { paused, resume } = useVisibilityPause(ready);
   const pausedRef = useRef(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fullscreenSupported, setFullscreenSupported] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+  const fullscreenActive = isFullscreen || pseudoFullscreen;
   const [controlsIdle, setControlsIdle] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
 
@@ -136,9 +137,6 @@ export function LiltOrbGame() {
   }
 
   useEffect(() => {
-    const supportTimer = window.setTimeout(() => {
-      setFullscreenSupported(typeof document.exitFullscreen === "function" || typeof document.webkitExitFullscreen === "function");
-    }, 0);
     function handleFullscreenChange() {
       const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
       const active = current === wrapRef.current;
@@ -150,28 +148,39 @@ export function LiltOrbGame() {
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     return () => {
-      window.clearTimeout(supportTimer);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
     };
   }, []);
 
+  // iOS Safari has no reliable native Fullscreen API for non-video elements
+  // (support varies by version and can silently no-op) - if the native
+  // request throws, is missing, or is rejected, fall back to a CSS-only
+  // "pseudo" fullscreen (.isPseudoFullscreen, styled like :fullscreen) that
+  // works everywhere instead of hiding the button or leaving it dead.
   function toggleFullscreen() {
+    if (pseudoFullscreen) {
+      setPseudoFullscreen(false);
+      return;
+    }
     const wrap = wrapRef.current;
     if (!wrap) return;
     const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
     if (current) {
       if (document.exitFullscreen) void document.exitFullscreen();
       else document.webkitExitFullscreen?.();
-    } else if (wrap.requestFullscreen) {
-      void wrap.requestFullscreen();
-    } else {
-      wrap.webkitRequestFullscreen?.();
+      return;
     }
+    const request = wrap.requestFullscreen?.bind(wrap) ?? wrap.webkitRequestFullscreen?.bind(wrap);
+    if (!request) {
+      setPseudoFullscreen(true);
+      return;
+    }
+    request().catch(() => setPseudoFullscreen(true));
   }
 
   function wakeControls() {
-    if (!isFullscreen) return;
+    if (!fullscreenActive) return;
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
     setControlsIdle((was) => (was ? false : was));
@@ -996,19 +1005,17 @@ export function LiltOrbGame() {
             </svg>
             {natural ? "NATURAL" : "CYBER"}
           </button>
-          {fullscreenSupported && (
-            <button className="bitPakuFullscreen" type="button" aria-pressed={isFullscreen} onClick={toggleFullscreen} aria-label="全画面表示を切り替え">
-              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
-              </svg>
-            </button>
-          )}
+          <button className="bitPakuFullscreen" type="button" aria-pressed={fullscreenActive} onClick={toggleFullscreen} aria-label="全画面表示を切り替え">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
+            </svg>
+          </button>
         </div>
       </div>
 
       <div
         ref={wrapRef}
-        className={`bitLiltOrbTank ${natural ? "isNatural" : ""}`}
+        className={`bitLiltOrbTank ${natural ? "isNatural" : ""} ${pseudoFullscreen ? "isPseudoFullscreen" : ""}`}
         aria-label="触れると粒子が集まる球体"
         onPointerMove={wakeControls}
         onContextMenu={(event) => event.preventDefault()}
@@ -1016,7 +1023,7 @@ export function LiltOrbGame() {
         <canvas ref={canvasRef} className="bitLiltOrbCanvas" />
         {!ready && <p className="bitPakuLoading">粒子を準備中…</p>}
         <p className={`bitLiltOrbHint ${hasInteracted ? "isHidden" : ""}`} aria-hidden="true">なぞって、はなす</p>
-        {isFullscreen && (
+        {fullscreenActive && (
           <button
             className={`bitLiltOrbExitFullscreen ${controlsIdle ? "isIdle" : ""}`}
             type="button"

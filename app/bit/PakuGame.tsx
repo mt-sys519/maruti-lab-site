@@ -97,7 +97,8 @@ export function PakuGame() {
   const [soundOn, setSoundOn] = useState(false);
   const { paused, resume } = useVisibilityPause(ready);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fullscreenSupported, setFullscreenSupported] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+  const fullscreenActive = isFullscreen || pseudoFullscreen;
   const [controlsIdle, setControlsIdle] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
 
@@ -226,7 +227,7 @@ export function PakuGame() {
   }, [ready, paused]);
 
   function wakeControls() {
-    if (!isFullscreen) return;
+    if (!fullscreenActive) return;
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
     setControlsIdle((was) => (was ? false : was));
@@ -271,12 +272,6 @@ export function PakuGame() {
   }
 
   useEffect(() => {
-    // Deferred so the client's first render still matches the server's (no
-    // fullscreen API on the server), avoiding a hydration mismatch.
-    const supportTimer = window.setTimeout(() => {
-      setFullscreenSupported(typeof document.exitFullscreen === "function" || typeof document.webkitExitFullscreen === "function");
-    }, 0);
-
     function handleFullscreenChange() {
       const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
       const active = current === tankRef.current;
@@ -288,24 +283,35 @@ export function PakuGame() {
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     return () => {
-      window.clearTimeout(supportTimer);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
     };
   }, []);
 
+  // iOS Safari has no reliable native Fullscreen API for non-video elements
+  // (support varies by version and can silently no-op) - if the native
+  // request throws, is missing, or is rejected, fall back to a CSS-only
+  // "pseudo" fullscreen (.isPseudoFullscreen, styled like :fullscreen) that
+  // works everywhere instead of hiding the button or leaving it dead.
   function toggleFullscreen() {
+    if (pseudoFullscreen) {
+      setPseudoFullscreen(false);
+      return;
+    }
     const tank = tankRef.current;
     if (!tank) return;
     const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
     if (current) {
       if (document.exitFullscreen) void document.exitFullscreen();
       else document.webkitExitFullscreen?.();
-    } else if (tank.requestFullscreen) {
-      void tank.requestFullscreen();
-    } else {
-      tank.webkitRequestFullscreen?.();
+      return;
     }
+    const request = tank.requestFullscreen?.bind(tank) ?? tank.webkitRequestFullscreen?.bind(tank);
+    if (!request) {
+      setPseudoFullscreen(true);
+      return;
+    }
+    request().catch(() => setPseudoFullscreen(true));
   }
 
   function feedAt(clientX: number, clientY: number) {
@@ -335,18 +341,16 @@ export function PakuGame() {
         <button className={`bitSound ${soundOn ? "isOn" : ""}`} type="button" aria-pressed={soundOn} onClick={toggleSound}>
           <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundOn ? "ON" : "OFF"}</strong>
         </button>
-        {fullscreenSupported && (
-          <button className="bitPakuFullscreen" type="button" aria-pressed={isFullscreen} onClick={toggleFullscreen} aria-label="全画面表示を切り替え">
-            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-              <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
-            </svg>
-          </button>
-        )}
+        <button className="bitPakuFullscreen" type="button" aria-pressed={fullscreenActive} onClick={toggleFullscreen} aria-label="全画面表示を切り替え">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
+          </svg>
+        </button>
       </div>
 
       <div
         ref={tankRef}
-        className="bitPakuTank"
+        className={`bitPakuTank ${pseudoFullscreen ? "isPseudoFullscreen" : ""}`}
         aria-label="ネオンテトラの水槽"
         onPointerDown={(event) => {
           wakeControls();
@@ -360,7 +364,7 @@ export function PakuGame() {
         <canvas id={CANVAS_ID} className="bitPakuCanvas" />
         <div ref={tapFxRef} className="bitPakuTapFx" aria-hidden="true" />
         {!ready && <p className="bitPakuLoading">水槽を準備中…</p>}
-        {isFullscreen && (
+        {fullscreenActive && (
           // The Fullscreen API only displays this element's own subtree - the
           // toolbar button above (a sibling of .bitPakuTank) becomes invisible
           // once fullscreen starts, with no way back except an OS gesture the

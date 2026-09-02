@@ -37,6 +37,8 @@ export function RainChimeGame() {
   const artboardRef = useRef<HTMLDivElement>(null);
   const [scene, setScene] = useState<RoomScene>("lap");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+  const fullscreenActive = isFullscreen || pseudoFullscreen;
   const { entered, soundOn, paused, backgroundPlayOn, toggleSound, toggleBackgroundPlay, resume } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
 
@@ -108,17 +110,31 @@ export function RainChimeGame() {
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
+    if (pseudoFullscreen) {
+      setPseudoFullscreen(false);
+      return;
+    }
     const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
     if (current) {
       if (document.exitFullscreen) await document.exitFullscreen();
       else await document.webkitExitFullscreen?.();
-    } else {
-      const viewport = viewportRef.current;
-      if (!viewport) return;
-      if (viewport.requestFullscreen) await viewport.requestFullscreen();
-      else await viewport.webkitRequestFullscreen?.();
+      return;
     }
-  }, []);
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    // iOS Safari has no reliable native Fullscreen API for non-video elements
+    // (support varies by version and can silently no-op) - if the native
+    // request throws, is missing, or is rejected, fall back to a CSS-only
+    // "pseudo" fullscreen (.isPseudoFullscreen, styled like :fullscreen) that
+    // works everywhere instead of leaving the button dead.
+    try {
+      if (viewport.requestFullscreen) await viewport.requestFullscreen();
+      else if (viewport.webkitRequestFullscreen) await viewport.webkitRequestFullscreen();
+      else throw new Error("Fullscreen API unavailable");
+    } catch {
+      setPseudoFullscreen(true);
+    }
+  }, [pseudoFullscreen]);
 
   return (
     <>
@@ -131,7 +147,7 @@ export function RainChimeGame() {
             <span className={styles.shortLabel}>BG {backgroundPlayOn ? "ON" : "OFF"}</span>
           </button>
         </div>
-        <button type="button" aria-pressed={isFullscreen} onClick={() => void toggleFullscreen()} aria-label="全画面表示を切り替え">
+        <button type="button" aria-pressed={fullscreenActive} onClick={() => void toggleFullscreen()} aria-label="全画面表示を切り替え">
           <svg className={styles.fullscreenIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
             <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
           </svg>
@@ -139,7 +155,7 @@ export function RainChimeGame() {
         </button>
       </div>
 
-      <div ref={viewportRef} className={styles.viewport}>
+      <div ref={viewportRef} className={`${styles.viewport} ${pseudoFullscreen ? styles.isPseudoFullscreen : ""}`}>
         <div ref={artboardRef} className={styles.artboard} data-scene={scene}>
           {roomFrames.map((frame) => (
             <img
@@ -165,7 +181,7 @@ export function RainChimeGame() {
           </div>
         )}
 
-        {isFullscreen && (
+        {fullscreenActive && (
           <button className={styles.exitFullscreen} type="button" onClick={() => void toggleFullscreen()} aria-label="全画面表示を終了">
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
               <path d="M7 2v5H2M13 2v5h5M7 18v-5H2M13 18v-5h5" />

@@ -3,9 +3,9 @@
 /* Fullscreens just the room image, not the controls bar/note/share row below
    it - matching PAKU and LILT ORB's tank/canvas-only fullscreen pattern
    instead of putting the whole page section into fullscreen. */
-.viewport:fullscreen, .viewport:-webkit-full-screen { position: fixed; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; max-width: none; max-height: none; margin: 0; border: 0; }
+.viewport:fullscreen, .viewport:-webkit-full-screen, .viewport.isPseudoFullscreen { position: fixed; inset: 0; z-index: 999; width: 100%; height: 100%; aspect-ratio: auto; max-width: none; max-height: none; margin: 0; border: 0; }
 @supports (height: 100dvh) {
-  .viewport:fullscreen, .viewport:-webkit-full-screen { height: 100dvh; }
+  .viewport:fullscreen, .viewport:-webkit-full-screen, .viewport.isPseudoFullscreen { height: 100dvh; }
 }
 .exitFullscreen { position: absolute; z-index: 8; top: 10px; right: 10px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid #30454d; border-radius: 999px; background: rgba(8, 18, 24, .82); backdrop-filter: blur(5px); color: #95abb0; cursor: pointer; }
 .exitFullscreen svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }

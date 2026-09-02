@@ -327,8 +327,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitPakuTank{position:relative;height:clamp(420px,58vw,620px);overflow:hidden;border:1px solid rgba(21,33,29,.45);background:#d7e8e7;touch-action:none;color-scheme:light;forced-color-adjust:none}
 .bitPakuShareRow{display:flex;gap:8px;margin-top:14px}
 .bitPakuShareRow>button{flex:1}
-.bitPakuTank:fullscreen,.bitPakuTank:-webkit-full-screen{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;background:#d7e8e7}
-@supports (height:100dvh){.bitPakuTank:fullscreen,.bitPakuTank:-webkit-full-screen{height:100dvh}}
+.bitPakuTank:fullscreen,.bitPakuTank:-webkit-full-screen,.bitPakuTank.isPseudoFullscreen{position:fixed;inset:0;z-index:999;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;background:#d7e8e7}
+@supports (height:100dvh){.bitPakuTank:fullscreen,.bitPakuTank:-webkit-full-screen,.bitPakuTank.isPseudoFullscreen{height:100dvh}}
 .bitPakuCanvas{position:relative;z-index:2;display:block;width:100%;height:100%;color-scheme:light;forced-color-adjust:none;isolation:isolate}
 .bitPakuLoading{position:absolute;z-index:9;inset:0;margin:0;display:grid;place-items:center;color:rgba(21,33,29,.5);font:600 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.14em;background:rgba(217,232,231,.75)}
 .bitPakuExitFullscreen{position:absolute;z-index:8;top:10px;right:10px;display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid rgba(21,33,29,.32);border-radius:999px;background:rgba(241,238,229,.82);backdrop-filter:blur(5px);color:#3a4440;cursor:pointer;opacity:1;transition:opacity .6s ease}
@@ -349,8 +349,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitLiltOrbTheme:hover,.bitLiltOrbTheme[aria-pressed="true"]{border-color:rgba(255,122,92,.56);color:var(--bit-red)}
 .bitLiltOrbTank{position:relative;height:clamp(420px,58vw,620px);overflow:hidden;border:1px solid rgba(21,33,29,.45);background:#0b1418;touch-action:none;transition:background-color .4s ease}
 .bitLiltOrbTank.isNatural{background:#eef4f3}
-.bitLiltOrbTank:fullscreen,.bitLiltOrbTank:-webkit-full-screen{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0}
-@supports (height:100dvh){.bitLiltOrbTank:fullscreen,.bitLiltOrbTank:-webkit-full-screen{height:100dvh}}
+.bitLiltOrbTank:fullscreen,.bitLiltOrbTank:-webkit-full-screen,.bitLiltOrbTank.isPseudoFullscreen{position:fixed;inset:0;z-index:999;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0}
+@supports (height:100dvh){.bitLiltOrbTank:fullscreen,.bitLiltOrbTank:-webkit-full-screen,.bitLiltOrbTank.isPseudoFullscreen{height:100dvh}}
 .bitLiltOrbCanvas{position:relative;z-index:2;display:block;width:100%;height:100%;touch-action:none}
 .bitLiltOrbHint{position:absolute;z-index:4;bottom:18px;left:0;right:0;margin:0;text-align:center;font:600 11px/1 "Yu Gothic UI",sans-serif;letter-spacing:.14em;color:rgba(220,240,245,.6);pointer-events:none;transition:opacity .6s ease,transform .6s ease}
 .bitLiltOrbTank.isNatural .bitLiltOrbHint{color:rgba(30,60,70,.55)}
