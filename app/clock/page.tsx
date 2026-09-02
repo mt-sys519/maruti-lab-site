@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ClockPage() {
   return <main className="clockPage">
-    <header className="siteHeader clockHeader"><a className="brand" href="/"><span className="brandMark"><img src="/icon-512.png" alt="" /></span><span>Maruti Lab</span></a><a href="/">Worksへ戻る</a></header>
+    <header className="siteHeader clockHeader"><a className="brand" href="/"><span className="brandMark" aria-hidden="true"><svg viewBox="0 0 18 18" focusable="false"><path d="M3 8.6 9 3.2l6 5.4" /><path d="M4.6 7.3V15h8.8V7.3" /><path d="M7.3 15v-4.3h3.4V15" /></svg></span><span>Maruti Lab</span></a><a href="/">Worksへ戻る</a></header>
     <section className="clockHero">
       <div className="clockHeroCopy"><p className="eyebrow">WINDOWS DESKTOP APP · FREE</p><h1>PromptTerm<br />CLOCK</h1><p className="clockLead">秒まで刻み続ける、<br />6管の端末時計。</p><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>Windows版を無料ダウンロード <small>v1.0.0 · 1.8MB</small></a><p className="downloadNote">Windows 10 / 11・64bit · 登録不要 · オフライン動作</p></div>
       <div className="clockHeroLive">

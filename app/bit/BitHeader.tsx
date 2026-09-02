@@ -12,7 +12,9 @@ export function BitHeader({ current }: { current?: string }) {
       </div>
       <nav className={styles.actions} aria-label="MarutiBit 補助ナビゲーション">
         <a className="brand" href="/" aria-label="Maruti Lab トップ">
-          <span className="brandMark"><img src="/icon-512.png" alt="" /></span>
+          <span className="brandMark" aria-hidden="true">
+            <svg viewBox="0 0 18 18" focusable="false"><path d="M3 8.6 9 3.2l6 5.4" /><path d="M4.6 7.3V15h8.8V7.3" /><path d="M7.3 15v-4.3h3.4V15" /></svg>
+          </span>
           <span>Maruti Lab</span>
         </a>
         <a className={styles.support} href={coffeeUrl} target="_blank" rel="noreferrer">

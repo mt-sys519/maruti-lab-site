@@ -40,7 +40,7 @@ test("renders the MarutiBit series index", async () => {
   assert.match(html, /MarutiBit/);
   assert.match(html, /ゲームを選ぶ/);
   assert.match(html, /class="brand" href="\/" aria-label="Maruti Lab トップ"/);
-  assert.match(html, /class="brandMark"><img src="\/icon-512\.png"/);
+  assert.match(html, /class="brandMark"[^>]*>\s*<svg/);
   assert.doesNotMatch(html, /id="bit-hub-title"><span>Maruti<\/span>/);
   assert.match(html, /href="\/bit\/angle"/);
   assert.match(html, /href="\/bit\/blank"/);

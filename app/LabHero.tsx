@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import type { CSSProperties } from "react";
 import { featuredBitGames } from "./bit/games";
 import styles from "./LabHero.module.css";
 
@@ -73,7 +74,7 @@ export function LabHero() {
             const isTrailingSolo = itemsInLastRow === 1 && isLastRow;
             const rowClass = [isLastRow && styles.isLastRow, isTrailingSolo && styles.spanFull].filter(Boolean).join(" ");
             return (
-              <a href={game.href} key={game.name} className={rowClass || undefined}>
+              <a href={game.href} key={game.name} className={rowClass || undefined} style={{ "--pkg-color": game.color } as CSSProperties}>
                 <span className={styles.gameNumber}>{game.number}</span>
                 {gameVisual(game.name)}
                 <strong className={styles.gameName}>{game.name}</strong>

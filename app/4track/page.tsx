@@ -41,7 +41,9 @@ export default function FourTrackPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <a className={styles.brand} href="/" aria-label="Maruti Lab トップ">
-          <span className={styles.brandMark}><img src="/icon-512.png" alt="" /></span>
+          <span className={styles.brandMark} aria-hidden="true">
+            <svg viewBox="0 0 18 18" focusable="false"><path d="M3 8.6 9 3.2l6 5.4" /><path d="M4.6 7.3V15h8.8V7.3" /><path d="M7.3 15v-4.3h3.4V15" /></svg>
+          </span>
           <span>Maruti Lab</span>
         </a>
         <nav aria-label="ページナビゲーション">
