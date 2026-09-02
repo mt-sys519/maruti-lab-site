@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -40,6 +41,7 @@ export default function InputRainPage() {
         <p><strong>タイピング／フリック入力ゲーム。</strong><br />落下する端末入力を、消える前に入力する。</p>
       </section>
       <InputRainGame />
+      <BitCartridgeNav current="input-rain" />
       <BitFooter label="MARUTIBIT / GAME 004" />
     </main>
   );

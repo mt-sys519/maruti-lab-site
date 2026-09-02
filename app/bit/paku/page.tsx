@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { PakuGame } from "../PakuGame";
+import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -47,6 +48,7 @@ export default function PakuPage() {
 
       <PakuGame />
 
+      <BitCartridgeNav current="paku" />
       <BitFooter label="MARUTIBIT / GAME 005" />
     </main>
   );

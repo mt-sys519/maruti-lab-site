@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { AngleGame } from "../AngleGame";
+import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -39,6 +40,7 @@ export default function AnglePage() {
         <p><strong>角度当てゲーム。</strong><br />三角形の角度を組み合わせ、示された「？」を求める、全5問のミニゲーム。</p>
       </section>
       <AngleGame />
+      <BitCartridgeNav current="angle" />
       <BitFooter label="MARUTIBIT / GAME 001" />
     </main>
   );

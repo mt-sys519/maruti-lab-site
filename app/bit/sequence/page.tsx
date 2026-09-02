@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { SequenceGame } from "../SequenceGame";
+import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -36,6 +37,7 @@ export default function SequencePage() {
         <p><strong>順番推理ゲーム。</strong><br />数の並びに隠れた規則を見つけて「？」を求める、全5問のミニゲーム。</p>
       </section>
       <SequenceGame />
+      <BitCartridgeNav current="sequence" />
       <BitFooter label="MARUTIBIT / GAME 003" />
     </main>
   );

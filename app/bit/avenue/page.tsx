@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -46,6 +47,7 @@ export default function AvenuePage() {
       <div className="bitGameShell">
         <RainChimeGame />
       </div>
+      <BitCartridgeNav current="avenue" />
       <BitFooter label="MARUTIBIT / GAME 007" />
     </main>
   );

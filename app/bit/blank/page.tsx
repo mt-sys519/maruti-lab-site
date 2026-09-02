@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { BlankGame } from "../BlankGame";
+import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -47,6 +48,7 @@ export default function BlankPage() {
 
       <BlankGame />
 
+      <BitCartridgeNav current="blank" />
       <BitFooter label="MARUTIBIT / GAME 002" />
     </main>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { LiltOrbGame } from "../LiltOrbGame";
+import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitSeriesNav } from "../BitSeriesNav";
@@ -50,6 +51,7 @@ export default function LiltOrbPage() {
 
       <LiltOrbGame />
 
+      <BitCartridgeNav current="liltorb" />
       <BitFooter label="MARUTIBIT / GAME 006" />
     </main>
   );
