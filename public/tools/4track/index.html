@@ -46,7 +46,7 @@ body{
   background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer;
 }
-.meter-wrap{width:80px;height:14px;background:#0b0906;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
+.meter-wrap{width:80px;height:14px;background:#1d160e;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
 .meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);}
 .clip-lamp{
   width:16px;height:16px;border-radius:50%;background:#3a1512;border:1px solid #000;
@@ -58,7 +58,7 @@ body{
 #metronome-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
 .metro-field{display:flex;flex-direction:column;gap:2px;font-size:9px;color:#b0a284;letter-spacing:.3px;}
 .metro-field input[type=number],.metro-field select{
-  background:#171310;border:1px solid #4a3f2e;color:#ecdfc3;
+  background:#322619;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:6px 6px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;width:58px;
 }
 #lofi-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:rgba(0,0,0,.2);}
@@ -124,7 +124,7 @@ body{
   background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:2px 4px;border-radius:4px;font-size:10px;cursor:pointer;
 }
-#wv-container{flex:0 0 72px;min-height:0;background:#171310;display:flex;flex-direction:column;position:relative}
+#wv-container{flex:0 0 72px;min-height:0;background:#322619;display:flex;flex-direction:column;position:relative}
 #wv-canvas{display:block;width:100%;flex:1;min-height:0;cursor:crosshair}
 #wv-info{
   padding:3px 9px;font-size:10px;color:#8A7554;
@@ -147,7 +147,7 @@ body{
 .tempo-arrow{font-size:19px;color:#ff6b35;padding-bottom:6px;}
 .tempo-apply{
   font-size:14px;font-weight:700;padding:11px 22px;border-radius:7px;
-  background:#ff6b35;border-color:#ff6b35;color:#171310;
+  background:#ff6b35;border-color:#ff6b35;color:#322619;
 }
 .tempo-apply:hover:not(:disabled){background:#ff8555;}
 .tempo-apply:disabled{opacity:1;background:#EDE0C0;border-color:#2B2118;color:#B0A284;}
@@ -493,7 +493,7 @@ function fitWvCanvas(){
 
 function drawWv(){
   const W=wvCanvas.width, H=wvCanvas.height, c=wvCtx;
-  c.fillStyle='#171310'; c.fillRect(0,0,W,H);
+  c.fillStyle='#322619'; c.fillRect(0,0,W,H);
   const sample = S.samples.find(s=>s.id===S.selSampleId);
   if(!sample){
     c.fillStyle='#6b5f47'; c.font='12px system-ui'; c.textAlign='center';
@@ -638,7 +638,7 @@ function drawClipsCanvas(){
   // Track row backgrounds + separators
   S.tracks.forEach((tr,i)=>{
     const y=i*TRACK_H;
-    c.fillStyle = i%2===0?'#171310':'#1c1712';
+    c.fillStyle = i%2===0?'#322619':'#3d2f1e';
     c.fillRect(0,y,W,TRACK_H);
     if(tr.muted && !tr.solo){
       c.fillStyle='rgba(0,0,0,.35)'; c.fillRect(0,y,W,TRACK_H);
@@ -1222,7 +1222,7 @@ function renderSampleList(){
 
 function drawMiniWave(canvas,sample){
   const c=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
-  c.fillStyle='#171310';c.fillRect(0,0,W,H);
+  c.fillStyle='#322619';c.fillRect(0,0,W,H);
   const data=sample.buffer.getChannelData(0),step=data.length/W;
   c.strokeStyle=sample.color;c.lineWidth=1;c.beginPath();
   for(let x=0;x<W;x++){
