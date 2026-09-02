@@ -317,6 +317,7 @@ body{
   </div>
   <div class="sep"></div>
   <button class="btn btn-green" id="btn-export">⬇ WAV書き出し</button>
+  <button class="btn" id="btn-bitdepth" title="書き出しのビット深度を切り替え" style="font-size:11px;padding:8px 10px;">16bit</button>
   <div class="sep"></div>
 
   <div id="master-box">
@@ -492,6 +493,7 @@ const S = {
   beatsPerBar: 4,
   clickOn: false,
   masterEq: 'none',
+  exportBitDepth: 16,
 };
 
 // ════════════════════════════════════════════════════
@@ -1844,6 +1846,12 @@ document.getElementById('btn-click').addEventListener('click',()=>{
   document.getElementById('btn-click').classList.toggle('active',S.clickOn);
 });
 
+const bitDepthBtn=document.getElementById('btn-bitdepth');
+bitDepthBtn.addEventListener('click',()=>{
+  S.exportBitDepth=S.exportBitDepth===16?24:16;
+  bitDepthBtn.textContent=S.exportBitDepth+'bit';
+});
+
 // ── Master vol / meter / clip lamp ────────
 const masterVolSlider=document.getElementById('master-vol');
 const masterVolVal=document.getElementById('master-vol-val');
@@ -1965,31 +1973,42 @@ document.getElementById('btn-export').addEventListener('click',async()=>{
     }
 
     const rendered=await offCtx.startRendering();
-    const wav=encodeWav(rendered);
+    const wav=encodeWav(rendered,S.exportBitDepth);
     const blob=new Blob([wav],{type:'audio/wav'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url; a.download='output.wav'; a.click();
     URL.revokeObjectURL(url);
-    setStatus(`書き出し完了: output.wav (${total.toFixed(2)}s, ${(wav.byteLength/1048576).toFixed(1)} MB)`);
+    setStatus(`書き出し完了: output.wav (${total.toFixed(2)}s, ${S.exportBitDepth}bit, ${(wav.byteLength/1048576).toFixed(1)} MB)`);
   }catch(err){setStatus('書き出しエラー: '+err.message);}
 });
 
-function encodeWav(buf){
+function encodeWav(buf,bitDepth=16){
   const nCh=Math.min(buf.numberOfChannels,2),sr=buf.sampleRate;
-  const bpch=2,blk=nCh*bpch,brt=sr*blk,dLen=buf.length*blk;
+  const bpch=bitDepth===24?3:2,blk=nCh*bpch,brt=sr*blk,dLen=buf.length*blk;
   const ab=new ArrayBuffer(44+dLen);const v=new DataView(ab);
   const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
   ws(0,'RIFF');v.setUint32(4,36+dLen,true);ws(8,'WAVE');
   ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);
   v.setUint16(22,nCh,true);v.setUint32(24,sr,true);
-  v.setUint32(28,brt,true);v.setUint16(32,blk,true);v.setUint16(34,16,true);
+  v.setUint32(28,brt,true);v.setUint16(32,blk,true);v.setUint16(34,bitDepth,true);
   ws(36,'data');v.setUint32(40,dLen,true);
   let off=44;
-  for(let i=0;i<buf.length;i++){
-    for(let ch=0;ch<nCh;ch++){
-      const s=Math.max(-1,Math.min(1,buf.getChannelData(ch)[i]));
-      v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;
+  if(bitDepth===24){
+    for(let i=0;i<buf.length;i++){
+      for(let ch=0;ch<nCh;ch++){
+        const s=Math.max(-1,Math.min(1,buf.getChannelData(ch)[i]));
+        const iv=Math.round(s<0?s*0x800000:s*0x7FFFFF);
+        v.setUint8(off,iv&0xFF); v.setUint8(off+1,(iv>>8)&0xFF); v.setUint8(off+2,(iv>>16)&0xFF);
+        off+=3;
+      }
+    }
+  } else {
+    for(let i=0;i<buf.length;i++){
+      for(let ch=0;ch<nCh;ch++){
+        const s=Math.max(-1,Math.min(1,buf.getChannelData(ch)[i]));
+        v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;
+      }
     }
   }
   return ab;
@@ -2096,7 +2115,7 @@ async function doAutosave(){
       tracks: S.tracks.map(t=>({id:t.id,name:t.name,volume:t.volume,pan:t.pan,eq:t.eq,muted:t.muted,solo:t.solo})),
       clips: S.clips.map(c=>({id:c.id,sampleId:c.sampleId,trackId:c.trackId,startTime:c.startTime,trimStart:c.trimStart,trimEnd:c.trimEnd,volume:c.volume,fadeIn:c.fadeIn,fadeOut:c.fadeOut})),
       targetTrackId: S.targetTrackId,
-      masterVolume: S.masterVolume, lofiOn: S.lofiOn, lofiAmount: S.lofiAmount, projectBpm: S.projectBpm, beatsPerBar: S.beatsPerBar, masterEq: S.masterEq,
+      masterVolume: S.masterVolume, lofiOn: S.lofiOn, lofiAmount: S.lofiAmount, projectBpm: S.projectBpm, beatsPerBar: S.beatsPerBar, masterEq: S.masterEq, exportBitDepth: S.exportBitDepth,
       nextUid: _id,
     };
     await idbPut('meta','project', meta);
@@ -2136,6 +2155,7 @@ async function restoreFromDb(){
     S.projectBpm=meta.projectBpm??120;
     S.beatsPerBar=meta.beatsPerBar??4;
     S.masterEq=meta.masterEq||'none';
+    S.exportBitDepth=meta.exportBitDepth===24?24:16;
     if(meta.nextUid) _id=Math.max(_id, meta.nextUid);
     return S.samples.length>0 || S.clips.length>0;
   }catch(err){ console.error('restore failed', err); return false; }
@@ -2156,7 +2176,7 @@ async function clearProject(){
   S.samples=[]; S.clips=[]; S.selSampleId=null; S.selClipId=null;
   S.tracks=[]; initTracks();
   S.masterVolume=1; S.lofiOn=false; S.lofiAmount=0.3;
-  S.projectBpm=120; S.beatsPerBar=4; S.clickOn=false; S.masterEq='none';
+  S.projectBpm=120; S.beatsPerBar=4; S.clickOn=false; S.masterEq='none'; S.exportBitDepth=16;
   savedSampleIds=new Set();
   undoStack=[]; redoStack=[];
 
@@ -2168,6 +2188,7 @@ async function clearProject(){
   document.getElementById('beatsPerBarSelect').value=S.beatsPerBar;
   document.getElementById('btn-click').classList.remove('active');
   document.getElementById('master-eq').value=S.masterEq;
+  bitDepthBtn.textContent='16bit';
 
   renderSampleList(); renderHeaders(); updateWvInfo(); updateAddBtns();
   updateInspector(); refreshUndoButtons(); fitTimeline(); drawTimeline();
@@ -2206,6 +2227,7 @@ restoreFromDb().then(restored=>{
   document.getElementById('projectBpmInput').value=S.projectBpm;
   document.getElementById('beatsPerBarSelect').value=S.beatsPerBar;
   document.getElementById('master-eq').value=S.masterEq;
+  bitDepthBtn.textContent=S.exportBitDepth+'bit';
   const sel=document.getElementById('add-track-sel');
   if(sel) sel.value=S.targetTrackId;
   fitTimeline();
