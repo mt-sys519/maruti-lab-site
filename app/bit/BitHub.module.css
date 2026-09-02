@@ -1,9 +1,31 @@
-.hero { min-height: 340px; padding: clamp(40px, 5.5vw, 76px) clamp(24px, 8vw, 120px); display: grid; grid-template-columns: .42fr minmax(0, 1.2fr) .42fr; gap: clamp(28px, 5vw, 80px); align-items: center; border-bottom: 1px solid rgba(21,33,29,.48); }
-.hero > p { margin: 0; align-self: start; color: #58675f; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
+/* Hero and catalog share the same cream + dot-grid "shop floor" backdrop
+   (see project_marutibit_toyshop_rebrand memory) so the page reads as one
+   continuous space instead of a plain header sitting above a themed
+   section - no border between them anymore. Baloo 2 only renders Latin
+   glyphs, so it's reserved for the Latin game-name logotypes elsewhere;
+   this page's Japanese copy stays on Yu Gothic UI, just recolored to the
+   shop's ink tone instead of the old site-wide blue/red. */
+.hero {
+  min-height: 340px;
+  padding: clamp(40px, 5.5vw, 76px) clamp(24px, 8vw, 120px);
+  display: grid;
+  grid-template-columns: .42fr minmax(0, 1.2fr) .42fr;
+  gap: clamp(28px, 5vw, 80px);
+  align-items: center;
+  position: relative;
+  background-color: #F5EFE1;
+  background-image: linear-gradient(rgba(24, 61, 85, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(24, 61, 85, .06) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px;
+}
+.hero::before, .hero::after { content: ""; position: absolute; pointer-events: none; }
+.hero::before { top: 14%; right: 6%; width: 12px; height: 12px; border-radius: 50%; background: #FF7A5C; opacity: .5; }
+.hero::after { bottom: 12%; left: 3%; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 11px solid #2BB3A3; opacity: .5; }
+.hero > p { margin: 0; align-self: start; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
 .hero > div { grid-column: 2; }
-.hero h1 { max-width: 760px; margin: 0; color: var(--bit-blue); font: 700 clamp(34px, 4.4vw, 62px)/1.35 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; letter-spacing: .01em; }
+.hero h1 { max-width: 760px; margin: 0; color: #232323; font: 700 clamp(34px, 4.4vw, 62px)/1.35 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; letter-spacing: .01em; }
 .hero div > p { margin: 20px 0 0; color: #53615a; font: 400 12px/2 "Yu Gothic UI", sans-serif; }
-.hero div > a { display: inline-flex; margin-top: 30px; min-height: 46px; align-items: center; padding: 0 20px; background: var(--bit-red); color: #fff; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; }
+.hero div > a { display: inline-flex; margin-top: 30px; min-height: 46px; align-items: center; padding: 0 20px; background: #FF7A5C; border: 3px solid #232323; box-shadow: 5px 5px 0 #232323; color: #232323; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; transition: transform .14s ease, box-shadow .14s ease; }
+.hero div > a:hover, .hero div > a:focus-visible { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #232323; outline: 0; }
 .catalog {
   position: relative;
   padding: clamp(58px, 8vw, 110px) clamp(20px, 6vw, 90px) clamp(80px, 10vw, 140px);
@@ -19,11 +41,11 @@
 .catalog::after { bottom: 10%; right: 5%; width: 13px; height: 13px; background: #7B8CDE; opacity: .45; transform: rotate(18deg); }
 .catalog > header { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: end; margin-bottom: 34px; }
 .catalog > header p, .catalog > header span { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
-.catalog > header h2 { margin: 0; color: var(--bit-blue); font: 700 clamp(30px, 4vw, 52px)/1.1 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }
-.catalog > header span { text-align: right; color: var(--bit-red); }
+.catalog > header h2 { margin: 0; color: #232323; font: 700 clamp(30px, 4vw, 52px)/1.1 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }
+.catalog > header span { text-align: right; color: #FF7A5C; }
 .grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 32px); }
 .card {
-  min-height: 350px;
+  min-height: 300px;
   padding: clamp(22px, 3vw, 40px);
   display: grid;
   grid-template-columns: 1fr auto;
@@ -45,7 +67,6 @@
 .blank, .sequence { gap: clamp(9px, 1.6vw, 20px); font: 500 clamp(28px, 4vw, 54px)/1 "Arial Narrow", sans-serif; }
 .blank i { color: #6c7771; font-style: normal; font-size: .55em; }
 .slot { display: grid; place-items: center; width: 1.35em; height: 1.35em; border: 2px dashed var(--pkg-color); border-radius: 6px; color: var(--pkg-color); font-size: .82em; }
-.sequence { align-items: flex-end; }
 .numSmall, .numMed, .numLarge { font-style: normal; }
 .rain { width: min(100%, 330px); min-height: 108px; margin: auto; align-items: flex-start; flex-direction: column; padding: 20px 12%; border: 1px solid #86f15a; background: #07100b; color: #86f15a; font-family: Consolas, monospace; }
 .rain i { font-style: normal; font-size: 9px; opacity: .55; }
