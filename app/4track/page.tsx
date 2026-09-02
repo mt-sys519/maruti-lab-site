@@ -112,7 +112,7 @@ export default function FourTrackPage() {
 
       <section className={styles.featureSection} aria-labelledby="features-title">
         <p className={styles.featureKicker}>REFERENCE / 11 FUNCTIONS</p>
-        <h3 id="features-title">細部まで、テープの流儀で。</h3>
+        <h3 id="features-title">細部まで、テープをまとって。</h3>
         <div className={styles.featureGrid}>
           {features.map((f) => (
             <div className={styles.featureItem} key={f.label}>
@@ -130,6 +130,7 @@ export default function FourTrackPage() {
         <div><span>LOCAL</span><p>音源とマイク録音はブラウザ内で処理され、Maruti Labのサーバーへ送信されません。</p></div>
         <div><span>MIC</span><p>録音機能はブラウザのマイク許可が必要です。許可はいつでも端末側で取り消せます。</p></div>
         <div><span>SAVE</span><p>作業内容はブラウザに自動保存され、次に開いたときに復元されます。別端末・別ブラウザには引き継がれないため、完成したら必ずWAVで書き出してください。</p></div>
+        <div><span>FORMAT</span><p>書き出しは16bit・端末のオーディオ設定に準じたサンプリングレート(多くの場合44.1kHzか48kHz)のWAVです。カセットは見た目のモチーフで、LO-FIエフェクトをONにしない限り音質は変わりません。</p></div>
       </aside>
 
       <footer className={styles.footer}>

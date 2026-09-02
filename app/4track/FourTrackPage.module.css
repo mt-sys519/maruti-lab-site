@@ -75,8 +75,8 @@
 .featureItem strong{display:block;margin-bottom:8px;font-size:14.5px;font-weight:700;letter-spacing:.01em;color:var(--studio-ink)}
 .featureItem p{margin:0;color:var(--studio-muted);font-size:12px;line-height:1.9;max-width:38ch}
 
-.notes{display:grid;grid-template-columns:repeat(3,1fr);background:#E7E2D3;border-bottom:1px solid var(--studio-line)}
-.notes>div{padding:42px clamp(20px,3.2vw,46px);border-right:1px solid var(--studio-line)}
+.notes{display:grid;grid-template-columns:repeat(4,1fr);background:#E7E2D3;border-bottom:1px solid var(--studio-line)}
+.notes>div{padding:42px clamp(16px,2.6vw,38px);border-right:1px solid var(--studio-line)}
 .notes>div:last-child{border-right:0}
 .notes span{display:block;margin-bottom:17px;color:var(--studio-accent);font:700 9px/1 "Courier New",monospace;letter-spacing:.16em}
 .notes p{margin:0;color:var(--studio-muted);font-size:11px;line-height:1.9}
