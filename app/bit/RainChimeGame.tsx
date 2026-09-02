@@ -146,6 +146,7 @@ export function RainChimeGame() {
             <span className={styles.fullLabel}>BACKGROUND {backgroundPlayOn ? "ON" : "OFF"}</span>
             <span className={styles.shortLabel}>BG {backgroundPlayOn ? "ON" : "OFF"}</span>
           </button>
+          <span className={styles.rotateHint}>⟲ 横向き推奨</span>
         </div>
         <button type="button" aria-pressed={fullscreenActive} onClick={() => void toggleFullscreen()} aria-label="全画面表示を切り替え">
           <svg className={styles.fullscreenIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
