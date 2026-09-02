@@ -44,6 +44,7 @@ body{
 #master-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:#322619;min-height:60px;}
 #master-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
 #master-box input[type=range]{accent-color:#ff6b35;width:84px;height:20px;cursor:pointer;}
+.master-vol-val{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ecdfc3;min-width:36px;}
 .eq-select-master{
   background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer;
@@ -198,7 +199,7 @@ body{
   position:relative;overflow:hidden;
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.12));
 }
-.th-main{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;position:relative;}
+.th-main{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0;position:relative;}
 .th-name{
   font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   cursor:text;min-width:0;
@@ -315,6 +316,7 @@ body{
   <div id="master-box">
     <span class="mb-label">MASTER</span>
     <input type="range" id="master-vol" min="0" max="1.5" step="0.01" value="1">
+    <span class="master-vol-val" id="master-vol-val">100%</span>
     <div class="meter-wrap"><div class="meter-fill" id="master-meter-fill"></div></div>
     <div class="clip-lamp" id="clip-lamp" title="CLIP"></div>
     <select id="master-eq" class="eq-select-master" title="マスターEQプリセット"></select>
@@ -1824,10 +1826,15 @@ document.getElementById('btn-click').addEventListener('click',()=>{
 
 // ── Master vol / meter / clip lamp ────────
 const masterVolSlider=document.getElementById('master-vol');
+const masterVolVal=document.getElementById('master-vol-val');
 const masterMeterFill=document.getElementById('master-meter-fill');
 const clipLamp=document.getElementById('clip-lamp');
 masterVolSlider.value=S.masterVolume;
-masterVolSlider.addEventListener('input',()=>{ S.masterVolume=parseFloat(masterVolSlider.value); });
+masterVolVal.textContent=Math.round(S.masterVolume*100)+'%';
+masterVolSlider.addEventListener('input',()=>{
+  S.masterVolume=parseFloat(masterVolSlider.value);
+  masterVolVal.textContent=Math.round(S.masterVolume*100)+'%';
+});
 function setMasterMeter(rms){ masterMeterFill.style.width=Math.min(100,rms*220)+'%'; }
 function setClipLamp(on){ clipLamp.classList.toggle('on',!!on); }
 
@@ -2129,6 +2136,7 @@ restoreFromDb().then(restored=>{
   renderHeaders();
   renderSampleList();
   document.getElementById('master-vol').value=S.masterVolume;
+  masterVolVal.textContent=Math.round(S.masterVolume*100)+'%';
   document.getElementById('lofi-on').checked=S.lofiOn;
   updateLofiKnobUI();
   document.getElementById('projectBpmInput').value=S.projectBpm;
