@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createResultCard } from "./shared/createResultCard";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
+import { ShareButton } from "./shared/ShareButton";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { XShareButton } from "./shared/XShareButton";
 import { inputRainPrompts, type InputRainDifficulty, type InputRainPrompt } from "./inputRainPrompts";
@@ -686,6 +687,10 @@ export function InputRainGame() {
           </div>
           <button type="button" className="bitStart" onClick={startRun}>START<small className="inputRainSpaceHint">SPACE TO START</small></button>
           <p className="bitRule">入力方式はこの端末に記憶され、次回も同じ設定で始まります。物理キーボードを接続した場合は「キーボード」を選んでください。</p>
+          <div className="bitPakuShareRow">
+            <ShareButton title="MarutiBit「INPUT RAIN」" text="PromptTermの端末入力を、文字が落ちきる前に打ち込むタイピング／フリック入力ゲーム" url="https://marutilab.com/bit/input-rain" />
+            <XShareButton variant="compact" text={"MarutiBit「INPUT RAIN」\nPromptTermの端末入力を、文字が落ちきる前に打ち込むタイピング／フリック入力ゲーム"} url="https://marutilab.com/bit/input-rain" />
+          </div>
         </>
       )}
 

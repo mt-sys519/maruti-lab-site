@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createResultCard } from "./shared/createResultCard";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { createUniqueQuestionSession, loadRecentQuestionSignatures, rememberQuestionSignatures } from "./shared/questionSession";
+import { ShareButton } from "./shared/ShareButton";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { XShareButton } from "./shared/XShareButton";
 import { useMathSeriesAudio } from "./useMathSeriesAudio";
@@ -220,6 +221,10 @@ export function BlankGame() {
         </div>
         <button className="bitStart" type="button" onClick={() => begin()}>START</button>
         <p className="bitRule">空欄は1つ。答えはすべて正の整数です。正解と回答速度でスコアが決まります。</p>
+        <div className="bitPakuShareRow">
+          <ShareButton title="MarutiBit「BLANK」" text="四則演算の空欄を逆算して埋める空欄補完ゲーム" url="https://marutilab.com/bit/blank" />
+          <XShareButton variant="compact" text={"MarutiBit「BLANK」\n四則演算の空欄を逆算して埋める空欄補完ゲーム"} url="https://marutilab.com/bit/blank" />
+        </div>
       </section>
     );
   }

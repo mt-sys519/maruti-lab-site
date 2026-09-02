@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createResultCard } from "./shared/createResultCard";
 import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { createUniqueQuestionSession, loadRecentQuestionSignatures, rememberQuestionSignatures } from "./shared/questionSession";
+import { ShareButton } from "./shared/ShareButton";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { XShareButton } from "./shared/XShareButton";
 import { useMathSeriesAudio } from "./useMathSeriesAudio";
@@ -601,6 +602,10 @@ export function AngleGame() {
         </div>
         <button className="bitStart" type="button" onClick={() => begin()}>START</button>
         <p className="bitRule">初級は内角の和、中級・上級は対頂角を使います。正解と回答速度でスコアが決まります。</p>
+        <div className="bitPakuShareRow">
+          <ShareButton title="MarutiBit「ANGLE」" text="三角形の角度を順番に解く角度当てゲーム" url="https://marutilab.com/bit/angle" />
+          <XShareButton variant="compact" text={"MarutiBit「ANGLE」\n三角形の角度を順番に解く角度当てゲーム"} url="https://marutilab.com/bit/angle" />
+        </div>
       </section>
     );
   }
