@@ -157,6 +157,9 @@ body{
 .tempo-apply:hover:not(:disabled){background:#ff8555;}
 .tempo-apply:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 #2B2118}
 .tempo-apply:disabled{opacity:1;background:#EDE0C0;border-color:#2B2118;color:#B0A284;box-shadow:none;}
+.tempo-sep{width:1px;height:34px;background:#4a3f2e;flex-shrink:0;align-self:center;}
+.mono-apply{background:#3A6EA5;color:#fff;}
+.mono-apply:hover:not(:disabled){background:#4C86BE;}
 .tempo-note{font-size:10px;color:#8A7554;max-width:220px;line-height:1.5;}
 
 /* ── Timeline (bottom half) ──────────────── */
@@ -219,9 +222,10 @@ body{
   flex:1;min-width:0;background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
 }
-.th-level-wrap{height:6px;background:#EDE0C0;border-radius:3px;overflow:hidden;margin-top:1px;position:relative;}
-.th-level-bar{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);transition:width .04s}
-.th-level-wrap::after{content:'';position:absolute;top:0;bottom:0;left:75%;width:1px;background:rgba(43,33,24,.5);pointer-events:none;}
+.th-level-wrap{flex-shrink:0;display:flex;gap:2px;align-items:flex-end;height:24px;}
+.th-level-ch{width:6px;height:100%;background:#EDE0C0;border-radius:2px;overflow:hidden;position:relative;display:flex;align-items:flex-end;}
+.th-level-fill{width:100%;height:0%;background:linear-gradient(0deg,#3FA34D,#F0B429 75%,#D94F3D 92%);transition:height .04s}
+.th-level-ch::after{content:'';position:absolute;left:0;right:0;bottom:75%;height:1px;background:rgba(43,33,24,.5);pointer-events:none}
 .th-rec-time{font-size:10px;color:#D94F3D;font-weight:600;position:absolute;right:6px;top:5px}
 
 /* ── Inspector ───────────────────────────── */
@@ -346,6 +350,9 @@ body{
       </div>
       <button class="btn tempo-apply" id="btn-stretch" disabled>テンポを変える</button>
       <span class="tempo-note">音程はそのまま、テンポだけ変えた新しいサンプルを作ります</span>
+      <div class="tempo-sep"></div>
+      <button class="btn tempo-apply mono-apply" id="btn-monoize" disabled>センターにモノラル化</button>
+      <span class="tempo-note">左右どちらかに片寄った録音を、真ん中から鳴る新しいサンプルにします</span>
     </div>
     <div id="wv-container">
       <canvas id="wv-canvas"></canvas>
@@ -583,6 +590,7 @@ function updateAddBtns(){
   document.getElementById('btn-sel-clear').disabled=!hasSel;
   document.getElementById('btn-wv-preview').disabled=!has;
   document.getElementById('btn-stretch').disabled=!has;
+  document.getElementById('btn-monoize').disabled=!has;
 }
 
 document.getElementById('btn-sel-clear').addEventListener('click',()=>{
@@ -946,22 +954,25 @@ function makeHeaderEl(tr){
   panSlider.addEventListener('dblclick',()=>{ tr.pan=0; panSlider.value=0; panVal.textContent=panLabel(0); });
   panRow.append(panLbl,panSlider,panVal);
 
-  // EQ row
+  // EQ row (+ mono toggle, + vertical L/R level meter)
   const eqRow=document.createElement('div'); eqRow.className='th-eq-row';
   const eqLbl=document.createElement('span'); eqLbl.textContent='EQ'; eqLbl.style.width='16px';
   const eqSelect=document.createElement('select');
   eqSelect.innerHTML=eqOptionsHtml();
   eqSelect.value=tr.eq;
   eqSelect.addEventListener('change',()=>{ tr.eq=eqSelect.value; });
-  eqRow.append(eqLbl,eqSelect);
 
-  // Level meter
   const levelWrap=document.createElement('div'); levelWrap.className='th-level-wrap';
   levelWrap.style.display='none';
-  const levelBar=document.createElement('div'); levelBar.className='th-level-bar';
-  levelWrap.appendChild(levelBar);
+  const levelL=document.createElement('div'); levelL.className='th-level-ch';
+  const levelFillL=document.createElement('div'); levelFillL.className='th-level-fill'; levelL.appendChild(levelFillL);
+  const levelR=document.createElement('div'); levelR.className='th-level-ch';
+  const levelFillR=document.createElement('div'); levelFillR.className='th-level-fill'; levelR.appendChild(levelFillR);
+  levelWrap.append(levelL,levelR);
 
-  div.append(nameEl,btns,volRow,panRow,eqRow,levelWrap);
+  eqRow.append(eqLbl,eqSelect,levelWrap);
+
+  div.append(nameEl,btns,volRow,panRow,eqRow);
   return div;
 }
 
@@ -1094,8 +1105,8 @@ function startLevelMeter(tId){
   const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
   const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
   const levelWrap=el.querySelector('.th-level-wrap');
-  const levelBar=el.querySelector('.th-level-bar');
-  levelWrap.style.display='block';
+  const levelFills=el.querySelectorAll('.th-level-fill');
+  levelWrap.style.display='flex';
 
   const buf=new Uint8Array(tr.rec.analyser.frequencyBinCount);
   function frame(){
@@ -1105,7 +1116,7 @@ function startLevelMeter(tId){
     for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;rms+=v*v;}
     rms=Math.sqrt(rms/buf.length);
     const pct=Math.min(100,rms*400);
-    levelBar.style.width=pct+'%';
+    levelFills.forEach(f=>f.style.height=pct+'%');
     tr.rec.animFrame=requestAnimationFrame(frame);
   }
   tr.rec.animFrame=requestAnimationFrame(frame);
@@ -1457,6 +1468,39 @@ document.getElementById('btn-stretch').addEventListener('click',()=>{
   }
 });
 
+function monoizeBuffer(buffer, ctx){
+  const len=buffer.length, nCh=buffer.numberOfChannels;
+  const mono=new Float32Array(len);
+  for(let ch=0; ch<nCh; ch++){
+    const data=buffer.getChannelData(ch);
+    for(let i=0;i<len;i++) mono[i]+=data[i];
+  }
+  let peak=0;
+  for(let i=0;i<len;i++){ const a=Math.abs(mono[i]); if(a>peak) peak=a; }
+  if(peak>1){ const g=1/peak; for(let i=0;i<len;i++) mono[i]*=g; }
+  const outBuffer=ctx.createBuffer(2,len,buffer.sampleRate);
+  outBuffer.copyToChannel(mono,0);
+  outBuffer.copyToChannel(mono,1);
+  return outBuffer;
+}
+
+document.getElementById('btn-monoize').addEventListener('click',()=>{
+  const sample=S.samples.find(s=>s.id===S.selSampleId); if(!sample) return;
+  setStatus('モノラル化中…');
+  try{
+    const ctx=getCtx();
+    const monoBuf=monoizeBuffer(sample.buffer, ctx);
+    const baseName=sample.name.replace(/\.[^.]+$/,'');
+    const newSample={id:uid(), name:`${baseName}_mono.wav`, buffer:monoBuf, color:SCOLORS[S.samples.length%SCOLORS.length]};
+    S.samples.push(newSample);
+    renderSampleList();
+    selectSample(newSample.id);
+    setStatus(`モノラル化したサンプルを作成しました (${monoBuf.duration.toFixed(2)}s)`);
+  }catch(err){
+    setStatus('モノラル化に失敗しました: '+err.message);
+  }
+});
+
 // ════════════════════════════════════════════════════
 // EQ PRESETS — 3-band (low shelf / mid peak / high shelf), fixed
 // frequencies. Presets, not a parametric editor — pick a flavor, not knobs.
@@ -1632,15 +1676,19 @@ function startPlayback(offset=0){
   const trackEqChains=S.tracks.map(t=>buildEqChain(ctx, t.eq));
   const trackMeters=S.tracks.map((tr,i)=>{
     const chain=trackEqChains[i];
-    const analyser=ctx.createAnalyser();
-    analyser.fftSize=256; analyser.smoothingTimeConstant=.7;
-    chain.output.connect(analyser);
-    analyser.connect(masterGain);
+    chain.output.connect(masterGain);
+    const splitter=ctx.createChannelSplitter(2);
+    chain.output.connect(splitter);
+    const analyserL=ctx.createAnalyser(); analyserL.fftSize=256; analyserL.smoothingTimeConstant=.7;
+    const analyserR=ctx.createAnalyser(); analyserR.fftSize=256; analyserR.smoothingTimeConstant=.7;
+    splitter.connect(analyserL,0); splitter.connect(analyserR,1);
     const el=headersInner.querySelector(`[data-tid="${tr.id}"]`);
+    const fills=el&&el.querySelectorAll('.th-level-fill');
     return {
-      trackId:tr.id, analyser, buf:new Float32Array(analyser.fftSize),
+      trackId:tr.id, analyserL, analyserR,
+      bufL:new Float32Array(analyserL.fftSize), bufR:new Float32Array(analyserR.fftSize),
       levelWrap:el&&el.querySelector('.th-level-wrap'),
-      levelBar:el&&el.querySelector('.th-level-bar'),
+      fillL:fills&&fills[0], fillR:fills&&fills[1],
     };
   });
 
@@ -1718,14 +1766,17 @@ function startPlayback(offset=0){
       setClipLamp(S.clipLampOffAt && performance.now()<S.clipLampOffAt);
     }
     trackMeters.forEach(tm=>{
-      if(!tm.levelBar||!tm.levelWrap) return;
+      if(!tm.fillL||!tm.fillR||!tm.levelWrap) return;
       const tr=S.tracks.find(t=>t.id===tm.trackId);
       if(tr&&tr.rec.state==='recording') return; // mic monitor owns this bar
-      tm.analyser.getFloatTimeDomainData(tm.buf);
-      let sumSq=0; for(let i=0;i<tm.buf.length;i++){ const v=tm.buf[i]; sumSq+=v*v; }
-      const rms=Math.sqrt(sumSq/tm.buf.length);
-      tm.levelWrap.style.display='block';
-      tm.levelBar.style.width=Math.min(100,rms*400)+'%';
+      tm.levelWrap.style.display='flex';
+      const rmsOf=(analyser,buf)=>{
+        analyser.getFloatTimeDomainData(buf);
+        let sumSq=0; for(let i=0;i<buf.length;i++){ const v=buf[i]; sumSq+=v*v; }
+        return Math.sqrt(sumSq/buf.length);
+      };
+      tm.fillL.style.height=Math.min(100,rmsOf(tm.analyserL,tm.bufL)*400)+'%';
+      tm.fillR.style.height=Math.min(100,rmsOf(tm.analyserR,tm.bufR)*400)+'%';
     });
     // auto-scroll playhead into view
     const phPx=elapsed*S.pps;
