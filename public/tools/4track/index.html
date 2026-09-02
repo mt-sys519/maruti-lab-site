@@ -48,8 +48,9 @@ body{
   background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer;
 }
-.meter-wrap{width:80px;height:14px;background:#1d160e;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
+.meter-wrap{width:80px;height:14px;background:#1d160e;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);position:relative;}
 .meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);}
+.meter-wrap::after{content:'';position:absolute;top:0;bottom:0;left:75%;width:1px;background:rgba(255,255,255,.55);pointer-events:none;}
 .clip-lamp{
   width:16px;height:16px;border-radius:50%;background:#3a1512;border:1px solid #000;
   box-shadow:inset 0 0 2px rgba(0,0,0,.8);flex-shrink:0;
@@ -218,8 +219,9 @@ body{
   flex:1;min-width:0;background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
 }
-.th-level-wrap{height:6px;background:#EDE0C0;border-radius:3px;overflow:hidden;margin-top:1px}
-.th-level-bar{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#3FA34D,#F0B429,#D94F3D);transition:width .04s}
+.th-level-wrap{height:6px;background:#EDE0C0;border-radius:3px;overflow:hidden;margin-top:1px;position:relative;}
+.th-level-bar{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);transition:width .04s}
+.th-level-wrap::after{content:'';position:absolute;top:0;bottom:0;left:75%;width:1px;background:rgba(43,33,24,.5);pointer-events:none;}
 .th-rec-time{font-size:10px;color:#D94F3D;font-weight:600;position:absolute;right:6px;top:5px}
 
 /* ── Inspector ───────────────────────────── */
@@ -396,6 +398,8 @@ body{
     </div>
     <button class="btn btn-red" id="btn-del" style="padding:2px 9px;font-size:10px">🗑 削除</button>
   </div>
+  <button class="btn" id="btn-undo" title="元に戻す (Ctrl+Z)" style="margin-left:auto;padding:3px 9px;font-size:10px" disabled>↶ 元に戻す</button>
+  <button class="btn" id="btn-redo" title="やり直す (Ctrl+Shift+Z)" style="padding:3px 9px;font-size:10px" disabled>↷ やり直す</button>
 </div>
 
 <script>
@@ -818,6 +822,7 @@ document.addEventListener('mouseup',()=>{
   if(S.drag.phase==='drag'){
     const clip=S.clips.find(c=>c.id===S.drag.clipId);
     if(clip){
+      pushUndo();
       clip.startTime=S.drag.ghostTime;
       clip.trackId=S.tracks[S.drag.targetTrIdx].id;
     }
@@ -1152,6 +1157,7 @@ function updateInspector(){
   document.getElementById('inp-fo').value=clip.fadeOut;
 }
 
+document.getElementById('inp-vol').addEventListener('pointerdown',()=>pushUndo());
 document.getElementById('inp-vol').addEventListener('input',e=>{
   const c=S.clips.find(c=>c.id===S.selClipId);if(!c)return;
   c.volume=parseFloat(e.target.value);
@@ -1160,13 +1166,16 @@ document.getElementById('inp-vol').addEventListener('input',e=>{
 });
 document.getElementById('inp-fi').addEventListener('change',e=>{
   const c=S.clips.find(c=>c.id===S.selClipId);if(!c)return;
+  pushUndo();
   c.fadeIn=Math.max(0,parseFloat(e.target.value)||0);drawTimeline();
 });
 document.getElementById('inp-fo').addEventListener('change',e=>{
   const c=S.clips.find(c=>c.id===S.selClipId);if(!c)return;
+  pushUndo();
   c.fadeOut=Math.max(0,parseFloat(e.target.value)||0);drawTimeline();
 });
 document.getElementById('btn-del').addEventListener('click',()=>{
+  pushUndo();
   S.clips=S.clips.filter(c=>c.id!==S.selClipId);
   S.selClipId=null;updateInspector();fitTimeline();
 });
@@ -1334,7 +1343,39 @@ function trackEndTime(tId){
   return Math.max(...tClips.map(c=>c.startTime+(c.trimEnd-c.trimStart)));
 }
 
+// ════════════════════════════════════════════════════
+// UNDO / REDO (clip arrangement only)
+// ════════════════════════════════════════════════════
+let undoStack=[], redoStack=[];
+function pushUndo(){
+  undoStack.push(JSON.stringify(S.clips));
+  if(undoStack.length>50) undoStack.shift();
+  redoStack=[];
+  refreshUndoButtons();
+}
+function refreshUndoButtons(){
+  document.getElementById('btn-undo').disabled=!undoStack.length;
+  document.getElementById('btn-redo').disabled=!redoStack.length;
+}
+function undo(){
+  if(!undoStack.length) return;
+  redoStack.push(JSON.stringify(S.clips));
+  S.clips=JSON.parse(undoStack.pop());
+  S.selClipId=null; updateInspector(); drawTimeline(); refreshUndoButtons();
+  setStatus('元に戻しました');
+}
+function redo(){
+  if(!redoStack.length) return;
+  undoStack.push(JSON.stringify(S.clips));
+  S.clips=JSON.parse(redoStack.pop());
+  S.selClipId=null; updateInspector(); drawTimeline(); refreshUndoButtons();
+  setStatus('やり直しました');
+}
+document.getElementById('btn-undo').addEventListener('click',undo);
+document.getElementById('btn-redo').addEventListener('click',redo);
+
 function addClip(sample,tId,startT,trimStart,trimEnd){
+  pushUndo();
   const clip={id:uid(),sampleId:sample.id,trackId:tId,
     startTime:startT,trimStart,trimEnd,volume:1,fadeIn:0,fadeOut:0};
   S.clips.push(clip); S.selClipId=clip.id;
@@ -1875,11 +1916,15 @@ document.addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();if(S.playing)stopPlayback();else startPlayback(S.playOff);}
   if(e.code==='Escape'){stopPlayback();S.playOff=0;drawTimeline();}
   if((e.code==='Delete'||e.code==='Backspace')&&S.selClipId){
+    pushUndo();
     S.clips=S.clips.filter(c=>c.id!==S.selClipId);
     S.selClipId=null;updateInspector();fitTimeline();
   }
   if((e.key==='='||e.key==='+')&&e.ctrlKey){e.preventDefault();zoomTimeline(1.4);}
   if(e.key==='-'&&e.ctrlKey){e.preventDefault();zoomTimeline(1/1.4);}
+  if(e.key.toLowerCase()==='z'&&(e.ctrlKey||e.metaKey)&&!e.shiftKey){e.preventDefault();undo();}
+  if(e.key.toLowerCase()==='z'&&(e.ctrlKey||e.metaKey)&&e.shiftKey){e.preventDefault();redo();}
+  if(e.key.toLowerCase()==='y'&&(e.ctrlKey||e.metaKey)){e.preventDefault();redo();}
 });
 
 function zoomTimeline(factor){
