@@ -1,27 +1,32 @@
-import type { ReactNode } from "react";
-
 type BitHowToPlayProps = {
   about: string;
   play: string;
   rules: string;
-  icon?: ReactNode;
 };
 
-export function BitHowToPlay({ about, play, rules, icon }: BitHowToPlayProps) {
+export function BitHowToPlay({ about, play, rules }: BitHowToPlayProps) {
   return (
     <section className="bitHowToPlay" aria-labelledby="bit-howtoplay-title">
       <h2 id="bit-howtoplay-title" className="srOnly">遊び方</h2>
-      {icon && <span className="bitHowToPlayIcon" aria-hidden="true">{icon}</span>}
       <div>
-        <h3>ABOUT</h3>
+        <div className="bitHowToPlayHead">
+          <h3>ABOUT</h3>
+          <span className="bitHowToPlayIcon" aria-hidden="true">ℹ️</span>
+        </div>
         <p>{about}</p>
       </div>
       <div>
-        <h3>PLAY</h3>
+        <div className="bitHowToPlayHead">
+          <h3>PLAY</h3>
+          <span className="bitHowToPlayIcon" aria-hidden="true">▶️</span>
+        </div>
         <p>{play}</p>
       </div>
       <div>
-        <h3>RULES</h3>
+        <div className="bitHowToPlayHead">
+          <h3>RULES</h3>
+          <span className="bitHowToPlayIcon" aria-hidden="true">📋</span>
+        </div>
         <p>{rules}</p>
       </div>
     </section>
