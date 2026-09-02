@@ -342,6 +342,7 @@ body{
       <input type="file" id="file-input" multiple accept=".wav,.mp3" style="display:none">
     </div>
     <div id="sample-list"></div>
+    <button class="btn btn-red" id="btn-clear-project" style="margin:6px;font-size:10px;padding:4px 8px;">🗑 プロジェクトをクリア</button>
   </div>
 
   <!-- Waveform Editor -->
@@ -2120,6 +2121,44 @@ async function restoreFromDb(){
     return S.samples.length>0 || S.clips.length>0;
   }catch(err){ console.error('restore failed', err); return false; }
 }
+
+async function clearProject(){
+  if(!confirm('プロジェクトを消去しますか？\nサンプル・トラック・保存データがすべて削除されます。')) return;
+  if(!confirm('本当によろしいですか？この操作は取り消せません。')) return;
+
+  stopPlayback();
+  try{
+    const db=await openAutosaveDb();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(['samples','meta'],'readwrite');
+      tx.objectStore('samples').clear();
+      tx.objectStore('meta').clear();
+      tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error);
+    });
+  }catch(err){ console.error('clear project db failed', err); }
+
+  S.samples=[]; S.clips=[]; S.selSampleId=null; S.selClipId=null;
+  S.tracks=[]; initTracks();
+  S.masterVolume=1; S.lofiOn=false; S.lofiAmount=0.3;
+  S.projectBpm=120; S.beatsPerBar=4; S.clickOn=false; S.masterEq='none';
+  savedSampleIds=new Set();
+  undoStack=[]; redoStack=[];
+
+  document.getElementById('master-vol').value=S.masterVolume;
+  masterVolVal.textContent='100%';
+  document.getElementById('lofi-on').checked=false;
+  updateLofiKnobUI();
+  document.getElementById('projectBpmInput').value=S.projectBpm;
+  document.getElementById('beatsPerBarSelect').value=S.beatsPerBar;
+  document.getElementById('btn-click').classList.remove('active');
+  document.getElementById('master-eq').value=S.masterEq;
+
+  renderSampleList(); renderHeaders(); updateWvInfo(); updateAddBtns();
+  updateInspector(); refreshUndoButtons(); fitTimeline(); drawTimeline();
+  setMasterMeter(0); setClipLamp(false);
+  setStatus('プロジェクトを消去しました');
+}
+document.getElementById('btn-clear-project').addEventListener('click', clearProject);
 
 // ════════════════════════════════════════════════════
 // RESIZE & INIT
