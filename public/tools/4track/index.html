@@ -48,8 +48,13 @@ body{
   background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer;
 }
-.meter-wrap{width:80px;height:22px;background:#1d160e;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);position:relative;}
-.meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);}
+.meter-wrap{width:96px;height:28px;background:#1d160e;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);position:relative;}
+.meter-fill{
+  height:100%;width:0%;
+  background:
+    repeating-linear-gradient(90deg, transparent 0px, transparent 3px, rgba(29,22,14,.9) 3px, rgba(29,22,14,.9) 4px),
+    linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);
+}
 .meter-wrap::after{content:'';position:absolute;top:0;bottom:0;left:75%;width:1px;background:rgba(255,255,255,.55);pointer-events:none;}
 .clip-lamp{
   width:18px;height:18px;border-radius:50%;background:#3a1512;border:1px solid #000;
@@ -223,9 +228,15 @@ body{
   padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
 }
 .th-eq-row .th-level-wrap{margin-left:auto;}
-.th-level-wrap{flex-shrink:0;display:flex;gap:2px;align-items:flex-end;height:24px;}
-.th-level-ch{width:6px;height:100%;background:#EDE0C0;border-radius:2px;overflow:hidden;position:relative;display:flex;align-items:flex-end;}
-.th-level-fill{width:100%;height:0%;background:linear-gradient(0deg,#3FA34D,#F0B429 75%,#D94F3D 92%);transition:height .04s}
+.th-level-wrap{flex-shrink:0;display:flex;gap:3px;align-items:flex-end;height:36px;}
+.th-level-ch{width:9px;height:100%;background:#EDE0C0;border-radius:2px;overflow:hidden;position:relative;display:flex;align-items:flex-end;}
+.th-level-fill{
+  width:100%;height:0%;
+  background:
+    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(237,224,192,.9) 2px, rgba(237,224,192,.9) 3px),
+    linear-gradient(0deg,#3FA34D,#F0B429 75%,#D94F3D 92%);
+  transition:height .04s;
+}
 .th-level-ch::after{content:'';position:absolute;left:0;right:0;bottom:75%;height:1px;background:rgba(43,33,24,.5);pointer-events:none}
 .th-rec-time{font-size:10px;color:#D94F3D;font-weight:600;position:absolute;right:6px;top:5px}
 
