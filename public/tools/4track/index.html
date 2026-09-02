@@ -194,10 +194,11 @@ body{
 /* Track header */
 .th{
   height:114px;border-bottom:1px solid #4a3f2e;
-  display:flex;flex-direction:column;padding:4px 6px;gap:2px;flex-shrink:0;
+  display:flex;flex-direction:row;padding:4px 6px;gap:6px;flex-shrink:0;
   position:relative;overflow:hidden;
   background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.12));
 }
+.th-main{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;position:relative;}
 .th-name{
   font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   cursor:text;min-width:0;
@@ -227,9 +228,8 @@ body{
   width:58px;flex-shrink:0;background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
 }
-.th-eq-row .th-level-wrap{margin-left:auto;}
-.th-level-wrap{flex-shrink:0;display:flex;gap:3px;align-items:flex-end;height:36px;}
-.th-level-ch{width:9px;height:100%;background:#EDE0C0;border-radius:2px;overflow:hidden;position:relative;display:flex;align-items:flex-end;}
+.th-level-wrap{flex-shrink:0;display:flex;gap:3px;align-items:flex-end;align-self:stretch;}
+.th-level-ch{width:11px;height:100%;background:#EDE0C0;border-radius:2px;overflow:hidden;position:relative;display:flex;align-items:flex-end;}
 .th-level-fill{
   width:100%;height:0%;
   background:
@@ -924,7 +924,6 @@ function makeHeaderEl(tr){
   // REC time display
   const recTimeEl=document.createElement('span');
   recTimeEl.className='th-rec-time'; recTimeEl.style.display='none';
-  div.appendChild(recTimeEl);
 
   // Buttons row
   const btns=document.createElement('div'); btns.className='th-btns';
@@ -966,14 +965,19 @@ function makeHeaderEl(tr){
   panSlider.addEventListener('dblclick',()=>{ tr.pan=0; panSlider.value=0; panVal.textContent=panLabel(0); });
   panRow.append(panLbl,panSlider,panVal);
 
-  // EQ row (+ mono toggle, + vertical L/R level meter)
+  // EQ row
   const eqRow=document.createElement('div'); eqRow.className='th-eq-row';
   const eqLbl=document.createElement('span'); eqLbl.textContent='EQ'; eqLbl.style.width='16px';
   const eqSelect=document.createElement('select');
   eqSelect.innerHTML=eqOptionsHtml();
   eqSelect.value=tr.eq;
   eqSelect.addEventListener('change',()=>{ tr.eq=eqSelect.value; });
+  eqRow.append(eqLbl,eqSelect);
 
+  const main=document.createElement('div'); main.className='th-main';
+  main.append(recTimeEl,nameEl,btns,volRow,panRow,eqRow);
+
+  // Vertical L/R level meter, running the full height of the track header
   const levelWrap=document.createElement('div'); levelWrap.className='th-level-wrap';
   const levelL=document.createElement('div'); levelL.className='th-level-ch';
   const levelFillL=document.createElement('div'); levelFillL.className='th-level-fill'; levelL.appendChild(levelFillL);
@@ -981,9 +985,7 @@ function makeHeaderEl(tr){
   const levelFillR=document.createElement('div'); levelFillR.className='th-level-fill'; levelR.appendChild(levelFillR);
   levelWrap.append(levelL,levelR);
 
-  eqRow.append(eqLbl,eqSelect,levelWrap);
-
-  div.append(nameEl,btns,volRow,panRow,eqRow);
+  div.append(main, levelWrap);
   return div;
 }
 
