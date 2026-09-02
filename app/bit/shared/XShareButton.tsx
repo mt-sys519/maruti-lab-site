@@ -18,8 +18,17 @@ export function XShareButton({ text, url, variant = "block" }: XShareButtonProps
     // mobile/tablet browsers (popup blocking, split-screen/multi-window quirks) - when
     // that happens `win` comes back null, so fall back to navigating the current tab
     // rather than leaving the tap looking like it did nothing.
-    const win = window.open(intent, "_blank", "noopener,noreferrer");
-    if (!win) window.location.href = intent;
+    //
+    // Passing "noopener" as a feature is deliberately NOT done here: per spec,
+    // browsers (Chrome included) return null from window.open() whenever
+    // noopener is set, even when the tab opened successfully - that made the
+    // `if (!win)` fallback fire on every click, navigating the original tab to
+    // the intent URL too. Get a real reference instead and null out `opener`
+    // by hand, which gives the same tabnabbing protection without losing the
+    // ability to tell success from failure.
+    const win = window.open(intent, "_blank", "noreferrer");
+    if (win) win.opener = null;
+    else window.location.href = intent;
   }
 
   const className = variant === "compact" ? styles.compact : styles.button;
