@@ -352,7 +352,7 @@ body{
     <span class="knob-val" id="lofi-knob-val">30%</span>
   </div>
   <div class="sep"></div>
-  <button class="btn btn-red" id="btn-clear-project" style="display:flex;align-items:center;justify-content:center;min-height:60px;border-radius:14px;font-size:12px;padding:0 18px;">🗑 プロジェクトをクリア</button>
+  <button class="btn btn-red" id="btn-clear-project" style="border-radius:16px;">🗑 プロジェクトをクリア</button>
 
   <span id="status">WAV / MP3 をドロップ、またはマイク録音で開始</span>
 </div>
@@ -503,6 +503,7 @@ const S = {
   drag:     null,// clip drag
   dropGhost:null,// library→timeline ghost
   previewSrc:null,
+  previewLofiSources:[],
   masterVolume: 1,
   lofiOn: false,
   lofiAmount: 0.3,
@@ -1915,6 +1916,10 @@ lofiKnob.addEventListener('mousedown',e=>{
 updateLofiKnobUI();
 
 // Preview
+function stopPreviewLofi(){
+  S.previewLofiSources.forEach(n=>{try{n.stop();}catch(_){}});
+  S.previewLofiSources=[];
+}
 document.getElementById('btn-wv-preview').addEventListener('click',()=>{
   const sample=S.samples.find(s=>s.id===S.selSampleId);if(!sample)return;
   const ctx=getCtx();
@@ -1922,9 +1927,23 @@ document.getElementById('btn-wv-preview').addEventListener('click',()=>{
   const t0=sel&&(sel.end-sel.start)>0.005?sel.start:0;
   const t1=sel&&(sel.end-sel.start)>0.005?sel.end:sample.buffer.duration;
   if(S.previewSrc){try{S.previewSrc.stop();}catch(_){}}
+  stopPreviewLofi();
+
+  // Route through the same MASTER EQ / LO-FI topology as full playback and
+  // export, so previewing a sample actually reflects how it'll sound mixed.
   const src=ctx.createBufferSource();
-  src.buffer=sample.buffer; src.connect(ctx.destination);
+  src.buffer=sample.buffer;
+  const masterEqChain=buildEqChain(ctx, S.masterEq);
+  src.connect(masterEqChain.input);
+  if(S.lofiOn){
+    const chain=buildLofiChain(ctx, S.lofiAmount, S.previewLofiSources);
+    masterEqChain.output.connect(chain.input);
+    chain.output.connect(ctx.destination);
+  } else {
+    masterEqChain.output.connect(ctx.destination);
+  }
   src.start(0,t0,t1-t0); S.previewSrc=src;
+  src.onended=stopPreviewLofi;
 });
 
 // ════════════════════════════════════════════════════
