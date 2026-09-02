@@ -55,6 +55,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap" />
+        {/* Baloo 2: the chunky rounded display face for each MarutiBit game's
+            "package" logotype (toy-shop rebrand) - scoped to game name
+            treatments only, the rest of the UI keeps Inter/Yu Gothic UI. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" />
         {children}
         {/* Loaded once here in the root layout, so every route under Maruti Lab -
             the top-level site, the MarutiBit hub, and each individual game page -

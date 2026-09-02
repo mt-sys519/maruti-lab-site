@@ -4,24 +4,47 @@
 .hero h1 { max-width: 760px; margin: 0; color: var(--bit-blue); font: 700 clamp(34px, 4.4vw, 62px)/1.35 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; letter-spacing: .01em; }
 .hero div > p { margin: 20px 0 0; color: #53615a; font: 400 12px/2 "Yu Gothic UI", sans-serif; }
 .hero div > a { display: inline-flex; margin-top: 30px; min-height: 46px; align-items: center; padding: 0 20px; background: var(--bit-red); color: #fff; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; }
-.catalog { padding: clamp(58px, 8vw, 110px) clamp(20px, 6vw, 90px) clamp(80px, 10vw, 140px); }
-.catalog > header { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: end; margin-bottom: 34px; }
+.catalog {
+  position: relative;
+  padding: clamp(58px, 8vw, 110px) clamp(20px, 6vw, 90px) clamp(80px, 10vw, 140px);
+  background-color: #F5EFE1;
+  background-image: linear-gradient(rgba(24, 61, 85, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(24, 61, 85, .06) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px;
+}
+/* A handful of Memphis-pastel confetti shapes scattered on the shared shop
+   background - see project_marutibit_toyshop_rebrand memory. Purely
+   decorative, kept out of the tab order. */
+.catalog::before, .catalog::after { content: ""; position: absolute; pointer-events: none; }
+.catalog::before { top: 8%; left: 4%; width: 14px; height: 14px; border-radius: 50%; background: #F4C430; opacity: .5; }
+.catalog::after { bottom: 10%; right: 5%; width: 13px; height: 13px; background: #7B8CDE; opacity: .45; transform: rotate(18deg); }
+.catalog > header { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: end; margin-bottom: 34px; }
 .catalog > header p, .catalog > header span { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .catalog > header h2 { margin: 0; color: var(--bit-blue); font: 700 clamp(30px, 4vw, 52px)/1.1 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }
 .catalog > header span { text-align: right; color: var(--bit-red); }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid rgba(21,33,29,.55); background: rgba(21,33,29,.28); gap: 1px; box-shadow: 12px 12px 0 rgba(24,61,85,.08); }
-.card { min-height: 350px; padding: clamp(22px, 3vw, 40px); display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; gap: 18px; background: rgba(241,238,229,.9); transition: background-color .18s ease, color .18s ease; }
-.card:hover, .card:focus-visible { background: var(--bit-blue); color: #f1eee5; outline: 0; }
-.number { color: var(--bit-red); font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
-.visual { grid-column: 1/-1; position: relative; min-height: 110px; display: flex; align-items: center; justify-content: center; color: var(--bit-blue); }
-.card:hover .visual, .card:focus-visible .visual { color: #f1eee5; }
+.grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 32px); }
+.card {
+  min-height: 350px;
+  padding: clamp(22px, 3vw, 40px);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  gap: 18px;
+  background: #F5EFE1;
+  border: 3px solid var(--pkg-color);
+  border-radius: 14px;
+  box-shadow: 8px 8px 0 #232323;
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+.card:hover, .card:focus-visible { transform: translate(-3px, -3px); box-shadow: 11px 11px 0 #232323; outline: 0; }
+.number { color: var(--pkg-color); font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
+.visual { grid-column: 1/-1; position: relative; min-height: 110px; display: flex; align-items: center; justify-content: center; color: var(--pkg-color); }
 .angle svg { width: clamp(88px, 9vw, 116px); height: auto; overflow: visible; }
 .angle svg .triangle { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.angle svg .arc { fill: none; stroke: var(--bit-red); stroke-width: 1.8; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.angle svg .q { fill: var(--bit-red); font: 700 15px "Yu Gothic UI", sans-serif; }
+.angle svg .arc { fill: none; stroke: var(--pkg-color); stroke-width: 1.8; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.angle svg .q { fill: var(--pkg-color); font: 700 15px "Yu Gothic UI", sans-serif; }
 .blank, .sequence { gap: clamp(9px, 1.6vw, 20px); font: 500 clamp(28px, 4vw, 54px)/1 "Arial Narrow", sans-serif; }
 .blank i { color: #6c7771; font-style: normal; font-size: .55em; }
-.slot { display: grid; place-items: center; width: 1.35em; height: 1.35em; border: 2px dashed var(--bit-red); border-radius: 6px; color: var(--bit-red); font-size: .82em; }
+.slot { display: grid; place-items: center; width: 1.35em; height: 1.35em; border: 2px dashed var(--pkg-color); border-radius: 6px; color: var(--pkg-color); font-size: .82em; }
 .sequence { align-items: flex-end; }
 .numSmall, .numMed, .numLarge { font-style: normal; }
 .rain { width: min(100%, 330px); min-height: 108px; margin: auto; align-items: flex-start; flex-direction: column; padding: 20px 12%; border: 1px solid #86f15a; background: #07100b; color: #86f15a; font-family: Consolas, monospace; }
@@ -34,16 +57,13 @@
 .liltorb svg { display: block; width: clamp(72px, 8vw, 100px); height: auto; overflow: visible; }
 .liltorb .orbRing { fill: none; stroke: currentColor; stroke-width: 1.4; vector-effect: non-scaling-stroke; opacity: .55; }
 .liltorb .orbDot { fill: currentColor; stroke: none; }
-.rainChime { width: min(100%, 330px); min-height: 108px; overflow: hidden; border: 1px solid rgba(24,61,85,.45); background: #071016; }
+.rainChime { width: min(100%, 330px); min-height: 108px; overflow: hidden; border: 1px solid var(--pkg-color); background: #071016; }
 .rainChime img { width: 100%; height: 108px; object-fit: cover; object-position: center; image-rendering: pixelated; }
-.card:hover .rainChime, .card:focus-visible .rainChime { border-color: rgba(241,238,229,.5); }
 .card > div:last-of-type p { margin: 0 0 10px; color: #66736c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
-.card > div:last-of-type h3 { margin: 0; font: 500 clamp(32px, 4.5vw, 62px)/.9 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.04em; }
+.card > div:last-of-type h3 { margin: 0; font: 800 clamp(28px, 4vw, 46px)/.95 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; color: #232323; }
 .kana { font: 500 12px/1 "Yu Gothic UI", sans-serif; letter-spacing: .06em; color: #7c8983; vertical-align: middle; }
-.card:hover .kana, .card:focus-visible .kana { color: #a9b7b0; }
 .card > div:last-of-type span { display: block; margin-top: 18px; max-width: 330px; color: #5d6963; font: 400 11px/1.8 "Yu Gothic UI", sans-serif; }
-.card:hover > div:last-of-type p, .card:focus-visible > div:last-of-type p, .card:hover > div:last-of-type span, .card:focus-visible > div:last-of-type span { color: #c5d0ca; }
-.play { align-self: end; padding-bottom: 4px; border-bottom: 1px solid currentColor; font: 700 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
+.play { align-self: end; padding-bottom: 4px; border-bottom: 2px solid var(--pkg-color); color: #232323; font: 700 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: 0; align-items: start; }

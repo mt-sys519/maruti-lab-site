@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { bitGames } from "./games";
 import styles from "./BitHub.module.css";
 
@@ -63,7 +64,7 @@ export function BitHub() {
         <header><p>GAME INDEX</p><h2 id="bit-catalog-title">ゲームを選ぶ</h2><span>{String(bitGames.length).padStart(2, "0")} / ONLINE</span></header>
         <div className={styles.grid}>
           {bitGames.map((game) => (
-            <a href={game.href} className={styles.card} key={game.id}>
+            <a href={game.href} className={styles.card} key={game.id} style={{ "--pkg-color": game.color } as CSSProperties}>
               <span className={styles.number}>{game.number}</span>
               <GameVisual id={game.id} />
               <div><p>{game.kind}</p><h3>{game.name} <small className={styles.kana}>‐{game.kana}‐</small></h3><span>{game.description}</span></div>
