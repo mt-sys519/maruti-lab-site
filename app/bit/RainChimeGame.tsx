@@ -23,6 +23,8 @@ declare global {
   }
 }
 
+const ROTATE_HINT_STORAGE_KEY = "marutibit:avenue-rotate-hint-seen";
+
 type RoomScene = "lap" | "glance" | "keyboard" | "windowsill";
 
 const roomFrames: Array<{ scene: RoomScene; src: string; className: string }> = [
@@ -41,6 +43,23 @@ export function RainChimeGame() {
   const fullscreenActive = isFullscreen || pseudoFullscreen;
   const { entered, soundOn, paused, backgroundPlayOn, toggleSound, toggleBackgroundPlay, resume } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
+  const [showRotateHint, setShowRotateHint] = useState(false);
+
+  // One-time nudge, not a persistent badge - shown once on first entry on a
+  // narrow portrait viewport, then remembered in localStorage so repeat
+  // visitors never see it again instead of it sitting in the controls bar
+  // permanently.
+  useEffect(() => {
+    if (!entered) return;
+    let alreadySeen = true;
+    try { alreadySeen = window.localStorage.getItem(ROTATE_HINT_STORAGE_KEY) === "true"; } catch { /* Default to showing once. */ }
+    if (alreadySeen) return;
+    if (!window.matchMedia("(max-width: 700px) and (orientation: portrait)").matches) return;
+    setShowRotateHint(true);
+    try { window.localStorage.setItem(ROTATE_HINT_STORAGE_KEY, "true"); } catch { /* Optional. */ }
+    const timer = window.setTimeout(() => setShowRotateHint(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [entered]);
 
   // iOS Safari historically only exposes the webkit-prefixed Fullscreen API,
   // and (unlike Android Chrome) doesn't reliably reflect requestFullscreen()
@@ -146,7 +165,6 @@ export function RainChimeGame() {
             <span className={styles.fullLabel}>BACKGROUND {backgroundPlayOn ? "ON" : "OFF"}</span>
             <span className={styles.shortLabel}>BG {backgroundPlayOn ? "ON" : "OFF"}</span>
           </button>
-          <span className={styles.rotateHint}>⟲ 横向き推奨</span>
         </div>
         <button type="button" aria-pressed={fullscreenActive} onClick={() => void toggleFullscreen()} aria-label="全画面表示を切り替え">
           <svg className={styles.fullscreenIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -175,6 +193,13 @@ export function RainChimeGame() {
         </div>
         <div className={styles.shade} aria-hidden="true" />
         <div className={styles.topReadout} aria-hidden="true"><span>11TH AVE / NEW YORK / 1996</span><span>WINDOW CHANNEL / RAIN</span></div>
+
+        {showRotateHint && (
+          <div className={styles.rotateToast} role="status">
+            <span>⟲ 横向きにすると、より広く楽しめます</span>
+            <button type="button" onClick={() => setShowRotateHint(false)} aria-label="閉じる">✕</button>
+          </div>
+        )}
 
         {entered && paused && (
           <div className={styles.pause}>

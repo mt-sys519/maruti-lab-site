@@ -67,7 +67,10 @@
 .topReadout { position: absolute; z-index: 5; top: 3.4%; left: 2.3%; right: 2.3%; display: flex; justify-content: space-between; color: rgba(222, 235, 235, .72); font: 600 clamp(6px, .7vw, 10px)/1 "Courier New", monospace; letter-spacing: .17em; text-shadow: 0 1px 3px #000; pointer-events: none; }
 .controls { display: flex; align-items: center; justify-content: space-between; padding: 13px clamp(14px, 3vw, 34px); border-bottom: 1px solid #26363d; background: #081218; color: #769098; }
 .controlsLeft { display: flex; align-items: center; gap: 10px; }
-.rotateHint { display: none; align-items: center; gap: 4px; font: 600 7px/1 "Yu Gothic UI", sans-serif; letter-spacing: .06em; color: #5c747a; white-space: nowrap; }
+.rotateToast { position: absolute; z-index: 9; top: 14px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; max-width: calc(100% - 28px); padding: 9px 8px 9px 14px; border-radius: 999px; background: rgba(8, 18, 24, .88); backdrop-filter: blur(6px); color: #cde1e4; font: 600 10px/1.4 "Yu Gothic UI", sans-serif; letter-spacing: .02em; animation: rotateToastIn .3s ease both; }
+.rotateToast button { flex: 0 0 auto; border: 0; background: transparent; color: #7fa0a5; font-size: 12px; line-height: 1; padding: 4px; cursor: pointer; }
+.rotateToast button:hover { color: #cde1e4; }
+@keyframes rotateToastIn { from { opacity: 0; transform: translate(-50%, -6px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .controls button { padding: 10px 13px; border: 1px solid #30454d; background: transparent; color: #95abb0; font: 700 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; white-space: nowrap; cursor: pointer; }
 .controls button[aria-pressed="true"] { border-color: #65a67c; color: #8bd6a4; }
 .shortLabel, .fullscreenIcon { display: none; }
@@ -95,11 +98,8 @@
   .fullscreenIcon { display: inline-block; }
 }
 
-@media (max-width: 700px) and (orientation: portrait) {
-  .rotateHint { display: inline-flex; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .drop { animation-duration: 3s; opacity: .22; }
   .frame { transition: none; }
+  .rotateToast { animation: none; }
 }
