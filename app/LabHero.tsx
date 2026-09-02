@@ -40,7 +40,7 @@ export function LabHero() {
         </svg>
       </span>
     );
-    if (name === "BLANK") return <span className={`${styles.visual} ${styles.blankVisual}`} aria-hidden="true"><span>8</span><i>+</i><b className={styles.slot}>?</b><i>=</i><span>13</span></span>;
+    if (name === "BLANK") return <span className={`${styles.visual} ${styles.blankVisual}`} aria-hidden="true"><span>8</span><i>＋</i><b className={styles.slot}>?</b><i>＝</i><span>13</span></span>;
     if (name === "SEQUENCE") return (
       <span className={`${styles.visual} ${styles.sequenceVisual}`} aria-hidden="true">
         <span className={styles.numSmall}>2</span><span className={styles.numMed}>4</span><span className={styles.numLarge}>8</span><b className={styles.slot}>?</b>
@@ -56,21 +56,18 @@ export function LabHero() {
     );
     if (name === "LILT ORB") return (
       <span className={`${styles.visual} ${styles.liltOrbVisual}`} aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false">
-          <circle className={styles.orbRing} cx="12" cy="12" r="8.2" />
-          <circle className={styles.orbDot} cx="9.2" cy="10" r=".9" />
-          <circle className={styles.orbDot} cx="14.2" cy="8.6" r=".65" />
-          <circle className={styles.orbDot} cx="14.6" cy="14.1" r=".8" />
-          <circle className={styles.orbDot} cx="10.1" cy="14.9" r=".6" />
+        <svg viewBox="0 0 100 100" focusable="false">
+          <circle className={styles.orbRing} cx="50" cy="50" r="34" />
+          <circle className={styles.orbDot} cx="38" cy="42" r="2.6" />
+          <circle className={styles.orbDot} cx="59" cy="35" r="1.9" />
+          <circle className={styles.orbDot} cx="61" cy="59" r="2.3" />
+          <circle className={styles.orbDot} cx="42" cy="62" r="1.7" />
         </svg>
       </span>
     );
     if (name === "AVENUE") return (
       <span className={`${styles.visual} ${styles.avenueVisual}`} aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false">
-          <path d="M7 5.5H17" /><path d="M9 5.5V16" /><path d="M12 5.5V19" /><path d="M15 5.5V14.5" />
-          <circle className={styles.avenueDot} cx="12" cy="21.3" r="1" />
-        </svg>
+        <img src="/games/rain-chime/room-lap.webp" alt="" />
       </span>
     );
     if (name === "INPUT RAIN") return <span className={`${styles.visual} ${styles.rainVisual}`} aria-hidden="true"><i>PT&gt;</i><span>INPUT</span><b>RAIN</b></span>;
