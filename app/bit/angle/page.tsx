@@ -42,9 +42,13 @@ export default function AnglePage() {
       </section>
       <AngleGame />
       <BitHowToPlay
-        about="三角形の内角にひそむ「？」の角度を答える、全5問の推理パズルです。"
-        play="表示された角度をヒントに、数値キーパッドで答えを入力し「決定」で回答。初級は内角の和、中級・上級は対頂角や複数の三角形の関係を使って解きます。"
-        rules="全5問。正解数と回答スピードでスコアが決まります。時間制限はありません。PC・スマホともにタップ／クリックで操作できます。"
+        aboutLead={<>三角形の<strong>角度</strong>を読む。</>}
+        aboutSub="全5問の推理パズル。"
+        playLead={<>角度を読み取り、<strong>数字を入力</strong>。</>}
+        playSub="答えが決まったら決定。"
+        rulesLead={<><strong>正解数×回答速度</strong>でスコアが決まる。</>}
+        rulesSub="時間制限なし。"
+        chips={["初級：内角の和", "中級：複数図形", "上級：対頂角"]}
       />
       <BitCartridgeNav current="angle" />
       <BitFooter label="MARUTIBIT / GAME 001" />
