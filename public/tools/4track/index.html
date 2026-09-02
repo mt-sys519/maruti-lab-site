@@ -219,7 +219,12 @@ body{
 .th-btn.rec-armed{background:#D94F3D;border-color:#141B24;color:#fff;animation:recblink .8s ease-in-out infinite;transform:translate(1.5px,1.5px);box-shadow:0 0 0 #141B24}
 .th-btn.rec-on{background:#D94F3D;border-color:#141B24;color:#fff;transform:translate(1.5px,1.5px);box-shadow:0 0 0 #141B24}
 @keyframes recblink{0%,100%{opacity:1}50%{opacity:.4}}
-.btn.armed{background:#D94F3D;color:#fff;animation:recblink .7s ease-in-out infinite;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(20,27,36,.6);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.modal-box{background:#EEF0EA;border:2px solid #141B24;border-radius:10px;box-shadow:5px 5px 0 #141B24;padding:22px 26px;max-width:320px;}
+.modal-box h3{margin:0 0 10px;font-size:15px;color:#141B24;}
+.modal-box p{margin:0 0 18px;font-size:12px;line-height:1.7;color:#5C6B76;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;}
 .th-vol-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#5C6B76}
 .th-vol-row input[type=range]{width:62px;accent-color:#3FA34D;cursor:pointer}
 .th-pan-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#5C6B76}
@@ -328,8 +333,22 @@ body{
     <div class="knob" id="lofi-knob"><div class="tick" id="lofi-knob-tick"></div></div>
     <span class="knob-val" id="lofi-knob-val">30%</span>
   </div>
+  <div class="sep"></div>
+  <button class="btn btn-red" id="btn-clear-project" style="font-size:11px;padding:8px 14px;">🗑 プロジェクトをクリア</button>
 
   <span id="status">WAV / MP3 をドロップ、またはマイク録音で開始</span>
+</div>
+
+<!-- ── Clear-project confirm modal ─────── -->
+<div id="clear-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h3>プロジェクトを消去しますか？</h3>
+    <p>サンプル・トラック・保存データがすべて削除されます。この操作は取り消せません。</p>
+    <div class="modal-actions">
+      <button class="btn" id="clear-modal-no">いいえ</button>
+      <button class="btn btn-red" id="clear-modal-yes">はい、消去する</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Main ───────────────────────────── -->
@@ -343,7 +362,6 @@ body{
       <input type="file" id="file-input" multiple accept=".wav,.mp3" style="display:none">
     </div>
     <div id="sample-list"></div>
-    <button class="btn btn-red" id="btn-clear-project" style="display:block;width:calc(100% - 14px);margin:7px;padding:7px 4px;font-size:11px;">🗑 プロジェクトをクリア</button>
   </div>
 
   <!-- Waveform Editor -->
@@ -2156,26 +2174,16 @@ async function clearProject(){
   setMasterMeter(0); setClipLamp(false);
   setStatus('プロジェクトを消去しました');
 }
-(function(){
-  const btn=document.getElementById('btn-clear-project');
-  const defaultLabel=btn.textContent;
-  let armed=false, armTimer=null;
-  function disarm(){
-    armed=false; clearTimeout(armTimer); armTimer=null;
-    btn.textContent=defaultLabel; btn.classList.remove('armed');
-  }
-  btn.addEventListener('click', async ()=>{
-    if(!armed){
-      armed=true;
-      btn.textContent='本当に消す？(もう一度押す)';
-      btn.classList.add('armed');
-      armTimer=setTimeout(disarm, 4000);
-      return;
-    }
-    disarm();
-    await clearProject();
-  });
-})();
+document.getElementById('btn-clear-project').addEventListener('click', ()=>{
+  document.getElementById('clear-modal').style.display='flex';
+});
+document.getElementById('clear-modal-no').addEventListener('click', ()=>{
+  document.getElementById('clear-modal').style.display='none';
+});
+document.getElementById('clear-modal-yes').addEventListener('click', async ()=>{
+  document.getElementById('clear-modal').style.display='none';
+  await clearProject();
+});
 
 // ════════════════════════════════════════════════════
 // RESIZE & INIT
