@@ -156,7 +156,7 @@ test("renders the MarutiBit BLANK game page", async () => {
   assert.match(html, /GAME 002/);
   assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
   assert.match(html, /bitBlankLogo/);
-  assert.match(html, /<a href="\/bit\/angle"><small>001<\/small>ANGLE<\/a>/);
+  assert.match(html, /<a href="\/bit\/angle" style="[^"]*"><small>001<\/small>ANGLE<\/a>/);
 });
 
 test("renders the MarutiBit SEQUENCE game page", async () => {
@@ -168,7 +168,7 @@ test("renders the MarutiBit SEQUENCE game page", async () => {
   assert.match(html, /GAME 003/);
   assert.match(html.replaceAll("<!-- -->", ""), /5 QUESTIONS/);
   assert.match(html, /bitSequenceLogo/);
-  assert.match(html, /<a href="\/bit\/blank"><small>002<\/small>BLANK<\/a>/);
+  assert.match(html, /<a href="\/bit\/blank" style="[^"]*"><small>002<\/small>BLANK<\/a>/);
 });
 
 test("renders the MarutiBit INPUT RAIN typing game without Matrix-style background rain", async () => {
