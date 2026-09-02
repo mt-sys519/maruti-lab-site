@@ -41,37 +41,37 @@ body{
 }
 
 /* ── Master / LO-FI (toolbar) ────────────── */
-#master-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:#322619;}
+#master-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:#322619;min-height:60px;}
 #master-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
 #master-box input[type=range]{accent-color:#ff6b35;width:84px;height:20px;cursor:pointer;}
 .eq-select-master{
   background:#362e22;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:6px 8px;border-radius:6px;font-size:12px;cursor:pointer;
 }
-.meter-wrap{width:80px;height:14px;background:#1d160e;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);position:relative;}
+.meter-wrap{width:80px;height:22px;background:#1d160e;border:1px solid #000;border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);position:relative;}
 .meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#3FA34D,#F0B429 75%,#D94F3D 92%);}
 .meter-wrap::after{content:'';position:absolute;top:0;bottom:0;left:75%;width:1px;background:rgba(255,255,255,.55);pointer-events:none;}
 .clip-lamp{
-  width:16px;height:16px;border-radius:50%;background:#3a1512;border:1px solid #000;
+  width:18px;height:18px;border-radius:50%;background:#3a1512;border:1px solid #000;
   box-shadow:inset 0 0 2px rgba(0,0,0,.8);flex-shrink:0;
 }
 .clip-lamp.on{background:#ff4433;box-shadow:0 0 6px #ff4433,inset 0 0 2px rgba(0,0,0,.5);}
 
-#metronome-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:#322619;}
+#metronome-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:#322619;min-height:60px;}
 #metronome-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;}
 .metro-field{display:flex;flex-direction:column;gap:2px;font-size:9px;color:#b0a284;letter-spacing:.3px;}
 .metro-field input[type=number],.metro-field select{
   background:#322619;border:1px solid #4a3f2e;color:#ecdfc3;
   padding:6px 6px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;width:58px;
 }
-#lofi-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:#322619;}
+#lofi-box{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid #4a3f2e;border-radius:8px;background:#322619;min-height:60px;}
 #lofi-box .mb-label{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#ff6b35;letter-spacing:1px;cursor:pointer;}
 .knob{
-  width:42px;height:42px;border-radius:50%;position:relative;cursor:ns-resize;flex-shrink:0;
+  width:34px;height:34px;border-radius:50%;position:relative;cursor:ns-resize;flex-shrink:0;
   background:radial-gradient(circle at 35% 30%,#6b5f47,#241f19 70%);
   border:1px solid #000;box-shadow:0 1px 2px rgba(0,0,0,.6);
 }
-.knob .tick{position:absolute;top:3px;left:50%;width:3px;height:10px;background:#ff6b35;transform-origin:1.5px 18px;margin-left:-1.5px;border-radius:1.5px;}
+.knob .tick{position:absolute;top:3px;left:50%;width:2.5px;height:8px;background:#ff6b35;transform-origin:1.25px 14px;margin-left:-1.25px;border-radius:1.25px;}
 .knob-val{font-family:'Courier New',monospace;font-size:11px;color:#b0a284;min-width:30px;}
 .btn{
   background:#FFFBF0;border:2px solid #2B2118;color:#2B2118;
@@ -160,7 +160,7 @@ body{
 .tempo-sep{width:1px;height:34px;background:#4a3f2e;flex-shrink:0;align-self:center;}
 .mono-apply{background:#3A6EA5;color:#fff;}
 .mono-apply:hover:not(:disabled){background:#4C86BE;}
-.tempo-note{font-size:10px;color:#8A7554;max-width:220px;line-height:1.5;}
+.tempo-note{font-size:10px;color:#8A7554;max-width:260px;line-height:1.5;}
 
 /* ── Timeline (bottom half) ──────────────── */
 #tl-outer{
@@ -219,9 +219,10 @@ body{
 .th-pan-row .pv{min-width:26px;font-size:9px;font-family:'Courier New',monospace;}
 .th-eq-row{display:flex;align-items:center;gap:4px;font-size:10px;color:#8A7554}
 .th-eq-row select{
-  flex:1;min-width:0;background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
+  width:58px;flex-shrink:0;background:#FFFBF0;border:1px solid #2B2118;color:#2B2118;
   padding:2px 3px;border-radius:3px;font-size:9px;cursor:pointer;
 }
+.th-eq-row .th-level-wrap{margin-left:auto;}
 .th-level-wrap{flex-shrink:0;display:flex;gap:2px;align-items:flex-end;height:24px;}
 .th-level-ch{width:6px;height:100%;background:#EDE0C0;border-radius:2px;overflow:hidden;position:relative;display:flex;align-items:flex-end;}
 .th-level-fill{width:100%;height:0%;background:linear-gradient(0deg,#3FA34D,#F0B429 75%,#D94F3D 92%);transition:height .04s}
@@ -349,10 +350,10 @@ body{
         <label>変更後のBPM<input type="number" id="stretchDstBpm" value="120" min="20" max="300"></label>
       </div>
       <button class="btn tempo-apply" id="btn-stretch" disabled>テンポを変える</button>
-      <span class="tempo-note">音程はそのまま、テンポだけ変えた新しいサンプルを作ります</span>
+      <span class="tempo-note">音程はそのまま、<br>テンポだけ変えた新しいサンプルを作ります</span>
       <div class="tempo-sep"></div>
       <button class="btn tempo-apply mono-apply" id="btn-monoize" disabled>センターにモノラル化</button>
-      <span class="tempo-note">左右どちらかに片寄った録音を、真ん中から鳴る新しいサンプルにします</span>
+      <span class="tempo-note">左右どちらかに片寄った録音を、<br>真ん中から鳴る新しいサンプルにします</span>
     </div>
     <div id="wv-container">
       <canvas id="wv-canvas"></canvas>
@@ -963,7 +964,6 @@ function makeHeaderEl(tr){
   eqSelect.addEventListener('change',()=>{ tr.eq=eqSelect.value; });
 
   const levelWrap=document.createElement('div'); levelWrap.className='th-level-wrap';
-  levelWrap.style.display='none';
   const levelL=document.createElement('div'); levelL.className='th-level-ch';
   const levelFillL=document.createElement('div'); levelFillL.className='th-level-fill'; levelL.appendChild(levelFillL);
   const levelR=document.createElement('div'); levelR.className='th-level-ch';
@@ -1104,13 +1104,11 @@ async function finalizeRec(tId){
 function startLevelMeter(tId){
   const tr=S.tracks.find(t=>t.id===tId); if(!tr) return;
   const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
-  const levelWrap=el.querySelector('.th-level-wrap');
   const levelFills=el.querySelectorAll('.th-level-fill');
-  levelWrap.style.display='flex';
 
   const buf=new Uint8Array(tr.rec.analyser.frequencyBinCount);
   function frame(){
-    if(tr.rec.state!=='recording'){levelWrap.style.display='none';return;}
+    if(tr.rec.state!=='recording'){levelFills.forEach(f=>f.style.height='0%');return;}
     tr.rec.analyser.getByteTimeDomainData(buf);
     let rms=0;
     for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;rms+=v*v;}
@@ -1124,7 +1122,7 @@ function startLevelMeter(tId){
 
 function stopLevelMeter(tId){
   const el=headersInner.querySelector(`[data-tid="${tId}"]`); if(!el) return;
-  const lw=el.querySelector('.th-level-wrap'); if(lw) lw.style.display='none';
+  el.querySelectorAll('.th-level-fill').forEach(f=>f.style.height='0%');
 }
 
 // Recording timer
@@ -1637,8 +1635,7 @@ function stopPlayback(){
   S.tracks.forEach(tr=>{
     if(tr.rec.state==='recording') return;
     const el=headersInner.querySelector(`[data-tid="${tr.id}"]`);
-    const lw=el&&el.querySelector('.th-level-wrap');
-    if(lw) lw.style.display='none';
+    el&&el.querySelectorAll('.th-level-fill').forEach(f=>f.style.height='0%');
   });
   setMasterMeter(0); setClipLamp(false);
   drawTimeline();
@@ -1766,10 +1763,9 @@ function startPlayback(offset=0){
       setClipLamp(S.clipLampOffAt && performance.now()<S.clipLampOffAt);
     }
     trackMeters.forEach(tm=>{
-      if(!tm.fillL||!tm.fillR||!tm.levelWrap) return;
+      if(!tm.fillL||!tm.fillR) return;
       const tr=S.tracks.find(t=>t.id===tm.trackId);
       if(tr&&tr.rec.state==='recording') return; // mic monitor owns this bar
-      tm.levelWrap.style.display='flex';
       const rmsOf=(analyser,buf)=>{
         analyser.getFloatTimeDomainData(buf);
         let sumSq=0; for(let i=0;i<buf.length;i++){ const v=buf[i]; sumSq+=v*v; }
