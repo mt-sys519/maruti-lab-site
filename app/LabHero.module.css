@@ -73,7 +73,7 @@
 .games a.spanFull { grid-column: 1 / -1; border-right: 0; }
 .games a:hover, .games a:focus-visible { background: #232323; color: #f1eee5; outline: 0; }
 .gameNumber { font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: var(--pkg-color, #FF7A5C); }
-.gameName { overflow-wrap: anywhere; font: 500 clamp(21px, 2vw, 34px)/.92 "Arial Narrow", "Yu Gothic UI", sans-serif; letter-spacing: -.035em; }
+.gameName { overflow-wrap: anywhere; font: 800 clamp(19px, 1.85vw, 30px)/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; }
 .gameKind { font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; color: #66736c; }
 .games a:hover .gameNumber, .games a:focus-visible .gameNumber { color: var(--pkg-color, #FF7A5C); }
 .games a:hover .gameKind, .games a:focus-visible .gameKind { color: #c7d2cc; }
@@ -85,7 +85,6 @@
 .blankVisual, .sequenceVisual { gap: clamp(5px, 1vw, 11px); font: 500 clamp(18px, 2vw, 27px)/1 "Arial Narrow", sans-serif; }
 .blankVisual i { color: #6c7771; font-style: normal; font-size: .65em; }
 .slot { display: grid; place-items: center; width: 1.5em; height: 1.5em; border: 2px dashed var(--pkg-color, #FF7A5C); border-radius: 6px; color: var(--pkg-color, #FF7A5C); font-size: .8em; }
-.sequenceVisual { align-items: flex-end; }
 .numSmall, .numMed, .numLarge { font-style: normal; }
 .pakuVisual svg { width: clamp(48px, 5.5vw, 66px); height: auto; overflow: visible; }
 .pakuVisual svg path { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
