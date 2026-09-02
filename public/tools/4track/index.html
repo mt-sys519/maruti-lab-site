@@ -94,8 +94,8 @@ body{
 .btn-red{border-color:#D94F3D;color:#D94F3D}
 .btn-red:hover{background:#D94F3D;color:#fff}
 
-.export-group{display:flex;align-items:stretch;border-radius:8px;box-shadow:3px 3px 0 #141B24;overflow:hidden;}
-#toolbar .export-group .btn{border-radius:0;box-shadow:none;border-right:1.5px solid #141B24;}
+.export-group{display:flex;align-items:stretch;border-radius:8px;border:2px solid #141B24;box-shadow:3px 3px 0 #141B24;overflow:hidden;}
+#toolbar .export-group .btn{border:none;border-radius:0;box-shadow:none;border-right:1.5px solid #141B24;}
 .bitdepth-toggle{display:flex;}
 .bd-opt{
   font-family:inherit;font-size:11px;font-weight:700;padding:0 13px;letter-spacing:.02em;
@@ -352,7 +352,7 @@ body{
     <span class="knob-val" id="lofi-knob-val">30%</span>
   </div>
   <div class="sep"></div>
-  <button class="btn btn-red" id="btn-clear-project" style="font-size:11px;padding:8px 14px;">🗑 プロジェクトをクリア</button>
+  <button class="btn btn-red" id="btn-clear-project" style="display:flex;align-items:center;justify-content:center;min-height:60px;border-radius:14px;font-size:12px;padding:0 18px;">🗑 プロジェクトをクリア</button>
 
   <span id="status">WAV / MP3 をドロップ、またはマイク録音で開始</span>
 </div>
