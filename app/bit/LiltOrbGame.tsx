@@ -250,19 +250,13 @@ export function LiltOrbGame() {
       pointerDownPos = pointer;
       try { canvas!.setPointerCapture(event.pointerId); } catch { /* Already released. */ }
       setHasInteracted(true);
-      startAudio();
+      // Only "mouse" here - see the note on startAudio(). On touch,
+      // pointerdown carries no user activation, and touching the audio engine
+      // from it actively poisons the context.
+      if (event.pointerType === "mouse") startAudio();
     }
-    // pointermove is not an activation-granting event in WebKit, so this is
-    // only worth a throttled attempt (it costs a node per try) - it's the
-    // touch listeners below that actually carry the unlock on iOS.
-    let lastMoveUnlockAt = 0;
     function handlePointerMove(event: PointerEvent) {
       if (pointerActive) pointer = screenToLocal(event.clientX, event.clientY);
-      if (running) return;
-      const now = performance.now();
-      if (now - lastMoveUnlockAt < 200) return;
-      lastMoveUnlockAt = now;
-      startAudio();
     }
     function handlePointerUp(event: PointerEvent) {
       pointerActive = false;
@@ -273,39 +267,31 @@ export function LiltOrbGame() {
         if (dist < 14 && dur < 280) registerTap(performance.now());
       }
       pointerDownPos = null;
+      // pointerup DOES grant activation for touch/pen, so this is the first
+      // moment in a press-and-drag where the unlock can actually succeed.
       startAudio();
     }
     function handlePointerCancel() {
       pointerActive = false;
       pointerDownPos = null;
-      // iOS can end a press-and-drag with pointercancel instead of pointerup
-      // (a system gesture recogniser taking the touch over). That used to
-      // mean the release - the one moment most likely to actually carry
-      // audio activation - passed with no unlock attempt at all.
-      startAudio();
+      // Deliberately no startAudio() - pointercancel is not an activation
+      // triggering input event, so it can only create a dead context.
     }
     canvas.addEventListener("pointerdown", handlePointerDown);
     canvas.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("pointercancel", handlePointerCancel);
 
-    // Raw touch events as well as the pointer ones above. WebKit grants the
-    // user activation that AudioContext.resume() needs off the *touch*
-    // stream, and touchend is the event it most reliably honours - which is
-    // exactly why a quick tap unlocked sound instantly on iPhone while a
-    // press-and-drag never did, no matter how many times it was retried
-    // (reported on-device: 939 resume() calls across one drag, actx.state
-    // never once left "suspended"). Pointer events are synthesised from
-    // these and evidently don't carry the same weight.
+    // touchend only - NOT touchstart/touchcancel. Per the HTML standard's
+    // "activation triggering input event", touchend is the touch event that
+    // grants user activation; touchstart never does.
     const touchUnlock = () => startAudio();
-    canvas.addEventListener("touchstart", touchUnlock, { passive: true });
     canvas.addEventListener("touchend", touchUnlock, { passive: true });
-    canvas.addEventListener("touchcancel", touchUnlock, { passive: true });
 
-    // Last line of defence: prime the audio off the first activating event
-    // anywhere on the page, so by the time the orb is touched the context is
-    // usually already unlocked and the gesture on the orb itself doesn't
-    // have to be the one that carries it.
+    // Prime the audio off the first activating event anywhere on the page
+    // (every type listed here is an activation triggering input event), so
+    // that merely scrolling down to the orb is usually enough to have sound
+    // ready before it is ever touched.
     const primeEvents = ["touchend", "pointerup", "click", "keydown"] as const;
     function primeAudio() {
       startAudio();
@@ -1028,6 +1014,19 @@ export function LiltOrbGame() {
       playSilentUnlockBuffer();
       scheduleRetry();
     }
+    // MUST only be called from an "activation triggering input event" as the
+    // HTML standard defines it: keydown, mousedown, pointerdown *only when
+    // pointerType is "mouse"*, pointerup when it is not, and touchend.
+    // Nothing else grants the user activation AudioContext needs.
+    //
+    // On iPhone that means a press-and-drag grants nothing at all until the
+    // finger lifts - touchstart, pointerdown and pointermove are all
+    // powerless. Calling this from them doesn't just waste an attempt, it
+    // constructs the AudioContext outside any activation, and a context born
+    // that way can stay permanently unresumable however many times resume()
+    // is called on it later (reported on-device: 939 attempts across one
+    // drag, actx.state never once leaving "suspended"). So the first touch
+    // must NOT reach this function.
     function startAudio() {
       if (running) return;
       ensureEngine();
@@ -1056,9 +1055,7 @@ export function LiltOrbGame() {
       canvas.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerCancel);
-      canvas.removeEventListener("touchstart", touchUnlock);
       canvas.removeEventListener("touchend", touchUnlock);
-      canvas.removeEventListener("touchcancel", touchUnlock);
       primeEvents.forEach((type) => document.removeEventListener(type, primeAudio));
       if (kickSchedulerId) window.clearInterval(kickSchedulerId);
       if (specialMomentTimer) window.clearTimeout(specialMomentTimer);
