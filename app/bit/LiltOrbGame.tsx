@@ -265,6 +265,15 @@ export function LiltOrbGame() {
     }
     function handlePointerMove(event: PointerEvent) {
       if (pointerActive) pointer = screenToLocal(event.clientX, event.clientY);
+      // A press-and-drag that never lifts only ever gave the unlock two
+      // trusted-gesture chances (down, up) - and up doesn't fire until the
+      // drag ends, by which point the gesture that needed the sound is
+      // already over. Reported on iPhone Safari: repeated tap-then-release
+      // unlocks almost instantly, but a single continuous drag never does,
+      // no matter how many times retried. pointermove is still part of the
+      // same trusted touch sequence, so keep spending extra resume() shots
+      // through it too instead of going silent between down and up.
+      if (actx && !running && actx.state === "suspended") void actx.resume();
     }
     function handlePointerUp(event: PointerEvent) {
       pointerActive = false;
@@ -897,6 +906,19 @@ export function LiltOrbGame() {
     function ensureEngine() {
       if (actx) return;
       actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      // `running` otherwise only ever gets updated inside attemptResume()'s
+      // own synchronous check, which only runs once up front and then again
+      // every 700ms from its retry timer - so the context can sit fully
+      // "running" for up to 700ms with the app still thinking it's suspended
+      // and skipping drag-tone frames. statechange fires the instant the
+      // browser actually flips the state, closing that gap.
+      actx.addEventListener("statechange", () => {
+        if (running || !actx || actx.state === "suspended") return;
+        running = true;
+        startingAudio = false;
+        scheduleAmbientTick();
+        scheduleCyberArp();
+      });
       master = actx.createGain();
       master.gain.setValueAtTime(0, actx.currentTime);
       // Short, not silent-feeling: ambient NATURAL chimes are sparse (the
