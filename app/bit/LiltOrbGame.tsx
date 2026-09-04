@@ -215,11 +215,13 @@ export function LiltOrbGame() {
     soundOnRef.current = storedSoundOn;
     setSoundOn(storedSoundOn);
 
-    // TEMP DIAGNOSTIC (?debug=1) - see debugRef declaration above.
+    // TEMP DIAGNOSTIC - see debugRef declaration above. Always on (no ?debug=1
+    // gate) since that query param wasn't reliably making it to the page on
+    // iPhone Safari (address-bar autocomplete swallowing it, most likely).
     let resumeAttempts = 0;
     let dragToneStarted = false;
     let debugInterval = 0;
-    if (new URLSearchParams(window.location.search).get("debug") === "1" && debugRef.current) {
+    if (debugRef.current) {
       debugRef.current.style.display = "block";
       debugInterval = window.setInterval(() => {
         if (!debugRef.current) return;
