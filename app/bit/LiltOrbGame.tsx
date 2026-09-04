@@ -86,6 +86,10 @@ export function LiltOrbGame() {
   const fullscreenActive = isFullscreen || pseudoFullscreen;
   const [controlsIdle, setControlsIdle] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
+  // TEMP DIAGNOSTIC (?debug=1): on-screen readout of the audio-unlock state,
+  // for chasing the iPhone Safari "drag never unlocks sound" report without
+  // needing a cable/Mac to open Safari's remote inspector. Remove once fixed.
+  const debugRef = useRef<HTMLPreElement>(null);
 
   // Exposed so the pause overlay / resume-from-pause handler (defined outside
   // the mount effect) can reach into the running engine.
@@ -211,6 +215,27 @@ export function LiltOrbGame() {
     soundOnRef.current = storedSoundOn;
     setSoundOn(storedSoundOn);
 
+    // TEMP DIAGNOSTIC (?debug=1) - see debugRef declaration above.
+    let resumeAttempts = 0;
+    let dragToneStarted = false;
+    let debugInterval = 0;
+    if (new URLSearchParams(window.location.search).get("debug") === "1" && debugRef.current) {
+      debugRef.current.style.display = "block";
+      debugInterval = window.setInterval(() => {
+        if (!debugRef.current) return;
+        debugRef.current.textContent =
+          `actx: ${actx?.state ?? "none"}\n` +
+          `running: ${running}\n` +
+          `startingAudio: ${startingAudio}\n` +
+          `pointerActive: ${pointerActive}\n` +
+          `resumeAttempts: ${resumeAttempts}\n` +
+          `dragToneStarted: ${dragToneStarted}\n` +
+          `dragNatGain: ${dragNatGain?.gain.value.toFixed(3) ?? "none"}\n` +
+          `outputGain: ${outputGain?.gain.value.toFixed(3) ?? "none"}\n` +
+          `soundOn: ${soundOnRef.current}`;
+      }, 200);
+    }
+
     let dpr = 1, width = 1, height = 1, radius = 1;
     const rand = mulberry32(0xca1407);
     const particles: Particle[] = Array.from({ length: PARTICLE_COUNT }, () => makeParticle(rand));
@@ -261,7 +286,7 @@ export function LiltOrbGame() {
       // a trusted gesture - the same call fired from a setTimeout callback
       // (as the retry loop does) is likely mostly ignored. More gestures ->
       // more genuinely-trusted resume() attempts -> faster unlock.
-      if (actx && !running && actx.state === "suspended") void actx.resume();
+      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); }
     }
     function handlePointerMove(event: PointerEvent) {
       if (pointerActive) pointer = screenToLocal(event.clientX, event.clientY);
@@ -273,7 +298,7 @@ export function LiltOrbGame() {
       // no matter how many times retried. pointermove is still part of the
       // same trusted touch sequence, so keep spending extra resume() shots
       // through it too instead of going silent between down and up.
-      if (actx && !running && actx.state === "suspended") void actx.resume();
+      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); }
     }
     function handlePointerUp(event: PointerEvent) {
       pointerActive = false;
@@ -286,7 +311,7 @@ export function LiltOrbGame() {
       pointerDownPos = null;
       // Same reasoning as the pointerdown handler: pointerup is also a
       // trusted gesture, so take the extra free chance while waiting.
-      if (actx && !running && actx.state === "suspended") void actx.resume();
+      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); }
     }
     function handlePointerCancel() {
       pointerActive = false;
@@ -799,6 +824,7 @@ export function LiltOrbGame() {
       pan.connect(master!); pan.connect(delay!);
       dragCybGain.connect(cyberBus!);
       dragOsc1.start(); dragOsc2.start();
+      dragToneStarted = true;
     }
 
     function updateDragTone(now: number) {
@@ -978,6 +1004,7 @@ export function LiltOrbGame() {
         return;
       }
       startingAudio = true;
+      resumeAttempts++;
       actx.resume().catch(() => { /* Retried on the timer below regardless. */ });
       window.setTimeout(attemptResume, 700);
     }
@@ -1011,6 +1038,7 @@ export function LiltOrbGame() {
       window.removeEventListener("pointercancel", handlePointerCancel);
       if (kickSchedulerId) window.clearInterval(kickSchedulerId);
       if (specialMomentTimer) window.clearTimeout(specialMomentTimer);
+      if (debugInterval) window.clearInterval(debugInterval);
       engineRef.current = null;
       void actx?.close();
     };
@@ -1051,6 +1079,24 @@ export function LiltOrbGame() {
         onContextMenu={(event) => event.preventDefault()}
       >
         <canvas ref={canvasRef} className="bitLiltOrbCanvas" />
+        <pre
+          ref={debugRef}
+          style={{
+            display: "none",
+            position: "absolute",
+            zIndex: 20,
+            top: 8,
+            left: 8,
+            margin: 0,
+            padding: "8px 10px",
+            background: "rgba(0,0,0,.78)",
+            color: "#7ef23a",
+            font: "11px/1.5 monospace",
+            whiteSpace: "pre",
+            pointerEvents: "none",
+            borderRadius: 6,
+          }}
+        />
         {!ready && <p className="bitPakuLoading">粒子を準備中…</p>}
         <p className={`bitLiltOrbHint ${hasInteracted ? "isHidden" : ""}`} aria-hidden="true">なぞって、はなす</p>
         {fullscreenActive && (
