@@ -42,7 +42,7 @@ export function RainChimeGame() {
   const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const fullscreenActive = isFullscreen || pseudoFullscreen;
   const [controlsIdle, setControlsIdle] = useState(false);
-  const idleTimerRef = useRef<number>();
+  const idleTimerRef = useRef<number | undefined>(undefined);
   const { entered, soundOn, paused, backgroundPlayOn, toggleSound, toggleBackgroundPlay, resume } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
   const [showRotateHint, setShowRotateHint] = useState(false);

@@ -251,29 +251,18 @@ export function LiltOrbGame() {
       try { canvas!.setPointerCapture(event.pointerId); } catch { /* Already released. */ }
       setHasInteracted(true);
       startAudio();
-      // Also fire a resume() attempt synchronously, right here inside this
-      // actual pointerdown handler, on every single tap/drag-start - not
-      // just the first one. Confirmed on-device: rapid repeated tapping
-      // brings sound on in ~1s, while dragging (one gesture, then just
-      // pointermove) can take ~8s even with the timer-based retry in
-      // attemptResume() already running. That strongly suggests Android
-      // Chrome only really acts on resume() calls made synchronously inside
-      // a trusted gesture - the same call fired from a setTimeout callback
-      // (as the retry loop does) is likely mostly ignored. More gestures ->
-      // more genuinely-trusted resume() attempts -> faster unlock.
-      if (actx && !running && actx.state === "suspended") { void actx.resume(); playSilentUnlockBuffer(); }
     }
+    // pointermove is not an activation-granting event in WebKit, so this is
+    // only worth a throttled attempt (it costs a node per try) - it's the
+    // touch listeners below that actually carry the unlock on iOS.
+    let lastMoveUnlockAt = 0;
     function handlePointerMove(event: PointerEvent) {
       if (pointerActive) pointer = screenToLocal(event.clientX, event.clientY);
-      // A press-and-drag that never lifts only ever gave the unlock two
-      // trusted-gesture chances (down, up) - and up doesn't fire until the
-      // drag ends, by which point the gesture that needed the sound is
-      // already over. Reported on iPhone Safari: repeated tap-then-release
-      // unlocks almost instantly, but a single continuous drag never does,
-      // no matter how many times retried. pointermove is still part of the
-      // same trusted touch sequence, so keep spending extra resume() shots
-      // through it too instead of going silent between down and up.
-      if (actx && !running && actx.state === "suspended") { void actx.resume(); playSilentUnlockBuffer(); }
+      if (running) return;
+      const now = performance.now();
+      if (now - lastMoveUnlockAt < 200) return;
+      lastMoveUnlockAt = now;
+      startAudio();
     }
     function handlePointerUp(event: PointerEvent) {
       pointerActive = false;
@@ -284,18 +273,45 @@ export function LiltOrbGame() {
         if (dist < 14 && dur < 280) registerTap(performance.now());
       }
       pointerDownPos = null;
-      // Same reasoning as the pointerdown handler: pointerup is also a
-      // trusted gesture, so take the extra free chance while waiting.
-      if (actx && !running && actx.state === "suspended") { void actx.resume(); playSilentUnlockBuffer(); }
+      startAudio();
     }
     function handlePointerCancel() {
       pointerActive = false;
       pointerDownPos = null;
+      // iOS can end a press-and-drag with pointercancel instead of pointerup
+      // (a system gesture recogniser taking the touch over). That used to
+      // mean the release - the one moment most likely to actually carry
+      // audio activation - passed with no unlock attempt at all.
+      startAudio();
     }
     canvas.addEventListener("pointerdown", handlePointerDown);
     canvas.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("pointercancel", handlePointerCancel);
+
+    // Raw touch events as well as the pointer ones above. WebKit grants the
+    // user activation that AudioContext.resume() needs off the *touch*
+    // stream, and touchend is the event it most reliably honours - which is
+    // exactly why a quick tap unlocked sound instantly on iPhone while a
+    // press-and-drag never did, no matter how many times it was retried
+    // (reported on-device: 939 resume() calls across one drag, actx.state
+    // never once left "suspended"). Pointer events are synthesised from
+    // these and evidently don't carry the same weight.
+    const touchUnlock = () => startAudio();
+    canvas.addEventListener("touchstart", touchUnlock, { passive: true });
+    canvas.addEventListener("touchend", touchUnlock, { passive: true });
+    canvas.addEventListener("touchcancel", touchUnlock, { passive: true });
+
+    // Last line of defence: prime the audio off the first activating event
+    // anywhere on the page, so by the time the orb is touched the context is
+    // usually already unlocked and the gesture on the orb itself doesn't
+    // have to be the one that carries it.
+    const primeEvents = ["touchend", "pointerup", "click", "keydown"] as const;
+    function primeAudio() {
+      startAudio();
+      if (running) primeEvents.forEach((type) => document.removeEventListener(type, primeAudio));
+    }
+    primeEvents.forEach((type) => document.addEventListener(type, primeAudio, { passive: true }));
 
     let last = performance.now();
     let lastRender = 0;
@@ -963,7 +979,6 @@ export function LiltOrbGame() {
       delay.connect(master);
     }
 
-    let startingAudio = false;
     // PAKU's audio engine hit this exact bug class before (see its
     // public/scripts/paku/audio.js comments): continuous/looping nodes
     // (its ambient drone, fluorescent hum) created as soon as actx.state
@@ -976,33 +991,47 @@ export function LiltOrbGame() {
     function markRunning() {
       if (running || !actx) return;
       running = true;
-      startingAudio = false;
       scheduleAmbientTick();
       scheduleCyberArp();
     }
     // Confirmed on-device (Redmi Note 13 Pro 5G, Chrome for Android): on a
     // fresh page load, actx.resume()'s promise can simply hang and never
     // settle - not reject, just never resolve - a known Android Chrome
-    // quirk. So still poll actx.state every ~700ms as a fallback for that
+    // quirk. So still poll actx.state on a timer as a fallback for that
     // case, but prefer the resume() promise resolving as the primary,
     // faster-and-safer signal (see markRunning above).
-    function attemptResume() {
+    let retryTimer = 0;
+    function scheduleRetry() {
+      if (retryTimer) return;
+      retryTimer = window.setTimeout(() => {
+        retryTimer = 0;
+        if (running || !actx) return;
+        tryResume();
+      }, 700);
+    }
+    // Safe to call from any gesture, any number of times - unlike the old
+    // version, which latched a `startingAudio` flag on the very first touch
+    // and then returned early from every later gesture, so no resume() call
+    // made from inside a real gesture ever had its promise wired up to
+    // markRunning again. Only the fire-and-forget inline calls were left,
+    // which is why hundreds of attempts could pass with nothing happening.
+    function tryResume() {
       if (running || !actx) return;
       if (actx.state !== "suspended") {
         markRunning();
         return;
       }
-      startingAudio = true;
       const result = actx.resume();
       if (result && typeof result.then === "function") {
-        result.then(markRunning).catch(() => { /* Retried on the timer below regardless. */ });
+        result.then(markRunning).catch(() => { /* Retried on the timer instead. */ });
       }
-      window.setTimeout(attemptResume, 700);
+      playSilentUnlockBuffer();
+      scheduleRetry();
     }
     function startAudio() {
-      if (running || startingAudio) return;
+      if (running) return;
       ensureEngine();
-      attemptResume();
+      tryResume();
     }
 
     engineRef.current = {
@@ -1027,8 +1056,13 @@ export function LiltOrbGame() {
       canvas.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerCancel);
+      canvas.removeEventListener("touchstart", touchUnlock);
+      canvas.removeEventListener("touchend", touchUnlock);
+      canvas.removeEventListener("touchcancel", touchUnlock);
+      primeEvents.forEach((type) => document.removeEventListener(type, primeAudio));
       if (kickSchedulerId) window.clearInterval(kickSchedulerId);
       if (specialMomentTimer) window.clearTimeout(specialMomentTimer);
+      if (retryTimer) window.clearTimeout(retryTimer);
       engineRef.current = null;
       void actx?.close();
     };
