@@ -288,7 +288,7 @@ export function LiltOrbGame() {
       // a trusted gesture - the same call fired from a setTimeout callback
       // (as the retry loop does) is likely mostly ignored. More gestures ->
       // more genuinely-trusted resume() attempts -> faster unlock.
-      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); }
+      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); playSilentUnlockBuffer(); }
     }
     function handlePointerMove(event: PointerEvent) {
       if (pointerActive) pointer = screenToLocal(event.clientX, event.clientY);
@@ -300,7 +300,7 @@ export function LiltOrbGame() {
       // no matter how many times retried. pointermove is still part of the
       // same trusted touch sequence, so keep spending extra resume() shots
       // through it too instead of going silent between down and up.
-      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); }
+      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); playSilentUnlockBuffer(); }
     }
     function handlePointerUp(event: PointerEvent) {
       pointerActive = false;
@@ -313,7 +313,7 @@ export function LiltOrbGame() {
       pointerDownPos = null;
       // Same reasoning as the pointerdown handler: pointerup is also a
       // trusted gesture, so take the extra free chance while waiting.
-      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); }
+      if (actx && !running && actx.state === "suspended") { resumeAttempts++; void actx.resume(); playSilentUnlockBuffer(); }
     }
     function handlePointerCancel() {
       pointerActive = false;
@@ -931,9 +931,27 @@ export function LiltOrbGame() {
     // Confirmed by trying the eager version on-device: sound stopped working
     // entirely (not just delayed) until navigating away and back unlocked
     // the origin some other way.
+    // The classic iOS unlock hack: actually starting a (silent) buffer
+    // source is a stronger signal to WebKit than resume() alone - reported
+    // on-device, resume() was called 900+ times across a held drag and
+    // actx.state never left "suspended" even once, so the promise-based
+    // resume() call clearly isn't enough on its own on this device/version.
+    // Cheap and safe to call repeatedly from every trusted pointer event.
+    function playSilentUnlockBuffer() {
+      if (!actx) return;
+      try {
+        const buffer = actx.createBuffer(1, 1, 22050);
+        const source = actx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(actx.destination);
+        source.start(0);
+      } catch { /* Best-effort; safe to ignore. */ }
+    }
+
     function ensureEngine() {
       if (actx) return;
       actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      playSilentUnlockBuffer();
       // `running` otherwise only ever gets updated inside attemptResume()'s
       // own synchronous check, which only runs once up front and then again
       // every 700ms from its retry timer - so the context can sit fully
