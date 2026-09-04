@@ -924,19 +924,6 @@ export function LiltOrbGame() {
       if (actx) return;
       actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       playSilentUnlockBuffer();
-      // `running` otherwise only ever gets updated inside attemptResume()'s
-      // own synchronous check, which only runs once up front and then again
-      // every 700ms from its retry timer - so the context can sit fully
-      // "running" for up to 700ms with the app still thinking it's suspended
-      // and skipping drag-tone frames. statechange fires the instant the
-      // browser actually flips the state, closing that gap.
-      actx.addEventListener("statechange", () => {
-        if (running || !actx || actx.state === "suspended") return;
-        running = true;
-        startingAudio = false;
-        scheduleAmbientTick();
-        scheduleCyberArp();
-      });
       master = actx.createGain();
       master.gain.setValueAtTime(0, actx.currentTime);
       // Short, not silent-feeling: ambient NATURAL chimes are sparse (the
@@ -977,26 +964,39 @@ export function LiltOrbGame() {
     }
 
     let startingAudio = false;
+    // PAKU's audio engine hit this exact bug class before (see its
+    // public/scripts/paku/audio.js comments): continuous/looping nodes
+    // (its ambient drone, fluorescent hum) created as soon as actx.state
+    // merely *read* as no-longer-suspended played "sometimes, not others" on
+    // iOS Safari - state can apparently flip before the browser has truly
+    // finished unlocking the output pipeline. Its fix, mirrored here: only
+    // treat the unlock as real once the resume() promise has actually
+    // resolved, and gate starting any continuous node (LILT ORB's drag-tone
+    // oscillators, the ambient/cyber schedulers) on that, not on state alone.
+    function markRunning() {
+      if (running || !actx) return;
+      running = true;
+      startingAudio = false;
+      scheduleAmbientTick();
+      scheduleCyberArp();
+    }
     // Confirmed on-device (Redmi Note 13 Pro 5G, Chrome for Android): on a
     // fresh page load, actx.resume()'s promise can simply hang and never
     // settle - not reject, just never resolve - a known Android Chrome
-    // quirk. A single resume() call with no retry (the previous version of
-    // this function) then waits forever with `running` stuck false, which
-    // matches the reported "sound never comes on no matter how much you
-    // touch it" exactly. So: keep calling resume() every ~700ms, checking
-    // actx.state directly rather than trusting any single promise, until it
-    // actually reports "running".
+    // quirk. So still poll actx.state every ~700ms as a fallback for that
+    // case, but prefer the resume() promise resolving as the primary,
+    // faster-and-safer signal (see markRunning above).
     function attemptResume() {
       if (running || !actx) return;
       if (actx.state !== "suspended") {
-        running = true;
-        startingAudio = false;
-        scheduleAmbientTick();
-        scheduleCyberArp();
+        markRunning();
         return;
       }
       startingAudio = true;
-      actx.resume().catch(() => { /* Retried on the timer below regardless. */ });
+      const result = actx.resume();
+      if (result && typeof result.then === "function") {
+        result.then(markRunning).catch(() => { /* Retried on the timer below regardless. */ });
+      }
       window.setTimeout(attemptResume, 700);
     }
     function startAudio() {
