@@ -7,9 +7,11 @@
 @supports (height: 100dvh) {
   .viewport:fullscreen, .viewport:-webkit-full-screen, .viewport.isPseudoFullscreen { height: 100dvh; }
 }
-.exitFullscreen { position: absolute; z-index: 8; top: 10px; right: 10px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid #30454d; border-radius: 999px; background: rgba(8, 18, 24, .82); backdrop-filter: blur(5px); color: #95abb0; cursor: pointer; }
+.exitFullscreen { position: absolute; z-index: 8; top: 10px; right: 10px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid #30454d; border-radius: 999px; background: rgba(8, 18, 24, .82); backdrop-filter: blur(5px); color: #95abb0; cursor: pointer; opacity: 1; transition: opacity .6s ease; }
 .exitFullscreen svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .exitFullscreen:hover, .exitFullscreen:focus-visible { border-color: #65a67c; color: #8bd6a4; outline: none; }
+.exitFullscreen.isIdle { opacity: 0; }
+@media (hover: none) { .exitFullscreen.isIdle { pointer-events: none; } }
 .artboard { position: absolute; z-index: 1; overflow: hidden; }
 .frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0; image-rendering: pixelated; transition: opacity .36s steps(3, end); }
 .lapFrame { opacity: 1; }

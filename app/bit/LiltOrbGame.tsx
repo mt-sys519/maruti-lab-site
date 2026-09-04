@@ -139,11 +139,7 @@ export function LiltOrbGame() {
   useEffect(() => {
     function handleFullscreenChange() {
       const current = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
-      const active = current === wrapRef.current;
-      setIsFullscreen(active);
-      setControlsIdle(false);
-      if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
-      if (active) idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
+      setIsFullscreen(current === wrapRef.current);
     }
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
@@ -178,6 +174,18 @@ export function LiltOrbGame() {
     }
     request().catch(() => setPseudoFullscreen(true));
   }
+
+  // Keyed on fullscreenActive (not just the fullscreenchange event above) so
+  // the idle timer also starts for the pseudo-fullscreen fallback, which
+  // never fires that event - otherwise the exit button never faded out at
+  // all on iOS Safari, the exact platform this fallback exists for.
+  useEffect(() => {
+    setControlsIdle(false);
+    if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    if (!fullscreenActive) return;
+    idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
+    return () => { if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current); };
+  }, [fullscreenActive]);
 
   function wakeControls() {
     if (!fullscreenActive) return;

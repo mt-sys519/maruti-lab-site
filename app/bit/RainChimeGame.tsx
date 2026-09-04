@@ -41,6 +41,8 @@ export function RainChimeGame() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const fullscreenActive = isFullscreen || pseudoFullscreen;
+  const [controlsIdle, setControlsIdle] = useState(false);
+  const idleTimerRef = useRef<number>();
   const { entered, soundOn, paused, backgroundPlayOn, toggleSound, toggleBackgroundPlay, resume } = useRainChimeAudio();
   const drops = useMemo(() => rainDrops, []);
   const [showRotateHint, setShowRotateHint] = useState(false);
@@ -76,6 +78,27 @@ export function RainChimeGame() {
       document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
     };
   }, []);
+
+  // Mirrors PAKU/LILT ORB: the exit-fullscreen button fades out after a
+  // moment of inactivity instead of sitting on screen permanently, and any
+  // touch/pointer activity in the viewport brings it back for a few seconds.
+  // Keyed on fullscreenActive (not the fullscreenchange event) so the idle
+  // timer also starts for the pseudo-fullscreen fallback, which never fires
+  // that event.
+  useEffect(() => {
+    setControlsIdle(false);
+    if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    if (!fullscreenActive) return;
+    idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
+    return () => window.clearTimeout(idleTimerRef.current);
+  }, [fullscreenActive]);
+
+  function wakeControls() {
+    if (!fullscreenActive) return;
+    if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = window.setTimeout(() => setControlsIdle(true), 2600);
+    setControlsIdle((was) => (was ? false : was));
+  }
 
   useEffect(() => {
     if (!entered) return;
@@ -174,7 +197,12 @@ export function RainChimeGame() {
         </button>
       </div>
 
-      <div ref={viewportRef} className={`${styles.viewport} ${pseudoFullscreen ? styles.isPseudoFullscreen : ""}`}>
+      <div
+        ref={viewportRef}
+        className={`${styles.viewport} ${pseudoFullscreen ? styles.isPseudoFullscreen : ""}`}
+        onPointerDown={wakeControls}
+        onPointerMove={wakeControls}
+      >
         <div ref={artboardRef} className={styles.artboard} data-scene={scene}>
           {roomFrames.map((frame) => (
             <img
@@ -208,7 +236,7 @@ export function RainChimeGame() {
         )}
 
         {fullscreenActive && (
-          <button className={styles.exitFullscreen} type="button" onClick={() => void toggleFullscreen()} aria-label="全画面表示を終了">
+          <button className={`${styles.exitFullscreen} ${controlsIdle ? styles.isIdle : ""}`} type="button" onClick={() => void toggleFullscreen()} aria-label="全画面表示を終了">
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
               <path d="M7 2v5H2M13 2v5h5M7 18v-5H2M13 18v-5h5" />
             </svg>
