@@ -86,6 +86,9 @@ export function LiltOrbGame() {
   const fullscreenActive = isFullscreen || pseudoFullscreen;
   const [controlsIdle, setControlsIdle] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
+  // TEMP DIAGNOSTIC: on-screen event trace for the iPhone Safari audio-unlock
+  // report. Remove once the real cause is confirmed fixed.
+  const debugRef = useRef<HTMLPreElement>(null);
 
   // Exposed so the pause overlay / resume-from-pause handler (defined outside
   // the mount effect) can reach into the running engine.
@@ -211,6 +214,20 @@ export function LiltOrbGame() {
     soundOnRef.current = storedSoundOn;
     setSoundOn(storedSoundOn);
 
+    // TEMP DIAGNOSTIC - see debugRef declaration above. Always on, no query
+    // param (that wasn't reliably reaching the page on iPhone Safari before).
+    const debugLog: string[] = [];
+    function note(tag: string) {
+      const t = (performance.now() / 1000).toFixed(2);
+      debugLog.push(`${t}s ${tag} actx=${actx?.state ?? "none"} running=${running}`);
+      if (debugLog.length > 14) debugLog.shift();
+      if (debugRef.current) {
+        debugRef.current.style.display = "block";
+        debugRef.current.textContent =
+          (running ? "UNLOCKED" : "LOCKED") + "\n" + debugLog.join("\n");
+      }
+    }
+
     let dpr = 1, width = 1, height = 1, radius = 1;
     const rand = mulberry32(0xca1407);
     const particles: Particle[] = Array.from({ length: PARTICLE_COUNT }, () => makeParticle(rand));
@@ -250,6 +267,7 @@ export function LiltOrbGame() {
       pointerDownPos = pointer;
       try { canvas!.setPointerCapture(event.pointerId); } catch { /* Already released. */ }
       setHasInteracted(true);
+      note("pointerdown");
       startAudio();
     }
     // pointermove is not an activation-granting event in WebKit, so this is
@@ -262,6 +280,7 @@ export function LiltOrbGame() {
       const now = performance.now();
       if (now - lastMoveUnlockAt < 200) return;
       lastMoveUnlockAt = now;
+      note("pointermove");
       startAudio();
     }
     function handlePointerUp(event: PointerEvent) {
@@ -273,6 +292,7 @@ export function LiltOrbGame() {
         if (dist < 14 && dur < 280) registerTap(performance.now());
       }
       pointerDownPos = null;
+      note("pointerup");
       startAudio();
     }
     function handlePointerCancel() {
@@ -282,6 +302,7 @@ export function LiltOrbGame() {
       // (a system gesture recogniser taking the touch over). That used to
       // mean the release - the one moment most likely to actually carry
       // audio activation - passed with no unlock attempt at all.
+      note("pointercancel");
       startAudio();
     }
     canvas.addEventListener("pointerdown", handlePointerDown);
@@ -297,7 +318,7 @@ export function LiltOrbGame() {
     // (reported on-device: 939 resume() calls across one drag, actx.state
     // never once left "suspended"). Pointer events are synthesised from
     // these and evidently don't carry the same weight.
-    const touchUnlock = () => startAudio();
+    const touchUnlock = (event: TouchEvent) => { note(event.type); startAudio(); };
     canvas.addEventListener("touchstart", touchUnlock, { passive: true });
     canvas.addEventListener("touchend", touchUnlock, { passive: true });
     canvas.addEventListener("touchcancel", touchUnlock, { passive: true });
@@ -307,7 +328,8 @@ export function LiltOrbGame() {
     // usually already unlocked and the gesture on the orb itself doesn't
     // have to be the one that carries it.
     const primeEvents = ["touchend", "pointerup", "click", "keydown"] as const;
-    function primeAudio() {
+    function primeAudio(event: Event) {
+      note("prime:" + event.type);
       startAudio();
       if (running) primeEvents.forEach((type) => document.removeEventListener(type, primeAudio));
     }
@@ -939,6 +961,7 @@ export function LiltOrbGame() {
     function ensureEngine() {
       if (actx) return;
       actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      note("ensureEngine:created");
       playSilentUnlockBuffer();
       master = actx.createGain();
       master.gain.setValueAtTime(0, actx.currentTime);
@@ -991,6 +1014,7 @@ export function LiltOrbGame() {
     function markRunning() {
       if (running || !actx) return;
       running = true;
+      note("markRunning");
       scheduleAmbientTick();
       scheduleCyberArp();
     }
@@ -1006,6 +1030,7 @@ export function LiltOrbGame() {
       retryTimer = window.setTimeout(() => {
         retryTimer = 0;
         if (running || !actx) return;
+        note("retryTimer");
         tryResume();
       }, 700);
     }
@@ -1018,12 +1043,17 @@ export function LiltOrbGame() {
     function tryResume() {
       if (running || !actx) return;
       if (actx.state !== "suspended") {
+        note("tryResume:already-not-suspended");
         markRunning();
         return;
       }
+      note("tryResume:calling-resume");
       const result = actx.resume();
       if (result && typeof result.then === "function") {
-        result.then(markRunning).catch(() => { /* Retried on the timer instead. */ });
+        result.then(() => { note("resume:resolved"); markRunning(); })
+          .catch(() => { note("resume:rejected"); });
+      } else {
+        note("resume:no-promise-returned");
       }
       playSilentUnlockBuffer();
       scheduleRetry();
@@ -1103,6 +1133,27 @@ export function LiltOrbGame() {
         onContextMenu={(event) => event.preventDefault()}
       >
         <canvas ref={canvasRef} className="bitLiltOrbCanvas" />
+        <pre
+          ref={debugRef}
+          style={{
+            display: "none",
+            position: "absolute",
+            zIndex: 30,
+            top: 8,
+            left: 8,
+            right: 8,
+            margin: 0,
+            padding: "10px 12px",
+            background: "rgba(0,0,0,.85)",
+            color: "#7ef23a",
+            font: "11px/1.6 monospace",
+            whiteSpace: "pre-wrap",
+            pointerEvents: "none",
+            borderRadius: 8,
+            maxHeight: "70%",
+            overflow: "hidden",
+          }}
+        />
         {!ready && <p className="bitPakuLoading">粒子を準備中…</p>}
         <p className={`bitLiltOrbHint ${hasInteracted ? "isHidden" : ""}`} aria-hidden="true">なぞって、はなす</p>
         {fullscreenActive && (
