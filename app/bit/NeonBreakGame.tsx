@@ -17,6 +17,8 @@ import {
   VolumeX,
   Zap,
 } from "./neonBreakIcons";
+import { ShareButton } from "./shared/ShareButton";
+import { XShareButton } from "./shared/XShareButton";
 import "./neonBreak.css";
 
 type Ball = {
@@ -3541,6 +3543,22 @@ export function NeonBreakGame() {
             </div>
           </div>
         )}
+      </div>
+      {/* Same row AVENUE and PAKU use - the OS share sheet plus the X
+          composer - sitting under the game rather than inside a result
+          screen, so it is reachable whether or not a rack is finished. */}
+      <div className="bitPakuShareRow">
+        <ShareButton
+          title="MarutiBit「NEON BREAK」"
+          text="ネオンの台のナインボール。台につくのは、三人のオペレーター"
+          url="https://marutilab.com/bit/neonbreak"
+        />
+        <XShareButton
+          variant="compact"
+          text={`MarutiBit「NEON BREAK」
+ネオンの台のナインボール。台につくのは、三人のオペレーター`}
+          url="https://marutilab.com/bit/neonbreak"
+        />
       </div>
     </div>
   );
