@@ -77,7 +77,8 @@
 .gameKind { font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; color: #66736c; }
 .games a:hover .gameNumber, .games a:focus-visible .gameNumber { color: var(--pkg-color, #FF7A5C); }
 .games a:hover .gameKind, .games a:focus-visible .gameKind { color: #c7d2cc; }
-.visual { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: clamp(58px, 7vh, 88px); color: var(--pkg-color, #232323); }
+/* Same numbers the /bit list uses - one set of sizes for the marks, not a second set tuned here. */
+.visual { --mark-size: clamp(72px, 8vw, 100px); --mark-type-size: clamp(22px, 2.4vw, 34px); position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: clamp(74px, 9vh, 110px); color: var(--pkg-color, #232323); }
 .angleVisual svg { width: clamp(56px, 6vw, 76px); height: auto; overflow: visible; }
 .angleVisual svg .triangle { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .angleVisual svg .arc { fill: none; stroke: var(--pkg-color, #FF7A5C); stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
@@ -92,13 +93,10 @@
 .liltOrbVisual svg { width: clamp(48px, 5.5vw, 66px); height: auto; overflow: visible; }
 .liltOrbVisual .orbRing { fill: none; stroke: currentColor; stroke-width: 1.4; opacity: .55; vector-effect: non-scaling-stroke; }
 .liltOrbVisual .orbDot { fill: currentColor; stroke: none; }
-.avenueVisual { overflow: hidden; border: 1px solid var(--pkg-color, #7B8CDE); background: #071016; }
-.avenueVisual img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; image-rendering: pixelated; }
-.rainVisual { align-items: flex-start; flex-direction: column; padding: 10px 15%; border: 1px solid currentColor; background: #07100b; color: #86f15a; font-family: Consolas, monospace; }
-.rainVisual i { font-style: normal; font-size: 8px; opacity: .55; }
-.rainVisual span, .rainVisual b { align-self: center; font-size: clamp(11px, 1.2vw, 15px); letter-spacing: .13em; }
-.rainVisual b { opacity: .48; transform: translateY(4px); }
-.games a:hover .rainVisual, .games a:focus-visible .rainVisual { color: #86f15a; border-color: #86f15a; }
+.avenueVisual svg, .neonBreakVisual svg { width: clamp(56px, 6.4vw, 78px); height: auto; overflow: visible; }
+.avenueVisual svg path, .avenueVisual svg circle, .neonBreakVisual svg path, .neonBreakVisual svg circle { fill: none; stroke: currentColor; stroke-width: 1.45; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.markDot { fill: currentColor; stroke: none; }
+.inputRainVisual { font-size: clamp(76px, 8.6vw, 104px); }
 .readout { grid-column: 2/-1; }
 
 @media (max-width: 1100px) {

@@ -1,0 +1,82 @@
+/* One size knob for every shape: the caller sets --mark-size on an ancestor
+   and the SVG marks, the typographic ones and INPUT RAIN's em-based terminal
+   all scale off it. Colour comes from --pkg-color through currentColor. */
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.34em;
+  font-size: var(--mark-size, 64px);
+}
+
+/* Only the drawn marks take the package colour. The ones made of characters
+   inherit the card's own text colour, so a card that inverts on hover takes
+   them with it - hard-coding a dark ink here made SEQUENCE's numerals vanish
+   into the home page's hover state. */
+.stroke {
+  color: var(--pkg-color, #232323);
+}
+.stroke svg {
+  display: block;
+  width: 1em;
+  height: auto;
+  overflow: visible;
+}
+.stroke svg path,
+.stroke svg circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.dot {
+  fill: currentColor !important;
+  stroke: none !important;
+}
+.faint {
+  opacity: 0.55;
+}
+.accent {
+  stroke-width: 2 !important;
+}
+.glyph {
+  fill: currentColor;
+  stroke: none;
+  font: 700 15px "Yu Gothic UI", sans-serif;
+}
+
+/* The two marks made of characters rather than paths. */
+.type {
+  font-family: "Arial Narrow", sans-serif;
+  /* Its own knob: the numerals were sized by eye per site, not as a fraction
+     of the drawn marks. */
+  font-size: var(--mark-type-size, clamp(18px, 2vw, 27px));
+  font-weight: 500;
+}
+.type i {
+  color: #6c7771;
+  font-style: normal;
+  font-size: 0.65em;
+}
+.slot {
+  display: grid;
+  place-items: center;
+  width: 1.35em;
+  height: 1.35em;
+  border: 2px dashed var(--pkg-color);
+  border-radius: 6px;
+  color: var(--pkg-color);
+  font-size: 0.82em;
+}
+.sequence .numSmall,
+.sequence .numMed,
+.sequence .numLarge {
+  font-style: normal;
+}
+
+.inputRain {
+  /* The terminal frame is drawn in em against this, at .58em wide. */
+  font-size: calc(var(--mark-size, 64px) * 1.55);
+}
