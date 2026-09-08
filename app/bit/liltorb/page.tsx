@@ -47,7 +47,7 @@ export default function LiltOrbPage() {
           </svg>
           <span>LILT ORB</span>
         </h1>
-        <p><strong>粒子操作トイ。</strong><br />なぞって粒子を引き寄せる、感触のおもちゃ。NATURALは癒し、CYBERは刺激。</p>
+        <p><strong>粒子操作トイ。</strong><br /><span className="bitIntroSub">なぞって粒子を引き寄せる、感触のおもちゃ。NATURALは癒し、CYBERは刺激。</span></p>
       </section>
 
       <LiltOrbGame />

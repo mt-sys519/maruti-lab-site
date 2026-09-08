@@ -41,7 +41,7 @@ export default function NeonBreakPage() {
           </svg>
           <span>NEON BREAK</span>
         </h1>
-        <p><strong>ネオンの台のナインボール。</strong><br />台につくのは、三人のオペレーター。</p>
+        <p><strong>ネオンの台のナインボール。</strong><br /><span className="bitIntroSub">台につくのは、三人のオペレーター。</span></p>
       </section>
       {/* Wider than the other cartridges: this one is a full table with a side
           panel, and at the standard 1120px the felt gets squeezed to the point

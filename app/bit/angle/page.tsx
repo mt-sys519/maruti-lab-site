@@ -38,7 +38,7 @@ export default function AnglePage() {
           </svg>
           <span>ANGLE</span>
         </h1>
-        <p><strong>角度当てゲーム。</strong><br />三角形の角度を組み合わせ、示された「？」を求める、全5問のミニゲーム。</p>
+        <p><strong>角度当てゲーム。</strong><br /><span className="bitIntroSub">三角形の角度を組み合わせ、示された「？」を求める、全5問のミニゲーム。</span></p>
       </section>
       <AngleGame />
       <BitHowToPlay

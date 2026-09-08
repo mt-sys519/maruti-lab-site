@@ -35,7 +35,7 @@ export default function SequencePage() {
           </svg>
           <span>SEQUENCE</span>
         </h1>
-        <p><strong>順番推理ゲーム。</strong><br />数の並びに隠れた規則を見つけて「？」を求める、全5問のミニゲーム。</p>
+        <p><strong>順番推理ゲーム。</strong><br /><span className="bitIntroSub">数の並びに隠れた規則を見つけて「？」を求める、全5問のミニゲーム。</span></p>
       </section>
       <SequenceGame />
       <BitHowToPlay

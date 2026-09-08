@@ -39,7 +39,7 @@ export default function InputRainPage() {
           <span className="inputRainTitleMark" aria-hidden="true"><i /><i /><i /></span>
           <span>INPUT RAIN</span>
         </h1>
-        <p><strong>タイピング／フリック入力ゲーム。</strong><br />落下する端末入力を、消える前に入力する。</p>
+        <p><strong>タイピング／フリック入力ゲーム。</strong><br /><span className="bitIntroSub">落下する端末入力を、消える前に入力する。</span></p>
       </section>
       <InputRainGame />
       <BitHowToPlay

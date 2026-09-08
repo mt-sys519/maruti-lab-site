@@ -43,7 +43,7 @@ export default function AvenuePage() {
           </svg>
           <span>AVENUE</span>
         </h1>
-        <p><strong>眺めるアンビエント。</strong><br />雨、ウインドチャイム、タングドラムがつくる部屋の時間。</p>
+        <p><strong>眺めるアンビエント。</strong><br /><span className="bitIntroSub">雨、ウインドチャイム、タングドラムがつくる部屋の時間。</span></p>
       </section>
       <div className="bitGameShell">
         <RainChimeGame />

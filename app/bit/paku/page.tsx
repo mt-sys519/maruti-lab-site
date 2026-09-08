@@ -44,7 +44,7 @@ export default function PakuPage() {
           </svg>
           <span>PAKU</span>
         </h1>
-        <p><strong>エサやりゲーム。</strong><br />水槽で泳ぐ熱帯魚に、タップで餌をあげるだけのミニゲーム。</p>
+        <p><strong>エサやりゲーム。</strong><br /><span className="bitIntroSub">水槽で泳ぐ熱帯魚に、タップで餌をあげるだけのミニゲーム。</span></p>
       </section>
 
       <PakuGame />

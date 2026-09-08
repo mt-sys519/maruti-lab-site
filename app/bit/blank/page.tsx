@@ -44,7 +44,7 @@ export default function BlankPage() {
           </svg>
           <span>BLANK</span>
         </h1>
-        <p><strong>空欄補完ゲーム。</strong><br />四則演算の式にある「？」に入る数字を逆算する、全5問のミニゲーム。</p>
+        <p><strong>空欄補完ゲーム。</strong><br /><span className="bitIntroSub">四則演算の式にある「？」に入る数字を逆算する、全5問のミニゲーム。</span></p>
       </section>
 
       <BlankGame />
