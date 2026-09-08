@@ -19,11 +19,11 @@ export const metadata: Metadata = {
     description,
     url: "/bit/neonbreak",
     images: [
-      { url: "/og/bit/neonbreak-v2.png", width: 1200, height: 630, alt: "MarutiBit NEON BREAK" },
-      { url: "/og/bit/neonbreak-v2-square.png", width: 630, height: 630, alt: "MarutiBit NEON BREAK" },
+      { url: "/og/bit/neonbreak-v3.png", width: 1200, height: 630, alt: "MarutiBit NEON BREAK" },
+      { url: "/og/bit/neonbreak-v3-square.png", width: 630, height: 630, alt: "MarutiBit NEON BREAK" },
     ],
   },
-  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/neonbreak-v2.png"] },
+  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/neonbreak-v3.png"] },
 };
 
 export default function NeonBreakPage() {

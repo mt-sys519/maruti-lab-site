@@ -26,7 +26,11 @@ const args = process.argv.slice(2);
 const game = args.find((a) => !a.startsWith("--")) ?? "neonbreak";
 const portFlag = args.indexOf("--port");
 const port = portFlag === -1 ? "3000" : args[portFlag + 1];
-const suffix = args.includes("--v2") ? "-v2" : "";
+// --v2, --v3 ... : X caches a card by its image URL, so a card whose artwork
+// changes after it has been shared needs a new filename rather than an
+// overwrite.
+const version = args.find((a) => /^--v\d+$/.test(a));
+const suffix = version ? version.slice(1) : "";
 
 const outputDirectory = fileURLToPath(new URL("../public/og/bit/", import.meta.url));
 

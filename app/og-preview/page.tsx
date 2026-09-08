@@ -36,7 +36,9 @@ const copy: Record<string, Card> = {
   neonbreak: {
     lead: "ネオンの台のナインボール。",
     sub: "台につくのは、三人のオペレーター。",
-    art: "/games/neonbreak/neon-operator-wide.webp",
+    // The three of them together, which is what the line under the title
+    // actually says - the single-operator shot only showed one of the three.
+    art: "/games/neonbreak/neon-3operator.webp",
   },
 };
 
