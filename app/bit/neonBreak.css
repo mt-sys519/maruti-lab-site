@@ -1,0 +1,1881 @@
+/* NEON BREAK, ported from the standalone prototype. Everything is nested
+   under .nbRoot: the prototype owned its whole page and styles very generic
+   names (.title, .game, .rules, .player) that would otherwise repaint the
+   MarutiBit chrome around it. @keyframes sit outside the nesting because they
+   are not selectors, and the prototype's html/body/* rules are gone - the
+   site owns those now. */
+.nbRoot {
+  position: relative;
+  --background: #03050a;
+  --foreground: #effaff;
+  --cyan: #35e1ff;
+  --pink: #ff3acb;
+  --green: #5dffb2;
+  --line: rgba(67, 205, 255, 0.32);
+  --radius: 0.2rem;
+  /* Shared play-surface hierarchy: target, action, then commentary. */
+  .breakTop .turnBanner {
+    margin-left: 0;
+  }
+  .stageSelect {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+  .stageSelect button {
+    height: 26px;
+    border: 1px solid rgba(85, 137, 165, 0.3);
+    background: rgba(3, 10, 19, 0.68);
+    color: #657e91;
+    font: 700 9px monospace;
+    cursor: pointer;
+  }
+  .stageSelect button:hover {
+    border-color: var(--pink);
+    color: var(--pink);
+  }
+  .stageSelect button.selected {
+    background: #3a0e33;
+    border-color: var(--pink);
+    color: var(--pink);
+    box-shadow: 0 0 10px #ff3acb55;
+  }
+  .confirmOverlay {
+    position: fixed;
+    z-index: 10;
+    inset: 0;
+    background: rgba(2, 4, 9, 0.72);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .confirmBox {
+    max-width: 340px;
+    width: 100%;
+    border: 1px solid var(--pink);
+    background: linear-gradient(
+      160deg,
+      rgba(10, 6, 20, 0.97),
+      rgba(20, 4, 24, 0.97)
+    );
+    box-shadow:
+      0 0 40px #ff3acb33,
+      0 20px 60px #000c;
+    padding: 20px;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 14px) 0,
+      100% 14px,
+      100% 100%,
+      14px 100%,
+      0 calc(100% - 14px)
+    );
+  }
+  .confirmBox p {
+    margin: 0 0 18px;
+    color: #e9f4fb;
+    font: 700 11px/1.6 monospace;
+    letter-spacing: 0.02em;
+  }
+  .confirmActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .confirmActions button {
+    height: 40px;
+    border: 1px solid #31536b;
+    font: 700 9px monospace;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+  }
+  .confirmCancel {
+    background: rgba(5, 14, 27, 0.9);
+    color: #9fb4c4;
+  }
+  .confirmCancel:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .confirmOk {
+    background: #4b0d2f;
+    border-color: var(--pink);
+    color: #ffb8e6;
+  }
+  .confirmOk:hover {
+    background: #671242;
+    box-shadow: 0 0 16px #ff3acb55;
+  }
+  @media (max-width: 700px) {
+    .breakTop {
+      flex-wrap: wrap !important;
+      gap: 8px;
+    }
+    .modeSwitch {
+      order: 3;
+      width: 100%;
+      margin: 0 !important;
+    }
+    .modeSwitch button {
+      flex: 1;
+    }
+  }
+  .modeSwitch {
+    display: flex;
+    margin-left: auto;
+    margin-right: 16px;
+    border: 1px solid #29475b;
+    background: rgba(3, 10, 19, 0.28);
+    backdrop-filter: blur(4px);
+  }
+  .modeSwitch button {
+    height: 32px;
+    padding: 0 13px;
+    border: 0;
+    border-right: 1px solid #29475b;
+    background: transparent;
+    color: #688195;
+    cursor: pointer;
+    font: 700 8px monospace;
+    letter-spacing: 0.13em;
+  }
+  .modeSwitch button:last-child {
+    border-right: 0;
+  }
+  .modeSwitch button.selected {
+    background: #0b2737;
+    color: var(--cyan);
+    box-shadow: inset 0 -2px var(--cyan);
+  }
+  .player.cpu.active {
+    border-color: var(--pink);
+    color: var(--pink);
+  }
+  .soloCard {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: end;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(53, 225, 255, 0.36);
+    background: linear-gradient(
+      110deg,
+      rgba(8, 34, 50, 0.28),
+      rgba(35, 7, 38, 0.16)
+    );
+    backdrop-filter: blur(4px);
+  }
+  .soloCard span {
+    grid-row: 1/3;
+    color: #7e98ab;
+    font: 700 9px monospace;
+    letter-spacing: 0.15em;
+    align-self: center;
+  }
+  .soloCard strong {
+    color: var(--cyan);
+    font: 700 27px monospace;
+    line-height: 1;
+  }
+  .soloCard b {
+    color: #6f8799;
+    font: 700 7px monospace;
+    letter-spacing: 0.14em;
+    text-align: right;
+  }
+  .breakApp {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 12px;
+    background: #03050a;
+  }
+  @media (min-width: 768px) {
+    .breakApp {
+      padding: 20px 24px;
+    }
+  }
+  /* Each per-mode source is a full scene in its own right (office, city view,
+     AND the character, all in one ~16:9 shot) - not a character cutout that
+     needs a separate generic backdrop behind it. Earlier this ran as two
+     stacked images (a plain skyline layer full-bleed, this one cropped into a
+     narrow box on the right) with gradient work to hide the seam between two
+     different photos. Once the source itself was a complete scene, that
+     seam-hiding was solving a problem that no longer existed - one full-bleed
+     image does the whole job, no second layer or mask fade required. Source
+     aspect (1672x941 ≈ 16:9) is close enough to most desktop viewports that
+     `cover` barely crops it at all; position is still biased toward the
+     character (right side of the frame in all three sources) so she isn't
+     the part that gets trimmed on unusually narrow or wide windows. */
+  .operatorBackdrop {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background: url("/games/neonbreak/neon-operator-wide.webp") 70% center/cover no-repeat;
+    filter: saturate(0.75) contrast(1.1);
+  }
+  .operatorBackdrop.mode-cpu {
+    background-image: url("/games/neonbreak/neon-operator-wide-cpu.webp");
+    background-position: 68% center;
+  }
+  .operatorBackdrop.mode-stage {
+    background-image: url("/games/neonbreak/neon-operator-wide-stage.webp");
+    background-position: 75% 24%;
+  }
+  .sceneShade {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(2, 5, 11, 0.9) 0%,
+        rgba(2, 5, 11, 0.75) 48%,
+        rgba(2, 5, 11, 0.38) 70%,
+        rgba(2, 5, 11, 0.1) 100%
+      ),
+      linear-gradient(0deg, #02050c, transparent 44%);
+  }
+  .breakTop,
+  .breakLayout,
+  .breakApp > footer {
+    position: relative;
+    z-index: 2;
+  }
+  .breakTop {
+    min-height: 58px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    background: linear-gradient(90deg, rgba(4, 15, 26, 0.76), transparent);
+  }
+  .brandmark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 52px;
+    height: 42px;
+    border: 2px solid rgba(120, 240, 255, 0.92);
+    border-radius: 6px;
+    color: #eafdff;
+    font: 800 19px/1 monospace;
+    letter-spacing: 0.02em;
+    box-shadow:
+      0 0 5px #37e7ff,
+      0 0 15px #37e7ff99,
+      inset 0 0 11px #37e7ff77;
+    animation: tubeFrame 7.3s infinite steps(1, end);
+  }
+  .brandmark span {
+    text-shadow:
+      0 0 4px #eafdff,
+      0 0 11px #37e7ff,
+      0 0 21px #37e7ff,
+      0 0 38px #1aa6ff;
+  }
+  .tubeN {
+    animation: tubeGlyph 5.1s infinite steps(1, end);
+  }
+  .tubeB {
+    animation: tubeGlyph 6.7s 0.8s infinite steps(1, end);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .brandmark,
+    .tubeN,
+    .tubeB {
+      animation: none;
+    }
+  }
+  .crewCard {
+    --accent: #37e7ff;
+    margin: 15px 0 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(85, 137, 165, 0.28);
+    border-left: 2px solid var(--accent);
+    background: linear-gradient(
+      90deg,
+      rgba(6, 20, 33, 0.5),
+      rgba(6, 20, 33, 0.12)
+    );
+  }
+  .crew-cpu {
+    --accent: #ff3bce;
+  }
+  .crew-stage {
+    --accent: #b98cff;
+  }
+  .crewCard > span {
+    display: block;
+    color: #6f8798;
+    font: 700 8px monospace;
+    letter-spacing: 0.17em;
+  }
+  .crewCard > strong {
+    display: block;
+    margin-top: 3px;
+    color: var(--accent);
+    font: 800 15px monospace;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 14px var(--accent);
+  }
+  .crewLine {
+    margin: 7px 0 0;
+    color: #9db2c2;
+    font-size: 9.5px;
+    line-height: 1.62;
+  }
+  .title {
+    font: 800 20px/1 monospace;
+    letter-spacing: 0.18em;
+    text-shadow: 0 0 18px #25dfff55;
+  }
+  .kicker {
+    margin-top: 6px;
+    color: #708aa0;
+    font: 600 9px/1 monospace;
+    letter-spacing: 0.2em;
+  }
+  .turnBanner {
+    margin-left: auto;
+    margin-right: 18px;
+    border-left: 2px solid var(--pink);
+    padding: 5px 11px;
+    color: #899baa;
+    font: 700 8px monospace;
+    letter-spacing: 0.15em;
+  }
+  .turnBanner b {
+    display: block;
+    margin-top: 3px;
+    color: white;
+    font-size: 11px;
+  }
+  .iconbtn,
+  .resetbtn {
+    height: 38px;
+    border: 1px solid #31536b;
+    background: rgba(5, 14, 27, 0.55);
+    backdrop-filter: blur(12px);
+    color: #c9e9f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .iconbtn {
+    width: 38px;
+  }
+  .resetbtn {
+    padding: 0 14px;
+    color: var(--cyan);
+    font: 700 9px monospace;
+    letter-spacing: 0.12em;
+  }
+  .iconbtn:hover,
+  .resetbtn:hover {
+    border-color: var(--cyan);
+    background: #10253a;
+  }
+  .tableShell {
+    /* One stacking order at every width: mode/target, then what she is saying,
+       then the table, then the shot readout. The dialogue row comes after the
+       canvas in the DOM (it was added for phones), so without this it lands
+       under the table. */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-width: 0;
+    border: 1px solid rgba(62, 207, 255, 0.52);
+    background: rgba(2, 7, 14, 0.28);
+    backdrop-filter: blur(4px);
+    box-shadow:
+      0 24px 90px #000d,
+      0 0 35px #19b9ff19;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 16px) 0,
+      100% 16px,
+      100% 100%,
+      16px 100%,
+      0 calc(100% - 16px)
+    );
+  }
+  .turnCallout {
+    /* Centred on the table rather than tucked under the top rail: it is the
+       one thing the player is waiting for, and the middle of the felt is
+       where they are already looking. */
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font: 800 10px monospace;
+    letter-spacing: 0.12em;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+    animation: calloutPulse 1.6s ease-in-out infinite;
+  }
+  .turnCallout.ready {
+    animation: calloutBlink 1.9s ease-in-out infinite;
+    background: rgba(6, 26, 36, 0.82);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 16px #35e1ff55;
+  }
+  .turnCallout.cpu {
+    /* Only the SHOOT prompt belongs in the middle: the CPU banner stays up for
+       a whole turn, so at centre it would sit on top of the balls it is
+       narrating. It sits just inside the top rail instead.
+
+       As a fraction of the canvas rather than a fixed 47px: the rail is at 9%
+       of the height when the table is landscape and 5% when it is portrait, so
+       one pixel value cannot be just inside both. 47px was the portrait
+       number, which on a desktop landscape table landed above the rail, out on
+       the corner pockets. */
+    top: 13%;
+    transform: translate(-50%, 0);
+    background: rgba(40, 7, 34, 0.82);
+    border: 1px solid var(--pink);
+    color: var(--pink);
+    box-shadow: 0 0 16px #ff3acb55;
+  }
+  /* Above 700px the table turns landscape and the rack sits dead centre, so
+     the prompt rides a little high of the middle to stay off the balls. */
+  @media (min-width: 701px) {
+    .turnCallout.ready {
+      top: 40%;
+    }
+  }
+  .turnCallout .spin {
+    animation: spin 0.9s linear infinite;
+  }
+  .statusbar,
+  .tableFooter {
+    height: 41px;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #738ca0;
+    font: 600 9px monospace;
+    letter-spacing: 0.13em;
+    background: linear-gradient(
+      90deg,
+      rgba(9, 24, 39, 0.3),
+      rgba(18, 7, 28, 0.2)
+    );
+    backdrop-filter: blur(4px);
+  }
+  .statusbar {
+    border-bottom: 1px solid #1e4761;
+  }
+  .tableFooter {
+    height: 31px;
+    border-top: 1px solid #1d3b50;
+  }
+  .tableStage {
+    order: 3;
+    position: relative;
+  }
+  .playToolbar {
+    order: 1;
+  }
+  .shotStrip {
+    order: 4;
+  }
+  .game {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: crosshair;
+    background: transparent;
+  }
+  .matchPanel {
+    border: 1px solid rgba(91, 201, 255, 0.4);
+    background: linear-gradient(
+      145deg,
+      rgba(7, 18, 33, 0.3),
+      rgba(16, 6, 25, 0.25)
+    );
+    padding: 16px;
+    box-shadow: 0 22px 70px #000c;
+    backdrop-filter: blur(6px);
+    clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 0 100%);
+  }
+  /* One scale down the column: 16px between blocks, 6px inside a block (a
+     heading and the thing it labels). It had grown ad hoc - 15, 14, 9, 21, 8,
+     10, 16px - and taking her line out of the crew card made that visible. */
+  .panelButtons,
+  .crewCard,
+  .rackLine,
+  .powerNote,
+  .soloCard,
+  .bestReadout,
+  .stageSelect {
+    margin: 0 0 16px;
+  }
+  .targetReadout,
+  .meterLabel,
+  .powerMeter {
+    margin: 0 0 6px;
+  }
+  .rules {
+    margin: 0;
+    padding-top: 16px;
+  }
+  .playerRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .player {
+    border: 1px solid rgba(85, 137, 165, 0.25);
+    padding: 10px;
+    background: rgba(3, 10, 19, 0.22);
+    color: #657e91;
+  }
+  .player span {
+    font: 800 17px monospace;
+  }
+  .player b {
+    display: block;
+    margin-top: 4px;
+    font: 700 8px monospace;
+    letter-spacing: 0.12em;
+  }
+  .player.active {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: inset 0 0 18px #18dfff12;
+  }
+  .targetReadout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 15px 0 9px;
+    padding: 10px 12px;
+    border-left: 2px solid var(--pink);
+    background: linear-gradient(90deg, rgba(46, 8, 42, 0.72), transparent);
+  }
+  .targetReadout span {
+    color: #8498aa;
+    font: 700 9px monospace;
+    letter-spacing: 0.16em;
+  }
+  .targetReadout strong {
+    color: var(--pink);
+    font: 700 30px monospace;
+    text-shadow: 0 0 17px #ff3acb;
+  }
+  .rackLine {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0 21px;
+  }
+  .rackLine i {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: #061018;
+    font: 800 8px monospace;
+    font-style: normal;
+    box-shadow: 0 0 9px currentColor;
+    transition: 0.2s;
+  }
+  .rackLine i.down {
+    opacity: 0.13;
+    filter: grayscale(1);
+  }
+  .meterLabel {
+    display: flex;
+    justify-content: space-between;
+    color: #7890a3;
+    font: 700 9px monospace;
+    letter-spacing: 0.14em;
+  }
+  .meterLabel b {
+    color: #f6faff;
+  }
+  .powerMeter {
+    height: 8px;
+    margin: 8px 0;
+    background: #101d29;
+    overflow: hidden;
+    border: 1px solid #1c3444;
+  }
+  .powerMeter i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #2949ff, var(--cyan), var(--pink));
+    box-shadow: 0 0 13px var(--pink);
+    transition: width 0.25s;
+  }
+  .powerBtn {
+    width: 100%;
+    height: 42px;
+    margin-bottom: 14px;
+    border: 1px solid #244458;
+    background: #091522;
+    color: #587182;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font: 700 9px monospace;
+    letter-spacing: 0.12em;
+  }
+  .powerBtn:enabled {
+    cursor: pointer;
+    color: #ff77dc;
+    border-color: #c42b9f;
+    box-shadow: inset 0 0 20px #ff3acb1c;
+  }
+  .powerBtn.armed {
+    color: white;
+    background: #4b0d42;
+    border-color: #ff4ed4;
+    box-shadow: 0 0 22px #ff3acb55;
+    animation: armed 1s ease-in-out infinite alternate;
+  }
+  .powerNote {
+    display: flex;
+    gap: 9px;
+    margin-top: 10px;
+    padding: 11px;
+    border: 1px solid rgba(255, 58, 203, 0.3);
+    background: rgba(44, 7, 39, 0.58);
+    color: var(--pink);
+  }
+  .powerNote p {
+    margin: 0;
+    color: #a882a4;
+    font-size: 9px;
+    line-height: 1.55;
+  }
+  .powerNote b {
+    color: #ff78dc;
+    font: 700 8px monospace;
+    letter-spacing: 0.11em;
+  }
+  .rules {
+    margin-top: 16px;
+    border-top: 1px solid #244156;
+    padding-top: 13px;
+  }
+  .rules b {
+    color: #86a0b4;
+    font: 700 8px monospace;
+    letter-spacing: 0.15em;
+  }
+  .rules p {
+    margin: 7px 0 0;
+    color: #71879a;
+    font-size: 9px;
+    line-height: 1.65;
+  }
+  /* calc(50vw + 380px) was still one straight line end to end, and a single
+     line through (860px -> ~800px) necessarily sits ABOVE the old 69vw line
+     almost everywhere below ~1900px to reach that narrow-end target - so
+     every ordinary "full size" window (1280-1600px, not just narrow ones)
+     ended up with a bigger content area, and less visible character, than
+     before. What's actually wanted is two different behaviors in two
+     different ranges, not one compromise line: unchanged 69vw from 1200px
+     up (this is what "full size" actually looked like before and should
+     still look like), and a separate, much flatter formula only below that,
+     which is the one narrow band this was ever supposed to touch. */
+  @media (min-width: 1200px) {
+    /* Held at a constant width rather than tracking the viewport: 30vw + 562px
+       meant every pixel the window lost came out of the row, and the row spends
+       most of it on the table, so narrowing shrank the table all the way down
+       to the breakpoint. */
+    .breakTop,
+    .breakLayout,
+    .breakApp > footer {
+      width: min(1320px, 100%);
+      margin-left: 0;
+      margin-right: auto;
+    }
+    /* 31% of a constant 1320px row is a 409px panel, wider than it ever was
+       when the row tracked the viewport. Fixed at what it measured then, and
+       the table takes everything else. Stretched because the panel runs about
+       90px shorter than the table and their bottom edges did not line up. */
+    .breakLayout {
+      grid-template-columns: minmax(210px, 310px) minmax(300px, 1fr);
+      align-items: stretch;
+    }
+    /* The operator stands about 70% of the way across her own scene, with a
+       stretch of city to the right of her. Sliding the scene right runs some of
+       that city off the frame and moves her toward the space the row leaves.
+       The gap it opens on the left is behind the panel, which is always wider
+       than 11% of the box. The row gives up no width for it. */
+    .operatorBackdrop {
+      transform: translateX(11%);
+    }
+    /* Above this width the panel is beside the table, so the controls live in
+       it and the bar over the table carries state only. (.playToolbar > div
+       already sets display:flex, so this has to match on specificity.) */
+    .playToolbar > .toolbarButtons {
+      display: none;
+    }
+    .panelButtons {
+      display: grid;
+    }
+    .matchPanel {
+      margin-top: 0;
+    }
+    .sceneShade {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(2, 5, 11, 0.88) 0%,
+          rgba(2, 5, 11, 0.72) 44%,
+          rgba(2, 5, 11, 0.34) 68%,
+          rgba(2, 5, 11, 0.08) 100%
+        ),
+        linear-gradient(0deg, #02050c, transparent 44%);
+    }
+  }
+  /* One continuous curve rather than two bands. A flat 69vw scaled the whole
+     composition together, so narrowing the window never actually handed the
+     table more of the screen - it just made everything smaller, which reads as
+     nothing changing at all. Growing slower than the viewport means the table
+     keeps its share as things get tight (92% of the width at 900px) while a
+     wide window still leaves the character her room (59% at 1920px). */
+  @media (max-width: 1199px) {
+    .breakLayout {
+      grid-template-columns: 1fr;
+    }
+    .tableShell {
+      grid-row: 1;
+    }
+    .matchPanel {
+      grid-row: 2;
+      background: rgba(5, 14, 27, 0.3);
+    }
+    .sceneShade {
+      background: rgba(2, 5, 11, 0.78);
+    }
+  }
+  /* Between the two-column breakpoint and the phone layout the table goes
+     full width, so it covers a taller slice of the backdrop - mostly her dark
+     suit rather than the lit upper body the two-column widths happen to frame.
+     Same art, same alphas, but it reads far dimmer. Easing the shell's own
+     tint back in this band alone brings it to roughly the same presence
+     without restructuring how the backdrop is fitted. */
+  /* Single column: the table goes full width and the backdrop behind it is
+     still fitted to the WINDOW, so which slice of the art lands under the
+     table changes with the window's aspect - the same alphas read bright at
+     one size and washed out at another. Chasing that with opacity never
+     settles it. Fitted to the table instead, like the phone layout, the
+     framing is fixed relative to the table and the page keeps the skyline. */
+  @media (min-width: 701px) and (max-width: 1199px) {
+    .operatorBackdrop,
+    .operatorBackdrop.mode-cpu,
+    .operatorBackdrop.mode-stage {
+      background-image: url("/games/neonbreak/neon-skyline.webp");
+      background-position: center;
+      filter: saturate(0.6) contrast(1.05) brightness(0.62);
+    }
+    /* backdrop-filter blurs what sits BEHIND the element, and here the art is
+       the element's own background - so the blur has to be applied to the art
+       itself. It rides on a pseudo-element, inset past the edges so the
+       blur's soft border falls outside the visible box. */
+    /* The shell's own backdrop-filter would blur this pseudo-element a second
+       time (it sits below the shell's background) and mix the skyline in with
+       it - two blurs stacked, which came out looking like grain. The art
+       carries the only blur here. */
+    [data-mode] .tableShell {
+      backdrop-filter: none;
+    }
+    [data-mode] .tableShell::before {
+      content: "";
+      position: absolute;
+      inset: -12px;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 20%),
+        linear-gradient(
+          rgba(5, 13, 23, 0.58),
+          rgba(3, 8, 15, 0.44) 40%,
+          rgba(3, 8, 15, 0.56)
+        ),
+        url("/games/neonbreak/neon-operator-wide.webp");
+      background-repeat: no-repeat;
+      background-size:
+        100% 100%,
+        100% 100%,
+        cover;
+      background-position:
+        center,
+        center,
+        72% 22%;
+      filter: blur(2px) saturate(1.08);
+    }
+    [data-mode="cpu"] .tableShell::before {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 20%),
+        linear-gradient(
+          rgba(5, 13, 23, 0.58),
+          rgba(3, 8, 15, 0.44) 40%,
+          rgba(3, 8, 15, 0.56)
+        ),
+        url("/games/neonbreak/neon-operator-wide-cpu.webp");
+      background-position:
+        center,
+        center,
+        70% 18%;
+    }
+    [data-mode="stage"] .tableShell::before {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 20%),
+        linear-gradient(
+          rgba(5, 13, 23, 0.58),
+          rgba(3, 8, 15, 0.44) 40%,
+          rgba(3, 8, 15, 0.56)
+        ),
+        url("/games/neonbreak/neon-operator-wide-stage.webp");
+      background-position:
+        center,
+        center,
+        74% 26%;
+    }
+    /* Same art the shell paints behind the felt, but unblurred, undimmed
+       and in front of the table - the result screen has no balls left to
+       keep readable, so she is the picture and the box is the overlay. */
+    /* The art is feathered at its edges, so whatever sits under it shows
+       through there - which was the rails and two pockets floating over her
+       shoulders. Under the art the table goes dark instead, and she rises out
+       of that rather than out of a half-erased table. */
+    /* [data-mode] only to outrank the base .clearPop, which is declared after
+       these media blocks and would otherwise win on source order. */
+    [data-mode] .clearPop {
+      background: radial-gradient(
+        ellipse at center,
+        rgba(2, 6, 14, 0.94) 30%,
+        rgba(2, 6, 14, 0.88) 70%,
+        rgba(2, 6, 14, 0.82)
+      );
+    }
+    /* One framing for all three operators: whoever it is, the result screen
+       starts at the same height and the same crop - only the file changes. */
+    [data-mode] {
+      --result-art: url("/games/neonbreak/neon-operator-wide.webp");
+    }
+    [data-mode="cpu"] {
+      --result-art: url("/games/neonbreak/neon-operator-wide-cpu.webp");
+    }
+    [data-mode="stage"] {
+      --result-art: url("/games/neonbreak/neon-operator-wide-stage.webp");
+    }
+    [data-mode] .resultArt {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        radial-gradient(
+          ellipse at center,
+          rgba(2, 6, 14, 0.84) 26%,
+          rgba(2, 6, 14, 0.32) 64%,
+          rgba(2, 6, 14, 0.06)
+        ),
+        var(--result-art);
+      background-repeat: no-repeat;
+      background-size:
+        100% 100%,
+        cover;
+      background-position:
+        center,
+        72% 22%;
+    }
+  }
+  /* Phones only: above 700px her line rides in the toolbar instead. This row
+     also carries the power button, which phones cannot reach in the panel. */
+  .tableHud {
+    --accent: #37e7ff;
+    order: 2;
+    position: relative;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px 10px;
+    border-bottom: 1px solid rgba(43, 70, 89, 0.55);
+    background: rgba(6, 17, 28, 0.34);
+    backdrop-filter: blur(5px);
+  }
+  [data-mode="cpu"] .tableHud {
+    --accent: #ff3bce;
+  }
+  [data-mode="stage"] .tableHud {
+    --accent: #b98cff;
+  }
+  .tableHud p {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    color: #b9d2e0;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  /* Same plate as the toolbar's - only the row it sits in differs. */
+  .tableHud p b,
+  .toolbarLine b {
+    display: inline-block;
+    flex: 0 0 auto;
+    margin-right: 10px;
+    padding: 3px 9px 2px;
+    border: 1px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent);
+    font: 800 10px/1 monospace;
+    letter-spacing: 0.18em;
+    text-shadow: 0 0 10px var(--accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent);
+    clip-path: polygon(
+      0 0,
+      calc(100% - 6px) 0,
+      100% 6px,
+      100% 100%,
+      6px 100%,
+      0 calc(100% - 6px)
+    );
+  }
+  /* She stands on the right, so her line sits on the right, next to her. */
+  .toolbarLine {
+    --accent: #37e7ff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    min-width: 0;
+    margin: 0 42px 0 14px;
+    color: #b9d2e0;
+    font-size: 11px;
+  }
+  [data-mode="cpu"] .toolbarLine {
+    --accent: #ff3bce;
+  }
+  [data-mode="stage"] .toolbarLine {
+    --accent: #b98cff;
+  }
+  .toolbarLine span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Shown only where the panel is beside the table; see the 1200px block. */
+  .panelButtons {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .panelButtons button {
+    height: 34px;
+    border: 1px solid #2b4659;
+    background: rgba(9, 23, 37, 0.42);
+    color: #c1edf6;
+    font: 700 10px monospace;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+  .panelButtons button:hover:not(:disabled) {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .panelButtons button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  @media (max-width: 700px) {
+    .tableHud {
+      display: flex;
+    }
+    .toolbarLine {
+      display: none;
+    }
+    .turnCallout.cpu {
+      top: 47px;
+    }
+  }
+  @media (max-width: 700px) {
+    .breakApp {
+      padding: 10px;
+    }
+    /* Same treatment as the single-column band above: the page keeps the
+       skyline and the operator is fitted to the TABLE, not the window, so the
+       framing does not drift with the viewport's aspect. */
+    .operatorBackdrop,
+    .operatorBackdrop.mode-cpu,
+    .operatorBackdrop.mode-stage {
+      background-image: url("/games/neonbreak/neon-skyline.webp");
+      background-position: center;
+      filter: saturate(0.6) contrast(1.05) brightness(0.62);
+    }
+    .sceneShade {
+      background: rgba(2, 5, 11, 0.72);
+    }
+    .breakTop {
+      min-height: 50px;
+      background: linear-gradient(90deg, rgba(4, 15, 26, 0.5), transparent);
+    }
+    /* The shell's own backdrop-filter would blur the art pseudo-element a
+       second time and mix the skyline into it - two blurs stacked, which came
+       out looking like grain. The art carries the only blur here. */
+    [data-mode] .tableShell {
+      backdrop-filter: none;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Phones read top to bottom, so the order is the order of attention:
+       what mode/target this is, what she just said and whether the power shot
+       is ready, the table, then the shot readout. */
+    .playToolbar {
+      order: 1;
+    }
+    .tableHud {
+      order: 2;
+    }
+    .tableStage {
+      order: 3;
+    }
+    .shotStrip {
+      order: 4;
+    }
+    .statusbar {
+      order: 5;
+      border-bottom: 0;
+      border-top: 1px solid #1e4761;
+    }
+    /* Two things have to agree here. The art stops at the line under the
+       TARGET row - done with a mask, because the box is what background-size
+       fits to and shrinking it would rescale her. And the art is then sized to
+       exactly the strip that is left (100% - 59px) and pinned to its bottom,
+       so the picture starts AT that line: cover was fitting it to the full box
+       with zero vertical slack, which meant the mask ate the top of her head,
+       and any y-offset meant for framing (AIKA had 74px) just left a dark band
+       hanging below the line instead of moving anything. 59px = the 12px the
+       pseudo-element overhangs the shell plus the 47px down to the line.
+       Note the dialogue row below that line paints its own tinted, blurred
+       background, so the next 45px of picture is behind it and does not
+       show. */
+    [data-mode] .tableShell::before {
+      content: "";
+      position: absolute;
+      inset: -12px;
+      z-index: -1;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 59px, #000 59px);
+      mask-image: linear-gradient(to bottom, transparent 59px, #000 59px);
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 20%),
+        linear-gradient(
+          rgba(5, 13, 23, 0.5),
+          rgba(3, 8, 15, 0.34) 38%,
+          rgba(3, 8, 15, 0.42)
+        ),
+        url("/games/neonbreak/neon-operator-tall.webp");
+      background-repeat: no-repeat;
+      background-size:
+        100% 100%,
+        100% 100%,
+        auto calc(100% - 59px);
+      background-position:
+        center,
+        center,
+        center bottom;
+      filter: blur(2px) saturate(1.08);
+    }
+    [data-mode="cpu"] .tableShell::before {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 20%),
+        linear-gradient(
+          rgba(5, 13, 23, 0.5),
+          rgba(3, 8, 15, 0.34) 38%,
+          rgba(3, 8, 15, 0.42)
+        ),
+        url("/games/neonbreak/neon-operator-tall-cpu.webp");
+    }
+    [data-mode="stage"] .tableShell::before {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 20%),
+        linear-gradient(
+          rgba(5, 13, 23, 0.5),
+          rgba(3, 8, 15, 0.34) 38%,
+          rgba(3, 8, 15, 0.42)
+        ),
+        url("/games/neonbreak/neon-operator-tall-stage.webp");
+    }
+    /* Phones stack the side panel below the fold, which buries the two things
+       you need mid-shot: what she just said, and whether the power shot is
+       charged. They ride on the table instead. The charge is a hairline under
+       the row rather than a number on a floating chip, and the button only
+       lights up once it can actually be pressed - so nothing sits there
+       looking detached while the gauge is filling. */
+    .tableHud {
+      --accent: #37e7ff;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px 10px;
+      border-bottom: 1px solid rgba(43, 70, 89, 0.55);
+      background: rgba(6, 17, 28, 0.34);
+      backdrop-filter: blur(5px);
+    }
+    [data-mode="cpu"] .tableHud {
+      --accent: #ff3bce;
+    }
+    [data-mode="stage"] .tableHud {
+      --accent: #b98cff;
+    }
+    .tableHud p {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      color: #b9d2e0;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .tableHud p b {
+      margin-right: 7px;
+      color: var(--accent);
+      font: 700 9px monospace;
+      letter-spacing: 0.14em;
+    }
+    .hudPower {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 26px;
+      padding: 0 11px;
+      border: 1px solid #2c4a5e;
+      border-radius: 999px;
+      background: rgba(8, 22, 34, 0.55);
+      color: #62798a;
+      font: 700 9px monospace;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+    }
+    .hudPower:disabled {
+      /* Quiet while it charges: no pill, no colour, just the word - the
+         hairline underneath is what says how far along it is. */
+      border-color: transparent;
+      background: none;
+      cursor: default;
+    }
+    .hudPower:not(:disabled) {
+      border-color: rgba(255, 58, 203, 0.6);
+      color: #ff9fe4;
+    }
+    .hudPower.armed {
+      border-color: var(--pink);
+      background: #400d31;
+      color: #ffc4ef;
+      box-shadow: 0 0 14px #ff3acb55;
+    }
+    .hudCharge {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #35e1ff, #ff3acb);
+      box-shadow: 0 0 8px #ff3acb66;
+      transition: width 0.2s linear;
+    }
+    /* The art is feathered at its edges, so whatever sits under it shows
+       through there - which was the rails and two pockets floating over her
+       shoulders. Under the art the table goes dark instead, and she rises out
+       of that rather than out of a half-erased table. */
+    /* [data-mode] only to outrank the base .clearPop, which is declared after
+       these media blocks and would otherwise win on source order. */
+    [data-mode] .clearPop {
+      background: radial-gradient(
+        ellipse at center,
+        rgba(2, 6, 14, 0.94) 30%,
+        rgba(2, 6, 14, 0.88) 70%,
+        rgba(2, 6, 14, 0.82)
+      );
+    }
+    /* One framing for all three operators: whoever it is, the result screen
+       starts at the same height and the same crop - only the file changes. */
+    [data-mode] {
+      --result-art: url("/games/neonbreak/neon-operator-tall.webp");
+    }
+    [data-mode="cpu"] {
+      --result-art: url("/games/neonbreak/neon-operator-tall-cpu.webp");
+    }
+    [data-mode="stage"] {
+      --result-art: url("/games/neonbreak/neon-operator-tall-stage.webp");
+    }
+    [data-mode] .resultArt {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        radial-gradient(
+          ellipse at center,
+          rgba(2, 6, 14, 0.84) 26%,
+          rgba(2, 6, 14, 0.32) 64%,
+          rgba(2, 6, 14, 0.06)
+        ),
+        var(--result-art);
+      background-repeat: no-repeat;
+      background-size:
+        100% 100%,
+        cover;
+      background-position:
+        center,
+        center 30px;
+    }
+    .title {
+      font-size: 15px;
+    }
+    .kicker {
+      font-size: 7px;
+      letter-spacing: 0.08em;
+    }
+    .turnBanner {
+      display: none;
+    }
+    .resetbtn {
+      padding: 0 9px;
+    }
+    .hideMobile {
+      display: none;
+    }
+    .statusbar {
+      font-size: 7px;
+      height: 37px;
+      padding: 0 10px;
+    }
+    .tableFooter {
+      display: none;
+    }
+    .game {
+      min-height: 310px;
+    }
+    .matchPanel {
+      padding: 14px;
+    }
+    .rackLine i {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  .clearPop {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    /* Darkened toward the middle only, so the box reads while the character
+       stays visible around it rather than being blanked out by a flat sheet. */
+    background: radial-gradient(
+      ellipse at center,
+      rgba(2, 6, 14, 0.82) 30%,
+      rgba(2, 6, 14, 0.34) 68%,
+      rgba(2, 6, 14, 0.12)
+    );
+    animation: clearFade 0.26s ease-out;
+  }
+  .resultArt {
+    display: none;
+    /* Without this it is a rectangle of artwork slapped over the felt, cut dead
+       straight against the toolbar and the shot strip. Feathering all four
+       edges lets her rise out of the table instead of covering it, and the
+       fade-in is the popup's own so the two arrive as one thing. */
+    -webkit-mask-image:
+      linear-gradient(to bottom, transparent, #000 11%, #000 84%, transparent),
+      linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+    mask-image:
+      linear-gradient(to bottom, transparent, #000 11%, #000 84%, transparent),
+      linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    animation: clearFade 0.3s ease-out;
+  }
+  .clearBox {
+    position: relative;
+    z-index: 1;
+    min-width: 206px;
+    padding: 20px 26px 18px;
+    text-align: center;
+    border: 1px solid var(--cyan);
+    background: linear-gradient(
+      160deg,
+      rgba(6, 24, 38, 0.97),
+      rgba(18, 6, 30, 0.97)
+    );
+    box-shadow:
+      0 0 44px #37e7ff40,
+      inset 0 0 26px #37e7ff18;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 14px) 0,
+      100% 14px,
+      100% 100%,
+      14px 100%,
+      0 calc(100% - 14px)
+    );
+    animation: clearRise 0.34s cubic-bezier(0.2, 1.45, 0.4, 1) both;
+  }
+  .clearKicker {
+    display: block;
+    color: var(--cyan);
+    font: 700 9px monospace;
+    letter-spacing: 0.22em;
+    text-shadow: 0 0 14px var(--cyan);
+  }
+  .clearBox strong {
+    display: block;
+    margin-top: 6px;
+    color: #fff;
+    font: 800 40px/1 monospace;
+    text-shadow: 0 0 22px #37e7ffcc;
+  }
+  .clearBox strong i {
+    margin-left: 4px;
+    font: 700 12px monospace;
+    font-style: normal;
+    color: #7fd9ef;
+  }
+  .clearBox p {
+    margin: 8px 0 0;
+    color: #9db2c2;
+    font-size: 9.5px;
+    letter-spacing: 0.05em;
+  }
+  .resultRecord {
+    margin: 9px 0 0;
+    color: #6f8798;
+    font: 700 8px monospace;
+    letter-spacing: 0.2em;
+  }
+  .resultRecord b {
+    margin: 0 3px;
+    color: var(--cyan);
+    font: 800 13px monospace;
+  }
+  .resultQuote {
+    max-width: 250px;
+    margin: 10px auto 0;
+    padding-top: 9px;
+    border-top: 1px solid rgba(85, 137, 165, 0.28);
+    color: #9db2c2;
+    font-size: 9.5px;
+    line-height: 1.6;
+  }
+  .clearActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+  }
+  .clearActions button {
+    flex: 1;
+    height: 36px;
+    padding: 0 14px;
+    cursor: pointer;
+    font: 700 9px monospace;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+  .clearReplay {
+    border: 1px solid #2b5169;
+    background: rgba(7, 20, 33, 0.8);
+    color: #8fa9bb;
+  }
+  .clearReplay:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .clearNext {
+    border: 1px solid #ff4ed4;
+    background: #4b0d42;
+    color: #fff;
+    box-shadow: 0 0 20px #ff3acb55;
+    animation: armed 1s ease-in-out infinite alternate;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .clearPop,
+    .clearBox,
+    .clearNext {
+      animation: none;
+    }
+  }
+  /* Playability pass: preserve the operator/table silhouette, make controls legible. */
+  button:focus-visible,
+  canvas:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  .breakTop {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .modeSwitch {
+    margin-right: 0;
+  }
+  .modeSwitch button {
+    font-size: 11px;
+    height: 36px;
+    padding: 0 12px;
+  }
+  .kicker {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  .matchPanel {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: linear-gradient(
+      145deg,
+      rgba(7, 18, 33, 0.72),
+      rgba(16, 6, 25, 0.66)
+    );
+  }
+  .targetReadout {
+    order: -4;
+    margin-top: 0;
+  }
+  .rackLine {
+    order: -3;
+    gap: 3px;
+    margin-bottom: 18px;
+  }
+  .rackLine i {
+    flex-shrink: 0;
+  }
+  .targetReadout span,
+  .meterLabel,
+  .soloCard span,
+  .player b {
+    font-size: 11px;
+  }
+  .powerBtn {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    min-height: 44px;
+    margin-bottom: 0;
+  }
+  .powerNote {
+    padding: 10px;
+    gap: 8px;
+  }
+  .powerNote svg {
+    flex-shrink: 0;
+  }
+  .powerNote p {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .powerNote b,
+  .crewCard > span,
+  .rules b {
+    font-size: 10px;
+  }
+  .crewCard {
+    margin: 14px 0;
+  }
+  .crewCard > strong {
+    font-size: 18px;
+  }
+  .crewLine,
+  .rules p {
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .rules {
+    margin-top: 8px;
+  }
+  .bestReadout {
+    font: 11px/1.6 monospace;
+    color: #9fb7c7;
+    margin: 0 0 14px;
+  }
+  .bestReadout b {
+    color: #88f4da;
+  }
+  .difficulty {
+    border: 0;
+    padding: 0;
+    margin: 0 0 14px;
+    order: -5;
+    min-width: 0;
+  }
+  .difficulty legend {
+    font: 11px monospace;
+    color: #b8cdd9;
+    margin-bottom: 8px;
+  }
+  .difficulty > div {
+    display: flex;
+    gap: 4px;
+  }
+  .difficulty button {
+    flex: 1;
+    min-width: 0;
+    background: #0a1524;
+    border: 1px solid #345066;
+    color: #9eb1c1;
+    min-height: 34px;
+    font: 10px monospace;
+    padding: 4px;
+  }
+  .difficulty button[aria-pressed="true"] {
+    color: #ff99e4;
+    border-color: var(--pink);
+    background: #30102e;
+  }
+  .difficulty button:disabled {
+    opacity: 0.5;
+  }
+  .stageSelect {
+    order: -5;
+  }
+  .stageSelect button {
+    height: 32px;
+    font-size: 12px;
+    position: relative;
+  }
+  .stageSelect .completed::after {
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 40%;
+    right: 40%;
+    height: 2px;
+    background: #70ffcb;
+  }
+  .tableShell {
+    /* The character runs behind the table at these widths, so anything the
+       shell adds shows up as a darker band down her exactly at the table's
+       edge. Between this and the felt wash the table still reads, and the
+       seam across her doesn't. */
+    background: rgba(2, 7, 14, 0.12);
+  }
+  .playToolbar {
+    min-height: 45px;
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    background: rgba(9, 23, 37, 0.42);
+    backdrop-filter: blur(5px);
+    border-bottom: 1px solid #2b4659;
+    font: 11px monospace;
+    color: #c1edf6;
+  }
+  .playToolbar > div {
+    display: flex;
+    gap: 6px;
+  }
+  .playToolbar button,
+  .pauseCover button,
+  .helpBox button {
+    border: 1px solid #3b6177;
+    background: #0c2232;
+    color: #b9efff;
+    min-height: 32px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .statusbar {
+    height: auto;
+    min-height: 38px;
+    gap: 10px;
+    padding: 8px 12px;
+    letter-spacing: 0.03em;
+    font-size: 11px;
+    background: rgba(8, 19, 31, 0.34);
+  }
+  .statusbar > span:nth-child(2) {
+    text-align: right;
+    line-height: 1.5;
+  }
+  .statusbar .hideMobile {
+    display: none;
+  }
+  .turnCallout {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+  .shotStrip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 38px;
+    padding: 7px 14px 9px;
+    background: rgba(8, 19, 31, 0.34);
+    color: #a8c2d1;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .shotStrip > [role="status"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .shotHint {
+    flex: 0 0 auto;
+    color: #6f8798;
+    font-size: 10px;
+  }
+  .shotStrip b {
+    color: var(--cyan);
+    font: 14px monospace;
+  }
+  .shotStrip > i {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--pink));
+    transition: width 0.05s;
+  }
+  .pauseCover {
+    position: absolute;
+    inset: 45px 0 0;
+    z-index: 7;
+    background: #020814bf;
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .pauseCover > span {
+    font: 24px monospace;
+    color: var(--cyan);
+    letter-spacing: 0.3em;
+  }
+  .helpBox {
+    width: min(580px, 100%);
+    max-height: 85svh;
+    overflow: auto;
+    padding: 24px;
+    background: #081322;
+    border: 1px solid #498399;
+    box-shadow: 0 20px 100px #000b;
+  }
+  .helpBox h2 {
+    font: 20px monospace;
+    letter-spacing: 0.12em;
+    color: var(--cyan);
+    margin: 0;
+  }
+  .helpBox p {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #c3d4e0;
+    margin: 16px 0;
+  }
+  .helpBox button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .confirmBox p {
+    font-size: 14px;
+  }
+  .confirmActions button,
+  .clearActions button {
+    font-size: 12px;
+    min-height: 42px;
+  }
+  .clearBox p,
+  .resultQuote {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .clearKicker {
+    font-size: 12px;
+  }
+  /* No width override here: a flat cap in this band made every size between
+     876px and 1199px render identically, which undoes the whole point of the
+     two-band formula above - the table is supposed to keep taking space as the
+     window narrows. The floor on the table column matters for the same
+     reason, so the percentage tracks stay as declared. */
+  @media (max-width: 1199px) {
+    .matchPanel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .matchPanel > * {
+      margin: 0;
+    }
+    /* NEXT OBJECT and the ball row share a line on purpose - they are one
+       readout. soloCard was the odd one out, alone in half a row with a hole
+       beside it, and panelButtons inherited the same half width. */
+    .crewCard,
+    .rules,
+    .stageSelect,
+    .difficulty,
+    .bestReadout,
+    .soloCard,
+    .panelButtons {
+      grid-column: 1/-1;
+    }
+    .rackLine {
+      align-items: center;
+    }
+    .targetReadout {
+      padding: 8px 12px;
+    }
+    .powerNote {
+      grid-column: 1/-1;
+    }
+    .meterLabel,
+    .powerMeter,
+    .powerBtn {
+      grid-column: 1/-1;
+    }
+    .game {
+      min-height: 0;
+    }
+    .breakApp > footer {
+      font-size: 9px;
+      gap: 12px;
+    }
+  }
+  @media (max-width: 420px) {
+    .brandmark {
+      width: 40px;
+    }
+    .title {
+      font-size: 14px;
+    }
+    .kicker {
+      font-size: 8px;
+    }
+    .statusbar {
+      font-size: 10px;
+    }
+    .shotStrip {
+      font-size: 11px;
+    }
+    .rackLine i {
+      width: 18px;
+      height: 18px;
+    }
+    .matchPanel {
+      padding: 12px;
+    }
+    .resetbtn {
+      font-size: 10px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+@keyframes tubeFrame {
+  0%,
+  88.4%,
+  89.2%,
+  93.6%,
+  94.1%,
+  100% {
+    opacity: 1;
+  }
+  88.8%,
+  93.8% {
+    opacity: 0.35;
+  }
+}
+@keyframes tubeGlyph {
+  0%,
+  71.4%,
+  72.1%,
+  73%,
+  73.6%,
+  96.2%,
+  96.8%,
+  100% {
+    opacity: 1;
+  }
+  71.8%,
+  73.3%,
+  96.5% {
+    opacity: 0.18;
+  }
+}
+@keyframes calloutPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes calloutBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.18;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes armed {
+  to {
+    box-shadow: 0 0 34px #ff3acb99;
+  }
+}
+@keyframes clearFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes clearRise {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

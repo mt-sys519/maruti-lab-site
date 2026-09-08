@@ -40,6 +40,16 @@ function GameVisual({ id }: { id: (typeof bitGames)[number]["id"] }) {
       </svg>
     </span>
   );
+  if (id === "neonbreak") return (
+    <span className={`${styles.visual} ${styles.neonbreak}`} aria-hidden="true">
+      <svg viewBox="0 0 100 100" focusable="false">
+        <circle className={styles.nbBall} cx="50" cy="50" r="30" />
+        <path className={styles.nbBand} d="M20.6 40.5h58.8M20.6 59.5h58.8" />
+        <text className={styles.nbNine} x="50" y="58" textAnchor="middle">9</text>
+        <circle className={styles.nbCue} cx="17" cy="79" r="8" />
+      </svg>
+    </span>
+  );
   return <span className={`${styles.visual} ${styles.rainChime}`} aria-hidden="true"><img src="/games/rain-chime/room-lap.webp" alt="" /></span>;
 }
 

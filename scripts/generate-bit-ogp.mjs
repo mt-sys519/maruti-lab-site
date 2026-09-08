@@ -155,6 +155,23 @@ const liltOrbVisual = `<g transform="translate(755 140)" filter="url(#shadow)">
   <text x="24" y="312" fill="#7fa3ad" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">TOUCH TO GATHER</text>
 </g>`;
 
+// Mirrors the hub card icon for NEON BREAK (see GameVisual's "neonbreak"
+// case): the nine ball with its band, and the cue ball off to one side.
+function neonBreakIcon(scale, ink, accent) {
+  return `<g transform="scale(${scale}) translate(-50 -50)">
+    <circle cx="50" cy="50" r="30" fill="none" stroke="${ink}" stroke-width="${(1.4 / scale).toFixed(2)}"/>
+    <path d="M20.6 40.5h58.8M20.6 59.5h58.8" fill="none" stroke="${ink}" stroke-opacity=".45" stroke-width="${(1.4 / scale).toFixed(2)}"/>
+    <text x="50" y="59" text-anchor="middle" fill="${accent}" font-family="'Yu Gothic UI', sans-serif" font-weight="700" font-size="26">9</text>
+    <circle cx="17" cy="79" r="8" fill="none" stroke="${ink}" stroke-opacity=".55" stroke-width="${(1.4 / scale).toFixed(2)}"/>
+  </g>`;
+}
+
+const neonBreakVisual = `<g transform="translate(755 140)" filter="url(#shadow)">
+  <rect width="330" height="330" rx="4" fill="${palette.dark}" stroke="#3a5058"/>
+  <g transform="translate(165 158)">${neonBreakIcon(2.4, "#8ef2ff", "#ff8ad8")}</g>
+  <text x="24" y="312" fill="#7fa3ad" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">NINE BALL PROTOCOL</text>
+</g>`;
+
 // Square variant: some unfurlers (Slack/Discord/LINE) prefer or fall back to
 // a 1:1 og:image rather than the 1200x630 default. `theme` matches whatever
 // the real hub card actually uses (light cream for most, dark terminal for
@@ -185,6 +202,7 @@ const blankSquareVisual = `<g transform="translate(315 230)" filter="url(#shadow
 const sequenceSquareVisual = `<g transform="translate(315 230)" filter="url(#shadow)">${sequenceIcon(4.8)}</g>`;
 const rainSquareVisual = `<g transform="translate(315 270)" filter="url(#shadow)">${rainIcon(4.2)}</g>`;
 const pakuSquareVisual = `<g transform="translate(315 250)" filter="url(#shadow)">${pakuIcon(20)}</g>`;
+const neonBreakSquareVisual = `<g transform="translate(315 250)" filter="url(#shadow)">${neonBreakIcon(4.2, "#8ef2ff", "#ff8ad8")}</g>`;
 
 const images = [
   ["index.png", shell({ serial: "SERIES INDEX", title: "Maruti Bit", subtitle: "短い時間で、考える。見抜く。打ち込む。", visual: hubVisual })],
@@ -200,6 +218,8 @@ const images = [
   ["paku-square.png", squareShell({ serial: "GAME 005", title: "PAKU", subtitle: "水槽の熱帯魚に、タップで餌をあげる。", visual: pakuSquareVisual, theme: "light" })],
   ["liltorb.png", shell({ serial: "GAME 006", title: "LILT ORB", subtitle: "触れると粒子が集まる、癒しと刺激の球体トイ。", visual: liltOrbVisual })],
   ["liltorb-square.png", squareShell({ serial: "GAME 006", title: "LILT ORB", subtitle: "触れると粒子が集まる、癒しと刺激の球体トイ。", visual: liltOrbSquareVisual, theme: "dark" })],
+  ["neonbreak.png", shell({ serial: "GAME 008", title: "NEON BREAK", subtitle: "ネオンの台のナインボール。台につくのは、三人のオペレーター。", visual: neonBreakVisual })],
+  ["neonbreak-square.png", squareShell({ serial: "GAME 008", title: "NEON BREAK", subtitle: "ネオンの台のナインボール。", visual: neonBreakSquareVisual, theme: "dark" })],
 ];
 
 for (const [filename, svg] of images) {
