@@ -6,6 +6,10 @@
    site owns those now. */
 .nbRoot {
   position: relative;
+  /* The prototype set this on body, which the port drops - so anything that
+     did not name its own colour inherited .bitPage's near-black ink and went
+     invisible on the dark table. The game's own title was doing exactly that. */
+  color: var(--foreground);
   --background: #03050a;
   --foreground: #effaff;
   --cyan: #35e1ff;
