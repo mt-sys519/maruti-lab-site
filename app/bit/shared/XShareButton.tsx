@@ -19,14 +19,15 @@ export function XShareButton({ text, url, variant = "block" }: XShareButtonProps
     // that happens `win` comes back null, so fall back to navigating the current tab
     // rather than leaving the tap looking like it did nothing.
     //
-    // Passing "noopener" as a feature is deliberately NOT done here: per spec,
-    // browsers (Chrome included) return null from window.open() whenever
-    // noopener is set, even when the tab opened successfully - that made the
-    // `if (!win)` fallback fire on every click, navigating the original tab to
-    // the intent URL too. Get a real reference instead and null out `opener`
-    // by hand, which gives the same tabnabbing protection without losing the
-    // ability to tell success from failure.
-    const win = window.open(intent, "_blank", "noreferrer");
+    // No feature string at all. Per spec, browsers return null from
+    // window.open() whenever noopener is set, even when the tab opened fine -
+    // and "noreferrer" implies noopener, so passing it had exactly the effect
+    // the comment here used to warn about: `win` was always null, the
+    // fallback fired on every click, and the original tab followed the new one
+    // to the composer. Take a real reference and null out `opener` by hand,
+    // which is the same tabnabbing protection without losing the ability to
+    // tell a blocked popup from a successful one.
+    const win = window.open(intent, "_blank");
     if (win) win.opener = null;
     else window.location.href = intent;
   }
