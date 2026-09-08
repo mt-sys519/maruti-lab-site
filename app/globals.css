@@ -187,7 +187,12 @@ footer{padding-top:34px;padding-bottom:34px}
 
 /* NEON BREAK is a table plus a side panel rather than a single board, so it
    gets a wider shell than the rest of the cartridges. */
-.bitGameShellWide{width:min(1712px,calc(100% - 32px));padding:clamp(8px,1vw,14px)}
+/* No inner padding: the game paints its own dark frame edge to edge, and on a
+   phone a cream border inside a border just ate width. */
+/* No padding, border or hard shadow: this cartridge paints its own dark frame
+   edge to edge, and the cream border inside a border just ate width on a
+   phone. The other seven keep the toy-shop frame. */
+.bitGameShellWide{width:min(1712px,calc(100% - 32px));padding:0;border:0;background:#03050a;box-shadow:none}
 .bitNeonBreakLogo{display:block;width:.675em;height:.6em;flex:0 0 .675em;overflow:visible;color:var(--pkg-color,var(--bit-red))}
 .bitNeonBreakLogo circle,.bitNeonBreakLogo path{fill:none;stroke:currentColor;stroke-width:1.45;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .bitNeonBreakLogoDot{fill:currentColor;stroke:none}

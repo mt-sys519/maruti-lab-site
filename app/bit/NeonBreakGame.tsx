@@ -21,6 +21,11 @@ import { ShareButton } from "./shared/ShareButton";
 import { XShareButton } from "./shared/XShareButton";
 import "./neonBreak.css";
 
+// The same key every other cartridge reads, so turning sound on in one turns
+// it on here too. They store "is sound enabled" and default to off; this game
+// tracks the opposite (muted), hence the flips.
+const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
+
 type Ball = {
   id: number;
   x: number;
@@ -1111,6 +1116,15 @@ export function NeonBreakGame() {
     keyboardAngleRef = useRef(0),
     keyboardPowerRef = useRef(18);
   const pressRef = useRef<Point | null>(null);
+  // Where the finger landed relative to the cue ball. Every aim calculation
+  // subtracts it, so a drag started anywhere on the felt behaves exactly as if
+  // it had started on the ball - which is what a touch screen needs when the
+  // cue is against a rail and there is no room to pull from beside it.
+  const grabRef = useRef<Point>({ x: 0, y: 0 });
+  const fromGrab = (p: Point): Point => ({
+    x: p.x - grabRef.current.x,
+    y: p.y - grabRef.current.y,
+  });
   const previousGeometry = useRef<Geometry | null>(null);
   const [progress, setProgress] = useState<Progress>({
     soloBest: null,
@@ -1223,6 +1237,17 @@ export function NeonBreakGame() {
   );
   if (!audioEngineRef.current) audioEngineRef.current = createBreakAudio();
   useEffect(() => () => audioEngineRef.current?.dispose(), []);
+  useEffect(() => {
+    let enabled = false;
+    try {
+      enabled = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true";
+    } catch {
+      /* Private mode or blocked storage; the default stands. */
+    }
+    mutedRef.current = !enabled;
+    audioEngineRef.current?.setMuted(!enabled);
+    setMuted(!enabled);
+  }, []);
   // BGM is off. The three loops still live in breakAudio.ts (setMusic takes
   // 'solo' | 'cpu' | 'stage' | null and starts the matching one); putting
   // `setMusic(mode)` back in this effect is the whole switch.
@@ -2778,19 +2803,18 @@ export function NeonBreakGame() {
     // Any touch on the felt counts as "seen", not just a successful grab -
     // a miss still means the player is reaching for the cue.
     setPromptSeen(true);
-    if (Math.hypot(p.x - cue.x, p.y - cue.y) < 100) {
-      cancelAim();
-      pressRef.current = p;
-      dragRef.current = p;
-      e.currentTarget.focus({ preventScroll: true });
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
+    cancelAim();
+    grabRef.current = { x: p.x - cue.x, y: p.y - cue.y };
+    pressRef.current = p;
+    dragRef.current = cue;
+    e.currentTarget.focus({ preventScroll: true });
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
   const up = (e: React.PointerEvent) => {
     if (!dragRef.current || !pressRef.current) return;
-    const p = pos(e),
+    const p = fromGrab(pos(e)),
       cue = ballsRef.current[0];
-    if (Math.hypot(p.x - pressRef.current.x, p.y - pressRef.current.y) < 4) {
+    if (Math.hypot(p.x - cue.x, p.y - cue.y) < 4) {
       cancelAim();
       return;
     }
@@ -3001,6 +3025,14 @@ export function NeonBreakGame() {
               onClick={() => {
                 const next = !muted;
                 mutedRef.current = next;
+                try {
+                  window.localStorage.setItem(
+                    SOUND_STORAGE_KEY,
+                    next ? "false" : "true",
+                  );
+                } catch {
+                  /* Optional. */
+                }
                 audioEngineRef.current!.setMuted(next);
                 if (!next) audioEngineRef.current!.uiClick();
                 setMuted(next);
@@ -3416,7 +3448,7 @@ export function NeonBreakGame() {
                 }}
                 onPointerDown={down}
                 onPointerMove={(e) => {
-                  if (dragRef.current) steerAim(pos(e));
+                  if (dragRef.current) steerAim(fromGrab(pos(e)));
                 }}
                 onPointerUp={up}
                 onPointerCancel={cancelAim}
@@ -3482,6 +3514,23 @@ export function NeonBreakGame() {
           </span>
           <span>DRAG CUE BALL · AIM · RELEASE</span>
         </footer>
+        {/* Same pair AVENUE and PAKU use, but on the game's own dark ground
+            rather than the cream below it - the cartridge frame has no padding
+            here, so there is no light strip to sit on. Its own row, split in
+            half. */}
+        <div className="nbShareRow">
+          <ShareButton
+            title="MarutiBit「NEON BREAK」"
+            text="ネオンの台のナインボール。台につくのは、三人のオペレーター"
+            url="https://marutilab.com/bit/neonbreak"
+          />
+          <XShareButton
+            variant="compact"
+            text={`MarutiBit「NEON BREAK」
+ネオンの台のナインボール。台につくのは、三人のオペレーター`}
+            url="https://marutilab.com/bit/neonbreak"
+          />
+        </div>
         {helpOpen && (
           <div className="confirmOverlay" onClick={() => setHelpOpen(false)}>
             <div
@@ -3543,22 +3592,6 @@ export function NeonBreakGame() {
             </div>
           </div>
         )}
-      </div>
-      {/* Same row AVENUE and PAKU use - the OS share sheet plus the X
-          composer - sitting under the game rather than inside a result
-          screen, so it is reachable whether or not a rack is finished. */}
-      <div className="bitPakuShareRow">
-        <ShareButton
-          title="MarutiBit「NEON BREAK」"
-          text="ネオンの台のナインボール。台につくのは、三人のオペレーター"
-          url="https://marutilab.com/bit/neonbreak"
-        />
-        <XShareButton
-          variant="compact"
-          text={`MarutiBit「NEON BREAK」
-ネオンの台のナインボール。台につくのは、三人のオペレーター`}
-          url="https://marutilab.com/bit/neonbreak"
-        />
       </div>
     </div>
   );

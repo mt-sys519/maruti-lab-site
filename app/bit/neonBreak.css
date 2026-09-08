@@ -191,6 +191,9 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
+    /* No double-tap zoom. There is nothing to do during AIKA's turn, so an
+       impatient second tap was zooming the page instead of being ignored. */
+    touch-action: manipulation;
     padding: 12px;
     background: #03050a;
   }
@@ -246,6 +249,30 @@
   .breakApp > footer {
     position: relative;
     z-index: 2;
+  }
+  /* The shared share buttons are drawn for the cream page; in here they sit on
+     black, so the same shapes are inverted. Own row, two equal halves. */
+  .nbShareRow {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .nbShareRow button {
+    padding: 11px 9px;
+  }
+  .nbShareRow button {
+    border-color: rgba(120, 170, 200, 0.34);
+    background: transparent;
+    color: #7f9bab;
+  }
+  .nbShareRow button:hover,
+  .nbShareRow button:focus-visible {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    outline: none;
   }
   .breakTop {
     min-height: 58px;
@@ -757,8 +784,12 @@
      keeps its share as things get tight (92% of the width at 900px) while a
      wide window still leaves the character her room (59% at 1920px). */
   @media (max-width: 1199px) {
+    /* minmax(0, 1fr), not 1fr: a 1fr track takes its minimum from the content,
+       so the toolbar's own minimum width pushed the whole table wider than the
+       box and .breakApp's overflow:hidden cut the right rail off. VS CPU hit it
+       first because its toolbar row is the longest. */
     .breakLayout {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
     .tableShell {
       grid-row: 1;
@@ -1590,7 +1621,15 @@
   }
   .playToolbar > div {
     display: flex;
+    flex: 0 0 auto;
     gap: 6px;
+  }
+  /* Allowed to shrink and clip rather than setting the row's minimum width. */
+  .playToolbar > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .playToolbar button,
   .pauseCover button,
