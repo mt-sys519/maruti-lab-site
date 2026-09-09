@@ -27,6 +27,48 @@ export default function ClockPage() {
       <div><span>02</span><h3>CLOCK MODE</h3><p>端末の外枠を消し、時計だけを静かにデスクトップへ残せます。</p></div>
       <div><span>03</span><h3>LOCAL & QUIET</h3><p>アカウント、広告、通信、Telemetryなし。すべて端末内で動作します。</p></div>
     </section>
+    <section className="clockGuide" aria-labelledby="clock-guide-title">
+      <div className="clockGuideHead">
+        <p className="eyebrow">HOW TO USE</p>
+        <h2 id="clock-guide-title">使い方</h2>
+        <p>このページの右（スマートフォンでは上）で動いている画面は、実際のアプリと同じものです。ボタンを押すと、ここで試せます。</p>
+      </div>
+      <dl className="clockGuideList">
+        <div>
+          <dt>時刻表示</dt>
+          <dd><code>HH:MM:SS</code>の24時間表示に固定しています。秒を省きません。時刻はお使いのWindowsの時計に従います。</dd>
+        </div>
+        <div>
+          <dt>CLOCK MODE</dt>
+          <dd>端末の外枠と情報表示を消し、6本の管だけをデスクトップに残します。<b>RETURN</b>でもとの画面へ戻ります。</dd>
+        </div>
+        <div>
+          <dt>COLOR</dt>
+          <dd>管の発光色を<b>GREEN → AMBER → BLUE → RED</b>の順に切り替えます。押すたびに次の色へ進みます。</dd>
+        </div>
+        <div>
+          <dt>EFFECT</dt>
+          <dd>分が変わる瞬間の切り替え演出を<b>NORMAL / RAIN / GLITCH / CORRUPT</b>から選びます。時刻の読み取りには影響しません。</dd>
+        </div>
+        <div>
+          <dt>PIN</dt>
+          <dd>ONにすると、ほかのウィンドウより手前に固定されます。作業しながら時刻を見続けたいときに。</dd>
+        </div>
+        <div>
+          <dt>INFO</dt>
+          <dd>画面右側の状態表示（管の状態、UTCオフセット、ビルド番号など）を出し入れします。</dd>
+        </div>
+        <div>
+          <dt>フルスクリーン</dt>
+          <dd>画面いっぱいに広げます。据え置きの時計として使うときに。</dd>
+        </div>
+      </dl>
+      <div className="clockGuideNote">
+        <h3>動作環境と、しないこと</h3>
+        <p>Windows 10 / 11（64bit）。インストーラーは1.8MBです。</p>
+        <p>アカウント登録、広告、通信、アクセス解析、自動更新のいずれもありません。インストール後はオフラインのまま動きます。新しい版が出ても勝手に入れ替わらないので、更新はこのページから改めてダウンロードしてください。</p>
+      </div>
+    </section>
     <section className="downloadSection"><div><p className="eyebrow">DOWNLOAD</p><h2>PromptTerm CLOCK 1.0.0</h2><p>未署名の個人制作アプリのため、Windows SmartScreenの青い警告画面が表示される場合があります。その場合は「詳細情報」を開き、「実行」を選択してください。ファイルの同一性はSHA-256で確認できます。</p></div><div className="downloadActions"><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>セットアップをダウンロード</a><a href="/downloads/SHA256SUMS.txt" download>SHA-256を確認</a><code>E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E</code></div></section>
     <footer><div className="footerBrand">Maruti Lab</div><div className="footerLinks"><a href="/">Works</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/privacy">Privacy</a><a href="/disclaimer">Disclaimer</a></div><small>© 2026 Maruti Lab</small></footer>
   </main>;
