@@ -176,13 +176,13 @@
   color: #1c211e;
   display: flex;
   flex-direction: column;
-  border-bottom: 10px solid #7B8CDE;
+  border-bottom: 10px solid #2BB3A3;
 }
 .note .noteEyebrow {
   margin: 0;
   font: 500 17px/1 "Yu Gothic UI", sans-serif;
   letter-spacing: 0.22em;
-  color: #5566b8;
+  color: #17796e;
 }
 .note h1 {
   margin: 34px 0 0;

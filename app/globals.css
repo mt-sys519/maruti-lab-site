@@ -143,10 +143,10 @@ footer{padding-top:34px;padding-bottom:34px}
 
 /* Notes. The grid stays on the page - it is the site's ground - but the
    article is lifted off it onto a sheet of plain paper, so the 44px lines
-   never run through a line of body text. Periwinkle is MarutiBit's blue and
-   marks everything structural here: the date, the tags, the rule before each
-   heading, the links. */
-.notePage{--note-accent:#7B8CDE}
+   never run through a line of body text. The accent is the teal from the Bit
+   of the MarutiBit wordmark, and it marks everything structural here: the
+   date, the tags, the rule before each heading, the links. */
+.notePage{--note-accent:#2BB3A3}
 .notePage .eyebrow{color:var(--note-accent)}
 .noteSheet{width:min(860px,calc(100% - 40px));margin:clamp(46px,6vw,84px) auto;background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--note-accent);box-shadow:0 22px 50px rgba(41,39,32,.07);padding:0 clamp(26px,5vw,64px)}
 .noteSheet .blogIndex,.noteSheet .postDocument,.noteSheet .postFooter{width:auto;margin:0}
@@ -154,14 +154,14 @@ footer{padding-top:34px;padding-bottom:34px}
    way in, so anyone reading down the page never learned the notes existed. */
 .notesSection{padding:clamp(90px,12vw,170px) clamp(24px,5vw,76px);border-top:1px solid var(--line)}
 .notesList{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(30px,5vw,70px)}
-.notesList li{border-top:2px solid #7B8CDE}
+.notesList li{border-top:2px solid #2BB3A3}
 .notesList a{display:block;padding:30px 0 34px}
-.notesList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:#7B8CDE}
+.notesList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:#1b8579}
 .notesList h3{font-size:clamp(19px,1.9vw,23px);font-weight:500;line-height:1.65;margin:14px 0 0}
-.notesList a:hover h3{color:#4f61b4}
+.notesList a:hover h3{color:#17796e}
 .notesList p{font-size:13px;line-height:2;color:var(--muted);margin:12px 0 0}
 .notesMore{display:inline-block;margin-top:18px;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.12em;border-bottom:1px solid var(--line);padding-bottom:6px}
-.notesList a:hover .notesMore{border-color:#4f61b4;color:#4f61b4}
+.notesList a:hover .notesMore{border-color:#17796e;color:#17796e}
 .notesAll{display:inline-block;margin-top:52px}
 @media(max-width:900px){.notesList{grid-template-columns:1fr}}
 
@@ -178,10 +178,10 @@ footer{padding-top:34px;padding-bottom:34px}
 .postList a{display:block;padding:34px 0}
 .postList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:var(--note-accent)}
 .postList h2{font-size:clamp(20px,2.4vw,26px);font-weight:500;line-height:1.6;margin:14px 0 0}
-.postList a:hover h2{color:#4f61b4}
+.postList a:hover h2{color:#17796e}
 .postList p{font-size:13px;line-height:2;color:var(--muted);margin:12px 0 0;max-width:38em}
 .postMeta{display:flex;align-items:center;gap:10px;margin-top:16px;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.12em;color:var(--muted)}
-.postMeta b{font-weight:500;border:1px solid var(--note-accent);border-radius:999px;padding:5px 10px;color:#5566b8}
+.postMeta b{font-weight:500;border:1px solid var(--note-accent);border-radius:999px;padding:5px 10px;color:#1b8579}
 .postMeta i{font-style:normal;margin-left:auto}
 .postDocument{padding:clamp(56px,7vw,88px) 0 40px}
 .postDocument h1{font-size:clamp(30px,4.4vw,50px);font-weight:400;line-height:1.5;margin:0 0 26px}
@@ -192,8 +192,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .postBody h2:before{content:"";position:absolute;top:-2px;left:0;width:46px;height:3px;background:var(--note-accent)}
 .postBody h3{font-size:16px;font-weight:600;line-height:1.7;margin:42px 0 14px;color:var(--ink)}
 .postBody p{margin:0 0 26px}
-.postBody a{color:#4f61b4;border-bottom:1px solid rgba(123,140,222,.5)}
-.postBody a:hover{border-color:#4f61b4}
+.postBody a{color:#17796e;border-bottom:1px solid rgba(43,179,163,.55)}
+.postBody a:hover{border-color:#17796e}
 .postBody strong{font-weight:600;color:var(--ink)}
 /* Tailwind's preflight strips list markers, so put them back here. */
 .postBody ul,.postBody ol{margin:0 0 26px;padding-left:1.5em}
@@ -214,7 +214,7 @@ footer{padding-top:34px;padding-bottom:34px}
 .postFooter ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .postFooter li{border-bottom:1px solid var(--line)}
 .postFooter a{display:flex;align-items:baseline;gap:20px;padding:22px 0;font-size:14px}
-.postFooter a:hover{color:#4f61b4}
+.postFooter a:hover{color:#17796e}
 .postFooter time{flex:0 0 auto;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.16em;color:var(--note-accent)}
 @media(max-width:640px){.postBody{font-size:14.5px;line-height:2.05}.postBody h2{margin-top:48px}.postFooter a{flex-direction:column;gap:8px}}
 
