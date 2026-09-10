@@ -106,3 +106,19 @@ test("the CLOCK page explains how the app is actually used", async () => {
   assert.match(html, /CORRUPT/);
   assert.match(html, /Windows 10 \/ 11/);
 });
+
+// SwiftCrop moved in from its own domain. The page has to carry the tool and
+// enough of its own writing to be worth landing on.
+test("the SwiftCrop page embeds the tool and explains it", async () => {
+  const response = await render("/swiftcrop");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /src="\/swiftcrop\/index\.html"/);
+  assert.match(html, /使い方/);
+  for (const heading of ["出力サイズ", "フォーマットと品質", "保存方法"]) {
+    assert.ok(html.includes(heading), `${heading} is missing from the guide`);
+  }
+  // Held back from search until swiftcrop.jp redirects here.
+  assert.match(html, /name="robots" content="noindex/);
+  assert.doesNotMatch(html, /swiftcrop\.jp/);
+});

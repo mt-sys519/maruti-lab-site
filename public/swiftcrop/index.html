@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SwiftCrop</title>
+<meta content="複数画像をアップロードせず、ブラウザ内で一括切り抜き・リサイズ。登録・インストール不要で、LINEスタンプ、SNS、EC、AI学習データの画像作業を軽快に進められます。" name="description"/>
+<meta content="index,follow,max-image-preview:large" name="robots"/>
+<meta content="#f7f8f3" name="theme-color"/>
+<meta content="light" name="color-scheme"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Outfit:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style id="hero-critical-style">
+.hero-free-label,.mobile-tool-intro{display:none}
+@media(max-width:720px){
+  .hero-copy>.eyebrow{order:1}.hero-copy>h1{order:2}
+  .hero-free-label{display:inline-flex;order:3}
+  .hero-copy>.hero-lead{display:none}
+  .mobile-tool-intro{display:flex}
+  .hero-copy>.hero-lead{order:4}.hero-visual{order:5}.hero-copy>.hero-trust{order:6}
+}
+</style>
+<link href="style.css?v=4.0.3-export-time" rel="stylesheet"/>
+
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-GTPT9ZK2HD"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-GTPT9ZK2HD');
+  </script>
+
+</head>
+<body>
+<noscript><div class="noscript-message">SwiftCropを利用するにはJavaScriptを有効にしてください。</div></noscript>
+<div class="app-container">
+
+<div class="mobile-tool-intro"><strong>同じ設定で切り抜き・リサイズ・形式変換</strong><span>複数画像をまとめて処理できます。</span></div><div class="main-layout"> <div class="mobile-upload-slot" id="mobile-upload-slot"></div>
+
+<aside aria-label="出力設定" class="control-panel">
+<section class="panel-section">
+<h2><i class="fa-solid fa-maximize"></i> 出力サイズ</h2>
+<div class="input-grid">
+<div class="input-group">
+<label for="resize-width">幅（px）</label>
+<input id="resize-width" inputmode="numeric" max="12000" min="1" step="1" type="number" value="1024"/>
+</div>
+<div class="input-group">
+<label for="resize-height">高さ（px）</label>
+<input id="resize-height" inputmode="numeric" max="12000" min="1" step="1" type="number" value="1024"/>
+</div>
+</div>
+<label class="checkbox-label" for="lock-aspect">
+<input checked="" id="lock-aspect" type="checkbox"/>
+<span class="custom-checkbox"></span>
+<span>比率を固定</span>
+<strong class="aspect-ratio-current" id="aspect-ratio-current">1:1</strong>
+          </label>
+<div class="preset-selector ratio-preset-selector">
+<span class="field-label">比率</span>
+<div class="presets ratio-presets">
+<button class="btn btn-preset btn-ratio" data-ratio="free" type="button">自由入力</button>
+<button aria-controls="ratio-size-picker" aria-expanded="false" aria-haspopup="dialog" class="btn btn-preset btn-ratio active" data-ratio="1:1" type="button"><span>1:1</span><i aria-hidden="true" class="fa-solid fa-chevron-down"></i></button>
+<button aria-controls="ratio-size-picker" aria-expanded="false" aria-haspopup="dialog" class="btn btn-preset btn-ratio" data-ratio="16:9" type="button"><span>16:9</span><i aria-hidden="true" class="fa-solid fa-chevron-down"></i></button>
+<button aria-controls="ratio-size-picker" aria-expanded="false" aria-haspopup="dialog" class="btn btn-preset btn-ratio" data-ratio="9:16" type="button"><span>9:16</span><i aria-hidden="true" class="fa-solid fa-chevron-down"></i></button>
+</div>
+</div>
+<div class="preset-selector purpose-size-selector">
+<span class="field-label">用途別サイズ</span>
+<div class="presets purpose-size-presets">
+<button class="btn btn-preset btn-size-preset" data-h="1080" data-w="1080" type="button"><span>Instagram</span><small>1080×1080</small></button>
+<button class="btn btn-preset btn-size-preset" data-h="630" data-w="1200" type="button"><span>OGP</span><small>1200×630</small></button>
+</div>
+</div>
+<button class="btn btn-secondary btn-original-size" id="preset-original" type="button"><i class="fa-solid fa-rotate-left"></i> 元画像サイズに戻す</button>
+<div class="recent-section" hidden="" id="recent-section">
+<div class="recent-header">
+<span class="field-label">最近使ったサイズ</span>
+<button class="text-button" id="btn-clear-recent" type="button">履歴を削除</button>
+</div>
+<div class="recent-sizes" id="recent-sizes"></div>
+</div>
+</section>
+<section class="panel-section">
+<h2><i class="fa-solid fa-sliders"></i> 出力設定</h2>
+<div class="input-group">
+<label for="output-format">フォーマット</label>
+<select aria-describedby="format-help" id="output-format">
+<option selected="" value="image/jpeg">JPEG（おすすめ）</option>
+<option value="image/png">PNG（透明画像向け）</option>
+<option value="image/webp">WebP（Webサイト向け）</option>
+</select>
+<small class="format-help" id="format-help">
+              写真・SNSはJPEG、透明画像はPNG、Webサイト用はWebPがおすすめです。
+            </small>
+</div>
+<div class="input-group" id="quality-group">
+<div class="label-with-val">
+<label for="output-quality">品質</label>
+<span id="quality-val">85%</span>
+</div>
+<input class="slider" id="output-quality" max="100" min="10" type="range" value="85"/>
+</div>
+<div class="input-group">
+<span class="field-label">保存方法</span>
+<div aria-label="保存方法" class="save-methods" role="radiogroup">
+<label class="save-method-card">
+<input id="save-individual" name="save-method" type="radio" value="individual"/>
+<span class="save-method-icon"><i class="fa-solid fa-image"></i></span>
+<span>
+<strong>1枚ずつ保存・共有</strong>
+<small>スマホ推奨・画像ごとに保存</small>
+</span>
+</label>
+<label class="save-method-card">
+<input id="save-zip" name="save-method" type="radio" value="zip"/>
+<span class="save-method-icon"><i class="fa-solid fa-file-zipper"></i></span>
+<span>
+<strong>ZIPでまとめて保存</strong>
+<small>PC推奨・複数画像を一括保存</small>
+</span>
+</label>
+</div>
+<p class="device-recommendation" id="device-recommendation"></p>
+</div>
+<div class="input-group">
+<label for="rename-pattern">画像ファイル名</label>
+<input id="rename-pattern" placeholder="例：image_###" type="text" value="swiftcrop_###"/>
+<small class="help-text"><code>###</code> は連番になります。</small>
+</div>
+<div class="input-group" id="zip-name-group">
+<label for="zip-name">ZIPファイル名</label>
+<div class="suffix-input">
+<input id="zip-name" placeholder="swiftcrop_images" type="text" value="swiftcrop_images"/>
+<span>.zip</span>
+</div>
+</div>
+</section>
+<div class="sidebar-tool-actions">
+<button class="btn btn-secondary" disabled="" id="btn-add-more" type="button">
+<i class="fa-solid fa-plus"></i> 画像を追加
+</button>
+<div class="sidebar-autocrop">
+<button class="btn btn-secondary btn-auto-crop" disabled="" id="btn-smart-crop-all" type="button">
+<i class="fa-solid fa-wand-magic-sparkles"></i> まとめて自動調整
+</button>
+<p class="smart-crop-note">顔や被写体が収まりやすい位置へ調整します。あとから手動でも変更できます。</p>
+</div>
+</div>
+<div aria-live="polite" class="progress-container" id="progress-container" role="status" style="display:none;">
+<div class="progress-bar-wrapper"><div class="progress-bar" id="progress-bar">0%</div></div>
+<span class="progress-status" id="progress-status">処理中...</span>
+</div>
+<div class="privacy-note">
+<i class="fa-solid fa-lock"></i>
+<p><strong>画像は外部へ送信されません。</strong><br/>すべての処理はこのブラウザ内で完結します。</p>
+</div>
+
+<div class="sidebar-danger-zone">
+<button class="btn btn-link text-danger" disabled="" id="btn-clear" type="button"><i class="fa-solid fa-trash-can"></i> 画像をすべてクリア</button>
+</div>
+</aside>
+<main class="workspace-area">
+<section aria-labelledby="upload-title" class="drop-zone" id="drop-zone">
+<div class="drop-zone-content">
+<div class="upload-icon-wrap"><i class="fa-solid fa-images upload-icon"></i></div>
+<h2 id="upload-title">画像をドラッグ＆ドロップ</h2>
+<p>JPEG・PNG・WebPを複数まとめて処理できます</p>
+<p class="paste-hint"><kbd>Ctrl</kbd> + <kbd>V</kbd> でスクリーンショットも貼り付け可能</p>
+<p class="drop-zone-note"><i class="fa-solid fa-circle-check"></i> 完全無料・登録不要・画像を外部サーバーへ送信しません</p>
+<input accept="image/jpeg,image/png,image/webp" class="file-input-hidden" id="file-input" multiple="" type="file"/>
+<button class="btn btn-outline" id="btn-select-files" type="button"><i class="fa-solid fa-folder-open"></i> ファイルを選択</button>
+</div>
+</section>
+<section aria-labelledby="dataset-settings-title" class="dataset-panel dataset-panel-wide optional-ai is-collapsed" id="ai-options-panel">
+<label class="ai-option-toggle" for="enable-ai-options">
+<input id="enable-ai-options" type="checkbox"/>
+<span class="custom-checkbox"></span>
+<span class="ai-option-toggle-copy">
+<strong id="dataset-settings-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI学習用オプション</strong>
+<small>必要な場合だけ選択してください</small>
+</span>
+<i aria-hidden="true" class="fa-solid fa-chevron-down ai-option-chevron"></i>
+</label>
+<div class="ai-option-content" hidden="" id="ai-option-content">
+<div class="dataset-config-column">
+<div class="input-group">
+<label for="trigger-word">Trigger word</label>
+<input autocomplete="off" id="trigger-word" maxlength="120" placeholder="例：mktk_char" type="text"/>
+<small class="help-text">すべてのCaptionの先頭へ追加する、学習対象を呼び出すための合言葉です。</small>
+</div>
+<div class="input-group">
+<label for="dataset-name">Dataset Name</label>
+<input autocomplete="off" id="dataset-name" maxlength="80" placeholder="my_character" type="text"/>
+<small class="help-text">入力すると画像名・TXT名・ZIP名へ自動反映されます。</small>
+</div>
+<label class="checkbox-label" for="generate-txt">
+<input id="generate-txt" type="checkbox"/>
+<span class="custom-checkbox"></span>
+Caption Files (.txt) を生成
+</label>
+</div>
+<div class="dataset-caption-column">
+<div class="input-group" id="caption-settings">
+<label for="caption-template">Caption Template</label>
+<textarea id="caption-template" maxlength="2000" placeholder="{{dataset}}" rows="3">{{dataset}}</textarea>
+<small class="help-text"><code>{{dataset}}</code> <code>{{filename}}</code> <code>{{output}}</code> <code>{{index}}</code> を使用できます。</small>
+</div>
+<div class="caption-preview">
+<span>Caption Preview</span>
+<strong id="caption-preview-text">swiftcrop_dataset</strong>
+</div>
+</div>
+<div class="dataset-export-column">
+<div aria-live="polite" class="dataset-summary">
+<i class="fa-solid fa-box-archive"></i>
+<div class="dataset-summary-grid">
+<span><small>Images</small><strong id="summary-image-count">0</strong></span>
+<span><small>Output</small><strong id="summary-output-size">1024 × 1024</strong></span>
+<span><small>Format</small><strong id="summary-format">JPEG</strong></span>
+<span><small>Captions</small><strong id="summary-captions">Enabled</strong></span>
+<span class="summary-wide"><small>ZIP</small><strong id="dataset-export-summary">swiftcrop_dataset.zip</strong></span>
+<span class="summary-wide"><small>Estimated export</small><strong id="summary-estimated-size">0 MB</strong></span>
+</div>
+</div>
+<div class="output-preview">
+<div class="output-preview-head"><span>Output Preview</span><small>最初の2件</small></div>
+<code id="output-preview-list">swiftcrop_dataset_0001.jpg
+swiftcrop_dataset_0001.txt
+swiftcrop_dataset_0002.jpg
+swiftcrop_dataset_0002.txt</code>
+</div>
+</div>
+<p class="ai-zip-notice"><i aria-hidden="true" class="fa-solid fa-circle-info"></i><span>Caption TXTを出力する場合は、「ZIP保存」を選択してください。</span></p>
+</div>
+</section>
+
+<section class="gallery-wrapper" id="gallery-wrapper" style="display:none;">
+<div class="gallery-header">
+<div>
+<h2>画像リスト（<span id="image-count">0</span>枚）</h2>
+<p class="gallery-summary"><span id="total-size">0 MB</span>・ドラッグで順番を変更できます・画像ファイルを画面へドロップして追加できます</p>
+</div>
+<div class="instruction-tip">
+<span><i class="fa-solid fa-arrows-up-down-left-right"></i> 位置調整</span>
+<span><i class="fa-solid fa-magnifying-glass-plus"></i> ホイール／ピンチでズーム</span>
+<span><i class="fa-solid fa-sliders"></i> Shift＋ホイールで微調整</span>
+<span><i class="fa-solid fa-rotate-left"></i> ダブルクリックでリセット</span>
+</div>
+</div>
+<div class="image-grid" id="image-grid"></div>
+</section>
+<section aria-label="画像処理" class="bottom-process-area" hidden="" id="bottom-process-area">
+<button class="btn btn-primary btn-bottom-process" disabled="" id="btn-download" type="button">
+<i class="fa-solid fa-box-archive"></i>
+<span>画像を処理</span>
+</button>
+</section>
+
+
+
+
+
+
+</main>
+</div>
+
+</div>
+<div class="modal-backdrop" hidden="" id="complete-modal">
+<div aria-labelledby="complete-title" aria-modal="true" class="complete-modal" role="dialog">
+<button aria-label="閉じる" class="modal-close" id="btn-close-modal" type="button"><i class="fa-solid fa-xmark"></i></button>
+<div class="complete-icon"><i class="fa-solid fa-check"></i></div>
+<h2 id="complete-title">保存の準備ができました</h2>
+<p id="complete-message"><strong id="complete-count">0枚</strong><span id="complete-detail">の画像を保存できます。</span></p>
+<div class="export-summary" id="export-summary">
+<span><small>Images</small><strong id="complete-image-count">0</strong></span>
+<span><small>Caption files</small><strong id="complete-caption-count">0</strong></span>
+<span class="export-summary-wide"><small>ZIP</small><strong id="complete-zip-name">swiftcrop_dataset.zip</strong></span>
+</div>
+<div class="mobile-save-summary" hidden="" id="mobile-save-summary">
+<button class="btn btn-primary" hidden="" id="btn-share-all" type="button">
+<i class="fa-solid fa-share-nodes"></i> まとめて共有・保存
+        </button>
+<p class="save-help" id="save-help"></p>
+<div class="processed-image-list" id="processed-image-list"></div>
+</div>
+<div class="complete-actions">
+<button class="btn btn-primary" id="btn-use-again" type="button"><i class="fa-solid fa-rotate"></i> もう一度使う</button>
+<button class="btn btn-secondary" id="btn-bookmark" type="button"><i class="fa-regular fa-bookmark"></i> ブックマーク方法</button>
+</div>
+<a class="support-card" href="https://buymeacoffee.com/marutilab" rel="noopener noreferrer" target="_blank">
+<span class="support-card-icon"><i class="fa-solid fa-mug-hot"></i></span>
+<span><strong>SwiftCropが役に立ったら</strong><small>コーヒー1杯で、これからの開発を応援できます。</small></span>
+<i aria-hidden="true" class="fa-solid fa-arrow-up-right-from-square"></i>
+</a>
+<p class="bookmark-help" hidden="" id="bookmark-help">Windowsは <kbd>Ctrl</kbd> + <kbd>D</kbd>、Macは <kbd>⌘</kbd> + <kbd>D</kbd> で追加できます。</p>
+</div>
+</div>
+<div class="ratio-size-picker" hidden="" id="ratio-size-picker">
+<button aria-label="サイズ選択を閉じる" class="ratio-size-picker-dismiss" data-ratio-picker-close="" type="button"></button>
+<section aria-labelledby="ratio-size-picker-title" aria-modal="true" class="ratio-size-picker-panel" id="ratio-size-picker-panel" role="dialog">
+<header>
+<div><small>出力サイズ</small><h2 id="ratio-size-picker-title">1:1のサイズ</h2></div>
+<button aria-label="閉じる" class="ratio-size-picker-close" data-ratio-picker-close="" type="button"><i class="fa-solid fa-xmark"></i></button>
+</header>
+<div class="ratio-size-options" id="ratio-size-options"></div>
+</section>
+</div>
+<div aria-live="polite" class="toast" id="toast" role="status"></div>
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script defer="" src="i18n.js?v=4.0.3-ratio-sizes-support"></script>
+<script defer="" src="app.js?v=4.0.3-export-time"></script>
+<div aria-hidden="true" class="additional-drop-overlay" id="additional-drop-overlay">
+<div class="additional-drop-message">
+<i class="fa-solid fa-images"></i>
+<strong>画像を追加</strong>
+<span>ここにドロップすると現在の画像リストへ追加されます</span>
+</div>
+</div>
+</body>
+</html>
