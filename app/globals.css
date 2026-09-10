@@ -127,6 +127,13 @@ footer{padding-top:34px;padding-bottom:34px}
 .legalDocument h2{font:500 17px/1.6 "Yu Gothic UI",sans-serif;margin:0 0 14px}
 .legalDocument p,.legalDocument li{font-size:13px;line-height:2;color:var(--muted)}
 .legalDocument ul{padding-left:1.4em;margin:0}
+/* The operator, with the same face and name the X account carries, so the two
+   read as one person rather than two accounts. */
+.aboutOperator{display:grid;grid-template-columns:112px minmax(0,1fr);gap:clamp(20px,3vw,34px);align-items:start}
+.aboutOperator img{width:112px;height:112px;border-radius:50%;border:1px solid var(--line);object-fit:cover}
+.aboutOperator h2{margin-top:4px}
+.aboutOperator p+p{margin-top:14px}
+@media(max-width:640px){.aboutOperator{grid-template-columns:1fr}.aboutOperator img{width:84px;height:84px}}
 .legalUpdated{margin-top:42px;font:500 10px/1.6 "Yu Gothic UI",sans-serif!important;letter-spacing:.08em}
 .contactIntro{margin:0 0 48px;font-size:13px;line-height:2;color:var(--muted)}
 .contactForm{display:flex;flex-direction:column;gap:30px;max-width:520px}

@@ -155,6 +155,7 @@ export default function Home() {
         <div>
           <h2 id="about-title">小さくつくる。<br />ちゃんと使えるところまで。</h2>
           <p>画像を動かす。整える。色を戻す。時間を表示する。Maruti Labは、思いつきを実際に触れる道具へ変え、公開し、使いながら直していく個人ラボです。</p>
+          <a className="textButton refinedLink" href="/about"><span>運営者情報を見る</span></a>
         </div>
       </section>
 
@@ -165,7 +166,7 @@ export default function Home() {
 
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>

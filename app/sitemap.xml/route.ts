@@ -18,6 +18,7 @@ const pages = [
   "/bit/avenue",
   "/bit/neonbreak",
   "/blog",
+  "/about",
   "/privacy",
   "/disclaimer",
   "/contact",
