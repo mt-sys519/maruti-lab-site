@@ -59,6 +59,7 @@ export default async function BlogPost({ params }: Props) {
         <a href="/">Maruti Lab</a>
         <a href="/blog">ノート一覧</a>
       </header>
+      <div className="noteSheet">
       <article className="postDocument">
         <p className="eyebrow">
           NOTE / <time dateTime={post.date}>{formatDate(post.date)}</time>
@@ -89,6 +90,7 @@ export default async function BlogPost({ params }: Props) {
           </ul>
         </nav>
       )}
+      </div>
       <footer>
         <div className="footerBrand">Maruti Lab</div>
         <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>

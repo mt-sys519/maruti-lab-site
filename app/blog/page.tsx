@@ -16,6 +16,7 @@ export default function BlogIndex() {
         <a href="/">Maruti Lab</a>
         <a href="/">トップへ戻る</a>
       </header>
+      <div className="noteSheet blogIndexSheet">
       <div className="blogIndex">
         <p className="eyebrow">NOTES / MARUTI LAB</p>
         <h1>ノート</h1>
@@ -43,6 +44,7 @@ export default function BlogIndex() {
             ))}
           </ol>
         )}
+      </div>
       </div>
       <footer>
         <div className="footerBrand">Maruti Lab</div>

@@ -141,29 +141,34 @@ footer{padding-top:34px;padding-bottom:34px}
 .contactSent{max-width:520px;padding:28px 0 0;margin-top:6px;font-size:14px;line-height:2;color:var(--ink);border-top:1px solid var(--line)}
 @media(max-width:640px){.legalHeader{height:70px}.legalDocument h1{margin-bottom:44px}.footerLinks{gap:14px}}
 
-/* Notes. The legal pages sit on a 44px ruled grid, which is fine behind a
-   short document and noisy behind a long one - the lines cut through every
-   line of body text. Reading pages get plain paper. */
-.notePage{background-image:none}
+/* Notes. The grid stays on the page - it is the site's ground - but the
+   article is lifted off it onto a sheet of plain paper, so the 44px lines
+   never run through a line of body text. Periwinkle is MarutiBit's blue and
+   marks everything structural here: the date, the tags, the rule before each
+   heading, the links. */
+.notePage{--note-accent:#7B8CDE}
+.notePage .eyebrow{color:var(--note-accent)}
+.noteSheet{width:min(860px,calc(100% - 40px));margin:clamp(46px,6vw,84px) auto;background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--note-accent);box-shadow:0 22px 50px rgba(41,39,32,.07);padding:0 clamp(26px,5vw,64px)}
+.noteSheet .blogIndex,.noteSheet .postDocument,.noteSheet .postFooter{width:auto;margin:0}
 /* Latest notes on the front page. The header and footer links were the only
    way in, so anyone reading down the page never learned the notes existed. */
 .notesSection{padding:clamp(90px,12vw,170px) clamp(24px,5vw,76px);border-top:1px solid var(--line)}
 .notesList{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(30px,5vw,70px)}
-.notesList li{border-top:1px solid var(--line)}
+.notesList li{border-top:2px solid #7B8CDE}
 .notesList a{display:block;padding:30px 0 34px}
-.notesList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:var(--muted)}
+.notesList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:#7B8CDE}
 .notesList h3{font-size:clamp(19px,1.9vw,23px);font-weight:500;line-height:1.65;margin:14px 0 0}
-.notesList a:hover h3{color:var(--verm)}
+.notesList a:hover h3{color:#4f61b4}
 .notesList p{font-size:13px;line-height:2;color:var(--muted);margin:12px 0 0}
 .notesMore{display:inline-block;margin-top:18px;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.12em;border-bottom:1px solid var(--line);padding-bottom:6px}
-.notesList a:hover .notesMore{border-color:var(--verm);color:var(--verm)}
+.notesList a:hover .notesMore{border-color:#4f61b4;color:#4f61b4}
 .notesAll{display:inline-block;margin-top:52px}
 @media(max-width:900px){.notesList{grid-template-columns:1fr}}
 
 /* Set for reading at length: a wider measure, larger body type and real
    space between blocks. */
 .blogIndex,.postDocument,.postFooter{width:min(760px,calc(100% - 48px));margin:0 auto}
-.blogIndex{padding:clamp(70px,9vw,120px) 0}
+.blogIndex{padding:clamp(56px,7vw,88px) 0 clamp(40px,5vw,64px)}
 .blogIndex h1{font-size:clamp(38px,6vw,68px);font-weight:400;margin:0 0 34px}
 .blogLead{font-size:14px;line-height:2.1;color:var(--muted);margin:0 0 22px;max-width:34em}
 .blogEmpty{font-size:13px;line-height:2;color:var(--muted);border-top:1px solid var(--line);padding-top:34px}
@@ -171,23 +176,24 @@ footer{padding-top:34px;padding-bottom:34px}
 .postList li{border-top:1px solid var(--line)}
 .postList li:last-child{border-bottom:1px solid var(--line)}
 .postList a{display:block;padding:34px 0}
-.postList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:var(--muted)}
+.postList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:var(--note-accent)}
 .postList h2{font-size:clamp(20px,2.4vw,26px);font-weight:500;line-height:1.6;margin:14px 0 0}
-.postList a:hover h2{color:var(--verm)}
+.postList a:hover h2{color:#4f61b4}
 .postList p{font-size:13px;line-height:2;color:var(--muted);margin:12px 0 0;max-width:38em}
 .postMeta{display:flex;align-items:center;gap:10px;margin-top:16px;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.12em;color:var(--muted)}
-.postMeta b{font-weight:500;border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.postMeta b{font-weight:500;border:1px solid var(--note-accent);border-radius:999px;padding:5px 10px;color:#5566b8}
 .postMeta i{font-style:normal;margin-left:auto}
-.postDocument{padding:clamp(70px,9vw,110px) 0 40px}
+.postDocument{padding:clamp(56px,7vw,88px) 0 40px}
 .postDocument h1{font-size:clamp(30px,4.4vw,50px);font-weight:400;line-height:1.5;margin:0 0 26px}
 .postMetaHead{margin:0 0 46px;padding-bottom:34px;border-bottom:1px solid var(--line)}
 .postMetaHead i{margin-left:0}
 .postBody{font-size:15px;line-height:2.15;color:#333937}
-.postBody h2{font-size:20px;font-weight:500;line-height:1.7;margin:64px 0 20px;padding-top:26px;border-top:1px solid var(--line);color:var(--ink)}
+.postBody h2{position:relative;font-size:20px;font-weight:500;line-height:1.7;margin:64px 0 20px;padding-top:30px;border-top:1px solid var(--line);color:var(--ink)}
+.postBody h2:before{content:"";position:absolute;top:-2px;left:0;width:46px;height:3px;background:var(--note-accent)}
 .postBody h3{font-size:16px;font-weight:600;line-height:1.7;margin:42px 0 14px;color:var(--ink)}
 .postBody p{margin:0 0 26px}
-.postBody a{color:var(--verm);border-bottom:1px solid rgba(173,68,52,.35)}
-.postBody a:hover{border-color:var(--verm)}
+.postBody a{color:#4f61b4;border-bottom:1px solid rgba(123,140,222,.5)}
+.postBody a:hover{border-color:#4f61b4}
 .postBody strong{font-weight:600;color:var(--ink)}
 /* Tailwind's preflight strips list markers, so put them back here. */
 .postBody ul,.postBody ol{margin:0 0 26px;padding-left:1.5em}
@@ -204,12 +210,12 @@ footer{padding-top:34px;padding-bottom:34px}
 .postBody hr{margin:52px 0;border:0;border-top:1px solid var(--line)}
 .postBody table{width:100%;border-collapse:collapse;margin:0 0 30px;font-size:13px}
 .postBody th,.postBody td{border-bottom:1px solid var(--line);padding:12px 10px;text-align:left}
-.postFooter{padding:0 0 clamp(70px,9vw,110px)}
+.postFooter{padding:0 0 clamp(50px,6vw,74px)}
 .postFooter ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .postFooter li{border-bottom:1px solid var(--line)}
 .postFooter a{display:flex;align-items:baseline;gap:20px;padding:22px 0;font-size:14px}
-.postFooter a:hover{color:var(--verm)}
-.postFooter time{flex:0 0 auto;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.16em;color:var(--muted)}
+.postFooter a:hover{color:#4f61b4}
+.postFooter time{flex:0 0 auto;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.16em;color:var(--note-accent)}
 @media(max-width:640px){.postBody{font-size:14.5px;line-height:2.05}.postBody h2{margin-top:48px}.postFooter a{flex-direction:column;gap:8px}}
 
 /* CLOCK download hero: preserve the complete 16:9 CLOCK MODE capture. */
