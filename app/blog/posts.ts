@@ -9,6 +9,8 @@ export type Post = {
   draft: boolean;
   html: string;
   minutes: number;
+  /** Share card, written by scripts/capture-note-ogp.mjs. */
+  image?: string;
 };
 
 // Cloudflare Workers have no filesystem, so the articles are bundled at build
@@ -60,6 +62,7 @@ function build(path: string, source: string): Post {
       text.replace(/\s+/g, " ").trim().slice(0, 110),
     tags: list(data.tags),
     draft: data.draft === "true",
+    image: data.image || undefined,
     html: marked.parse(body) as string,
     // Japanese runs about 500 characters a minute; round up so a short note
     // never claims to take zero.

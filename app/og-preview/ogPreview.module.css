@@ -163,3 +163,60 @@
   letter-spacing: 0.18em;
   color: #5d6963;
 }
+
+/* Note cards. The site's own paper rather than MarutiBit's, because a note
+   belongs to Maruti Lab and not to the toy shelf. No thumbnail: the title is
+   the whole card. */
+.note {
+  background-color: #f2f0e9;
+  background-image:
+    linear-gradient(rgba(54, 63, 57, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(54, 63, 57, 0.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+  color: #1c211e;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 10px solid #ad4434;
+}
+.note .noteEyebrow {
+  margin: 0;
+  font: 500 17px/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.22em;
+  color: #686d68;
+}
+.note h1 {
+  margin: 34px 0 0;
+  font-weight: 400;
+  font-size: 62px;
+  line-height: 1.42;
+  letter-spacing: 0.01em;
+  max-width: 15em;
+}
+.note .noteDesc {
+  margin: 32px 0 0;
+  font-size: 22px;
+  line-height: 1.9;
+  color: #535b56;
+  max-width: 34em;
+}
+.note .noteFoot {
+  margin: auto 0 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font: 500 17px/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.16em;
+  color: #686d68;
+}
+.note .noteBrand {
+  color: #1c211e;
+  font-weight: 600;
+}
+.note.square h1 {
+  font-size: 46px;
+  margin-top: 26px;
+}
+.note.square .noteDesc {
+  font-size: 19px;
+  margin-top: 24px;
+}

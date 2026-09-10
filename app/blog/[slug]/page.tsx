@@ -16,7 +16,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: post.title,
       description: post.description,
       publishedTime: post.date,
+      images: post.image
+        ? [{ url: `https://marutilab.com${post.image}`, width: 1200, height: 630 }]
+        : undefined,
     },
+    twitter: post.image
+      ? { card: "summary_large_image", images: [`https://marutilab.com${post.image}`] }
+      : undefined,
   };
 }
 

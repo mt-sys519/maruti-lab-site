@@ -145,6 +145,21 @@ footer{padding-top:34px;padding-bottom:34px}
    short document and noisy behind a long one - the lines cut through every
    line of body text. Reading pages get plain paper. */
 .notePage{background-image:none}
+/* Latest notes on the front page. The header and footer links were the only
+   way in, so anyone reading down the page never learned the notes existed. */
+.notesSection{padding:clamp(90px,12vw,170px) clamp(24px,5vw,76px);border-top:1px solid var(--line)}
+.notesList{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(30px,5vw,70px)}
+.notesList li{border-top:1px solid var(--line)}
+.notesList a{display:block;padding:30px 0 34px}
+.notesList time{font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:var(--muted)}
+.notesList h3{font-size:clamp(19px,1.9vw,23px);font-weight:500;line-height:1.65;margin:14px 0 0}
+.notesList a:hover h3{color:var(--verm)}
+.notesList p{font-size:13px;line-height:2;color:var(--muted);margin:12px 0 0}
+.notesMore{display:inline-block;margin-top:18px;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.12em;border-bottom:1px solid var(--line);padding-bottom:6px}
+.notesList a:hover .notesMore{border-color:var(--verm);color:var(--verm)}
+.notesAll{display:inline-block;margin-top:52px}
+@media(max-width:900px){.notesList{grid-template-columns:1fr}}
+
 /* Set for reading at length: a wider measure, larger body type and real
    space between blocks. */
 .blogIndex,.postDocument,.postFooter{width:min(760px,calc(100% - 48px));margin:0 auto}

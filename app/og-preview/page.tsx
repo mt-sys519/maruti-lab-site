@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { bitGames } from "../bit/games";
+import { formatDate, posts } from "../blog/posts";
 import styles from "./ogPreview.module.css";
 
 // The MarutiBit share cards are captured from this page with headless Chrome
@@ -77,19 +78,56 @@ function Card({ id, square }: { id: string; square?: boolean }) {
   );
 }
 
+
+// The notes get the same treatment: a real page captured by the same script,
+// so a shared article looks like the site rather than like a default card.
+//
+//   node scripts/capture-note-ogp.mjs <slug>
+function NoteCard({ slug, square }: { slug: string; square?: boolean }) {
+  const post = posts.find((p) => p.slug === slug);
+  if (!post) return null;
+  return (
+    <div
+      className={`${styles.card} ${styles.note} ${square ? styles.square : styles.wide}`}
+      id={square ? `${slug}-square` : slug}
+    >
+      <p className={styles.noteEyebrow}>NOTE / {formatDate(post.date)}</p>
+      <h1>{post.title}</h1>
+      {!square && <p className={styles.noteDesc}>{post.description}</p>}
+      <p className={styles.noteFoot}>
+        <span className={styles.noteBrand}>MARUTI LAB</span>
+        <span>MARUTILAB.COM/BLOG</span>
+      </p>
+    </div>
+  );
+}
+
 export default function OgPreviewPage({
   searchParams,
 }: {
-  searchParams?: { game?: string; only?: string };
+  searchParams?: { game?: string; note?: string; only?: string };
 }) {
   const id = searchParams?.game ?? "neonbreak";
+  const note = searchParams?.note;
   // `only` is what the capture script uses: one card, flush to the origin, so
   // a viewport screenshot at the card's size is the card and nothing else.
   const only = searchParams?.only;
   if (only === "wide" || only === "square") {
     return (
       <main className={styles.bare}>
-        <Card id={id} square={only === "square"} />
+        {note ? (
+          <NoteCard slug={note} square={only === "square"} />
+        ) : (
+          <Card id={id} square={only === "square"} />
+        )}
+      </main>
+    );
+  }
+  if (note) {
+    return (
+      <main className={styles.stage}>
+        <NoteCard slug={note} />
+        <NoteCard slug={note} square />
       </main>
     );
   }

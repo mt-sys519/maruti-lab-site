@@ -4,6 +4,7 @@ date: 2026-09-11
 description: SwiftCrop、COLOR RE:FINE、YURAMEKI。3つとも、読み込んだデータを端末の外へ送りません。なぜそうしたのかという話です。
 tags: [制作記, SwiftCrop, COLOR RE:FINE, YURAMEKI]
 draft: false
+image: /og/blog/browser-only.png
 ---
 
 Maruti Labで作っている道具は、どれも読み込んだデータをサーバーへ送りません。画像も、写真も、書き出したファイルも、端末から出ていきません。

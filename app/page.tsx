@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { LabHero } from "./LabHero";
 import { ClockPreview } from "./ClockPreview";
+import { formatDate, posts } from "./blog/posts";
 
 const yuramekiUrl = "https://yurameki.tokyo/";
 
@@ -126,6 +127,28 @@ export default function Home() {
           <a className="textButton refinedLink" href={yuramekiUrl} target="_blank" rel="noreferrer"><span>YURAMEKIを開く</span></a>
         </div>
       </section>
+
+      {posts.length > 0 && (
+        <section id="notes" className="notesSection" aria-labelledby="notes-title">
+          <div className="sectionHeading">
+            <p className="eyebrow">NOTES</p>
+            <h2 id="notes-title">つくりながら、書いています。</h2>
+          </div>
+          <ol className="notesList">
+            {posts.slice(0, 2).map((post) => (
+              <li key={post.slug}>
+                <a href={`/blog/${post.slug}`}>
+                  <time dateTime={post.date}>{formatDate(post.date)}</time>
+                  <h3>{post.title}</h3>
+                  <p>{post.description}</p>
+                  <span className="notesMore">読む</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+          <a className="textButton refinedLink notesAll" href="/blog"><span>ノートをすべて見る</span></a>
+        </section>
+      )}
 
       <section id="about" className="aboutSection" aria-labelledby="about-title">
         <p className="eyebrow">LAB NOTE</p>
