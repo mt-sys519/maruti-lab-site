@@ -49,7 +49,9 @@ async function listPosts() {
         slug: name.replace(/\.md$/, ""),
         title: data.title || name,
         date: data.date || "",
-        tags: data.tags || "",
+        // Stored as [a, b]; the field edits the bare list, and savePost puts
+        // the brackets back. Handing over the raw value doubled them.
+        tags: (data.tags || "").replace(/^\[|\]$/g, ""),
         description: data.description || "",
         draft: data.draft === "true",
         body,

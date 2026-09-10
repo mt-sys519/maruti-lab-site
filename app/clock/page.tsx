@@ -25,7 +25,7 @@ export default function ClockPage() {
     <section className="clockSpecs">
       <div><span>01</span><h3>6 TUBES</h3><p>HH:MM:SS。秒を省かず、現在時刻を6本のreNix管で刻み続けます。</p></div>
       <div><span>02</span><h3>CLOCK MODE</h3><p>端末の外枠を消し、時計だけを静かにデスクトップへ残せます。</p></div>
-      <div><span>03</span><h3>LOCAL & QUIET</h3><p>アカウント、広告、通信、Telemetryなし。すべて端末内で動作します。</p></div>
+      <div><span>03</span><h3>LOCAL & QUIET</h3><p>アカウント登録も通信もTelemetryもなし。すべて端末内で動作します。</p></div>
     </section>
     <section className="clockGuide" aria-labelledby="clock-guide-title">
       <div className="clockGuideHead">
@@ -66,7 +66,7 @@ export default function ClockPage() {
       <div className="clockGuideNote">
         <h3>動作環境と、しないこと</h3>
         <p>Windows 10 / 11（64bit）。インストーラーは1.8MBです。</p>
-        <p>アカウント登録、広告、通信、アクセス解析、自動更新のいずれもありません。インストール後はオフラインのまま動きます。新しい版が出ても勝手に入れ替わらないので、更新はこのページから改めてダウンロードしてください。</p>
+        <p>アカウント登録、通信、アクセス解析、自動更新のいずれもありません。インストール後はオフラインのまま動きます。新しい版が出ても勝手に入れ替わらないので、更新はこのページから改めてダウンロードしてください。</p>
       </div>
     </section>
     <section className="downloadSection"><div><p className="eyebrow">DOWNLOAD</p><h2>PromptTerm CLOCK 1.0.0</h2><p>未署名の個人制作アプリのため、Windows SmartScreenの青い警告画面が表示される場合があります。その場合は「詳細情報」を開き、「実行」を選択してください。ファイルの同一性はSHA-256で確認できます。</p></div><div className="downloadActions"><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>セットアップをダウンロード</a><a href="/downloads/SHA256SUMS.txt" download>SHA-256を確認</a><code>E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E</code></div></section>
