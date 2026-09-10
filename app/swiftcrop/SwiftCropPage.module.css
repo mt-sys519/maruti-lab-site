@@ -184,3 +184,105 @@
     height: min(1400px, 190vh);
   }
 }
+
+/* The guide and FAQ that came across from swiftcrop.jp/faq/. It is the
+   author's own writing, so it is carried over rather than rephrased. */
+.faqTitle {
+  font: 400 clamp(30px, 4.4vw, 56px)/1.4 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0;
+  margin: 24px 0 0;
+}
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 34px;
+}
+.toc a {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--paper);
+}
+.toc a:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.faqBody {
+  padding: 0 clamp(24px, 5vw, 76px) clamp(70px, 9vw, 120px);
+}
+.faqGroup {
+  border-top: 1px solid var(--line);
+  padding: clamp(34px, 4vw, 54px) 0;
+  scroll-margin-top: 24px;
+}
+.faqGroup h2 {
+  margin: 0 0 8px;
+  font-size: clamp(21px, 2.4vw, 28px);
+  font-weight: 500;
+}
+.faqGroup dl {
+  margin: 0;
+}
+.faqGroup dl > div {
+  border-bottom: 1px solid var(--line);
+  padding: 26px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(20px, 3vw, 44px);
+}
+.faqGroup dl > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.faqGroup dt {
+  font: 500 15px/1.8 "Yu Gothic UI", sans-serif;
+}
+.faqGroup dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 2.05;
+  color: var(--muted);
+}
+.faqGroup dd p {
+  margin: 0 0 12px;
+}
+.faqGroup dd p:last-child {
+  margin-bottom: 0;
+}
+.faqGroup dd ol,
+.faqGroup dd ul {
+  margin: 0 0 12px;
+  padding-left: 1.4em;
+}
+.faqGroup dd ol {
+  list-style: decimal;
+}
+.faqGroup dd ul {
+  list-style: disc;
+}
+.faqGroup dd li {
+  margin-bottom: 6px;
+}
+.faqGroup dd a {
+  color: var(--verm);
+  border-bottom: 1px solid rgba(173, 68, 52, 0.35);
+}
+@media (max-width: 780px) {
+  .faqGroup dl > div {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+.faqLink {
+  margin: 34px 0 0;
+  font-size: 14px;
+  line-height: 2.05;
+  max-width: 44em;
+}
+.faqLink a {
+  color: var(--verm);
+  border-bottom: 1px solid rgba(173, 68, 52, 0.35);
+}

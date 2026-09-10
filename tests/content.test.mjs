@@ -122,3 +122,17 @@ test("the SwiftCrop page embeds the tool and explains it", async () => {
   assert.match(html, /name="robots" content="noindex/);
   assert.doesNotMatch(html, /swiftcrop\.jp/);
 });
+
+test("the SwiftCrop FAQ came across whole", async () => {
+  const html = await (await render("/swiftcrop/faq")).text();
+  for (const q of [
+    "SwiftCropは無料で使えますか？",
+    "画像はサーバーへ送信・保存されますか？",
+    "ZIP保存と個別保存の違いは？",
+    "AIの自動タグ付けやモデル学習もできますか？",
+  ]) {
+    assert.ok(html.includes(q), `${q} is missing`);
+  }
+  assert.match(html, /FAQPage/);
+  assert.doesNotMatch(html, /privacy\.html|contact\.html/);
+});

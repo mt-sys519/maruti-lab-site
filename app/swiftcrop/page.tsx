@@ -74,6 +74,7 @@ export default function SwiftCropPage() {
         </a>
         <nav aria-label="ページナビゲーション">
           <a href="#guide">使い方</a>
+          <a href="/swiftcrop/faq">よくある質問</a>
           <a href="/blog/browser-only">なぜ送らないのか</a>
           <a href="/">Works</a>
         </nav>
@@ -155,6 +156,10 @@ export default function SwiftCropPage() {
             なぜそう作っているのかは、<a href="/blog/browser-only">ノートに書きました</a>。
           </p>
         </div>
+        <p className={styles.faqLink}>
+          対応形式、保存の仕方、AI学習用データセットの書き出し、うまくいかないときの確認手順は
+          <a href="/swiftcrop/faq">よくある質問</a>にまとめてあります。
+        </p>
       </section>
 
       <footer>
