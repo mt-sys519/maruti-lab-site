@@ -141,8 +141,12 @@ footer{padding-top:34px;padding-bottom:34px}
 .contactSent{max-width:520px;padding:28px 0 0;margin-top:6px;font-size:14px;line-height:2;color:var(--ink);border-top:1px solid var(--line)}
 @media(max-width:640px){.legalHeader{height:70px}.legalDocument h1{margin-bottom:44px}.footerLinks{gap:14px}}
 
-/* Notes. Same paper and grid as the legal pages, but set for reading at
-   length: a wider measure, larger body type and real space between blocks. */
+/* Notes. The legal pages sit on a 44px ruled grid, which is fine behind a
+   short document and noisy behind a long one - the lines cut through every
+   line of body text. Reading pages get plain paper. */
+.notePage{background-image:none}
+/* Set for reading at length: a wider measure, larger body type and real
+   space between blocks. */
 .blogIndex,.postDocument,.postFooter{width:min(760px,calc(100% - 48px));margin:0 auto}
 .blogIndex{padding:clamp(70px,9vw,120px) 0}
 .blogIndex h1{font-size:clamp(38px,6vw,68px);font-weight:400;margin:0 0 34px}

@@ -25,7 +25,7 @@ export default async function BlogPost({ params }: Props) {
   const post = postBySlug(slug);
   if (!post) {
     return (
-      <main className="legalPage">
+      <main className="legalPage notePage">
         <header className="legalHeader">
           <a href="/">Maruti Lab</a>
           <a href="/blog">ノート一覧</a>
@@ -38,12 +38,17 @@ export default async function BlogPost({ params }: Props) {
             <a href="/blog">ノート一覧</a>から探してみてください。
           </p>
         </article>
+        <footer>
+          <div className="footerBrand">Maruti Lab</div>
+          <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+          <small>© 2026 Maruti Lab</small>
+        </footer>
       </main>
     );
   }
   const others = posts.filter((other) => other.slug !== post.slug).slice(0, 3);
   return (
-    <main className="legalPage">
+    <main className="legalPage notePage">
       <header className="legalHeader">
         <a href="/">Maruti Lab</a>
         <a href="/blog">ノート一覧</a>
@@ -78,6 +83,11 @@ export default async function BlogPost({ params }: Props) {
           </ul>
         </nav>
       )}
+      <footer>
+        <div className="footerBrand">Maruti Lab</div>
+        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+        <small>© 2026 Maruti Lab</small>
+      </footer>
     </main>
   );
 }
