@@ -5,6 +5,7 @@ import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
+import { BitNotes } from "../BitNotes";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -60,6 +61,30 @@ export default function LiltOrbPage() {
         rulesLead={<>勝敗や得点は<strong>ありません</strong>。</>}
         rulesSub="テーマを切り替えて感触の違いを楽しめます。"
       />
+      <BitNotes
+        title="音と隠し機能"
+        lead="LILT ORBの音はNATURALとCYBERで別々で、CYBERにはひとつ隠し機能があります。"
+        entries={[
+          {
+            label: "HIDDEN",
+            name: "タップテンポ",
+            meta: "CYBERのみ",
+            body: <>CYBERで球体を4回続けてタップすると、その間隔からテンポを読み取ってキックのループが始まります。速さはタップ次第で、毎分40〜220拍の範囲に収まります。もう4回タップすると止まり、NATURALに切り替えても止まります。</>,
+          },
+          {
+            label: "SOUND / A",
+            name: "NATURAL",
+            body: <>最初にチャイムがひとつ鳴ったあとは、ほとんど静かなままです。触れたときの音も余韻の長いものを選んでいます。何もしないで置いておける方の面です。</>,
+          },
+          {
+            label: "SOUND / B",
+            name: "CYBER",
+            body: <>アルペジオが走り、なぞっている間だけ粒のような音が左右を横切ります。指を離すと何も残りません。動かしている間だけ鳴る音です。</>,
+          },
+        ]}
+        footnote="音はMarutiBit共通の設定です。ほかのゲームでオフにしていれば、ここでもオフのままになります。"
+      />
+
       <BitCartridgeNav current="liltorb" />
       <BitFooter label="MARUTIBIT / GAME 006" />
     </main>

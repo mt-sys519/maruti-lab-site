@@ -112,6 +112,39 @@ test("renders the MarutiBit LILT ORB page with its dedicated social preview", as
   assert.match(html, /twitter:card" content="summary_large_image/);
 });
 
+// The two toys have no score to explain, so their HOW TO PLAY cards are three
+// short lines and the pages came out the thinnest on the site. The notes carry
+// what the games actually do underneath - keep them on the page and keep them
+// matching the code they describe.
+test("documents the three species PAKU actually stocks", async () => {
+  const html = await (await render("/bit/paku")).text();
+  assert.match(html, /この水槽の3種/);
+  assert.match(html, /アフリカンランプアイ/);
+  assert.match(html, /ネオンテトラ/);
+  assert.match(html, /パンダコリドラス/);
+  const source = await readFile(new URL("../app/bit/PakuGame.tsx", import.meta.url), "utf8");
+  for (const [species, count] of [["african-lampeye", 6], ["neon-tetra", 9], ["corydoras", 3]]) {
+    assert.match(source, new RegExp(`speciesConfig\\["${species}"\\] = \\{ enabled: true, count: ${count},`));
+    assert.match(html, new RegExp(`／ ${count}匹`));
+  }
+  // Every other species in the database is disabled, so naming one would be a lie.
+  for (const absent of ["グラスキャット", "ラミーノーズ", "グッピー", "モーリー", "ベタ", "エンゼル", "エビ", "シュリンプ"]) {
+    assert.doesNotMatch(html, new RegExp(absent));
+  }
+});
+
+test("documents LILT ORB's tap tempo and keeps it CYBER-only", async () => {
+  const html = await (await render("/bit/liltorb")).text();
+  assert.match(html, /音と隠し機能/);
+  assert.match(html, /タップテンポ/);
+  assert.match(html, /4回続けてタップ/);
+  assert.match(html, /40〜220拍/);
+  const source = await readFile(new URL("../app/bit/LiltOrbGame.tsx", import.meta.url), "utf8");
+  assert.match(source, /tapTimestamps\.length >= 4/);
+  assert.match(source, /Math\.max\(40, Math\.min\(220, 60000 \/ \(total \/ 3\)\)\)/);
+  assert.match(source, /if \(naturalRef\.current\) \{ tapTimestamps = \[\]; return; \}/);
+});
+
 test("renders the MarutiBit AVENUE room with its dedicated social preview", async () => {
   const response = await render("/bit/avenue");
   assert.equal(response.status, 200);

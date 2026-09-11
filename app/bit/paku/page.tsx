@@ -5,6 +5,7 @@ import { BitCartridgeNav } from "../BitCartridgeNav";
 import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
+import { BitNotes } from "../BitNotes";
 import { BitSeriesNav } from "../BitSeriesNav";
 
 export const metadata: Metadata = {
@@ -57,6 +58,32 @@ export default function PakuPage() {
         rulesLead={<>時間制限や得点は<strong>ありません</strong>。</>}
         rulesSub="好きなだけ眺めて遊べます。"
       />
+      <BitNotes
+        title="この水槽の3種"
+        lead="水槽にいるのは熱帯魚が3種、あわせて18匹です。泳ぐ高さと餌の食べ方が種ごとに違います。"
+        entries={[
+          {
+            label: "SURFACE",
+            name: "アフリカンランプアイ",
+            meta: "Poropanchax normani ／ 約4〜4.5cm ／ 6匹",
+            body: <>水面のすぐ下を群れで巡回します。眼の上が青く光るのが特徴で、この水槽でもほとんど上層から降りてきません。餌には水面を素早くつつくように出ますが、沈んでしまったぶんは追いかけません。</>,
+          },
+          {
+            label: "MID-WATER",
+            name: "ネオンテトラ",
+            meta: "Paracheirodon innesi ／ 約3〜4cm ／ 9匹",
+            body: <>中層を群れで泳ぎます。餌を見つけると突っ込み、すぐ向きを変えて離れていくのがネオンテトラの食べ方の特徴です。</>,
+          },
+          {
+            label: "BOTTOM",
+            name: "パンダコリドラス",
+            meta: "Hoplisoma panda ／ 約4.5〜5cm ／ 3匹",
+            body: <>底だけを歩き、ヒゲで砂を探って食べます。物陰より開けた砂地を好むので姿を見失いにくい魚です。ときどき水面まで一気に上がって空気を吸い、また底へ戻ります。</>,
+          },
+        ]}
+        footnote="上層と中層の魚は、沈みきった餌をある深さより下までは追いません。底に落ちたぶんはコリドラスの取り分になります。"
+      />
+
       <BitCartridgeNav current="paku" />
       <BitFooter label="MARUTIBIT / GAME 005" />
     </main>

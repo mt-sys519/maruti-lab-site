@@ -323,6 +323,18 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitHowToPlayChips span:nth-child(3n+2){background:#F4C430}
 .bitHowToPlayChips span:nth-child(3n+3){background:#2BB3A3;color:#fff}
 @media(max-width:700px){.bitHowToPlay{width:calc(100% - 24px)}.bitHowToPlayGrid{grid-template-columns:1fr;gap:16px}.bitHowToPlayNum{font-size:56px}}
+.bitNotes{width:min(1120px,calc(100% - 40px));margin:0 auto clamp(24px,4vw,48px)}
+.bitNotesHead{margin:0 0 16px}
+.bitNotes h2{display:inline-flex;align-items:center;margin:0 0 9px;padding:5px 13px;border:2px solid #232323;border-radius:999px;background:#f1eee5;color:#232323;font:800 11px/1 "Baloo 2","Yu Gothic UI",sans-serif;letter-spacing:.04em;box-shadow:2.5px 2.5px 0 #232323}
+.bitNotesLead{margin:0;max-width:64ch;font:400 12px/1.75 "Yu Gothic UI",sans-serif;color:#5c655e}
+.bitNotesGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.bitNotesCard{padding:16px 16px 14px;border:2px solid #232323;border-radius:9px;background:#f1eee5;box-shadow:3px 3px 0 #232323}
+.bitNotesLabel{margin:0 0 7px;font:800 9px/1 "Baloo 2","Yu Gothic UI",sans-serif;letter-spacing:.12em;color:var(--pkg-color,#FF7A5C)}
+.bitNotesCard h3{margin:0;font:700 14px/1.35 "Yu Gothic UI",sans-serif;color:#232323}
+.bitNotesMeta{margin:4px 0 0;font:400 10px/1.5 "Yu Gothic UI",sans-serif;letter-spacing:.02em;color:#8d968f}
+.bitNotesBody{margin:10px 0 0;font:400 12px/1.75 "Yu Gothic UI",sans-serif;color:#4a534d}
+.bitNotesFootnote{margin:16px 0 0;padding-left:12px;border-left:2px solid #232323;max-width:70ch;font:400 11px/1.7 "Yu Gothic UI",sans-serif;color:#5c655e}
+@media(max-width:700px){.bitNotes{width:calc(100% - 24px)}.bitNotesGrid{grid-template-columns:1fr;gap:14px}}
 .bitFooter{padding:34px clamp(20px,5vw,70px);display:flex;justify-content:space-between;background:#232323;font:500 8px/1 "Yu Gothic UI",sans-serif;letter-spacing:.15em;color:#8d968f}
 .bitBlankBoard{min-height:clamp(270px,38vw,430px);display:grid;place-items:center;padding:44px 18px;border-bottom:1px solid rgba(21,33,29,.35)}.bitBlankExpression{display:flex;align-items:center;justify-content:center;gap:clamp(7px,1.25vw,16px);max-width:100%;white-space:nowrap;color:var(--bit-blue);font:500 clamp(28px,5.2vw,66px)/1 "Arial Narrow","Yu Gothic UI",sans-serif;font-variant-numeric:tabular-nums}.bitBlankExpression span{display:inline-block}.bitBlankExpression .isParen{color:#68736e;font-weight:300}.bitBlankExpression em{display:grid;place-items:center;width:1.32em;height:1.32em;border-radius:50%;background:var(--bit-red);color:#fff;font-style:normal;font-weight:600;box-shadow:0 0 0 8px rgba(255,122,92,.08)}
 .bitSequenceBoard{min-height:clamp(270px,38vw,430px);display:grid;place-items:center;padding:44px 14px;border-bottom:1px solid rgba(21,33,29,.35)}.bitSequenceRow{position:relative;width:min(100%,820px);display:flex;align-items:center;justify-content:center;gap:clamp(5px,1.6vw,20px);white-space:nowrap;color:var(--bit-blue);font:500 clamp(23px,4.7vw,58px)/1 "Arial Narrow","Yu Gothic UI",sans-serif;font-variant-numeric:tabular-nums}.bitSequenceRow:after{content:"";position:absolute;left:3%;right:3%;bottom:-24px;height:1px;background:linear-gradient(90deg,transparent,rgba(35,35,35,.35),transparent)}.bitSequenceTerm{min-width:1.25em;text-align:center}.bitSequenceTerm.isUnknown{display:grid;place-items:center;width:1.4em;height:1.4em;min-width:1.4em;border-radius:50%;background:var(--bit-red);color:#fff;font-weight:600;box-shadow:0 0 0 8px rgba(255,122,92,.08)}
