@@ -113,7 +113,7 @@ test("the SwiftCrop page embeds the tool and explains it", async () => {
   const response = await render("/swiftcrop");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /src="\/swiftcrop-app\/index\.html"/);
+  assert.match(html, /src="\/swiftcrop-app\/"/);
   assert.match(html, /使い方/);
   for (const heading of ["出力サイズ", "フォーマットと品質", "保存方法"]) {
     assert.ok(html.includes(heading), `${heading} is missing from the guide`);
