@@ -1,0 +1,4 @@
+# COLOR RE:FINE's model is 215MB in eleven parts. Without this every visit
+# would pull it again; the files never change once published.
+/color-refine-app/models/*
+  Cache-Control: public, max-age=31536000, immutable

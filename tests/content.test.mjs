@@ -113,7 +113,7 @@ test("the SwiftCrop page embeds the tool and explains it", async () => {
   const response = await render("/swiftcrop");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /src="\/swiftcrop-app\/"/);
+  assert.match(html, /src="\/swiftcrop-app\/index\.html"/);
   assert.match(html, /使い方/);
   for (const heading of ["出力サイズ", "フォーマットと品質", "保存方法"]) {
     assert.ok(html.includes(heading), `${heading} is missing from the guide`);
@@ -135,4 +135,25 @@ test("the SwiftCrop FAQ came across whole", async () => {
   }
   assert.match(html, /FAQPage/);
   assert.doesNotMatch(html, /privacy\.html|contact\.html/);
+});
+
+// COLOR RE:FINE followed SwiftCrop in. Its model is 215MB in eleven parts, so
+// the pieces and the licence notices matter as much as the page does.
+test("the COLOR RE:FINE pages carry the tool, the help and the notices", async () => {
+  const page = await (await render("/color-refine")).text();
+  assert.match(page, /src="\/color-refine-app\/index\.html"/);
+  assert.match(page, /215MB/);
+  assert.match(page, /name="robots" content="noindex/);
+
+  const help = await (await render("/color-refine/help")).text();
+  for (const q of ["写真はサーバーへ送信されますか？", "2回目以降もダウンロードされますか？"]) {
+    assert.ok(help.includes(q), `${q} is missing`);
+  }
+
+  // Apache 2.0 requires the notice to travel with the work.
+  const licenses = await (await render("/color-refine/licenses")).text();
+  assert.match(licenses, /DDColor/);
+  assert.match(licenses, /ONNX Runtime Web/);
+  assert.match(licenses, /Apache License 2\.0/);
+  assert.match(licenses, /MIT License/);
 });

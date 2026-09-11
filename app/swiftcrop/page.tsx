@@ -96,13 +96,13 @@ export default function SwiftCropPage() {
       <section className={styles.toolSection} aria-label="SwiftCrop 本体">
         <div className={styles.toolBar}>
           <span>SWIFTCROP / READY</span>
-          <a href="/swiftcrop-app/" target="_blank" rel="noreferrer">
+          <a href="/swiftcrop-app/index.html" target="_blank" rel="noreferrer">
             大きな画面で開く
           </a>
         </div>
         <iframe
           className={styles.frame}
-          src="/swiftcrop-app/"
+          src="/swiftcrop-app/index.html"
           title="SwiftCrop"
           loading="eager"
         />
