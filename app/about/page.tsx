@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
+import { SiteFooter } from "../SiteFooter";
 
 export const metadata: Metadata = {
   title: "運営者情報",
@@ -68,11 +69,7 @@ export default function AboutPage() {
           </p>
         </section>
       </article>
-      <footer>
-        <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
-        <small>© 2026 Maruti Lab</small>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

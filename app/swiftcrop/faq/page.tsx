@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import content from "../faqContent.json";
 import styles from "../SwiftCropPage.module.css";
+import { SiteFooter } from "../../SiteFooter";
 
 const title = "SwiftCropのよくある質問";
 const description =
@@ -105,11 +106,7 @@ export default function SwiftCropFaqPage() {
         </section>
       </div>
 
-      <footer>
-        <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/swiftcrop">SwiftCrop</a><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/blog">ラボノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
-        <small>© 2026 Maruti Lab</small>
-      </footer>
+      <SiteFooter extra={[{ href: "/swiftcrop", label: "SwiftCrop" }]} />
     </main>
   );
 }

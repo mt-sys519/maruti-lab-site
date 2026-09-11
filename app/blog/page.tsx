@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
 import { formatDate, posts } from "./posts";
+import { SiteFooter } from "../SiteFooter";
 
 export const metadata: Metadata = {
   title: "ラボノート",
@@ -46,11 +47,7 @@ export default function BlogIndex() {
         )}
       </div>
       </div>
-      <footer>
-        <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
-        <small>© 2026 Maruti Lab</small>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

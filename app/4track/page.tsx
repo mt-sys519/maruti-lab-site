@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
 import styles from "./FourTrackPage.module.css";
+import { SiteFooter } from "../SiteFooter";
 
 const title = "4TRACK CASSETTE SAMPLER";
 const description = "音を切る、並べる、録る。ブラウザだけで使える4トラック・カセットサンプラー。";
@@ -133,13 +134,7 @@ export default function FourTrackPage() {
         <div><span>FORMAT</span><p>書き出しは16bit・端末のオーディオ設定に準じたサンプリングレート(多くの場合44.1kHzか48kHz)のWAVです。カセットは見た目のモチーフで、LO-FIエフェクトをONにしない限り音質は変わりません。</p></div>
       </aside>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerBrand}>Maruti Lab</div>
-        <div className={styles.footerLinks}>
-          <a href="/">Top</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a>
-        </div>
-        <small>© 2026 Maruti Lab</small>
-      </footer>
+      <SiteFooter className={styles.footer} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
     </main>

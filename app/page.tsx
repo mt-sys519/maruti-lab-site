@@ -2,6 +2,7 @@ import Image from "next/image";
 import { LabHero } from "./LabHero";
 import { ClockPreview } from "./ClockPreview";
 import { formatDate, posts } from "./blog/posts";
+import { SiteFooter } from "./SiteFooter";
 
 const yuramekiUrl = "https://yurameki.tokyo/";
 
@@ -164,11 +165,7 @@ export default function Home() {
         <a className="refinedLink" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer"><span>Coffeeで支援する</span></a>
       </section>
 
-      <footer>
-        <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
-        <small>© 2026 Maruti Lab</small>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

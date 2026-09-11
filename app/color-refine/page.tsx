@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
 import styles from "../swiftcrop/SwiftCropPage.module.css";
+import { SiteFooter } from "../SiteFooter";
 
 const title = "COLOR RE:FINE";
 const description =
@@ -140,11 +141,7 @@ export default function ColorRefinePage() {
         </p>
       </section>
 
-      <footer>
-        <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/">Works</a><a href="/swiftcrop">SwiftCrop</a><a href="/bit">MarutiBit</a><a href="/blog">ラボノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/color-refine/licenses">Licenses</a></div>
-        <small>© 2026 Maruti Lab</small>
-      </footer>
+      <SiteFooter extra={[{ href: "/color-refine/licenses", label: "Licenses" }]} />
     </main>
   );
 }

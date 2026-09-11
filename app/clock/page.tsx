@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
+import { SiteFooter } from "../SiteFooter";
 
 export const metadata: Metadata = {
   title: "PromptTerm CLOCK",
@@ -70,6 +71,6 @@ export default function ClockPage() {
       </div>
     </section>
     <section className="downloadSection"><div><p className="eyebrow">DOWNLOAD</p><h2>PromptTerm CLOCK 1.0.0</h2><p>未署名の個人制作アプリのため、Windows SmartScreenの青い警告画面が表示される場合があります。その場合は「詳細情報」を開き、「実行」を選択してください。ファイルの同一性はSHA-256で確認できます。</p></div><div className="downloadActions"><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>セットアップをダウンロード</a><a href="/downloads/SHA256SUMS.txt" download>SHA-256を確認</a><code>E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E</code></div></section>
-    <footer><div className="footerBrand">Maruti Lab</div><div className="footerLinks"><a href="/">Works</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/privacy">Privacy</a><a href="/disclaimer">Disclaimer</a></div><small>© 2026 Maruti Lab</small></footer>
+    <SiteFooter />
   </main>;
 }
