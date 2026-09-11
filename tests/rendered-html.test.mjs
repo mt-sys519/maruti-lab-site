@@ -133,6 +133,15 @@ test("documents the three species PAKU actually stocks", async () => {
   }
 });
 
+// AdSense checks for this tag on whatever page it lands on, so a stray edit
+// that drops it from the root layout has to fail here rather than in review.
+test("carries the AdSense ownership tag on every page", async () => {
+  for (const route of ["/", "/bit/paku", "/blog/paku", "/swiftcrop", "/privacy"]) {
+    const html = await (await render(route)).text();
+    assert.match(html, /name="google-adsense-account" content="ca-pub-4193413238740568"/);
+  }
+});
+
 // The notes were renamed to LabNote, but the rename reached the nav and the
 // footer and stopped there: the article eyebrow and the share card still read
 // NOTE long after. Both are the places nobody looks at while renaming.

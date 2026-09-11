@@ -40,6 +40,9 @@ export const metadata: Metadata = {
     images: [{ url: "/maruti-lab-og.jpg", width: 1200, height: 630, alt: "Maruti Lab — 小さなデジタル道具のラボ" }],
   },
   twitter: { card: "summary_large_image", title: "Maruti Lab", description: "画像を動かす。写真を整える。色を戻す。時間を灯す。", images: ["/maruti-lab-og.jpg"] },
+  // AdSense verifies ownership by finding this in the head of every page, so it
+  // belongs in the root layout rather than on the home page alone.
+  other: { "google-adsense-account": "ca-pub-4193413238740568" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
