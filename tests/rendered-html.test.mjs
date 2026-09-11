@@ -19,8 +19,12 @@ test("renders the Maruti Lab works page", async () => {
   assert.match(html, /Maruti Lab/);
   assert.match(html, /YURAMEKI/);
   assert.match(html, /PromptTerm/);
-  assert.match(html, /class="navIcon"[^>]*>🎮/);
-  assert.match(html, /class="navIcon"[^>]*>☕/);
+  assert.match(html, /4TRACK CASSETTE SAMPLER/);
+  assert.match(html, /href="\/4track"/);
+  assert.match(html, /\/og\/4track\.png/);
+  assert.match(html, /href="\/bit"[\s\S]{0,400}>MarutiBit/);
+  assert.match(html, /href="https:\/\/buymeacoffee\.com\/marutilab"[\s\S]{0,400}>Coffee/);
+  assert.doesNotMatch(html, /class="navIcon"[^>]*>[^<]/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });
 
@@ -31,6 +35,44 @@ test("renders the PromptTerm CLOCK download page", async () => {
   assert.match(html, /PromptTerm CLOCK/);
   assert.match(html, /PromptTerm_CLOCK_1\.0\.0_setup\.exe/);
   assert.match(html, /E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E/);
+});
+
+test("renders the 4TRACK browser sampler with dedicated metadata and the embedded tool", async () => {
+  const response = await render("/4track");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /4TRACK/);
+  assert.match(html, /CASSETTE SAMPLER/);
+  assert.match(html, /src="\/tools\/4track\/index\.html"/);
+  assert.match(html, /allow="microphone"/);
+  assert.match(html, /\/og\/4track\.png/);
+  assert.match(html, /twitter:card" content="summary_large_image/);
+  assert.match(html, /音源とマイク録音はブラウザ内で処理され/);
+});
+
+test("ships the complete local-only 4TRACK tool without remote audio transfer", async () => {
+  const source = await readFile(new URL("../public/tools/4track/index.html", import.meta.url), "utf8");
+  assert.match(source, /const NUM_TRK\s*=\s*4/);
+  assert.match(source, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(source, /new OfflineAudioContext/);
+  assert.match(source, /id="master-vol"/);
+  assert.match(source, /id="lofi-on"/);
+  assert.match(source, /th-pan-row/);
+  assert.match(source, /a\.download='output\.wav'/);
+  assert.match(source, /name="robots" content="noindex,nofollow"/);
+  assert.doesNotMatch(source, /fetch\(|XMLHttpRequest|WebSocket|sendBeacon/);
+});
+
+test("documents local audio processing, user rights, and volatile browser work", async () => {
+  const privacy = await (await render("/privacy")).text();
+  const terms = await (await render("/terms")).text();
+  const disclaimer = await (await render("/disclaimer")).text();
+  assert.match(privacy, /ブラウザ内で扱う音源とマイク/);
+  assert.match(privacy, /Maruti Labのサーバーへ送信されません/);
+  assert.match(terms, /音源・画像等の利用/);
+  assert.match(terms, /利用に必要な許諾を得た素材/);
+  assert.match(disclaimer, /ブラウザツールと作業データについて/);
+  assert.match(disclaimer, /作業内容が失われる場合があります/);
 });
 
 test("renders the MarutiBit series index", async () => {
