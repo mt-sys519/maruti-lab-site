@@ -91,7 +91,7 @@ export default function ColorRefineHelpPage() {
 
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/color-refine">COLOR RE:FINE</a><a href="/">Works</a><a href="/blog">ノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/color-refine/licenses">Licenses</a></div>
+        <div className="footerLinks"><a href="/color-refine">COLOR RE:FINE</a><a href="/">Works</a><a href="/blog">ラボノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/color-refine/licenses">Licenses</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>

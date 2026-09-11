@@ -150,7 +150,7 @@ export default function SwiftCropPage() {
             SwiftCropは、読み込んだ画像をサーバーへ送りません。切り抜きも、リサイズも、形式の変換も、あなたのブラウザの中だけで実行されます。処理した画像が外に出るのは、あなたが保存したときだけです。
           </p>
           <p>
-            なぜそう作っているのかは、<a href="/blog/browser-only">ノートに書きました</a>。
+            なぜそう作っているのかは、<a href="/blog/browser-only">ラボノートに書きました</a>。
           </p>
         </div>
         <p className={styles.faqLink}>
@@ -161,7 +161,7 @@ export default function SwiftCropPage() {
 
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>

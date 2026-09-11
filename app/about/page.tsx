@@ -41,7 +41,7 @@ export default function AboutPage() {
             <li><a href="/bit">MarutiBit</a> — 短時間で遊べる小さなゲーム集</li>
           </ul>
           <p>
-            道具はどれも、読み込んだデータを外部のサーバーへ送りません。なぜそうしているのかは<a href="/blog/browser-only">ノートに書きました</a>。
+            道具はどれも、読み込んだデータを外部のサーバーへ送りません。なぜそうしているのかは<a href="/blog/browser-only">ラボノートに書きました</a>。
           </p>
         </section>
         <section>
@@ -70,7 +70,7 @@ export default function AboutPage() {
       </article>
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>

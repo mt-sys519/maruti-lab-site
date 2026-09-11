@@ -62,7 +62,7 @@ export default function Home() {
             <span className="navIcon" aria-hidden="true">
               <svg viewBox="0 0 18 18" focusable="false"><path d="M4 2.6h7.2L14 5.4v10H4Z" /><path d="M6.4 8.2h5.2M6.4 11h3.4" /></svg>
             </span>
-            ノート
+            ラボノート
           </a>
           <a className="navWithMark" href="#about">
             <span className="navIcon" aria-hidden="true">
@@ -146,7 +146,7 @@ export default function Home() {
               </li>
             ))}
           </ol>
-          <a className="textButton refinedLink notesAll" href="/blog"><span>ノートをすべて見る</span></a>
+          <a className="textButton refinedLink notesAll" href="/blog"><span>ラボノートをすべて見る</span></a>
         </section>
       )}
 
@@ -166,7 +166,7 @@ export default function Home() {
 
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+        <div className="footerLinks"><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://note.com/a_tkms" target="_blank" rel="noreferrer">note</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>

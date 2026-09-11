@@ -130,7 +130,7 @@ export default function ColorRefinePage() {
             ふつう、この手の処理はサーバーで行います。そのほうが速いからです。COLOR RE:FINEは逆に、モデルのほうを端末へ届けて動かしています。215MBを配るという手間は、そのためのものです。
           </p>
           <p>
-            なぜそう作っているのかは、<a href="/blog/browser-only">ノートに書きました</a>。
+            なぜそう作っているのかは、<a href="/blog/browser-only">ラボノートに書きました</a>。
           </p>
         </div>
         <p className={styles.faqLink}>
@@ -142,7 +142,7 @@ export default function ColorRefinePage() {
 
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/">Works</a><a href="/swiftcrop">SwiftCrop</a><a href="/bit">MarutiBit</a><a href="/blog">ノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/color-refine/licenses">Licenses</a></div>
+        <div className="footerLinks"><a href="/">Works</a><a href="/swiftcrop">SwiftCrop</a><a href="/bit">MarutiBit</a><a href="/blog">ラボノート</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/color-refine/licenses">Licenses</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>

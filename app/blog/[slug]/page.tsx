@@ -34,19 +34,19 @@ export default async function BlogPost({ params }: Props) {
       <main className="legalPage notePage">
         <header className="legalHeader">
           <a href="/">Maruti Lab</a>
-          <a href="/blog">ノート一覧</a>
+          <a href="/blog">ラボノート一覧</a>
         </header>
         <article className="legalDocument">
           <p className="eyebrow">404</p>
           <h1>記事が見つかりません</h1>
           <p>
             URLが変わったか、まだ公開されていない記事です。
-            <a href="/blog">ノート一覧</a>から探してみてください。
+            <a href="/blog">ラボノート一覧</a>から探してみてください。
           </p>
         </article>
         <footer>
           <div className="footerBrand">Maruti Lab</div>
-          <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+          <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
           <small>© 2026 Maruti Lab</small>
         </footer>
       </main>
@@ -57,7 +57,7 @@ export default async function BlogPost({ params }: Props) {
     <main className="legalPage notePage">
       <header className="legalHeader">
         <a href="/">Maruti Lab</a>
-        <a href="/blog">ノート一覧</a>
+        <a href="/blog">ラボノート一覧</a>
       </header>
       <div className="noteSheet">
       <article className="postDocument">
@@ -93,7 +93,7 @@ export default async function BlogPost({ params }: Props) {
       </div>
       <footer>
         <div className="footerBrand">Maruti Lab</div>
-        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
+        <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">ラボノート</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
         <small>© 2026 Maruti Lab</small>
       </footer>
     </main>
