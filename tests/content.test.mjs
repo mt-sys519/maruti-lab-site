@@ -118,8 +118,8 @@ test("the SwiftCrop page embeds the tool and explains it", async () => {
   for (const heading of ["出力サイズ", "フォーマットと品質", "保存方法"]) {
     assert.ok(html.includes(heading), `${heading} is missing from the guide`);
   }
-  // Held back from search until swiftcrop.jp redirects here.
-  assert.match(html, /name="robots" content="noindex/);
+  // swiftcrop.jp redirects here now, so this is the copy search should see.
+  assert.doesNotMatch(html, /content="noindex/);
   assert.doesNotMatch(html, /swiftcrop\.jp/);
 });
 

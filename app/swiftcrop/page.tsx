@@ -35,9 +35,6 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "https://marutilab.com/swiftcrop" },
-  // Held out of the index until swiftcrop.jp redirects here. Two live copies
-  // of the same tool would be competing with each other.
-  robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     url: "https://marutilab.com/swiftcrop",

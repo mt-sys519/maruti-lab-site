@@ -11,9 +11,6 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "https://marutilab.com/swiftcrop/faq" },
-  // Off the index until swiftcrop.jp redirects here; the same text is still
-  // live over there.
-  robots: { index: false, follow: true },
 };
 
 export default function SwiftCropFaqPage() {

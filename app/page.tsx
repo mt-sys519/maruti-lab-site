@@ -11,9 +11,9 @@ const works = [
     label: "IMAGE UTILITY",
     copy: "画像を外へ送らず、必要な比率とサイズへ。複数枚もブラウザだけで整える画像ツール。",
     image: "/works/swiftcrop.png",
-    href: "https://swiftcrop.jp/",
+    href: "/swiftcrop",
     action: "使ってみる",
-    external: true,
+    external: false,
   },
   {
     name: "COLOR RE:FINE",

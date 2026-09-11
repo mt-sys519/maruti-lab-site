@@ -8,6 +8,8 @@ const pages = [
   "/",
   "/clock",
   "/4track",
+  "/swiftcrop",
+  "/swiftcrop/faq",
   "/bit",
   "/bit/angle",
   "/bit/blank",
