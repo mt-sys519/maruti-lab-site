@@ -151,7 +151,7 @@ export default function SwiftCropPage() {
             SwiftCropは、読み込んだ画像をサーバーへ送りません。切り抜きも、リサイズも、形式の変換も、あなたのブラウザの中だけで実行されます。処理した画像が外に出るのは、あなたが保存したときだけです。
           </p>
           <p>
-            なぜそう作っているのかは、<a href="/blog/browser-only">ラボノートに書きました</a>。
+            なぜそう作っているのかは、<a href="/blog/browser-only">LabNoteに書きました</a>。
           </p>
         </div>
         <p className={styles.faqLink}>

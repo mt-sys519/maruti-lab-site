@@ -63,7 +63,7 @@ export default function Home() {
             <span className="navIcon" aria-hidden="true">
               <svg viewBox="0 0 18 18" focusable="false"><path d="M4 2.6h7.2L14 5.4v10H4Z" /><path d="M6.4 8.2h5.2M6.4 11h3.4" /></svg>
             </span>
-            ラボノート
+            LabNote
           </a>
           <a className="navWithMark" href="#about">
             <span className="navIcon" aria-hidden="true">
@@ -147,7 +147,7 @@ export default function Home() {
               </li>
             ))}
           </ol>
-          <a className="textButton refinedLink notesAll" href="/blog"><span>ラボノートをすべて見る</span></a>
+          <a className="textButton refinedLink notesAll" href="/blog"><span>LabNoteをすべて見る</span></a>
         </section>
       )}
 

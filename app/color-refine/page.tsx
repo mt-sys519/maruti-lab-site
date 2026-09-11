@@ -131,7 +131,7 @@ export default function ColorRefinePage() {
             ふつう、この手の処理はサーバーで行います。そのほうが速いからです。COLOR RE:FINEは逆に、モデルのほうを端末へ届けて動かしています。215MBを配るという手間は、そのためのものです。
           </p>
           <p>
-            なぜそう作っているのかは、<a href="/blog/browser-only">ラボノートに書きました</a>。
+            なぜそう作っているのかは、<a href="/blog/browser-only">LabNoteに書きました</a>。
           </p>
         </div>
         <p className={styles.faqLink}>

@@ -4,7 +4,7 @@ import { formatDate, posts } from "./posts";
 import { SiteFooter } from "../SiteFooter";
 
 export const metadata: Metadata = {
-  title: "ラボノート",
+  title: "LabNote",
   description:
     "Maruti Labの制作記。ブラウザだけで動く道具をどう作っているか、何を選んで、どこで苦労したかを書いています。",
   alternates: { canonical: "https://marutilab.com/blog" },
@@ -20,7 +20,7 @@ export default function BlogIndex() {
       <div className="noteSheet blogIndexSheet">
       <div className="blogIndex">
         <p className="eyebrow">LAB NOTE / MARUTI LAB</p>
-        <h1>ラボノート</h1>
+        <h1>LabNote</h1>
         <p className="blogLead">
           ブラウザだけで動く道具と、小さなゲームを作っています。ここには、その作り方と、途中で選んだこと・苦労したことを書いていきます。
         </p>

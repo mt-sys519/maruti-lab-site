@@ -42,7 +42,7 @@ test("renders the notes index with every published post", async () => {
   const response = await render("/blog");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /ノート/);
+  assert.match(html, /LabNote/);
   for (const post of await published()) {
     assert.match(html, new RegExp(`href="/blog/${post.slug}"`));
     assert.ok(html.includes(post.data.title), `${post.slug} is missing its title`);

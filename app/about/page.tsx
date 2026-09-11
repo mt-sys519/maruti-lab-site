@@ -42,7 +42,7 @@ export default function AboutPage() {
             <li><a href="/bit">MarutiBit</a> — 短時間で遊べる小さなゲーム集</li>
           </ul>
           <p>
-            道具はどれも、読み込んだデータを外部のサーバーへ送りません。なぜそうしているのかは<a href="/blog/browser-only">ラボノートに書きました</a>。
+            道具はどれも、読み込んだデータを外部のサーバーへ送りません。なぜそうしているのかは<a href="/blog/browser-only">LabNoteに書きました</a>。
           </p>
         </section>
         <section>
