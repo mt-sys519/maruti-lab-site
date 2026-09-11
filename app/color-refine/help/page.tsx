@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "https://marutilab.com/color-refine/help" },
-  robots: { index: false, follow: true },
 };
 
 export default function ColorRefineHelpPage() {

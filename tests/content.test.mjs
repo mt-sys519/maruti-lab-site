@@ -143,7 +143,8 @@ test("the COLOR RE:FINE pages carry the tool, the help and the notices", async (
   const page = await (await render("/color-refine")).text();
   assert.match(page, /src="\/color-refine-app\/index\.html"/);
   assert.match(page, /215MB/);
-  assert.match(page, /name="robots" content="noindex/);
+  // color-refine.com redirects here now.
+  assert.doesNotMatch(page, /content="noindex/);
 
   const help = await (await render("/color-refine/help")).text();
   for (const q of ["写真はサーバーへ送信されますか？", "2回目以降もダウンロードされますか？"]) {

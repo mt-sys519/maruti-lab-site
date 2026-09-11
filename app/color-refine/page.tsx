@@ -29,8 +29,6 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "https://marutilab.com/color-refine" },
-  // Held out of the index until color-refine.com redirects here.
-  robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     url: "https://marutilab.com/color-refine",

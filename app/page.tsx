@@ -20,9 +20,9 @@ const works = [
     label: "LOCAL COLORIZATION",
     copy: "白黒写真に、もう一度、あの日の色を。端末の中だけで写真をカラー化します。",
     image: "/works/color-refine.png",
-    href: "https://color-refine.com/",
+    href: "/color-refine",
     action: "使ってみる",
-    external: true,
+    external: false,
   },
   {
     name: "4TRACK CASSETTE SAMPLER",
