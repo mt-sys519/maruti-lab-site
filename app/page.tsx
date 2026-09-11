@@ -131,7 +131,7 @@ export default function Home() {
       {posts.length > 0 && (
         <section id="notes" className="notesSection" aria-labelledby="notes-title">
           <div className="sectionHeading">
-            <p className="eyebrow">NOTES</p>
+            <p className="eyebrow">LAB NOTE</p>
             <h2 id="notes-title">つくりながら、書いています。</h2>
           </div>
           <ol className="notesList">
@@ -151,7 +151,7 @@ export default function Home() {
       )}
 
       <section id="about" className="aboutSection" aria-labelledby="about-title">
-        <p className="eyebrow">LAB NOTE</p>
+        <p className="eyebrow">ABOUT</p>
         <div>
           <h2 id="about-title">小さくつくる。<br />ちゃんと使えるところまで。</h2>
           <p>画像を動かす。整える。色を戻す。時間を表示する。Maruti Labは、思いつきを実際に触れる道具へ変え、公開し、使いながら直していく個人ラボです。</p>

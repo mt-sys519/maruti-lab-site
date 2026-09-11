@@ -18,7 +18,7 @@ export default function BlogIndex() {
       </header>
       <div className="noteSheet blogIndexSheet">
       <div className="blogIndex">
-        <p className="eyebrow">NOTES / MARUTI LAB</p>
+        <p className="eyebrow">LAB NOTE / MARUTI LAB</p>
         <h1>ノート</h1>
         <p className="blogLead">
           ブラウザだけで動く道具と、小さなゲームを作っています。ここには、その作り方と、途中で選んだこと・苦労したことを書いていきます。
