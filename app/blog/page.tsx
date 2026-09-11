@@ -5,7 +5,7 @@ import { formatDate, posts } from "./posts";
 export const metadata: Metadata = {
   title: "ノート",
   description:
-    "Maruti Labの制作記。ブラウザだけで動く道具をどう作っているか、何を選んで何を諦めたかを書いています。",
+    "Maruti Labの制作記。ブラウザだけで動く道具をどう作っているか、何を選んで、どこで苦労したかを書いています。",
   alternates: { canonical: "https://marutilab.com/blog" },
 };
 
@@ -21,7 +21,7 @@ export default function BlogIndex() {
         <p className="eyebrow">NOTES / MARUTI LAB</p>
         <h1>ノート</h1>
         <p className="blogLead">
-          ブラウザだけで動く道具と、小さなゲームを作っています。ここには、その作り方と、途中で選んだこと・諦めたことを書いていきます。
+          ブラウザだけで動く道具と、小さなゲームを作っています。ここには、その作り方と、途中で選んだこと・苦労したことを書いていきます。
         </p>
         {posts.length === 0 ? (
           <p className="blogEmpty">最初の記事を準備しています。</p>
