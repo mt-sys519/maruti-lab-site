@@ -79,6 +79,14 @@ function Card({ id, square }: { id: string; square?: boolean }) {
 }
 
 
+// A note whose subject is something you look at gets a picture of it on the
+// wide card; the title alone is the right card for a note about a decision,
+// but not for one about a tank of fish. Wide only - the square card has no
+// room for it without becoming a different composition.
+const noteArt: Record<string, string> = {
+  paku: "/games/paku/tank.png",
+};
+
 // The notes get the same treatment: a real page captured by the same script,
 // so a shared article looks like the site rather than like a default card.
 //
@@ -86,14 +94,20 @@ function Card({ id, square }: { id: string; square?: boolean }) {
 function NoteCard({ slug, square }: { slug: string; square?: boolean }) {
   const post = posts.find((p) => p.slug === slug);
   if (!post) return null;
+  const art = square ? undefined : noteArt[slug];
   return (
     <div
-      className={`${styles.card} ${styles.note} ${square ? styles.square : styles.wide}`}
+      className={`${styles.card} ${styles.note} ${art ? styles.hasArt : ""} ${square ? styles.square : styles.wide}`}
       id={square ? `${slug}-square` : slug}
     >
-      <p className={styles.noteEyebrow}>NOTE / {formatDate(post.date)}</p>
+      <p className={styles.noteEyebrow}>LABNOTE / {formatDate(post.date)}</p>
       <h1>{post.title}</h1>
       {!square && <p className={styles.noteDesc}>{post.description}</p>}
+      {art && (
+        <div className={styles.noteArt}>
+          <img src={art} alt="" />
+        </div>
+      )}
       <p className={styles.noteFoot}>
         <span className={styles.noteBrand}>MARUTI LAB</span>
         <span>MARUTILAB.COM/BLOG</span>

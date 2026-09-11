@@ -132,7 +132,7 @@ export default function Home() {
       {posts.length > 0 && (
         <section id="notes" className="notesSection" aria-labelledby="notes-title">
           <div className="sectionHeading">
-            <p className="eyebrow">LAB NOTE</p>
+            <p className="eyebrow">LABNOTE</p>
             <h2 id="notes-title">つくりながら、書いています。</h2>
           </div>
           <ol className="notesList">

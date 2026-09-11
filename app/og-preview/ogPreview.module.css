@@ -212,6 +212,36 @@
   color: #1c211e;
   font-weight: 600;
 }
+/* Same framed, hard-shadowed artwork the game cards use, in the note's own
+   teal, so a note with a picture still belongs to the same family. The text
+   narrows to clear it rather than the picture floating over the words. */
+.note .noteArt {
+  position: absolute;
+  top: 152px;
+  right: 70px;
+  width: 372px;
+  height: 300px;
+  border: 2.5px solid #232323;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #f1eee5;
+  box-shadow: 14px 14px 0 #2BB3A3;
+}
+.note .noteArt img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The fish gather in the upper half; the lower half of the tank is water. */
+  object-position: center 34%;
+}
+.note.hasArt h1 {
+  max-width: 9.4em;
+}
+.note.hasArt .noteDesc {
+  max-width: 19em;
+}
+
 .note.square h1 {
   font-size: 46px;
   margin-top: 26px;

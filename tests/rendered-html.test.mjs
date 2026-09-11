@@ -133,6 +133,18 @@ test("documents the three species PAKU actually stocks", async () => {
   }
 });
 
+// The notes were renamed to LabNote, but the rename reached the nav and the
+// footer and stopped there: the article eyebrow and the share card still read
+// NOTE long after. Both are the places nobody looks at while renaming.
+test("calls the notes LabNote on the article page and on its share card", async () => {
+  const article = await (await render("/blog/paku")).text();
+  assert.match(article, /LABNOTE \//);
+  assert.match(article, /OTHER LABNOTES/);
+  const card = await (await render("/og-preview?note=paku")).text();
+  assert.match(card, /LABNOTE \//);
+  for (const html of [article, card]) assert.doesNotMatch(html, />NOTE \/|>LAB NOTE</);
+});
+
 test("documents LILT ORB's tap tempo and keeps it CYBER-only", async () => {
   const html = await (await render("/bit/liltorb")).text();
   assert.match(html, /音と隠し機能/);

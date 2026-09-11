@@ -59,7 +59,7 @@ export default async function BlogPost({ params }: Props) {
       <div className="noteSheet">
       <article className="postDocument">
         <p className="eyebrow">
-          NOTE / <time dateTime={post.date}>{formatDate(post.date)}</time>
+          LABNOTE / <time dateTime={post.date}>{formatDate(post.date)}</time>
         </p>
         <h1>{post.title}</h1>
         <p className="postMeta postMetaHead">
@@ -74,7 +74,7 @@ export default async function BlogPost({ params }: Props) {
       </article>
       {others.length > 0 && (
         <nav className="postFooter" aria-label="ほかの記事">
-          <p className="eyebrow">OTHER NOTES</p>
+          <p className="eyebrow">OTHER LABNOTES</p>
           <ul>
             {others.map((other) => (
               <li key={other.slug}>
