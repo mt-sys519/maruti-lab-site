@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { bitGames } from "./games";
 import { GameUnit } from "./GameUnit";
 import styles from "./GameShelf.module.css";
@@ -19,7 +19,12 @@ const COPIES = [0, 1, 2];
 /** The whole catalog on one row, as a shelf of handhelds. Shared by the home
  *  hero and the /bit index - the two pages show the same shelf rather than
  *  two versions of it. */
-export function GameShelf({ className }: { className?: string }) {
+export type ShelfHandle = { step: (direction: -1 | 1) => void };
+
+export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(function GameShelf(
+  { className },
+  handle,
+) {
   const rail = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
 
@@ -36,6 +41,22 @@ export function GameShelf({ className }: { className?: string }) {
     if (strip) strip.scrollLeft = copyWidth(strip);
   }, []);
 
+
+  // The arrows live with whatever section is using the shelf, so it hands out
+  // the one move they need rather than drawing buttons of its own.
+  useImperativeHandle(handle, () => ({
+    step(direction) {
+      const strip = rail.current;
+      if (!strip) return;
+      const units = Array.from(strip.children) as HTMLElement[];
+      const next = direction === 1
+        ? units.find((unit) => unit.offsetLeft > strip.scrollLeft + 4)
+        : [...units].reverse().find((unit) => unit.offsetLeft < strip.scrollLeft - 4);
+      if (!next) return;
+      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+      strip.scrollTo({ left: next.offsetLeft, behavior });
+    },
+  }));
 
   function keepLooping() {
     const strip = rail.current;
@@ -138,4 +159,4 @@ export function GameShelf({ className }: { className?: string }) {
       )}
     </div>
   );
-}
+});

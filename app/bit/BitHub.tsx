@@ -1,16 +1,19 @@
 "use client";
 
+import { useRef } from "react";
 import type { CSSProperties } from "react";
 import { bitGames } from "./games";
 import styles from "./BitHub.module.css";
 import { GameMark } from "./GameMark";
 import { GameAmbience } from "./GameAmbience";
 import { GameShelf } from "./GameShelf";
+import type { ShelfHandle } from "./GameShelf";
 import { GameUnit } from "./GameUnit";
 import { pickOfTheDay } from "./pickOfTheDay";
 
 export function BitHub() {
   const pick = pickOfTheDay();
+  const shelf = useRef<ShelfHandle>(null);
 
   function playRandom(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
@@ -32,10 +35,17 @@ export function BitHub() {
       <section className={styles.catalog} aria-label="ゲーム一覧">
         {/* No heading of its own: the shelf reads as part of the hero above it,
             and a second title in between pushed the machines down the page. */}
-        <header><p>GAME INDEX</p><span>{String(bitGames.length).padStart(2, "0")} / ONLINE</span></header>
+        <header>
+          <p>GAME INDEX</p>
+          <div className={styles.steps}>
+            <span>{String(bitGames.length).padStart(2, "0")} / ONLINE</span>
+            <button type="button" onClick={() => shelf.current?.step(-1)} aria-label="前のゲームを表示">‹</button>
+            <button type="button" onClick={() => shelf.current?.step(1)} aria-label="次のゲームを表示">›</button>
+          </div>
+        </header>
         {/* The shelf is how you browse; the list below is how you check. It
             starts closed so the machines are what the page opens with. */}
-        <GameShelf className={styles.shelf} />
+        <GameShelf ref={shelf} className={styles.shelf} />
         <details className={styles.all}>
           <summary><span>ぜんぶ一覧で見る</span><i aria-hidden="true" /></summary>
           <div className={styles.grid}>

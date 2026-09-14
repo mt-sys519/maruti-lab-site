@@ -50,12 +50,20 @@
 .catalog::before { top: 8%; left: 4%; width: 14px; height: 14px; border-radius: 50%; background: #F4C430; opacity: .5; }
 .catalog::after { bottom: 10%; right: 5%; width: 13px; height: 13px; background: #7B8CDE; opacity: .45; transform: rotate(18deg); }
 .catalog > header { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.steps { display: flex; align-items: center; gap: 14px; }
+.steps button { display: grid; place-items: center; width: 40px; height: 40px; border: 3px solid #232323; border-radius: 50%; background: #f1eee5; box-shadow: 4px 4px 0 #232323; color: #232323; font: 400 18px/1 "Inter", sans-serif; cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
+.steps button:hover, .steps button:focus-visible { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #232323; outline: 0; }
+.steps button:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #232323; }
 .catalog > header p, .catalog > header span { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .catalog > header span { color: #FF7A5C; }
 /* The shelf escapes the section's padding on both sides. Held in on the left
    while it ran off the right, the same row of machines looked like it had a
    margin at one end and none at the other. */
-.shelf { position: relative; z-index: 1; margin-inline: calc(-1 * clamp(20px, 6vw, 90px)); }
+/* Doubled so it outranks the shelf's own gap, which is set on a single class
+   in the other module and would otherwise win on load order. OLIPOP stands
+   its cans about a quarter of a can apart; a fourteenth is what made this row
+   look packed. */
+.shelf.shelf { position: relative; z-index: 1; margin-inline: calc(-1 * clamp(20px, 6vw, 90px)); gap: clamp(30px, 4vw, 72px); }
 
 .all { position: relative; z-index: 1; margin-top: clamp(16px, 2vw, 26px); }
 .all > summary { display: inline-flex; align-items: center; gap: 12px; padding: 13px 22px; list-style: none; cursor: pointer; background: #f1eee5; border: 3px solid #232323; box-shadow: 5px 5px 0 #232323; color: #232323; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .1em; transition: transform .14s ease, box-shadow .14s ease; }
