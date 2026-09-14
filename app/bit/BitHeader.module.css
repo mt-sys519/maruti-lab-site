@@ -8,8 +8,8 @@
 
 @media (max-width: 640px) {
   .hierarchy { gap: 7px; }
-  .hierarchy :global(.bitBrand) { font-size: 14px; }
-  .hierarchy :global(.bitBrand) b { font-size: 13px; }
+  .hierarchy :global(.bitBrand) { font-size: 19px; }
+  .hierarchy :global(.bitBrand) b { font-size: 18px; }
   .hierarchy > strong { display: none; }
   .currentSeparator { display: none; }
   .actions { gap: 10px; }

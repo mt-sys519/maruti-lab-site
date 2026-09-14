@@ -70,7 +70,9 @@
   .intro { grid-column: 2; padding-bottom: 48px; }
   .index { grid-column: 2; margin: 0 0 54px clamp(28px, 5vw, 60px); }
   .indexHead { padding-right: 0; }
-  .shelfBleed { margin-inline: calc(-1 * clamp(28px, 5vw, 60px)) 0; }
+  /* The index's own margin plus the hero's 42px rail column: nothing is
+     printed on the strip at this height, so the machines can cross it. */
+  .shelfBleed { margin-inline: calc(-1 * (clamp(28px, 5vw, 60px) + 42px)) 0; }
   .readout { grid-column: 2; }
 }
 
@@ -84,7 +86,7 @@
   .actions { align-items: stretch; flex-direction: column; margin-top: 32px; }
   .actions a { width: 100%; }
   .index { margin: 0 0 40px 14px; }
-  .shelfBleed { margin-inline: -14px 0; }
+  .shelfBleed { margin-inline: -42px 0; }
   .readout { padding: 0 10px; }
 }
 
