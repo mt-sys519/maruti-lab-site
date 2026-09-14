@@ -16,7 +16,7 @@
 
 /* Only the sizing and the snapping belong to the rail; what a unit looks
    like lives with the unit, so the machine of the day matches it. */
-.railUnit { flex: 0 0 clamp(216px, 17vw, 300px); scroll-snap-align: start; }
+.railUnit { flex: 0 0 clamp(216px, 17vw, 300px); scroll-snap-align: center; }
 
 @media (max-width: 640px) {
   .railUnit { flex-basis: 72vw; }

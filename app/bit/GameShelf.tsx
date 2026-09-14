@@ -28,17 +28,33 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
   const rail = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
 
+  // Where the shelf has to be scrolled for this machine to sit in the middle
+  // of the window. Snapping is centred too, so a gesture always leaves one
+  // machine in the middle rather than one flush against the left edge.
+  function centreOf(strip: HTMLDivElement, unit: HTMLElement) {
+    return unit.offsetLeft - (strip.clientWidth - unit.offsetWidth) / 2;
+  }
+
   function copyWidth(strip: HTMLDivElement) {
     const units = strip.children as HTMLCollectionOf<HTMLElement>;
     if (units.length <= bitGames.length) return 0;
     return units[bitGames.length].offsetLeft - units[0].offsetLeft;
   }
 
-  // Start on the middle copy so there is a whole catalog of room in both
-  // directions before the first wrap is needed.
+  // Open on the tagged machine, in the middle - the one the shelf is meant to
+  // show off. Within the middle copy, so there is a whole catalog of room in
+  // both directions before the first wrap is needed.
   useEffect(() => {
     const strip = rail.current;
-    if (strip) strip.scrollLeft = copyWidth(strip);
+    if (!strip) return;
+    const featured = Math.max(0, bitGames.findIndex((game) => "tag" in game));
+    const unit = strip.children[bitGames.length + featured] as HTMLElement | undefined;
+    if (!unit) return;
+    const width = copyWidth(strip);
+    let left = centreOf(strip, unit);
+    if (left < width) left += width;
+    if (left >= width * 2) left -= width;
+    strip.scrollLeft = left;
   }, []);
 
 
@@ -50,11 +66,11 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
       if (!strip) return;
       const units = Array.from(strip.children) as HTMLElement[];
       const next = direction === 1
-        ? units.find((unit) => unit.offsetLeft > strip.scrollLeft + 4)
-        : [...units].reverse().find((unit) => unit.offsetLeft < strip.scrollLeft - 4);
+        ? units.find((unit) => centreOf(strip, unit) > strip.scrollLeft + 4)
+        : [...units].reverse().find((unit) => centreOf(strip, unit) < strip.scrollLeft - 4);
       if (!next) return;
       const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-      strip.scrollTo({ left: next.offsetLeft, behavior });
+      strip.scrollTo({ left: centreOf(strip, next), behavior });
     },
   }));
 
