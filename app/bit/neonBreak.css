@@ -2071,3 +2071,74 @@
 .nbRoot.isPseudoFullscreen .breakApp > footer {
   width: min(1800px, 100%);
 }
+
+/* Fullscreen on a phone. Widening alone left the shell 1600px tall inside an
+   844px screen, so the bottom of the table was still below the fold and you
+   still had to scroll - which is the one thing fullscreen is asked to fix.
+   Here the screen is the frame: the table is fitted to whatever height is
+   left after the bar and the two rows that matter, and everything that is
+   reference rather than play steps out for the duration. The side panel goes
+   with them because on a phone POWER SHOT and her line already ride on the
+   table itself. */
+@media (max-width: 700px) {
+  .nbRoot:fullscreen,
+  .nbRoot:-webkit-full-screen,
+  .nbRoot.isPseudoFullscreen {
+    overflow: hidden;
+  }
+  .nbRoot:fullscreen .breakApp,
+  .nbRoot:-webkit-full-screen .breakApp,
+  .nbRoot.isPseudoFullscreen .breakApp {
+    height: 100%;
+    padding: 8px 10px 10px;
+    justify-content: flex-start;
+  }
+  .nbRoot:fullscreen .modeSwitch,
+  .nbRoot:fullscreen .turnBanner,
+  .nbRoot:fullscreen .breakApp > footer,
+  .nbRoot:fullscreen .breakLayout > aside,
+  .nbRoot:fullscreen .nbShareRow,
+  .nbRoot:-webkit-full-screen .modeSwitch,
+  .nbRoot:-webkit-full-screen .turnBanner,
+  .nbRoot:-webkit-full-screen .breakApp > footer,
+  .nbRoot:-webkit-full-screen .breakLayout > aside,
+  .nbRoot:-webkit-full-screen .nbShareRow,
+  .nbRoot.isPseudoFullscreen .modeSwitch,
+  .nbRoot.isPseudoFullscreen .turnBanner,
+  .nbRoot.isPseudoFullscreen .breakApp > footer,
+  .nbRoot.isPseudoFullscreen .breakLayout > aside,
+  .nbRoot.isPseudoFullscreen .nbShareRow {
+    display: none;
+  }
+  .nbRoot:fullscreen .breakLayout,
+  .nbRoot:-webkit-full-screen .breakLayout,
+  .nbRoot.isPseudoFullscreen .breakLayout {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 8px;
+  }
+  .nbRoot:fullscreen .tableShell,
+  .nbRoot:-webkit-full-screen .tableShell,
+  .nbRoot.isPseudoFullscreen .tableShell {
+    height: 100%;
+    min-height: 0;
+  }
+  .nbRoot:fullscreen .tableStage,
+  .nbRoot:-webkit-full-screen .tableStage,
+  .nbRoot.isPseudoFullscreen .tableStage {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+  }
+  /* Fitted by height rather than width: the screen is taller than the table
+     is in proportion, so filling the width is what pushed its foot off the
+     bottom. */
+  .nbRoot:fullscreen .game,
+  .nbRoot:-webkit-full-screen .game,
+  .nbRoot.isPseudoFullscreen .game {
+    width: auto;
+    max-width: 100%;
+    height: 100%;
+  }
+}
