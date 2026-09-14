@@ -2093,17 +2093,14 @@
     padding: 8px 10px 10px;
     justify-content: flex-start;
   }
-  .nbRoot:fullscreen .modeSwitch,
   .nbRoot:fullscreen .turnBanner,
   .nbRoot:fullscreen .breakApp > footer,
   .nbRoot:fullscreen .breakLayout > aside,
   .nbRoot:fullscreen .nbShareRow,
-  .nbRoot:-webkit-full-screen .modeSwitch,
   .nbRoot:-webkit-full-screen .turnBanner,
   .nbRoot:-webkit-full-screen .breakApp > footer,
   .nbRoot:-webkit-full-screen .breakLayout > aside,
   .nbRoot:-webkit-full-screen .nbShareRow,
-  .nbRoot.isPseudoFullscreen .modeSwitch,
   .nbRoot.isPseudoFullscreen .turnBanner,
   .nbRoot.isPseudoFullscreen .breakApp > footer,
   .nbRoot.isPseudoFullscreen .breakLayout > aside,
@@ -2140,5 +2137,45 @@
     width: auto;
     max-width: 100%;
     height: 100%;
+  }
+}
+
+/* The height for the table comes out of the furniture rather than out of the
+   controls. The bar, the mode switch and the two rows above the felt all run
+   tighter while fullscreen lasts - which is where the room went that hiding
+   the mode switch was buying. */
+@media (max-width: 700px) {
+  .nbRoot:fullscreen .breakTop,
+  .nbRoot:-webkit-full-screen .breakTop,
+  .nbRoot.isPseudoFullscreen .breakTop {
+    gap: 6px;
+  }
+  .nbRoot:fullscreen .brandmark,
+  .nbRoot:-webkit-full-screen .brandmark,
+  .nbRoot.isPseudoFullscreen .brandmark {
+    display: none;
+  }
+  .nbRoot:fullscreen .breakTop .kicker,
+  .nbRoot:-webkit-full-screen .breakTop .kicker,
+  .nbRoot.isPseudoFullscreen .breakTop .kicker {
+    display: none;
+  }
+  .nbRoot:fullscreen .breakTop .title,
+  .nbRoot:-webkit-full-screen .breakTop .title,
+  .nbRoot.isPseudoFullscreen .breakTop .title {
+    font-size: 15px;
+  }
+  .nbRoot:fullscreen .modeSwitch button,
+  .nbRoot:-webkit-full-screen .modeSwitch button,
+  .nbRoot.isPseudoFullscreen .modeSwitch button {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 10px;
+  }
+  .nbRoot:fullscreen .playToolbar,
+  .nbRoot:-webkit-full-screen .playToolbar,
+  .nbRoot.isPseudoFullscreen .playToolbar {
+    padding-top: 5px;
+    padding-bottom: 5px;
   }
 }
