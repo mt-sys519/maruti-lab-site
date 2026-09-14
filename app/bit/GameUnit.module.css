@@ -55,21 +55,33 @@
   .unit:hover, .unit:focus-visible { transform: none; box-shadow: 8px 8px 0 #232323; }
 }
 
-/* A shelf tag straddling the machine's top edge, half on the paper and half
-   on the shell. Cream rather than the package color, which would vanish into
-   the shell it sits on. */
+/* A burst seal on the corner of the machine, the way a toy box is stickered
+   - the same idea as the badge on OLIPOP's cans, in this shop's ink and
+   palette. Yellow rather than the game's own color, which would sink into
+   the shell it is stuck to; the black outline keeps it separate even on the
+   yellow machine. */
 .tag {
   position: absolute;
-  top: -13px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 5px 13px 6px;
-  background: #f1eee5;
-  border: 2.5px solid #232323;
-  border-radius: 999px;
-  box-shadow: 3px 3px 0 #232323;
-  color: #232323;
-  font: 800 10px/1 "Yu Gothic UI", sans-serif;
-  letter-spacing: .16em;
-  white-space: nowrap;
+  top: -14px;
+  right: -12px;
+  z-index: 2;
+  width: clamp(58px, 4.6vw, 72px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  transform: rotate(-9deg);
+  pointer-events: none;
 }
+.tag svg { grid-area: 1 / 1; width: 100%; height: 100%; overflow: visible; }
+.tag svg path { fill: #F4C430; stroke: #232323; stroke-width: 3; stroke-linejoin: round; }
+.tag span {
+  grid-area: 1 / 1;
+  color: #232323;
+  font: 800 clamp(11px, 0.9vw, 13px)/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: .04em;
+}
+
+/* The seal leans the other way when the machine lifts, so it reads as stuck
+   on rather than painted on. */
+.unit:hover .tag, .unit:focus-visible .tag { transform: rotate(-3deg) scale(1.04); }
+.tag { transition: transform .18s ease; }
