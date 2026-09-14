@@ -35,7 +35,11 @@ export function createBreakAudio(): Engine {
   let delay: DelayNode | null = null;
   let muted = false;
   let lastCollision = -Infinity,
-    lastRail = -Infinity;
+    lastRail = -Infinity,
+    // Audio-clock time the last wind-up tick was scheduled for. A fast pull
+    // crosses every step in under a tenth of a second, and eight ticks piled
+    // on the same instant is one noise, not a wind-up.
+    lastPull = -Infinity;
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const later = (fn: () => void, ms: number) => {
     const timer = setTimeout(() => {
@@ -717,7 +721,17 @@ export function createBreakAudio(): Engine {
     pullTick(norm: number, armed: boolean) {
       if (muted) return;
       resume();
-      const now = ctx!.currentTime;
+      // Spaced on the audio clock rather than played on arrival, so a quick
+      // draw still reads as "shuin shuin shuin" instead of one blurred zip.
+      // Past a third of a second of backlog the tick is dropped rather than
+      // stacked on the last one - stacking was what made a fast pull sound
+      // like a single noise in the first place, and a tail still rattling
+      // after the ball is struck would be worse than a missing step.
+      const earliest = ctx!.currentTime;
+      const at = Math.max(earliest, lastPull + 0.075);
+      if (at > earliest + 0.34) return;
+      lastPull = at;
+      const now = at;
       const osc = ctx!.createOscillator();
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(150 + norm * 90, now);
