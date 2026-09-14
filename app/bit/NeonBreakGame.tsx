@@ -1262,6 +1262,13 @@ export function NeonBreakGame() {
     life: number;
     maxLife: number;
   } | null>(null);
+  // The moment the power shot finishes charging, announced on the table where
+  // the player is actually looking: a ring thrown off the cue ball. The panel
+  // on the right only changed a small control's colour, which nobody saw.
+  const chargeRingRef = useRef<{ x: number; y: number; life: number } | null>(null);
+  // Bumped on the same moment, to let the panel play its one-shot: the gauge
+  // flaring as it lands and the button popping once.
+  const [chargedAt, setChargedAt] = useState(0);
 
   const sync = () => {
     setPhase(phaseRef.current);
@@ -1991,6 +1998,26 @@ export function NeonBreakGame() {
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       }
+      const ring = chargeRingRef.current;
+      if (ring && ring.life > 0) {
+        // Two rings a beat apart, thrown outward and fading - one pulse, not a
+        // loop, so it reads as something that just happened.
+        const t = 1 - ring.life / 0.85;
+        for (const delay of [0, 0.22]) {
+          const p = (t - delay) / (1 - delay);
+          if (p <= 0 || p >= 1) continue;
+          ctx.globalAlpha = (1 - p) * 0.9;
+          ctx.strokeStyle = "#ff3bce";
+          ctx.lineWidth = 3 * (1 - p) + 1;
+          ctx.shadowColor = "#ff3bce";
+          ctx.shadowBlur = 18;
+          ctx.beginPath();
+          ctx.arc(ring.x, ring.y, R + 4 + p * 58, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+      }
       const flash = flashRef.current;
       if (flash && flash.life > 0) {
         ctx.globalAlpha = (flash.life / flash.maxLife) * 0.35;
@@ -2335,13 +2362,18 @@ export function NeonBreakGame() {
                   : VOICE.aika.cpuMiss,
         );
         foulsRef.current[turnRef.current] = 0;
+        const chargeWas = chargesRef.current[turnRef.current];
         chargesRef.current[turnRef.current] = Math.min(
           100,
-          chargesRef.current[turnRef.current] +
-            20 +
-            objectPots * 28 +
-            Math.min(25, s.railObjects.size * 5),
+          chargeWas + 20 + objectPots * 28 + Math.min(25, s.railObjects.size * 5),
         );
+        const mine = !(modeRef.current === "cpu" && turnRef.current === 1);
+        if (mine && chargeWas < 100 && chargesRef.current[turnRef.current] >= 100) {
+          const cue = ballsRef.current[0];
+          chargeRingRef.current = { x: cue.x, y: cue.y, life: 0.85 };
+          triggerFlash("#ff3bce", 0.18);
+          setChargedAt((n) => n + 1);
+        }
         if (objectPots > 0) {
           phaseRef.current = "aim";
           setStatus(
@@ -2689,6 +2721,10 @@ export function NeonBreakGame() {
       if (flashRef.current) {
         flashRef.current.life -= frame;
         if (flashRef.current.life <= 0) flashRef.current = null;
+      }
+      if (chargeRingRef.current) {
+        chargeRingRef.current.life -= frame;
+        if (chargeRingRef.current.life <= 0) chargeRingRef.current = null;
       }
       draw(now);
       raf = requestAnimationFrame(tick);
@@ -3100,10 +3136,20 @@ export function NeonBreakGame() {
               <>
                 <div className="meterLabel">
                   <span>POWER SHOT</span>
-                  <b>{charges[turn]}%</b>
+                  {/* The word rather than "100%", and it stays until the shot
+                      is spent: a reading that holds is what someone who
+                      missed the moment can still find. */}
+                  <b className={charges[turn] >= 100 ? "isFull" : undefined}>
+                    {charges[turn] >= 100 ? "CHARGED" : `${charges[turn]}%`}
+                  </b>
                 </div>
-                <div className="powerMeter">
+                <div
+                  className={charges[turn] >= 100 ? "powerMeter isFull" : "powerMeter"}
+                >
                   <i style={{ width: `${charges[turn]}%` }} />
+                  {/* Keyed on the charge count so it remounts and replays:
+                      one sweep as the gauge lands, not a loop. */}
+                  {charges[turn] >= 100 && <b className="meterFlare" key={chargedAt} />}
                 </div>
                 <button
                   className={powerArmed ? "powerBtn armed" : "powerBtn"}
@@ -3116,6 +3162,9 @@ export function NeonBreakGame() {
                 >
                   <Shield size={17} />
                   {powerArmed ? "ARMED // ×3" : "ACTIVATE POWER SHOT"}
+                  {charges[turn] >= 100 && !powerArmed && (
+                    <i className="powerPop" key={chargedAt} aria-hidden="true" />
+                  )}
                 </button>
                 <div className="powerNote">
                   <Zap size={16} />
@@ -3476,11 +3525,14 @@ export function NeonBreakGame() {
                 >
                   <Shield size={12} />
                   {powerArmed ? "ARMED ×3" : "POWER"}
+                  {charges[turn] >= 100 && !powerArmed && (
+                    <i className="powerPop" key={chargedAt} aria-hidden="true" />
+                  )}
                 </button>
               )}
               {mode !== "stage" && (
                 <i
-                  className="hudCharge"
+                  className={charges[turn] >= 100 ? "hudCharge isFull" : "hudCharge"}
                   style={{ width: `${charges[turn]}%` }}
                 />
               )}
