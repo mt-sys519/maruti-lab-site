@@ -55,7 +55,10 @@ function IndexCard() {
   return (
     <div className={`${styles.card} ${styles.wide} ${styles.index}`} id="index">
       <p className={styles.serial}>MARUTI LAB / QUICK GAMES</p>
-      <h1 className={styles.indexTitle}>短い時間で、<br />頭と心を少し動かす。</h1>
+      {/* The wordmark itself, the way the home page writes it. A card for
+          MarutiBit that never says MarutiBit is no card at all. */}
+      <h1 className={styles.indexBrand}><span>Maruti</span><b>Bit</b></h1>
+      <p className={styles.indexTitle}>短い時間で、頭と心を少し動かす。</p>
       <div className={styles.indexShelf}>
         {shelf.map((game) => <GameUnit game={game} key={game.id} className={styles.indexUnit} />)}
       </div>
