@@ -2846,6 +2846,9 @@ export function NeonBreakGame() {
   // comes from the raw drag length, so a soft shot can be aimed as finely as
   // a hard one - which was the other half of the problem.
   const AIM_GAIN = 0.34;
+  // Which step of the pull last made a sound, so the zips fire as the cue is
+  // drawn further back and not on every pointer move.
+  const pullStepRef = useRef(-1);
   const steerAim = (pt: Point) => {
     const cue = ballsRef.current[0];
     const raw = Math.atan2(cue.y - pt.y, cue.x - pt.x),
@@ -2858,15 +2861,18 @@ export function NeonBreakGame() {
       aimRef.current = cur + d * AIM_GAIN;
     }
     dragRef.current = pt;
-    setShotPower(
-      Math.round(
-        (Math.min(Math.hypot(cue.x - pt.x, cue.y - pt.y) * 0.18, MAX_SHOT) /
-          MAX_SHOT) *
-          100,
-      ),
-    );
+    const norm = Math.min(Math.hypot(cue.x - pt.x, cue.y - pt.y) * 0.18, MAX_SHOT) / MAX_SHOT;
+    setShotPower(Math.round(norm * 100));
+    // Eight steps across the pull. Only ever upward: easing off is not a
+    // wind-up, and ticking on the way back down would rattle.
+    const step = Math.floor(norm * 8);
+    if (step > pullStepRef.current) {
+      pullStepRef.current = step;
+      audioEngineRef.current?.pullTick(norm, powerArmedRef.current);
+    }
   };
   const cancelAim = () => {
+    pullStepRef.current = -1;
     dragRef.current = null;
     aimRef.current = null;
     pressRef.current = null;
@@ -3003,7 +3009,14 @@ export function NeonBreakGame() {
       fireShot(keyboardAngleRef.current, keyboardPowerRef.current);
       return;
     }
-    setShotPower(Math.round((keyboardPowerRef.current / MAX_SHOT) * 100));
+    // Winding up on the arrow keys sounds the same as winding up by dragging.
+    const norm = keyboardPowerRef.current / MAX_SHOT;
+    setShotPower(Math.round(norm * 100));
+    const step = Math.floor(norm * 8);
+    if (step > pullStepRef.current) {
+      pullStepRef.current = step;
+      audioEngineRef.current?.pullTick(norm, powerArmedRef.current);
+    }
   };
   const armPower = () => {
     if (

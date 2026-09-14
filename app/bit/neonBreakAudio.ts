@@ -14,6 +14,7 @@ type Engine = {
   win: () => void;
   armPower: () => void;
   powerFire: () => void;
+  pullTick: (norm: number, armed: boolean) => void;
   uiClick: () => void;
   setMusic: (track: MusicTrack) => void;
   unlock: () => void;
@@ -709,6 +710,33 @@ export function createBreakAudio(): Engine {
         osc.start(now);
         osc.stop(now + 0.19);
       });
+    },
+    // Drawing the cue back. One short zip per step of the pull, climbing with
+    // it, so winding up sounds like winding up - "shuin, shuin, shuin" - and
+    // a shot that is armed winds up brighter and louder than one that is not.
+    pullTick(norm: number, armed: boolean) {
+      if (muted) return;
+      resume();
+      const now = ctx!.currentTime;
+      const osc = ctx!.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(150 + norm * 90, now);
+      const band = ctx!.createBiquadFilter();
+      band.type = "bandpass";
+      band.Q.value = armed ? 11 : 8;
+      // Each step starts where the last one reached, so the pull climbs.
+      band.frequency.setValueAtTime(700 + norm * 2600, now);
+      band.frequency.exponentialRampToValueAtTime(
+        1500 + norm * (armed ? 5200 : 3400),
+        now + 0.085,
+      );
+      const g = ctx!.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(armed ? 0.75 : 0.42, now + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0006, now + 0.11);
+      osc.connect(band).connect(g).connect(sfx!);
+      osc.start(now);
+      osc.stop(now + 0.13);
     },
     uiClick() {
       if (muted) return;
