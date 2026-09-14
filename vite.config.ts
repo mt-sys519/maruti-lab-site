@@ -42,6 +42,14 @@ export default defineConfig(async () => {
   process.env.MINIFLARE_REGISTRY_PATH ??= ".wrangler/registry";
 
   return {
+    // The notes are imported through import.meta.glob(..., { query: "?raw" }),
+    // which is enough to build them but not enough to change one. On a save,
+    // Vite re-resolves the file without the query, hands the Markdown to the
+    // JS parser and fails on the first line of the front matter - so the dev
+    // server keeps serving the version it started with, and edits to an
+    // article silently do not appear. Declaring .md an asset stops it being
+    // treated as source; `?raw` still returns the text.
+    assetsInclude: ["**/*.md"],
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
