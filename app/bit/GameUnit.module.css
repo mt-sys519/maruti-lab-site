@@ -81,7 +81,7 @@
   letter-spacing: .04em;
 }
 
-/* Straight on the shelf, and it tips as the machine lifts - the same six
-   degrees it had before, now travelled on the way up rather than back. */
-.unit:hover .tag, .unit:focus-visible .tag { transform: rotate(-6deg) scale(1.04); }
+/* Straight on the shelf, and it tips clockwise as the machine lifts - the
+   same six degrees, turned the same way it turned before. */
+.unit:hover .tag, .unit:focus-visible .tag { transform: rotate(6deg) scale(1.04); }
 .tag { transition: transform .18s ease; }
