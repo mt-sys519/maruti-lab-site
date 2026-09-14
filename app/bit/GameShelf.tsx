@@ -15,6 +15,7 @@ const DRAG_THRESHOLD = 6;
 // shows: the unit arriving is the same unit that just left.
 const COPIES = [0, 1, 2];
 
+
 /** The whole catalog on one row, as a shelf of handhelds. Shared by the home
  *  hero and the /bit index - the two pages show the same shelf rather than
  *  two versions of it. */
@@ -35,6 +36,7 @@ export function GameShelf({ className }: { className?: string }) {
     if (strip) strip.scrollLeft = copyWidth(strip);
   }, []);
 
+
   function keepLooping() {
     const strip = rail.current;
     if (!strip) return;
@@ -48,9 +50,17 @@ export function GameShelf({ className }: { className?: string }) {
     drag.current.startLeft += shift;
   }
 
+  // Snapping has to be off while a gesture is moving the shelf by hand: left
+  // on, it pulls back toward the nearest machine after every single step and
+  // eats most of the travel. It goes back on once the gesture has settled.
+  function holdSnap(strip: HTMLDivElement) {
+    strip.style.scrollSnapType = "none";
+  }
+
   function settle() {
     const strip = rail.current;
     if (!strip) return;
+    strip.style.scrollSnapType = "";
     const units = Array.from(strip.children) as HTMLElement[];
     const nearest = units.reduce((best, unit) =>
       Math.abs(unit.offsetLeft - strip.scrollLeft) < Math.abs(best.offsetLeft - strip.scrollLeft)
@@ -81,6 +91,7 @@ export function GameShelf({ className }: { className?: string }) {
     if (!drag.current.moved) {
       if (Math.abs(travelled) <= DRAG_THRESHOLD) return;
       drag.current.moved = true;
+      holdSnap(rail.current);
       // Capture only once this is definitely a drag. Capturing on pointerdown
       // retargets the rest of the gesture to the rail, and then an ordinary
       // click never reaches the unit underneath and the game never opens.

@@ -52,9 +52,10 @@
 .catalog > header { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .catalog > header p, .catalog > header span { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .catalog > header span { color: #FF7A5C; }
-/* The shelf escapes the section's right padding, so the row runs off the
-   edge of the screen instead of stopping neatly short of it. */
-.shelf { position: relative; z-index: 1; margin-right: calc(-1 * clamp(20px, 6vw, 90px)); }
+/* The shelf escapes the section's padding on both sides. Held in on the left
+   while it ran off the right, the same row of machines looked like it had a
+   margin at one end and none at the other. */
+.shelf { position: relative; z-index: 1; margin-inline: calc(-1 * clamp(20px, 6vw, 90px)); }
 
 .all { position: relative; z-index: 1; margin-top: clamp(16px, 2vw, 26px); }
 .all > summary { display: inline-flex; align-items: center; gap: 12px; padding: 13px 22px; list-style: none; cursor: pointer; background: #f1eee5; border: 3px solid #232323; box-shadow: 5px 5px 0 #232323; color: #232323; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .1em; transition: transform .14s ease, box-shadow .14s ease; }
