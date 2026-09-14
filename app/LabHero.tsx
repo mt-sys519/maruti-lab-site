@@ -3,17 +3,11 @@
 import { useRef } from "react";
 import type { CSSProperties } from "react";
 import { bitGames } from "./bit/games";
-import { GameMark } from "./bit/GameMark";
+import { GameShelf } from "./bit/GameShelf";
 import styles from "./LabHero.module.css";
-
-// Past this many pixels a pointer gesture is a drag, not a click, and the
-// card under the cursor must not open its game when the button comes up.
-const DRAG_THRESHOLD = 6;
 
 export function LabHero() {
   const hero = useRef<HTMLElement>(null);
-  const rail = useRef<HTMLDivElement>(null);
-  const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
   const gameCount = String(bitGames.length).padStart(2, "0");
 
   function trackPointer(event: React.PointerEvent<HTMLElement>) {
@@ -43,60 +37,6 @@ export function LabHero() {
   // scroll position that puts it at the left edge of the rail.
   function cardsOf(strip: HTMLDivElement) {
     return Array.from(strip.children) as HTMLElement[];
-  }
-
-  function settle() {
-    const strip = rail.current;
-    if (!strip) return;
-    // Already parked against the right end: snapping back would fight the
-    // reader, who can see there is nothing further along.
-    if (strip.scrollLeft >= strip.scrollWidth - strip.clientWidth - 2) return;
-    const nearest = cardsOf(strip).reduce((best, card) =>
-      Math.abs(card.offsetLeft - strip.scrollLeft) < Math.abs(best.offsetLeft - strip.scrollLeft)
-        ? card
-        : best,
-    );
-    strip.scrollTo({ left: nearest.offsetLeft, behavior: glide() });
-  }
-
-  function startDrag(event: React.PointerEvent<HTMLDivElement>) {
-    // Touch already has a good horizontal gesture of its own, with the
-    // momentum the OS gives it. Only the mouse needs a hand here.
-    if (event.pointerType === "touch" || !rail.current) return;
-    drag.current = {
-      active: true,
-      startX: event.clientX,
-      startLeft: rail.current.scrollLeft,
-      moved: false,
-    };
-  }
-
-  function moveDrag(event: React.PointerEvent<HTMLDivElement>) {
-    if (!drag.current.active || !rail.current) return;
-    const travelled = event.clientX - drag.current.startX;
-    if (!drag.current.moved) {
-      if (Math.abs(travelled) <= DRAG_THRESHOLD) return;
-      drag.current.moved = true;
-      // Capture only once this is definitely a drag. Capturing on pointerdown
-      // retargets the rest of the gesture to the rail, and then an ordinary
-      // click never reaches the card underneath and the game never opens.
-      rail.current.setPointerCapture(event.pointerId);
-    }
-    rail.current.scrollLeft = drag.current.startLeft - travelled;
-  }
-
-  function endDrag(event: React.PointerEvent<HTMLDivElement>) {
-    if (!drag.current.active || !rail.current) return;
-    drag.current.active = false;
-    if (rail.current.hasPointerCapture(event.pointerId))
-      rail.current.releasePointerCapture(event.pointerId);
-    settle();
-  }
-
-  function suppressClick(event: React.MouseEvent<HTMLDivElement>) {
-    if (!drag.current.moved) return;
-    drag.current.moved = false;
-    event.preventDefault();
   }
 
   return (
@@ -139,37 +79,12 @@ export function LabHero() {
 
       <div id="bit-games" className={styles.index} aria-label="MarutiBitのゲーム一覧">
         <div className={styles.indexHead}>
-          <span>GAME INDEX<i className={styles.hint}>DRAG</i></span>
+          <span>
+            GAME INDEX<i className={styles.hint}>DRAG</i>
+          </span>
           <strong>{gameCount} / ONLINE</strong>
         </div>
-        <div
-          className={styles.shelf}
-          ref={rail}
-          onPointerDown={startDrag}
-          onPointerMove={moveDrag}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-          onClickCapture={suppressClick}
-        >
-          {bitGames.map((game) => (
-            <a href={game.href} key={game.id} className={styles.unit} style={{ "--pkg-color": game.color } as CSSProperties} draggable={false}>
-              <span className={styles.bezel}>
-                <span className={styles.screen}>
-                  <span className={styles.serial}>{game.number}</span>
-                  <span className={styles.visual}><GameMark id={game.id} /></span>
-                </span>
-                <span className={styles.plate}>
-                  <strong className={styles.gameName}>{game.name}</strong>
-                  <small className={styles.gameKind}>{game.kind}</small>
-                </span>
-              </span>
-              <span className={styles.controls} aria-hidden="true">
-                <i className={styles.pad} />
-                <i className={styles.buttons} />
-              </span>
-            </a>
-          ))}
-        </div>
+        <GameShelf />
       </div>
 
       <div className={`labReadout ${styles.readout}`} aria-label="MarutiBitの概要">

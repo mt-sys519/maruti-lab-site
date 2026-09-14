@@ -43,6 +43,21 @@
 .catalog > header p, .catalog > header span { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .catalog > header h2 { margin: 0; color: #232323; font: 700 clamp(30px, 4vw, 52px)/1.1 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }
 .catalog > header span { text-align: right; color: #FF7A5C; }
+/* The shelf escapes the section's right padding, so the row runs off the
+   edge of the screen instead of stopping neatly short of it. */
+.shelf { position: relative; z-index: 1; margin-right: calc(-1 * clamp(20px, 6vw, 90px)); }
+
+.all { position: relative; z-index: 1; margin-top: clamp(16px, 2vw, 26px); }
+.all > summary { display: inline-flex; align-items: center; gap: 12px; padding: 13px 22px; list-style: none; cursor: pointer; background: #f1eee5; border: 3px solid #232323; box-shadow: 5px 5px 0 #232323; color: #232323; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .1em; transition: transform .14s ease, box-shadow .14s ease; }
+.all > summary::-webkit-details-marker { display: none; }
+.all > summary:hover, .all > summary:focus-visible { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #232323; outline: 0; }
+.all > summary i { position: relative; width: 12px; height: 12px; }
+.all > summary i::before, .all > summary i::after { content: ""; position: absolute; background: #232323; }
+.all > summary i::before { top: 5px; left: 0; width: 12px; height: 2px; }
+.all > summary i::after { top: 0; left: 5px; width: 2px; height: 12px; }
+.all[open] > summary i::after { opacity: 0; }
+.all[open] > summary { margin-bottom: clamp(26px, 3vw, 38px); }
+
 .grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 32px); }
 .card {
   min-height: 300px;
