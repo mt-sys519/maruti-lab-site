@@ -2484,11 +2484,15 @@ export function NeonBreakGame() {
                   : VOICE.aika.cpuMiss,
         );
         foulsRef.current[turnRef.current] = 0;
+        // The power shot itself earns nothing. Spending it and taking most of
+        // it straight back off the balls it scattered made the meter a
+        // formality - now using one costs you the next one.
         const chargeWas = chargesRef.current[turnRef.current];
-        chargesRef.current[turnRef.current] = Math.min(
-          100,
-          chargeWas + 20 + objectPots * 28 + Math.min(25, s.railObjects.size * 5),
-        );
+        if (!s.power)
+          chargesRef.current[turnRef.current] = Math.min(
+            100,
+            chargeWas + 20 + objectPots * 28 + Math.min(25, s.railObjects.size * 5),
+          );
         const mine = !(modeRef.current === "cpu" && turnRef.current === 1);
         if (mine && chargeWas < 100 && chargesRef.current[turnRef.current] >= 100) {
           const cue = ballsRef.current[0];
@@ -3360,7 +3364,7 @@ export function NeonBreakGame() {
                   <p>
                     <b>NEON OVERCHARGE</b>
                     <br />
-                    初速3倍。発動中の手球はポケットを反射する。使用後、ゲージはゼロに戻る。
+                    初速3倍。発動中の手球はポケットを反射する。使用後、ゲージはゼロに戻り、その一打では溜まらない。
                   </p>
                 </div>
               </>
@@ -3794,7 +3798,7 @@ export function NeonBreakGame() {
                 9ボールは最小番号へ先に当て、的球を入れるか、接触後にどれかの球をクッションへ。合法的に9番を入れると勝利。ファウルは手球の自由配置、CPU戦は3連続ファウルで敗北。ブレイクは1番に当て、的球を入れるか的球4個をクッションへ。
               </p>
               <p>
-                パワーショットはゲージ満タンで使用可能。次の一打の初速が3倍になり、その一打だけ手球はポケットを反射します。プッシュアウトなしのカジュアル9ボールです。
+                パワーショットはゲージ満タンで使用可能。次の一打の初速が3倍になり、その一打だけ手球はポケットを反射します。使った一打では球を落としてもゲージは溜まりません。プッシュアウトなしのカジュアル9ボールです。
               </p>
               <p>
                 STAGEは一打で9番を入れるチャレンジ。記録はこのブラウザに保存されます。
