@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import { bitGames } from "./games";
 import { GameMark } from "./GameMark";
@@ -10,6 +10,12 @@ import styles from "./GameShelf.module.css";
 // unit under the cursor must not open its game when the button comes up.
 const DRAG_THRESHOLD = 6;
 
+// The shelf has no ends. Three copies of the catalog are laid end to end and
+// the scroll position is pushed back by exactly one copy whenever it leaves
+// the middle one, so the reader can keep going either way and the seam never
+// shows: the unit arriving is the same unit that just left.
+const COPIES = [0, 1, 2];
+
 /** The whole catalog on one row, as a shelf of handhelds. Shared by the home
  *  hero and the /bit index - the two pages show the same shelf rather than
  *  two versions of it. */
@@ -17,12 +23,35 @@ export function GameShelf({ className }: { className?: string }) {
   const rail = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
 
+  function copyWidth(strip: HTMLDivElement) {
+    const units = strip.children as HTMLCollectionOf<HTMLElement>;
+    if (units.length <= bitGames.length) return 0;
+    return units[bitGames.length].offsetLeft - units[0].offsetLeft;
+  }
+
+  // Start on the middle copy so there is a whole catalog of room in both
+  // directions before the first wrap is needed.
+  useEffect(() => {
+    const strip = rail.current;
+    if (strip) strip.scrollLeft = copyWidth(strip);
+  }, []);
+
+  function keepLooping() {
+    const strip = rail.current;
+    if (!strip) return;
+    const width = copyWidth(strip);
+    if (width <= 0) return;
+    const shift = strip.scrollLeft >= width * 2 ? -width : strip.scrollLeft < width ? width : 0;
+    if (!shift) return;
+    strip.scrollLeft += shift;
+    // A drag in progress measures from where it began, so that has to move
+    // with it or the shelf lurches out from under the cursor.
+    drag.current.startLeft += shift;
+  }
+
   function settle() {
     const strip = rail.current;
     if (!strip) return;
-    // Already parked against the right end: snapping back would fight the
-    // reader, who can see there is nothing further along.
-    if (strip.scrollLeft >= strip.scrollWidth - strip.clientWidth - 2) return;
     const units = Array.from(strip.children) as HTMLElement[];
     const nearest = units.reduce((best, unit) =>
       Math.abs(unit.offsetLeft - strip.scrollLeft) < Math.abs(best.offsetLeft - strip.scrollLeft)
@@ -83,34 +112,39 @@ export function GameShelf({ className }: { className?: string }) {
       onPointerMove={moveDrag}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
+      onScroll={keepLooping}
       onClickCapture={suppressClick}
     >
-      {bitGames.map((game) => (
-        <a
-          href={game.href}
-          key={game.id}
-          className={styles.unit}
-          style={{ "--pkg-color": game.color } as CSSProperties}
-          draggable={false}
-        >
-          <span className={styles.bezel}>
-            <span className={styles.screen}>
-              <span className={styles.serial}>{game.number}</span>
-              <span className={styles.visual}>
-                <GameMark id={game.id} />
+      {COPIES.flatMap((copy) =>
+        bitGames.map((game) => (
+          <a
+            href={game.href}
+            key={`${copy}-${game.id}`}
+            aria-hidden={copy === 1 ? undefined : true}
+            tabIndex={copy === 1 ? undefined : -1}
+            className={styles.unit}
+            style={{ "--pkg-color": game.color } as CSSProperties}
+            draggable={false}
+          >
+            <span className={styles.bezel}>
+              <span className={styles.screen}>
+                <span className={styles.serial}>{game.number}</span>
+                <span className={styles.visual}>
+                  <GameMark id={game.id} />
+                </span>
+              </span>
+              <span className={styles.plate}>
+                <strong className={styles.name}>{game.name}</strong>
+                <small className={styles.kind}>{game.kind}</small>
               </span>
             </span>
-            <span className={styles.plate}>
-              <strong className={styles.name}>{game.name}</strong>
-              <small className={styles.kind}>{game.kind}</small>
+            <span className={styles.controls} aria-hidden="true">
+              <i className={styles.pad} />
+              <i className={styles.buttons} />
             </span>
-          </span>
-          <span className={styles.controls} aria-hidden="true">
-            <i className={styles.pad} />
-            <i className={styles.buttons} />
-          </span>
-        </a>
-      ))}
+          </a>
+        ))
+      )}
     </div>
   );
 }

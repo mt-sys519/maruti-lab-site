@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { bitGames } from "./games";
 import styles from "./BitHub.module.css";
 import { GameMark } from "./GameMark";
+import { GameAmbience } from "./GameAmbience";
 import { GameShelf } from "./GameShelf";
 
 export function BitHub() {
@@ -15,6 +16,7 @@ export function BitHub() {
   return (
     <>
       <section className={styles.hero} aria-labelledby="bit-hub-title">
+        <GameAmbience className={styles.ambient} />
         <p>MARUTI LAB / QUICK GAMES</p>
         <div>
           <h1 id="bit-hub-title">短い時間で、頭と心を少し動かす。</h1>
@@ -23,8 +25,10 @@ export function BitHub() {
         </div>
       </section>
 
-      <section className={styles.catalog} aria-labelledby="bit-catalog-title">
-        <header><p>GAME INDEX</p><h2 id="bit-catalog-title">ゲームを選ぶ</h2><span>{String(bitGames.length).padStart(2, "0")} / ONLINE</span></header>
+      <section className={styles.catalog} aria-label="ゲーム一覧">
+        {/* No heading of its own: the shelf reads as part of the hero above it,
+            and a second title in between pushed the machines down the page. */}
+        <header><p>GAME INDEX</p><span>{String(bitGames.length).padStart(2, "0")} / ONLINE</span></header>
         {/* The shelf is how you browse; the list below is how you check. It
             starts closed so the machines are what the page opens with. */}
         <GameShelf className={styles.shelf} />

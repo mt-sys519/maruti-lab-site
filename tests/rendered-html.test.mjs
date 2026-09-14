@@ -80,7 +80,10 @@ test("renders the MarutiBit series index", async () => {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /MarutiBit/);
-  assert.match(html, /ゲームを選ぶ/);
+  assert.match(html, /GAME INDEX/);
+  // The full list is folded away behind a summary, so the page should open
+  // with the shelf rather than with the grid.
+  assert.match(html, /ぜんぶ一覧で見る/);
   assert.match(html, /class="brand" href="\/" aria-label="Maruti Lab トップ"/);
   assert.match(html, /class="brandMark"[^>]*>\s*<svg/);
   assert.doesNotMatch(html, /id="bit-hub-title"><span>Maruti<\/span>/);
