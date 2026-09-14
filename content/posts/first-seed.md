@@ -1,9 +1,10 @@
 ---
-title: コードを書けない自分が、最初の種を蒔くまで
+title: コードを書けない自分が、AIと最初の種を蒔くまで
 date: 2026-09-15
 description: 11年ぶりの社会復帰が決まった頃、自分でお金を稼ぐための種を蒔かなければと思いました。AIでツールを作りはじめた2ヶ月の話です。
 tags: [制作記, SwiftCrop, AI]
-draft: true
+draft: false
+image: /og/blog/first-seed.png
 ---
 
 ## ただ可能性という名の種を蒔きたかった
