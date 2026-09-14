@@ -55,5 +55,10 @@ async function shot(selector, width, height, fileName) {
 }
 
 console.log(`Capturing ${game} cards from http://localhost:${port}/og-preview`);
-await shot("wide", 1200, 630, `${game}${suffix}.png`);
-await shot("square", 630, 630, `${game}${suffix}-square.png`);
+if (game === "index") {
+  // The series card: one wide card, no square twin.
+  await shot("index", 1200, 630, `index${suffix}.png`);
+} else {
+  await shot("wide", 1200, 630, `${game}${suffix}.png`);
+  await shot("square", 630, 630, `${game}${suffix}-square.png`);
+}

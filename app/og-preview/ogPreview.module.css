@@ -250,3 +250,24 @@
   font-size: 19px;
   margin-top: 24px;
 }
+
+/* The /bit card: the page's own words, and the machines the page is about,
+   running off the right edge the way they do on the shelf. */
+.index { padding: 58px 70px 56px; }
+.indexTitle {
+  margin: 26px 0 0;
+  color: #232323;
+  font: 700 52px/1.32 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif;
+  letter-spacing: 0.01em;
+}
+.indexShelf {
+  position: absolute;
+  left: 70px;
+  right: 0;
+  bottom: 96px;
+  display: flex;
+  gap: 42px;
+  align-items: flex-end;
+}
+.indexUnit { flex: 0 0 214px; }
+.tagline { position: absolute; right: 70px; bottom: 56px; margin: 0; font: 700 15px/1 Inter, "Yu Gothic UI", sans-serif; letter-spacing: 0.26em; color: #647169; }

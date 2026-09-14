@@ -104,7 +104,7 @@ test("renders the MarutiBit series index", async () => {
   assert.match(html, /href="\/bit\/sequence"/);
   assert.match(html, /href="\/bit\/input-rain"/);
   assert.match(html, /href="\/bit\/avenue"/);
-  assert.match(html, /\/og\/bit\/index\.png/);
+  assert.match(html, /\/og\/bit\/index-v2\.png/);
 });
 
 test("renders the MarutiBit PAKU page with its dedicated social preview", async () => {

@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/bit" },
-  openGraph: { title, description, url: "/bit", images: [{ url: "/og/bit/index.png", width: 1200, height: 630, alt: "MarutiBit ゲームシリーズ" }] },
-  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/index.png"] },
+  openGraph: { title, description, url: "/bit", images: [{ url: "/og/bit/index-v2.png", width: 1200, height: 630, alt: "MarutiBit ゲームシリーズ" }] },
+  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/index-v2.png"] },
 };
 
 export default function MarutiBitPage() {

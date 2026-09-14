@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { bitGames } from "../bit/games";
+import { GameUnit } from "../bit/GameUnit";
 import { formatDate, posts } from "../blog/posts";
 import styles from "./ogPreview.module.css";
 
@@ -42,6 +43,27 @@ const copy: Record<string, Card> = {
     art: "/games/neonbreak/neon-3operator.webp",
   },
 };
+
+/* The card for /bit itself. The old one was the same words over a row of
+   coloured dots, and said 7 GAMES when there were eight. The dots were
+   standing in for the machines; now there are machines. */
+function IndexCard() {
+  // Lead with the tagged machine, so the seal that is the news is on the card
+  // rather than off its right edge.
+  const first = Math.max(0, bitGames.findIndex((game) => "tag" in game));
+  const shelf = [...bitGames.slice(first), ...bitGames.slice(0, first)];
+  return (
+    <div className={`${styles.card} ${styles.wide} ${styles.index}`} id="index">
+      <p className={styles.serial}>MARUTI LAB / QUICK GAMES</p>
+      <h1 className={styles.indexTitle}>短い時間で、<br />頭と心を少し動かす。</h1>
+      <div className={styles.indexShelf}>
+        {shelf.map((game) => <GameUnit game={game} key={game.id} className={styles.indexUnit} />)}
+      </div>
+      <p className={styles.foot}>MARUTILAB.COM/BIT</p>
+      <p className={styles.tagline}>{String(bitGames.length).padStart(2, "0")} GAMES / ONLINE</p>
+    </div>
+  );
+}
 
 function Card({ id, square }: { id: string; square?: boolean }) {
   const game = bitGames.find((g) => g.id === id);
@@ -126,6 +148,9 @@ export default function OgPreviewPage({
   // `only` is what the capture script uses: one card, flush to the origin, so
   // a viewport screenshot at the card's size is the card and nothing else.
   const only = searchParams?.only;
+  if (only === "index") {
+    return <main className={styles.bare}><IndexCard /></main>;
+  }
   if (only === "wide" || only === "square") {
     return (
       <main className={styles.bare}>
