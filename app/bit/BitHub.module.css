@@ -138,7 +138,7 @@
 }
 
 /* The machine of the day, standing on the floor the fold used to leave bare. */
-.pick { position: relative; z-index: 1; margin-top: clamp(40px, 5vw, 76px); display: flex; align-items: center; gap: clamp(26px, 4vw, 64px); }
+.pick { position: relative; z-index: 1; margin-top: clamp(40px, 5vw, 76px); display: flex; align-items: center; gap: clamp(26px, 4vw, 56px); }
 .pickUnit { flex: 0 0 auto; width: clamp(224px, 21vw, 292px); }
 .pickCopy { min-width: 0; }
 .pickEyebrow { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
@@ -152,4 +152,29 @@
 @media (max-width: 760px) {
   .pick { flex-direction: column; align-items: flex-start; gap: 30px; }
   .pickUnit { width: min(72vw, 300px); }
+}
+
+/* The screen dissolves into the shop floor at both edges rather than sitting
+   in a frame - it is a glimpse of the game, not a second card. */
+.pickShot { flex: 0 1 clamp(300px, 27vw, 440px); min-width: 0; margin: 0; }
+.pickShot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Faded on every edge, so it reads as a glimpse rather than a rectangle
+     someone pasted on the floor. Two linear masks intersected rather than one
+     radial: a radial wide enough not to crop the picture never reaches
+     transparent before the edge, and one tight enough to fade vignettes it. */
+  --fade-x: linear-gradient(90deg, transparent 0, #000 17%, #000 83%, transparent 100%);
+  --fade-y: linear-gradient(180deg, transparent 0, #000 15%, #000 85%, transparent 100%);
+  -webkit-mask-image: var(--fade-x), var(--fade-y);
+  -webkit-mask-composite: source-in;
+  mask-image: var(--fade-x), var(--fade-y);
+  mask-composite: intersect;
+}
+
+/* Under this there is no room for it beside the machine and the copy, and it
+   would only squeeze both. */
+@media (max-width: 1200px) {
+  .pickShot { display: none; }
 }

@@ -68,6 +68,12 @@ export function BitHub() {
             <p className={styles.pickText}>{pick.description}</p>
             <a className={styles.pickPlay} href={pick.href}>この一台で遊ぶ</a>
           </div>
+          {/* The game's own screen, photographed rather than embedded: a live
+              frame would pull the game's assets and run its animation loop on
+              a page nobody is playing on. */}
+          <p className={styles.pickShot}>
+            <img src={`/games/shots/${pick.id}.webp`} width={900} height={700} alt={`${pick.name}の画面`} loading="lazy" decoding="async" />
+          </p>
         </section>
       </section>
     </>

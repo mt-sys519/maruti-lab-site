@@ -1,0 +1,27 @@
+/* The window is the frame: no page padding, no scrollbars, the game shell
+   stretched to fill whatever size Chrome was opened at. */
+.stage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: hidden;
+}
+.stage :global(.bitGameShell) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* The photograph should be the game, not its furniture. The sound toggle,
+   the fullscreen button and the share row belong to the page the game lives
+   on, and only read as clutter shrunk down beside the machine of the day. */
+.stage :global(.bitGameControls),
+.stage :global(.bitSound),
+.stage :global(.bitShare),
+.stage :global(.bitShareStatus),
+.stage :global(.bitPakuShareRow),
+.stage :global(.bitPakuFullscreen) { display: none !important; }

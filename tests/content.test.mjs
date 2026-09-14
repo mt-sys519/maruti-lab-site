@@ -158,3 +158,16 @@ test("the COLOR RE:FINE pages carry the tool, the help and the notices", async (
   assert.match(licenses, /Apache License 2\.0/);
   assert.match(licenses, /MIT License/);
 });
+
+test("every MarutiBit game has a screen photographed for the machine of the day", async () => {
+  const games = await readFile(new URL("../app/bit/games.ts", import.meta.url), "utf8");
+  const ids = [...games.matchAll(/\{ id: "([a-z-]+)"/g)].map((match) => match[1]);
+  assert.ok(ids.length >= 8, "the catalog should have been parsed");
+  const shots = await readdir(new URL("../public/games/shots/", import.meta.url));
+  for (const id of ids) {
+    // A new game added to the catalog without running
+    // scripts/capture-game-shots.mjs would show a broken image on /bit on
+    // whichever day the date happened to pick it.
+    assert.ok(shots.includes(`${id}.webp`), `missing screen shot for ${id}`);
+  }
+});
