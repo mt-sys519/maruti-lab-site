@@ -20,6 +20,7 @@ export function GameUnit({ game, className, ...rest }: {
       draggable={false}
       {...rest}
     >
+      {"tag" in game && <b className={styles.tag}>{game.tag}</b>}
       <span className={styles.bezel}>
         <span className={styles.screen}>
           <span className={styles.serial}>{game.number}</span>

@@ -88,6 +88,9 @@ test("renders the MarutiBit series index", async () => {
   // random, so it has to be in the server's HTML - and the machine on show
   // has to be the one the button opens.
   assert.match(html, /今日の一台/);
+  // A shelf tag comes from the catalog row, so a game carrying one has to
+  // reach the page without anything else being touched.
+  assert.match(html, />NEW</);
   const pick = html.match(/<section[^>]*bit-pick-title[\s\S]*?<\/section>/);
   assert.ok(pick, "the page should render the machine of the day");
   const picked = [...pick[0].matchAll(/href="(\/bit\/[a-z-]+)"/g)].map((match) => match[1]);

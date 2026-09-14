@@ -4,7 +4,7 @@
   gap: clamp(14px, 1.4vw, 22px);
   /* Vertical room for the lift and the cast shadow. No horizontal padding:
      a unit's offsetLeft has to be a scroll position the snap agrees with. */
-  padding: 16px 0 26px;
+  padding: 24px 0 26px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
