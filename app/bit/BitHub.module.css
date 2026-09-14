@@ -38,7 +38,7 @@
 .hero div > a:hover, .hero div > a:focus-visible { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #232323; outline: 0; }
 .catalog {
   position: relative;
-  padding: clamp(26px, 3vw, 44px) clamp(20px, 6vw, 90px) clamp(64px, 7vw, 100px);
+  padding: clamp(26px, 3vw, 44px) clamp(20px, 6vw, 90px) clamp(80px, 14vw, 260px);
   background-color: #F5EFE1;
   background-image: linear-gradient(rgba(24, 61, 85, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(24, 61, 85, .06) 1px, transparent 1px);
   background-size: 32px 32px, 32px 32px;
@@ -138,7 +138,7 @@
 }
 
 /* The machine of the day, standing on the floor the fold used to leave bare. */
-.pick { position: relative; z-index: 1; margin-top: clamp(40px, 5vw, 76px); display: flex; align-items: center; gap: clamp(26px, 4vw, 56px); }
+.pick { position: relative; z-index: 1; margin-top: clamp(56px, 14vw, 260px); display: flex; align-items: center; gap: clamp(26px, 4vw, 56px); }
 .pickUnit, .pickCopy { position: relative; z-index: 1; }
 .pickUnit { flex: 0 0 auto; width: clamp(224px, 21vw, 292px); }
 .pickCopy { min-width: 0; }
@@ -164,13 +164,10 @@
    left, and untouchable so it never swallows a click meant for the copy. */
 .pickShot {
   position: absolute;
-  /* Pinned to the section's own top and bottom. Centred on it instead, the
-     picture was taller than the section and reached up over whatever was
-     above - the grid of eight, once the list is opened. */
-  top: 0;
-  bottom: 0;
+  top: 50%;
   right: calc(-1 * clamp(20px, 6vw, 90px));
-  width: min(74%, 1000px);
+  transform: translateY(-50%);
+  width: min(62vw, 1000px);
   margin: 0;
   z-index: 0;
   pointer-events: none;
@@ -178,9 +175,7 @@
 .pickShot img {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 58% center;
+  height: auto;
   /* Solid where the screen leaves the page, gone by the time it reaches the
      copy. The top and bottom get a shorter fade of their own so the picture
      has no hard horizontal edges either. */
