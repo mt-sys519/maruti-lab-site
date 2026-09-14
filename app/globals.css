@@ -201,7 +201,15 @@ footer{padding-top:34px;padding-bottom:34px}
 .postDocument h1{font-size:clamp(30px,4.4vw,50px);font-weight:400;line-height:1.5;margin:0 0 26px}
 .postMetaHead{margin:0 0 46px;padding-bottom:34px;border-bottom:1px solid var(--line)}
 .postMetaHead i{margin-left:0}
-.postBody{font-size:15px;line-height:2.15;color:#333937}
+/* The site sets Yu Gothic UI everywhere, which is the interface cut of Yu
+   Gothic - thin and tight, drawn for buttons and menus. It is fine on the
+   poster-like pages, and hard going for three thousand characters of prose
+   on Windows, where it is what everyone gets. No Japanese webfont is
+   loaded, so the reading face here is chosen from what people already have:
+   Hiragino on a Mac, BIZ UDPGothic on Windows 10 and 11, which was drawn to
+   be read. Only the body of an article changes; the headings and navigation
+   keep the face they were designed with. */
+.postBody{font-family:"Hiragino Kaku Gothic ProN","BIZ UDPGothic","Noto Sans JP","Yu Gothic",sans-serif;font-size:16.5px;line-height:1.95;color:#333937}
 .postBody h2{position:relative;font-size:20px;font-weight:500;line-height:1.7;margin:64px 0 20px;padding-top:30px;border-top:1px solid var(--line);color:var(--ink)}
 .postBody h2:before{content:"";position:absolute;top:-2px;left:0;width:46px;height:3px;background:var(--note-accent)}
 .postBody h3{font-size:16px;font-weight:600;line-height:1.7;margin:42px 0 14px;color:var(--ink)}
