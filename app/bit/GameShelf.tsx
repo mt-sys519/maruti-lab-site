@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { CSSProperties } from "react";
 import { bitGames } from "./games";
-import { GameMark } from "./GameMark";
+import { GameUnit } from "./GameUnit";
 import styles from "./GameShelf.module.css";
 
 // Past this many pixels a pointer gesture is a drag, not a click, and the
@@ -117,32 +116,13 @@ export function GameShelf({ className }: { className?: string }) {
     >
       {COPIES.flatMap((copy) =>
         bitGames.map((game) => (
-          <a
-            href={game.href}
+          <GameUnit
+            game={game}
             key={`${copy}-${game.id}`}
+            className={styles.railUnit}
             aria-hidden={copy === 1 ? undefined : true}
             tabIndex={copy === 1 ? undefined : -1}
-            className={styles.unit}
-            style={{ "--pkg-color": game.color } as CSSProperties}
-            draggable={false}
-          >
-            <span className={styles.bezel}>
-              <span className={styles.screen}>
-                <span className={styles.serial}>{game.number}</span>
-                <span className={styles.visual}>
-                  <GameMark id={game.id} />
-                </span>
-              </span>
-              <span className={styles.plate}>
-                <strong className={styles.name}>{game.name}</strong>
-                <small className={styles.kind}>{game.kind}</small>
-              </span>
-            </span>
-            <span className={styles.controls} aria-hidden="true">
-              <i className={styles.pad} />
-              <i className={styles.buttons} />
-            </span>
-          </a>
+          />
         ))
       )}
     </div>

@@ -6,8 +6,12 @@ import styles from "./BitHub.module.css";
 import { GameMark } from "./GameMark";
 import { GameAmbience } from "./GameAmbience";
 import { GameShelf } from "./GameShelf";
+import { GameUnit } from "./GameUnit";
+import { pickOfTheDay } from "./pickOfTheDay";
 
 export function BitHub() {
+  const pick = pickOfTheDay();
+
   function playRandom(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
     window.location.href = bitGames[Math.floor(Math.random() * bitGames.length)].href;
@@ -51,6 +55,20 @@ export function BitHub() {
             ))}
           </div>
         </details>
+
+        {/* The fold left a stretch of empty floor under it. One machine
+            picked from the date fills it with something to actually open. */}
+        <section className={styles.pick} aria-labelledby="bit-pick-title">
+          <GameUnit game={pick} className={styles.pickUnit} />
+          <div className={styles.pickCopy}>
+            <p className={styles.pickEyebrow}>TODAY'S MACHINE</p>
+            <h2 id="bit-pick-title" className={styles.pickTitle}>今日の一台</h2>
+            <p className={styles.pickKana}>‐{pick.kana}‐</p>
+            <p className={styles.pickName}>{pick.name}</p>
+            <p className={styles.pickText}>{pick.description}</p>
+            <a className={styles.pickPlay} href={pick.href}>この一台で遊ぶ</a>
+          </div>
+        </section>
       </section>
     </>
   );

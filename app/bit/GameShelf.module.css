@@ -1,6 +1,4 @@
-/* Each game is its own machine, not a tile in a grid. The shell takes the
-   game's package color; the name sits on the dark bezel, where light text is
-   readable whatever color the shell happens to be. */
+/* The units stand on the page itself - there is no frame holding them. */
 .shelf {
   display: flex;
   gap: clamp(14px, 1.4vw, 22px);
@@ -16,63 +14,16 @@
 .shelf::-webkit-scrollbar { display: none; }
 .shelf:active { cursor: grabbing; }
 
-.unit {
-  flex: 0 0 clamp(216px, 17vw, 300px);
-  scroll-snap-align: start;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(15px, 1.5vw, 21px);
-  /* A chin at the bottom, thicker than the sides. Without it the controls sit
-     on the edge of the shell and the thing looks impossible to hold. */
-  padding: clamp(16px, 1.6vw, 22px) clamp(16px, 1.6vw, 22px) clamp(26px, 2.5vw, 34px);
-  background: var(--pkg-color, #FF7A5C);
-  /* The one asymmetric corner is what makes it read as a handheld rather
-     than a rounded rectangle. */
-  border-radius: 17px 17px 46px 17px;
-  border: 3px solid #232323;
-  /* Same black line and same solid drop as the ランダムで遊ぶ button. */
-  box-shadow: 5px 5px 0 #232323;
-  transition: transform .18s ease, box-shadow .18s ease;
-  -webkit-user-select: none;
-  user-select: none;
-}
-.unit:hover, .unit:focus-visible { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 #232323; outline: 0; }
-
-.bezel { display: flex; flex-direction: column; gap: 10px; padding: 13px 13px 15px; background: #232323; border-radius: 10px 10px 7px 7px; color: #f1eee5; }
-/* The screen follows the shell, not the window. Fixing its height in vh made
-   the machine go landscape on a wide desktop and squat on a short one. */
-.screen { position: relative; aspect-ratio: 5 / 4; display: grid; place-items: center; padding: 6px; background: #e9e4d7; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(35, 35, 35, .25); }
-.serial { position: absolute; top: 6px; left: 8px; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: var(--pkg-color, #FF7A5C); }
-.plate { display: flex; flex-direction: column; gap: 4px; }
-.name { overflow-wrap: anywhere; font: 800 clamp(17px, 1.4vw, 23px)/1.04 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; }
-.kind { font: 500 9px/1.5 "Yu Gothic UI", sans-serif; letter-spacing: .14em; color: #a8b2ad; }
-
-.visual { --mark-size: clamp(58px, 6.2vw, 92px); --mark-type-size: clamp(19px, 1.9vw, 30px); position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--pkg-color, #232323); }
-
-.controls { display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(6px, 0.8vw, 11px); }
-.pad { position: relative; width: 30px; height: 30px; }
-.pad::before, .pad::after { content: ""; position: absolute; background: rgba(35, 35, 35, .5); border-radius: 2px; }
-.pad::before { top: 10px; left: 0; width: 30px; height: 10px; }
-.pad::after { top: 0; left: 10px; width: 10px; height: 30px; }
-.buttons { position: relative; width: 46px; height: 33px; }
-.buttons::before, .buttons::after { content: ""; position: absolute; width: 17px; height: 17px; border-radius: 50%; background: rgba(35, 35, 35, .5); }
-.buttons::before { top: 0; right: 0; }
-.buttons::after { top: 16px; right: 29px; }
+/* Only the sizing and the snapping belong to the rail; what a unit looks
+   like lives with the unit, so the machine of the day matches it. */
+.railUnit { flex: 0 0 clamp(216px, 17vw, 300px); scroll-snap-align: start; }
 
 @media (max-width: 640px) {
-  .unit { flex-basis: 72vw; }
+  .railUnit { flex-basis: 72vw; }
 }
 
 /* Touch already has its own gesture and its own momentum, so the shelf only
-   has to decide where to stop. A sticky :hover on a tapped unit would leave
-   it lifted after the reader had moved on. */
+   has to decide where to stop. */
 @media (hover: none) {
   .shelf { scroll-snap-type: x mandatory; cursor: auto; }
-  .unit:hover { transform: none; box-shadow: 5px 5px 0 #232323; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .unit { transition: box-shadow .18s ease; }
-  .unit:hover, .unit:focus-visible { transform: none; box-shadow: 8px 8px 0 #232323; }
 }

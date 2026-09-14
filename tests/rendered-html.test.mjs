@@ -84,6 +84,15 @@ test("renders the MarutiBit series index", async () => {
   // The full list is folded away behind a summary, so the page should open
   // with the shelf rather than with the grid.
   assert.match(html, /ぜんぶ一覧で見る/);
+  // The machine of the day is derived from the date rather than picked at
+  // random, so it has to be in the server's HTML - and the machine on show
+  // has to be the one the button opens.
+  assert.match(html, /今日の一台/);
+  const pick = html.match(/<section[^>]*bit-pick-title[\s\S]*?<\/section>/);
+  assert.ok(pick, "the page should render the machine of the day");
+  const picked = [...pick[0].matchAll(/href="(\/bit\/[a-z-]+)"/g)].map((match) => match[1]);
+  assert.equal(picked.length, 2, "the machine and its play link");
+  assert.equal(picked[0], picked[1], "both should point at the same game");
   assert.match(html, /class="brand" href="\/" aria-label="Maruti Lab トップ"/);
   assert.match(html, /class="brandMark"[^>]*>\s*<svg/);
   assert.doesNotMatch(html, /id="bit-hub-title"><span>Maruti<\/span>/);
