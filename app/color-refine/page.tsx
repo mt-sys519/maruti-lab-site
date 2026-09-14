@@ -84,7 +84,7 @@ export default function ColorRefinePage() {
           <span>COLOR RE:FINE / READY</span>
           <a href="/color-refine-app/index.html" target="_blank" rel="noreferrer">大きな画面で開く</a>
         </div>
-        <iframe className={`${styles.frame} ${styles.frameTall}`} src="/color-refine-app/index.html" title="COLOR RE:FINE" loading="lazy" />
+        <iframe className={styles.frame} src="/color-refine-app/index.html" title="COLOR RE:FINE" loading="lazy" />
       </section>
 
       <section className={styles.guide} id="guide" aria-labelledby="cr-guide-title">

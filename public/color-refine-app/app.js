@@ -907,7 +907,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.clearTimeout(strengthRenderTimer);
                 strengthRenderTimer = window.setTimeout(rerenderCurrentColor, 180);
             });
-            strengthInput.addEventListener("change", rerenderCurrentColor);
+            // Not `addEventListener("change", rerenderCurrentColor)`: the
+            // listener is called with the event, which lands in
+            // `forcedViewMode` and is truthy, so the view mode became an
+            // Event object. It then matched neither "original" nor "color"
+            // and fell through to the comparison view at 50%, which is why
+            // letting go of the slider split the photo down the middle.
+            strengthInput.addEventListener("change", () => rerenderCurrentColor());
             strengthHead.append(strengthLabel, strengthValue);
             strengthWrap.append(strengthHead, strengthInput);
             referenceGroup.appendChild(strengthWrap);

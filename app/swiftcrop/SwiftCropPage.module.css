@@ -77,13 +77,6 @@
   border: 1px solid var(--line);
   background: #fff;
 }
-/* COLOR RE:FINE's own hero is nearly a screen tall on its own - the sample
-   comparison and the note beneath it - so at the shared height the tool itself
-   would start below the bottom edge of the frame and have to be found by
-   scrolling inside it. The frame is taller here for that reason only. */
-.frameTall {
-  height: min(1960px, 210vh);
-}
 .guide {
   padding: clamp(70px, 9vw, 120px) clamp(24px, 5vw, 76px);
   border-top: 1px solid var(--line);
@@ -189,9 +182,6 @@
   }
   .frame {
     height: min(1400px, 190vh);
-  }
-  .frameTall {
-    height: min(2100px, 230vh);
   }
 }
 
