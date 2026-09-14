@@ -1960,7 +1960,7 @@ export function NeonBreakGame() {
         const dx = cue.x - drag.x,
           dy = cue.y - drag.y,
           m = Math.hypot(dx, dy),
-          power = Math.min(m * 0.18, MAX_SHOT),
+          power = Math.min(pullReach(cue, drag) * 0.18, MAX_SHOT),
           pull = Math.min(power * 1.8, 28);
         if (m > 2) {
           const ang = keyboardRef.current
@@ -2846,6 +2846,15 @@ export function NeonBreakGame() {
   // comes from the raw drag length, so a soft shot can be aimed as finely as
   // a hard one - which was the other half of the problem.
   const AIM_GAIN = 0.34;
+  // Full power needs about 390 screen pixels of drag. With the cue ball on a
+  // rail you are pulling towards the edge of the window and simply run out of
+  // room, so anything dragged past the felt counts triple: the pull feels the
+  // same everywhere it always did, and the corner it was impossible to shoot
+  // hard from now reaches the top. Shared by the gauge, the guide and the
+  // shot itself, which otherwise disagree about what 100% means.
+  const pullReach = (cue: Point, pt: Point) =>
+    Math.hypot(cue.x - pt.x, cue.y - pt.y) +
+    (Math.max(0, -pt.x, pt.x - W) + Math.max(0, -pt.y, pt.y - H)) * 2;
   // Which step of the pull last made a sound, so the zips fire as the cue is
   // drawn further back and not on every pointer move.
   const pullStepRef = useRef(-1);
@@ -2861,15 +2870,19 @@ export function NeonBreakGame() {
       aimRef.current = cur + d * AIM_GAIN;
     }
     dragRef.current = pt;
-    const norm = Math.min(Math.hypot(cue.x - pt.x, cue.y - pt.y) * 0.18, MAX_SHOT) / MAX_SHOT;
+    const norm = Math.min(pullReach(cue, pt) * 0.18, MAX_SHOT) / MAX_SHOT;
     setShotPower(Math.round(norm * 100));
-    // Eight steps across the pull. Only ever upward: easing off is not a
-    // wind-up, and ticking on the way back down would rattle.
+    // Eight steps across the pull. Only ever upward - easing off is not a
+    // wind-up - and every step that was crossed sounds, not just the one
+    // landed on: a quick draw jumps several at once, and skipping them was
+    // what made a fast pull a single tick.
     const step = Math.floor(norm * 8);
-    if (step > pullStepRef.current) {
-      pullStepRef.current = step;
-      audioEngineRef.current?.pullTick(norm, powerArmedRef.current);
+    if (step > pullStepRef.current && powerArmedRef.current) {
+      for (let i = pullStepRef.current + 1; i <= step; i++) {
+        audioEngineRef.current?.pullTick(i / 8, true);
+      }
     }
+    if (step > pullStepRef.current) pullStepRef.current = step;
   };
   const cancelAim = () => {
     pullStepRef.current = -1;
@@ -2958,7 +2971,7 @@ export function NeonBreakGame() {
     }
     const dx = cue.x - p.x,
       dy = cue.y - p.y,
-      power = Math.min(Math.hypot(dx, dy) * 0.18, MAX_SHOT);
+      power = Math.min(pullReach(cue, p) * 0.18, MAX_SHOT);
     fireShot(aimRef.current ?? Math.atan2(dy, dx), power);
   };
   const handleKey = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
@@ -3013,10 +3026,12 @@ export function NeonBreakGame() {
     const norm = keyboardPowerRef.current / MAX_SHOT;
     setShotPower(Math.round(norm * 100));
     const step = Math.floor(norm * 8);
-    if (step > pullStepRef.current) {
-      pullStepRef.current = step;
-      audioEngineRef.current?.pullTick(norm, powerArmedRef.current);
+    if (step > pullStepRef.current && powerArmedRef.current) {
+      for (let i = pullStepRef.current + 1; i <= step; i++) {
+        audioEngineRef.current?.pullTick(i / 8, true);
+      }
     }
+    if (step > pullStepRef.current) pullStepRef.current = step;
   };
   const armPower = () => {
     if (
