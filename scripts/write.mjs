@@ -49,6 +49,7 @@ async function listPosts() {
         slug: name.replace(/\.md$/, ""),
         title: data.title || name,
         date: data.date || "",
+        updated: data.updated || "",
         // Stored as [a, b]; the field edits the bare list, and savePost puts
         // the brackets back. Handing over the raw value doubled them.
         tags: (data.tags || "").replace(/^\[|\]$/g, ""),
@@ -61,23 +62,41 @@ async function listPosts() {
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
+// Everything this desk has a field for. Anything else in the front matter was
+// put there by something else - image: by the OG card script, slug: by a post
+// that was renamed without giving up its URL - and saving used to wipe it,
+// because the file was rebuilt from the fields alone.
+const EDITED_KEYS = new Set(["title", "date", "updated", "description", "tags", "draft"]);
+
 async function savePost(post) {
   const slug = safeSlug(post.slug);
   if (!slug) throw new Error("ファイル名（slug）を入れてください");
   await mkdir(postsDir, { recursive: true });
+  const file = join(postsDir, `${slug}.md`);
+  let kept = [];
+  if (existsSync(file)) {
+    const { data } = parse(await readFile(file, "utf8"));
+    kept = Object.entries(data)
+      .filter(([key]) => !EDITED_KEYS.has(key))
+      .map(([key, value]) => `${key}: ${value}`);
+  }
   const front = [
     "---",
     `title: ${post.title || slug}`,
     `date: ${post.date || today()}`,
+    // Only worth recording once it differs from the publication date.
+    post.updated && post.updated !== (post.date || today())
+      ? `updated: ${post.updated}`
+      : null,
     post.description ? `description: ${post.description}` : null,
     post.tags ? `tags: [${post.tags}]` : null,
     post.draft ? "draft: true" : null,
+    ...kept,
     "---",
     "",
   ]
     .filter((line) => line !== null)
     .join("\n");
-  const file = join(postsDir, `${slug}.md`);
   await writeFile(file, `${front}${post.body.replace(/\r\n/g, "\n").trim()}\n`, "utf8");
   return { slug, file };
 }
@@ -184,6 +203,7 @@ textarea:focus{outline:none}
     <div class="row">
       <label>ファイル名 <input id="slug" type="text" placeholder="browser-only" size="18"></label>
       <label>日付 <input id="date" type="text" size="10"></label>
+      <label>更新日 <input id="updated" type="text" size="10" placeholder="直したら"></label>
       <label><input id="draft" type="checkbox" checked> 下書き</label>
     </div>
     <div class="row">
@@ -203,7 +223,7 @@ textarea:focus{outline:none}
 <div class="preview" id="preview"></div>
 <script type="module">
 const $ = (id) => document.getElementById(id);
-const fields = ["title","slug","date","tags","description"];
+const fields = ["title","slug","date","updated","tags","description"];
 let current = null, timer = null;
 
 const today = () => {
@@ -231,6 +251,7 @@ function open(post) {
   $("title").value = post.title === post.slug + ".md" ? "" : post.title;
   $("slug").value = post.slug;
   $("date").value = post.date || today();
+  $("updated").value = post.updated || "";
   $("tags").value = post.tags;
   $("description").value = post.description;
   $("draft").checked = post.draft;

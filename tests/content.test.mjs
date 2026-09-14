@@ -171,3 +171,74 @@ test("every MarutiBit game has a screen photographed for the machine of the day"
     assert.ok(shots.includes(`${id}.webp`), `missing screen shot for ${id}`);
   }
 });
+
+// The note section is about to go from three articles to a hundred, and what
+// is cheap to change now is expensive to change then. The URL a post answers
+// on, the dates it reports and the way the index is paged are pinned here
+// rather than left to be discovered at article ninety.
+test("a post can be renamed without moving, and updated: stays honest", async () => {
+  for (const post of await readPosts()) {
+    // A post called page.md would sit under /blog/page/2's route.
+    assert.notEqual(post.slug, "page", "page.md is a reserved file name");
+    assert.notEqual(post.data.slug, "page", post.slug + " claims a reserved slug");
+    if (post.data.updated === undefined) continue;
+    assert.match(
+      post.data.updated,
+      /^\d{4}-\d{2}-\d{2}$/,
+      post.slug + ": updated must be YYYY-MM-DD",
+    );
+    assert.ok(
+      post.data.updated >= post.data.date,
+      post.slug + ": updated is earlier than the date it was published",
+    );
+  }
+});
+
+test("an article says when it was published and when it last changed", async () => {
+  for (const post of await published()) {
+    const slug = post.data.slug || post.slug;
+    const changed = post.data.updated || post.data.date;
+    const html = await (await render(`/blog/${slug}`)).text();
+    assert.match(html, /"@type":"BlogPosting"/, `${post.slug} carries no article schema`);
+    assert.ok(
+      html.includes(`"datePublished":"${post.data.date}"`),
+      `${post.slug} reports the wrong publication date`,
+    );
+    // The whole point of updated: - an edited post that still announced its
+    // publication date would be telling Google to ignore the edit.
+    assert.ok(
+      html.includes(`"dateModified":"${changed}"`),
+      `${post.slug} reports the wrong modified date`,
+    );
+    assert.ok(
+      html.includes(`<link rel="canonical" href="https://marutilab.com/blog/${slug}">`),
+      `${post.slug} has no canonical URL`,
+    );
+  }
+});
+
+test("the sitemap reports the last change, not the first publication", async () => {
+  const xml = await (await render("/sitemap.xml")).text();
+  for (const post of await published()) {
+    const slug = post.data.slug || post.slug;
+    const changed = post.data.updated || post.data.date;
+    assert.ok(
+      xml.includes(`<loc>https://marutilab.com/blog/${slug}</loc><lastmod>${changed}</lastmod>`),
+      `${post.slug} is missing or stale in the sitemap`,
+    );
+  }
+});
+
+test("pages of the index that do not exist are kept out of search", async () => {
+  // Page one is /blog and always will be; /blog/page/2 onwards is the rest.
+  const first = await render("/blog");
+  assert.equal(first.status, 200);
+  assert.ok((await first.text()).includes('href="/blog/'));
+
+  const beyond = await (await render("/blog/page/999")).text();
+  assert.match(beyond, /そのページはありません/);
+  assert.match(beyond, /content="noindex/);
+  // Same for a slug nobody wrote: it answers, but it does not invite Google.
+  const missing = await (await render("/blog/this-slug-does-not-exist")).text();
+  assert.match(missing, /content="noindex/);
+});

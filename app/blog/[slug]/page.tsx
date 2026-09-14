@@ -1,13 +1,16 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
-import { formatDate, postBySlug, posts } from "../posts";
+import { formatDate, lastChanged, postBySlug, posts } from "../posts";
 import { SiteFooter } from "../../SiteFooter";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = postBySlug((await params).slug);
-  if (!post) return { title: "記事が見つかりません" };
+  // An unknown slug still answers with a page rather than a hard 404, so it is
+  // told not to be indexed instead of quietly collecting empty results.
+  if (!post)
+    return { title: "記事が見つかりません", robots: { index: false, follow: true } };
   return {
     title: post.title,
     description: post.description,
@@ -17,6 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: post.title,
       description: post.description,
       publishedTime: post.date,
+      modifiedTime: lastChanged(post),
       images: post.image
         ? [{ url: `https://marutilab.com${post.image}`, width: 1200, height: 630 }]
         : undefined,
@@ -50,6 +54,23 @@ export default async function BlogPost({ params }: Props) {
     );
   }
   const others = posts.filter((other) => other.slug !== post.slug).slice(0, 3);
+  // Written out here rather than left to the reader: a post that says when it
+  // was published and when it was last touched is the difference between an
+  // article that has been kept and one that has merely survived.
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: lastChanged(post),
+    inLanguage: "ja",
+    mainEntityOfPage: `https://marutilab.com/blog/${post.slug}`,
+    author: { "@type": "Person", name: "Maruti Lab" },
+    publisher: { "@type": "Organization", name: "Maruti Lab" },
+    ...(post.image ? { image: `https://marutilab.com${post.image}` } : {}),
+    ...(post.tags.length ? { keywords: post.tags.join(", ") } : {}),
+  };
   return (
     <main className="legalPage notePage">
       <header className="legalHeader">
@@ -58,6 +79,10 @@ export default async function BlogPost({ params }: Props) {
       </header>
       <div className="noteSheet">
       <article className="postDocument">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
         <p className="eyebrow">
           LABNOTE / <time dateTime={post.date}>{formatDate(post.date)}</time>
         </p>
@@ -67,6 +92,11 @@ export default async function BlogPost({ params }: Props) {
             <b key={tag}>{tag}</b>
           ))}
           <i>約{post.minutes}分</i>
+          {post.updated && (
+            <i>
+              <time dateTime={post.updated}>{formatDate(post.updated)}</time>に更新
+            </i>
+          )}
         </p>
         {/* The body is Markdown written by the site owner and rendered at
             build time, so there is no third-party HTML in here. */}

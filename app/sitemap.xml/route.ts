@@ -1,4 +1,4 @@
-import { posts } from "../blog/posts";
+import { lastChanged, pageCount, pagePath, posts } from "../blog/posts";
 
 // The sitemap used to be a hand-maintained file in public/. Notes are added by
 // dropping a Markdown file into content/posts/, and an article Google never
@@ -33,9 +33,16 @@ const pages = [
 export function GET() {
   const entries = [
     ...pages.map((path) => `  <url><loc>https://marutilab.com${path}</loc></url>`),
+    // Page one is already in the list above as /blog.
+    ...Array.from({ length: pageCount - 1 }, (_, i) => pagePath(i + 2)).map(
+      (path) => `  <url><loc>https://marutilab.com${path}</loc></url>`,
+    ),
     ...posts.map(
       (post) =>
-        `  <url><loc>https://marutilab.com/blog/${post.slug}</loc><lastmod>${post.date}</lastmod></url>`,
+        // lastmod is when the page last changed, not when it first appeared -
+        // an edited post that still reported its publication date would be
+        // telling Google to ignore the edit.
+        `  <url><loc>https://marutilab.com/blog/${post.slug}</loc><lastmod>${lastChanged(post)}</lastmod></url>`,
     ),
   ];
   return new Response(

@@ -3,7 +3,10 @@ import { marked } from "marked";
 export type Post = {
   slug: string;
   title: string;
+  /** Published. Never changes once a post is live. */
   date: string;
+  /** Last meaningful edit, if there has been one. Absent on untouched posts. */
+  updated?: string;
   description: string;
   tags: string[];
   draft: boolean;
@@ -57,6 +60,7 @@ function build(path: string, source: string): Post {
     slug,
     title: data.title || slug,
     date: data.date || "",
+    updated: data.updated && data.updated !== data.date ? data.updated : undefined,
     description:
       data.description ||
       text.replace(/\s+/g, " ").trim().slice(0, 110),
@@ -79,6 +83,21 @@ export const posts = all.filter((post) => !post.draft);
 export const postBySlug = (slug: string) =>
   posts.find((post) => post.slug === slug);
 export const allTags = [...new Set(posts.flatMap((post) => post.tags))];
+
+/** What a search engine should treat as the age of the page. */
+export const lastChanged = (post: Post) => post.updated || post.date;
+
+// Paging is settled now rather than at a hundred posts, because the index is
+// the one part of the note section whose URLs are not already fixed: /blog is
+// page one and always will be, and the rest are /blog/page/2 onwards. A query
+// string would have worked too, but a path is what Google treats as a page in
+// its own right, and it cannot be dropped by a link that forgets it.
+export const PER_PAGE = 20;
+export const pageCount = Math.max(1, Math.ceil(posts.length / PER_PAGE));
+export const postsOnPage = (page: number) =>
+  posts.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+/** Page one lives at /blog, so /blog/page/1 is never a URL. */
+export const pagePath = (page: number) => (page <= 1 ? "/blog" : `/blog/page/${page}`);
 
 export const formatDate = (date: string) => {
   const [year, month, day] = date.split("-");
