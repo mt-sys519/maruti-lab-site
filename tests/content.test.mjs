@@ -77,8 +77,8 @@ test("every post carries the metadata the article page needs", async () => {
   for (const post of await readPosts()) {
     assert.match(
       post.data.date ?? "",
-      /^\d{4}-\d{2}-\d{2}$/,
-      `${post.slug} needs a date: YYYY-MM-DD`,
+      /^\d{4}-\d{2}-\d{2}( \d{2}:\d{2})?$/,
+      `${post.slug} needs a date: YYYY-MM-DD, optionally with HH:MM`,
     );
     assert.ok(post.data.title?.trim(), `${post.slug} needs a title`);
     assert.equal(
@@ -197,11 +197,13 @@ test("a post can be renamed without moving, and updated: stays honest", async ()
 test("an article says when it was published and when it last changed", async () => {
   for (const post of await published()) {
     const slug = post.data.slug || post.slug;
-    const changed = post.data.updated || post.data.date;
+    // The date may carry a time for ordering; only the day is ever published.
+    const day = post.data.date.slice(0, 10);
+    const changed = post.data.updated || day;
     const html = await (await render(`/blog/${slug}`)).text();
     assert.match(html, /"@type":"BlogPosting"/, `${post.slug} carries no article schema`);
     assert.ok(
-      html.includes(`"datePublished":"${post.data.date}"`),
+      html.includes(`"datePublished":"${day}"`),
       `${post.slug} reports the wrong publication date`,
     );
     // The whole point of updated: - an edited post that still announced its
@@ -221,7 +223,7 @@ test("the sitemap reports the last change, not the first publication", async () 
   const xml = await (await render("/sitemap.xml")).text();
   for (const post of await published()) {
     const slug = post.data.slug || post.slug;
-    const changed = post.data.updated || post.data.date;
+    const changed = post.data.updated || post.data.date.slice(0, 10);
     assert.ok(
       xml.includes(`<loc>https://marutilab.com/blog/${slug}</loc><lastmod>${changed}</lastmod>`),
       `${post.slug} is missing or stale in the sitemap`,
@@ -270,4 +272,17 @@ test("a note ends with a way to buy the coffee", async () => {
   assert.match(html, /class="supportSection"/, "the support band is missing");
   assert.match(html, /コーヒーを一杯/);
   assert.match(html, /href="https:\/\/buymeacoffee\.com\/marutilab"/);
+});
+
+// Two notes went out on one day and the older one sat on top, because the
+// comparator returned -1 for a tie - which is not an ordering - and the list
+// fell back to the file names, backwards.
+test("the index runs newest first, and a time settles a shared day", async () => {
+  const notes = (await published())
+    .map((post) => ({ slug: post.data.slug || post.slug, stamp: post.data.date }))
+    .sort((a, b) => (a.stamp < b.stamp ? 1 : a.stamp > b.stamp ? -1 : 0));
+  const html = await (await render("/blog")).text();
+  const list = html.slice(html.indexOf('class="postList"'));
+  const shown = [...list.matchAll(/href="\/blog\/([a-z0-9-]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(shown.slice(0, notes.length), notes.map((n) => n.slug));
 });

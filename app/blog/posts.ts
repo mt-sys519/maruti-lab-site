@@ -3,8 +3,10 @@ import { marked } from "marked";
 export type Post = {
   slug: string;
   title: string;
-  /** Published. Never changes once a post is live. */
+  /** Published, as a day. Never changes once a post is live. */
   date: string;
+  /** The same date as written, keeping any time on it. Ordering only. */
+  stamp: string;
   /** Last meaningful edit, if there has been one. Absent on untouched posts. */
   updated?: string;
   description: string;
@@ -56,11 +58,17 @@ function build(path: string, source: string): Post {
   const { data, body } = parseFrontMatter(source);
   const slug = data.slug || path.split("/").pop()!.replace(/\.md$/, "");
   const text = body.replace(/[#>*`_\-\[\]()!]/g, "");
+  // `date:` may carry a time - 2026-09-15 21:30 - for a day that gets more
+  // than one note. Everything shown or published uses the day; only the
+  // ordering looks at the time.
+  const stamp = (data.date || "").trim();
+  const day = stamp.slice(0, 10);
   return {
     slug,
     title: data.title || slug,
-    date: data.date || "",
-    updated: data.updated && data.updated !== data.date ? data.updated : undefined,
+    date: day,
+    stamp,
+    updated: data.updated && data.updated !== day ? data.updated : undefined,
     description:
       data.description ||
       text.replace(/\s+/g, " ").trim().slice(0, 110),
@@ -74,9 +82,15 @@ function build(path: string, source: string): Post {
   };
 }
 
+// Newest first. The comparator has to be able to say "these are the same":
+// returning -1 for a tie, as this once did, is not an ordering at all, and two
+// notes published on one day came out in whatever order fell out of it - which
+// was their file names, backwards. Ties now keep the order they were read in,
+// and a note that needs to sit above another from the same day says so with a
+// time.
 const all = Object.entries(files)
   .map(([path, source]) => build(path, source))
-  .sort((a, b) => (a.date < b.date ? 1 : -1));
+  .sort((a, b) => (a.stamp < b.stamp ? 1 : a.stamp > b.stamp ? -1 : 0));
 
 /** Everything published, newest first. Drafts never reach the site. */
 export const posts = all.filter((post) => !post.draft);

@@ -1,6 +1,6 @@
 ---
 title: 画像を外部に送信しないWebツールという選択。
-date: 2026-09-11
+date: 2026-09-11 04:50
 description: SwiftCrop、COLOR RE:FINE、YURAMEKI。3つとも、読み込んだデータを端末の外へ送りません。なぜそうしたのかという話です。
 tags: [制作記, SwiftCrop, COLOR RE:FINE, YURAMEKI]
 draft: false
