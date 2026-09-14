@@ -194,7 +194,13 @@
   .breakApp {
     position: relative;
     isolation: isolate;
+    /* clip, not hidden: a hidden box is still scrollable by script and by
+       focus, and clicking the fullscreen button scrolled this one 188px
+       sideways to keep the button in view - taking the panel off the left
+       edge, and leaving it there after fullscreen was exited. Nothing in
+       here is meant to scroll. hidden first for anything too old for clip. */
     overflow: hidden;
+    overflow: clip;
     /* No double-tap zoom. There is nothing to do during AIKA's turn, so an
        impatient second tap was zooming the page instead of being ignored. */
     touch-action: manipulation;
@@ -2018,4 +2024,50 @@
   .nbRoot .hudPower:not(:disabled):not(.armed) {
     animation: none;
   }
+}
+
+/* Fullscreen. The shell already lays itself out against the space it is
+   given, so it only has to be told to take the whole screen and to carry its
+   own background there: a fullscreened element is painted over a black
+   backdrop with nothing of the page behind it. .isPseudoFullscreen is the
+   CSS-only fallback for browsers that refuse the request (iOS Safari on
+   anything that is not a video) and has to say the same things with a fixed
+   position instead. */
+.nbRoot:fullscreen,
+.nbRoot:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: #04070f;
+}
+.nbRoot.isPseudoFullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: auto;
+  background: #04070f;
+}
+.nbRoot:fullscreen .breakApp,
+.nbRoot:-webkit-full-screen .breakApp,
+.nbRoot.isPseudoFullscreen .breakApp {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+/* The shell is capped at 1320px and left-aligned on purpose, so the operator
+   has room on the right. Fullscreen without lifting that cap only makes the
+   picture bigger and leaves the table the size it was, which is not what
+   anyone asks fullscreen for. The cap rises to the screen and she keeps
+   whatever is left over. */
+.nbRoot:fullscreen .breakTop,
+.nbRoot:fullscreen .breakLayout,
+.nbRoot:fullscreen .breakApp > footer,
+.nbRoot:-webkit-full-screen .breakTop,
+.nbRoot:-webkit-full-screen .breakLayout,
+.nbRoot:-webkit-full-screen .breakApp > footer,
+.nbRoot.isPseudoFullscreen .breakTop,
+.nbRoot.isPseudoFullscreen .breakLayout,
+.nbRoot.isPseudoFullscreen .breakApp > footer {
+  width: min(1800px, 100%);
 }

@@ -11,6 +11,8 @@ import {
 import {
   Crosshair,
   Loader2,
+  Maximize,
+  Minimize,
   RotateCcw,
   Shield,
   Volume2,
@@ -1257,6 +1259,14 @@ export function NeonBreakGame() {
   const sparksRef = useRef<Spark[]>([]);
   // Full-screen color pulse (power shot fire = cyan/pink, foul = red),
   // 0 = none, counts down to 0 each frame.
+  // The whole shell goes fullscreen, not just the canvas: the panel carries
+  // POWER SHOT, the next object and the status line, all of which you need
+  // mid-shot. It also keeps the top bar on screen, so the way out stays where
+  // it was rather than needing a second button drawn over the table.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+  const fullscreenActive = isFullscreen || pseudoFullscreen;
   const flashRef = useRef<{
     color: string;
     life: number;
@@ -1273,6 +1283,53 @@ export function NeonBreakGame() {
   // Bumped on the same moment, to let the panel play its one-shot: the gauge
   // flaring as it lands and the button popping once.
   const [chargedAt, setChargedAt] = useState(0);
+
+  useEffect(() => {
+    const onChange = () => {
+      const current =
+        document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
+      setIsFullscreen(current === rootRef.current);
+      if (current) setPseudoFullscreen(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, []);
+
+  // iOS Safari has no reliable Fullscreen API for non-video elements, and an
+  // embedded webview can refuse without saying so: the request resolves and
+  // nothing happens. So the fallback is not hung on the promise rejecting -
+  // it checks whether the element actually ended up fullscreen and drops to a
+  // CSS-only fullscreen if it did not. PAKU, LILT ORB and AVENUE only catch
+  // the rejection, which misses the silent case.
+  const toggleFullscreen = () => {
+    audioEngineRef.current?.uiClick();
+    if (pseudoFullscreen) {
+      setPseudoFullscreen(false);
+      return;
+    }
+    const root = rootRef.current;
+    if (!root) return;
+    if (document.fullscreenElement ?? document.webkitFullscreenElement) {
+      if (document.exitFullscreen) void document.exitFullscreen();
+      else document.webkitExitFullscreen?.();
+      return;
+    }
+    const request =
+      root.requestFullscreen?.bind(root) ?? root.webkitRequestFullscreen?.bind(root);
+    if (!request) {
+      setPseudoFullscreen(true);
+      return;
+    }
+    request().catch(() => setPseudoFullscreen(true));
+    window.setTimeout(() => {
+      const now = document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
+      if (now !== root) setPseudoFullscreen(true);
+    }, 250);
+  };
 
   const sync = () => {
     setPhase(phaseRef.current);
@@ -3105,7 +3162,7 @@ export function NeonBreakGame() {
                       : `最小番号は${target}番だね。そこから狙っていこうね。`,
           };
   return (
-    <div className="nbRoot">
+    <div className={pseudoFullscreen ? "nbRoot isPseudoFullscreen" : "nbRoot"} ref={rootRef}>
       <div data-mode={mode} className="breakApp">
         <div className={`operatorBackdrop mode-${mode}`} aria-hidden="true" />
         <div className="sceneShade" aria-hidden="true" />
@@ -3200,6 +3257,14 @@ export function NeonBreakGame() {
               aria-label="サウンド切替"
             >
               {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            </button>
+            <button
+              className="iconbtn"
+              onClick={toggleFullscreen}
+              aria-pressed={fullscreenActive}
+              aria-label="全画面表示を切り替え"
+            >
+              {fullscreenActive ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
             {mode === "stage" && phase !== "gameover" && (
               <button className="resetbtn" onClick={retryStage}>
