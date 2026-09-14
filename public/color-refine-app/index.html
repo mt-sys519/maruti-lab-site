@@ -60,6 +60,42 @@
   </div>
 
   <main id="main-content" class="app-shell">
+    <header class="hero">
+      <a class="brand brand-logo" href="./" aria-label="COLOR RE:FINE トップ">
+        <img src="logo.svg" width="560" height="112" alt="COLOR RE:FINE — AIで、思い出に色を。">
+      </a>
+      <h1>白黒写真に、もう一度、<br>あの日の色を。</h1>
+      <p class="lead">あなたの思い出に彩りを、無料で自然にカラー化。</p>
+      <div class="service-facts" aria-label="サービスの特徴">
+        <span>無料</span>
+        <span>ブラウザだけで完結</span>
+        <span>登録不要</span>
+        <span>写真を外へ送らない</span>
+      </div>
+
+      <figure class="hero-sample" aria-label="カラー化イメージ">
+        <figcaption>カラー化イメージ</figcaption>
+        <div id="sample-comparison" class="hero-sample-frame sample-comparison" data-start="64">
+          <img class="sample-comparison-image sample-original" src="catsample.jpg" width="1600" height="1066" alt="カラー化前の猫の白黒写真" loading="eager" decoding="async">
+          <div class="sample-color-layer">
+            <img class="sample-comparison-image sample-color" src="catsamplecolor.jpg" width="1600" height="1066" alt="COLOR RE:FINEでカラー化した猫の写真" loading="eager" decoding="async">
+          </div>
+          <span class="sample-comparison-label is-color">カラー化</span>
+          <span class="sample-comparison-label is-original">元画像</span>
+          <span class="sample-comparison-divider" aria-hidden="true"></span>
+          <button class="sample-comparison-handle" type="button" aria-label="サンプル画像の比較位置を調整" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64">
+            <span aria-hidden="true">‹</span><span aria-hidden="true">›</span>
+          </button>
+        </div>
+      </figure>
+
+      <aside class="memory-color-message" aria-labelledby="memory-color-title">
+        <h2 id="memory-color-title">あの日の空気まで、もう一度。</h2>
+        <p>同じ日に撮影したカラー写真があれば、その日の色合いを参考に、より自然な仕上がりを目指せます。</p>
+      </aside>
+
+    </header>
+
     
 
     <section id="upload-area" class="upload-area" aria-label="写真を選択">

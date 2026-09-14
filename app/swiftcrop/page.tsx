@@ -81,16 +81,8 @@ export default function SwiftCropPage() {
       <section className={styles.intro} aria-labelledby="swiftcrop-title">
         <p className={styles.kicker}>MARUTI LAB / BROWSER TOOL</p>
         <h1 id="swiftcrop-title">SwiftCrop</h1>
-        <p className={styles.lead}>
-          切り抜きも、リサイズも。<br />まとめて軽く、安心に。
-        </p>
         <p className={styles.sub}>
           複数の画像を同じ設定で切り抜き、大きさを揃え、形式を変えて保存します。読み込んだ画像はこのブラウザの中だけで処理され、どこへも送信されません。
-        </p>
-        <p className={styles.badges}>
-          <span>完全無料</span>
-          <span>登録不要</span>
-          <span>アップロードなし</span>
         </p>
       </section>
 

@@ -74,16 +74,8 @@ export default function ColorRefinePage() {
       <section className={styles.intro} aria-labelledby="cr-title">
         <p className={styles.kicker}>MARUTI LAB / BROWSER TOOL</p>
         <h1 id="cr-title">COLOR RE:FINE</h1>
-        <p className={styles.lead}>
-          白黒写真に、もう一度、<br />あの日の色を。
-        </p>
         <p className={styles.sub}>
           色を推測するAIモデルを、あなたの端末へ読み込んで動かします。写真のほうは、どこへも送りません。
-        </p>
-        <p className={styles.badges}>
-          <span>完全無料</span>
-          <span>登録不要</span>
-          <span>アップロードなし</span>
         </p>
       </section>
 
@@ -92,7 +84,7 @@ export default function ColorRefinePage() {
           <span>COLOR RE:FINE / READY</span>
           <a href="/color-refine-app/index.html" target="_blank" rel="noreferrer">大きな画面で開く</a>
         </div>
-        <iframe className={styles.frame} src="/color-refine-app/index.html" title="COLOR RE:FINE" loading="lazy" />
+        <iframe className={`${styles.frame} ${styles.frameTall}`} src="/color-refine-app/index.html" title="COLOR RE:FINE" loading="lazy" />
       </section>
 
       <section className={styles.guide} id="guide" aria-labelledby="cr-guide-title">
