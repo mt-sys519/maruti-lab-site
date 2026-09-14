@@ -245,3 +245,17 @@ test("pages of the index that do not exist answer with a real 404", async () => 
   assert.ok(one.status === 301 || one.status === 308, "page 1 should redirect");
   assert.equal(one.headers.get("location"), "/blog");
 });
+
+// The application is in review, and the two tools came from domains that
+// carried their own advertising. COLOR RE:FINE still loaded the AdSense script
+// and drew an empty "ADVERTISEMENT" box above the fold months after the move.
+test("the embedded tools serve no advertising of their own", async () => {
+  for (const app of ["swiftcrop-app", "color-refine-app"]) {
+    const html = await readFile(
+      new URL(`../public/${app}/index.html`, import.meta.url),
+      "utf8",
+    );
+    assert.doesNotMatch(html, /googlesyndication|adsbygoogle/, `${app} loads AdSense`);
+    assert.doesNotMatch(html, /ad-placeholder|ADVERTISEMENT/, `${app} shows an empty ad slot`);
+  }
+});
