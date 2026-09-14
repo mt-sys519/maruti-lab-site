@@ -197,7 +197,7 @@ footer{padding-top:34px;padding-bottom:34px}
 .notePager{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:40px;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.2em;color:var(--muted)}
 .notePager a{color:var(--ink);border-bottom:1px solid var(--note-accent);padding-bottom:4px}
 .notePager a:hover{color:#17796e}
-.postDocument{padding:clamp(56px,7vw,88px) 0 40px}
+.postDocument{font-family:"Hiragino Kaku Gothic ProN","BIZ UDPGothic","Noto Sans JP","Yu Gothic",sans-serif;padding:clamp(56px,7vw,88px) 0 40px}
 .postDocument h1{font-size:clamp(30px,4.4vw,50px);font-weight:400;line-height:1.5;margin:0 0 26px}
 .postMetaHead{margin:0 0 46px;padding-bottom:34px;border-bottom:1px solid var(--line)}
 .postMetaHead i{margin-left:0}
@@ -207,9 +207,10 @@ footer{padding-top:34px;padding-bottom:34px}
    on Windows, where it is what everyone gets. No Japanese webfont is
    loaded, so the reading face here is chosen from what people already have:
    Hiragino on a Mac, BIZ UDPGothic on Windows 10 and 11, which was drawn to
-   be read. Only the body of an article changes; the headings and navigation
-   keep the face they were designed with. */
-.postBody{font-family:"Hiragino Kaku Gothic ProN","BIZ UDPGothic","Noto Sans JP","Yu Gothic",sans-serif;font-size:16.5px;line-height:1.95;color:#333937}
+   be read. It covers the article itself - its title, its headings, its
+   text. The eyebrow, the tag row and the site's navigation declare their
+   own face and keep the one they were designed with. */
+.postBody{font-size:16.5px;line-height:1.95;color:#333937}
 .postBody h2{position:relative;font-size:20px;font-weight:500;line-height:1.7;margin:64px 0 20px;padding-top:30px;border-top:1px solid var(--line);color:var(--ink)}
 .postBody h2:before{content:"";position:absolute;top:-2px;left:0;width:46px;height:3px;background:var(--note-accent)}
 .postBody h3{font-size:16px;font-weight:600;line-height:1.7;margin:42px 0 14px;color:var(--ink)}
@@ -238,7 +239,7 @@ footer{padding-top:34px;padding-bottom:34px}
 .postFooter a{display:flex;align-items:baseline;gap:20px;padding:22px 0;font-size:14px}
 .postFooter a:hover{color:#17796e}
 .postFooter time{flex:0 0 auto;font:500 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.16em;color:var(--note-accent)}
-@media(max-width:640px){.postBody{font-size:14.5px;line-height:2.05}.postBody h2{margin-top:48px}.postFooter a{flex-direction:column;gap:8px}}
+@media(max-width:640px){.postBody{font-size:15.5px;line-height:2}.postBody h2{margin-top:48px}.postFooter a{flex-direction:column;gap:8px}}
 
 /* CLOCK download hero: preserve the complete 16:9 CLOCK MODE capture. */
 .clockHero{min-height:680px;height:calc(100svh - 86px);max-height:860px;grid-template-columns:minmax(460px,.68fr) minmax(0,1.32fr)}
