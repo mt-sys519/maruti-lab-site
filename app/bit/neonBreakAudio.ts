@@ -675,10 +675,18 @@ export function createBreakAudio(): Engine {
       osc.start(now);
       osc.stop(now + 0.22);
     },
-    // The power shot leaving the cue: two quick zips a beat apart, each a
-    // saw swept up through a bandpass sweeping down - the "shuin shuin" the
-    // shot always looked like it should make. The strike itself is still
-    // cueStrike; this rides on top of it.
+    // The power shot leaving the cue: two quick zips a beat apart.
+    //
+    // A swept bandpass riding a FIXED low saw, not a rising saw: sweeping the
+    // tone up while sweeping the filter down was the first attempt, and the
+    // two passed each other without ever meeting - at Q=7 that window is a
+    // few milliseconds wide, so the nodes were built and played and nothing
+    // came out. A saw at 165Hz has harmonics all the way up; running the
+    // filter across them is what makes the zip.
+    //
+    // The gain looks enormous next to the other effects because a Q=9
+    // bandpass throws away most of the signal: rendered offline this peaks at
+    // 0.17, which is where cueStrike sits.
     powerFire() {
       if (muted) return;
       resume();
@@ -686,20 +694,20 @@ export function createBreakAudio(): Engine {
         const now = ctx!.currentTime + offset;
         const osc = ctx!.createOscillator();
         osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(240 + i * 90, now);
-        osc.frequency.exponentialRampToValueAtTime(1900 + i * 700, now + 0.13);
+        osc.frequency.setValueAtTime(165 + i * 22, now);
+        osc.frequency.linearRampToValueAtTime(200 + i * 26, now + 0.15);
         const band = ctx!.createBiquadFilter();
         band.type = "bandpass";
-        band.Q.value = 7;
-        band.frequency.setValueAtTime(5200 + i * 900, now);
-        band.frequency.exponentialRampToValueAtTime(700, now + 0.16);
+        band.Q.value = 9;
+        band.frequency.setValueAtTime(420, now);
+        band.frequency.exponentialRampToValueAtTime(6200 + i * 900, now + 0.13);
         const g = ctx!.createGain();
         g.gain.setValueAtTime(0.0001, now);
-        g.gain.linearRampToValueAtTime(0.14 - i * 0.03, now + 0.012);
-        g.gain.exponentialRampToValueAtTime(0.0005, now + 0.18);
+        g.gain.linearRampToValueAtTime(0.9 - i * 0.18, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0006, now + 0.17);
         osc.connect(band).connect(g).connect(sfx!);
         osc.start(now);
-        osc.stop(now + 0.2);
+        osc.stop(now + 0.19);
       });
     },
     uiClick() {

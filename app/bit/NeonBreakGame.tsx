@@ -1932,6 +1932,30 @@ export function NeonBreakGame() {
                   0.18,
             }
           : dragRef.current;
+      if (powerArmedRef.current && phaseRef.current === "aim" && cue.active) {
+        // Two rings breathing out of the cue ball, half a cycle apart, plus a
+        // held glow: armed is a state you sit in while you line the shot up,
+        // so it has to keep saying so rather than flash once.
+        const beat = (t % 1100) / 1100;
+        for (const phase of [0, 0.5]) {
+          const p = (beat + phase) % 1;
+          ctx.globalAlpha = (1 - p) * 0.55;
+          ctx.strokeStyle = "#ff3bce";
+          ctx.lineWidth = 2.5 * (1 - p) + 0.5;
+          ctx.shadowColor = "#ff3bce";
+          ctx.shadowBlur = 16;
+          ctx.beginPath();
+          ctx.arc(cue.x, cue.y, R + 3 + p * 26, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 0.35 + Math.sin(beat * Math.PI * 2) * 0.12;
+        ctx.fillStyle = "#ff3bce";
+        ctx.beginPath();
+        ctx.arc(cue.x, cue.y, R + 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+      }
       if (phaseRef.current === "aim" && cue.active && drag) {
         const dx = cue.x - drag.x,
           dy = cue.y - drag.y,
@@ -1945,8 +1969,11 @@ export function NeonBreakGame() {
             nx = Math.cos(ang),
             ny = Math.sin(ang);
           ctx.strokeStyle = powerArmedRef.current ? "#ff42d2" : "#eaffff";
-          ctx.lineWidth = 2;
+          ctx.lineWidth = powerArmedRef.current ? 3 : 2;
           ctx.setLineDash([9, 7]);
+          // The dashes crawl towards the target while armed. Static, the only
+          // difference a power shot made to the aim was its colour.
+          ctx.lineDashOffset = powerArmedRef.current ? -(t / 22) % 16 : 0;
           ctx.beginPath();
           if (modeRef.current === "stage") {
             const path = traceAim(cue.x, cue.y, nx, ny, 560);
@@ -1966,6 +1993,7 @@ export function NeonBreakGame() {
           }
           ctx.stroke();
           ctx.setLineDash([]);
+          ctx.lineDashOffset = 0;
           ctx.strokeStyle = powerArmedRef.current ? "#ff3bce" : "#2ee3ff";
           ctx.lineWidth = 5;
           ctx.beginPath();
