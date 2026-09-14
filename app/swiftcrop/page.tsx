@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import styles from "./SwiftCropPage.module.css";
 import { SiteFooter } from "../SiteFooter";
+import { ToolFrame } from "./ToolFrame";
 
 const title = "SwiftCrop";
 const description =
@@ -93,12 +94,7 @@ export default function SwiftCropPage() {
             大きな画面で開く
           </a>
         </div>
-        <iframe
-          className={styles.frame}
-          src="/swiftcrop-app/index.html"
-          title="SwiftCrop"
-          loading="eager"
-        />
+        <ToolFrame src="/swiftcrop-app/index.html" title="SwiftCrop" />
       </section>
 
       <section className={styles.guide} id="guide" aria-labelledby="guide-title">
