@@ -54,7 +54,7 @@
 .steps button { display: grid; place-items: center; width: 40px; height: 40px; border: 3px solid #232323; border-radius: 50%; background: #f1eee5; box-shadow: 4px 4px 0 #232323; color: #232323; font: 400 18px/1 "Inter", sans-serif; cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
 .steps button:hover, .steps button:focus-visible { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #232323; outline: 0; }
 .steps button:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #232323; }
-.catalog > header p, .catalog > header span { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
+.catalog > header p, .catalog > header span { margin: 0; color: #65716c; font: 600 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .catalog > header span { color: #FF7A5C; }
 /* The shelf escapes the section's padding on both sides. Held in on the left
    while it ran off the right, the same row of machines looked like it had a
@@ -76,60 +76,16 @@
 .all[open] > summary i::after { opacity: 0; }
 .all[open] > summary { margin-bottom: clamp(26px, 3vw, 38px); }
 
-.grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 32px); }
-.card {
-  min-height: 300px;
-  padding: clamp(22px, 3vw, 40px);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto 1fr auto;
-  gap: 18px;
-  background: #F5EFE1;
-  border: 3px solid var(--pkg-color);
-  border-radius: 14px;
-  box-shadow: 8px 8px 0 #232323;
-  transition: transform .14s ease, box-shadow .14s ease;
-}
-.card:hover, .card:focus-visible { transform: translate(-3px, -3px); box-shadow: 11px 11px 0 #232323; outline: 0; }
-.head { align-self: start; }
-.kind { margin: 6px 0 0; color: #66736c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
-.number { display: block; color: var(--pkg-color); font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
-.visual { --mark-size: clamp(72px, 8vw, 100px); --mark-type-size: clamp(22px, 2.4vw, 34px); grid-column: 1/-1; position: relative; min-height: 110px; display: flex; align-items: center; justify-content: center; color: var(--pkg-color); }
-.angle svg { width: clamp(88px, 9vw, 116px); height: auto; overflow: visible; }
-.angle svg .triangle { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.angle svg .arc { fill: none; stroke: var(--pkg-color); stroke-width: 1.8; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.angle svg .q { fill: var(--pkg-color); font: 700 15px "Yu Gothic UI", sans-serif; }
-.blank, .sequence { gap: clamp(9px, 1.6vw, 20px); font: 500 clamp(28px, 4vw, 54px)/1 "Arial Narrow", sans-serif; }
-.blank i { color: #6c7771; font-style: normal; font-size: .55em; }
-.slot { display: grid; place-items: center; width: 1.35em; height: 1.35em; border: 2px dashed var(--pkg-color); border-radius: 6px; color: var(--pkg-color); font-size: .82em; }
-.numSmall, .numMed, .numLarge { font-style: normal; }
-.rain { width: min(100%, 330px); min-height: 108px; margin: auto; align-items: flex-start; flex-direction: column; padding: 20px 12%; border: 1px solid #86f15a; background: #07100b; color: #86f15a; font-family: Consolas, monospace; }
-.rain i { font-style: normal; font-size: 9px; opacity: .55; }
-.rain span, .rain b { align-self: center; font-size: clamp(16px, 2.4vw, 27px); letter-spacing: .14em; }
-.rain b { opacity: .45; transform: translateY(7px); }
-.paku svg { display: block; width: clamp(72px, 9vw, 108px); height: auto; overflow: visible; }
-.paku svg path { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.paku svg circle { fill: currentColor; stroke: none; }
-.liltorb svg { display: block; width: clamp(72px, 8vw, 100px); height: auto; overflow: visible; }
-.liltorb .orbRing { fill: none; stroke: currentColor; stroke-width: 1.4; vector-effect: non-scaling-stroke; opacity: .55; }
-.liltorb .orbDot { fill: currentColor; stroke: none; }
-.neonbreak svg { display: block; width: clamp(64px, 7vw, 88px); height: auto; overflow: visible; }
-.neonbreak circle, .neonbreak path { fill: none; stroke: currentColor; stroke-width: 1.45; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.nbDot { fill: currentColor; stroke: none; }
-.inputRain { font-size: clamp(96px, 11vw, 132px); }
-.avenue svg { display: block; width: clamp(64px, 7vw, 88px); height: auto; overflow: visible; }
-.avenue svg path { fill: none; stroke: currentColor; stroke-width: 1.45; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.avenueDot { fill: currentColor; stroke: none; }
-.rainChime { width: min(100%, 330px); min-height: 108px; overflow: hidden; border: 1px solid var(--pkg-color); background: #071016; }
-.rainChime img { width: 100%; height: 108px; object-fit: cover; object-position: center; image-rendering: pixelated; }
-.card > div:last-of-type p { margin: 0 0 10px; color: #66736c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
-.card > div:last-of-type h3 { margin: 0; font: 800 clamp(28px, 4vw, 46px)/.95 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; color: #232323; }
-/* A reading, so it sits above the name like furigana rather than below it,
-   where it read as a second line of description. Inline after the name, a long
-   one wrapped and only some cards did, so the row came out uneven. */
-.card > div:last-of-type p.kana { display: block; margin: 0 0 2px; font: 500 12px/1 "Yu Gothic UI", sans-serif; letter-spacing: .06em; color: #7c8983; }
-.card > div:last-of-type span { display: block; margin-top: 18px; max-width: 330px; color: #5d6963; font: 400 11px/1.8 "Yu Gothic UI", sans-serif; }
-.play { align-self: end; padding-bottom: 4px; border-bottom: 2px solid var(--pkg-color); color: #232323; font: 700 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
+/* The catalog as a plain list: a serial, a name, what it is. No second set
+   of artwork - the machines above already do that job. */
+.list { position: relative; z-index: 1; margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(21, 33, 29, .22); }
+.list li { border-bottom: 1px solid rgba(21, 33, 29, .22); }
+.list a { display: grid; grid-template-columns: 54px auto minmax(0, 1fr); align-items: baseline; gap: 0 clamp(14px, 2vw, 30px); padding: clamp(15px, 1.6vw, 22px) clamp(6px, 1vw, 14px); transition: background-color .14s ease, padding-left .14s ease; }
+.list a:hover, .list a:focus-visible { background: rgba(35, 35, 35, .05); padding-left: clamp(14px, 1.8vw, 26px); outline: 0; }
+.listNumber { color: var(--pkg-color); font: 600 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
+.listName { color: #232323; font: 800 clamp(20px, 2vw, 28px)/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; }
+.listKana { color: #7c8983; font: 500 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .06em; }
+.listKind { grid-column: 2/-1; margin-top: 7px; color: #5d6963; font: 400 11px/1.7 "Yu Gothic UI", sans-serif; }
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: 0; align-items: start; }
@@ -141,8 +97,8 @@
 @media (max-width: 640px) {
   .hero { padding-top: 40px; padding-bottom: 44px; }
   .hero h1 { font-size: clamp(30px, 9vw, 42px); }
-  .grid { grid-template-columns: 1fr; }
-  .card { min-height: 315px; }
+  .list a { grid-template-columns: 42px minmax(0, 1fr); }
+  .listKana { grid-column: 2; }
   .catalog > header h2 { font-size: 30px; }
 }
 

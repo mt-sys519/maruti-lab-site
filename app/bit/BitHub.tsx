@@ -4,7 +4,6 @@ import { useRef } from "react";
 import type { CSSProperties } from "react";
 import { bitGames } from "./games";
 import styles from "./BitHub.module.css";
-import { GameMark } from "./GameMark";
 import { GameAmbience } from "./GameAmbience";
 import { GameShelf } from "./GameShelf";
 import type { ShelfHandle } from "./GameShelf";
@@ -48,22 +47,21 @@ export function BitHub() {
         <GameShelf ref={shelf} className={styles.shelf} />
         <details className={styles.all}>
           <summary><span>ぜんぶ一覧で見る</span><i aria-hidden="true" /></summary>
-          <div className={styles.grid}>
+          {/* Names only. The machines above are where a game is chosen; this
+              is where the whole catalog is checked, and drawing all eight a
+              second way gave the same games two different looks. */}
+          <ol className={styles.list}>
             {bitGames.map((game) => (
-              <a href={game.href} className={styles.card} key={game.id} style={{ "--pkg-color": game.color } as CSSProperties}>
-                {/* The kind sits with the serial at the top rather than above the
-                    name, where it was one of three small lines stacked over the
-                    title and read as part of the reading. */}
-                <div className={styles.head}>
-                  <span className={styles.number}>{game.number}</span>
-                  <p className={styles.kind}>{game.kind}</p>
-                </div>
-                <span className={styles.visual}><GameMark id={game.id} /></span>
-                <div><p className={styles.kana}>‐{game.kana}‐</p><h3>{game.name}</h3><span>{game.description}</span></div>
-                <b className={styles.play}>PLAY</b>
-              </a>
+              <li key={game.id} style={{ "--pkg-color": game.color } as CSSProperties}>
+                <a href={game.href}>
+                  <span className={styles.listNumber}>{game.number}</span>
+                  <strong className={styles.listName}>{game.name}</strong>
+                  <span className={styles.listKana}>‐{game.kana}‐</span>
+                  <span className={styles.listKind}>{game.kind}</span>
+                </a>
+              </li>
             ))}
-          </div>
+          </ol>
         </details>
 
         {/* The fold left a stretch of empty floor under it. One machine
