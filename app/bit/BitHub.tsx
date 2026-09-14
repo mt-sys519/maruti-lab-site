@@ -19,7 +19,7 @@ export function BitHub() {
         <GameAmbience className={styles.ambient} />
         <p>MARUTI LAB / QUICK GAMES</p>
         <div>
-          <h1 id="bit-hub-title">短い時間で、頭と心を少し動かす。</h1>
+          <h1 id="bit-hub-title"><span>短い時間で、</span><span>頭と心を少し動かす。</span></h1>
           <p>考える。見抜く。打ち込む。感じる。<br />ひと息で遊べる、小さなゲームを少しずつ増やしています。</p>
           <a href={bitGames[0].href} onClick={playRandom}>RANDOM START</a>
         </div>

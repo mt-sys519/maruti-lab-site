@@ -7,7 +7,7 @@
    shop's ink tone instead of the old site-wide blue/red. */
 .hero {
   min-height: 340px;
-  padding: clamp(40px, 5.5vw, 76px) clamp(24px, 8vw, 120px);
+  padding: clamp(40px, 5.5vw, 72px) clamp(24px, 8vw, 120px) clamp(30px, 3.6vw, 52px);
   display: grid;
   grid-template-columns: .42fr minmax(0, 1.2fr) .42fr;
   gap: clamp(28px, 5vw, 80px);
@@ -27,9 +27,14 @@
 .hero > .ambient { grid-column: 1 / -1; position: absolute; inset: 0; z-index: 0; }
 .hero > p { margin: 0; align-self: start; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
 .hero > div { grid-column: 2; }
-.hero h1 { max-width: 760px; margin: 0; color: #232323; font: 700 clamp(34px, 4.4vw, 62px)/1.35 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; letter-spacing: .01em; }
-.hero div > p { margin: 20px 0 0; color: #53615a; font: 400 12px/2 "Yu Gothic UI", sans-serif; }
-.hero div > a { display: inline-flex; margin-top: 30px; min-height: 46px; align-items: center; padding: 0 20px; background: #FF7A5C; border: 3px solid #232323; box-shadow: 5px 5px 0 #232323; color: #232323; font: 700 10px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; transition: transform .14s ease, box-shadow .14s ease; }
+.hero h1 { max-width: 26em; margin: 0; color: #232323; font: 700 clamp(32px, 3.6vw, 54px)/1.32 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; letter-spacing: .01em; }
+/* Japanese has no spaces, so the line was breaking inside a word and leaving
+   two characters stranded on the second line. Each phrase is its own
+   inline-block: the break lands between them, and a phrase too wide for the
+   column still wraps inside itself rather than overflowing. */
+.hero h1 span { display: inline-block; }
+.hero div > p { margin: 26px 0 0; color: #53615a; font: 400 13.5px/2.1 "Yu Gothic UI", sans-serif; }
+.hero div > a { display: inline-flex; margin-top: 34px; min-height: 50px; align-items: center; padding: 0 24px; background: #FF7A5C; border: 3px solid #232323; box-shadow: 5px 5px 0 #232323; color: #232323; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; transition: transform .14s ease, box-shadow .14s ease; }
 .hero div > a:hover, .hero div > a:focus-visible { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #232323; outline: 0; }
 .catalog {
   position: relative;
