@@ -50,35 +50,79 @@
 .index {
   grid-column: 3;
   align-self: center;
-  margin: clamp(34px, 5vh, 62px) clamp(32px, 4vw, 68px) clamp(34px, 5vh, 62px) 0;
-  border: 1px solid rgba(21, 33, 29, .58);
-  background: rgba(241, 238, 229, .8);
-  box-shadow: 12px 12px 0 rgba(35, 35, 35, .08);
+  /* No frame, no fill, no shadow. The units are the objects; there is no box
+     holding them. The right side runs off the screen so the shelf reads as
+     longer than the window. */
+  margin: clamp(34px, 5vh, 62px) 0 clamp(34px, 5vh, 62px) 0;
   display: grid;
-  grid-template-rows: 54px 1fr;
+  grid-template-rows: 30px 1fr;
   position: relative;
   z-index: 2;
   scroll-margin-top: 24px;
 }
-.indexHead { padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(21, 33, 29, .35); color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; }
+.indexHead { padding: 0 clamp(32px, 4vw, 68px) 0 0; display: flex; align-items: center; justify-content: space-between; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; }
 .indexHead strong { color: #FF7A5C; font-size: 8px; }
-.pager { display: flex; align-items: center; gap: 10px; }
-.pager strong { color: #FF7A5C; font-size: 8px; }
-.pager button { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid rgba(21, 33, 29, .35); background: transparent; color: #65716c; font-size: 12px; line-height: 1; cursor: pointer; transition: background-color .15s ease, color .15s ease, border-color .15s ease; }
-.pager button:hover, .pager button:focus-visible { background: #232323; color: #f1eee5; border-color: #232323; outline: 0; }
-.games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); }
-.games a { min-width: 0; padding: clamp(16px, 2vw, 28px); display: flex; flex-direction: column; justify-content: space-between; gap: 10px; border-right: 1px solid rgba(21, 33, 29, .26); border-bottom: 1px solid rgba(21, 33, 29, .26); transition: background-color .16s ease, color .16s ease; }
-.games a:nth-child(2n) { border-right: 0; }
-.games a.isLastRow { border-bottom: 0; }
-.games a.spanFull { grid-column: 1 / -1; border-right: 0; }
-.games a:hover, .games a:focus-visible { background: #232323; color: #f1eee5; outline: 0; }
-.gameNumber { font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: var(--pkg-color, #FF7A5C); }
-.gameName { overflow-wrap: anywhere; font: 800 clamp(19px, 1.85vw, 30px)/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; }
-.gameKind { font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .16em; color: #66736c; }
-.games a:hover .gameNumber, .games a:focus-visible .gameNumber { color: var(--pkg-color, #FF7A5C); }
-.games a:hover .gameKind, .games a:focus-visible .gameKind { color: #c7d2cc; }
+.hint { margin-left: 10px; font-style: normal; color: #98a39e; }
+/* Each game is its own machine, not a tile in a grid. The shell takes the
+   game's package color; the name sits on the dark bezel, where light text is
+   readable whatever color the shell happens to be. */
+.shelf {
+  display: flex;
+  gap: clamp(14px, 1.4vw, 22px);
+  /* Vertical room for the lift and the cast shadow. No horizontal padding:
+     a unit's offsetLeft has to be a scroll position the snap agrees with. */
+  padding: 16px 0 26px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  cursor: grab;
+}
+.shelf::-webkit-scrollbar { display: none; }
+.shelf:active { cursor: grabbing; }
+
+.unit {
+  flex: 0 0 clamp(210px, 16.5vw, 262px);
+  scroll-snap-align: start;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(15px, 1.5vw, 21px);
+  /* A chin at the bottom, thicker than the sides. Without it the controls sit
+     on the edge of the shell and the thing looks impossible to hold. */
+  padding: clamp(16px, 1.6vw, 22px) clamp(16px, 1.6vw, 22px) clamp(26px, 2.5vw, 34px);
+  background: var(--pkg-color, #FF7A5C);
+  /* The one asymmetric corner is what makes it read as a handheld rather
+     than a rounded rectangle. */
+  border-radius: 17px 17px 46px 17px;
+  border: 3px solid #232323;
+  /* Same black line and same solid drop as the ランダムで遊ぶ button. */
+  box-shadow: 5px 5px 0 #232323;
+  transition: transform .18s ease, box-shadow .18s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.unit:hover, .unit:focus-visible { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 #232323; outline: 0; }
+
+.bezel { display: flex; flex-direction: column; gap: 10px; padding: 13px 13px 15px; background: #232323; border-radius: 10px 10px 7px 7px; color: #f1eee5; }
+.screen { position: relative; display: grid; place-items: center; padding: 6px; background: #e9e4d7; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(35, 35, 35, .25); }
+.serial { position: absolute; top: 6px; left: 8px; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: var(--pkg-color, #FF7A5C); }
+.plate { display: flex; flex-direction: column; gap: 4px; }
+
+.controls { display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(6px, 0.8vw, 11px); }
+.pad { position: relative; width: 30px; height: 30px; }
+.pad::before, .pad::after { content: ""; position: absolute; background: rgba(35, 35, 35, .5); border-radius: 2px; }
+.pad::before { top: 10px; left: 0; width: 30px; height: 10px; }
+.pad::after { top: 0; left: 10px; width: 10px; height: 30px; }
+.buttons { position: relative; width: 46px; height: 33px; }
+.buttons::before, .buttons::after { content: ""; position: absolute; width: 17px; height: 17px; border-radius: 50%; background: rgba(35, 35, 35, .5); }
+.buttons::before { top: 0; right: 0; }
+.buttons::after { top: 16px; right: 29px; }
+
+.gameName { overflow-wrap: anywhere; font: 800 clamp(17px, 1.4vw, 23px)/1.04 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; }
+.gameKind { font: 500 9px/1.5 "Yu Gothic UI", sans-serif; letter-spacing: .14em; color: #a8b2ad; }
 /* Same numbers the /bit list uses - one set of sizes for the marks, not a second set tuned here. */
-.visual { --mark-size: clamp(72px, 8vw, 100px); --mark-type-size: clamp(22px, 2.4vw, 34px); position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: clamp(74px, 9vh, 110px); color: var(--pkg-color, #232323); }
+.visual { --mark-size: clamp(62px, 6.4vw, 82px); --mark-type-size: clamp(20px, 2vw, 28px); position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: clamp(96px, 11vh, 128px); color: var(--pkg-color, #232323); }
 .angleVisual svg { width: clamp(56px, 6vw, 76px); height: auto; overflow: visible; }
 .angleVisual svg .triangle { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .angleVisual svg .arc { fill: none; stroke: var(--pkg-color, #FF7A5C); stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
@@ -102,7 +146,7 @@
 @media (max-width: 1100px) {
   .bitHomeHero.bitHomeHero { grid-template-columns: 42px minmax(0, 1fr); grid-template-rows: auto auto 62px; }
   .intro { grid-column: 2; padding-bottom: 48px; }
-  .index { grid-column: 2; margin: 0 clamp(28px, 5vw, 60px) 54px; min-height: 560px; }
+  .index { grid-column: 2; margin: 0 0 54px clamp(28px, 5vw, 60px); }
   .readout { grid-column: 2; }
 }
 
@@ -115,9 +159,22 @@
   .copy { font-size: 12px; }
   .actions { align-items: stretch; flex-direction: column; margin-top: 32px; }
   .actions a { width: 100%; }
-  .index { margin: 0 14px 40px; min-height: 500px; grid-template-rows: 48px 1fr; }
-  .games a { padding: 14px 11px; gap: 8px; }
-  .games strong { font-size: clamp(21px, 7vw, 30px); }
+  .index { margin: 0 0 40px 14px; }
+  .unit { flex-basis: 72vw; }
   .visual { height: 68px; }
   .readout { padding: 0 10px; }
+}
+
+/* Touch already has its own gesture and its own momentum, so the shelf only
+   has to decide where to stop. A sticky :hover on a tapped card would leave
+   it black after the reader had moved on. */
+@media (hover: none) {
+  .shelf { scroll-snap-type: x mandatory; cursor: auto; }
+  .hint { display: none; }
+  .unit:hover { transform: none; box-shadow: 5px 5px 0 #232323; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unit { transition: box-shadow .18s ease; }
+  .unit:hover, .unit:focus-visible { transform: none; box-shadow: 8px 8px 0 #232323; }
 }
