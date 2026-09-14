@@ -164,9 +164,12 @@
    left, and untouchable so it never swallows a click meant for the copy. */
 .pickShot {
   position: absolute;
-  top: 50%;
+  /* Pinned to the section's own top and bottom. Centred on it instead, the
+     picture was taller than the section and reached up over whatever was
+     above - the grid of eight, once the list is opened. */
+  top: 0;
+  bottom: 0;
   right: calc(-1 * clamp(20px, 6vw, 90px));
-  transform: translateY(-50%);
   width: min(74%, 1000px);
   margin: 0;
   z-index: 0;
@@ -175,7 +178,9 @@
 .pickShot img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: 58% center;
   /* Solid where the screen leaves the page, gone by the time it reaches the
      copy. The top and bottom get a shorter fade of their own so the picture
      has no hard horizontal edges either. */
