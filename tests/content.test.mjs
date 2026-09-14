@@ -69,8 +69,8 @@ test("drafts stay off the site", async () => {
   for (const draft of drafts) {
     assert.doesNotMatch(html, new RegExp(`href="/blog/${draft.slug}"`));
   }
-  const missing = await (await render("/blog/this-slug-does-not-exist")).text();
-  assert.match(missing, /記事が見つかりません/);
+  const missing = await render("/blog/this-slug-does-not-exist");
+  assert.equal(missing.status, 404);
 });
 
 test("every post carries the metadata the article page needs", async () => {
@@ -229,16 +229,19 @@ test("the sitemap reports the last change, not the first publication", async () 
   }
 });
 
-test("pages of the index that do not exist are kept out of search", async () => {
+test("pages of the index that do not exist answer with a real 404", async () => {
   // Page one is /blog and always will be; /blog/page/2 onwards is the rest.
   const first = await render("/blog");
   assert.equal(first.status, 200);
   assert.ok((await first.text()).includes('href="/blog/'));
 
-  const beyond = await (await render("/blog/page/999")).text();
-  assert.match(beyond, /そのページはありません/);
-  assert.match(beyond, /content="noindex/);
-  // Same for a slug nobody wrote: it answers, but it does not invite Google.
-  const missing = await (await render("/blog/this-slug-does-not-exist")).text();
-  assert.match(missing, /content="noindex/);
+  // A soft 404 - a page that answers 200 and merely asks not to be indexed -
+  // is still a page to everything that reads the site. These are not pages.
+  for (const path of ["/blog/page/999", "/blog/page/abc", "/blog/page/-3"]) {
+    assert.equal((await render(path)).status, 404, `${path} should be a 404`);
+  }
+  // /blog/page/1 is the one exception: the page it names does exist.
+  const one = await render("/blog/page/1");
+  assert.ok(one.status === 301 || one.status === 308, "page 1 should redirect");
+  assert.equal(one.headers.get("location"), "/blog");
 });

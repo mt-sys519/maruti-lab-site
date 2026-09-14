@@ -1,16 +1,13 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { formatDate, lastChanged, postBySlug, posts } from "../posts";
-import { SiteFooter } from "../../SiteFooter";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = postBySlug((await params).slug);
-  // An unknown slug still answers with a page rather than a hard 404, so it is
-  // told not to be indexed instead of quietly collecting empty results.
-  if (!post)
-    return { title: "記事が見つかりません", robots: { index: false, follow: true } };
+  if (!post) return { title: "記事が見つかりません" };
   return {
     title: post.title,
     description: post.description,
@@ -34,25 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlogPost({ params }: Props) {
   const { slug } = await params;
   const post = postBySlug(slug);
-  if (!post) {
-    return (
-      <main className="legalPage notePage">
-        <header className="legalHeader">
-          <a href="/">Maruti Lab</a>
-          <a href="/blog">LabNote一覧</a>
-        </header>
-        <article className="legalDocument">
-          <p className="eyebrow">404</p>
-          <h1>記事が見つかりません</h1>
-          <p>
-            URLが変わったか、まだ公開されていない記事です。
-            <a href="/blog">LabNote一覧</a>から探してみてください。
-          </p>
-        </article>
-        <SiteFooter />
-      </main>
-    );
-  }
+  if (!post) notFound();
   const others = posts.filter((other) => other.slug !== post.slug).slice(0, 3);
   // Written out here rather than left to the reader: a post that says when it
   // was published and when it was last touched is the difference between an
