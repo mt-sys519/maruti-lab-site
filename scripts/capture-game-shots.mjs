@@ -31,8 +31,8 @@ const port = portFlag === -1 ? "3000" : args[portFlag + 1];
 const wanted = args.filter((a) => !a.startsWith("--") && a !== port);
 const games = wanted.length ? wanted : ids;
 
-const width = 900;
-const height = 700;
+const width = 1280;
+const height = 960;
 const outputDirectory = fileURLToPath(new URL("../public/games/shots/", import.meta.url));
 await mkdir(outputDirectory, { recursive: true });
 

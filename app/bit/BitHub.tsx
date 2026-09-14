@@ -72,7 +72,7 @@ export function BitHub() {
               frame would pull the game's assets and run its animation loop on
               a page nobody is playing on. */}
           <p className={styles.pickShot}>
-            <img src={`/games/shots/${pick.id}.webp`} width={900} height={700} alt={`${pick.name}の画面`} loading="lazy" decoding="async" />
+            <img src={`/games/shots/${pick.id}.webp`} width={1280} height={960} alt={`${pick.name}の画面`} loading="lazy" decoding="async" />
           </p>
         </section>
       </section>

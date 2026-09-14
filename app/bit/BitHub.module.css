@@ -139,6 +139,7 @@
 
 /* The machine of the day, standing on the floor the fold used to leave bare. */
 .pick { position: relative; z-index: 1; margin-top: clamp(40px, 5vw, 76px); display: flex; align-items: center; gap: clamp(26px, 4vw, 56px); }
+.pickUnit, .pickCopy { position: relative; z-index: 1; }
 .pickUnit { flex: 0 0 auto; width: clamp(224px, 21vw, 292px); }
 .pickCopy { min-width: 0; }
 .pickEyebrow { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
@@ -156,17 +157,32 @@
 
 /* The screen dissolves into the shop floor at both edges rather than sitting
    in a frame - it is a glimpse of the game, not a second card. */
-.pickShot { flex: 0 1 clamp(300px, 27vw, 440px); min-width: 0; margin: 0; }
+/* Runs off the right edge of the screen and dissolves leftwards, passing
+   behind the copy on its way out - laid out beside the text instead, the two
+   read as separate blocks that happen to be next to each other rather than
+   one thing bleeding into the page. Out of the flow so it can reach that far
+   left, and untouchable so it never swallows a click meant for the copy. */
+.pickShot {
+  position: absolute;
+  top: 50%;
+  right: calc(-1 * clamp(20px, 6vw, 90px));
+  transform: translateY(-50%);
+  width: min(74%, 1000px);
+  margin: 0;
+  z-index: 0;
+  pointer-events: none;
+}
 .pickShot img {
   display: block;
   width: 100%;
   height: auto;
-  /* Faded on every edge, so it reads as a glimpse rather than a rectangle
-     someone pasted on the floor. Two linear masks intersected rather than one
-     radial: a radial wide enough not to crop the picture never reaches
-     transparent before the edge, and one tight enough to fade vignettes it. */
-  --fade-x: linear-gradient(90deg, transparent 0, #000 17%, #000 83%, transparent 100%);
-  --fade-y: linear-gradient(180deg, transparent 0, #000 15%, #000 85%, transparent 100%);
+  /* Solid where the screen leaves the page, gone by the time it reaches the
+     copy. The top and bottom get a shorter fade of their own so the picture
+     has no hard horizontal edges either. */
+  /* By the time it is under the words it is down to about a tenth, which the
+     dark screens (AVENUE, NEON BREAK) still sit quietly behind. */
+  --fade-x: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, .1) 26%, rgba(0, 0, 0, .42) 52%, #000 84%);
+  --fade-y: linear-gradient(180deg, transparent 0, #000 13%, #000 87%, transparent 100%);
   -webkit-mask-image: var(--fade-x), var(--fade-y);
   -webkit-mask-composite: source-in;
   mask-image: var(--fade-x), var(--fade-y);
@@ -175,6 +191,6 @@
 
 /* Under this there is no room for it beside the machine and the copy, and it
    would only squeeze both. */
-@media (max-width: 1200px) {
+@media (max-width: 1040px) {
   .pickShot { display: none; }
 }
