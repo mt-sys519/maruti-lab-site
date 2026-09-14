@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import styles from "./SwiftCropPage.module.css";
+import { correctEmbeddedViewport, type EmbedViewport } from "./embedViewport";
 
 /** Beyond this the measurement is wrong, not the page. */
 const MAX_HEIGHT = 20000;
@@ -71,6 +72,15 @@ export function ToolFrame({ src, title, measureRoot = ".app-container" }: Props)
         );
       };
 
+      // While the frame does not scroll, the app's own fixed and sticky
+      // elements have no window to hold on to. This lends them the reader's.
+      let viewport: EmbedViewport | undefined;
+      try {
+        viewport = correctEmbeddedViewport(frame, doc);
+      } catch {
+        // The app still works; a toast lands in the wrong place.
+      }
+
       let applied = 0;
       let climbs = 0;
       let busy = false;
@@ -103,6 +113,7 @@ export function ToolFrame({ src, title, measureRoot = ".app-container" }: Props)
           if (target > MAX_HEIGHT || climbs > 40) return giveUp();
           applied = target;
           frame.style.height = `${target}px`;
+          viewport?.update();
           // Resizing the frame reflows the document inside it, and that reflow
           // can change the height again - the settings column is capped at
           // `100vh`, so a taller frame lets it grow. Nothing out here is told
@@ -131,6 +142,7 @@ export function ToolFrame({ src, title, measureRoot = ".app-container" }: Props)
         resizes.disconnect();
         mutations.disconnect();
         window.removeEventListener("resize", schedule);
+        viewport?.dispose();
       };
     };
 
