@@ -259,3 +259,15 @@ test("the embedded tools serve no advertising of their own", async () => {
     assert.doesNotMatch(html, /ad-placeholder|ADVERTISEMENT/, `${app} shows an empty ad slot`);
   }
 });
+
+// Reading a note is the moment someone is most likely to want to say thanks,
+// and for five articles the only way to do it was one word among eleven in
+// the footer.
+test("a note ends with a way to buy the coffee", async () => {
+  const [post] = await published();
+  if (!post) return;
+  const html = await (await render(`/blog/${post.data.slug || post.slug}`)).text();
+  assert.match(html, /class="supportSection"/, "the support band is missing");
+  assert.match(html, /コーヒーを一杯/);
+  assert.match(html, /href="https:\/\/buymeacoffee\.com\/marutilab"/);
+});

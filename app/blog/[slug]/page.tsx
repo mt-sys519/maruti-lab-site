@@ -97,6 +97,23 @@ export default async function BlogPost({ params }: Props) {
         </nav>
       )}
       </div>
+      {/* The reader has just finished three thousand characters. Until now the
+          only way to say thank you from a note was one word among eleven in
+          the footer; this is the same band the home page ends with. */}
+      <section className="supportSection" aria-label="Maruti Labを支援">
+        <div>
+          <p className="eyebrow">KEEP THE LAB OPEN</p>
+          <h2>気に入ったら、コーヒーを一杯。</h2>
+        </div>
+        <a
+          className="refinedLink"
+          href="https://buymeacoffee.com/marutilab"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span>Coffeeで支援する</span>
+        </a>
+      </section>
       <footer>
         <div className="footerBrand">Maruti Lab</div>
         <div className="footerLinks"><a href="/">Works</a><a href="/bit">MarutiBit</a><a href="/4track">4TRACK</a><a href="/blog">LabNote</a><a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">X / @maruti_lab</a><a href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">Coffee</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a></div>
