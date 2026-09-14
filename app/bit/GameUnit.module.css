@@ -62,10 +62,14 @@
    yellow machine. */
 .tag {
   position: absolute;
-  top: -14px;
-  right: -12px;
+  /* Grown from its bottom-left corner: that corner stays where it sat, and
+     the extra goes out to the right and up. */
+  --seal: clamp(58px, 4.6vw, 72px);
+  --grown: calc(var(--seal) * .24);
+  top: calc(-14px - var(--grown));
+  right: calc(-12px - var(--grown));
   z-index: 2;
-  width: clamp(58px, 4.6vw, 72px);
+  width: calc(var(--seal) + var(--grown));
   aspect-ratio: 1;
   display: grid;
   place-items: center;
@@ -77,7 +81,7 @@
 .tag span {
   grid-area: 1 / 1;
   color: #232323;
-  font: 800 clamp(11px, 0.9vw, 13px)/1 "Yu Gothic UI", sans-serif;
+  font: 800 clamp(13.5px, 1.12vw, 16px)/1 "Yu Gothic UI", sans-serif;
   letter-spacing: .04em;
 }
 
