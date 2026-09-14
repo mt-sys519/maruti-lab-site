@@ -77,17 +77,22 @@
 }
 
 @media (max-width: 640px) {
-  .bitHomeHero.bitHomeHero { grid-template-columns: 28px minmax(0, 1fr); }
-  .intro { padding: 52px 20px 42px; }
+  /* No rail strip on a phone. It pushed the whole hero 28px further in than
+     the header above it, so the section read as having a stray margin down
+     its left side rather than a deliberate one. Everything lines up with the
+     header's own 24px now. */
+  .bitHomeHero.bitHomeHero { grid-template-columns: minmax(0, 1fr); }
+  .bitHomeHero :global(.labRail) { display: none; }
+  .intro { grid-column: 1; padding: 52px 24px 42px; }
   .intro :global(.labKicker) { margin-bottom: 28px; }
   .intro h1 { font-size: clamp(58px, 19vw, 82px); }
   .lead { margin-top: 30px; font-size: 20px; }
   .copy { font-size: 12px; }
   .actions { align-items: stretch; flex-direction: column; margin-top: 32px; }
   .actions a { width: 100%; }
-  .index { margin: 0 0 40px 14px; }
-  .shelfBleed { margin-inline: -42px 0; }
-  .readout { padding: 0 10px; }
+  .index { grid-column: 1; margin: 0 0 40px 24px; }
+  .shelfBleed { margin-inline: -24px 0; }
+  .readout { grid-column: 1; padding: 0 24px; }
 }
 
 /* The drag hint is for pointers only; a phone just swipes. */
