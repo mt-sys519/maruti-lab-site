@@ -13,6 +13,7 @@ type Engine = {
   foul: () => void;
   win: () => void;
   armPower: () => void;
+  powerFire: () => void;
   uiClick: () => void;
   setMusic: (track: MusicTrack) => void;
   unlock: () => void;
@@ -673,6 +674,33 @@ export function createBreakAudio(): Engine {
       osc.connect(g).connect(sfx!);
       osc.start(now);
       osc.stop(now + 0.22);
+    },
+    // The power shot leaving the cue: two quick zips a beat apart, each a
+    // saw swept up through a bandpass sweeping down - the "shuin shuin" the
+    // shot always looked like it should make. The strike itself is still
+    // cueStrike; this rides on top of it.
+    powerFire() {
+      if (muted) return;
+      resume();
+      [0, 0.085].forEach((offset, i) => {
+        const now = ctx!.currentTime + offset;
+        const osc = ctx!.createOscillator();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(240 + i * 90, now);
+        osc.frequency.exponentialRampToValueAtTime(1900 + i * 700, now + 0.13);
+        const band = ctx!.createBiquadFilter();
+        band.type = "bandpass";
+        band.Q.value = 7;
+        band.frequency.setValueAtTime(5200 + i * 900, now);
+        band.frequency.exponentialRampToValueAtTime(700, now + 0.16);
+        const g = ctx!.createGain();
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.linearRampToValueAtTime(0.14 - i * 0.03, now + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0005, now + 0.18);
+        osc.connect(band).connect(g).connect(sfx!);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      });
     },
     uiClick() {
       if (muted) return;

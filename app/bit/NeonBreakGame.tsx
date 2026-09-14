@@ -1266,6 +1266,10 @@ export function NeonBreakGame() {
   // the player is actually looking: a ring thrown off the cue ball. The panel
   // on the right only changed a small control's colour, which nobody saw.
   const chargeRingRef = useRef<{ x: number; y: number; life: number } | null>(null);
+  // The launch of a power shot: a wider, faster shockwave than the charge
+  // ring, and a flag that keeps the cue trailing sparks while it runs.
+  const powerFireRef = useRef<{ x: number; y: number; life: number } | null>(null);
+  const powerLiveRef = useRef(false);
   // Bumped on the same moment, to let the panel play its one-shot: the gauge
   // flaring as it lands and the button popping once.
   const [chargedAt, setChargedAt] = useState(0);
@@ -1315,6 +1319,7 @@ export function NeonBreakGame() {
       setShotPower(0);
       runRef.current = 0;
       sparksRef.current = [];
+      powerLiveRef.current = false;
       flashRef.current = null;
       if (nextMode) modeRef.current = nextMode;
       if (msgTimer.current) clearTimeout(msgTimer.current);
@@ -1455,6 +1460,7 @@ export function NeonBreakGame() {
       setKeyboardAim(false);
       setShotPower(0);
       sparksRef.current = [];
+      powerLiveRef.current = false;
       sync();
     }
     previousGeometry.current = geo;
@@ -2018,6 +2024,25 @@ export function NeonBreakGame() {
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       }
+      const blast = powerFireRef.current;
+      if (blast && blast.life > 0) {
+        const t = 1 - blast.life / 0.5;
+        ctx.globalAlpha = (1 - t) * 0.95;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 6 * (1 - t) + 1;
+        ctx.shadowColor = "#ff3bce";
+        ctx.shadowBlur = 26;
+        ctx.beginPath();
+        ctx.arc(blast.x, blast.y, R + t * 150, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "#ff3bce";
+        ctx.lineWidth = 3 * (1 - t) + 1;
+        ctx.beginPath();
+        ctx.arc(blast.x, blast.y, R + t * 104, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+      }
       const flash = flashRef.current;
       if (flash && flash.life > 0) {
         ctx.globalAlpha = (flash.life / flash.maxLife) * 0.35;
@@ -2083,7 +2108,19 @@ export function NeonBreakGame() {
           : "AIKA SHOT — AIKAの一打",
       );
       audioEngineRef.current!.cueStrike(power * (usePower ? 3 : 1));
-      if (usePower) triggerFlash("#ff3bce", 0.25);
+      if (usePower) {
+        triggerFlash("#ff3bce", 0.25);
+        powerFireRef.current = { x: cue.x, y: cue.y, life: 0.5 };
+        powerLiveRef.current = true;
+        spawnBurst(sparksRef.current, cue.x, cue.y, {
+          count: 22,
+          speed: 260,
+          life: 0.45,
+          colors: ["#ff3bce", "#ff8ae4", "#2ee3ff", "#ffffff"],
+          size: 2.6,
+        });
+        audioEngineRef.current!.powerFire();
+      }
       sync();
     };
     // Candidate ball-in-hand spots for the CPU, as (distance along the break
@@ -2726,6 +2763,25 @@ export function NeonBreakGame() {
         chargeRingRef.current.life -= frame;
         if (chargeRingRef.current.life <= 0) chargeRingRef.current = null;
       }
+      if (powerFireRef.current) {
+        powerFireRef.current.life -= frame;
+        if (powerFireRef.current.life <= 0) powerFireRef.current = null;
+      }
+      if (powerLiveRef.current) {
+        const cue = ballsRef.current[0];
+        const speed = Math.hypot(cue.vx, cue.vy);
+        // Off once it has slowed to an ordinary shot's pace: the trail is
+        // there to say "this one is moving three times as fast".
+        if (speed < 320 || phaseRef.current !== "rolling") powerLiveRef.current = false;
+        else
+          spawnBurst(sparksRef.current, cue.x, cue.y, {
+            count: 2,
+            speed: 26,
+            life: 0.3,
+            colors: ["#ff3bce", "#ff8ae4"],
+            size: 2,
+          });
+      }
       draw(now);
       raf = requestAnimationFrame(tick);
     };
@@ -2818,7 +2874,19 @@ export function NeonBreakGame() {
         : "BALLS IN MOTION — 停止待ち",
     );
     audioEngineRef.current!.cueStrike(power * boost);
-    if (powerArmedRef.current) triggerFlash("#ff3bce", 0.25);
+    if (powerArmedRef.current) {
+      triggerFlash("#ff3bce", 0.25);
+      powerFireRef.current = { x: cue.x, y: cue.y, life: 0.5 };
+      powerLiveRef.current = true;
+      spawnBurst(sparksRef.current, cue.x, cue.y, {
+        count: 22,
+        speed: 260,
+        life: 0.45,
+        colors: ["#ff3bce", "#ff8ae4", "#2ee3ff", "#ffffff"],
+        size: 2.6,
+      });
+      audioEngineRef.current!.powerFire();
+    }
     sync();
   };
   const down = (e: React.PointerEvent<HTMLCanvasElement>) => {
