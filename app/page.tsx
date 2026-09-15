@@ -126,6 +126,7 @@ export default function Home() {
           <p className="workTagline">一枚の絵に、息を宿す。</p>
           <p>風、衣、髪、光の気配。息づく場所を静かに囲み、止まっていた一瞬へ時間を結びます。作品は端末の中だけで息づきます。</p>
           <a className="textButton refinedLink" href={yuramekiUrl}><span>YURAMEKIを開く</span></a>
+          <a className="featureSubLink refinedLink" href="/yurameki/about"><span>YURAMEKIについて</span></a>
         </div>
       </section>
 

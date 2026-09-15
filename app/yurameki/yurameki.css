@@ -215,7 +215,7 @@ header{height:64px;padding:0 clamp(20px,4vw,72px);display:flex;align-items:cente
 .yuramekiPage .progressTrack{height:2px;margin-top:14px;background:#d8d0c2;overflow:hidden}
 .yuramekiPage .progressTrack i{display:block;height:100%;background:var(--beni);transition:width .25s ease}
 .yuramekiPage /* Breathscapes */
-.landscapes{margin:0 clamp(20px,4vw,72px);padding:62px 0 76px;border-top:1px solid rgba(29,37,34,.7);display:grid;grid-template-columns:240px 1fr;gap:56px}
+.yuramekiPage .landscapes{margin:0 clamp(20px,4vw,72px);padding:62px 0 76px;border-top:1px solid rgba(29,37,34,.7);display:grid;grid-template-columns:240px 1fr;gap:56px}
 .yuramekiPage .landscapes h2{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:34px;font-weight:400;letter-spacing:.05em;margin:0}
 .yuramekiPage .landscapes>div>p:last-child{font-size:10px;line-height:1.9;color:var(--sumi-soft)}
 .yuramekiPage .landscapeGrid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
@@ -332,3 +332,23 @@ header{height:64px;padding:0 clamp(20px,4vw,72px);display:flex;align-items:cente
 .yuramekiPage .consentBanner button:last-child{background:var(--sumi);color:var(--kinari)}
 .yuramekiPage .analyticsPreferences{position:fixed;z-index:80;right:12px;bottom:10px;padding:7px 9px;border:1px solid rgba(37,40,35,.3);background:rgba(251,247,239,.88);color:var(--sumi-soft);font-size:8px;cursor:pointer}
 @media(max-width:700px){.yuramekiPage .consentBanner{bottom:12px;padding:17px;align-items:stretch;flex-direction:column;gap:15px}.yuramekiPage .consentBanner>div:last-child{display:grid;grid-template-columns:1fr 1fr}.yuramekiPage .consentBanner button{width:100%}}
+
+/* The guide under the studio. It borrows the shape of .landscapes above it -
+ * a narrow column of heading against a wide column of content - so that
+ * reading down the page does not feel like arriving somewhere else. */
+.yuramekiPage .guide{margin:0 clamp(20px,4vw,72px);padding:62px 0 20px;border-top:1px solid var(--line);display:grid;grid-template-columns:240px 1fr;gap:56px}
+.yuramekiPage .guide h2{margin:0;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:34px;font-weight:400;letter-spacing:.05em}
+.yuramekiPage .guideHead>p:last-child{margin:18px 0 0;font-size:10px;line-height:1.9;color:var(--sumi-soft)}
+.yuramekiPage .guideSteps{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border:1px solid var(--line);background:var(--line)}
+.yuramekiPage .guideSteps li{padding:20px;display:grid;align-content:start;gap:8px;background:rgba(248,244,235,.62)}
+.yuramekiPage .guideSteps b{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:15px;font-weight:400;color:var(--beni)}
+.yuramekiPage .guideSteps span{font-size:13px;letter-spacing:.04em}
+.yuramekiPage .guideSteps small{font-size:9.5px;line-height:1.8;color:var(--sumi-soft)}
+.yuramekiPage .guideFacts{margin:28px 0 0}
+.yuramekiPage .guideFacts>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;padding:13px 0;border-top:1px solid var(--line)}
+.yuramekiPage .guideFacts dt{font-size:10px;letter-spacing:.08em}
+.yuramekiPage .guideFacts dd{margin:0;font-size:10.5px;line-height:1.9;color:var(--sumi-soft)}
+.yuramekiPage .guideMore{display:flex;flex-wrap:wrap;gap:20px;margin:26px 0 0}
+.yuramekiPage .guideMore a{color:var(--beni);font-size:10px;letter-spacing:.06em;text-underline-offset:4px}
+@media(max-width:900px){.yuramekiPage .guide{grid-template-columns:1fr;gap:30px}.yuramekiPage .guideSteps{grid-template-columns:1fr}}
+@media(max-width:520px){.yuramekiPage .guide{margin:0 18px;padding:50px 0 16px}.yuramekiPage .guide h2{font-size:27px}.yuramekiPage .guideFacts>div{grid-template-columns:1fr;gap:5px}}

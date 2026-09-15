@@ -294,7 +294,7 @@ test("the index runs newest first, and a time settles a shared day", async () =>
 test("YURAMEKI is part of the site, not a frame in it", async () => {
   const pages = {
     "/yurameki": "一枚の絵に",
-    "/yurameki/about": "動かしすぎない",
+    "/yurameki/about": "イラストや写真を、動かす",
     "/yurameki/gallery": "動きの余白",
     "/yurameki/faq": "よくある質問",
     "/yurameki/credits": "制作と出所",
@@ -309,6 +309,29 @@ test("YURAMEKI is part of the site, not a frame in it", async () => {
     assert.doesNotMatch(html, /<iframe/, `${path} should not be framed`);
     assert.doesNotMatch(html, /yurameki\.tokyo/, `${path} still points at the old site`);
   }
+});
+
+test("YURAMEKI says in plain words what it is", async () => {
+  const studio = await (await render("/yurameki")).text();
+  assert.match(studio, /<title>[^<]*イラストを動かす/, "the studio's title hides what it does");
+  for (const phrase of ["YURAMEKIについて", "動かす場所を囲む", "GIF", "MP4"]) {
+    assert.ok(studio.includes(phrase), `the studio's guide lost "${phrase}"`);
+  }
+  const about = await (await render("/yurameki/about")).text();
+  for (const phrase of ["できること", "呼吸", "たなびき", "灯り", "波紋", "APNG"]) {
+    assert.ok(about.includes(phrase), `About lost "${phrase}"`);
+  }
+  // Usage questions, not only the questions about rights.
+  const faq = await (await render("/yurameki/faq")).text();
+  assert.ok(faq.includes("どうやって画像を動かすのですか"), "the FAQ lost its first usage question");
+});
+
+test("the About page keeps the tools inside the site", async () => {
+  // Both had moved in and both still 301 back here, so linking out sent a
+  // reader round a redirect to arrive where they already were.
+  const html = await (await render("/about")).text();
+  assert.doesNotMatch(html, /swiftcrop\.jp/, "About still links out to the old SwiftCrop domain");
+  assert.doesNotMatch(html, /color-refine\.com/, "About still links out to the old COLOR RE:FINE domain");
 });
 
 test("the studio carries no advertising or second analytics", async () => {
