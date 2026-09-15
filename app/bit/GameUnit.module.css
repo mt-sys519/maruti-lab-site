@@ -26,13 +26,21 @@
 .bezel { display: flex; flex-direction: column; gap: 10px; padding: 13px 13px 15px; background: #232323; border-radius: 10px 10px 7px 7px; color: #f1eee5; }
 /* The screen follows the shell, not the window. Fixing its height in vh made
    the machine go landscape on a wide desktop and squat on a short one. */
-.screen { position: relative; aspect-ratio: 5 / 4; display: grid; place-items: center; padding: 6px; background: #e9e4d7; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(35, 35, 35, .25); }
+.screen { container-type: inline-size; position: relative; aspect-ratio: 5 / 4; display: grid; place-items: center; padding: 6px; background: #e9e4d7; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(35, 35, 35, .25); }
 .serial { position: absolute; top: 6px; left: 8px; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; color: var(--pkg-color, #FF7A5C); }
 .plate { display: flex; flex-direction: column; gap: 4px; }
 .name { overflow-wrap: anywhere; font: 800 clamp(17px, 1.4vw, 23px)/1.04 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: -.01em; }
 .kind { font: 500 11px/1.5 "Yu Gothic UI", sans-serif; letter-spacing: .1em; color: #b3bcb7; }
 
-.visual { --mark-size: clamp(58px, 6.2vw, 92px); --mark-type-size: clamp(19px, 1.9vw, 30px); position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--pkg-color, #232323); }
+/* Sized from the screen it sits in, not from the window. The unit is 72vw
+   on a phone and about 300px on a desktop, so a viewport-based size left
+   the mark at its 58px floor inside a 206px screen - a quarter of the
+   width, adrift in the middle of it. The percentages are what the desktop
+   already had - 79px of mark inside the screen's 133px of content - now
+   held at every size, rather than only at the width the clamp was tuned
+   for. cqw counts the content box, so the screen's padding is already
+   out of it. */
+.visual { --mark-size: 59cqw; --mark-type-size: 18cqw; position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--pkg-color, #232323); }
 
 .controls { display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(6px, 0.8vw, 11px); }
 .pad { position: relative; width: 30px; height: 30px; }

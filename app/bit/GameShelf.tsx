@@ -27,6 +27,7 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
 ) {
   const rail = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
+  const idle = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Where the shelf has to be scrolled for this machine to sit in the middle
   // of the window. Snapping is centred too, so a gesture always leaves one
@@ -55,6 +56,20 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
     if (left < width) left += width;
     if (left >= width * 2) left -= width;
     strip.scrollLeft = left;
+
+    // Where the browser has it, this is exact, and the timer above is only
+    // there for the browsers that do not.
+    if (!("onscrollend" in strip)) return;
+    const onEnd = () => {
+      if (drag.current.active) return;
+      clearTimeout(idle.current);
+      wrap();
+    };
+    strip.addEventListener("scrollend", onEnd);
+    return () => {
+      strip.removeEventListener("scrollend", onEnd);
+      clearTimeout(idle.current);
+    };
   }, []);
 
 
@@ -74,7 +89,7 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
     },
   }));
 
-  function keepLooping() {
+  function wrap() {
     const strip = rail.current;
     if (!strip) return;
     const width = copyWidth(strip);
@@ -85,6 +100,23 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
     // A drag in progress measures from where it began, so that has to move
     // with it or the shelf lurches out from under the cursor.
     drag.current.startLeft += shift;
+  }
+
+  // Moving the scroll position while a flick is still travelling is what made
+  // the shelf shake on a phone: the browser is animating toward a target it
+  // worked out before the jump, so it carries on to where that target used to
+  // be and drags the row back. Under `scroll-snap-type: x mandatory` it then
+  // re-snaps from there, and the two fight for as long as the momentum lasts.
+  // A mouse drag has no momentum - the position is ours - so that still wraps
+  // as it goes; everything else waits for the scrolling to stop. There are
+  // three copies of the catalog, so there is a whole shelf of room to wait in.
+  function keepLooping() {
+    if (drag.current.active) {
+      wrap();
+      return;
+    }
+    clearTimeout(idle.current);
+    idle.current = setTimeout(wrap, 140);
   }
 
   // Snapping has to be off while a gesture is moving the shelf by hand: left
@@ -99,15 +131,19 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
     if (!strip) return;
     strip.style.scrollSnapType = "";
     const units = Array.from(strip.children) as HTMLElement[];
+    // Against centreOf, not offsetLeft: the units snap to centre, so aiming at
+    // a unit's left edge landed a half-unit off and the browser pulled it back
+    // afterwards - one gesture, two moves, and the second one visible.
     const nearest = units.reduce((best, unit) =>
-      Math.abs(unit.offsetLeft - strip.scrollLeft) < Math.abs(best.offsetLeft - strip.scrollLeft)
+      Math.abs(centreOf(strip, unit) - strip.scrollLeft) <
+      Math.abs(centreOf(strip, best) - strip.scrollLeft)
         ? unit
         : best,
     );
     const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? "auto"
       : "smooth";
-    strip.scrollTo({ left: nearest.offsetLeft, behavior });
+    strip.scrollTo({ left: centreOf(strip, nearest), behavior });
   }
 
   function startDrag(event: React.PointerEvent<HTMLDivElement>) {
