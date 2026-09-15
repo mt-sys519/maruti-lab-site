@@ -26,7 +26,7 @@ export default function YuramekiLayout({ children }: { children: ReactNode }) {
         </a>
         <nav aria-label="ページナビゲーション">
           <a href="/yurameki/about">YURAMEKIについて</a>
-          <a href="/yurameki/gallery">作例</a>
+          <a href="/yurameki/gallery">動きのサンプル</a>
           <a href="/yurameki/faq">よくある質問</a>
           <a href="/">Works</a>
         </nav>

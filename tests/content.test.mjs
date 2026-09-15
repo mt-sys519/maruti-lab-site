@@ -295,7 +295,7 @@ test("YURAMEKI is part of the site, not a frame in it", async () => {
   const pages = {
     "/yurameki": "一枚の絵に",
     "/yurameki/about": "イラストや写真を、動かす",
-    "/yurameki/gallery": "動きの余白",
+    "/yurameki/gallery": "動きのサンプル",
     "/yurameki/faq": "よくある質問",
     "/yurameki/credits": "制作と出所",
   };

@@ -1,7 +1,11 @@
-/* eslint-disable @next/next/no-img-element -- a single local artwork is intentionally cropped differently for each study */
 import type { Metadata } from "next";
 import { InfoPage } from "../info-shell";
 
-export const metadata:Metadata={title:"動きのサンプル｜呼吸とたなびき",description:"同じ一枚の絵に、呼吸とたなびきをそれぞれ与えたYURAMEKIのサンプル。どこを囲むと何が動くのかを比べられます。",alternates:{canonical:"/yurameki/gallery"}};
+export const metadata:Metadata={title:"動きのサンプル｜呼吸",description:"YURAMEKIで実際に書き出した1080のMP4。囲んだところだけが動き、それ以外は止まったままであることを見られます。",alternates:{canonical:"/yurameki/gallery"}};
 
-export default function Gallery(){return <InfoPage eyebrow="MOTION STUDIES" title="動きの余白。" lead="同じ一枚の絵でも、どこへ時間を渡すかで景色は変わります。"><div className="studyGrid"><article><div className="studyImage breathStudy"><img src="/yurameki/demo.webp" alt="女性と黒猫のYURAMEKIデモ作品"/></div><p className="eyebrow">01 — 呼吸 / KOKYŪ</p><h2>人物と猫に、静かな満ち引きを。</h2><p>胸元と猫の胴体を別々の範囲として選び、わずかに異なる間で呼吸させています。</p></article><article><div className="studyImage flutterStudy"><img src="/yurameki/demo.webp" alt="柳と桜を含むYURAMEKIデモ作品"/></div><p className="eyebrow">02 — たなびき / TANABIKI</p><h2>柳と桜へ、風の通り道を。</h2><p>人物には触れず、画面上部の柳と桜へ横方向のうねりを渡します。</p></article><article className="studyBlank"><span>YOUR IMAGE</span><h2>次の景色は、あなたの一枚から。</h2><p>画像を置き、動かしたい場所を囲むだけで、自分の作例をつくれます。</p><a className="backToStudio" href="/yurameki">制作画面をひらく</a></article></div><p className="galleryNote">掲載中の2例は、同じYURAMEKIオリジナルDEMOを使用しています。動きの違いを比較するための作例です。</p></InfoPage>}
+/* The page called these 作例 and showed the same still twice, which was the
+   old site's plan for artwork that never arrived. They are samples of what the
+   tool does, so one real export stands here instead - the poster is the frame
+   the studio starts from, and the video is that same frame with two ranges
+   breathing in it. The other three motions follow when they are made. */
+export default function Gallery(){return <InfoPage eyebrow="MOTION SAMPLES" title="動きのサンプル" lead="YURAMEKIで書き出したものです。囲んだところだけが動き、ほかは止まったままです。"><div className="studyGrid studyGridSingle"><article><div className="studyImage"><video src="/yurameki/sample-breath.mp4" poster="/yurameki/demo-breath.webp" autoPlay muted loop playsInline preload="metadata" aria-label="女性と黒猫の絵に呼吸の動きをつけたYURAMEKIのサンプル"/></div><p className="eyebrow">01 — 呼吸 / KOKYŪ</p><h2>人物と猫に、静かな満ち引きを。</h2><p>胸元と猫の胴体を別々の範囲として選び、わずかに異なる間で呼吸させています。1080のMP4として書き出したものをそのまま置いています。</p></article><article className="studyBlank"><span>YOUR IMAGE</span><h2>次の景色は、あなたの一枚から。</h2><p>画像を置き、動かしたい場所を囲むだけで、同じものをつくれます。</p><a className="backToStudio" href="/yurameki">制作画面をひらく</a></article></div><p className="galleryNote">使っている絵はYURAMEKIのオリジナルDEMOです。たなびき・灯り・波紋のサンプルは準備中です。</p></InfoPage>}
