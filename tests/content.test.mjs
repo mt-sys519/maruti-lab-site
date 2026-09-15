@@ -334,6 +334,16 @@ test("the About page keeps the tools inside the site", async () => {
   assert.doesNotMatch(html, /color-refine\.com/, "About still links out to the old COLOR RE:FINE domain");
 });
 
+test("YURAMEKI's support link points at the page that exists", async () => {
+  // It read an env var its old project set and this one does not, so all three
+  // places that offer it said the support page was coming soon instead.
+  for (const path of ["/yurameki", "/yurameki/about"]) {
+    const html = await (await render(path)).text();
+    assert.match(html, /buymeacoffee\.com\/marutilab/, `${path} lost the support link`);
+    assert.ok(!html.includes("準備中です"), `${path} still calls the support page unfinished`);
+  }
+});
+
 test("the studio carries no advertising or second analytics", async () => {
   const html = await (await render("/yurameki")).text();
   assert.doesNotMatch(html, /googlesyndication|adsbygoogle/);
