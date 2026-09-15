@@ -21,18 +21,22 @@ const COPIES = [0, 1, 2];
  *  two versions of it. */
 export type ShelfHandle = { step: (direction: -1 | 1) => void };
 
-export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(function GameShelf(
-  { className },
-  handle,
-) {
+export const GameShelf = forwardRef<
+  ShelfHandle,
+  { className?: string; align?: "center" | "start" }
+>(function GameShelf({ className, align = "center" }, handle) {
   const rail = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
   const idle = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Where the shelf has to be scrolled for this machine to sit in the middle
-  // of the window. Snapping is centred too, so a gesture always leaves one
-  // machine in the middle rather than one flush against the left edge.
-  function centreOf(strip: HTMLDivElement, unit: HTMLElement) {
+  // Where the shelf has to be scrolled for this machine to sit where the shelf
+  // rests things. On /bit that is the middle of the window; in the hero on the
+  // home page it is flush against the left edge, because there the shelf stops
+  // at the column the copy ends rather than running off the screen - and a
+  // machine resting half in and half out of that edge is cut, not bled.
+  // Snapping agrees with whichever it is, so a gesture leaves them lined up.
+  function restOf(strip: HTMLDivElement, unit: HTMLElement) {
+    if (align === "start") return unit.offsetLeft;
     return unit.offsetLeft - (strip.clientWidth - unit.offsetWidth) / 2;
   }
 
@@ -52,7 +56,7 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
     const unit = strip.children[bitGames.length + featured] as HTMLElement | undefined;
     if (!unit) return;
     const width = copyWidth(strip);
-    let left = centreOf(strip, unit);
+    let left = restOf(strip, unit);
     if (left < width) left += width;
     if (left >= width * 2) left -= width;
     strip.scrollLeft = left;
@@ -81,11 +85,11 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
       if (!strip) return;
       const units = Array.from(strip.children) as HTMLElement[];
       const next = direction === 1
-        ? units.find((unit) => centreOf(strip, unit) > strip.scrollLeft + 4)
-        : [...units].reverse().find((unit) => centreOf(strip, unit) < strip.scrollLeft - 4);
+        ? units.find((unit) => restOf(strip, unit) > strip.scrollLeft + 4)
+        : [...units].reverse().find((unit) => restOf(strip, unit) < strip.scrollLeft - 4);
       if (!next) return;
       const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-      strip.scrollTo({ left: centreOf(strip, next), behavior });
+      strip.scrollTo({ left: restOf(strip, next), behavior });
     },
   }));
 
@@ -135,15 +139,15 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
     // a unit's left edge landed a half-unit off and the browser pulled it back
     // afterwards - one gesture, two moves, and the second one visible.
     const nearest = units.reduce((best, unit) =>
-      Math.abs(centreOf(strip, unit) - strip.scrollLeft) <
-      Math.abs(centreOf(strip, best) - strip.scrollLeft)
+      Math.abs(restOf(strip, unit) - strip.scrollLeft) <
+      Math.abs(restOf(strip, best) - strip.scrollLeft)
         ? unit
         : best,
     );
     const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? "auto"
       : "smooth";
-    strip.scrollTo({ left: centreOf(strip, nearest), behavior });
+    strip.scrollTo({ left: restOf(strip, nearest), behavior });
   }
 
   function startDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -190,6 +194,7 @@ export const GameShelf = forwardRef<ShelfHandle, { className?: string }>(functio
   return (
     <div
       className={className ? `${styles.shelf} ${className}` : styles.shelf}
+      data-align={align}
       ref={rail}
       onPointerDown={startDrag}
       onPointerMove={moveDrag}

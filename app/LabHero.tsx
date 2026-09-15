@@ -84,7 +84,7 @@ export function LabHero() {
           </span>
           <strong>{gameCount} / ONLINE</strong>
         </div>
-        <GameShelf className={styles.shelfBleed} />
+        <GameShelf className={styles.shelfBleed} align="start" />
       </div>
 
       <div className={`labReadout ${styles.readout}`} aria-label="MarutiBitの概要">
