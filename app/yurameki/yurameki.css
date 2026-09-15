@@ -29,33 +29,42 @@
 .yuramekiPage footer{align-items:normal;grid-template-columns:none;font-family:inherit}
 .yuramekiPage .brand{font-size:inherit;font-weight:inherit;white-space:normal}
 .yuramekiPage{
---sumi:#252823;
-  --sumi-soft:#52564f;
-  --washi:#f4efe5;
-  --washi-deep:#e9dfcf;
-  --kinari:#fbf7ef;
-  --ai:#65766a;
-  --ai-pale:#e5ebe3;
-  --indigo:#40556e;
-  --indigo-deep:#2d4055;
-  --indigo-pale:#e8edf2;
-  --seiji:#5e8277;
-  --seiji-pale:#e4ede8;
-  --beni:#a85c58;
-  --beni-deep:#75413f;
-  --gold:#ad9465;
-  --kokyu:#a45752;
-  --hamon:#2f6c71;
-  --akari:#93622f;
-  --tanabiki:#52705d;
-  --line:#d5c9b7;
-  --shadow:rgba(28,37,33,.14);
+/* The palette had twelve hues and every one of them was dusty: a rose, a mud
+ * gold, a grey-green and a grey-blue all sitting at much the same lightness
+ * and much the same low saturation, over a beige ground. Nothing was dark and
+ * nothing was sharp, so the whole studio read as smoke - and the artwork it
+ * holds is black, deep red and gold, which the interface then lost to.
+ *
+ * The paper stays. What changed is that the ink went properly black, the
+ * hairlines went warmer and lighter, and each accent was taken out of the
+ * dust: one red carries the links and the marks on the canvas, and the four
+ * motions keep their own colours but at a saturation you can actually name. */
+--sumi:#14150f;
+  --sumi-soft:#3b3c35;
+  --washi:#f6f2e8;
+  --washi-deep:#ece5d5;
+  --kinari:#fdfbf6;
+  --ai:#4f5e54;
+  --ai-pale:#e6ebe3;
+  --indigo:#33506e;
+  --indigo-deep:#20384f;
+  --indigo-pale:#e7edf3;
+  --seiji:#4d7b6d;
+  --seiji-pale:#e3ede7;
+  --beni:#c8392a;
+  --beni-deep:#8f2418;
+  --gold:#b08a3e;
+  --kokyu:#c23b30;
+  --hamon:#1d7e86;
+  --akari:#c07c1b;
+  --tanabiki:#3d7a58;
+  --line:#c9bda6;
+  --shadow:rgba(20,21,15,.14);
 margin:0;
   color:var(--sumi);
   background:
-    radial-gradient(circle at 15% 12%,rgba(166,144,95,.08),transparent 24rem),
-    radial-gradient(circle at 90% 30%,rgba(83,111,104,.07),transparent 29rem),
-    repeating-linear-gradient(0deg,rgba(29,37,34,.018) 0,rgba(29,37,34,.018) 1px,transparent 1px,transparent 5px),
+    radial-gradient(circle at 15% 12%,rgba(176,138,62,.05),transparent 26rem),
+    repeating-linear-gradient(0deg,rgba(20,21,15,.016) 0,rgba(20,21,15,.016) 1px,transparent 1px,transparent 5px),
     var(--washi);
   font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN","Meiryo",system-ui,sans-serif;
   letter-spacing:.015em;
@@ -88,11 +97,11 @@ header{height:64px;padding:0 clamp(20px,4vw,72px);display:flex;align-items:cente
 .yuramekiPage .intro h1 em{color:var(--beni-deep);font-style:normal}
 .yuramekiPage .intro>p:last-child{grid-column:2;margin:0 0 3px;max-width:590px;line-height:1.75;font-size:11px;color:var(--sumi-soft)}
 .yuramekiPage /* Studio */
-.studio{--mode-accent:var(--kokyu);--mode-pale:rgba(164,87,82,.08);margin:0 clamp(18px,4vw,72px);display:grid;grid-template-columns:230px minmax(440px,1fr) 250px;border:1px solid rgba(37,40,35,.8);background:rgba(251,247,239,.94);box-shadow:12px 14px 0 rgba(173,148,101,.13);position:relative}
-.yuramekiPage .studio[data-effect="breath"]{--mode-accent:var(--kokyu);--mode-pale:rgba(164,87,82,.08)}
-.yuramekiPage .studio[data-effect="ripple"]{--mode-accent:var(--hamon);--mode-pale:rgba(47,108,113,.08)}
-.yuramekiPage .studio[data-effect="light"]{--mode-accent:var(--akari);--mode-pale:rgba(147,98,47,.08)}
-.yuramekiPage .studio[data-effect="flutter"]{--mode-accent:var(--tanabiki);--mode-pale:rgba(82,112,93,.08)}
+.studio{--mode-accent:var(--kokyu);--mode-pale:rgba(194,59,48,.07);margin:0 clamp(18px,4vw,72px);display:grid;grid-template-columns:230px minmax(440px,1fr) 250px;border:1px solid rgba(37,40,35,.8);background:rgba(251,247,239,.94);box-shadow:12px 14px 0 rgba(173,148,101,.13);position:relative}
+.yuramekiPage .studio[data-effect="breath"]{--mode-accent:var(--kokyu);--mode-pale:rgba(194,59,48,.07)}
+.yuramekiPage .studio[data-effect="ripple"]{--mode-accent:var(--hamon);--mode-pale:rgba(29,126,134,.07)}
+.yuramekiPage .studio[data-effect="light"]{--mode-accent:var(--akari);--mode-pale:rgba(192,124,27,.07)}
+.yuramekiPage .studio[data-effect="flutter"]{--mode-accent:var(--tanabiki);--mode-pale:rgba(61,122,88,.07)}
 .yuramekiPage .studio:before{content:"";position:absolute;inset:8px;pointer-events:none;border:1px solid rgba(166,144,95,.16)}
 .yuramekiPage .panel{padding:24px 22px;min-width:0;position:relative;z-index:1}
 .yuramekiPage .panel.left{border-right:1px solid var(--line)}
@@ -160,20 +169,20 @@ header{height:64px;padding:0 clamp(20px,4vw,72px);display:flex;align-items:cente
 .yuramekiPage .syncControl>span{display:block;margin-bottom:9px;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--sumi)}
 .yuramekiPage .syncControl>div{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .yuramekiPage .syncControl button{padding:8px 5px!important;background:rgba(251,247,239,.7)!important;border:1px solid var(--line)!important;font-size:9.5px;font-weight:600;line-height:1.35;cursor:pointer}
-.yuramekiPage .syncControl button.active{background:var(--mode-accent)!important;border-color:var(--mode-accent)!important;color:#fff}
+.yuramekiPage .syncControl button.active{background:var(--sumi)!important;border-color:var(--sumi)!important;color:var(--kinari)}
 .yuramekiPage .rangeDraftStatus{margin:2px 0 0;color:var(--sumi);font-size:10px;line-height:1.6;text-align:center}
 .yuramekiPage .finishRegionButton{min-height:46px;background:var(--beni)!important;border-color:var(--beni)!important;color:#fff!important;font-weight:700;letter-spacing:.06em}
 .yuramekiPage .finishRegionButton:disabled{background:rgba(168,92,88,.12)!important;border-color:rgba(168,92,88,.26)!important;color:rgba(40,52,47,.52)!important;cursor:not-allowed!important}
 .yuramekiPage .range{display:block;margin:14px 0}
 .yuramekiPage .range span{font-size:11px;font-weight:600;letter-spacing:.03em}
-.yuramekiPage .range output{font-family:"SFMono-Regular",Consolas,monospace;font-weight:600;color:var(--mode-accent)}
-.yuramekiPage .range input{width:100%;accent-color:var(--mode-accent);margin-top:10px}
+.yuramekiPage .range output{font-family:"SFMono-Regular",Consolas,monospace;font-weight:600;color:var(--sumi)}
+.yuramekiPage .range input{width:100%;accent-color:var(--sumi);margin-top:10px}
 .yuramekiPage .points{display:block;border-top:1px solid var(--line);padding-top:20px;margin-top:28px;font-size:10px;font-weight:700;letter-spacing:.07em}
 .yuramekiPage .pointRail{display:grid;grid-template-columns:22px minmax(0,1fr) 22px;align-items:center;gap:3px;width:100%;min-width:0;margin-top:9px}
 .yuramekiPage .pointRailTrack{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-inline:contain;padding:1px 0}
 .yuramekiPage .pointRailTrack::-webkit-scrollbar{display:none}
 .yuramekiPage .pointRailTrack button{flex:0 0 27px;width:27px;height:27px;border:1px solid var(--line)!important;background:var(--kinari)!important;border-radius:50%!important;cursor:pointer;padding:0!important;font-size:10px;scroll-snap-align:center}
-.yuramekiPage .pointRailTrack button.active{background:var(--mode-accent)!important;border-color:var(--mode-accent)!important;color:white}
+.yuramekiPage .pointRailTrack button.active{background:var(--sumi)!important;border-color:var(--sumi)!important;color:var(--kinari)}
 .yuramekiPage .pointRailArrow{width:22px;height:27px;border:0!important;background:transparent!important;color:var(--sumi-soft);font-size:19px;line-height:1;padding:0!important;cursor:pointer;visibility:hidden}
 .yuramekiPage .pointRailArrow.visible{visibility:visible}
 .yuramekiPage .pointRailArrow:disabled{opacity:.24;cursor:default}
