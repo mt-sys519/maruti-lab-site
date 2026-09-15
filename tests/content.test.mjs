@@ -286,3 +286,33 @@ test("the index runs newest first, and a time settles a shared day", async () =>
   const shown = [...list.matchAll(/href="\/blog\/([a-z0-9-]+)"/g)].map((m) => m[1]);
   assert.deepEqual(shown.slice(0, notes.length), notes.map((n) => n.slug));
 });
+
+// YURAMEKI came across as pages rather than as an iframe: its studio is a
+// client component of this site, its stylesheet is scoped under .yuramekiPage,
+// and its own writing kept its own URLs rather than being folded into the
+// lab's About.
+test("YURAMEKI is part of the site, not a frame in it", async () => {
+  const pages = {
+    "/yurameki": "一枚の絵に",
+    "/yurameki/about": "動かしすぎない",
+    "/yurameki/gallery": "動きの余白",
+    "/yurameki/faq": "よくある質問",
+    "/yurameki/credits": "制作と出所",
+  };
+  for (const [path, heading] of Object.entries(pages)) {
+    const response = await render(path);
+    assert.equal(response.status, 200, `${path} should answer`);
+    const html = await response.text();
+    assert.ok(html.includes(heading), `${path} lost its heading`);
+    assert.match(html, /class="yuramekiPage"/, `${path} is not scoped`);
+    // The whole point: no frame, and nothing left pointing at the old domain.
+    assert.doesNotMatch(html, /<iframe/, `${path} should not be framed`);
+    assert.doesNotMatch(html, /yurameki\.tokyo/, `${path} still points at the old site`);
+  }
+});
+
+test("the studio carries no advertising or second analytics", async () => {
+  const html = await (await render("/yurameki")).text();
+  assert.doesNotMatch(html, /googlesyndication|adsbygoogle/);
+  assert.doesNotMatch(html, /G-XGDEFLVL8W/);
+});

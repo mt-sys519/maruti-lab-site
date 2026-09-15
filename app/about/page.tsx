@@ -36,7 +36,7 @@ export default function AboutPage() {
           <ul>
             <li><a href="https://swiftcrop.jp/" target="_blank" rel="noreferrer">SwiftCrop</a> — 画像のトリミングとリサイズ</li>
             <li><a href="https://color-refine.com/" target="_blank" rel="noreferrer">COLOR RE:FINE</a> — 白黒写真のカラー化</li>
-            <li><a href="https://yurameki.tokyo/" target="_blank" rel="noreferrer">YURAMEKI</a> — 静止画に揺れを加えるモーションメーカー</li>
+            <li><a href="/yurameki">YURAMEKI</a> — 静止画に揺れを加えるモーションメーカー</li>
             <li><a href="/clock">PromptTerm CLOCK</a> — Windowsデスクトップ時計</li>
             <li><a href="/4track">4TRACK CASSETTE SAMPLER</a> — ブラウザのサンプラー</li>
             <li><a href="/bit">MarutiBit</a> — 短時間で遊べる小さなゲーム集</li>

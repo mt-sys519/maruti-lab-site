@@ -4,7 +4,7 @@ import { ClockPreview } from "./ClockPreview";
 import { formatDate, posts } from "./blog/posts";
 import { SiteFooter } from "./SiteFooter";
 
-const yuramekiUrl = "https://yurameki.tokyo/";
+const yuramekiUrl = "/yurameki";
 
 const works = [
   {
@@ -117,7 +117,7 @@ export default function Home() {
       </section>
 
       <section id="yurameki" className="feature featureYurameki" aria-labelledby="yurameki-title">
-        <a className="featureImage yuramekiImage imageLink" href={yuramekiUrl} target="_blank" rel="noreferrer" aria-label="YURAMEKIを開く">
+        <a className="featureImage yuramekiImage imageLink" href={yuramekiUrl} aria-label="YURAMEKIを開く">
           <Image src="/works/yurameki-breath.png" alt="YURAMEKIの呼吸する作例" fill sizes="(max-width: 800px) 100vw, 62vw" />
         </a>
         <div className="featureCopy">
@@ -125,7 +125,7 @@ export default function Home() {
           <h2 id="yurameki-title">YURAMEKI</h2>
           <p className="workTagline">一枚の絵に、息を宿す。</p>
           <p>風、衣、髪、光の気配。息づく場所を静かに囲み、止まっていた一瞬へ時間を結びます。作品は端末の中だけで息づきます。</p>
-          <a className="textButton refinedLink" href={yuramekiUrl} target="_blank" rel="noreferrer"><span>YURAMEKIを開く</span></a>
+          <a className="textButton refinedLink" href={yuramekiUrl}><span>YURAMEKIを開く</span></a>
         </div>
       </section>
 

@@ -1,0 +1,316 @@
+/* YURAMEKI's stylesheet, scoped.
+ *
+ * Moved from the YURAMEKI project unchanged except for where it applies: every
+ * rule is nested under .yuramekiPage, and what it hung on the document - the colour
+ * variables on :root, the paper and the type on body - is hung on that wrapper
+ * instead. Nothing about how it looks is altered, and no class in it was
+ * renamed; four of its names (brand, contactForm, eyebrow, intro) are also
+ * used by this site, and the nesting is what keeps the two apart.
+ *
+ * `*` and `html` are dropped because the site already says the same thing
+ * about box-sizing and scroll-behavior.
+ */
+.yuramekiPage{
+--sumi:#252823;
+  --sumi-soft:#52564f;
+  --washi:#f4efe5;
+  --washi-deep:#e9dfcf;
+  --kinari:#fbf7ef;
+  --ai:#65766a;
+  --ai-pale:#e5ebe3;
+  --indigo:#40556e;
+  --indigo-deep:#2d4055;
+  --indigo-pale:#e8edf2;
+  --seiji:#5e8277;
+  --seiji-pale:#e4ede8;
+  --beni:#a85c58;
+  --beni-deep:#75413f;
+  --gold:#ad9465;
+  --kokyu:#a45752;
+  --hamon:#2f6c71;
+  --akari:#93622f;
+  --tanabiki:#52705d;
+  --line:#d5c9b7;
+  --shadow:rgba(28,37,33,.14);
+margin:0;
+  color:var(--sumi);
+  background:
+    radial-gradient(circle at 15% 12%,rgba(166,144,95,.08),transparent 24rem),
+    radial-gradient(circle at 90% 30%,rgba(83,111,104,.07),transparent 29rem),
+    repeating-linear-gradient(0deg,rgba(29,37,34,.018) 0,rgba(29,37,34,.018) 1px,transparent 1px,transparent 5px),
+    var(--washi);
+  font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN","Meiryo",system-ui,sans-serif;
+  letter-spacing:.015em;
+  min-height:100svh;
+}
+.yuramekiPage button,.yuramekiPage input{font:inherit}
+.yuramekiPage button{color:inherit}
+.yuramekiPage a:focus-visible,.yuramekiPage button:focus-visible,.yuramekiPage input:focus-visible,.yuramekiPage select:focus-visible,.yuramekiPage textarea:focus-visible,.yuramekiPage canvas:focus-visible{outline:2px solid var(--beni);outline-offset:3px}
+.yuramekiPage main{min-height:100vh;overflow:hidden}
+.yuramekiPage /* Drag layer */
+.dropOverlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:rgba(29,37,34,.92);backdrop-filter:blur(12px);pointer-events:none}
+.yuramekiPage .dropOverlay div{width:min(560px,82vw);height:280px;border:1px solid rgba(244,240,231,.7);display:grid;place-content:center;text-align:center;color:var(--washi);position:relative}
+.yuramekiPage .dropOverlay div:before,.yuramekiPage .dropOverlay div:after{content:"";position:absolute;width:26px;height:26px;border-color:var(--gold)}
+.yuramekiPage .dropOverlay div:before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid}
+.yuramekiPage .dropOverlay div:after{right:-1px;bottom:-1px;border-right:2px solid;border-bottom:2px solid}
+.yuramekiPage .dropOverlay b{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(28px,4vw,48px);font-weight:500;letter-spacing:.08em}
+.yuramekiPage .dropOverlay span{margin-top:15px;font-size:10px;letter-spacing:.22em}
+.yuramekiPage /* Header */
+header{height:64px;padding:0 clamp(20px,4vw,72px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(37,40,35,.2);background:rgba(244,240,231,.82);backdrop-filter:blur(12px);position:relative}
+.yuramekiPage .brand{display:flex;align-items:baseline;gap:17px;color:var(--sumi)}
+.yuramekiPage .brandName{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:17px;font-weight:500;letter-spacing:.24em;line-height:1}
+.yuramekiPage .brand small{font-size:7px;font-weight:600;letter-spacing:.24em;color:var(--ai)}
+.yuramekiPage .privacy{font-size:11px;display:flex;gap:9px;align-items:center;color:var(--sumi-soft);letter-spacing:.07em}
+.yuramekiPage .privacy span{width:6px;height:6px;border-radius:50%;background:var(--seiji);box-shadow:0 0 0 4px rgba(94,130,119,.14)}
+.yuramekiPage /* Intro: vertical rhythm inspired by bijin-ga composition */
+.intro{padding:22px clamp(20px,4vw,72px) 24px;display:grid;grid-template-columns:minmax(300px,.8fr) minmax(420px,1.2fr);align-items:end;gap:38px;position:relative}
+.yuramekiPage .intro .eyebrow{grid-column:1}
+.yuramekiPage .eyebrow{font-size:9px;font-weight:700;letter-spacing:.26em;margin:0 0 16px;color:var(--ai)}
+.yuramekiPage .intro h1{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(30px,3.1vw,48px);font-weight:400;line-height:1.1;letter-spacing:-.035em;margin:0;grid-column:1;max-width:620px}
+.yuramekiPage .intro h1 em{color:var(--beni-deep);font-style:normal}
+.yuramekiPage .intro>p:last-child{grid-column:2;margin:0 0 3px;max-width:590px;line-height:1.75;font-size:11px;color:var(--sumi-soft)}
+.yuramekiPage /* Studio */
+.studio{--mode-accent:var(--kokyu);--mode-pale:rgba(164,87,82,.08);margin:0 clamp(18px,4vw,72px);display:grid;grid-template-columns:230px minmax(440px,1fr) 250px;border:1px solid rgba(37,40,35,.8);background:rgba(251,247,239,.94);box-shadow:12px 14px 0 rgba(173,148,101,.13);position:relative}
+.yuramekiPage .studio[data-effect="breath"]{--mode-accent:var(--kokyu);--mode-pale:rgba(164,87,82,.08)}
+.yuramekiPage .studio[data-effect="ripple"]{--mode-accent:var(--hamon);--mode-pale:rgba(47,108,113,.08)}
+.yuramekiPage .studio[data-effect="light"]{--mode-accent:var(--akari);--mode-pale:rgba(147,98,47,.08)}
+.yuramekiPage .studio[data-effect="flutter"]{--mode-accent:var(--tanabiki);--mode-pale:rgba(82,112,93,.08)}
+.yuramekiPage .studio:before{content:"";position:absolute;inset:8px;pointer-events:none;border:1px solid rgba(166,144,95,.16)}
+.yuramekiPage .panel{padding:24px 22px;min-width:0;position:relative;z-index:1}
+.yuramekiPage .panel.left{border-right:1px solid var(--line)}
+.yuramekiPage .panel.right{border-left:1px solid var(--line);background:linear-gradient(180deg,var(--mode-pale),rgba(251,247,239,.96) 120px)}
+.yuramekiPage .step{display:flex;gap:13px;align-items:center;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:15px;font-weight:600;margin-bottom:20px;letter-spacing:.08em}
+.yuramekiPage .step b{display:grid;place-items:center;width:27px;height:27px;border:1px solid var(--beni);background:var(--beni);font-family:"Yu Gothic UI","Meiryo",sans-serif;font-size:14px;font-weight:700;color:var(--kinari)}
+.yuramekiPage .panel.right .step b{border-color:var(--mode-accent);background:var(--mode-accent)}
+.yuramekiPage .panel.right .step span{color:var(--mode-accent)}
+.yuramekiPage .upload{height:166px;border:1px solid rgba(37,40,35,.7)!important;background-color:#f3f0e7!important;background-image:radial-gradient(circle at 50% 28%,rgba(255,255,255,.68),transparent 54%),linear-gradient(145deg,rgba(232,238,229,.58),rgba(249,242,230,.7))!important;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:background-color .2s ease,box-shadow .2s ease,border-color .2s ease;position:relative;box-shadow:inset 0 0 0 7px rgba(251,247,239,.62),0 6px 18px rgba(37,40,35,.07)}
+.yuramekiPage .upload:after{content:"";position:absolute;inset:7px;border:1px solid rgba(132,110,70,.22);pointer-events:none}
+.yuramekiPage .upload input{display:none}
+.yuramekiPage .upload strong{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:20px;font-weight:500;letter-spacing:.1em;color:var(--sumi);transition:color .2s ease}
+.yuramekiPage .upload strong:before{content:"＋";display:inline-block;margin-right:8px;color:var(--beni);font-size:.9em}
+.yuramekiPage .upload span{margin-top:11px;font-size:8.5px;color:var(--sumi-soft);letter-spacing:.06em}
+.yuramekiPage .upload:active{background-color:#eee8dc!important}
+@media(hover:hover) and (pointer:fine){.yuramekiPage .upload:hover{background-color:#faf6ed!important;border-color:var(--beni-deep)!important;box-shadow:inset 0 0 0 7px rgba(251,247,239,.7),0 7px 19px rgba(37,40,35,.09)}.yuramekiPage .upload:hover strong{color:var(--beni-deep)}}
+.yuramekiPage .localOnlyNotice{margin:10px 0 0;padding:11px 12px;display:grid;grid-template-columns:9px minmax(0,1fr);gap:9px;border:1px solid rgba(94,130,119,.42);background:var(--seiji-pale);color:var(--sumi-soft);box-shadow:inset 3px 0 rgba(94,130,119,.22)}
+.yuramekiPage .localOnlyNotice>i{width:7px;height:7px;margin-top:4px;border-radius:50%;background:var(--seiji);box-shadow:0 0 0 4px rgba(94,130,119,.14)}
+.yuramekiPage .localOnlyNotice b{display:block;font-size:10px;line-height:1.5;letter-spacing:.035em;color:var(--sumi)}
+.yuramekiPage .localOnlyNotice p{margin:4px 0 5px;font-size:9.5px;line-height:1.65}
+.yuramekiPage .localOnlyNotice a{font-size:9.5px;color:#466c62;text-underline-offset:3px}
+.yuramekiPage .panel.left>div[style*="grid-template-columns"] button,.yuramekiPage .panel.right button{border-radius:0!important;border:1px solid var(--line)!important;box-shadow:none!important}
+.yuramekiPage .panel.left>div[style*="grid-template-columns"] button{font-size:10px;letter-spacing:.05em;cursor:pointer}
+.yuramekiPage .ghost{width:100%;margin-top:12px;border:0!important;background:none!important;text-decoration:none;font-size:10px;cursor:pointer;color:var(--sumi-soft);padding:7px;position:relative}
+.yuramekiPage .ghost:after{content:"";position:absolute;left:32%;right:32%;bottom:2px;height:1px;background:var(--line)}
+.yuramekiPage .ghost:hover{color:var(--beni)}
+.yuramekiPage .tip{margin-top:34px;border-top:1px solid var(--line);padding-top:20px;font-size:10px;line-height:1.9;color:var(--sumi-soft)}
+.yuramekiPage .tip b{font-family:"Yu Mincho",serif;font-weight:600;letter-spacing:.12em;color:var(--sumi)}
+.yuramekiPage .tip p{margin:8px 0}
+.yuramekiPage .canvasWrap{background:radial-gradient(circle at 50% 38%,#ece7dc 0,#d9d5ca 72%);padding:87px 22px 28px;position:relative;display:grid;place-items:start center;align-content:start;overflow:hidden}
+.yuramekiPage .canvasWrap:before{content:"";position:absolute;inset:0;background:linear-gradient(125deg,transparent 52%,rgba(255,255,255,.28));pointer-events:none}
+.yuramekiPage .canvasTop{position:absolute;top:62px;left:24px;right:24px;display:flex;justify-content:space-between;font-size:10px;letter-spacing:.12em;font-weight:700;color:var(--sumi);z-index:2}
+.yuramekiPage .canvasTop button{border:0!important;background:transparent!important;font-size:10px;font-weight:600;letter-spacing:.05em;cursor:pointer;padding:0!important}
+.yuramekiPage .canvasTop i{display:inline-block;width:5px;height:5px;border-radius:50%;background:#87958f}
+.yuramekiPage .canvasTop .live i{background:var(--beni);box-shadow:0 0 0 4px rgba(166,75,67,.13)}
+.yuramekiPage .canvasWrap canvas{display:block;max-width:min(100%,calc(100vh - 235px),720px);width:100%;height:auto;aspect-ratio:1;box-shadow:0 22px 46px rgba(37,40,35,.18),0 0 0 7px rgba(251,247,239,.72),0 0 0 8px rgba(173,148,101,.24);touch-action:none;cursor:crosshair;position:relative;z-index:1}
+.yuramekiPage .canvasToolbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:min(370px,calc(100% - 32px));height:40px;z-index:4;display:grid;grid-template-columns:1fr;justify-content:center;gap:10px}
+.yuramekiPage .canvasModes{height:40px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(37,40,35,.28);background:rgba(251,247,239,.88)}
+.yuramekiPage .canvasModes button{--tab-accent:var(--kokyu);min-width:0;padding:3px 2px 2px;border:0;border-right:1px solid rgba(37,40,35,.16);background:transparent;color:var(--sumi);font-family:"Yu Gothic UI","Meiryo",sans-serif;line-height:1;cursor:pointer;box-shadow:inset 0 2px var(--tab-accent)}
+.yuramekiPage .canvasModes button[data-mode="breath"]{--tab-accent:var(--kokyu)}
+.yuramekiPage .canvasModes button[data-mode="ripple"]{--tab-accent:var(--hamon)}
+.yuramekiPage .canvasModes button[data-mode="light"]{--tab-accent:var(--akari)}
+.yuramekiPage .canvasModes button[data-mode="flutter"]{--tab-accent:var(--tanabiki)}
+.yuramekiPage .canvasModes button>span{display:block;font-size:11px;font-weight:700;letter-spacing:.05em}
+.yuramekiPage .canvasModes button>small{display:block;margin-top:3px;font-size:7.5px;font-weight:700;letter-spacing:.12em;color:var(--tab-accent)}
+.yuramekiPage .canvasModes button:last-child{border-right:0}
+.yuramekiPage .canvasModes button[aria-pressed="true"]{background:var(--tab-accent);color:#fff;box-shadow:none}
+.yuramekiPage .canvasModes button[aria-pressed="true"] small{color:#fff;opacity:.82}
+.yuramekiPage .canvasGuideToggle{min-width:140px;height:40px;padding:0 11px;border:1px solid rgba(64,85,110,.72)!important;background:rgba(248,250,251,.96)!important;color:var(--indigo-deep);font-family:"Yu Gothic UI","Meiryo",sans-serif;font-size:10px;font-weight:700;letter-spacing:.03em;white-space:nowrap;cursor:pointer;box-shadow:inset 3px 0 var(--indigo)!important;transition:background .18s,color .18s,border-color .18s;align-items:center;justify-content:center}
+.yuramekiPage .canvasGuideToggle:hover{border-color:var(--indigo-deep)!important;color:var(--indigo-deep);background:var(--indigo-pale)!important}
+.yuramekiPage .canvasGuideToggle[aria-pressed="true"]{background:var(--indigo)!important;border-color:var(--indigo)!important;color:#fff;box-shadow:none!important}
+.yuramekiPage .canvasGuideToggle span{display:inline-block;min-width:15px;margin-right:5px;font-family:serif;font-size:12px;line-height:1}
+.yuramekiPage .canvasGuideMobile{display:none}
+.yuramekiPage .canvasGuideDesktop{display:flex;width:100%;margin:-8px 0 12px}
+.yuramekiPage .canvasHint{position:absolute;bottom:10px;font-size:9px;font-weight:600;letter-spacing:.1em;color:var(--sumi-soft)}
+.yuramekiPage .pointCoach{position:absolute;z-index:3;left:50%;bottom:43px;transform:translateX(-50%);display:flex;align-items:center;gap:9px;padding:9px 13px;background:rgba(251,247,239,.92);border:1px solid rgba(168,92,88,.38);box-shadow:0 8px 24px rgba(37,40,35,.1);color:var(--sumi);font-size:10px;font-weight:600;letter-spacing:.04em;white-space:nowrap;pointer-events:none;animation:coachIn .55s ease both}
+.yuramekiPage .pointCoach i{width:7px;height:7px;border:2px solid var(--beni);border-radius:50%;box-shadow:0 0 0 4px rgba(168,92,88,.12)}
+@keyframes coachIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
+.yuramekiPage .pointHead,.yuramekiPage .range>span,.yuramekiPage .points{display:flex;justify-content:space-between;align-items:center}
+.yuramekiPage .pointHead{font-size:11px;font-weight:700;margin-bottom:24px;letter-spacing:.05em}
+.yuramekiPage .pointHead i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mode-accent);margin-right:7px}
+.yuramekiPage .pointHead button{border:0!important;background:none!important;font-size:10px;font-weight:600;text-decoration:none;cursor:pointer;padding:4px!important;color:var(--sumi-soft)}
+.yuramekiPage .pointHead button:hover{color:var(--beni)}
+.yuramekiPage .syncControl{padding:0 0 18px;margin:-5px 0 18px;border-bottom:1px solid var(--line)}
+.yuramekiPage .syncControl>span{display:block;margin-bottom:9px;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--sumi)}
+.yuramekiPage .syncControl>div{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.yuramekiPage .syncControl button{padding:8px 5px!important;background:rgba(251,247,239,.7)!important;border:1px solid var(--line)!important;font-size:9.5px;font-weight:600;line-height:1.35;cursor:pointer}
+.yuramekiPage .syncControl button.active{background:var(--mode-accent)!important;border-color:var(--mode-accent)!important;color:#fff}
+.yuramekiPage .rangeDraftStatus{margin:2px 0 0;color:var(--sumi);font-size:10px;line-height:1.6;text-align:center}
+.yuramekiPage .finishRegionButton{min-height:46px;background:var(--beni)!important;border-color:var(--beni)!important;color:#fff!important;font-weight:700;letter-spacing:.06em}
+.yuramekiPage .finishRegionButton:disabled{background:rgba(168,92,88,.12)!important;border-color:rgba(168,92,88,.26)!important;color:rgba(40,52,47,.52)!important;cursor:not-allowed!important}
+.yuramekiPage .range{display:block;margin:14px 0}
+.yuramekiPage .range span{font-size:11px;font-weight:600;letter-spacing:.03em}
+.yuramekiPage .range output{font-family:"SFMono-Regular",Consolas,monospace;font-weight:600;color:var(--mode-accent)}
+.yuramekiPage .range input{width:100%;accent-color:var(--mode-accent);margin-top:10px}
+.yuramekiPage .points{display:block;border-top:1px solid var(--line);padding-top:20px;margin-top:28px;font-size:10px;font-weight:700;letter-spacing:.07em}
+.yuramekiPage .pointRail{display:grid;grid-template-columns:22px minmax(0,1fr) 22px;align-items:center;gap:3px;width:100%;min-width:0;margin-top:9px}
+.yuramekiPage .pointRailTrack{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-inline:contain;padding:1px 0}
+.yuramekiPage .pointRailTrack::-webkit-scrollbar{display:none}
+.yuramekiPage .pointRailTrack button{flex:0 0 27px;width:27px;height:27px;border:1px solid var(--line)!important;background:var(--kinari)!important;border-radius:50%!important;cursor:pointer;padding:0!important;font-size:10px;scroll-snap-align:center}
+.yuramekiPage .pointRailTrack button.active{background:var(--mode-accent)!important;border-color:var(--mode-accent)!important;color:white}
+.yuramekiPage .pointRailArrow{width:22px;height:27px;border:0!important;background:transparent!important;color:var(--sumi-soft);font-size:19px;line-height:1;padding:0!important;cursor:pointer;visibility:hidden}
+.yuramekiPage .pointRailArrow.visible{visibility:visible}
+.yuramekiPage .pointRailArrow:disabled{opacity:.24;cursor:default}
+.yuramekiPage .empty{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;text-align:center;color:#72817b;padding:46px 0;line-height:2;font-size:14px}
+.yuramekiPage .panel.right>div[style*="display:grid"]>button:first-child{background:var(--mode-accent)!important;color:#fff!important;border-color:var(--mode-accent)!important;font-weight:700;letter-spacing:.05em;transition:.2s}
+.yuramekiPage .panel.right>div[style*="display:grid"]>button:first-child:hover{background:var(--beni)!important;border-color:var(--beni)!important}
+.yuramekiPage .mobileEditorTabs,.yuramekiPage .mobileAdvancedToggle{display:none}
+.yuramekiPage /* Export */
+.export{margin:clamp(72px,8vw,130px) clamp(20px,4vw,72px) 0;padding:48px 0 54px;display:flex;align-items:flex-end;justify-content:space-between;gap:42px;border-top:1px solid var(--sumi);position:relative}
+.yuramekiPage .export:before{content:"";position:absolute;top:-1px;left:0;width:96px;height:3px;background:var(--beni)}
+.yuramekiPage .export h2{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(30px,3vw,46px);font-weight:400;letter-spacing:.03em;margin:0}
+.yuramekiPage .export>div>p:last-child{font-size:10px;color:var(--sumi-soft)}
+.yuramekiPage .exportBtns{display:grid;grid-template-columns:repeat(3,minmax(132px,142px)) minmax(174px,190px);grid-template-rows:auto auto auto auto auto;gap:8px;max-width:660px;align-items:stretch}
+.yuramekiPage .exportBtns:before,.yuramekiPage .exportBtns:after{font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--ai);align-self:end;padding:0 0 3px}
+.yuramekiPage .exportBtns:before{content:"大きさ  /  SIZE";grid-column:1/4;grid-row:1}
+.yuramekiPage .exportBtns:after{content:"形式  /  FORMAT";grid-column:1/5;grid-row:3}
+.yuramekiPage .exportBtns>button:nth-of-type(-n+3){grid-row:2}
+.yuramekiPage .exportBtns>button:nth-of-type(n+4):nth-of-type(-n+7){grid-row:4}
+.yuramekiPage .exportBtns>button:nth-of-type(8),.yuramekiPage .exportBtns>.saveReady{grid-column:1/5;grid-row:5;min-height:64px;text-align:center;display:grid;align-content:center}
+.yuramekiPage .exportBtns>.shareReady{grid-column:4;grid-row:2;min-height:0;text-align:center;display:grid;align-content:center;background:rgba(166,144,95,.12)!important}
+.yuramekiPage .exportBtns:has(.saveReady)>button:nth-of-type(8){display:none}
+.yuramekiPage .exportBtns button{min-width:142px;padding:16px 17px;text-align:left;background:rgba(251,248,241,.55)!important;border:1px solid var(--sumi)!important;border-radius:0!important;cursor:pointer;transition:transform .22s ease,background .22s ease,color .22s ease,box-shadow .22s ease}
+.yuramekiPage .exportBtns button:hover:not(:disabled){background:var(--sumi)!important;color:var(--kinari)!important;transform:translateY(-3px);box-shadow:5px 5px 0 rgba(166,144,95,.25)}
+.yuramekiPage .exportBtns button:disabled{opacity:.38;cursor:not-allowed}
+.yuramekiPage .exportBtns button[aria-pressed="true"]{background:var(--sumi)!important;color:var(--kinari)!important;box-shadow:inset 0 -3px var(--beni)!important}
+.yuramekiPage .exportBtns b,.yuramekiPage .exportBtns span{display:block}
+.yuramekiPage .exportBtns b{font-family:"Yu Mincho",serif;font-size:16px;font-weight:600;letter-spacing:.04em}
+.yuramekiPage .exportBtns span{font-size:9px;margin-top:6px;letter-spacing:.05em}
+.yuramekiPage .exportBtns>button:nth-of-type(8){background:var(--sumi)!important;color:var(--kinari)!important}
+.yuramekiPage .exportBtns>button:nth-of-type(8) b,.yuramekiPage .exportBtns>button:nth-of-type(8) span{color:var(--kinari)!important}
+.yuramekiPage .exportBtns>button:nth-of-type(8):disabled{opacity:.68}
+.yuramekiPage .exportBtns>.saveReady{background:var(--beni)!important;color:var(--kinari)!important;border-color:var(--beni)!important}
+.yuramekiPage .exportBtns>.saveReady b,.yuramekiPage .exportBtns>.saveReady span{color:var(--kinari)!important}
+.yuramekiPage .completion{margin-top:18px;min-height:62px;padding-left:16px;border-left:1px solid var(--gold)}
+.yuramekiPage .completion p{margin:0;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:15px;color:var(--sumi)}
+.yuramekiPage .completion small{display:block;margin-top:8px;color:#6e756f;font-size:9px}
+.yuramekiPage .completion.ready{padding:17px 19px;border:1px solid rgba(166,75,67,.44);background:rgba(251,248,241,.75);box-shadow:7px 7px 0 rgba(166,144,95,.14)}
+.yuramekiPage .completion.ready p{font-size:22px;color:var(--beni)}
+.yuramekiPage .progressTrack{height:2px;margin-top:14px;background:#d8d0c2;overflow:hidden}
+.yuramekiPage .progressTrack i{display:block;height:100%;background:var(--beni);transition:width .25s ease}
+.yuramekiPage /* Breathscapes */
+.landscapes{margin:0 clamp(20px,4vw,72px);padding:62px 0 76px;border-top:1px solid rgba(29,37,34,.7);display:grid;grid-template-columns:240px 1fr;gap:56px}
+.yuramekiPage .landscapes h2{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:34px;font-weight:400;letter-spacing:.05em;margin:0}
+.yuramekiPage .landscapes>div>p:last-child{font-size:10px;line-height:1.9;color:var(--sumi-soft)}
+.yuramekiPage .landscapeGrid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.yuramekiPage .landscapeGrid button{--landscape-accent:var(--kokyu);position:relative;min-height:122px;padding:19px;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;align-content:start;text-align:left;gap:9px;color:#6f746f;background:rgba(248,244,235,.62);box-shadow:inset 0 3px var(--landscape-accent);transition:.2s;cursor:pointer}
+.yuramekiPage .landscapeGrid button:nth-child(1){--landscape-accent:var(--hamon)}
+.yuramekiPage .landscapeGrid button:nth-child(2){--landscape-accent:var(--gold)}
+.yuramekiPage .landscapeGrid button:nth-child(3){--landscape-accent:var(--tanabiki)}
+.yuramekiPage .landscapeGrid button:nth-child(4){--landscape-accent:var(--beni)}
+.yuramekiPage .landscapeGrid button:not(:disabled):hover{background:rgba(251,248,241,.72)}
+.yuramekiPage .landscapeGrid button.active{color:var(--sumi);background:rgba(251,248,241,.92);box-shadow:inset 0 3px var(--beni)}
+.yuramekiPage .landscapeGrid button.pending{cursor:not-allowed;color:var(--sumi-soft);background:rgba(241,236,226,.62)}
+.yuramekiPage .landscapeGrid button.pending>span{opacity:.55}
+.yuramekiPage .landscapeGrid button.pending b{opacity:.9}
+.yuramekiPage .landscapeGrid button.pending>small{color:var(--sumi-soft);opacity:.82;letter-spacing:.07em}
+.yuramekiPage .landscapeGrid button.pending>i{position:absolute;top:10px;right:9px;padding:3px 5px;border:1px solid rgba(173,148,101,.55);background:rgba(251,247,239,.88);color:var(--sumi-soft);font-size:8px;font-style:normal;font-weight:700;letter-spacing:.08em}
+.yuramekiPage .landscapeGrid button>span{font-size:17px;opacity:.78}
+.yuramekiPage .landscapeGrid button b{font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;font-size:15px;font-weight:700;letter-spacing:.05em}
+.yuramekiPage .landscapeGrid button b em{display:block;margin-top:4px;color:var(--landscape-accent);font-family:system-ui,sans-serif;font-size:8px;font-style:normal;font-weight:800;letter-spacing:.13em}
+.yuramekiPage .landscapeGrid button>small{font-size:9px;line-height:1.5;letter-spacing:.05em}
+.yuramekiPage footer{padding:25px clamp(20px,4vw,72px);background:var(--sumi);color:#e4ebe7;display:flex;justify-content:space-between;gap:24px;font-size:9px;letter-spacing:.1em;position:relative}
+.yuramekiPage footer:before{content:"";position:absolute;left:clamp(20px,4vw,72px);top:0;width:78px;height:2px;background:var(--beni)}
+@media(max-width:1050px){.yuramekiPage .studio{grid-template-columns:210px minmax(380px,1fr) 230px}.yuramekiPage .panel{padding:24px 18px}}
+@media(min-width:901px) and (max-width:1180px){.yuramekiPage .export{display:block}.yuramekiPage .exportBtns{margin-top:30px;max-width:none;width:100%;grid-template-columns:repeat(12,minmax(0,1fr))}.yuramekiPage .exportBtns:before,.yuramekiPage .exportBtns:after{grid-column:1/13}.yuramekiPage .exportBtns>button:nth-of-type(1){grid-column:1/5}.yuramekiPage .exportBtns>button:nth-of-type(2){grid-column:5/9}.yuramekiPage .exportBtns>button:nth-of-type(3){grid-column:9/13}.yuramekiPage .exportBtns>button:nth-of-type(4){grid-column:1/4}.yuramekiPage .exportBtns>button:nth-of-type(5){grid-column:4/7}.yuramekiPage .exportBtns>button:nth-of-type(6){grid-column:7/10}.yuramekiPage .exportBtns>button:nth-of-type(7){grid-column:10/13;grid-row:4}.yuramekiPage .exportBtns>button:nth-of-type(8),.yuramekiPage .exportBtns>.saveReady{grid-column:1/13;grid-row:5}.yuramekiPage .exportBtns>.shareReady{grid-column:1/13;grid-row:6;min-height:68px}}
+@media(max-width:900px){.yuramekiPage .intro{display:block}.yuramekiPage .intro>p:last-child{margin-top:22px}.yuramekiPage .studio{grid-template-columns:1fr;box-shadow:9px 9px 0 rgba(166,144,95,.18)}.yuramekiPage .canvasWrap{order:1;min-height:0}.yuramekiPage .mobileEditorTabs{display:grid;grid-template-columns:repeat(3,1fr);order:2;min-height:52px;background:var(--kinari);border-top:1px solid var(--line);border-bottom:1px solid var(--line);z-index:4}.yuramekiPage .mobileEditorTabs button{min-height:52px;border:0;border-right:1px solid var(--line);background:transparent;color:var(--sumi-soft);font-size:10px;letter-spacing:.08em;cursor:pointer}.yuramekiPage .mobileEditorTabs button:last-child{border-right:0}.yuramekiPage .mobileEditorTabs button[aria-pressed="true"]{background:var(--sumi);color:var(--kinari)}.yuramekiPage .mobileEditorTabs b{margin-right:7px;font-family:"Yu Gothic UI","Meiryo",sans-serif;font-size:12px;font-weight:800;color:var(--beni)}.yuramekiPage .mobileEditorTabs button[aria-pressed="true"] b{color:var(--kinari)}.yuramekiPage .panel.left,.yuramekiPage .panel.right{display:none;order:3;border:0}.yuramekiPage .canvasToolbar{width:min(520px,calc(100% - 32px));grid-template-columns:minmax(0,370px) 140px}.yuramekiPage .canvasGuideMobile{display:flex}.yuramekiPage .canvasGuideDesktop{display:none}.yuramekiPage .studio[data-mobile-panel="image"] .panel.left{display:block}.yuramekiPage .studio[data-mobile-panel="motion"] .panel.right{display:block}.yuramekiPage .upload{height:104px}.yuramekiPage .export{display:block}.yuramekiPage .exportBtns{margin-top:30px;grid-template-columns:repeat(12,minmax(0,1fr));max-width:none;width:100%}.yuramekiPage .exportBtns:before,.yuramekiPage .exportBtns:after{grid-column:1/13}.yuramekiPage .exportBtns>button:nth-of-type(1){grid-column:1/5}.yuramekiPage .exportBtns>button:nth-of-type(2){grid-column:5/9}.yuramekiPage .exportBtns>button:nth-of-type(3){grid-column:9/13}.yuramekiPage .exportBtns>button:nth-of-type(4){grid-column:1/4}.yuramekiPage .exportBtns>button:nth-of-type(5){grid-column:4/7}.yuramekiPage .exportBtns>button:nth-of-type(6){grid-column:7/10}.yuramekiPage .exportBtns>button:nth-of-type(7){grid-column:10/13;grid-row:4}.yuramekiPage .exportBtns>button:nth-of-type(8),.yuramekiPage .exportBtns>.saveReady{grid-column:1/13;grid-row:5;min-height:76px;margin-top:7px}.yuramekiPage .exportBtns>.shareReady{grid-column:1/13;grid-row:6;min-height:68px}.yuramekiPage .privacy{display:none}.yuramekiPage .landscapes{grid-template-columns:1fr}.yuramekiPage .landscapeGrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.yuramekiPage header{height:58px;padding:0 18px}.yuramekiPage .brand{display:grid;gap:4px}.yuramekiPage .brandName{font-size:15px;letter-spacing:.22em}.yuramekiPage .brand small{font-size:7px;letter-spacing:.14em}.yuramekiPage .intro{padding:16px 18px 18px}.yuramekiPage .intro h1{font-size:28px;line-height:1.12;letter-spacing:-.025em}.yuramekiPage .intro>p:last-child{margin-top:8px;max-width:34em;font-size:10.5px;line-height:1.7}.yuramekiPage .studio{margin:0;border-left:0;border-right:0;box-shadow:none;display:flex;flex-direction:column;height:auto;min-height:0;overflow:visible}.yuramekiPage .studio:before{display:none}.yuramekiPage .canvasWrap{order:1;display:block;padding:120px 10px 32px;min-height:0;overflow:visible}.yuramekiPage .canvasWrap canvas{width:100%;max-width:none;box-shadow:0 13px 30px rgba(37,40,35,.16),0 0 0 4px rgba(251,247,239,.72)}.yuramekiPage .canvasToolbar{top:8px;left:10px;right:10px;transform:none;width:auto;height:auto;grid-template-columns:1fr;gap:6px}.yuramekiPage .canvasModes{width:100%;height:42px;background:rgba(251,247,239,.9);backdrop-filter:blur(8px)}.yuramekiPage .canvasModes button>span{font-size:11px}.yuramekiPage .canvasModes button>small{font-size:7.5px}.yuramekiPage .canvasGuideToggle{justify-self:end;min-width:142px;height:36px;padding:0 12px;background:rgba(251,247,239,.94);backdrop-filter:blur(8px);font-size:10px}.yuramekiPage .canvasTop{top:95px;left:14px;right:14px}.yuramekiPage .canvasTop button{min-width:44px;min-height:28px}.yuramekiPage .canvasHint{bottom:9px}.yuramekiPage .pointCoach{bottom:36px;max-width:calc(100% - 30px);white-space:normal;text-align:center}.yuramekiPage .mobileEditorTabs{position:sticky;top:0;flex:0 0 52px}.yuramekiPage .panel.left,.yuramekiPage .panel.right{order:3;min-height:0;overflow:visible;padding:22px 18px 34px;border:0!important;background:var(--washi)}.yuramekiPage .panel>.step{display:none}.yuramekiPage .upload{height:104px}.yuramekiPage .upload strong{font-size:17px}.yuramekiPage .upload strong:before{margin-right:7px}.yuramekiPage .upload span{display:block;margin-top:9px;font-size:9px}.yuramekiPage .panel.right>div[style*="display:grid"]>button{min-height:44px}.yuramekiPage .pointHead button{min-width:44px;min-height:44px;font-size:10px!important}.yuramekiPage .syncControl button{min-height:44px;font-size:9px}.yuramekiPage .range{margin:11px 0}.yuramekiPage .range input{height:40px;margin-top:5px;touch-action:pan-y}.yuramekiPage .advancedRange{display:none}.yuramekiPage .panel.right.advanced-open .advancedRange{display:block}.yuramekiPage .mobileAdvancedToggle{display:block;width:100%;min-height:44px;margin:13px 0 4px;border:1px solid var(--line);background:transparent;color:var(--sumi-soft);font-size:10px;letter-spacing:.08em}.yuramekiPage .points{margin-top:18px;padding-top:14px}.yuramekiPage .pointRail{grid-template-columns:28px minmax(0,1fr) 28px}.yuramekiPage .pointRailTrack button{flex-basis:44px;width:44px;height:44px;font-size:12px}.yuramekiPage .pointRailArrow{width:28px;height:44px}.yuramekiPage .export{margin:38px 18px 0;padding:38px 0 44px;scroll-margin-top:12px}.yuramekiPage .exportBtns{grid-template-columns:repeat(12,minmax(0,1fr));width:100%;max-width:none}.yuramekiPage .exportBtns button{min-width:0}.yuramekiPage .landscapes{margin:0 18px;padding-top:50px}.yuramekiPage .landscapeGrid{grid-template-columns:1fr 1fr}.yuramekiPage footer{padding:20px 18px;gap:20px;flex-direction:column}.yuramekiPage footer:before{left:18px}}
+.yuramekiPage /* Rights,.yuramekiPage support and information pages */
+.rightsNotice{margin:13px 0 3px;padding:12px 13px;border-left:2px solid var(--gold);background:rgba(233,223,207,.42)}
+.yuramekiPage .rightsNotice b{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:11px;font-weight:600;letter-spacing:.06em}
+.yuramekiPage .rightsNotice p{margin:6px 0 8px;font-size:9px;line-height:1.75;color:var(--sumi-soft)}
+.yuramekiPage .rightsNotice div{display:flex;gap:13px}
+.yuramekiPage .rightsNotice a{font-size:9px;color:var(--beni);text-underline-offset:3px}
+.yuramekiPage .supportStrip{margin:0 clamp(20px,4vw,72px) clamp(70px,8vw,120px);padding:32px 38px;border:1px solid rgba(173,148,101,.65);background:linear-gradient(120deg,rgba(251,247,239,.82),rgba(233,223,207,.72));display:flex;align-items:center;justify-content:space-between;gap:40px;box-shadow:8px 9px 0 rgba(173,148,101,.1)}
+.yuramekiPage .supportStrip>div>span:first-child{font-size:8px;font-weight:700;letter-spacing:.24em;color:var(--beni)}
+.yuramekiPage .supportStrip h2{margin:8px 0 5px;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:23px;font-weight:400}
+.yuramekiPage .supportStrip p{margin:0;font-size:9px;line-height:1.7;color:var(--sumi-soft)}
+.yuramekiPage .supportStrip>a{min-width:178px;padding:14px 17px;border:1px solid var(--sumi);display:flex;align-items:center;gap:12px;text-decoration:none;transition:.2s}
+.yuramekiPage .supportStrip>a:hover{background:var(--sumi);color:var(--kinari)}
+.yuramekiPage .supportStrip>a .coffeeMark{font-family:"Times New Roman","Yu Mincho",serif;font-size:21px;line-height:1;color:inherit;opacity:.78;letter-spacing:0}
+.yuramekiPage .supportLinkCopy{display:block}
+.yuramekiPage .supportStrip>a b,.yuramekiPage .supportStrip>a small{display:block}
+.yuramekiPage .supportStrip>a b{font-family:"Yu Mincho",serif;font-size:14px}
+.yuramekiPage .supportStrip>a small{margin-top:5px;font-size:7px;letter-spacing:.08em}
+.yuramekiPage .supportPending{padding:13px 18px;border:1px solid var(--line);font-size:8px!important;line-height:1.6;letter-spacing:.15em!important;color:var(--sumi-soft)!important;text-align:center}
+.yuramekiPage footer nav{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.yuramekiPage footer nav a{color:inherit;font-size:8px;text-underline-offset:4px}
+.yuramekiPage .infoSite{min-height:100vh}
+.yuramekiPage .infoHeader{position:relative}
+.yuramekiPage .infoHeader .brand{text-decoration:none;color:inherit}
+.yuramekiPage .infoHeader nav{display:flex;gap:25px}
+.yuramekiPage .infoHeader nav a{font-size:9px;color:var(--sumi-soft);text-decoration:none}
+.yuramekiPage .infoHeader nav a:hover{color:var(--beni)}
+.yuramekiPage .infoPage{width:min(1000px,calc(100% - 40px));margin:auto;padding:clamp(70px,9vw,130px) 0}
+.yuramekiPage .infoPage>h1{margin:0;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(42px,6vw,76px);font-weight:400;letter-spacing:-.04em}
+.yuramekiPage .infoLead{max-width:760px;margin:28px 0 clamp(55px,7vw,90px);font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(17px,2vw,24px);line-height:1.9}
+.yuramekiPage .infoBody{max-width:760px;margin-left:auto}
+.yuramekiPage .infoBody section{padding:32px 0;border-top:1px solid var(--line)}
+.yuramekiPage .infoBody section:last-of-type{border-bottom:1px solid var(--line)}
+.yuramekiPage .infoBody h2{margin:0 0 16px;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:21px;font-weight:500}
+.yuramekiPage .infoBody p,.yuramekiPage .infoBody li{font-size:12px;line-height:2;color:var(--sumi-soft)}
+.yuramekiPage .infoBody a{color:var(--beni);text-underline-offset:4px}
+.yuramekiPage .infoBody ul{padding-left:1.4em}
+.yuramekiPage .policyDate{margin-top:28px!important;font-size:9px!important}
+.yuramekiPage .infoFooter{padding:28px clamp(20px,4vw,72px);background:var(--sumi);color:var(--kinari);display:flex;align-items:center;justify-content:space-between;gap:30px;font-size:8px;letter-spacing:.1em}
+.yuramekiPage .infoFooter:before{display:none}
+.yuramekiPage .infoFooter nav{display:flex;gap:18px;flex-wrap:wrap}
+.yuramekiPage .infoFooter a{color:inherit}
+.yuramekiPage .faqList details{padding:22px 0;border-top:1px solid var(--line)}
+.yuramekiPage .faqList details:last-child{border-bottom:1px solid var(--line)}
+.yuramekiPage .faqList summary{display:flex;justify-content:space-between;gap:20px;cursor:pointer;list-style:none;font-family:"Yu Mincho",serif;font-size:17px}
+.yuramekiPage .faqList summary:after{content:"＋";color:var(--beni)}
+.yuramekiPage .faqList details[open] summary:after{content:"−"}
+.yuramekiPage .faqList details p{padding-right:35px}
+.yuramekiPage .contactNotice{padding:20px 22px;border:1px solid var(--line);background:rgba(233,223,207,.35);margin-bottom:34px}
+.yuramekiPage .contactNotice p{margin:0}
+.yuramekiPage .contactNotice p+p{margin-top:8px}
+.yuramekiPage .contactForm{display:grid;gap:23px}
+.yuramekiPage .contactForm label>span{display:block;margin-bottom:8px;font-size:10px;font-weight:700;letter-spacing:.06em}
+.yuramekiPage .contactForm input,.yuramekiPage .contactForm select,.yuramekiPage .contactForm textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:0;background:rgba(251,247,239,.82);color:var(--sumi);font:inherit}
+.yuramekiPage .contactForm textarea{resize:vertical}
+.yuramekiPage .contactForm .consent{display:flex;align-items:flex-start;gap:10px}
+.yuramekiPage .contactForm .consent input{width:16px;margin-top:3px}
+.yuramekiPage .contactForm .consent span{font-size:10px;font-weight:400;line-height:1.7}
+.yuramekiPage .contactForm button{justify-self:start;min-width:190px;padding:14px 20px;border:1px solid var(--sumi);background:var(--sumi);color:var(--kinari);cursor:pointer}
+.yuramekiPage .contactForm button:disabled{opacity:.5;cursor:not-allowed}
+.yuramekiPage .honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important}
+.yuramekiPage .provenance{margin:20px 0}
+.yuramekiPage .provenance div{display:grid;grid-template-columns:120px 1fr;padding:10px 0;border-top:1px solid var(--line)}
+.yuramekiPage .provenance dt,.yuramekiPage .provenance dd{font-size:10px}
+.yuramekiPage .provenance dd{margin:0}
+@media(max-width:900px){.yuramekiPage .infoHeader nav{display:none}.yuramekiPage .infoFooter{align-items:flex-start;flex-direction:column}.yuramekiPage .supportStrip{align-items:flex-start;flex-direction:column}.yuramekiPage .supportStrip>a{width:100%}}
+@media(max-width:520px){.yuramekiPage .supportStrip{margin:0 18px 70px;padding:24px 20px}.yuramekiPage .infoPage{width:calc(100% - 36px);padding-top:60px}.yuramekiPage .infoBody{margin:0}.yuramekiPage .infoPage>h1{font-size:39px}.yuramekiPage .provenance div{grid-template-columns:1fr;gap:4px}.yuramekiPage footer nav{justify-content:flex-start}}
+.yuramekiPage .notFound{min-height:calc(100vh - 140px)}
+.yuramekiPage .backToStudio{display:inline-block;padding:14px 20px;border:1px solid var(--sumi);color:var(--sumi);text-decoration:none}
+.yuramekiPage .backToStudio:hover{background:var(--sumi);color:var(--kinari)}
+.yuramekiPage .supportCallout{padding:28px!important;background:rgba(233,223,207,.34);border:1px solid rgba(173,148,101,.45)!important}
+.yuramekiPage .studyGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:34px}
+.yuramekiPage .studyGrid article{padding:0 0 28px;border-bottom:1px solid var(--line)}
+.yuramekiPage .studyGrid article h2{font-size:18px}
+.yuramekiPage .studyImage{aspect-ratio:1.35;overflow:hidden;margin-bottom:20px;background:var(--washi-deep)}
+.yuramekiPage .studyImage img{display:block;width:100%;height:100%;object-fit:cover}
+.yuramekiPage .breathStudy img{object-position:42% 56%;transform:scale(1.06)}
+.yuramekiPage .flutterStudy img{object-position:66% 13%;transform:scale(1.18)}
+.yuramekiPage .studyBlank{grid-column:1/3;min-height:250px;padding:38px!important;display:grid;align-content:center;justify-items:start;background:linear-gradient(135deg,rgba(229,235,227,.72),rgba(251,247,239,.55));border:1px solid var(--line)!important}
+.yuramekiPage .studyBlank>span{font-size:8px;letter-spacing:.22em;color:var(--ai)}
+.yuramekiPage .studyBlank h2{margin-top:15px}
+.yuramekiPage .galleryNote{margin-top:24px!important;font-size:9px!important}
+@media(max-width:700px){.yuramekiPage .studyGrid{grid-template-columns:1fr}.yuramekiPage .studyBlank{grid-column:auto}.yuramekiPage .studyImage{aspect-ratio:1.15}}
+.yuramekiPage .consentBanner{position:fixed;z-index:90;left:50%;bottom:22px;transform:translateX(-50%);width:min(900px,calc(100% - 36px));padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:28px;border:1px solid rgba(37,40,35,.82);background:rgba(251,247,239,.97);box-shadow:10px 12px 34px rgba(37,40,35,.2);backdrop-filter:blur(10px)}
+.yuramekiPage .consentBanner b{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:15px;letter-spacing:.06em}
+.yuramekiPage .consentBanner p{max-width:620px;margin:7px 0 0;font-size:9px;line-height:1.8;color:var(--sumi-soft)}
+.yuramekiPage .consentBanner a{color:var(--beni)}
+.yuramekiPage .consentBanner>div:last-child{display:flex;flex:none;gap:7px}
+.yuramekiPage .consentBanner button{padding:10px 13px;border:1px solid var(--sumi);background:transparent;cursor:pointer;font-size:9px}
+.yuramekiPage .consentBanner button:last-child{background:var(--sumi);color:var(--kinari)}
+.yuramekiPage .analyticsPreferences{position:fixed;z-index:80;right:12px;bottom:10px;padding:7px 9px;border:1px solid rgba(37,40,35,.3);background:rgba(251,247,239,.88);color:var(--sumi-soft);font-size:8px;cursor:pointer}
+@media(max-width:700px){.yuramekiPage .consentBanner{bottom:12px;padding:17px;align-items:stretch;flex-direction:column;gap:15px}.yuramekiPage .consentBanner>div:last-child{display:grid;grid-template-columns:1fr 1fr}.yuramekiPage .consentBanner button{width:100%}}
