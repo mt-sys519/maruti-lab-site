@@ -231,8 +231,8 @@ header{height:64px;padding:0 clamp(20px,4vw,72px);display:flex;align-items:cente
 .yuramekiPage .landscapeGrid button{--landscape-accent:var(--kokyu);position:relative;min-height:122px;padding:19px;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;align-content:start;text-align:left;gap:9px;color:#6f746f;background:rgba(248,244,235,.62);box-shadow:inset 0 3px var(--landscape-accent);transition:.2s;cursor:pointer}
 .yuramekiPage .landscapeGrid button:nth-child(1){--landscape-accent:var(--hamon)}
 .yuramekiPage .landscapeGrid button:nth-child(2){--landscape-accent:var(--gold)}
-.yuramekiPage .landscapeGrid button:nth-child(3){--landscape-accent:var(--tanabiki)}
-.yuramekiPage .landscapeGrid button:nth-child(4){--landscape-accent:var(--beni)}
+.yuramekiPage .landscapeGrid button:nth-child(3){--landscape-accent:var(--akari)}
+.yuramekiPage .landscapeGrid button:nth-child(4){--landscape-accent:var(--ai)}
 .yuramekiPage .landscapeGrid button:not(:disabled):hover{background:rgba(251,248,241,.72)}
 .yuramekiPage .landscapeGrid button.active{color:var(--sumi);background:rgba(251,248,241,.92);box-shadow:inset 0 3px var(--beni)}
 .yuramekiPage .landscapeGrid button.pending{cursor:not-allowed;color:var(--sumi-soft);background:rgba(241,236,226,.62)}
