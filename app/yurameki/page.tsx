@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "Maruti Lab",
     title: "YURAMEKI — 一枚の絵に、静かな呼吸を",
     description: "一枚の絵に、静かな呼吸を。ブラウザの中だけでつくるモーションスタジオ。",
-    images: [{ url: "https://marutilab.com/yurameki/og.png", width: 1731, height: 909 }],
+    images: [{ url: "https://marutilab.com/yurameki/og.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",

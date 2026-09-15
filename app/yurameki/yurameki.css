@@ -10,6 +10,24 @@
  * `*` and `html` are dropped because the site already says the same thing
  * about box-sizing and scroll-behavior.
  */
+
+/* What the site's own stylesheet says about names YURAMEKI also uses.
+ *
+ * Scoping YURAMEKI's rules stopped them reaching the rest of the site. It did
+ * nothing about the other direction: app/globals.css is global, and it has a
+ * .intro, an .eyebrow, a .brand and a footer of its own. Where it declares a
+ * property YURAMEKI does not, that declaration had nothing to argue with and
+ * simply applied - which is how the studio ended up with 724px of empty paper
+ * above it, from a min-height meant for the lab's own hero.
+ *
+ * Every line below was found by reading the same elements on yurameki.tokyo,
+ * which is still up, and comparing them one property at a time. These are the
+ * differences, and they are set back to what that page computes.
+ */
+.yuramekiPage .intro{min-height:0;justify-content:normal;flex-direction:row}
+.yuramekiPage .eyebrow{font-family:inherit;line-height:1.5}
+.yuramekiPage footer{align-items:normal;grid-template-columns:none;font-family:inherit}
+.yuramekiPage .brand{font-size:inherit;font-weight:inherit;white-space:normal}
 .yuramekiPage{
 --sumi:#252823;
   --sumi-soft:#52564f;
