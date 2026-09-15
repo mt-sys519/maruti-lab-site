@@ -39,8 +39,14 @@
    already had - 79px of mark inside the screen's 133px of content - now
    held at every size, rather than only at the width the clamp was tuned
    for. cqw counts the content box, so the screen's padding is already
-   out of it. */
-.visual { --mark-size: 59cqw; --mark-type-size: 18cqw; position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--pkg-color, #232323); }
+   out of it.
+
+   The type knob is lower than the drawn one because BLANK's mark is a
+   five-term equation - the longest thing any screen holds - and at the
+   old size it came to 98% of the width it had. Two pixels either side is
+   not a margin, it is a coincidence, and it held only as long as every
+   reader's font was the same width as the author's. */
+.visual { --mark-size: 59cqw; --mark-type-size: 14.5cqw; position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--pkg-color, #232323); }
 
 .controls { display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(6px, 0.8vw, 11px); }
 .pad { position: relative; width: 30px; height: 30px; }
