@@ -30,7 +30,7 @@ const LIGHT_POINT:Point={id:1,x:300,y:485,dx:0,dy:0,vx:0,vy:0,amplitude:24,stiff
 const LIGHT_POINTS=[LIGHT_POINT];
 const RIPPLE_POINT:Point={id:1,x:418,y:355,dx:0,dy:0,vx:0,vy:0,amplitude:2.6,stiffness:42,damping:72,radius:118,feather:26,outer:0,whole:8,speed:50,synced:true,phaseOffset:0,impact:25};
 const RIPPLE_POINTS=[RIPPLE_POINT];
-const DEMO_IMAGES:Record<MotionKind,string>={breath:"/yurameki/demo-breath.png",flutter:"/yurameki/demo-flutter.png",light:"/yurameki/demo-light.png",ripple:"/yurameki/demo-ripple.png"};
+const DEMO_IMAGES:Record<MotionKind,string>={breath:"/yurameki/demo-breath.webp",flutter:"/yurameki/demo-flutter.webp",light:"/yurameki/demo-light.webp",ripple:"/yurameki/demo-ripple.webp"};
 const DEMO_STATUSES:Record<MotionKind,string>={breath:"花魁と黒猫に静かな呼吸を宿しています。範囲1・2を切り替えて試せます",flutter:"2匹の鯉へ風を渡しています。範囲1・2を切り替えて試せます",light:"蝋燭の灯りが静かにまたたいています。点を動かして光の位置を試せます",ripple:"水面へ静かな輪をひろげています。中心と届く範囲を動かして試せます"};
 
 function presetsForMode(kind:MotionKind){return kind==="flutter"?FLUTTER_POINTS:kind==="light"?LIGHT_POINTS:kind==="ripple"?RIPPLE_POINTS:INITIAL_POINTS}
