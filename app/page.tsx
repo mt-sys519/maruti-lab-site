@@ -3,6 +3,7 @@ import { LabHero } from "./LabHero";
 import { ClockPreview } from "./ClockPreview";
 import { formatDate, posts } from "./blog/posts";
 import { SiteFooter } from "./SiteFooter";
+import { AboutMark, BitMark, CoffeeMark, LabMark, NoteMark, ToolsMark } from "./icons";
 
 const yuramekiUrl = "/yurameki";
 
@@ -42,38 +43,38 @@ export default function Home() {
       <header className="siteHeader">
         <a className="brand" href="#top" aria-label="Maruti Lab トップ">
           <span className="brandMark" aria-hidden="true">
-            <svg viewBox="0 0 18 18" focusable="false"><path d="M3 8.6 9 3.2l6 5.4" /><path d="M4.6 7.3V15h8.8V7.3" /><path d="M7.3 15v-4.3h3.4V15" /></svg>
+            <LabMark />
           </span>
           <span>Maruti Lab</span>
         </a>
         <nav aria-label="メインナビゲーション">
           <a className="navWithMark" href="#works">
             <span className="navIcon" aria-hidden="true">
-              <svg viewBox="0 0 18 18" focusable="false"><rect x="2.5" y="2.5" width="5.2" height="5.2" /><rect x="10.3" y="2.5" width="5.2" height="5.2" /><rect x="2.5" y="10.3" width="5.2" height="5.2" /><rect x="10.3" y="10.3" width="5.2" height="5.2" /></svg>
+              <ToolsMark />
             </span>
             Works
           </a>
           <a className="navWithMark" href="/bit">
             <span className="navIcon" aria-hidden="true">
-              <svg viewBox="0 0 18 18" focusable="false"><path d="M4.8 6.2h8.4a3 3 0 0 1 2.95 3.52l-.5 2.75a2.1 2.1 0 0 1-3.66.95L10.6 12H7.4l-1.39 1.42a2.1 2.1 0 0 1-3.66-.95l-.5-2.75A3 3 0 0 1 4.8 6.2Z" /><path d="M5.9 8.4v2.1M4.85 9.45h2.1" /><circle cx="12.1" cy="8.6" r=".55" fill="currentColor" stroke="none" /><circle cx="13.5" cy="10" r=".55" fill="currentColor" stroke="none" /></svg>
+              <BitMark />
             </span>
             MarutiBit
           </a>
           <a className="navWithMark" href="/blog">
             <span className="navIcon" aria-hidden="true">
-              <svg viewBox="0 0 18 18" focusable="false"><path d="M4 2.6h7.2L14 5.4v10H4Z" /><path d="M6.4 8.2h5.2M6.4 11h3.4" /></svg>
+              <NoteMark />
             </span>
             LabNote
           </a>
           <a className="navWithMark" href="#about">
             <span className="navIcon" aria-hidden="true">
-              <svg viewBox="0 0 18 18" focusable="false"><circle cx="9" cy="9" r="6.4" /><path d="M9 8.3v4.1" /><circle cx="9" cy="5.9" r=".65" fill="currentColor" stroke="none" /></svg>
+              <AboutMark />
             </span>
             About
           </a>
           <a className="supportLink navWithMark" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer">
             <span className="navIcon" aria-hidden="true">
-              <svg viewBox="0 0 18 18" focusable="false"><path d="M3.6 7.2h8.3v3.4a3.6 3.6 0 0 1-3.6 3.6H7.2a3.6 3.6 0 0 1-3.6-3.6Z" /><path d="M11.9 8.1h1a1.9 1.9 0 0 1 0 3.8h-1" /><path d="M6 4.4c.4-.5.4-.9 0-1.4M8.4 4.4c.4-.5.4-.9 0-1.4" /></svg>
+              <CoffeeMark />
             </span>
             Coffee
           </a>
@@ -98,7 +99,7 @@ export default function Home() {
       <section id="works" className="worksSection" aria-labelledby="works-title">
         <div className="sectionHeading">
           <p className="eyebrow">OTHER WORKS</p>
-          <h2 id="works-title">画像を整える。音を組む。</h2>
+          <h2 id="works-title">ちいさな道具が、<br />日々を少したのしくする。</h2>
         </div>
         <div className="worksGrid">
           {works.map((work) => (
@@ -132,18 +133,24 @@ export default function Home() {
 
       {posts.length > 0 && (
         <section id="notes" className="notesSection" aria-labelledby="notes-title">
-          <div className="sectionHeading">
+          <div className="sectionHeading notesHeading">
             <p className="eyebrow">LABNOTE</p>
-            <h2 id="notes-title">つくりながら、書いています。</h2>
+            <h2 id="notes-title">つくる途中の考えごと。</h2>
           </div>
-          <ol className="notesList">
-            {posts.slice(0, 2).map((post) => (
+          {/* Each note already has a square card drawn for it by
+              scripts/capture-note-ogp.mjs, sitting unused in public/og/blog.
+              A row of date-then-title reads like a company announcements page;
+              the card is the reason to click, and it carries the title inside
+              it, so the title is not set again underneath. */}
+          <ol className="notesGrid">
+            {posts.slice(0, 3).map((post) => (
               <li key={post.slug}>
                 <a href={`/blog/${post.slug}`}>
+                  <span className="notesArt">
+                    <Image src={`/og/blog/${post.slug}-square.png`} alt="" fill sizes="(max-width:700px) 50vw, 300px" />
+                  </span>
+                  <h3 className="srOnly">{post.title}</h3>
                   <time dateTime={post.date}>{formatDate(post.date)}</time>
-                  <h3>{post.title}</h3>
-                  <p>{post.description}</p>
-                  <span className="notesMore">読む</span>
                 </a>
               </li>
             ))}
@@ -155,7 +162,7 @@ export default function Home() {
       <section id="about" className="aboutSection" aria-labelledby="about-title">
         <p className="eyebrow">ABOUT</p>
         <div>
-          <h2 id="about-title">小さくつくる。<br />ちゃんと使えるところまで。</h2>
+          <h2 id="about-title">小さな道具を、<br />AIと一緒に作っています。</h2>
           <p>画像を動かす。整える。色を戻す。時間を表示する。Maruti Labは、思いつきを実際に触れる道具へ変え、公開し、使いながら直していく個人ラボです。</p>
           <a className="textButton refinedLink" href="/about"><span>運営者情報を見る</span></a>
         </div>
@@ -163,7 +170,7 @@ export default function Home() {
 
       <section className="supportSection" aria-label="Maruti Labを支援">
         <div><p className="eyebrow">KEEP THE LAB OPEN</p><h2>気に入ったら、コーヒーを一杯。</h2></div>
-        <a className="refinedLink" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer"><span>Coffeeで支援する</span></a>
+        <a className="refinedLink" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer"><span>コーヒーをおごる</span></a>
       </section>
 
       <SiteFooter />

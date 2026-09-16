@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { ReactNode } from "react";
 import "./yurameki.css";
+import { LabMark } from "../icons";
 
 /**
  * Everything under /yurameki, with the lab's own header above it and
@@ -16,11 +17,7 @@ export default function YuramekiLayout({ children }: { children: ReactNode }) {
       <header className="siteHeader">
         <a className="brand" href="/" aria-label="Maruti Lab トップ">
           <span className="brandMark" aria-hidden="true">
-            <svg viewBox="0 0 18 18" focusable="false">
-              <path d="M3 8.6 9 3.2l6 5.4" />
-              <path d="M4.6 7.3V15h8.8V7.3" />
-              <path d="M7.3 15v-4.3h3.4V15" />
-            </svg>
+            <LabMark />
           </span>
           <span>Maruti Lab</span>
         </a>

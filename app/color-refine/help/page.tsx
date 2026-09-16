@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import content from "../crContent.json";
 import styles from "../../swiftcrop/SwiftCropPage.module.css";
 import { SiteFooter } from "../../SiteFooter";
+import { LabMark } from "../../icons";
 
 const title = "COLOR RE:FINEのよくある質問";
 const description =
@@ -39,7 +40,7 @@ export default function ColorRefineHelpPage() {
       <header className="siteHeader">
         <a className="brand" href="/" aria-label="Maruti Lab トップ">
           <span className="brandMark" aria-hidden="true">
-            <svg viewBox="0 0 18 18" focusable="false"><path d="M3 8.6 9 3.2l6 5.4" /><path d="M4.6 7.3V15h8.8V7.3" /><path d="M7.3 15v-4.3h3.4V15" /></svg>
+            <LabMark />
           </span>
           <span>Maruti Lab</span>
         </a>
