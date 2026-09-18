@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TerraIntro from "./TerraIntro";
-import { TerraFrame } from "./TerraLogo";
+import { TerraFace, TerraFrame } from "./TerraLogo";
 import { SearchMark, SoundMark } from "../icons";
 import { KINDS, KIND_LABEL, REGISTER_LABEL, places, unpack, varieties, type Country, type World } from "./content";
 
@@ -729,7 +729,10 @@ export default function TerraMap() {
                       if (!expression) return null;
                       return (
                         <div className={`terraPhrase terraPhrase-${kind}`} key={kind}>
-                          <p className="terraKind">{KIND_LABEL[kind]}</p>
+                          <p className="terraKind">
+                            <TerraFace kind={kind} />
+                            {KIND_LABEL[kind]}
+                          </p>
                           <p className="terraText">{expression.text}</p>
                           <p className="terraReading">{expression.reading}</p>
                           {expression.pronunciationNote && (

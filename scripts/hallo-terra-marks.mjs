@@ -149,30 +149,42 @@ function blob(seed, wander) {
 
 const BLOBS = [1.1, 2.4, 3.9, 5.2, 6.6, 7.8].map((seed, i) => blob(seed, 2 + (i % 3)));
 
-// A face, in the same hand as everything else. Three of them: eyes open, one
-// eye shut, and a pair of curved-up eyes - the last is the one that reads as
-// pleased rather than as a smiley sticker.
-const smile = (pen) => ({
-  round: [
+// Three faces, one for each kind of thing a person says here. Same pen as the
+// globe and the letters, so they are part of the drawing rather than emoji
+// that wandered in.
+//
+// The greeting looks up and open. The thank you has its eyes creased shut,
+// which is what a real one does. The apology was the interesting one: a sad
+// face is wrong - nobody is sad to say sorry - what is wanted is sheepish, and
+// sheepish is eyebrows tilted up at the inside corners over a small mouth
+// turned very slightly down. The brows do all the work, and they do it in
+// whichever direction they are pointed: slanted the other way, the same face
+// is furious.
+const face = (pen) => ({
+  greeting: [
     ...paths(gen.circle(32, 32, 52, { ...pen, seed: 5 })),
-    ...paths(gen.circle(23, 26, 4, { ...pen, seed: 14 })),
-    ...paths(gen.circle(41, 26, 4, { ...pen, seed: 15 })),
-    ...paths(gen.curve([[20, 37], [26, 45], [38, 45], [44, 37]], { ...pen, seed: 22 })),
+    ...paths(gen.circle(24, 27, 4, { ...pen, seed: 14 })),
+    ...paths(gen.circle(40, 27, 4, { ...pen, seed: 15 })),
+    ...paths(gen.curve([[21, 38], [26, 45], [38, 45], [43, 38]], { ...pen, seed: 22 })),
   ],
-  wink: [
-    ...paths(gen.circle(32, 32, 52, { ...pen, seed: 31 })),
-    ...paths(gen.curve([[19, 27], [23, 23], [27, 27]], { ...pen, seed: 7 })),
-    ...paths(gen.circle(41, 26, 4, { ...pen, seed: 18 })),
-    ...paths(gen.curve([[20, 37], [26, 45], [38, 45], [44, 37]], { ...pen, seed: 9 })),
-  ],
-  pleased: [
+  thanks: [
     ...paths(gen.circle(32, 32, 52, { ...pen, seed: 44 })),
-    ...paths(gen.curve([[18, 28], [23, 23], [28, 28]], { ...pen, seed: 11 })),
-    ...paths(gen.curve([[36, 28], [41, 23], [46, 28]], { ...pen, seed: 12 })),
-    ...paths(gen.curve([[21, 36], [26, 44], [38, 44], [43, 36]], { ...pen, seed: 23 })),
+    ...paths(gen.curve([[19, 29], [24, 24], [29, 29]], { ...pen, seed: 11 })),
+    ...paths(gen.curve([[35, 29], [40, 24], [45, 29]], { ...pen, seed: 12 })),
+    ...paths(gen.curve([[21, 37], [26, 45], [38, 45], [43, 37]], { ...pen, seed: 23 })),
+  ],
+  apology: [
+    ...paths(gen.circle(32, 32, 52, { ...pen, seed: 61 })),
+    // Inner ends high, outer ends low. The other way round is anger, which is
+    // what the first attempt drew and what it looked like.
+    ...paths(gen.linearPath([[19, 26], [27, 22]], { ...pen, roughness: 0.5, seed: 33 })),
+    ...paths(gen.linearPath([[45, 26], [37, 22]], { ...pen, roughness: 0.5, seed: 34 })),
+    ...paths(gen.circle(24, 31, 4, { ...pen, seed: 35 })),
+    ...paths(gen.circle(40, 31, 4, { ...pen, seed: 36 })),
+    ...paths(gen.curve([[25, 41], [32, 43.5], [39, 41]], { ...pen, seed: 37 })),
   ],
 });
-const SMILES = smile(marker);
+const FACES = face(marker);
 
 // The mark again, for when it is 32 pixels across and nobody can afford a
 // meridian. Circle, equator, bubble - the three strokes that still say globe.
@@ -212,8 +224,8 @@ export const RING: string[] = ${JSON.stringify(ring, null, 2)};
 /** The mark with its meridian dropped, for the smallest sizes. */
 export const MARK_TINY: string[] = ${JSON.stringify(MARK_TINY, null, 2)};
 
-/** A face in a 64x64 box, three ways. */
-export const SMILES: Record<string, string[]> = ${JSON.stringify(SMILES, null, 2)};
+/** A face in a 64x64 box, one per kind of thing a person says. */
+export const FACES: Record<string, string[]> = ${JSON.stringify(FACES, null, 2)};
 
 /** Loose shapes in a square box, to be scattered behind the writing. */
 export const BLOBS: { fill: string[]; line: string[] }[] = ${JSON.stringify(BLOBS, null, 2)};
@@ -246,18 +258,21 @@ const markerNameSvg = (w, sw, color) =>
   `<svg viewBox="${`0 -6 ${nameMarker.width + 6} 92`}" width="${w}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${nameMarker.strokes.map(line).join("")}</svg>`;
 
 const faceSvg = (kind, w, sw, color) =>
-  `<svg viewBox="0 0 64 64" width="${w}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${SMILES[kind].map(line).join("")}</svg>`;
+  `<svg viewBox="0 0 64 64" width="${w}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${FACES[kind].map(line).join("")}</svg>`;
 
 const preview = `<!doctype html><meta charset="utf-8"><body style="background:#fdfaec;padding:46px;color:#1c211e;font:12px/1.6 sans-serif">
-<p style="letter-spacing:.2em;color:#4a504a">SMILE</p>
-<div style="display:flex;gap:40px;align-items:center;margin-bottom:30px">
-${faceSvg("round", 150, 2.4, "#1c211e")}${faceSvg("wink", 150, 2.4, "#1c211e")}${faceSvg("pleased", 150, 2.4, "#1c211e")}</div>
-<div style="display:flex;gap:26px;align-items:center;margin-bottom:30px">
-${faceSvg("round", 64, 3.2, "#ed83aa")}${faceSvg("wink", 64, 3.2, "#e0bc28")}${faceSvg("pleased", 64, 3.2, "#2098de")}</div>
-<div style="display:flex;gap:18px;align-items:center">
-${faceSvg("pleased", 30, 4.2, "#1c211e")}${faceSvg("round", 22, 5, "#1c211e")}
-<span style="font:700 15px/1 sans-serif">小さくすると</span></div>
+<p style="letter-spacing:.2em;color:#4a504a">挨拶 / お礼 / お詫び</p>
+<div style="display:flex;gap:40px;align-items:center;margin-bottom:26px">
+${faceSvg("greeting", 130, 2.6, "#2098de")}${faceSvg("thanks", 130, 2.6, "#19a244")}${faceSvg("apology", 130, 2.6, "#653194")}</div>
+<div style="display:flex;gap:22px;align-items:center;margin-bottom:26px">
+${faceSvg("greeting", 44, 4, "#2098de")}${faceSvg("thanks", 44, 4, "#19a244")}${faceSvg("apology", 44, 4, "#653194")}</div>
+<div style="display:flex;gap:14px;align-items:center">
+${faceSvg("greeting", 18, 5.5, "#2098de")}<b>挨拶</b>
+${faceSvg("thanks", 18, 5.5, "#19a244")}<b>お礼</b>
+${faceSvg("apology", 18, 5.5, "#653194")}<b>お詫び</b></div>
 </body>`;
+// Kept out of public/ on purpose: it is a workbench, not part of the site.
+await writeFile(join(here, "..", ".cache", "marks-preview.html"), preview);
 // Kept out of public/ on purpose: it is a workbench, not part of the site.
 // Kept out of public/ on purpose: it is a workbench, not part of the site.
 await writeFile(join(here, "..", ".cache", "marks-preview.html"), preview);

@@ -1,4 +1,5 @@
 import {
+  FACES,
   FRAMES,
   FRAMES_WIDE,
   BLOBS,
@@ -157,5 +158,18 @@ export function TerraShapes({ tone, at = 0 }: { tone: string; at?: number }) {
         </svg>
       ))}
     </span>
+  );
+}
+
+/** The face that goes with a greeting, a thank you or an apology. */
+export function TerraFace({ kind }: { kind: string }) {
+  const drawn = FACES[kind];
+  if (!drawn) return null;
+  return (
+    <svg className="terraFace" viewBox="0 0 64 64" aria-hidden="true">
+      {drawn.map((d) => (
+        <path key={d} d={d} vectorEffect="non-scaling-stroke" />
+      ))}
+    </svg>
   );
 }
