@@ -459,13 +459,18 @@
 .terraShapeFill { fill: currentColor; opacity: 0.13; stroke: none; }
 .terraShapeLine { fill: none; stroke: currentColor; stroke-width: 1.6; opacity: 0.38; stroke-linejoin: round; }
 
-/* Out in the margins on a wide screen; on a narrow one there are no margins
-   to put them in, so they hide rather than lie across the reading. */
+/* Out in the margins on a wide screen. On a narrow one there are no margins
+   to put them in, so they go under the writing instead - which is where they
+   already were, the text being the only thing here that is positioned - and
+   they are let down until a line of type crossing one is still just a line of
+   type on paper. */
 @media (max-width: 900px) {
   .terraShape { opacity: 0.55; }
 }
 @media (max-width: 620px) {
-  .terraShapes { display: none; }
+  .terraShape { opacity: 0.85; }
+  .terraShapeFill { opacity: 0.09; }
+  .terraShapeLine { opacity: 0.26; }
 }
 
 .terraAbout h2 {
