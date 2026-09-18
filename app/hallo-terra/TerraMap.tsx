@@ -622,7 +622,7 @@ export default function TerraMap() {
         </div>
 
         <div className="terraSearch">
-          <TerraFrame variant={1} />
+          <TerraFrame variant={0} wide />
           <span className="terraSearchMark" aria-hidden="true">
             <SearchMark />
           </span>

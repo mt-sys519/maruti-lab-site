@@ -109,6 +109,14 @@ const FRAMES = [3, 12, 27].map((seed) =>
   paths(gen.rectangle(2, 2, 96, 36, { roughness: 1.1, bowing: 1.5, disableMultiStroke: true, seed })),
 );
 
+// And a long one, drawn long. A box drawn 100 wide and shown 260 wide has its
+// wobble stretched two and a half times with it, and a stretched wobble along
+// the top of a text field does not read as a hand - it reads as a line that
+// failed to be straight.
+const FRAMES_WIDE = [8, 19].map((seed) =>
+  paths(gen.rectangle(2, 2, 256, 36, { roughness: 1.1, bowing: 1.1, disableMultiStroke: true, seed })),
+);
+
 // Shapes to scatter behind the writing. Blobs rather than boxes, and drawn in
 // a square box that is never stretched: the earlier sheets were drawn 100
 // units wide and shown 700 wide, and a wobble stretched seven times over stops
@@ -171,6 +179,9 @@ export const BLOBS: { fill: string[]; line: string[] }[] = ${JSON.stringify(BLOB
 
 /** Hand-drawn boxes in a 100x40 frame, to be stretched over a control. */
 export const FRAMES: string[][] = ${JSON.stringify(FRAMES, null, 2)};
+
+/** The same, drawn long, for controls that are wider than they are tall. */
+export const FRAMES_WIDE: string[][] = ${JSON.stringify(FRAMES_WIDE, null, 2)};
 
 /** A hand-drawn line 200 units wide, for underlining. */
 export const RULE: string[] = ${JSON.stringify(rule, null, 2)};

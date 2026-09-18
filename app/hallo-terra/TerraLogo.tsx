@@ -1,5 +1,6 @@
 import {
   FRAMES,
+  FRAMES_WIDE,
   BLOBS,
   RULE,
   MARK,
@@ -81,10 +82,16 @@ export default function TerraLogo({ size = "md" }: { size?: Size }) {
  * the pen the same width whatever the shape ends up being. Three frames, so a
  * row of buttons is not one box repeated.
  */
-export function TerraFrame({ variant = 0 }: { variant?: number }) {
+export function TerraFrame({ variant = 0, wide = false }: { variant?: number; wide?: boolean }) {
+  const set = wide ? FRAMES_WIDE : FRAMES;
   return (
-    <svg className="terraFrame" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-      {FRAMES[variant % FRAMES.length].map((d) => (
+    <svg
+      className="terraFrame"
+      viewBox={wide ? "0 0 260 40" : "0 0 100 40"}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      {set[variant % set.length].map((d) => (
         <path key={d} d={d} vectorEffect="non-scaling-stroke" />
       ))}
     </svg>

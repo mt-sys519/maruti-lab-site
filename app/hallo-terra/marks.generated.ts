@@ -149,6 +149,16 @@ export const FRAMES: string[][] = [
   ]
 ];
 
+/** The same, drawn long, for controls that are wider than they are tall. */
+export const FRAMES_WIDE: string[][] = [
+  [
+    "M2.8 3.5 C52.7 -0.2, 105.8 0.6, 257.7 3 M257.6 0.1 C258.8 14.3, 257 30.8, 258.8 35.8 M256.5 38 C169.9 39.9, 84.2 40.8, 3 37.2 M0.6 39.3 C4.3 25.8, 0.3 11.3, 2.6 1.6"
+  ],
+  [
+    "M2.3 0.5 C54.9 0.7, 105.6 1.6, 258.8 1.5 M257.3 -0.1 C258.6 8.2, 257.1 18.2, 260.1 38.7 M259.1 36.9 C173.6 38.3, 86 39.6, 0.6 37.5 M1.2 39.8 C3.3 26.5, 2.1 17.6, 1.4 3.5"
+  ]
+];
+
 /** A hand-drawn line 200 units wide, for underlining. */
 export const RULE: string[] = [
   "M-1.4 6.4 C38.6 8.2, 78.5 7, 198.5 4.7 M1 6.5 C72.1 8.7, 144.7 9, 200.1 6.8"
