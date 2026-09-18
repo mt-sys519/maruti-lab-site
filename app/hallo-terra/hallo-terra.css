@@ -405,6 +405,13 @@
   color: var(--muted);
 }
 
+@media (max-width: 860px) {
+  /* The big lockup does not fit a phone at its full size. */
+  .terraIntroFoot .terraLogoMark { width: 44px; stroke-width: 3.4px; }
+  .terraIntroFoot .terraLogoName { width: min(190px, 52vw); stroke-width: 2.6px; }
+  .terraIntroFoot .terraLogo-lg { gap: 14px; }
+}
+
 @media (max-width: 640px) {
   .terraLogo-md { gap: 10px; }
   .terraLogo-md .terraLogoMark { width: 32px; stroke-width: 2.4px; }
@@ -419,23 +426,40 @@
   position: fixed;
   inset: 0;
   z-index: 60;
-  display: grid;
-  place-items: center;
-  background: var(--terra-paper);
+  overflow: hidden;
+  /* The drawing's own ground, not the page's: a phone is far taller than the
+     picture, and covering it would blow the globe up past the screen. Standing
+     the opening on the same cream the picture is painted on means the part the
+     picture does not reach simply cannot be seen. */
+  background: #f5ecda;
   cursor: pointer;
   animation: terraIntroIn 0.6s ease both;
 }
-.terraIntroScene {
-  position: relative;
-  width: min(100%, 1180px);
-  aspect-ratio: 1168 / 784;
-  transform-origin: 50.09% 39.41%; /* the space the illustration left */
+
+/* The dive lives on its own layer so that the name and the button, which
+   belong to the page rather than to the picture, are not dragged into it. */
+.terraIntroZoom {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50.09% 39.1%;
   transition: transform 0.9s cubic-bezier(0.55, 0, 0.9, 0.55), opacity 0.9s ease-in;
-  /* Already on its way in before it dives. A picture that has been creeping
-     closer the whole time reads as one movement that ends in the map, rather
-     than as a wait followed by a movement. */
+}
+.terraIntro.leaving .terraIntroZoom { transform: scale(7); opacity: 0; }
+.terraIntro.leaving { background: transparent; transition: background 0.5s ease 0.2s; }
+
+/* Sized to cover the window while keeping the drawing's own proportions, and
+   centred on the space left for the globe rather than on the middle of the
+   picture - the globe is what the eye is going into. */
+.terraIntroScene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 149dvh);
+  aspect-ratio: 1168 / 784;
   animation: terraCreep 2.8s linear both;
 }
+.terraIntro.leaving .terraIntroScene { animation: none; }
+
 .terraIntroScene canvas {
   position: absolute;
   z-index: 1;
@@ -443,55 +467,45 @@
   transform: translate(-50%, -50%);
   border-radius: 50%;
 }
-/* Going in scales the scene about the globe and lets the map, which has been
-   underneath the whole time, be what is left. */
-.terraIntro.leaving .terraIntroScene { animation: none; transform: scale(7); opacity: 0; }
-.terraIntro.leaving { background: transparent; transition: background 0.5s ease 0.2s; }
 
-.terraIntroName {
-  margin-top: clamp(14px, 3vh, 30px);
+/* The crop has to end somewhere; it ends in the ground rather than on a line.
+   The same veil thickens along the bottom, where the name has to be read over
+   whoever happens to be standing there. */
+.terraIntro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, rgba(245, 236, 218, 0.94) 0%, rgba(245, 236, 218, 0.55) 15%, transparent 30%),
+    radial-gradient(125% 100% at 50% 40%, transparent 55%, #f5ecda 98%);
+}
+.terraIntro.leaving::after { opacity: 0; transition: opacity 0.5s ease; }
+
+.terraIntroFoot {
+  position: absolute;
+  padding: 0 20px;
+  left: 0;
+  right: 0;
+  bottom: clamp(26px, 7vh, 72px);
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: clamp(16px, 3vh, 28px);
   color: var(--ink);
 }
-.terraIntro.leaving .terraIntroName { opacity: 0; transition: opacity 0.35s ease; }
-@media (max-width: 640px) {
-  .terraIntroName .terraLogoMark { width: 48px; stroke-width: 3.6px; }
-  .terraIntroName .terraLogoName { width: 200px; stroke-width: 2.6px; }
-}
+.terraIntro.leaving .terraIntroFoot { opacity: 0; transition: opacity 0.35s ease; }
 
 .terraIntroSkip {
-  position: absolute;
-  bottom: clamp(24px, 6vh, 54px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 13px 22px;
-  border: 1px solid var(--line);
-  background: rgba(242, 240, 233, 0.9);
-  color: var(--muted);
-  font: 500 11px/1 "Yu Gothic UI", sans-serif;
+  padding: 12px 20px;
+  border: 0;
+  background: none;
+  color: #5c5a50;
+  font: 700 12px/1 var(--terra-hand);
   letter-spacing: 0.12em;
   cursor: pointer;
 }
-.terraIntroSkip:hover { border-color: var(--ink); color: var(--ink); }
-.terraIntro.leaving .terraIntroName {
-  margin-top: clamp(14px, 3vh, 30px);
-  color: var(--ink);
-}
-.terraIntro.leaving .terraIntroName { opacity: 0; transition: opacity 0.35s ease; }
-@media (max-width: 640px) {
-  .terraIntroName .terraLogoMark { width: 48px; stroke-width: 3.6px; }
-  .terraIntroName .terraLogoName { width: 200px; stroke-width: 2.6px; }
-}
-
-.terraIntroSkip { opacity: 0; transition: opacity 0.3s ease; }
-
-@keyframes terraIntroIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes terraCreep {
-  from { transform: scale(1); }
-  to { transform: scale(1.07); }
-}
+.terraIntroSkip:hover { color: var(--ink); }
 
 /* The greeting sits on the globe, where the eye already is. */
 .terraIntroWord {
@@ -501,15 +515,25 @@
   transform: translate(-50%, -50%);
   width: 46%;
   text-align: center;
+  font-family: var(--terra-hand);
   font-size: clamp(20px, 3.1vw, 40px);
   line-height: 1.3;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--ink);
-  text-shadow: 0 0 18px rgba(242, 240, 233, 0.95), 0 0 6px rgba(242, 240, 233, 0.95);
+  text-shadow: 0 0 18px rgba(253, 250, 240, 0.95), 0 0 6px rgba(253, 250, 240, 0.95);
   pointer-events: none;
 }
 .terraIntroWord span { display: inline-block; animation: terraWord 0.85s ease both; }
+
+@keyframes terraIntroIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes terraCreep {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.07); }
+}
 @keyframes terraWord {
   0% { opacity: 0; transform: translateY(6px); }
   22%, 74% { opacity: 1; transform: none; }
@@ -517,11 +541,10 @@
 }
 
 @media (max-width: 860px) {
-  /* The art is wide and the phone is not, so it is allowed to run off the
-     sides: the globe sits in the middle either way. Wide enough that the
-     globe is about two thirds of the screen, and never so wide that it runs
-     off the top and bottom when the phone is on its side. */
-  .terraIntroScene { width: min(175%, 150vh); }
+  /* A phone is much taller than the drawing, so covering it would blow the
+     globe up past the screen. Here the width leads instead, and the sides of
+     the crowd are allowed to run off. */
+  .terraIntroScene { width: min(190%, 149dvh); }
 }
 
 /* ---- drawn boxes and drawn rules ------------------------------------ */

@@ -168,28 +168,34 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
 
   return (
     <div className={`terraIntro${leaving ? " leaving" : ""}`} role="presentation" onClick={leave}>
-      <div className="terraIntroScene">
-        <Image src="/hallo-terra/intro.jpg" alt="" fill priority sizes="100vw" style={{ objectFit: "contain" }} />
-        {/* The word belongs to the waiting, not to the dive: at seven times
-            the size it would be a wall of letters across the whole screen. */}
-        {!leaving && (
-          <p className="terraIntroWord" style={{ left: `${DISC_X}%`, top: `${DISC_Y}%` }}>
-            <span key={word}>{greetings[word % Math.max(1, greetings.length)] ?? ""}</span>
-          </p>
-        )}
-        <canvas
-          ref={canvasRef}
-          /* Width only: the height follows from aspect-ratio, because a
-             percentage height here would answer to the frame, not the circle. */
-          style={{ left: `${DISC_X}%`, top: `${DISC_Y}%`, width: `${DISC_SIZE}%` }}
-        />
+      {/* The picture fills the screen rather than sitting on it as a
+          rectangle, and the globe is positioned inside the picture's own
+          frame, so the two stay locked together however the window is cropped.
+          The zoom layer is separate from the name and the button: they belong
+          to the page, not to the scene being dived into. */}
+      <div className="terraIntroZoom">
+        <div className="terraIntroScene">
+          <Image src="/hallo-terra/intro.jpg" alt="" fill priority sizes="100vw" style={{ objectFit: "cover" }} />
+          <canvas
+            ref={canvasRef}
+            /* Width only: the height follows from aspect-ratio, because a
+               percentage height here would answer to the frame, not the circle. */
+            style={{ left: `${DISC_X}%`, top: `${DISC_Y}%`, width: `${DISC_SIZE}%` }}
+          />
+          {!leaving && (
+            <p className="terraIntroWord" style={{ left: `${DISC_X}%`, top: `${DISC_Y}%` }}>
+              <span key={word}>{greetings[word % Math.max(1, greetings.length)] ?? ""}</span>
+            </p>
+          )}
+        </div>
       </div>
-      <span className="terraIntroName">
+
+      <div className="terraIntroFoot">
         <TerraLogo size="lg" />
-      </span>
-      <button type="button" className="terraIntroSkip" onClick={leave}>
-        地図をひらく
-      </button>
+        <button type="button" className="terraIntroSkip" onClick={leave}>
+          地図をひらく
+        </button>
+      </div>
     </div>
   );
 }
