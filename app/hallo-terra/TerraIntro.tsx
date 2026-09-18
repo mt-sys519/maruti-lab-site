@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { varieties } from "./content";
 
 /* The opening: a crowd with a space in the middle, and a turning globe in it.
    The globe is a 2D canvas re-projecting the coastlines each frame rather
@@ -17,6 +18,12 @@ const TILT = 14; // degrees; the north pole leans away, as globes do on a stand
 const SPIN = 7; // degrees a second
 const DWELL = 2800; // how long the world turns before it opens
 const DIVE = 900;
+const WORD = 850; // how long each greeting stays
+
+// Short enough to read at a glance and to fit across a globe.
+const POOL = Object.values(varieties)
+  .map((v) => v.expressions.greeting?.text?.split(" / ")[0]?.trim())
+  .filter((t): t is string => !!t && t.length <= 12);
 
 // Where the illustration left a space for the globe, measured off the artwork.
 const DISC_X = 50.09;
@@ -26,7 +33,26 @@ const DISC_SIZE = 39.9;
 export default function TerraIntro({ onDone }: { onDone: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [leaving, setLeaving] = useState(false);
+  const [word, setWord] = useState(0);
   const closing = useRef(false);
+
+  // Real greetings out of the real data, a different few each visit. Waiting
+  // is only long when there is nothing to do, and reading three words in
+  // three languages is both something to do and the whole pitch.
+  const [greetings, setGreetings] = useState<string[]>(() => POOL.slice(0, 4));
+  useEffect(() => {
+    // After the first frame, because shuffling during a render is not a thing
+    // a component is allowed to do.
+    const frame = requestAnimationFrame(() => {
+      const pool = [...POOL];
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      setGreetings(pool.slice(0, 4));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const leave = useCallback(() => {
     if (closing.current) return;
@@ -37,7 +63,11 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     const timer = window.setTimeout(leave, DWELL);
-    return () => window.clearTimeout(timer);
+    const cycle = window.setInterval(() => setWord((n) => n + 1), WORD);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearInterval(cycle);
+    };
   }, [leave]);
 
   useEffect(() => {
@@ -131,6 +161,9 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
     <div className={`terraIntro${leaving ? " leaving" : ""}`} role="presentation" onClick={leave}>
       <div className="terraIntroScene">
         <Image src="/hallo-terra/intro.jpg" alt="" fill priority sizes="100vw" style={{ objectFit: "contain" }} />
+        <p className="terraIntroWord" style={{ left: `${DISC_X}%`, top: `${DISC_Y}%` }}>
+          <span key={word}>{greetings[word % Math.max(1, greetings.length)] ?? ""}</span>
+        </p>
         <canvas
           ref={canvasRef}
           /* Width only: the height follows from aspect-ratio, because a
