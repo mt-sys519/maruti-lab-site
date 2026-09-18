@@ -57,4 +57,4 @@ async function shot(url, width, height, target) {
 }
 
 await mkdir(at("public/og"), { recursive: true });
-await shot(`http://localhost:${port}/hallo-terra/card`, 1200, 630, "public/og/hallo-terra.jpg");
+await shot(`http://localhost:${port}/hallo-terra/card`, 1200, 630, "public/og/hallo-terra-2.jpg");

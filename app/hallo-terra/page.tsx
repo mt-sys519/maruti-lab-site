@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     title: "HALLO TERRA — 世界の挨拶を、地図から",
     description: "地図から場所を選ぶと、その土地の挨拶・お礼・お詫びと、挨拶の仕草が分かります。",
     url: "/hallo-terra",
-    images: [{ url: "/og/hallo-terra.jpg", width: 1200, height: 630, alt: "HALLO TERRA — 世界の挨拶を、地図から" }],
+    images: [{ url: "/og/hallo-terra-2.jpg", width: 1200, height: 630, alt: "HALLO TERRA — 世界の挨拶を、地図から" }],
   },
-  twitter: { card: "summary_large_image", images: ["/og/hallo-terra.jpg"] },
+  twitter: { card: "summary_large_image", images: ["/og/hallo-terra-2.jpg"] },
 };
 
 export default function HalloTerraPage() {
