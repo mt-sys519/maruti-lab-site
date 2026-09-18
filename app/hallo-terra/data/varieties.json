@@ -16,7 +16,8 @@
       "apology": {
         "text": "آسف / آسفة",
         "reading": "アーセフ / アースファ",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "آسف"
       }
     }
   },
@@ -37,7 +38,8 @@
       "apology": {
         "text": "آسف / آسفة",
         "reading": "アーセフ / アースファ",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "آسف"
       }
     }
   },
@@ -79,7 +81,8 @@
       "apology": {
         "text": "آسف / آسفة",
         "reading": "アーセフ / アースファ",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "آسف"
       }
     }
   },
@@ -210,7 +213,8 @@
       "greeting": {
         "text": "G'day / Hello",
         "reading": "グダイ / ハロー",
-        "meaning": "やあ / こんにちは"
+        "meaning": "やあ / こんにちは",
+        "audioText": "G'day"
       },
       "thanks": {
         "text": "Thank you",
@@ -273,7 +277,8 @@
       "greeting": {
         "text": "Hello / Hi",
         "reading": "ハロー / ハイ",
-        "meaning": "こんにちは / やあ"
+        "meaning": "こんにちは / やあ",
+        "audioText": "Hello"
       },
       "thanks": {
         "text": "Thank you",
@@ -887,7 +892,8 @@
       "thanks": {
         "text": "Dank u / Bedankt",
         "reading": "ダンク ウー / ベダンクト",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Dank u"
       },
       "apology": {
         "text": "Sorry",
@@ -924,12 +930,14 @@
       "greeting": {
         "text": "Olá / Oi",
         "reading": "オラ / オイ",
-        "meaning": "こんにちは / やあ"
+        "meaning": "こんにちは / やあ",
+        "audioText": "Olá"
       },
       "thanks": {
         "text": "Obrigado / Obrigada",
         "reading": "オブリガード / オブリガーダ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Obrigado"
       },
       "apology": {
         "text": "Desculpe",
@@ -950,7 +958,8 @@
       "thanks": {
         "text": "Obrigado / Obrigada",
         "reading": "オブリガード / オブリガーダ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Obrigado"
       },
       "apology": {
         "text": "Desculpe",
@@ -1029,17 +1038,20 @@
       "greeting": {
         "text": "สวัสดีครับ / สวัสดีค่ะ",
         "reading": "サワッディー クラップ / カー",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "สวัสดีครับ"
       },
       "thanks": {
         "text": "ขอบคุณครับ / ขอบคุณค่ะ",
         "reading": "コープクン クラップ / カー",
-        "meaning": "ありがとうございます"
+        "meaning": "ありがとうございます",
+        "audioText": "ขอบคุณครับ"
       },
       "apology": {
         "text": "ขอโทษครับ / ขอโทษค่ะ",
         "reading": "コートート クラップ / カー",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "ขอโทษครับ"
       }
     }
   },

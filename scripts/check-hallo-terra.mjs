@@ -40,6 +40,15 @@ for (const [id, variety] of Object.entries(varieties)) {
     if (expression.register && !REGISTERS.includes(expression.register)) {
       complain(at, `register が ${REGISTERS.join(" / ")} のどれでもありません: ${expression.register}`);
     }
+    // Speech is given `audioText ?? text`, so a text offering a choice has to
+    // say which half to read, or the synthesiser reads the slash too.
+    if (expression.text?.includes("/") && !expression.audioText?.trim()) {
+      complain(at, `text が「${expression.text}」と複数候補なので audioText が要ります`);
+    }
+    if (expression.audioText?.includes("/")) complain(at, "audioText は読み上げる1つだけにしてください");
+    if (expression.audioText && KATAKANA.test(expression.audioText) && !KATAKANA.test(expression.text)) {
+      complain(at, "audioText にカタカナが入っています（読み上げるのは現地表記です）");
+    }
     if (expression.sources && !Array.isArray(expression.sources)) complain(at, "sources が配列ではありません");
     for (const source of expression.sources ?? []) {
       if (typeof source !== "string" || !/^https?:\/\//.test(source)) complain(at, `出典がURLではありません: ${source}`);

@@ -585,7 +585,11 @@ export default function TerraMap() {
                               {expression.usage}
                             </p>
                           )}
-                          <button type="button" className="terraSpeak" onClick={() => speak(expression.text, variety.speech)}>
+                          <button
+                            type="button"
+                            className="terraSpeak"
+                            onClick={() => speak(expression.audioText || expression.text, variety.speech)}
+                          >
                             音で聞く
                           </button>
                         </div>

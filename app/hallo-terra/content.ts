@@ -24,6 +24,12 @@ export type Expression = {
   reading: string;
   /** What it means in Japanese. */
   meaning: string;
+  /**
+   * The one line to say out loud, when `text` offers a choice - "Obrigado /
+   * Obrigada", or Thai's ครับ and ค่ะ. Speech reads this, never the katakana:
+   * the katakana is a Japanese reader's foothold, not a pronunciation.
+   */
+  audioText?: string | null;
   /** How formal it is, and so who it can be said to. */
   register?: Register | null;
   /** The situation it belongs in. */
