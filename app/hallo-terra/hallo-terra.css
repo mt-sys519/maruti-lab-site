@@ -399,15 +399,19 @@
 .terraEmpty { font-size: 12px; line-height: 1.95; color: var(--muted); }
 
 @media (min-width: 861px) and (max-height: 760px) {
-  /* The header and the name already cost 152px of a 620px window, so 78dvh
-     ended exactly at the fold and the card got 484 of the 976 it wanted. This
-     takes back what it can: the name is set closer, and the block runs a
-     little past the bottom - the +/- buttons ride down with it and need a
-     nudge of scroll, which is the price of the sixty-odd pixels of card.
-     Pinching and the wheel work where they always did. */
-  .terra { height: min(88dvh, 860px); }
+  /* A wide, short window: the card is the thing that runs out of room, and
+     78dvh of it was 484 pixels around 976 of words. Letting the block hang
+     below the fold bought sixty of those and took the zoom buttons with it,
+     which was not a trade worth making. So the space comes out of the two
+     bands above instead - the lab's bar and the name, 152px between them,
+     for a map that had 484 - and the map then takes everything that is left
+     exactly, ending at the bottom of the window with nothing pushed off it.
+     This stylesheet only loads on these routes, so the shorter bar is
+     HALLO TERRA's and not the lab's. */
+  .siteHeader { height: 56px; }
   /* .terraSkin, because the plain rule for this is written further down. */
-  .terraSkin .terraTitle { padding-top: 14px; padding-bottom: 12px; }
+  .terraSkin .terraTitle { padding-top: 8px; padding-bottom: 8px; }
+  .terra { height: min(860px, calc(100dvh - 112px)); }
 }
 
 @media (max-width: 860px) {
