@@ -38,6 +38,13 @@ export default function TerraMap() {
   const view = useRef<View>({ x: 0, y: 0, s: 1 });
   const limits = useRef({ min: 0.1, max: 4 });
   const glide = useRef<{ vx: number; vy: number; raf: number } | null>(null);
+  // The finer coastlines, and which countries are currently wearing them.
+  const detail = useRef<{ data: Record<string, string> | null; asking: boolean; on: Set<string>; timer: number }>({
+    data: null,
+    asking: false,
+    on: new Set(),
+    timer: 0,
+  });
   // What is in the middle of the frame, in world coordinates, so that a window
   // resize or a phone turning on its side keeps looking at the same place.
   const middle = useRef({ x: 1000, y: 700 });
@@ -80,6 +87,9 @@ export default function TerraMap() {
 
   /* ---- the viewport ------------------------------------------------- */
 
+  // `apply` runs before `dress` is declared and must not depend on it.
+  const dressRef = useRef<(() => void) | null>(null);
+
   const apply = useCallback(() => {
     const layer = layerRef.current;
     if (!layer || !world) return;
@@ -95,6 +105,10 @@ export default function TerraMap() {
       v.y = room > 0 ? room / 2 : Math.min(0, Math.max(room, v.y));
     }
     layer.setAttribute("transform", `translate(${v.x} ${v.y}) scale(${v.s})`);
+    // Only once the view stops: swapping coastlines mid-drag would be work
+    // done sixty times a second and thrown away fifty-nine of them.
+    window.clearTimeout(detail.current.timer);
+    detail.current.timer = window.setTimeout(() => dressRef.current?.(), 180);
     if (stage) {
       middle.current = {
         x: (stage.clientWidth / 2 - v.x) / v.s,
@@ -102,6 +116,86 @@ export default function TerraMap() {
       };
     }
   }, [world]);
+
+  /**
+   * Lean in far enough and the countries on screen change their coastlines.
+   *
+   * The base map is 1:50m, which is what a whole world can be pushed around at
+   * sixty frames a second. Close up it has no small islands to give, and the
+   * whole world at 1:10m costs two and a half times the frame - so the fine
+   * data is fetched once, the first time anybody zooms in, and worn only by
+   * the countries actually on screen. Everything on screen wears it together,
+   * because a detailed border against a coarse one leaves a gap of sea.
+   */
+  const dress = useCallback(() => {
+    const stage = stageRef.current;
+    const layer = layerRef.current;
+    if (!stage || !layer || !world) return;
+    const v = view.current;
+    const state = detail.current;
+    const wearing = state.on;
+
+    const undress = () => {
+      for (const iso of wearing) {
+        const base = byIso.get(iso);
+        if (base) layer.querySelectorAll(`[data-iso="${iso}"]`).forEach((node) => node.setAttribute("d", base.d));
+      }
+      wearing.clear();
+    };
+
+    if (v.s < limits.current.min * 2.5) {
+      undress();
+      return;
+    }
+    if (!state.data) {
+      if (state.asking) return;
+      state.asking = true;
+      fetch("/hallo-terra/world-detail.json")
+        .then((r) => r.json())
+        .then((data: Record<string, string>) => {
+          state.data = data;
+          dressRef.current?.();
+        })
+        .catch(() => {
+          /* the coarse coastline is still a coastline */
+        })
+        .finally(() => {
+          state.asking = false;
+        });
+      return;
+    }
+
+    const span = world.width;
+    const left = (0 - v.x) / v.s;
+    const right = (stage.clientWidth - v.x) / v.s;
+    const top = (0 - v.y) / v.s;
+    const bottom = (stage.clientHeight - v.y) / v.s;
+    const seen = new Set<string>();
+    for (const country of world.countries) {
+      const [x0, y0, x1, y1] = country.box;
+      if (y1 < top || y0 > bottom) continue;
+      // The world repeats, so a country can be on screen in any of three copies.
+      const across = [0, -span, span].some((shift) => x1 + shift >= left && x0 + shift <= right);
+      if (!across) continue;
+      const fine = state.data[country.iso];
+      if (!fine) continue;
+      seen.add(country.iso);
+      if (wearing.has(country.iso)) continue;
+      const d = unpack(fine);
+      layer.querySelectorAll(`[data-iso="${country.iso}"]`).forEach((node) => node.setAttribute("d", d));
+      wearing.add(country.iso);
+    }
+    for (const iso of [...wearing]) {
+      if (seen.has(iso)) continue;
+      const base = byIso.get(iso);
+      if (base) layer.querySelectorAll(`[data-iso="${iso}"]`).forEach((node) => node.setAttribute("d", base.d));
+      wearing.delete(iso);
+    }
+  }, [byIso, world]);
+
+  useEffect(() => {
+    dressRef.current = dress;
+  }, [dress]);
 
   const fit = useCallback(() => {
     const stage = stageRef.current;
