@@ -504,14 +504,16 @@
 }
 
 /* The dive lives on its own layer so that the name and the button, which
-   belong to the page rather than to the picture, are not dragged into it. */
+   belong to the page rather than to the picture, are not dragged into it.
+   The layer only holds the scene: the growing happens on the drawing itself,
+   because "49.5% across" has to mean 49.5% across the drawing, and this layer
+   is the size of the window instead. */
 .terraIntroZoom {
   position: absolute;
   inset: 0;
-  transform-origin: 49.5% 38.5%;
-  transition: transform 0.9s cubic-bezier(0.55, 0, 0.9, 0.55), opacity 0.9s ease-in;
+  transition: opacity 0.9s ease-in;
 }
-.terraIntro.leaving .terraIntroZoom { transform: scale(7); opacity: 0; }
+.terraIntro.leaving .terraIntroZoom { opacity: 0; }
 .terraIntro.leaving { background: transparent; transition: background 0.5s ease 0.2s; }
 
 /* Sized to cover the window while keeping the drawing's own proportions, and

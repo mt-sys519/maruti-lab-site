@@ -129,8 +129,11 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
       context.fillStyle = land;
       context.strokeStyle = edge;
       context.lineWidth = Math.max(1, dpr * 0.75);
-      context.beginPath();
+      // One ring at a time. Filled together, a ring that has gone round the
+      // back and been cut into pieces winds against the ring in front of it,
+      // and the overlap comes out as sea - a blue wedge sitting on the land.
       for (const ring of rings) {
+        context.beginPath();
         let open = false;
         for (const [lon, lat] of ring) {
           const l = (lon * Math.PI) / 180 - spin;
@@ -139,6 +142,11 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
           // The far side of the world is behind the near side, so it is not
           // drawn: the sign of this is which hemisphere the point is on.
           if (sinTilt * Math.sin(p) + cosTilt * cosP * Math.cos(l) <= 0) {
+            if (open) {
+              context.fill();
+              context.stroke();
+              context.beginPath();
+            }
             open = false;
             continue;
           }
@@ -148,9 +156,11 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
           else context.moveTo(x, y);
           open = true;
         }
+        if (open) {
+          context.fill();
+          context.stroke();
+        }
       }
-      context.fill();
-      context.stroke();
       context.restore();
 
       context.beginPath();
