@@ -525,9 +525,20 @@
   top: 50%;
   width: max(100%, 178dvh);
   aspect-ratio: 1672 / 941;
+  /* The centring lives here and not only in the keyframes: dropping the
+     animation on the way out would otherwise drop the centring with it, and
+     the drawing would jump to the bottom right corner on its last frame. */
+  transform: translate(-50%, -50%);
+  transform-origin: 49.5% 38.5%; /* the space the drawing left for the globe */
+  transition: transform 0.9s cubic-bezier(0.55, 0, 0.9, 0.55);
   animation: terraCreep 2.8s linear both;
 }
-.terraIntro.leaving .terraIntroScene { animation: none; }
+/* Growing happens on the drawing, because "49.5% across" has to mean across
+   the drawing - the layer above is the size of the window instead. */
+.terraIntro.leaving .terraIntroScene {
+  animation: none;
+  transform: translate(-50%, -50%) scale(7);
+}
 
 .terraIntroScene canvas {
   position: absolute;
