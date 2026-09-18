@@ -989,15 +989,6 @@
    "apology"
   ]
  },
- "kk-KZ": {
-  "voice": "kk_KZ-iseke-x_low",
-  "licence": "CC-BY-4.0",
-  "kinds": [
-   "greeting",
-   "thanks",
-   "apology"
-  ]
- },
  "lv-LV": {
   "voice": "lv_LV-aivars-medium",
   "licence": "CC0 1.0 Universal",
@@ -1226,23 +1217,6 @@
  "ur-PK": {
   "voice": "ur_PK-fasih-medium",
   "licence": "mit",
-  "kinds": [
-   "greeting",
-   "thanks",
-   "apology"
-  ]
- },
- "bn-BD": {
-  "voice": "bn_BD-google-medium",
-  "licence": "Attribution-ShareAlike 4.0 International",
-  "kinds": [
-   "greeting",
-   "thanks"
-  ]
- },
- "et-EE": {
-  "voice": "et_EE-news-medium",
-  "licence": "CC-BY (META-SHARE \"Available - Unrestricted Use\")",
   "kinds": [
    "greeting",
    "thanks",

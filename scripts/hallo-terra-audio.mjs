@@ -19,6 +19,11 @@
 //   4. synthesise audioText (never the katakana), one mp3 per phrase at 64kbps mono
 //   5. write app/hallo-terra/audio.generated.json: which variety has which clips
 //
+// Single-speaker voices only, and medium quality or better. Nothing else
+// ships: a crowd model or an x_low model may or may not be intelligible, and
+// nobody here can hear the difference in a language they do not speak, so the
+// rule has to be one that can be applied without listening.
+//
 // Single-speaker voices only. Several of the best-covered languages have a
 // model trained on a crowd - French on 125 speakers, German on 236 - and asked
 // for no speaker in particular it gives you nobody in particular: the French
