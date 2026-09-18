@@ -21,7 +21,9 @@ const REGISTERS = ["formal", "polite", "neutral", "casual"];
 const KATAKANA = /[゠-ヿ]/;
 
 const problems = [];
+const notices = [];
 const complain = (where, what) => problems.push(`${where}: ${what}`);
+const note = (where, what) => notices.push(`${where}: ${what}`);
 
 for (const [id, variety] of Object.entries(varieties)) {
   if (!variety.name?.trim()) complain(id, "name がありません");
@@ -58,7 +60,12 @@ for (const [id, variety] of Object.entries(varieties)) {
 
 for (const [iso, place] of Object.entries(places)) {
   if (!/^[A-Z]{3}$/.test(iso)) complain(iso, "場所のキーはISOの3文字コードです");
-  else if (!onTheMap.has(iso)) complain(iso, "この国コードは地図にありません（地図に出せません）");
+  // Natural Earth's 1:50m countries layer folds a handful of places into the
+  // country that administers them - France's overseas departments, the
+  // Caribbean Netherlands, Gibraltar, Tokelau - so they have no shape of their
+  // own to tap. Written up and unreachable is not an error, it is a queue: the
+  // day those shapes are added, the words are already here.
+  else if (!onTheMap.has(iso)) note(iso, "地図に形がないので、いまは出せません");
   if (!place.varieties?.length) complain(iso, "varieties が空です");
   // note is printed on the page and internalNote is not, so a working memo
   // that lands in the wrong one is a memo published to the world.
@@ -81,8 +88,11 @@ if (problems.length) {
   process.exit(1);
 }
 
+for (const notice of notices) process.stdout.write(`  · ${notice}
+`);
 process.stdout.write(
   `HALLO TERRA: ${Object.keys(places).length} の場所、${Object.keys(varieties).length} の言葉、すべて読みがあります` +
+    (notices.length ? `（うち ${notices.length} は地図に形がなく未表示）` : "") +
     (unused.length ? `（どの場所からも参照されていない変種: ${unused.join(", ")}）` : "") +
     "\n",
 );

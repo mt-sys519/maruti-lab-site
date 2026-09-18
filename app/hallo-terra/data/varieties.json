@@ -1,4 +1,64 @@
 {
+  "ak-GH": {
+    "name": "アカン語（トウィ語）",
+    "speech": "ak-GH",
+    "expressions": {
+      "greeting": {
+        "text": "Agoo",
+        "reading": "アゴー",
+        "meaning": "こんにちは",
+        "audioText": "Agoo",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/twi.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Medaase",
+        "reading": "メダーセ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Medaase",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/twi.htm"
+        ]
+      },
+      "apology": {
+        "text": "Kosɛ",
+        "reading": "コセ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Kosɛ",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/twi.htm"
+        ]
+      }
+    }
+  },
+  "am-ET": {
+    "name": "アムハラ語",
+    "speech": "am-ET",
+    "expressions": {
+      "greeting": {
+        "text": "ሰላም",
+        "reading": "セラム",
+        "meaning": "こんにちは",
+        "audioText": "ሰላም",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "አመሰግናለሁ",
+        "reading": "アメセグナッロ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "አመሰግናለሁ",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "ይቅርታ",
+        "reading": "イクルタ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "ይቅርታ",
+        "register": "neutral"
+      }
+    }
+  },
   "ar-AE": {
     "name": "アラビア語",
     "speech": "ar-AE",
@@ -6,18 +66,76 @@
       "greeting": {
         "text": "مرحبا",
         "reading": "マルハバ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "مرحبا"
       },
       "thanks": {
         "text": "شكراً",
         "reading": "シュクラン",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "شكراً"
       },
       "apology": {
         "text": "آسف / آسفة",
         "reading": "アーセフ / アースファ",
         "meaning": "ごめんなさい",
         "audioText": "آسف"
+      }
+    }
+  },
+  "ar-BH": {
+    "name": "アラビア語",
+    "speech": "ar-BH",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-DZ": {
+    "name": "アラビア語",
+    "speech": "ar-DZ",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
       }
     }
   },
@@ -28,12 +146,14 @@
       "greeting": {
         "text": "السلام عليكم",
         "reading": "アッサラーム アライクム",
-        "meaning": "こんにちは / 平安を"
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم"
       },
       "thanks": {
         "text": "شكراً",
         "reading": "シュクラン",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "شكراً"
       },
       "apology": {
         "text": "آسف / آسفة",
@@ -43,24 +163,307 @@
       }
     }
   },
+  "ar-IQ": {
+    "name": "アラビア語",
+    "speech": "ar-IQ",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-JO": {
+    "name": "アラビア語",
+    "speech": "ar-JO",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-KM": {
+    "name": "アラビア語",
+    "speech": "ar-KM",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-KW": {
+    "name": "アラビア語",
+    "speech": "ar-KW",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-LB": {
+    "name": "アラビア語",
+    "speech": "ar-LB",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-LY": {
+    "name": "アラビア語",
+    "speech": "ar-LY",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
   "ar-MA": {
-    "name": "モロッコ・アラビア語",
+    "name": "アラビア語",
     "speech": "ar-MA",
     "expressions": {
       "greeting": {
         "text": "السلام عليكم",
         "reading": "アッサラーム アライクム",
-        "meaning": "こんにちは / 平安を"
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم"
       },
       "thanks": {
         "text": "شكراً",
         "reading": "シュクラン",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "شكراً"
       },
       "apology": {
         "text": "سمح لي",
         "reading": "スマフ リ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "سمح لي"
+      }
+    }
+  },
+  "ar-MR": {
+    "name": "アラビア語",
+    "speech": "ar-MR",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-OM": {
+    "name": "アラビア語",
+    "speech": "ar-OM",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-PS": {
+    "name": "アラビア語",
+    "speech": "ar-PS",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-QA": {
+    "name": "アラビア語",
+    "speech": "ar-QA",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
       }
     }
   },
@@ -71,18 +474,453 @@
       "greeting": {
         "text": "السلام عليكم",
         "reading": "アッサラーム アライクム",
-        "meaning": "こんにちは / 平安を"
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم"
       },
       "thanks": {
         "text": "شكراً",
         "reading": "シュクラン",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "شكراً"
       },
       "apology": {
         "text": "آسف / آسفة",
         "reading": "アーセフ / アースファ",
         "meaning": "ごめんなさい",
         "audioText": "آسف"
+      }
+    }
+  },
+  "ar-SD": {
+    "name": "アラビア語",
+    "speech": "ar-SD",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-SY": {
+    "name": "アラビア語",
+    "speech": "ar-SY",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-TN": {
+    "name": "アラビア語",
+    "speech": "ar-TN",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ar-YE": {
+    "name": "アラビア語",
+    "speech": "ar-YE",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام عليكم",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう",
+        "audioText": "شكراً",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "آسف",
+        "reading": "アーシフ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "آسف",
+        "register": "neutral",
+        "pronunciationNote": "地域・話者によって発音や形が変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "az-AZ": {
+    "name": "アゼルバイジャン語",
+    "speech": "az-AZ",
+    "expressions": {
+      "greeting": {
+        "text": "Salam",
+        "reading": "サラム",
+        "meaning": "こんにちは",
+        "audioText": "Salam",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Təşəkkür edirəm",
+        "reading": "テシェッキュル エディレム（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Təşəkkür edirəm",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Bağışlayın",
+        "reading": "バグシュラユン（近似）",
+        "meaning": "すみません",
+        "audioText": "Bağışlayın",
+        "register": "polite"
+      }
+    }
+  },
+  "be-BY": {
+    "name": "ベラルーシ語",
+    "speech": "be-BY",
+    "expressions": {
+      "greeting": {
+        "text": "Вітаю",
+        "reading": "ヴィターユ",
+        "meaning": "こんにちは",
+        "audioText": "Вітаю",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Дзякуй",
+        "reading": "ジャークイ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Дзякуй",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Прабачце",
+        "reading": "プラバチツェ（近似）",
+        "meaning": "すみません",
+        "audioText": "Прабачце",
+        "register": "neutral"
+      }
+    }
+  },
+  "bem-ZM": {
+    "name": "ベンバ語",
+    "speech": "bem-ZM",
+    "expressions": {
+      "greeting": {
+        "text": "Shani",
+        "reading": "シャニ",
+        "meaning": "こんにちは",
+        "audioText": "Shani",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/bemba.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Natotela",
+        "reading": "ナトテラ",
+        "meaning": "ありがとう",
+        "audioText": "Natotela",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/bemba.htm"
+        ]
+      },
+      "apology": {
+        "text": "Njeleleniko",
+        "reading": "ンジェレレニコ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Njeleleniko",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/bemba.htm"
+        ]
+      }
+    }
+  },
+  "bg-BG": {
+    "name": "ブルガリア語",
+    "speech": "bg-BG",
+    "expressions": {
+      "greeting": {
+        "text": "Здравейте",
+        "reading": "ズドラヴェイテ",
+        "meaning": "こんにちは",
+        "audioText": "Здравейте",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Благодаря",
+        "reading": "ブラゴダリャ",
+        "meaning": "ありがとう",
+        "audioText": "Благодаря",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Извинете",
+        "reading": "イズヴィネテ",
+        "meaning": "すみません",
+        "audioText": "Извинете",
+        "register": "polite"
+      }
+    }
+  },
+  "bi-VU": {
+    "name": "ビスラマ語",
+    "speech": "bi-VU",
+    "expressions": {
+      "greeting": {
+        "text": "Halo",
+        "reading": "ハロ",
+        "meaning": "こんにちは",
+        "audioText": "Halo",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Tangkyu tumas",
+        "reading": "タングキュー トゥマス（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Tangkyu tumas",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sori",
+        "reading": "ソリ",
+        "meaning": "ごめんなさい",
+        "audioText": "Sori",
+        "register": "neutral"
+      }
+    }
+  },
+  "bn-BD": {
+    "name": "ベンガル語",
+    "speech": "bn-BD",
+    "expressions": {
+      "greeting": {
+        "text": "নমস্কার",
+        "reading": "ノモシュカル（近似）",
+        "meaning": "こんにちは",
+        "audioText": "নমস্কার",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "ধন্যবাদ",
+        "reading": "ドンノバード（近似）",
+        "meaning": "ありがとう",
+        "audioText": "ধন্যবাদ",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "দুঃখিত",
+        "reading": "ドゥッキト（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "দুঃখিত",
+        "register": "neutral"
+      }
+    }
+  },
+  "bs-BA": {
+    "name": "ボスニア語",
+    "speech": "bs-BA",
+    "expressions": {
+      "greeting": {
+        "text": "Dobar dan",
+        "reading": "ドバル ダン",
+        "meaning": "こんにちは",
+        "audioText": "Dobar dan",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Hvala",
+        "reading": "フヴァラ",
+        "meaning": "ありがとう",
+        "audioText": "Hvala",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Oprostite",
+        "reading": "オプロスティテ",
+        "meaning": "すみません",
+        "audioText": "Oprostite",
+        "register": "polite"
+      }
+    }
+  },
+  "ca-AD": {
+    "name": "カタルーニャ語",
+    "speech": "ca-AD",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gràcies",
+        "reading": "グラシアス（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Gràcies",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Ho sento",
+        "reading": "ウ セント（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Ho sento",
+        "register": "neutral"
+      }
+    }
+  },
+  "ch-GU": {
+    "name": "チャモロ語",
+    "speech": "ch-GU",
+    "expressions": {
+      "greeting": {
+        "text": "Håfa ådai",
+        "reading": "ハファ アデイ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Håfa ådai",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chamorro.php"
+        ]
+      },
+      "thanks": {
+        "text": "Si Yu'us Må'åse'",
+        "reading": "シ ユウス マアセ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Si Yu'us Må'åse'",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chamorro.php"
+        ]
+      },
+      "apology": {
+        "text": "Dispensa yo'",
+        "reading": "ディスペンサ ヨ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Dispensa yo'",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chamorro.php"
+        ]
+      }
+    }
+  },
+  "ch-MP": {
+    "name": "チャモロ語",
+    "speech": "ch-MP",
+    "expressions": {
+      "greeting": {
+        "text": "Hafa Adai",
+        "reading": "ハファ アダイ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Hafa Adai",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chamorro_nm.php"
+        ]
+      },
+      "thanks": {
+        "text": "Si Yu’us ma’ase",
+        "reading": "シ ユウス マアセ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Si Yu’us ma’ase",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chamorro_nm.php"
+        ]
+      },
+      "apology": {
+        "text": "Dispensa yu",
+        "reading": "ディスペンサ ユ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Dispensa yu",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chamorro_nm.php"
+        ]
+      }
+    }
+  },
+  "chk-FM": {
+    "name": "チューク語",
+    "speech": "chk-FM",
+    "expressions": {
+      "greeting": {
+        "text": "Ran annim",
+        "reading": "ラン アンニム",
+        "meaning": "こんにちは",
+        "audioText": "Ran annim",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chuukese.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Kinisou",
+        "reading": "キニソウ",
+        "meaning": "ありがとう",
+        "audioText": "Kinisou",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chuukese.htm"
+        ]
+      },
+      "apology": {
+        "text": "Tirow",
+        "reading": "ティロウ",
+        "meaning": "すみません",
+        "audioText": "Tirow",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chuukese.htm"
+        ]
       }
     }
   },
@@ -99,7 +937,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/czech.php"
-        ]
+        ],
+        "audioText": "Dobrý den"
       },
       "thanks": {
         "text": "Děkuji",
@@ -110,7 +949,8 @@
         "pronunciationNote": "dě の音は日本語にないためカタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/czech.php"
-        ]
+        ],
+        "audioText": "Děkuji"
       },
       "apology": {
         "text": "Promiňte",
@@ -121,7 +961,8 @@
         "pronunciationNote": "ň の音は日本語にないためカタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/czech.php"
-        ]
+        ],
+        "audioText": "Promiňte"
       }
     }
   },
@@ -138,7 +979,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/danish.php"
-        ]
+        ],
+        "audioText": "Hej"
       },
       "thanks": {
         "text": "Tak",
@@ -149,7 +991,8 @@
         "pronunciationNote": "実際の母音・子音はカタカナとずれるため音声確認推奨。",
         "sources": [
           "https://www.omniglot.com/language/phrases/danish.php"
-        ]
+        ],
+        "audioText": "Tak"
       },
       "apology": {
         "text": "Undskyld",
@@ -160,7 +1003,62 @@
         "pronunciationNote": "デンマーク語の弱化音はカタカナで正確に表せない。",
         "sources": [
           "https://www.omniglot.com/language/phrases/danish.php"
-        ]
+        ],
+        "audioText": "Undskyld"
+      }
+    }
+  },
+  "de-AT": {
+    "name": "ドイツ語",
+    "speech": "de-AT",
+    "expressions": {
+      "greeting": {
+        "text": "Guten Tag",
+        "reading": "グーテン ターク",
+        "meaning": "こんにちは",
+        "audioText": "Guten Tag",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Danke",
+        "reading": "ダンケ",
+        "meaning": "ありがとう",
+        "audioText": "Danke",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Entschuldigung",
+        "reading": "エントシュルディグング",
+        "meaning": "すみません",
+        "audioText": "Entschuldigung",
+        "register": "neutral"
+      }
+    }
+  },
+  "de-CH": {
+    "name": "ドイツ語",
+    "speech": "de-CH",
+    "expressions": {
+      "greeting": {
+        "text": "Guten Tag",
+        "reading": "グーテン ターク",
+        "meaning": "こんにちは",
+        "audioText": "Guten Tag",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Danke",
+        "reading": "ダンケ",
+        "meaning": "ありがとう",
+        "audioText": "Danke",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Entschuldigung",
+        "reading": "エントシュルディグング",
+        "meaning": "すみません",
+        "audioText": "Entschuldigung",
+        "register": "neutral"
       }
     }
   },
@@ -171,17 +1069,128 @@
       "greeting": {
         "text": "Guten Tag",
         "reading": "グーテン ターク",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Guten Tag"
       },
       "thanks": {
         "text": "Danke",
         "reading": "ダンケ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Danke"
       },
       "apology": {
         "text": "Entschuldigung",
         "reading": "エントシュルディグング",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Entschuldigung"
+      }
+    }
+  },
+  "de-LI": {
+    "name": "ドイツ語",
+    "speech": "de-LI",
+    "expressions": {
+      "greeting": {
+        "text": "Guten Tag",
+        "reading": "グーテン ターク",
+        "meaning": "こんにちは",
+        "audioText": "Guten Tag",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Danke",
+        "reading": "ダンケ",
+        "meaning": "ありがとう",
+        "audioText": "Danke",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Entschuldigung",
+        "reading": "エントシュルディグング",
+        "meaning": "すみません",
+        "audioText": "Entschuldigung",
+        "register": "neutral"
+      }
+    }
+  },
+  "dv-MV": {
+    "name": "ディベヒ語",
+    "speech": "dv-MV",
+    "expressions": {
+      "greeting": {
+        "text": "އައްސަލާމު ޢަލައިކުމް",
+        "reading": "アッサラーム アライクム（近似）",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "އައްސަލާމު ޢަލައިކުމް",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "ޝުކުރިއްޔާ",
+        "reading": "シュクリッヤー（近似）",
+        "meaning": "ありがとう",
+        "audioText": "ޝުކުރިއްޔާ",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "މަޢާފުކުރައްވާ",
+        "reading": "マアーフ クラッヴァー（近似）",
+        "meaning": "すみません",
+        "audioText": "މަޢާފުކުރައްވާ",
+        "register": "neutral"
+      }
+    }
+  },
+  "dz-BT": {
+    "name": "ゾンカ語",
+    "speech": "dz-BT",
+    "expressions": {
+      "greeting": {
+        "text": "སྐུ་གཟུགས་བཟང་པོ་ལགས།",
+        "reading": "クズ ザンポ ラ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "སྐུ་གཟུགས་བཟང་པོ་ལགས།",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "བཀའ་དྲིན་ཆེ།",
+        "reading": "カディン チェ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "བཀའ་དྲིན་ཆེ།",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "ཙིགཔ་མ་ཟ།",
+        "reading": "ツィプ マザ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "ཙིགཔ་མ་ཟ།",
+        "register": "neutral"
+      }
+    }
+  },
+  "el-CY": {
+    "name": "ギリシャ語",
+    "speech": "el-CY",
+    "expressions": {
+      "greeting": {
+        "text": "Γεια σας",
+        "reading": "ヤ サス",
+        "meaning": "こんにちは",
+        "audioText": "Γεια σας",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Ευχαριστώ",
+        "reading": "エフハリスト",
+        "meaning": "ありがとう",
+        "audioText": "Ευχαριστώ",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Συγγνώμη",
+        "reading": "シグノーミ",
+        "meaning": "すみません",
+        "audioText": "Συγγνώμη",
+        "register": "neutral"
       }
     }
   },
@@ -192,17 +1201,101 @@
       "greeting": {
         "text": "Γεια σας",
         "reading": "ヤ サス",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Γεια σας"
       },
       "thanks": {
         "text": "Ευχαριστώ",
         "reading": "エフハリスト",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Ευχαριστώ"
       },
       "apology": {
         "text": "Συγγνώμη",
         "reading": "シグノーミ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Συγγνώμη"
+      }
+    }
+  },
+  "en-AG": {
+    "name": "英語",
+    "speech": "en-AG",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-AI": {
+    "name": "英語",
+    "speech": "en-AI",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-AQ": {
+    "name": "英語",
+    "speech": "en-AQ",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
       }
     }
   },
@@ -219,33 +1312,281 @@
       "thanks": {
         "text": "Thank you",
         "reading": "サンキュー",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Thank you"
       },
       "apology": {
         "text": "Sorry",
         "reading": "ソーリー",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Sorry"
+      }
+    }
+  },
+  "en-BB": {
+    "name": "英語",
+    "speech": "en-BB",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-BM": {
+    "name": "英語",
+    "speech": "en-BM",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-BS": {
+    "name": "英語",
+    "speech": "en-BS",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-BZ": {
+    "name": "英語",
+    "speech": "en-BZ",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
       }
     }
   },
   "en-CA": {
-    "name": "カナダ英語",
+    "name": "英語",
     "speech": "en-CA",
     "expressions": {
       "greeting": {
         "text": "Hello",
         "reading": "ハロー",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hello"
       },
       "thanks": {
         "text": "Thank you",
         "reading": "サンキュー",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Thank you"
       },
       "apology": {
         "text": "Sorry",
         "reading": "ソーリー",
-        "meaning": "すみません"
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry"
+      }
+    }
+  },
+  "en-CC": {
+    "name": "英語",
+    "speech": "en-CC",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-CM": {
+    "name": "英語",
+    "speech": "en-CM",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-CX": {
+    "name": "英語",
+    "speech": "en-CX",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-DM": {
+    "name": "英語",
+    "speech": "en-DM",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-FK": {
+    "name": "英語",
+    "speech": "en-FK",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
       }
     }
   },
@@ -256,17 +1597,614 @@
       "greeting": {
         "text": "Hello",
         "reading": "ハロー",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hello"
       },
       "thanks": {
         "text": "Thank you",
         "reading": "サンキュー",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Thank you"
       },
       "apology": {
         "text": "Sorry",
         "reading": "ソーリー",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Sorry"
+      }
+    }
+  },
+  "en-GD": {
+    "name": "英語",
+    "speech": "en-GD",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-GG": {
+    "name": "英語",
+    "speech": "en-GG",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-GI": {
+    "name": "英語",
+    "speech": "en-GI",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-GS": {
+    "name": "英語",
+    "speech": "en-GS",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-GY": {
+    "name": "英語",
+    "speech": "en-GY",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-HM": {
+    "name": "英語",
+    "speech": "en-HM",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-IO": {
+    "name": "英語",
+    "speech": "en-IO",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-JE": {
+    "name": "英語",
+    "speech": "en-JE",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-KN": {
+    "name": "英語",
+    "speech": "en-KN",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-KY": {
+    "name": "英語",
+    "speech": "en-KY",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-LC": {
+    "name": "英語",
+    "speech": "en-LC",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-LR": {
+    "name": "英語",
+    "speech": "en-LR",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-MS": {
+    "name": "英語",
+    "speech": "en-MS",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-NF": {
+    "name": "英語",
+    "speech": "en-NF",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-NR": {
+    "name": "英語",
+    "speech": "en-NR",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-PN": {
+    "name": "英語",
+    "speech": "en-PN",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-SG": {
+    "name": "英語",
+    "speech": "en-SG",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-SH": {
+    "name": "英語",
+    "speech": "en-SH",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-SS": {
+    "name": "英語",
+    "speech": "en-SS",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-TC": {
+    "name": "英語",
+    "speech": "en-TC",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-TT": {
+    "name": "英語",
+    "speech": "en-TT",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-UM": {
+    "name": "英語",
+    "speech": "en-UM",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
       }
     }
   },
@@ -283,12 +2221,95 @@
       "thanks": {
         "text": "Thank you",
         "reading": "サンキュー",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Thank you"
       },
       "apology": {
         "text": "Sorry",
         "reading": "ソーリー",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Sorry"
+      }
+    }
+  },
+  "en-VC": {
+    "name": "英語",
+    "speech": "en-VC",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-VG": {
+    "name": "英語",
+    "speech": "en-VG",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "en-VI": {
+    "name": "英語",
+    "speech": "en-VI",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう",
+        "audioText": "Thank you",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Sorry",
+        "register": "neutral"
       }
     }
   },
@@ -299,17 +2320,47 @@
       "greeting": {
         "text": "Hola",
         "reading": "オラ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hola"
       },
       "thanks": {
         "text": "Gracias",
         "reading": "グラシアス",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Gracias"
       },
       "apology": {
         "text": "Perdón",
         "reading": "ペルドン",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Perdón"
+      }
+    }
+  },
+  "es-BO": {
+    "name": "スペイン語",
+    "speech": "es-BO",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
       }
     }
   },
@@ -320,17 +2371,182 @@
       "greeting": {
         "text": "Hola",
         "reading": "オラ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hola"
       },
       "thanks": {
         "text": "Gracias",
         "reading": "グラシアス",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Gracias"
       },
       "apology": {
         "text": "Perdón",
         "reading": "ペルドン",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Perdón"
+      }
+    }
+  },
+  "es-CO": {
+    "name": "スペイン語",
+    "speech": "es-CO",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-CR": {
+    "name": "スペイン語",
+    "speech": "es-CR",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-CU": {
+    "name": "スペイン語",
+    "speech": "es-CU",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-DO": {
+    "name": "スペイン語",
+    "speech": "es-DO",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-EC": {
+    "name": "スペイン語",
+    "speech": "es-EC",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-EH": {
+    "name": "スペイン語",
+    "speech": "es-EH",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
       }
     }
   },
@@ -341,17 +2557,101 @@
       "greeting": {
         "text": "Hola",
         "reading": "オラ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hola"
       },
       "thanks": {
         "text": "Gracias",
         "reading": "グラシアス",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Gracias"
       },
       "apology": {
         "text": "Perdón",
         "reading": "ペルドン",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Perdón"
+      }
+    }
+  },
+  "es-GQ": {
+    "name": "スペイン語",
+    "speech": "es-GQ",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-GT": {
+    "name": "スペイン語",
+    "speech": "es-GT",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-HN": {
+    "name": "スペイン語",
+    "speech": "es-HN",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
       }
     }
   },
@@ -362,17 +2662,74 @@
       "greeting": {
         "text": "Hola",
         "reading": "オラ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hola"
       },
       "thanks": {
         "text": "Gracias",
         "reading": "グラシアス",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Gracias"
       },
       "apology": {
         "text": "Perdón",
         "reading": "ペルドン",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Perdón"
+      }
+    }
+  },
+  "es-NI": {
+    "name": "スペイン語",
+    "speech": "es-NI",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-PA": {
+    "name": "スペイン語",
+    "speech": "es-PA",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
       }
     }
   },
@@ -383,17 +2740,155 @@
       "greeting": {
         "text": "Hola",
         "reading": "オラ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hola"
       },
       "thanks": {
         "text": "Gracias",
         "reading": "グラシアス",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Gracias"
       },
       "apology": {
         "text": "Perdón",
         "reading": "ペルドン",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Perdón"
+      }
+    }
+  },
+  "es-PR": {
+    "name": "スペイン語",
+    "speech": "es-PR",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-PY": {
+    "name": "スペイン語",
+    "speech": "es-PY",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-SV": {
+    "name": "スペイン語",
+    "speech": "es-SV",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-UY": {
+    "name": "スペイン語",
+    "speech": "es-UY",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
+      }
+    }
+  },
+  "es-VE": {
+    "name": "スペイン語",
+    "speech": "es-VE",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Hola",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう",
+        "audioText": "Gracias",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません",
+        "audioText": "Perdón",
+        "register": "neutral"
       }
     }
   },
@@ -410,7 +2905,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/estonian.php"
-        ]
+        ],
+        "audioText": "Tere"
       },
       "thanks": {
         "text": "Aitäh",
@@ -421,7 +2917,8 @@
         "pronunciationNote": "ä と語末 h は日本語にないため音声確認推奨。",
         "sources": [
           "https://www.omniglot.com/language/phrases/estonian.php"
-        ]
+        ],
+        "audioText": "Aitäh"
       },
       "apology": {
         "text": "Vabandust",
@@ -432,7 +2929,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/estonian.php"
-        ]
+        ],
+        "audioText": "Vabandust"
       }
     }
   },
@@ -449,7 +2947,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/persian.php"
-        ]
+        ],
+        "audioText": "سلام"
       },
       "thanks": {
         "text": "ممنونم",
@@ -460,7 +2959,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/persian.php"
-        ]
+        ],
+        "audioText": "ممنونم"
       },
       "apology": {
         "text": "متاسفم",
@@ -471,7 +2971,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/persian.php"
-        ]
+        ],
+        "audioText": "متاسفم"
       }
     }
   },
@@ -482,17 +2983,20 @@
       "greeting": {
         "text": "Hei",
         "reading": "ヘイ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hei"
       },
       "thanks": {
         "text": "Kiitos",
         "reading": "キートス",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Kiitos"
       },
       "apology": {
         "text": "Anteeksi",
         "reading": "アンテークシ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Anteeksi"
       }
     }
   },
@@ -503,38 +3007,398 @@
       "greeting": {
         "text": "Kumusta?",
         "reading": "クムスタ？",
-        "meaning": "こんにちは / 元気？"
+        "meaning": "こんにちは / 元気？",
+        "audioText": "Kumusta?"
       },
       "thanks": {
         "text": "Salamat",
         "reading": "サラマッ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Salamat"
       },
       "apology": {
         "text": "Paumanhin",
         "reading": "パウマンヒン",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Paumanhin"
+      }
+    }
+  },
+  "fj-FJ": {
+    "name": "フィジー語",
+    "speech": "fj-FJ",
+    "expressions": {
+      "greeting": {
+        "text": "Bula",
+        "reading": "ブラ",
+        "meaning": "こんにちは",
+        "audioText": "Bula",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/fijian.php"
+        ]
+      },
+      "thanks": {
+        "text": "Vinaka",
+        "reading": "ヴィナカ",
+        "meaning": "ありがとう",
+        "audioText": "Vinaka",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/fijian.php"
+        ]
+      },
+      "apology": {
+        "text": "Vosota sara",
+        "reading": "ヴォソタ サラ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Vosota sara",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/fijian.php"
+        ]
+      }
+    }
+  },
+  "fo-FO": {
+    "name": "フェロー語",
+    "speech": "fo-FO",
+    "expressions": {
+      "greeting": {
+        "text": "Halló",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Halló",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Takk",
+        "reading": "タック",
+        "meaning": "ありがとう",
+        "audioText": "Takk",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Orsaka",
+        "reading": "オルサカ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Orsaka",
+        "register": "neutral"
+      }
+    }
+  },
+  "fr-BF": {
+    "name": "フランス語",
+    "speech": "fr-BF",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-BI": {
+    "name": "フランス語",
+    "speech": "fr-BI",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-BJ": {
+    "name": "フランス語",
+    "speech": "fr-BJ",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-BL": {
+    "name": "フランス語",
+    "speech": "fr-BL",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
       }
     }
   },
   "fr-CA": {
-    "name": "カナダフランス語",
+    "name": "フランス語",
     "speech": "fr-CA",
     "expressions": {
       "greeting": {
         "text": "Bonjour",
         "reading": "ボンジュール",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/french.php"
+        ]
       },
       "thanks": {
         "text": "Merci",
         "reading": "メルシー",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/french.php"
+        ]
       },
       "apology": {
         "text": "Désolé(e)",
         "reading": "デゾレ",
-        "meaning": "すみません"
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/french.php"
+        ]
+      }
+    }
+  },
+  "fr-CD": {
+    "name": "フランス語",
+    "speech": "fr-CD",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-CF": {
+    "name": "フランス語",
+    "speech": "fr-CF",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-CG": {
+    "name": "フランス語",
+    "speech": "fr-CG",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-CI": {
+    "name": "フランス語",
+    "speech": "fr-CI",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-CM": {
+    "name": "フランス語",
+    "speech": "fr-CM",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/french.php"
+        ]
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/french.php"
+        ]
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/french.php"
+        ]
+      }
+    }
+  },
+  "fr-DJ": {
+    "name": "フランス語",
+    "speech": "fr-DJ",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
       }
     }
   },
@@ -545,17 +3409,762 @@
       "greeting": {
         "text": "Bonjour",
         "reading": "ボンジュール",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Bonjour"
       },
       "thanks": {
         "text": "Merci",
         "reading": "メルシー",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Merci"
       },
       "apology": {
         "text": "Désolé(e)",
         "reading": "デゾレ",
-        "meaning": "すみません / ごめんなさい"
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé"
+      }
+    }
+  },
+  "fr-GA": {
+    "name": "フランス語",
+    "speech": "fr-GA",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-GF": {
+    "name": "フランス語",
+    "speech": "fr-GF",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-GN": {
+    "name": "フランス語",
+    "speech": "fr-GN",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-GP": {
+    "name": "フランス語",
+    "speech": "fr-GP",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-HT": {
+    "name": "フランス語",
+    "speech": "fr-HT",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-LU": {
+    "name": "フランス語",
+    "speech": "fr-LU",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-MC": {
+    "name": "フランス語",
+    "speech": "fr-MC",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-MF": {
+    "name": "フランス語",
+    "speech": "fr-MF",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-ML": {
+    "name": "フランス語",
+    "speech": "fr-ML",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-MQ": {
+    "name": "フランス語",
+    "speech": "fr-MQ",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-NC": {
+    "name": "フランス語",
+    "speech": "fr-NC",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-NE": {
+    "name": "フランス語",
+    "speech": "fr-NE",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-PF": {
+    "name": "フランス語",
+    "speech": "fr-PF",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-PM": {
+    "name": "フランス語",
+    "speech": "fr-PM",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-RE": {
+    "name": "フランス語",
+    "speech": "fr-RE",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-SC": {
+    "name": "フランス語",
+    "speech": "fr-SC",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-SN": {
+    "name": "フランス語",
+    "speech": "fr-SN",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-TD": {
+    "name": "フランス語",
+    "speech": "fr-TD",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-TF": {
+    "name": "フランス語",
+    "speech": "fr-TF",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-TG": {
+    "name": "フランス語",
+    "speech": "fr-TG",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-WF": {
+    "name": "フランス語",
+    "speech": "fr-WF",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "fr-YT": {
+    "name": "フランス語",
+    "speech": "fr-YT",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは",
+        "audioText": "Bonjour",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう",
+        "audioText": "Merci",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Désolé",
+        "register": "neutral",
+        "pronunciationNote": "語尾は話者の性などで綴りが変わります。カタカナは近似です。"
+      }
+    }
+  },
+  "ga-IE": {
+    "name": "アイルランド語",
+    "speech": "ga-IE",
+    "expressions": {
+      "greeting": {
+        "text": "Dia dhuit",
+        "reading": "ディア グウィッチ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Dia dhuit",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Go raibh maith agat",
+        "reading": "ゴ レヴ マ アガト（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Go raibh maith agat",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Tá brón orm",
+        "reading": "ター ブローン オルム（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Tá brón orm",
+        "register": "neutral"
+      }
+    }
+  },
+  "gil-KI": {
+    "name": "キリバス語",
+    "speech": "gil-KI",
+    "expressions": {
+      "greeting": {
+        "text": "Mauri",
+        "reading": "マウリ",
+        "meaning": "こんにちは",
+        "audioText": "Mauri",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/kiribati.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Ko rab'a",
+        "reading": "コ ラバ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Ko rab'a",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/kiribati.htm"
+        ]
+      },
+      "apology": {
+        "text": "Kabara au bure",
+        "reading": "カバラ アウ ブレ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Kabara au bure",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/kiribati.htm"
+        ]
+      }
+    }
+  },
+  "gv-IM": {
+    "name": "マン島語",
+    "speech": "gv-IM",
+    "expressions": {
+      "greeting": {
+        "text": "Fastyr mie",
+        "reading": "ファスター ミー（近似）",
+        "meaning": "こんにちは / こんばんは",
+        "audioText": "Fastyr mie",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/manx.php"
+        ]
+      },
+      "thanks": {
+        "text": "Gura mie ayd",
+        "reading": "グラ ミー エイド（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Gura mie ayd",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/manx.php"
+        ]
+      },
+      "apology": {
+        "text": "Gow my leshtal",
+        "reading": "ゴウ マイ レシュタル（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Gow my leshtal",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/manx.php"
+        ]
+      }
+    }
+  },
+  "ha-NG": {
+    "name": "ハウサ語",
+    "speech": "ha-NG",
+    "expressions": {
+      "greeting": {
+        "text": "Sannu",
+        "reading": "サンヌ",
+        "meaning": "こんにちは",
+        "audioText": "Sannu",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hausa.php"
+        ]
+      },
+      "thanks": {
+        "text": "Na gode",
+        "reading": "ナ ゴデ",
+        "meaning": "ありがとう",
+        "audioText": "Na gode",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hausa.php"
+        ]
+      },
+      "apology": {
+        "text": "Yi hak'uri",
+        "reading": "イ ハクリ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Yi hak'uri",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hausa.php"
+        ]
       }
     }
   },
@@ -572,7 +4181,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/hebrew.php"
-        ]
+        ],
+        "audioText": "שלום"
       },
       "thanks": {
         "text": "תודה",
@@ -583,7 +4193,8 @@
         "pronunciationNote": "語末側にアクセントが置かれる発音を音声で確認推奨。",
         "sources": [
           "https://www.omniglot.com/language/phrases/hebrew.php"
-        ]
+        ],
+        "audioText": "תודה"
       },
       "apology": {
         "text": "סליחה",
@@ -594,7 +4205,8 @@
         "pronunciationNote": "語末の喉音はカタカナで正確に表せない。",
         "sources": [
           "https://www.omniglot.com/language/phrases/hebrew.php"
-        ]
+        ],
+        "audioText": "סליחה"
       }
     }
   },
@@ -605,17 +4217,47 @@
       "greeting": {
         "text": "नमस्ते",
         "reading": "ナマステ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "नमस्ते"
       },
       "thanks": {
         "text": "धन्यवाद",
         "reading": "ダンニャヴァード",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "धन्यवाद"
       },
       "apology": {
         "text": "माफ़ कीजिए",
         "reading": "マーフ キージエ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "माफ़ कीजिए"
+      }
+    }
+  },
+  "hr-HR": {
+    "name": "クロアチア語",
+    "speech": "hr-HR",
+    "expressions": {
+      "greeting": {
+        "text": "Dobar dan",
+        "reading": "ドバル ダン",
+        "meaning": "こんにちは",
+        "audioText": "Dobar dan",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Hvala",
+        "reading": "フヴァラ",
+        "meaning": "ありがとう",
+        "audioText": "Hvala",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Oprostite",
+        "reading": "オプロスティテ",
+        "meaning": "すみません",
+        "audioText": "Oprostite",
+        "register": "polite"
       }
     }
   },
@@ -632,7 +4274,8 @@
         "pronunciationNote": "母音の長短があるため音声確認推奨。",
         "sources": [
           "https://www.omniglot.com/language/phrases/hungarian.php"
-        ]
+        ],
+        "audioText": "Jó napot kívánok"
       },
       "thanks": {
         "text": "Köszönöm",
@@ -643,7 +4286,8 @@
         "pronunciationNote": "ö の音は日本語にないためカタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/hungarian.php"
-        ]
+        ],
+        "audioText": "Köszönöm"
       },
       "apology": {
         "text": "Bocsánat",
@@ -654,7 +4298,35 @@
         "pronunciationNote": "長母音を含むため音声確認推奨。",
         "sources": [
           "https://www.omniglot.com/language/phrases/hungarian.php"
-        ]
+        ],
+        "audioText": "Bocsánat"
+      }
+    }
+  },
+  "hy-AM": {
+    "name": "アルメニア語",
+    "speech": "hy-AM",
+    "expressions": {
+      "greeting": {
+        "text": "Բարև ձեզ",
+        "reading": "バレヴ ゼズ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Բարև ձեզ",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Շնորհակալություն",
+        "reading": "シュノラカルツュン（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Շնորհակալություն",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Ներեցեք",
+        "reading": "ネレツェク（近似）",
+        "meaning": "すみません",
+        "audioText": "Ներեցեք",
+        "register": "polite"
       }
     }
   },
@@ -665,17 +4337,80 @@
       "greeting": {
         "text": "Selamat pagi",
         "reading": "スラマッ パギ",
-        "meaning": "おはようございます"
+        "meaning": "おはようございます",
+        "audioText": "Selamat pagi"
       },
       "thanks": {
         "text": "Terima kasih",
         "reading": "トゥリマ カシ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Terima kasih"
       },
       "apology": {
         "text": "Maaf",
         "reading": "マアフ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Maaf"
+      }
+    }
+  },
+  "ig-NG": {
+    "name": "イボ語",
+    "speech": "ig-NG",
+    "expressions": {
+      "greeting": {
+        "text": "Ndeewo",
+        "reading": "ンデーウォ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Ndeewo",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/igbo.php"
+        ]
+      },
+      "thanks": {
+        "text": "Ị meela",
+        "reading": "イ メーラ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Ị meela",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/igbo.php"
+        ]
+      },
+      "apology": {
+        "text": "Ndo",
+        "reading": "ンド",
+        "meaning": "ごめんなさい",
+        "audioText": "Ndo",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/igbo.php"
+        ]
+      }
+    }
+  },
+  "is-IS": {
+    "name": "アイスランド語",
+    "speech": "is-IS",
+    "expressions": {
+      "greeting": {
+        "text": "Halló",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Halló",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Takk",
+        "reading": "タック",
+        "meaning": "ありがとう",
+        "audioText": "Takk",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Fyrirgefðu",
+        "reading": "フィリルゲヴズ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Fyrirgefðu",
+        "register": "neutral"
       }
     }
   },
@@ -686,17 +4421,74 @@
       "greeting": {
         "text": "Buongiorno",
         "reading": "ブオンジョルノ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Buongiorno"
       },
       "thanks": {
         "text": "Grazie",
         "reading": "グラツィエ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Grazie"
       },
       "apology": {
         "text": "Mi dispiace",
         "reading": "ミ ディスピアーチェ",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "Mi dispiace"
+      }
+    }
+  },
+  "it-SM": {
+    "name": "イタリア語",
+    "speech": "it-SM",
+    "expressions": {
+      "greeting": {
+        "text": "Buongiorno",
+        "reading": "ブオンジョルノ",
+        "meaning": "こんにちは",
+        "audioText": "Buongiorno",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Grazie",
+        "reading": "グラツィエ",
+        "meaning": "ありがとう",
+        "audioText": "Grazie",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Mi dispiace",
+        "reading": "ミ ディスピアーチェ",
+        "meaning": "ごめんなさい",
+        "audioText": "Mi dispiace",
+        "register": "neutral"
+      }
+    }
+  },
+  "it-VA": {
+    "name": "イタリア語",
+    "speech": "it-VA",
+    "expressions": {
+      "greeting": {
+        "text": "Buongiorno",
+        "reading": "ブオンジョルノ",
+        "meaning": "こんにちは",
+        "audioText": "Buongiorno",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Grazie",
+        "reading": "グラツィエ",
+        "meaning": "ありがとう",
+        "audioText": "Grazie",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Mi dispiace",
+        "reading": "ミ ディスピアーチェ",
+        "meaning": "ごめんなさい",
+        "audioText": "Mi dispiace",
+        "register": "neutral"
       }
     }
   },
@@ -707,17 +4499,227 @@
       "greeting": {
         "text": "こんにちは",
         "reading": "コンニチハ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "こんにちは"
       },
       "thanks": {
         "text": "ありがとう",
         "reading": "アリガトウ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "ありがとう"
       },
       "apology": {
         "text": "すみません",
         "reading": "スミマセン",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "すみません"
+      }
+    }
+  },
+  "jam-JM": {
+    "name": "ジャマイカ・パトワ",
+    "speech": "jam-JM",
+    "expressions": {
+      "greeting": {
+        "text": "Waa gwaan?",
+        "reading": "ワー グワーン？（近似）",
+        "meaning": "こんにちは / 調子はどう？",
+        "audioText": "Waa gwaan?",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/jamaican.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Thenk yuh",
+        "reading": "センク ユ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Thenk yuh",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/jamaican.htm"
+        ]
+      },
+      "apology": {
+        "text": "Hush",
+        "reading": "ハッシュ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Hush",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/jamaican.htm"
+        ]
+      }
+    }
+  },
+  "ka-GE": {
+    "name": "ジョージア語",
+    "speech": "ka-GE",
+    "expressions": {
+      "greeting": {
+        "text": "გამარჯობა",
+        "reading": "ガマルジョバ",
+        "meaning": "こんにちは",
+        "audioText": "გამარჯობა",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "გმადლობთ",
+        "reading": "グマドロプト（近似）",
+        "meaning": "ありがとう",
+        "audioText": "გმადლობთ",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "ბოდიში",
+        "reading": "ボディシ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "ბოდიში",
+        "register": "neutral"
+      }
+    }
+  },
+  "kj-NA": {
+    "name": "クワニャマ語（オシワンボ）",
+    "speech": "kj-NA",
+    "expressions": {
+      "greeting": {
+        "text": "Ongiini?",
+        "reading": "オンギーニ？（近似）",
+        "meaning": "こんにちは / 元気ですか",
+        "audioText": "Ongiini?",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/oshiwambo.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Tangi",
+        "reading": "タンギ",
+        "meaning": "ありがとう",
+        "audioText": "Tangi",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/oshiwambo.htm"
+        ]
+      },
+      "apology": {
+        "text": "Ombili",
+        "reading": "オンビリ",
+        "meaning": "ごめんなさい",
+        "audioText": "Ombili",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/oshiwambo.htm"
+        ]
+      }
+    }
+  },
+  "kk-KZ": {
+    "name": "カザフ語",
+    "speech": "kk-KZ",
+    "expressions": {
+      "greeting": {
+        "text": "Сәлеметсіз бе?",
+        "reading": "サレメトスィズ ベ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Сәлеметсіз бе?",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Рақмет",
+        "reading": "ラクメト（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Рақмет",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Кешіріңіз",
+        "reading": "ケシリニズ（近似）",
+        "meaning": "すみません",
+        "audioText": "Кешіріңіз",
+        "register": "polite"
+      }
+    }
+  },
+  "kl-GL": {
+    "name": "グリーンランド語",
+    "speech": "kl-GL",
+    "expressions": {
+      "greeting": {
+        "text": "Aluu",
+        "reading": "アルー",
+        "meaning": "こんにちは",
+        "audioText": "Aluu",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Qujanaq",
+        "reading": "クヤナック（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Qujanaq",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Utoqqatserpunga",
+        "reading": "ウトッカッツェルプンガ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Utoqqatserpunga",
+        "register": "neutral"
+      }
+    }
+  },
+  "km-KH": {
+    "name": "クメール語",
+    "speech": "km-KH",
+    "expressions": {
+      "greeting": {
+        "text": "សួស្តី",
+        "reading": "スオスダイ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "សួស្តី",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "អរគុណ",
+        "reading": "オークン（近似）",
+        "meaning": "ありがとう",
+        "audioText": "អរគុណ",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "សុំទោស",
+        "reading": "ソム トー（近似）",
+        "meaning": "すみません",
+        "audioText": "សុំទោស",
+        "register": "neutral"
+      }
+    }
+  },
+  "ko-KP": {
+    "name": "朝鮮語",
+    "speech": "ko-KP",
+    "expressions": {
+      "greeting": {
+        "text": "안녕하십니까",
+        "reading": "アンニョンハシムニッカ",
+        "meaning": "こんにちは",
+        "audioText": "안녕하십니까",
+        "sources": [
+          "https://en.wikivoyage.org/wiki/Korean"
+        ]
+      },
+      "thanks": {
+        "text": "고맙습니다",
+        "reading": "コマプスムニダ",
+        "meaning": "ありがとうございます",
+        "audioText": "고맙습니다",
+        "sources": [
+          "https://rki.kbs.co.kr/learn_korean/lessons/e_index.htm?learn_id=0201"
+        ]
+      },
+      "apology": {
+        "text": "미안합니다",
+        "reading": "ミアナムニダ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "미안합니다",
+        "sources": [
+          "https://rki.kbs.co.kr/learn_korean/lessons/e_index.htm?learn_id=0201"
+        ]
       }
     }
   },
@@ -728,17 +4730,296 @@
       "greeting": {
         "text": "안녕하세요",
         "reading": "アンニョンハセヨ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "안녕하세요"
       },
       "thanks": {
         "text": "감사합니다",
         "reading": "カムサハムニダ",
-        "meaning": "ありがとうございます"
+        "meaning": "ありがとうございます",
+        "audioText": "감사합니다"
       },
       "apology": {
         "text": "죄송합니다",
         "reading": "チェソンハムニダ",
-        "meaning": "申し訳ありません"
+        "meaning": "申し訳ありません",
+        "audioText": "죄송합니다"
+      }
+    }
+  },
+  "kri-SL": {
+    "name": "クリオ語",
+    "speech": "kri-SL",
+    "expressions": {
+      "greeting": {
+        "text": "Kushɛ",
+        "reading": "クシェ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Kushɛ",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/krio.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Tɛnki",
+        "reading": "テンキ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Tɛnki",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/krio.htm"
+        ]
+      },
+      "apology": {
+        "text": "A bayg padin",
+        "reading": "ア ベイグ パディン（近似）",
+        "meaning": "ごめんなさい / すみません",
+        "audioText": "A bayg padin",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/krio.htm"
+        ]
+      }
+    }
+  },
+  "ky-KG": {
+    "name": "キルギス語",
+    "speech": "ky-KG",
+    "expressions": {
+      "greeting": {
+        "text": "Саламатсызбы?",
+        "reading": "サラマツスズブ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Саламатсызбы?",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Рахмат",
+        "reading": "ラフマト",
+        "meaning": "ありがとう",
+        "audioText": "Рахмат",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Кечиресиз",
+        "reading": "ケチレシズ（近似）",
+        "meaning": "すみません",
+        "audioText": "Кечиресиз",
+        "register": "polite"
+      }
+    }
+  },
+  "lg-UG": {
+    "name": "ルガンダ語",
+    "speech": "lg-UG",
+    "expressions": {
+      "greeting": {
+        "text": "Gyebale ko",
+        "reading": "ジェバレ コ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Gyebale ko",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/luganda.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Weebale",
+        "reading": "ウェーバレ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Weebale",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/luganda.htm"
+        ]
+      },
+      "apology": {
+        "text": "Nsonyiwa",
+        "reading": "ンソニワ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Nsonyiwa",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/luganda.htm"
+        ]
+      }
+    }
+  },
+  "lo-LA": {
+    "name": "ラオ語",
+    "speech": "lo-LA",
+    "expressions": {
+      "greeting": {
+        "text": "ສະບາຍດີ",
+        "reading": "サバーイディー（近似）",
+        "meaning": "こんにちは",
+        "audioText": "ສະບາຍດີ",
+        "register": "neutral",
+        "pronunciationNote": "声調を持つためカタカナは近似です。"
+      },
+      "thanks": {
+        "text": "ຂອບໃຈ",
+        "reading": "コープチャイ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "ຂອບໃຈ",
+        "register": "neutral",
+        "pronunciationNote": "声調を持つためカタカナは近似です。"
+      },
+      "apology": {
+        "text": "ຂໍໂທດ",
+        "reading": "コートート（近似）",
+        "meaning": "すみません",
+        "audioText": "ຂໍໂທດ",
+        "register": "neutral",
+        "pronunciationNote": "声調を持つためカタカナは近似です。"
+      }
+    }
+  },
+  "lt-LT": {
+    "name": "リトアニア語",
+    "speech": "lt-LT",
+    "expressions": {
+      "greeting": {
+        "text": "Sveiki",
+        "reading": "スヴェイキ",
+        "meaning": "こんにちは",
+        "audioText": "Sveiki",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Ačiū",
+        "reading": "アチュー",
+        "meaning": "ありがとう",
+        "audioText": "Ačiū",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Atsiprašau",
+        "reading": "アツィプラシャウ（近似）",
+        "meaning": "すみません",
+        "audioText": "Atsiprašau",
+        "register": "neutral"
+      }
+    }
+  },
+  "lv-LV": {
+    "name": "ラトビア語",
+    "speech": "lv-LV",
+    "expressions": {
+      "greeting": {
+        "text": "Sveiki",
+        "reading": "スヴェイキ",
+        "meaning": "こんにちは",
+        "audioText": "Sveiki",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Paldies",
+        "reading": "パルディエス",
+        "meaning": "ありがとう",
+        "audioText": "Paldies",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Atvainojiet",
+        "reading": "アトヴァイノイエト（近似）",
+        "meaning": "すみません",
+        "audioText": "Atvainojiet",
+        "register": "polite"
+      }
+    }
+  },
+  "mfe-MU": {
+    "name": "モーリシャス・クレオール語",
+    "speech": "mfe-MU",
+    "expressions": {
+      "greeting": {
+        "text": "Bonzur",
+        "reading": "ボンズール（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Bonzur",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/mauritiancreole.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Mersi",
+        "reading": "メルシ",
+        "meaning": "ありがとう",
+        "audioText": "Mersi",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/mauritiancreole.htm"
+        ]
+      },
+      "apology": {
+        "text": "Sori",
+        "reading": "ソリ",
+        "meaning": "ごめんなさい",
+        "audioText": "Sori",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/mauritiancreole.htm"
+        ]
+      }
+    }
+  },
+  "mg-MG": {
+    "name": "マラガシ語",
+    "speech": "mg-MG",
+    "expressions": {
+      "greeting": {
+        "text": "Manao ahoana",
+        "reading": "マナオ アオアナ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Manao ahoana",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malagasy.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Misaotra",
+        "reading": "ミサオチャ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Misaotra",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malagasy.htm"
+        ]
+      },
+      "apology": {
+        "text": "Azafady",
+        "reading": "アザファディ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Azafady",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malagasy.htm"
+        ]
+      }
+    }
+  },
+  "mh-MH": {
+    "name": "マーシャル語",
+    "speech": "mh-MH",
+    "expressions": {
+      "greeting": {
+        "text": "Io̧kwe",
+        "reading": "ヨクウェ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Io̧kwe",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/marshallese.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Kom̧m̧ool",
+        "reading": "コモール（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Kom̧m̧ool",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/marshallese.htm"
+        ]
+      },
+      "apology": {
+        "text": "Jo̧lo̧k bōd",
+        "reading": "ジョロク ボード（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Jo̧lo̧k bōd",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/marshallese.htm"
+        ]
       }
     }
   },
@@ -749,17 +5030,101 @@
       "greeting": {
         "text": "Kia ora",
         "reading": "キア オラ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Kia ora"
       },
       "thanks": {
         "text": "Ngā mihi",
         "reading": "ンガー ミヒ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Ngā mihi"
       },
       "apology": {
         "text": "Aroha mai",
         "reading": "アロハ マイ",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "Aroha mai"
+      }
+    }
+  },
+  "mk-MK": {
+    "name": "マケドニア語",
+    "speech": "mk-MK",
+    "expressions": {
+      "greeting": {
+        "text": "Здраво",
+        "reading": "ズドラヴォ",
+        "meaning": "こんにちは",
+        "audioText": "Здраво",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Благодарам",
+        "reading": "ブラゴダラム",
+        "meaning": "ありがとう",
+        "audioText": "Благодарам",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Извинете",
+        "reading": "イズヴィネテ",
+        "meaning": "すみません",
+        "audioText": "Извинете",
+        "register": "polite"
+      }
+    }
+  },
+  "mn-MN": {
+    "name": "モンゴル語",
+    "speech": "mn-MN",
+    "expressions": {
+      "greeting": {
+        "text": "Сайн байна уу?",
+        "reading": "サイン バイノー（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Сайн байна уу?",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Баярлалаа",
+        "reading": "バヤルララー（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Баярлалаа",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Уучлаарай",
+        "reading": "オーチラライ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Уучлаарай",
+        "register": "neutral"
+      }
+    }
+  },
+  "ms-BN": {
+    "name": "マレー語",
+    "speech": "ms-BN",
+    "expressions": {
+      "greeting": {
+        "text": "Selamat pagi",
+        "reading": "スラマッ パギ",
+        "meaning": "おはようございます",
+        "audioText": "Selamat pagi",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Terima kasih",
+        "reading": "トゥリマ カシ",
+        "meaning": "ありがとう",
+        "audioText": "Terima kasih",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Maaf",
+        "reading": "マアフ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Maaf",
+        "register": "neutral"
       }
     }
   },
@@ -771,9 +5136,7 @@
         "text": "Selamat pagi",
         "reading": "スラマッ パギ",
         "meaning": "おはようございます",
-        "register": "neutral",
-        "usage": "朝の挨拶。時間帯によって表現を使い分ける。",
-        "pronunciationNote": "カタカナは近似。",
+        "audioText": "Selamat pagi",
         "sources": [
           "https://www.omniglot.com/language/phrases/malay.php"
         ]
@@ -782,9 +5145,7 @@
         "text": "Terima kasih",
         "reading": "トゥリマ カシ",
         "meaning": "ありがとう",
-        "register": "neutral",
-        "usage": "一般的な感謝。",
-        "pronunciationNote": "カタカナは近似。",
+        "audioText": "Terima kasih",
         "sources": [
           "https://www.omniglot.com/language/phrases/malay.php"
         ]
@@ -793,12 +5154,124 @@
         "text": "Maaf",
         "reading": "マアフ",
         "meaning": "すみません / ごめんなさい",
-        "register": "neutral",
-        "usage": "一般的な謝罪。",
-        "pronunciationNote": "カタカナは近似。",
+        "audioText": "Maaf",
         "sources": [
           "https://www.omniglot.com/language/phrases/malay.php"
         ]
+      }
+    }
+  },
+  "ms-SG": {
+    "name": "マレー語",
+    "speech": "ms-SG",
+    "expressions": {
+      "greeting": {
+        "text": "Selamat pagi",
+        "reading": "スラマッ パギ",
+        "meaning": "おはようございます",
+        "audioText": "Selamat pagi",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malay.php"
+        ]
+      },
+      "thanks": {
+        "text": "Terima kasih",
+        "reading": "トゥリマ カシ",
+        "meaning": "ありがとう",
+        "audioText": "Terima kasih",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malay.php"
+        ]
+      },
+      "apology": {
+        "text": "Maaf",
+        "reading": "マアフ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Maaf",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malay.php"
+        ]
+      }
+    }
+  },
+  "mt-MT": {
+    "name": "マルタ語",
+    "speech": "mt-MT",
+    "expressions": {
+      "greeting": {
+        "text": "Ħello",
+        "reading": "ヘッロ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Ħello",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Grazzi",
+        "reading": "グラッツィ",
+        "meaning": "ありがとう",
+        "audioText": "Grazzi",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Skużani",
+        "reading": "スクザーニ（近似）",
+        "meaning": "すみません",
+        "audioText": "Skużani",
+        "register": "neutral"
+      }
+    }
+  },
+  "my-MM": {
+    "name": "ビルマ語",
+    "speech": "my-MM",
+    "expressions": {
+      "greeting": {
+        "text": "မင်္ဂလာပါ",
+        "reading": "ミンガラーバー（近似）",
+        "meaning": "こんにちは",
+        "audioText": "မင်္ဂလာပါ",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "ကျေးဇူးတင်ပါတယ်",
+        "reading": "チェーズーティンバーデー（近似）",
+        "meaning": "ありがとう",
+        "audioText": "ကျေးဇူးတင်ပါတယ်",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "တောင်းပန်ပါတယ်",
+        "reading": "タウンパンバーデー（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "တောင်းပန်ပါတယ်",
+        "register": "neutral"
+      }
+    }
+  },
+  "nb-BV": {
+    "name": "ノルウェー語（ブークモール）",
+    "speech": "nb-BV",
+    "expressions": {
+      "greeting": {
+        "text": "Hei",
+        "reading": "ハイ",
+        "meaning": "こんにちは / やあ",
+        "audioText": "Hei",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Takk",
+        "reading": "タック",
+        "meaning": "ありがとう",
+        "audioText": "Takk",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Unnskyld",
+        "reading": "ウンシュル（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Unnskyld",
+        "register": "neutral"
       }
     }
   },
@@ -815,7 +5288,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/norwegian.php"
-        ]
+        ],
+        "audioText": "Hei"
       },
       "thanks": {
         "text": "Takk",
@@ -826,7 +5300,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/norwegian.php"
-        ]
+        ],
+        "audioText": "Takk"
       },
       "apology": {
         "text": "Unnskyld",
@@ -837,6 +5312,67 @@
         "pronunciationNote": "母音と子音が日本語にないため音声確認推奨。",
         "sources": [
           "https://www.omniglot.com/language/phrases/norwegian.php"
+        ],
+        "audioText": "Unnskyld"
+      }
+    }
+  },
+  "nb-SJ": {
+    "name": "ノルウェー語（ブークモール）",
+    "speech": "nb-SJ",
+    "expressions": {
+      "greeting": {
+        "text": "Hei",
+        "reading": "ハイ",
+        "meaning": "こんにちは / やあ",
+        "audioText": "Hei",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Takk",
+        "reading": "タック",
+        "meaning": "ありがとう",
+        "audioText": "Takk",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Unnskyld",
+        "reading": "ウンシュル（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Unnskyld",
+        "register": "neutral"
+      }
+    }
+  },
+  "nd-ZW": {
+    "name": "北ンデベレ語",
+    "speech": "nd-ZW",
+    "expressions": {
+      "greeting": {
+        "text": "Salibonani",
+        "reading": "サリボナニ",
+        "meaning": "こんにちは",
+        "audioText": "Salibonani",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/sindebele.php"
+        ]
+      },
+      "thanks": {
+        "text": "Ngiyabonga",
+        "reading": "ンギヤボンガ",
+        "meaning": "ありがとう",
+        "audioText": "Ngiyabonga",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/sindebele.php"
+        ]
+      },
+      "apology": {
+        "text": "Uxolo",
+        "reading": "ウコロ（近似）",
+        "meaning": "ごめんなさい / すみません",
+        "audioText": "Uxolo",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/sindebele.php"
         ]
       }
     }
@@ -854,7 +5390,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/nepali.php"
-        ]
+        ],
+        "audioText": "नमस्ते"
       },
       "thanks": {
         "text": "धन्यवाद",
@@ -865,7 +5402,8 @@
         "pronunciationNote": "子音結合をカタカナで完全には表せない。",
         "sources": [
           "https://www.omniglot.com/language/phrases/nepali.php"
-        ]
+        ],
+        "audioText": "धन्यवाद"
       },
       "apology": {
         "text": "माफी पाऊँ",
@@ -876,7 +5414,122 @@
         "pronunciationNote": "鼻母音を含むため音声確認推奨。",
         "sources": [
           "https://www.omniglot.com/language/phrases/nepali.php"
+        ],
+        "audioText": "माफी पाऊँ"
+      }
+    }
+  },
+  "niu-NU": {
+    "name": "ニウエ語",
+    "speech": "niu-NU",
+    "expressions": {
+      "greeting": {
+        "text": "Fakaalofa atu",
+        "reading": "ファカアロファ アトゥ",
+        "meaning": "こんにちは",
+        "audioText": "Fakaalofa atu",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/niuean.htm"
         ]
+      },
+      "thanks": {
+        "text": "Fakaaue",
+        "reading": "ファカアウエ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Fakaaue",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/niuean.htm"
+        ]
+      },
+      "apology": {
+        "text": "Fakamolemole la",
+        "reading": "ファカモレモレ ラ",
+        "meaning": "ごめんなさい",
+        "audioText": "Fakamolemole la",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/niuean.htm"
+        ]
+      }
+    }
+  },
+  "nl-AW": {
+    "name": "オランダ語",
+    "speech": "nl-AW",
+    "expressions": {
+      "greeting": {
+        "text": "Hallo",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hallo",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Bedankt",
+        "reading": "ベダンクト",
+        "meaning": "ありがとう",
+        "audioText": "Bedankt",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソリー",
+        "meaning": "すみません",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "nl-BE": {
+    "name": "オランダ語",
+    "speech": "nl-BE",
+    "expressions": {
+      "greeting": {
+        "text": "Hallo",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hallo",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Bedankt",
+        "reading": "ベダンクト",
+        "meaning": "ありがとう",
+        "audioText": "Bedankt",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソリー",
+        "meaning": "すみません",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "nl-BQ": {
+    "name": "オランダ語",
+    "speech": "nl-BQ",
+    "expressions": {
+      "greeting": {
+        "text": "Hallo",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hallo",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Bedankt",
+        "reading": "ベダンクト",
+        "meaning": "ありがとう",
+        "audioText": "Bedankt",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソリー",
+        "meaning": "すみません",
+        "audioText": "Sorry",
+        "register": "neutral"
       }
     }
   },
@@ -887,7 +5540,8 @@
       "greeting": {
         "text": "Hallo",
         "reading": "ハロー",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Hallo"
       },
       "thanks": {
         "text": "Dank u / Bedankt",
@@ -898,7 +5552,188 @@
       "apology": {
         "text": "Sorry",
         "reading": "ソリー",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Sorry"
+      }
+    }
+  },
+  "nl-SR": {
+    "name": "オランダ語",
+    "speech": "nl-SR",
+    "expressions": {
+      "greeting": {
+        "text": "Hallo",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hallo",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Bedankt",
+        "reading": "ベダンクト",
+        "meaning": "ありがとう",
+        "audioText": "Bedankt",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソリー",
+        "meaning": "すみません",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "nl-SX": {
+    "name": "オランダ語",
+    "speech": "nl-SX",
+    "expressions": {
+      "greeting": {
+        "text": "Hallo",
+        "reading": "ハロー",
+        "meaning": "こんにちは",
+        "audioText": "Hallo",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Bedankt",
+        "reading": "ベダンクト",
+        "meaning": "ありがとう",
+        "audioText": "Bedankt",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソリー",
+        "meaning": "すみません",
+        "audioText": "Sorry",
+        "register": "neutral"
+      }
+    }
+  },
+  "ny-MW": {
+    "name": "チェワ語（チチェワ）",
+    "speech": "ny-MW",
+    "expressions": {
+      "greeting": {
+        "text": "Moni",
+        "reading": "モニ",
+        "meaning": "こんにちは",
+        "audioText": "Moni",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chichewa.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Zikomo",
+        "reading": "ジコモ",
+        "meaning": "ありがとう",
+        "audioText": "Zikomo",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chichewa.htm"
+        ]
+      },
+      "apology": {
+        "text": "Pepani",
+        "reading": "ペパニ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Pepani",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/chichewa.htm"
+        ]
+      }
+    }
+  },
+  "pap-CW": {
+    "name": "パピアメント語",
+    "speech": "pap-CW",
+    "expressions": {
+      "greeting": {
+        "text": "Bon dia",
+        "reading": "ボン ディア",
+        "meaning": "こんにちは / おはようございます",
+        "audioText": "Bon dia",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Danki",
+        "reading": "ダンキ",
+        "meaning": "ありがとう",
+        "audioText": "Danki",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Diskulpa",
+        "reading": "ディスクルパ",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Diskulpa",
+        "register": "neutral"
+      }
+    }
+  },
+  "pau-PW": {
+    "name": "パラオ語",
+    "speech": "pau-PW",
+    "expressions": {
+      "greeting": {
+        "text": "Alii",
+        "reading": "アリー（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Alii",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/palauan.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Ke kmal mesaul",
+        "reading": "ケ クマル メサウル（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Ke kmal mesaul",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/palauan.htm"
+        ]
+      },
+      "apology": {
+        "text": "Komeng",
+        "reading": "コメン（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Komeng",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/palauan.htm"
+        ]
+      }
+    }
+  },
+  "pis-SB": {
+    "name": "ソロモン諸島ピジン",
+    "speech": "pis-SB",
+    "expressions": {
+      "greeting": {
+        "text": "Halo",
+        "reading": "ハロ",
+        "meaning": "こんにちは",
+        "audioText": "Halo",
+        "sources": [
+          "https://www.palmscheme.gov.au/sites/default/files/2022-02/PALM%20Country%20Fact%20Sheet%20Solomon%20Islands.pdf"
+        ]
+      },
+      "thanks": {
+        "text": "Tagio tumas",
+        "reading": "タギオ トゥマス（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Tagio tumas",
+        "sources": [
+          "https://www.palmscheme.gov.au/sites/default/files/2022-02/PALM%20Country%20Fact%20Sheet%20Solomon%20Islands.pdf"
+        ]
+      },
+      "apology": {
+        "text": "Mi sore",
+        "reading": "ミ ソレ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Mi sore",
+        "sources": [
+          "https://www.palmscheme.gov.au/sites/default/files/2022-02/PALM%20Country%20Fact%20Sheet%20Solomon%20Islands.pdf"
+        ]
       }
     }
   },
@@ -909,17 +5744,76 @@
       "greeting": {
         "text": "Dzień dobry",
         "reading": "ジェン ドブリ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Dzień dobry"
       },
       "thanks": {
         "text": "Dziękuję",
         "reading": "ジェンクイェ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Dziękuję"
       },
       "apology": {
         "text": "Przepraszam",
         "reading": "プシェプラシャム",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Przepraszam"
+      }
+    }
+  },
+  "ps-AF": {
+    "name": "パシュトー語",
+    "speech": "ps-AF",
+    "expressions": {
+      "greeting": {
+        "text": "سلام",
+        "reading": "サラーム",
+        "meaning": "こんにちは",
+        "audioText": "سلام",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "مننه",
+        "reading": "マナナ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "مننه",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "بخښنه غواړم",
+        "reading": "バフシュナ グワーラム（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "بخښنه غواړم",
+        "register": "neutral",
+        "pronunciationNote": "子音や母音をカタカナで正確に表せないため近似です。"
+      }
+    }
+  },
+  "pt-AO": {
+    "name": "ポルトガル語",
+    "speech": "pt-AO",
+    "expressions": {
+      "greeting": {
+        "text": "Olá",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Olá",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう",
+        "audioText": "Obrigado",
+        "register": "neutral",
+        "pronunciationNote": "話者により Obrigado / Obrigada を使い分けます。"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デスクルペ（近似）",
+        "meaning": "すみません",
+        "audioText": "Desculpe",
+        "register": "neutral"
       }
     }
   },
@@ -942,7 +5836,92 @@
       "apology": {
         "text": "Desculpe",
         "reading": "デスクウピ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Desculpe"
+      }
+    }
+  },
+  "pt-CV": {
+    "name": "ポルトガル語",
+    "speech": "pt-CV",
+    "expressions": {
+      "greeting": {
+        "text": "Olá",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Olá",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう",
+        "audioText": "Obrigado",
+        "register": "neutral",
+        "pronunciationNote": "話者により Obrigado / Obrigada を使い分けます。"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デスクルペ（近似）",
+        "meaning": "すみません",
+        "audioText": "Desculpe",
+        "register": "neutral"
+      }
+    }
+  },
+  "pt-GW": {
+    "name": "ポルトガル語",
+    "speech": "pt-GW",
+    "expressions": {
+      "greeting": {
+        "text": "Olá",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Olá",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう",
+        "audioText": "Obrigado",
+        "register": "neutral",
+        "pronunciationNote": "話者により Obrigado / Obrigada を使い分けます。"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デスクルペ（近似）",
+        "meaning": "すみません",
+        "audioText": "Desculpe",
+        "register": "neutral"
+      }
+    }
+  },
+  "pt-MZ": {
+    "name": "ポルトガル語",
+    "speech": "pt-MZ",
+    "expressions": {
+      "greeting": {
+        "text": "Olá",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Olá",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう",
+        "audioText": "Obrigado",
+        "register": "neutral",
+        "pronunciationNote": "話者により Obrigado / Obrigada を使い分けます。"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デスクルペ（近似）",
+        "meaning": "すみません",
+        "audioText": "Desculpe",
+        "register": "neutral"
       }
     }
   },
@@ -953,7 +5932,8 @@
       "greeting": {
         "text": "Olá",
         "reading": "オラ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Olá"
       },
       "thanks": {
         "text": "Obrigado / Obrigada",
@@ -964,7 +5944,151 @@
       "apology": {
         "text": "Desculpe",
         "reading": "デシュクルペ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Desculpe"
+      }
+    }
+  },
+  "pt-ST": {
+    "name": "ポルトガル語",
+    "speech": "pt-ST",
+    "expressions": {
+      "greeting": {
+        "text": "Olá",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Olá",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう",
+        "audioText": "Obrigado",
+        "register": "neutral",
+        "pronunciationNote": "話者により Obrigado / Obrigada を使い分けます。"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デスクルペ（近似）",
+        "meaning": "すみません",
+        "audioText": "Desculpe",
+        "register": "neutral"
+      }
+    }
+  },
+  "pt-TL": {
+    "name": "ポルトガル語",
+    "speech": "pt-TL",
+    "expressions": {
+      "greeting": {
+        "text": "Olá",
+        "reading": "オラ",
+        "meaning": "こんにちは",
+        "audioText": "Olá",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう",
+        "audioText": "Obrigado",
+        "register": "neutral",
+        "pronunciationNote": "話者により Obrigado / Obrigada を使い分けます。"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デスクルペ（近似）",
+        "meaning": "すみません",
+        "audioText": "Desculpe",
+        "register": "neutral"
+      }
+    }
+  },
+  "rar-CK": {
+    "name": "クック諸島マオリ語",
+    "speech": "rar-CK",
+    "expressions": {
+      "greeting": {
+        "text": "Kia orāna",
+        "reading": "キア オラーナ",
+        "meaning": "こんにちは",
+        "audioText": "Kia orāna",
+        "sources": [
+          "https://mpia.govt.nz/assets/2024-pacific-language-weeks/Cook-islands-maori-language-week/PLW-2024-Language-Cards-COOK-ISLANDS.pdf"
+        ]
+      },
+      "thanks": {
+        "text": "Meitaki",
+        "reading": "メイタキ",
+        "meaning": "ありがとう",
+        "audioText": "Meitaki",
+        "sources": [
+          "https://mpia.govt.nz/assets/2024-pacific-language-weeks/Cook-islands-maori-language-week/PLW-2024-Language-Cards-COOK-ISLANDS.pdf"
+        ]
+      },
+      "apology": {
+        "text": "Tatarā‘ara",
+        "reading": "タタラーアラ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Tatarā‘ara",
+        "sources": [
+          "https://mpia.govt.nz/assets/2024-pacific-language-weeks/Cook-islands-maori-language-week/PLW-2024-Language-Cards-COOK-ISLANDS.pdf"
+        ]
+      }
+    }
+  },
+  "ro-MD": {
+    "name": "ルーマニア語",
+    "speech": "ro-MD",
+    "expressions": {
+      "greeting": {
+        "text": "Bună ziua",
+        "reading": "ブナ ズィウア（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Bună ziua",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Mulțumesc",
+        "reading": "ムルツメスク（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Mulțumesc",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Îmi pare rău",
+        "reading": "ウミ パレ ラウ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Îmi pare rău",
+        "register": "neutral"
+      }
+    }
+  },
+  "ro-RO": {
+    "name": "ルーマニア語",
+    "speech": "ro-RO",
+    "expressions": {
+      "greeting": {
+        "text": "Bună ziua",
+        "reading": "ブナ ズィウア（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Bună ziua",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Mulțumesc",
+        "reading": "ムルツメスク（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Mulțumesc",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Îmi pare rău",
+        "reading": "ウミ パレ ラウ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Îmi pare rău",
+        "register": "neutral"
       }
     }
   },
@@ -975,17 +6099,422 @@
       "greeting": {
         "text": "Здравствуйте",
         "reading": "ズドラーストヴィチェ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Здравствуйте"
       },
       "thanks": {
         "text": "Спасибо",
         "reading": "スパシーバ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Спасибо"
       },
       "apology": {
         "text": "Извините",
         "reading": "イズヴィニーチェ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Извините"
+      }
+    }
+  },
+  "rw-RW": {
+    "name": "キニヤルワンダ語",
+    "speech": "rw-RW",
+    "expressions": {
+      "greeting": {
+        "text": "Muraho",
+        "reading": "ムラホ",
+        "meaning": "こんにちは",
+        "audioText": "Muraho",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Murakoze",
+        "reading": "ムラコゼ",
+        "meaning": "ありがとう",
+        "audioText": "Murakoze",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Mbabarira",
+        "reading": "ンババリラ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Mbabarira",
+        "register": "neutral"
+      }
+    }
+  },
+  "si-LK": {
+    "name": "シンハラ語",
+    "speech": "si-LK",
+    "expressions": {
+      "greeting": {
+        "text": "ආයුබෝවන්",
+        "reading": "アーユボーワン（近似）",
+        "meaning": "こんにちは",
+        "audioText": "ආයුබෝවන්",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "ස්තුතියි",
+        "reading": "ストゥティイ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "ස්තුතියි",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "සමාවෙන්න",
+        "reading": "サマーヴェンナ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "සමාවෙන්න",
+        "register": "neutral"
+      }
+    }
+  },
+  "sk-SK": {
+    "name": "スロバキア語",
+    "speech": "sk-SK",
+    "expressions": {
+      "greeting": {
+        "text": "Dobrý deň",
+        "reading": "ドブリー ジェニュ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Dobrý deň",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Ďakujem",
+        "reading": "ジャクイェム（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Ďakujem",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Prepáčte",
+        "reading": "プレパーチテ",
+        "meaning": "すみません",
+        "audioText": "Prepáčte",
+        "register": "polite"
+      }
+    }
+  },
+  "sl-SI": {
+    "name": "スロベニア語",
+    "speech": "sl-SI",
+    "expressions": {
+      "greeting": {
+        "text": "Pozdravljeni",
+        "reading": "ポズドラヴリェニ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Pozdravljeni",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Hvala",
+        "reading": "フヴァラ",
+        "meaning": "ありがとう",
+        "audioText": "Hvala",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Oprostite",
+        "reading": "オプロスティテ",
+        "meaning": "すみません",
+        "audioText": "Oprostite",
+        "register": "polite"
+      }
+    }
+  },
+  "sm-AS": {
+    "name": "サモア語",
+    "speech": "sm-AS",
+    "expressions": {
+      "greeting": {
+        "text": "Tālofa",
+        "reading": "ターロファ",
+        "meaning": "こんにちは",
+        "audioText": "Tālofa",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/samoan.php"
+        ]
+      },
+      "thanks": {
+        "text": "Fa'afetai",
+        "reading": "ファアフェタイ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Fa'afetai",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/samoan.php"
+        ]
+      },
+      "apology": {
+        "text": "Fa'amalie atu",
+        "reading": "ファアマリエ アトゥ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Fa'amalie atu",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/samoan.php"
+        ]
+      }
+    }
+  },
+  "sm-WS": {
+    "name": "サモア語",
+    "speech": "sm-WS",
+    "expressions": {
+      "greeting": {
+        "text": "Talofa",
+        "reading": "タロファ",
+        "meaning": "こんにちは",
+        "audioText": "Talofa",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Fa'afetai",
+        "reading": "ファアフェタイ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Fa'afetai",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Fa'amalie atu",
+        "reading": "ファアマリエ アトゥ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Fa'amalie atu",
+        "register": "neutral"
+      }
+    }
+  },
+  "sn-ZW": {
+    "name": "ショナ語",
+    "speech": "sn-ZW",
+    "expressions": {
+      "greeting": {
+        "text": "Mhoro",
+        "reading": "ムホロ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Mhoro",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/shona.php"
+        ]
+      },
+      "thanks": {
+        "text": "Ndatenda",
+        "reading": "ンダテンダ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Ndatenda",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/shona.php"
+        ]
+      },
+      "apology": {
+        "text": "Ndine urombo",
+        "reading": "ンディネ ウロンボ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Ndine urombo",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/shona.php"
+        ]
+      }
+    }
+  },
+  "so-SO": {
+    "name": "ソマリ語",
+    "speech": "so-SO",
+    "expressions": {
+      "greeting": {
+        "text": "Salaan",
+        "reading": "サラーン",
+        "meaning": "こんにちは",
+        "audioText": "Salaan",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Mahadsanid",
+        "reading": "マハドサニド（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Mahadsanid",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Waan ka xumahay",
+        "reading": "ワーン カ フマハイ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Waan ka xumahay",
+        "register": "neutral"
+      }
+    }
+  },
+  "sq-AL": {
+    "name": "アルバニア語",
+    "speech": "sq-AL",
+    "expressions": {
+      "greeting": {
+        "text": "Tungjatjeta",
+        "reading": "トゥンジャトイェタ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Tungjatjeta",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Faleminderit",
+        "reading": "ファレミンデリト（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Faleminderit",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Më fal",
+        "reading": "ム ファル（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Më fal",
+        "register": "neutral"
+      }
+    }
+  },
+  "sr-ME": {
+    "name": "セルビア語",
+    "speech": "sr-ME",
+    "expressions": {
+      "greeting": {
+        "text": "Добар дан",
+        "reading": "ドバル ダン",
+        "meaning": "こんにちは",
+        "audioText": "Добар дан",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Хвала",
+        "reading": "フヴァラ",
+        "meaning": "ありがとう",
+        "audioText": "Хвала",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Извините",
+        "reading": "イズヴィニテ",
+        "meaning": "すみません",
+        "audioText": "Извините",
+        "register": "polite"
+      }
+    }
+  },
+  "sr-RS": {
+    "name": "セルビア語",
+    "speech": "sr-RS",
+    "expressions": {
+      "greeting": {
+        "text": "Добар дан",
+        "reading": "ドバル ダン",
+        "meaning": "こんにちは",
+        "audioText": "Добар дан",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Хвала",
+        "reading": "フヴァラ",
+        "meaning": "ありがとう",
+        "audioText": "Хвала",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Извините",
+        "reading": "イズヴィニテ",
+        "meaning": "すみません",
+        "audioText": "Извините",
+        "register": "polite"
+      }
+    }
+  },
+  "ss-SZ": {
+    "name": "スワティ語（シスワティ）",
+    "speech": "ss-SZ",
+    "expressions": {
+      "greeting": {
+        "text": "Sawubona",
+        "reading": "サウボナ",
+        "meaning": "こんにちは",
+        "audioText": "Sawubona",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/swazi.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Ngiyabonga",
+        "reading": "ンギヤボンガ",
+        "meaning": "ありがとう",
+        "audioText": "Ngiyabonga",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/swazi.htm"
+        ]
+      },
+      "apology": {
+        "text": "Ngiyacolisa",
+        "reading": "ンギヤコリサ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Ngiyacolisa",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/swazi.htm"
+        ]
+      }
+    }
+  },
+  "st-LS": {
+    "name": "ソト語",
+    "speech": "st-LS",
+    "expressions": {
+      "greeting": {
+        "text": "Lumela",
+        "reading": "ルメラ",
+        "meaning": "こんにちは",
+        "audioText": "Lumela",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/sesotho.php"
+        ]
+      },
+      "thanks": {
+        "text": "Ke a leboha",
+        "reading": "ケ ア レボハ",
+        "meaning": "ありがとう",
+        "audioText": "Ke a leboha",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/sesotho.php"
+        ]
+      },
+      "apology": {
+        "text": "Ntshwarele",
+        "reading": "ンツワレレ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "Ntshwarele",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/sesotho.php"
+        ]
+      }
+    }
+  },
+  "sv-AX": {
+    "name": "スウェーデン語",
+    "speech": "sv-AX",
+    "expressions": {
+      "greeting": {
+        "text": "Hej",
+        "reading": "ヘイ",
+        "meaning": "こんにちは / やあ",
+        "audioText": "Hej",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Tack",
+        "reading": "タック",
+        "meaning": "ありがとう",
+        "audioText": "Tack",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Förlåt",
+        "reading": "フォルロート（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Förlåt",
+        "register": "neutral"
       }
     }
   },
@@ -996,17 +6525,20 @@
       "greeting": {
         "text": "Hej",
         "reading": "ヘイ",
-        "meaning": "こんにちは / やあ"
+        "meaning": "こんにちは / やあ",
+        "audioText": "Hej"
       },
       "thanks": {
         "text": "Tack",
         "reading": "タック",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Tack"
       },
       "apology": {
         "text": "Förlåt",
         "reading": "フォルロート",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "Förlåt"
       }
     }
   },
@@ -1017,17 +6549,74 @@
       "greeting": {
         "text": "Habari?",
         "reading": "ハバリ？",
-        "meaning": "こんにちは / 調子はどう？"
+        "meaning": "こんにちは / 調子はどう？",
+        "audioText": "Habari?"
       },
       "thanks": {
         "text": "Asante",
         "reading": "アサンテ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Asante"
       },
       "apology": {
         "text": "Samahani",
         "reading": "サマハニ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Samahani"
+      }
+    }
+  },
+  "sw-TZ": {
+    "name": "スワヒリ語",
+    "speech": "sw-TZ",
+    "expressions": {
+      "greeting": {
+        "text": "Habari?",
+        "reading": "ハバリ？",
+        "meaning": "こんにちは / 調子はどう？",
+        "audioText": "Habari?",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Asante",
+        "reading": "アサンテ",
+        "meaning": "ありがとう",
+        "audioText": "Asante",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Samahani",
+        "reading": "サマハニ",
+        "meaning": "すみません",
+        "audioText": "Samahani",
+        "register": "neutral"
+      }
+    }
+  },
+  "tg-TJ": {
+    "name": "タジク語",
+    "speech": "tg-TJ",
+    "expressions": {
+      "greeting": {
+        "text": "Ассалому алейкум",
+        "reading": "アッサローム アレイクム（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Ассалому алейкум",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Раҳмат",
+        "reading": "ラフマト",
+        "meaning": "ありがとう",
+        "audioText": "Раҳмат",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Бубахшед",
+        "reading": "ブバフシェド（近似）",
+        "meaning": "すみません",
+        "audioText": "Бубахшед",
+        "register": "polite"
       }
     }
   },
@@ -1055,6 +6644,192 @@
       }
     }
   },
+  "ti-ER": {
+    "name": "ティグリニャ語",
+    "speech": "ti-ER",
+    "expressions": {
+      "greeting": {
+        "text": "ሰላም",
+        "reading": "セラム",
+        "meaning": "こんにちは",
+        "audioText": "ሰላም",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "የቐንየለይ",
+        "reading": "イェケニェレイ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "የቐንየለይ",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "ይቕሬታ",
+        "reading": "イクレタ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "ይቕሬታ",
+        "register": "neutral"
+      }
+    }
+  },
+  "tk-TM": {
+    "name": "トルクメン語",
+    "speech": "tk-TM",
+    "expressions": {
+      "greeting": {
+        "text": "Salam",
+        "reading": "サラム",
+        "meaning": "こんにちは",
+        "audioText": "Salam",
+        "register": "neutral"
+      },
+      "thanks": {
+        "text": "Sagboluň",
+        "reading": "サグボルン（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Sagboluň",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Bagyşlaň",
+        "reading": "バグシュラン（近似）",
+        "meaning": "すみません",
+        "audioText": "Bagyşlaň",
+        "register": "polite"
+      }
+    }
+  },
+  "tkl-TK": {
+    "name": "トケラウ語",
+    "speech": "tkl-TK",
+    "expressions": {
+      "greeting": {
+        "text": "Tālofa",
+        "reading": "ターロファ",
+        "meaning": "こんにちは",
+        "audioText": "Tālofa",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tokelauan.htm"
+        ]
+      },
+      "thanks": {
+        "text": "Fakafetai",
+        "reading": "ファカフェタイ",
+        "meaning": "ありがとう",
+        "audioText": "Fakafetai",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tokelauan.htm"
+        ]
+      },
+      "apology": {
+        "text": "Fakamolemole",
+        "reading": "ファカモレモレ",
+        "meaning": "ごめんなさい",
+        "audioText": "Fakamolemole",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tokelauan.htm"
+        ]
+      }
+    }
+  },
+  "tn-BW": {
+    "name": "ツワナ語",
+    "speech": "tn-BW",
+    "expressions": {
+      "greeting": {
+        "text": "Dumela",
+        "reading": "ドゥメラ",
+        "meaning": "こんにちは",
+        "audioText": "Dumela",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tswana.php"
+        ]
+      },
+      "thanks": {
+        "text": "Ke a leboga",
+        "reading": "ケ ア レボガ",
+        "meaning": "ありがとう",
+        "audioText": "Ke a leboga",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tswana.php"
+        ]
+      },
+      "apology": {
+        "text": "Ke kopa tshwarelo",
+        "reading": "ケ コパ ツワレロ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Ke kopa tshwarelo",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tswana.php"
+        ]
+      }
+    }
+  },
+  "to-TO": {
+    "name": "トンガ語",
+    "speech": "to-TO",
+    "expressions": {
+      "greeting": {
+        "text": "Mālō e lelei",
+        "reading": "マーロー エ レレイ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Mālō e lelei",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tongan.php"
+        ]
+      },
+      "thanks": {
+        "text": "Mālō ʻaupito",
+        "reading": "マーロー アウピト（近似）",
+        "meaning": "ありがとうございます",
+        "audioText": "Mālō ʻaupito",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tongan.php"
+        ]
+      },
+      "apology": {
+        "text": "Fakamolemole",
+        "reading": "ファカモレモレ",
+        "meaning": "ごめんなさい",
+        "audioText": "Fakamolemole",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tongan.php"
+        ]
+      }
+    }
+  },
+  "tpi-PG": {
+    "name": "トク・ピシン",
+    "speech": "tpi-PG",
+    "expressions": {
+      "greeting": {
+        "text": "Gude",
+        "reading": "グデ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Gude",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tokpisin.php"
+        ]
+      },
+      "thanks": {
+        "text": "Tenkyu",
+        "reading": "テンキュ",
+        "meaning": "ありがとう",
+        "audioText": "Tenkyu",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tokpisin.php"
+        ]
+      },
+      "apology": {
+        "text": "Mi sori",
+        "reading": "ミ ソリ",
+        "meaning": "ごめんなさい",
+        "audioText": "Mi sori",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tokpisin.php"
+        ]
+      }
+    }
+  },
   "tr-TR": {
     "name": "トルコ語",
     "speech": "tr-TR",
@@ -1062,17 +6837,53 @@
       "greeting": {
         "text": "Merhaba",
         "reading": "メルハバ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Merhaba"
       },
       "thanks": {
         "text": "Teşekkür ederim",
         "reading": "テシェッキュル エデリム",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Teşekkür ederim"
       },
       "apology": {
         "text": "Özür dilerim",
         "reading": "オズュル ディレリム",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "Özür dilerim"
+      }
+    }
+  },
+  "tvl-TV": {
+    "name": "ツバル語",
+    "speech": "tvl-TV",
+    "expressions": {
+      "greeting": {
+        "text": "Tālofa",
+        "reading": "ターロファ",
+        "meaning": "こんにちは",
+        "audioText": "Tālofa",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tuvaluan.php"
+        ]
+      },
+      "thanks": {
+        "text": "Fakafetai",
+        "reading": "ファカフェタイ",
+        "meaning": "ありがとう",
+        "audioText": "Fakafetai",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tuvaluan.php"
+        ]
+      },
+      "apology": {
+        "text": "Fakamolemole, au kō 'sē!",
+        "reading": "ファカモレモレ、アウ コー セー（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Fakamolemole, au kō 'sē!",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/tuvaluan.php"
+        ]
       }
     }
   },
@@ -1089,7 +6900,8 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/ukrainian.php"
-        ]
+        ],
+        "audioText": "Вітаю"
       },
       "thanks": {
         "text": "Дякую",
@@ -1100,7 +6912,8 @@
         "pronunciationNote": "語頭の子音は日本語にないためカタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/ukrainian.php"
-        ]
+        ],
+        "audioText": "Дякую"
       },
       "apology": {
         "text": "Вибачте",
@@ -1111,7 +6924,68 @@
         "pronunciationNote": "カタカナは近似。",
         "sources": [
           "https://www.omniglot.com/language/phrases/ukrainian.php"
+        ],
+        "audioText": "Вибачте"
+      }
+    }
+  },
+  "ur-PK": {
+    "name": "ウルドゥー語",
+    "speech": "ur-PK",
+    "expressions": {
+      "greeting": {
+        "text": "السلام علیکم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を",
+        "audioText": "السلام علیکم",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/urdu.php"
         ]
+      },
+      "thanks": {
+        "text": "شکریہ",
+        "reading": "シュクリヤ",
+        "meaning": "ありがとう",
+        "audioText": "شکریہ",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/urdu.php"
+        ]
+      },
+      "apology": {
+        "text": "معاف کیجیے",
+        "reading": "マアフ キージエ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "audioText": "معاف کیجیے",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/urdu.php"
+        ]
+      }
+    }
+  },
+  "uz-UZ": {
+    "name": "ウズベク語",
+    "speech": "uz-UZ",
+    "expressions": {
+      "greeting": {
+        "text": "Assalomu alaykum",
+        "reading": "アッサローム アライクム（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Assalomu alaykum",
+        "register": "polite"
+      },
+      "thanks": {
+        "text": "Rahmat",
+        "reading": "ラフマト",
+        "meaning": "ありがとう",
+        "audioText": "Rahmat",
+        "register": "neutral"
+      },
+      "apology": {
+        "text": "Kechirasiz",
+        "reading": "ケチラスィズ（近似）",
+        "meaning": "すみません",
+        "audioText": "Kechirasiz",
+        "register": "polite"
       }
     }
   },
@@ -1122,17 +6996,123 @@
       "greeting": {
         "text": "Xin chào",
         "reading": "シン チャオ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Xin chào"
       },
       "thanks": {
         "text": "Cảm ơn",
         "reading": "カム オン",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Cảm ơn"
       },
       "apology": {
         "text": "Xin lỗi",
         "reading": "シン ロイ",
-        "meaning": "すみません"
+        "meaning": "すみません",
+        "audioText": "Xin lỗi"
+      }
+    }
+  },
+  "wo-GM": {
+    "name": "ウォロフ語",
+    "speech": "wo-GM",
+    "expressions": {
+      "greeting": {
+        "text": "Na nga def",
+        "reading": "ナンガ デフ（近似）",
+        "meaning": "こんにちは / 元気ですか",
+        "audioText": "Na nga def",
+        "sources": [
+          "https://learnwolof.com/guides/wolof-greetings-and-polite-phrases"
+        ]
+      },
+      "thanks": {
+        "text": "Jerrejef",
+        "reading": "ジェレジェフ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "Jerrejef",
+        "sources": [
+          "https://learnwolof.com/guides/wolof-greetings-and-polite-phrases"
+        ]
+      },
+      "apology": {
+        "text": "Baal ma",
+        "reading": "バール マ",
+        "meaning": "ごめんなさい / すみません",
+        "audioText": "Baal ma",
+        "sources": [
+          "https://learnwolof.com/guides/wolof-greetings-and-polite-phrases"
+        ]
+      }
+    }
+  },
+  "yo-NG": {
+    "name": "ヨルバ語",
+    "speech": "yo-NG",
+    "expressions": {
+      "greeting": {
+        "text": "Ẹ n lẹ",
+        "reading": "エン レ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "Ẹ n lẹ",
+        "pronunciationNote": "声調を持つため、カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/yoruba.php"
+        ]
+      },
+      "thanks": {
+        "text": "Ẹ ṣé",
+        "reading": "エ シェ（近似）",
+        "meaning": "ありがとうございます",
+        "audioText": "Ẹ ṣé",
+        "pronunciationNote": "声調を持つため、カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/yoruba.php"
+        ]
+      },
+      "apology": {
+        "text": "Ẹ má bínú",
+        "reading": "エ マ ビヌ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "Ẹ má bínú",
+        "pronunciationNote": "声調を持つため、カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/yoruba.php"
+        ]
+      }
+    }
+  },
+  "yue-HK": {
+    "name": "広東語",
+    "speech": "yue-HK",
+    "expressions": {
+      "greeting": {
+        "text": "你好",
+        "reading": "ネイホウ（近似）",
+        "meaning": "こんにちは",
+        "audioText": "你好",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/cantonese.php"
+        ]
+      },
+      "thanks": {
+        "text": "多謝",
+        "reading": "ドージェ（近似）",
+        "meaning": "ありがとう",
+        "audioText": "多謝",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/cantonese.php"
+        ]
+      },
+      "apology": {
+        "text": "對唔住",
+        "reading": "ドイムジュ（近似）",
+        "meaning": "ごめんなさい",
+        "audioText": "對唔住",
+        "pronunciationNote": "声調があるため、カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/cantonese.php"
+        ]
       }
     }
   },
@@ -1143,17 +7123,86 @@
       "greeting": {
         "text": "你好",
         "reading": "ニーハオ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "你好"
       },
       "thanks": {
         "text": "谢谢",
         "reading": "シエシエ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "谢谢"
       },
       "apology": {
         "text": "对不起",
         "reading": "ドゥイブチー",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "对不起"
+      }
+    }
+  },
+  "zh-MO": {
+    "name": "中国語（普通話）",
+    "speech": "zh-MO",
+    "expressions": {
+      "greeting": {
+        "text": "你好",
+        "reading": "ニーハオ",
+        "meaning": "こんにちは",
+        "audioText": "你好",
+        "register": "neutral",
+        "pronunciationNote": "声調を持つためカタカナは近似です。"
+      },
+      "thanks": {
+        "text": "谢谢",
+        "reading": "シエシエ",
+        "meaning": "ありがとう",
+        "audioText": "谢谢",
+        "register": "neutral",
+        "pronunciationNote": "声調を持つためカタカナは近似です。"
+      },
+      "apology": {
+        "text": "对不起",
+        "reading": "ドゥイブチー",
+        "meaning": "ごめんなさい",
+        "audioText": "对不起",
+        "register": "neutral",
+        "pronunciationNote": "声調を持つためカタカナは近似です。"
+      }
+    }
+  },
+  "zh-TW": {
+    "name": "中国語（台湾華語／國語）",
+    "speech": "zh-TW",
+    "expressions": {
+      "greeting": {
+        "text": "你好",
+        "reading": "ニーハオ",
+        "meaning": "こんにちは",
+        "audioText": "你好",
+        "pronunciationNote": "声調があるため、カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/mandarin.php"
+        ]
+      },
+      "thanks": {
+        "text": "謝謝",
+        "reading": "シエシエ",
+        "meaning": "ありがとう",
+        "audioText": "謝謝",
+        "pronunciationNote": "声調があるため、カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/mandarin.php"
+        ]
+      },
+      "apology": {
+        "text": "對不起",
+        "reading": "ドゥイブチー",
+        "meaning": "ごめんなさい",
+        "audioText": "對不起",
+        "pronunciationNote": "声調があるため、カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/mandarin.php"
+        ]
       }
     }
   },
@@ -1164,17 +7213,20 @@
       "greeting": {
         "text": "Sawubona",
         "reading": "サウボナ",
-        "meaning": "こんにちは"
+        "meaning": "こんにちは",
+        "audioText": "Sawubona"
       },
       "thanks": {
         "text": "Ngiyabonga",
         "reading": "ンギヤボンガ",
-        "meaning": "ありがとう"
+        "meaning": "ありがとう",
+        "audioText": "Ngiyabonga"
       },
       "apology": {
         "text": "Ngiyaxolisa",
         "reading": "ンギヤコリサ（近似）",
-        "meaning": "ごめんなさい"
+        "meaning": "ごめんなさい",
+        "audioText": "Ngiyaxolisa"
       }
     }
   }
