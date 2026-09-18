@@ -25,8 +25,9 @@
      room: the sea and the land are most of the screen, so they carry the
      mood, and the paper is pitched at the illustration's own ground so the
      opening has no visible edge round the picture. */
-  --terra-paper: #f5ecda;
-  --terra-notes: #fbf6ec;
+  --terra-paper: #fae3a0;
+  --terra-card: #fdf3d6;
+  --terra-notes: #fffdf6;
   --terra-sea: #cfe2e8;
   --terra-land: #ecdfc6;
   --terra-line: #c2b49a;
@@ -115,7 +116,7 @@
   min-width: 42px;
   height: 42px;
   border: 0;
-  background: rgba(245, 236, 218, 0.94);
+  background: rgba(253, 243, 214, 0.95);
   color: var(--ink);
   font: 500 15px/1 "Yu Gothic UI", sans-serif;
   cursor: pointer;
@@ -128,11 +129,11 @@
   width: 100%;
   padding: 12px 14px;
   border: 0;
-  background: rgba(245, 236, 218, 0.94);
+  background: rgba(253, 243, 214, 0.95);
   color: var(--ink);
   font: 400 13px/1 "Yu Gothic UI", sans-serif;
 }
-.terraSearch ul { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--line); background: var(--terra-paper); }
+.terraSearch ul { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--line); background: var(--terra-card); }
 .terraSearch li + li { border-top: 1px solid var(--line); }
 .terraSearch li button {
   width: 100%;
@@ -152,7 +153,7 @@
 
 .terraCard {
   border-left: 1px solid var(--line);
-  background: var(--terra-paper);
+  background: var(--terra-card);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -161,24 +162,24 @@
 .terraCardBody { padding: 30px 26px 60px; }
 .terraEyebrow { margin: 0 0 10px; font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: 0.16em; color: var(--muted); }
 .terraCard h2 { margin: 0; font-family: var(--terra-hand); font-size: 30px; font-weight: 700; letter-spacing: 0.02em; }
-.terraEn { margin: 7px 0 26px; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+.terraEn { margin: 7px 0 26px; font-size: 12px; letter-spacing: 0.06em; color: #6d6a5e; }
 
 /* More than one way of speaking here: the choice is shown, not hidden. */
 .terraTongues {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 10px 0 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line);
+  gap: 7px;
+  margin: 8px 0 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ddd0ab;
 }
 .terraTongues button {
   position: relative;
-  padding: 8px 13px;
+  padding: 9px 14px;
   border: 0;
   background: none;
-  color: var(--muted);
-  font: 500 11px/1 "Yu Gothic UI", sans-serif;
+  color: #5c5a50;
+  font: 700 12px/1 var(--terra-hand);
   cursor: pointer;
 }
 .terraTongues button { color: var(--muted); }
@@ -188,18 +189,20 @@
 .terraTongues button.on { color: var(--paper); }
 .terraTongues button.on .terraFrame { opacity: 0; }
 
+/* The language is the answer to "whose words are these", so it is said out
+   loud rather than filed as a caption. */
+.terraVariety > .terraKind { color: #6d6a5e; }
 .terraVariety h3 {
-  margin: 0 0 14px;
-  font-family: var(--terra-hand);
-  padding-bottom: 9px;
-  border-bottom: 1px solid var(--line);
-  font: 500 12px/1 "Yu Gothic UI", sans-serif;
-  letter-spacing: 0.1em;
-  color: var(--muted);
+  margin: 6px 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ddd0ab;
+  font: 700 17px/1.4 var(--terra-hand);
+  letter-spacing: 0.03em;
+  color: var(--ink);
 }
 .terraPhrase { margin-bottom: 22px; }
 /* Each of the three owns a colour, and its button is drawn in it. */
-.terraKind { margin: 0 0 7px; font: 700 10px/1 var(--terra-hand); letter-spacing: 0.12em; color: var(--muted); }
+.terraKind { margin: 0 0 7px; font: 700 11px/1 var(--terra-hand); letter-spacing: 0.1em; color: #6d6a5e; }
 .terraPhrase-greeting .terraKind { color: var(--terra-greeting); }
 .terraPhrase-thanks .terraKind { color: var(--terra-thanks); }
 .terraPhrase-apology .terraKind { color: var(--terra-apology); }
@@ -212,7 +215,7 @@
 .terraPhrase:hover .terraSpeak .terraFrame { opacity: 1; }
 .terraText { margin: 0; font-size: 21px; line-height: 1.5; }
 .terraReading { margin: 4px 0 0; font-size: 13px; letter-spacing: 0.06em; color: var(--verm); }
-.terraMeaning { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+.terraMeaning { margin: 4px 0 0; font-size: 13px; color: #55534a; }
 /* What the katakana cannot carry, said right under the katakana. */
 .terraSound { margin: 3px 0 0; font-size: 11px; line-height: 1.7; color: #7b7f78; }
 .terraUse { margin: 7px 0 0; font-size: 11px; line-height: 1.8; color: var(--muted); }
@@ -227,7 +230,7 @@
   vertical-align: 1px;
 }
 
-.terraSources { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+.terraSources { margin-top: 28px; padding-top: 18px; border-top: 1px solid #ddd0ab; }
 .terraSources ul { list-style: none; margin: 0; padding: 0; }
 .terraSources li { margin-bottom: 6px; }
 .terraSources a {
@@ -251,7 +254,7 @@
 }
 .terraSpeak:hover { opacity: 0.75; }
 
-.terraCulture { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line); }
+.terraCulture { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd0ab; }
 .terraGesture { margin: 0 0 8px; font-size: 15px; }
 .terraCulture p { font-size: 12px; line-height: 1.95; color: var(--muted); margin: 0 0 8px; }
 .terraNote { color: #6b7069; }
@@ -262,7 +265,7 @@
   /* The card becomes a sheet over the map: it peeks, and a tap or a
      selection raises it. The map keeps the whole screen underneath. */
   .terraCard {
-    background: var(--terra-paper);
+    background: var(--terra-card);
     position: absolute;
     left: 0;
     right: 0;
