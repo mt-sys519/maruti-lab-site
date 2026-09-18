@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "../SiteFooter";
 import TerraLogo, { TerraShapes } from "./TerraLogo";
-import { audio } from "./content";
+import { audio, places } from "./content";
 import TerraMap from "./TerraMap";
 
 /* The map is the page, and the map is a client component, so the metadata
@@ -39,6 +39,11 @@ export const metadata: Metadata = {
 };
 
 export default function HalloTerraPage() {
+  // Counted rather than claimed: this paragraph is the one that goes stale
+  // fastest, and it had been saying most countries were empty long after they
+  // had stopped being empty.
+  const written = Object.keys(places).length;
+  const gestured = Object.values(places).filter((p) => p.gesture).length;
   return (
     <>
       <div className="terraTitle">
@@ -152,7 +157,7 @@ export default function HalloTerraPage() {
           <TerraShapes tone="thanks" at={3} />
           <h2>まだできていないこと</h2>
           <p>
-            挨拶を書けている場所はまだ一部で、多くの国は「まだ書けていません」と出ます。音声のない言語もまだ多く、中国語とアラビア語と日本語はその中に入っています。
+            挨拶そのものは{written}か所に入りましたが、深さはまだばらばらです。仕草まで添えられたのはそのうち{gestured}か所で、使い分けや発音の注意まで書けている言葉はもっと少なく、首都の名前が英語のままの場所も残っています。音声のない言語も多く、中国語とアラビア語と日本語はその中に入っています。
           </p>
         </aside>
       </article>

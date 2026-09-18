@@ -411,7 +411,15 @@
 }
 
 @media (max-width: 860px) {
-  .terra { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); }
+  /* A phone gets the whole first screen, not 78% of it: the header and the
+     name cost about 132px, the map takes the rest, and the writing starts
+     where the screen ends instead of poking up over it. The sheet is a share
+     of that, so this is also where the card stops being a letterbox. */
+  .terra {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    height: min(860px, max(66dvh, 100dvh - 132px));
+  }
   /* The card becomes a sheet over the map: it peeks, and a tap or a
      selection raises it. The map keeps the whole screen underneath. */
   .terraCard {
@@ -420,7 +428,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    max-height: 72%;
+    max-height: 82%;
     border-left: 0;
     border-top: 1px solid var(--line);
     box-shadow: 0 -12px 34px rgba(40, 46, 42, 0.12);
@@ -735,8 +743,26 @@
 @media (max-width: 860px) {
   /* A phone is much taller than the drawing, so covering it would blow the
      globe up past the screen. Here the width leads instead, and the sides of
-     the crowd are allowed to run off. */
-  .terraIntroScene { width: min(190%, 178dvh); }
+     the crowd are allowed to run off - but only a little: at 190% the drawing
+     was nearly twice the screen and all that was left of it was somebody's
+     jumper. And what gets centred is the globe, not the middle of the picture,
+     because the middle of the picture is not what the opening is about. The
+     drawing then sits as a band across the screen with its own cream above and
+     below it, which is what that ground is there for. */
+  .terraIntroScene {
+    width: min(132%, 178dvh);
+    top: 46%;
+    transform: translate(-49.5%, -38.5%);
+    animation-name: terraCreepPhone;
+  }
+  .terraIntro.leaving .terraIntroScene { transform: translate(-49.5%, -38.5%) scale(7); }
+  .terraIntroWord { width: 62%; font-size: clamp(19px, 5.4vw, 30px); }
+}
+/* The creep has to carry the same centring it runs on, or the first frame
+   throws the drawing back to the middle. */
+@keyframes terraCreepPhone {
+  from { transform: translate(-49.5%, -38.5%) scale(1); }
+  to { transform: translate(-49.5%, -38.5%) scale(1.07); }
 }
 
 /* ---- drawn boxes and drawn rules ------------------------------------ */
