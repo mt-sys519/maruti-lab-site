@@ -4,9 +4,8 @@ import "./hallo-terra.css";
 import { LabMark } from "../icons";
 
 /**
- * Everything under /hallo-terra. The lab's header stays, because the map is a
- * room in this house and not a separate site, but nothing below it scrolls:
- * see hallo-terra.css for why the map screen refuses a page scroll.
+ * Everything under /hallo-terra, with the lab's header above it: the map is a
+ * room in this house and not a separate site.
  */
 export default function HalloTerraLayout({ children }: { children: ReactNode }) {
   return (
@@ -22,7 +21,7 @@ export default function HalloTerraLayout({ children }: { children: ReactNode }) 
           <a href="/">Works</a>
         </nav>
       </header>
-      <div className="terraPage">{children}</div>
+      {children}
     </>
   );
 }

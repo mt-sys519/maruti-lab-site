@@ -1,17 +1,15 @@
 /* HALLO TERRA.
-   The map screen is an app, not a document: it fills what is left under the
-   header and never scrolls. That is deliberate. A map you drag sideways and a
-   page you drag upwards cannot share one finger without one of them stealing
-   the other's gesture, so the page scroll is simply not there. */
-
-.terraPage {
-  height: calc(100dvh - 86px);
-  overflow: hidden;
-}
+   The map is a bounded room, not the whole house. Inside it nothing scrolls -
+   a map dragged sideways and a page dragged upwards cannot share one finger
+   without one stealing from the other, so within the map the page scroll is
+   switched off entirely. The way out is that the map stops short of the
+   bottom of the screen: there is always page below it to push against, and
+   the writing down there is the reason to go looking. */
 
 .terra {
-  height: 100%;
+  height: min(78dvh, 860px);
   position: relative; /* the sheet below is positioned against this, not the page */
+  overflow: hidden; /* and the peeking sheet is clipped by the map, not by the screen */
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
   background: var(--paper);
@@ -203,3 +201,81 @@
 @media (prefers-reduced-motion: reduce) {
   .terraCard { transition: none; }
 }
+
+/* ---- what the map is for, underneath the map ---------------------- */
+
+.terraScroll {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 26px clamp(22px, 6vw, 60px) 0;
+  font: 500 10px/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+.terraScroll i { display: block; width: 62px; height: 1px; background: var(--line); position: relative; }
+.terraScroll i:after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transform: rotate(-45deg);
+}
+
+.terraAbout {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px clamp(22px, 6vw, 60px) 90px;
+}
+.terraAbout section + section { margin-top: 54px; }
+.terraAbout h2 {
+  margin: 0 0 18px;
+  font-size: clamp(19px, 2.4vw, 25px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+.terraAbout p {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 2.05;
+  color: #454b46;
+}
+.terraAbout p:last-child { margin-bottom: 0; }
+.terraLede { font-size: 15px !important; color: var(--ink) !important; }
+.terraAbout .terraEyebrow { margin-bottom: 14px; }
+.terraSteps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.terraSteps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 42px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 2.05;
+  color: #454b46;
+}
+.terraSteps li:before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font: 500 11px/1 "Yu Gothic UI", sans-serif;
+  color: var(--muted);
+}
+.terraAside {
+  margin-top: 54px;
+  padding: 26px 24px;
+  background: var(--paper-deep);
+}
+.terraAside h2 { font-size: 15px; margin-bottom: 12px; }
+.terraAside p { font-size: 12.5px; line-height: 1.95; }
