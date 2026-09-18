@@ -24,8 +24,23 @@ export type Expression = {
   reading: string;
   /** What it means in Japanese. */
   meaning: string;
-  /** Anything a reader would get wrong without being told. */
-  note?: string;
+  /** How formal it is, and so who it can be said to. */
+  register?: Register | null;
+  /** The situation it belongs in. */
+  usage?: string | null;
+  /** What the katakana cannot carry - tone, a sound Japanese does not have. */
+  pronunciationNote?: string | null;
+  /** Where the wording was checked. */
+  sources?: string[] | null;
+};
+
+export type Register = "polite" | "neutral" | "casual" | "formal";
+
+export const REGISTER_LABEL: Record<Register, string> = {
+  formal: "あらたまった言い方",
+  polite: "ていねいな言い方",
+  neutral: "ふつうの言い方",
+  casual: "くだけた言い方",
 };
 
 export type Variety = {
@@ -36,11 +51,12 @@ export type Variety = {
 };
 
 export type Place = {
-  capital?: string;
+  capital?: string | null;
   varieties: string[];
-  gesture?: string;
-  culture?: string;
-  note?: string;
+  gesture?: string | null;
+  culture?: string | null;
+  note?: string | null;
+  sources?: string[] | null;
 };
 
 export const varieties = varietiesJson as Record<string, Variety>;

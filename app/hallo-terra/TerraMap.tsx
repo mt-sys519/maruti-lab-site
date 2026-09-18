@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TerraIntro from "./TerraIntro";
-import { KINDS, KIND_LABEL, places, varieties, type Country, type World } from "./content";
+import { KINDS, KIND_LABEL, REGISTER_LABEL, places, varieties, type Country, type World } from "./content";
 
 /* The world is drawn once and shown three times, side by side. Miller is a
    cylindrical projection, so the drawing repeats exactly every world-width:
@@ -413,6 +413,19 @@ export default function TerraMap() {
   const country = selected ? byIso.get(selected) ?? null : null;
   const place = selected ? places[selected] : undefined;
 
+  // Every link behind what the card is saying, in one list at the bottom
+  // rather than scattered under each line.
+  const sources = useMemo(() => {
+    if (!place) return [];
+    const all = [...(place.sources ?? [])];
+    for (const id of place.varieties) {
+      for (const expression of Object.values(varieties[id]?.expressions ?? {})) {
+        all.push(...(expression.sources ?? []));
+      }
+    }
+    return [...new Set(all.filter(Boolean))];
+  }, [place]);
+
   const found = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q || !world) return [];
@@ -534,7 +547,18 @@ export default function TerraMap() {
                           <p className="terraKind">{KIND_LABEL[kind]}</p>
                           <p className="terraText">{expression.text}</p>
                           <p className="terraReading">{expression.reading}</p>
+                          {expression.pronunciationNote && (
+                            <p className="terraSound">{expression.pronunciationNote}</p>
+                          )}
                           <p className="terraMeaning">{expression.meaning}</p>
+                          {(expression.register || expression.usage) && (
+                            <p className="terraUse">
+                              {expression.register && REGISTER_LABEL[expression.register] && (
+                                <span className="terraRegister">{REGISTER_LABEL[expression.register]}</span>
+                              )}
+                              {expression.usage}
+                            </p>
+                          )}
                           <button type="button" className="terraSpeak" onClick={() => speak(expression.text, variety.speech)}>
                             音で聞く
                           </button>
@@ -548,12 +572,27 @@ export default function TerraMap() {
               <p className="terraEmpty">この場所の挨拶はまだ書けていません。書けたところから増やしていきます。</p>
             )}
 
-            {place?.gesture && (
+            {(place?.gesture || place?.culture) && (
               <div className="terraCulture">
                 <p className="terraKind">仕草</p>
-                <p className="terraGesture">{place.gesture}</p>
+                {place.gesture && <p className="terraGesture">{place.gesture}</p>}
                 {place.culture && <p>{place.culture}</p>}
                 {place.note && <p className="terraNote">{place.note}</p>}
+              </div>
+            )}
+
+            {sources.length > 0 && (
+              <div className="terraSources">
+                <p className="terraKind">出典</p>
+                <ul>
+                  {sources.map((url) => (
+                    <li key={url}>
+                      <a href={url} target="_blank" rel="noreferrer">
+                        {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>

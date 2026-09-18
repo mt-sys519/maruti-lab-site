@@ -62,6 +62,16 @@
     "culture": "你好 は広く知られた普通話の挨拶です。実際の言語・挨拶は地域や相手との関係によって多様です。",
     "note": "より丁寧な 您好 もあります。"
   },
+  "CZE": {
+    "capital": "プラハ",
+    "varieties": [
+      "cs-CZ"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
+  },
   "DEU": {
     "capital": "ベルリン",
     "varieties": [
@@ -70,6 +80,16 @@
     "gesture": "握手など",
     "culture": "改まった場面では握手がよく使われます。Hallo は日常的で親しみのある挨拶です。",
     "note": "地域によって Servus や Grüß Gott なども聞かれます。"
+  },
+  "DNK": {
+    "capital": "コペンハーゲン",
+    "varieties": [
+      "da-DK"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
   },
   "EGY": {
     "capital": "カイロ",
@@ -88,6 +108,16 @@
     "gesture": "握手など",
     "culture": "改まった場面では握手が一般的。親しい人同士の頬への挨拶は関係や地域によって異なります。",
     "note": "国内にはスペイン語以外の地域言語もあります。"
+  },
+  "EST": {
+    "capital": "タリン",
+    "varieties": [
+      "et-EE"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
   },
   "FIN": {
     "capital": "ヘルシンキ",
@@ -125,6 +155,16 @@
     "culture": "Γεια σας は丁寧な相手や複数人への挨拶に使えます。親しい相手には Γεια σου も使われます。",
     "note": "挨拶の距離感は相手との関係によって変わります。"
   },
+  "HUN": {
+    "capital": "ブダペスト",
+    "varieties": [
+      "hu-HU"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
+  },
   "IDN": {
     "capital": "ジャカルタ",
     "varieties": [
@@ -142,6 +182,26 @@
     "gesture": "手のひらを合わせる",
     "culture": "Namaste と合掌の仕草は広く知られていますが、インドは多言語・多文化で挨拶は地域や言語によって大きく異なります。",
     "note": "「国＝ひとつの挨拶」に固定しないことがHALLO TERRAでは重要です。"
+  },
+  "IRN": {
+    "capital": "テヘラン",
+    "varieties": [
+      "fa-IR"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
+  },
+  "ISR": {
+    "capital": "エルサレム",
+    "varieties": [
+      "he-IL"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
   },
   "ITA": {
     "capital": "ローマ",
@@ -197,6 +257,16 @@
     "culture": "改まった初対面では握手が一般的です。親しい間柄の挨拶は関係や地域によって変わります。",
     "note": "時間帯によって Buenos días / Buenas tardes / Buenas noches を使い分けます。"
   },
+  "MYS": {
+    "capital": "クアラルンプール",
+    "varieties": [
+      "ms-MY"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
+  },
   "NLD": {
     "capital": "アムステルダム",
     "varieties": [
@@ -205,6 +275,26 @@
     "gesture": "握手など",
     "culture": "Hallo は日常的、Goedendag はより改まった響きがあります。",
     "note": "英語が通じやすい場所でも、現地語の挨拶は会話のきっかけになります。"
+  },
+  "NOR": {
+    "capital": "オスロ",
+    "varieties": [
+      "nb-NO"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
+  },
+  "NPL": {
+    "capital": "カトマンズ",
+    "varieties": [
+      "ne-NP"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
   },
   "NZL": {
     "capital": "ウェリントン",
@@ -295,6 +385,16 @@
     "gesture": "握手など",
     "culture": "Merhaba は幅広い場面で使える基本的な挨拶です。挨拶の仕方は年齢・関係・地域によって変わります。",
     "note": "よりカジュアルな Selam もよく使われます。"
+  },
+  "UKR": {
+    "capital": "キーウ",
+    "varieties": [
+      "uk-UA"
+    ],
+    "gesture": null,
+    "culture": null,
+    "note": "文化メモは未検証。公開前に要レビュー。",
+    "sources": []
   },
   "USA": {
     "capital": "ワシントンD.C.",

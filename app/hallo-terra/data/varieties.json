@@ -83,6 +83,84 @@
       }
     }
   },
+  "cs-CZ": {
+    "name": "チェコ語",
+    "speech": "cs-CZ",
+    "expressions": {
+      "greeting": {
+        "text": "Dobrý den",
+        "reading": "ドブリー デン",
+        "meaning": "こんにちは",
+        "register": "polite",
+        "usage": "初対面や店・仕事など、丁寧に挨拶したい場面。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/czech.php"
+        ]
+      },
+      "thanks": {
+        "text": "Děkuji",
+        "reading": "ジェクイ（近似）",
+        "meaning": "ありがとう",
+        "register": "polite",
+        "usage": "幅広い場面で使える丁寧な感謝。",
+        "pronunciationNote": "dě の音は日本語にないためカタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/czech.php"
+        ]
+      },
+      "apology": {
+        "text": "Promiňte",
+        "reading": "プロミニュテ（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "register": "polite",
+        "usage": "丁寧な呼びかけ・謝罪。",
+        "pronunciationNote": "ň の音は日本語にないためカタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/czech.php"
+        ]
+      }
+    }
+  },
+  "da-DK": {
+    "name": "デンマーク語",
+    "speech": "da-DK",
+    "expressions": {
+      "greeting": {
+        "text": "Hej",
+        "reading": "ハイ",
+        "meaning": "こんにちは / やあ",
+        "register": "casual",
+        "usage": "日常的な挨拶。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/danish.php"
+        ]
+      },
+      "thanks": {
+        "text": "Tak",
+        "reading": "タク（近似）",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "一般的な感謝。",
+        "pronunciationNote": "実際の母音・子音はカタカナとずれるため音声確認推奨。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/danish.php"
+        ]
+      },
+      "apology": {
+        "text": "Undskyld",
+        "reading": "オンスギュル（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "register": "neutral",
+        "usage": "謝罪や呼びかけで使える。",
+        "pronunciationNote": "デンマーク語の弱化音はカタカナで正確に表せない。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/danish.php"
+        ]
+      }
+    }
+  },
   "de-DE": {
     "name": "ドイツ語",
     "speech": "de-DE",
@@ -314,6 +392,84 @@
       }
     }
   },
+  "et-EE": {
+    "name": "エストニア語",
+    "speech": "et-EE",
+    "expressions": {
+      "greeting": {
+        "text": "Tere",
+        "reading": "テレ",
+        "meaning": "こんにちは",
+        "register": "neutral",
+        "usage": "幅広い場面で使える挨拶。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/estonian.php"
+        ]
+      },
+      "thanks": {
+        "text": "Aitäh",
+        "reading": "アイタッハ（近似）",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "一般的な感謝。",
+        "pronunciationNote": "ä と語末 h は日本語にないため音声確認推奨。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/estonian.php"
+        ]
+      },
+      "apology": {
+        "text": "Vabandust",
+        "reading": "ヴァバンドゥスト",
+        "meaning": "すみません / ごめんなさい",
+        "register": "neutral",
+        "usage": "一般的な謝罪。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/estonian.php"
+        ]
+      }
+    }
+  },
+  "fa-IR": {
+    "name": "ペルシャ語",
+    "speech": "fa-IR",
+    "expressions": {
+      "greeting": {
+        "text": "سلام",
+        "reading": "サラーム",
+        "meaning": "こんにちは",
+        "register": "neutral",
+        "usage": "一般的な挨拶。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/persian.php"
+        ]
+      },
+      "thanks": {
+        "text": "ممنونم",
+        "reading": "マムヌーナム",
+        "meaning": "ありがとう",
+        "register": "polite",
+        "usage": "丁寧な感謝。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/persian.php"
+        ]
+      },
+      "apology": {
+        "text": "متاسفم",
+        "reading": "モテアッセファム（近似）",
+        "meaning": "ごめんなさい / 残念です",
+        "register": "neutral",
+        "usage": "謝罪や遺憾を伝える表現。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/persian.php"
+        ]
+      }
+    }
+  },
   "fi-FI": {
     "name": "フィンランド語・スウェーデン語",
     "speech": "fi-FI",
@@ -377,6 +533,45 @@
       }
     }
   },
+  "he-IL": {
+    "name": "ヘブライ語",
+    "speech": "he-IL",
+    "expressions": {
+      "greeting": {
+        "text": "שלום",
+        "reading": "シャローム",
+        "meaning": "こんにちは",
+        "register": "neutral",
+        "usage": "一般的な挨拶。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hebrew.php"
+        ]
+      },
+      "thanks": {
+        "text": "תודה",
+        "reading": "トダー（近似）",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "一般的な感謝。",
+        "pronunciationNote": "語末側にアクセントが置かれる発音を音声で確認推奨。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hebrew.php"
+        ]
+      },
+      "apology": {
+        "text": "סליחה",
+        "reading": "スリハー（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "register": "neutral",
+        "usage": "軽い謝罪や『すみません』の呼びかけにも使える。",
+        "pronunciationNote": "語末の喉音はカタカナで正確に表せない。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hebrew.php"
+        ]
+      }
+    }
+  },
   "hi-IN": {
     "name": "ヒンディー語ほか多数",
     "speech": "hi-IN",
@@ -395,6 +590,45 @@
         "text": "माफ़ कीजिए",
         "reading": "マーフ キージエ",
         "meaning": "すみません"
+      }
+    }
+  },
+  "hu-HU": {
+    "name": "ハンガリー語",
+    "speech": "hu-HU",
+    "expressions": {
+      "greeting": {
+        "text": "Jó napot kívánok",
+        "reading": "ヨー ナポト キーヴァーノク",
+        "meaning": "こんにちは",
+        "register": "polite",
+        "usage": "丁寧な日中の挨拶。",
+        "pronunciationNote": "母音の長短があるため音声確認推奨。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hungarian.php"
+        ]
+      },
+      "thanks": {
+        "text": "Köszönöm",
+        "reading": "クスヌム（近似）",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "幅広い場面で使える感謝。",
+        "pronunciationNote": "ö の音は日本語にないためカタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hungarian.php"
+        ]
+      },
+      "apology": {
+        "text": "Bocsánat",
+        "reading": "ボチャーナト",
+        "meaning": "すみません / ごめんなさい",
+        "register": "neutral",
+        "usage": "一般的な謝罪。",
+        "pronunciationNote": "長母音を含むため音声確認推奨。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/hungarian.php"
+        ]
       }
     }
   },
@@ -500,6 +734,123 @@
         "text": "Aroha mai",
         "reading": "アロハ マイ",
         "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "ms-MY": {
+    "name": "マレー語",
+    "speech": "ms-MY",
+    "expressions": {
+      "greeting": {
+        "text": "Selamat pagi",
+        "reading": "スラマッ パギ",
+        "meaning": "おはようございます",
+        "register": "neutral",
+        "usage": "朝の挨拶。時間帯によって表現を使い分ける。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malay.php"
+        ]
+      },
+      "thanks": {
+        "text": "Terima kasih",
+        "reading": "トゥリマ カシ",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "一般的な感謝。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malay.php"
+        ]
+      },
+      "apology": {
+        "text": "Maaf",
+        "reading": "マアフ",
+        "meaning": "すみません / ごめんなさい",
+        "register": "neutral",
+        "usage": "一般的な謝罪。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/malay.php"
+        ]
+      }
+    }
+  },
+  "nb-NO": {
+    "name": "ノルウェー語（ブークモール）",
+    "speech": "nb-NO",
+    "expressions": {
+      "greeting": {
+        "text": "Hei",
+        "reading": "ハイ",
+        "meaning": "こんにちは / やあ",
+        "register": "neutral",
+        "usage": "日常で幅広く使える挨拶。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/norwegian.php"
+        ]
+      },
+      "thanks": {
+        "text": "Takk",
+        "reading": "タック",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "一般的な感謝。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/norwegian.php"
+        ]
+      },
+      "apology": {
+        "text": "Unnskyld",
+        "reading": "ウンシュル（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "register": "neutral",
+        "usage": "謝罪や呼びかけで使える。",
+        "pronunciationNote": "母音と子音が日本語にないため音声確認推奨。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/norwegian.php"
+        ]
+      }
+    }
+  },
+  "ne-NP": {
+    "name": "ネパール語",
+    "speech": "ne-NP",
+    "expressions": {
+      "greeting": {
+        "text": "नमस्ते",
+        "reading": "ナマステ",
+        "meaning": "こんにちは",
+        "register": "neutral",
+        "usage": "広く使える挨拶。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/nepali.php"
+        ]
+      },
+      "thanks": {
+        "text": "धन्यवाद",
+        "reading": "ダンニャヴァード（近似）",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "一般的な感謝。",
+        "pronunciationNote": "子音結合をカタカナで完全には表せない。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/nepali.php"
+        ]
+      },
+      "apology": {
+        "text": "माफी पाऊँ",
+        "reading": "マーフィー パーウン（近似）",
+        "meaning": "すみません / ごめんなさい",
+        "register": "polite",
+        "usage": "謝罪・許しを求める表現。",
+        "pronunciationNote": "鼻母音を含むため音声確認推奨。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/nepali.php"
+        ]
       }
     }
   },
@@ -689,6 +1040,45 @@
         "text": "Özür dilerim",
         "reading": "オズュル ディレリム",
         "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "uk-UA": {
+    "name": "ウクライナ語",
+    "speech": "uk-UA",
+    "expressions": {
+      "greeting": {
+        "text": "Вітаю",
+        "reading": "ヴィターユ",
+        "meaning": "こんにちは",
+        "register": "polite",
+        "usage": "丁寧な挨拶。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/ukrainian.php"
+        ]
+      },
+      "thanks": {
+        "text": "Дякую",
+        "reading": "ジャークユ（近似）",
+        "meaning": "ありがとう",
+        "register": "neutral",
+        "usage": "一般的な感謝。",
+        "pronunciationNote": "語頭の子音は日本語にないためカタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/ukrainian.php"
+        ]
+      },
+      "apology": {
+        "text": "Вибачте",
+        "reading": "ヴィバチテ",
+        "meaning": "すみません / ごめんなさい",
+        "register": "polite",
+        "usage": "丁寧な謝罪。",
+        "pronunciationNote": "カタカナは近似。",
+        "sources": [
+          "https://www.omniglot.com/language/phrases/ukrainian.php"
+        ]
       }
     }
   },

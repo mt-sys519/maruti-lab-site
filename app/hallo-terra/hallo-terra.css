@@ -146,6 +146,31 @@
 .terraText { margin: 0; font-size: 21px; line-height: 1.5; }
 .terraReading { margin: 4px 0 0; font-size: 13px; letter-spacing: 0.06em; color: var(--verm); }
 .terraMeaning { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+/* What the katakana cannot carry, said right under the katakana. */
+.terraSound { margin: 3px 0 0; font-size: 11px; line-height: 1.7; color: #7b7f78; }
+.terraUse { margin: 7px 0 0; font-size: 11px; line-height: 1.8; color: var(--muted); }
+.terraRegister {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--green);
+  vertical-align: 1px;
+}
+
+.terraSources { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+.terraSources ul { list-style: none; margin: 0; padding: 0; }
+.terraSources li { margin-bottom: 6px; }
+.terraSources a {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.terraSources a:hover { color: var(--ink); border-bottom-color: var(--ink); }
 .terraSpeak {
   margin-top: 9px;
   padding: 7px 12px;
