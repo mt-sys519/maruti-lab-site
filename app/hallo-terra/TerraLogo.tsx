@@ -20,48 +20,44 @@ import {
  */
 type Size = "lg" | "md" | "sm";
 
-const PEN: Record<Size, { mark: number; name: number; marker: boolean }> = {
-  lg: { mark: 4.2, name: 5.2, marker: true },
-  md: { mark: 2.4, name: 3, marker: true },
-  sm: { mark: 1.8, name: 2.4, marker: false },
-};
+// Which hand, per size. The widths themselves live in the stylesheet and are
+// real pixels: a stroke width in the drawing's own units would thin out every
+// time the logo is set smaller, which is how the big one ended up looking like
+// the small one.
+const MARKER: Record<Size, boolean> = { lg: true, md: true, sm: false };
 
 export function TerraMark({ size = "md" }: { size?: Size }) {
-  const pen = PEN[size];
   return (
     <svg
       className="terraLogoMark"
       viewBox="0 0 68 62"
       fill="none"
       stroke="currentColor"
-      strokeWidth={pen.mark}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {(pen.marker ? MARK_MARKER : MARK).map((d) => (
-        <path key={d} d={d} />
+      {(MARKER[size] ? MARK_MARKER : MARK).map((d) => (
+        <path key={d} d={d} vectorEffect="non-scaling-stroke" />
       ))}
     </svg>
   );
 }
 
 export function TerraName({ size = "md" }: { size?: Size }) {
-  const pen = PEN[size];
   return (
     <svg
       className="terraLogoName"
-      viewBox={pen.marker ? WORDMARK_MARKER_BOX : WORDMARK_BOX}
+      viewBox={MARKER[size] ? WORDMARK_MARKER_BOX : WORDMARK_BOX}
       fill="none"
       stroke="currentColor"
-      strokeWidth={pen.name}
       strokeLinecap="round"
       strokeLinejoin="round"
       role="img"
       aria-label="HALLO TERRA"
     >
-      {(pen.marker ? WORDMARK_MARKER : WORDMARK).map((d) => (
-        <path key={d} d={d} />
+      {(MARKER[size] ? WORDMARK_MARKER : WORDMARK).map((d) => (
+        <path key={d} d={d} vectorEffect="non-scaling-stroke" />
       ))}
     </svg>
   );

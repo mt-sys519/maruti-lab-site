@@ -341,15 +341,16 @@
 
 .terraLogo { display: inline-flex; align-items: center; color: var(--ink); }
 .terraLogo svg { display: block; height: auto; }
+/* Real pixels, so the weight is the weight whatever size it is set at. */
 .terraLogo-lg { gap: 22px; }
-.terraLogo-lg .terraLogoMark { width: 68px; }
-.terraLogo-lg .terraLogoName { width: 285px; }
+.terraLogo-lg .terraLogoMark { width: 74px; stroke-width: 5px; }
+.terraLogo-lg .terraLogoName { width: 310px; stroke-width: 3.4px; }
 .terraLogo-md { gap: 13px; }
-.terraLogo-md .terraLogoMark { width: 38px; }
-.terraLogo-md .terraLogoName { width: 162px; }
+.terraLogo-md .terraLogoMark { width: 40px; stroke-width: 2.8px; }
+.terraLogo-md .terraLogoName { width: 170px; stroke-width: 2.1px; }
 .terraLogo-sm { gap: 9px; }
-.terraLogo-sm .terraLogoMark { width: 26px; }
-.terraLogo-sm .terraLogoName { width: 112px; }
+.terraLogo-sm .terraLogoMark { width: 26px; stroke-width: 1.8px; }
+.terraLogo-sm .terraLogoName { width: 112px; stroke-width: 1.4px; }
 
 /* The strip that gives the map screen its name. */
 .terraTitle {
@@ -368,8 +369,8 @@
 
 @media (max-width: 640px) {
   .terraLogo-md { gap: 10px; }
-  .terraLogo-md .terraLogoMark { width: 30px; }
-  .terraLogo-md .terraLogoName { width: 128px; }
+  .terraLogo-md .terraLogoMark { width: 32px; stroke-width: 2.4px; }
+  .terraLogo-md .terraLogoName { width: 136px; stroke-width: 1.8px; }
   .terraTitle { padding: 16px 22px 14px; gap: 10px; }
   .terraTitle p { font-size: 11px; }
 }
@@ -415,8 +416,8 @@
 }
 .terraIntro.leaving .terraIntroName { opacity: 0; transition: opacity 0.35s ease; }
 @media (max-width: 640px) {
-  .terraIntroName .terraLogoMark { width: 44px; }
-  .terraIntroName .terraLogoName { width: 186px; }
+  .terraIntroName .terraLogoMark { width: 48px; stroke-width: 3.6px; }
+  .terraIntroName .terraLogoName { width: 200px; stroke-width: 2.6px; }
 }
 
 .terraIntroSkip {
@@ -439,8 +440,8 @@
 }
 .terraIntro.leaving .terraIntroName { opacity: 0; transition: opacity 0.35s ease; }
 @media (max-width: 640px) {
-  .terraIntroName .terraLogoMark { width: 44px; }
-  .terraIntroName .terraLogoName { width: 186px; }
+  .terraIntroName .terraLogoMark { width: 48px; stroke-width: 3.6px; }
+  .terraIntroName .terraLogoName { width: 200px; stroke-width: 2.6px; }
 }
 
 .terraIntroSkip { opacity: 0; transition: opacity 0.3s ease; }
