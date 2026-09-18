@@ -129,12 +129,57 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
       context.fillStyle = land;
       context.strokeStyle = edge;
       context.lineWidth = Math.max(1, dpr * 0.75);
-      // One ring at a time. Filled together, a ring that has gone round the
-      // back and been cut into pieces winds against the ring in front of it,
-      // and the overlap comes out as sea - a blue wedge sitting on the land.
+
+      // A coastline that goes round the back comes back in pieces, and a piece
+      // has to be closed somehow before it can be filled. Closed with a
+      // straight line - which is what a path does by itself - the closing line
+      // cuts across the globe and fills a wedge of land over the sea, which is
+      // what Siberia looked like. Each piece is closed along the rim instead,
+      // the way the real edge of the world runs. The rim is only used to fill:
+      // it is not a coastline, so it is not drawn.
       for (const ring of rings) {
-        context.beginPath();
-        let open = false;
+        let run: [number, number][] = [];
+        // Whether this ring ever went round the back. An island that never
+        // does is closed the ordinary way: flinging its ends out to the rim,
+        // which is right for a cut coastline, would drag a line across the
+        // ocean for one that was never cut.
+        let cut = false;
+        const flush = () => {
+          if (run.length > 1 && !cut) {
+            context.beginPath();
+            context.moveTo(run[0][0], run[0][1]);
+            for (const [px, py] of run.slice(1)) context.lineTo(px, py);
+            context.closePath();
+            context.fill();
+            context.stroke();
+          } else if (run.length > 1) {
+            // Pull the two ends out onto the rim so the arc meets them.
+            const ends = [run[0], run[run.length - 1]].map(([px, py]) => {
+              const dx = px - cx;
+              const dy = py - cy;
+              const length = Math.hypot(dx, dy) || 1;
+              return [cx + (dx / length) * r, cy + (dy / length) * r] as [number, number];
+            });
+            context.beginPath();
+            context.moveTo(ends[0][0], ends[0][1]);
+            for (const [px, py] of run.slice(1)) context.lineTo(px, py);
+            context.lineTo(ends[1][0], ends[1][1]);
+            const from = Math.atan2(ends[1][1] - cy, ends[1][0] - cx);
+            const to = Math.atan2(ends[0][1] - cy, ends[0][0] - cx);
+            let sweep = to - from;
+            while (sweep > Math.PI) sweep -= Math.PI * 2;
+            while (sweep < -Math.PI) sweep += Math.PI * 2;
+            context.arc(cx, cy, r, from, to, sweep < 0);
+            context.closePath();
+            context.fill();
+
+            context.beginPath();
+            context.moveTo(run[0][0], run[0][1]);
+            for (const [px, py] of run.slice(1)) context.lineTo(px, py);
+            context.stroke();
+          }
+          run = [];
+        };
         for (const [lon, lat] of ring) {
           const l = (lon * Math.PI) / 180 - spin;
           const p = (lat * Math.PI) / 180;
@@ -142,24 +187,16 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
           // The far side of the world is behind the near side, so it is not
           // drawn: the sign of this is which hemisphere the point is on.
           if (sinTilt * Math.sin(p) + cosTilt * cosP * Math.cos(l) <= 0) {
-            if (open) {
-              context.fill();
-              context.stroke();
-              context.beginPath();
-            }
-            open = false;
+            cut = true;
+            flush();
             continue;
           }
-          const x = cx + r * cosP * Math.sin(l);
-          const y = cy - r * (cosTilt * Math.sin(p) - sinTilt * cosP * Math.cos(l));
-          if (open) context.lineTo(x, y);
-          else context.moveTo(x, y);
-          open = true;
+          run.push([
+            cx + r * cosP * Math.sin(l),
+            cy - r * (cosTilt * Math.sin(p) - sinTilt * cosP * Math.cos(l)),
+          ]);
         }
-        if (open) {
-          context.fill();
-          context.stroke();
-        }
+        flush();
       }
       context.restore();
 
