@@ -22,6 +22,12 @@
 
 .terra {
   height: min(78dvh, 860px);
+  /* 78dvh leaves room below for the writing to start showing, which is the
+     point of it on a tall screen. On a short one that room is already there
+     and the card is the thing that runs out: at 900x620 the card was 484 tall
+     around 976 of words. Height is what is scarce, so height is what it takes
+     back. Wide only - under 861px the card is a sheet over the map and this
+     does not apply. */
   position: relative; /* the sheet below is positioned against this, not the page */
   overflow: hidden; /* and the peeking sheet is clipped by the map, not by the screen */
   display: grid;
@@ -391,6 +397,18 @@
 .terraCulture p { font-size: 12px; line-height: 1.95; color: var(--muted); margin: 0 0 8px; }
 .terraNote { color: #6b7069; }
 .terraEmpty { font-size: 12px; line-height: 1.95; color: var(--muted); }
+
+@media (min-width: 861px) and (max-height: 760px) {
+  /* The header and the name already cost 152px of a 620px window, so 78dvh
+     ended exactly at the fold and the card got 484 of the 976 it wanted. This
+     takes back what it can: the name is set closer, and the block runs a
+     little past the bottom - the +/- buttons ride down with it and need a
+     nudge of scroll, which is the price of the sixty-odd pixels of card.
+     Pinching and the wheel work where they always did. */
+  .terra { height: min(88dvh, 860px); }
+  /* .terraSkin, because the plain rule for this is written further down. */
+  .terraSkin .terraTitle { padding-top: 14px; padding-bottom: 12px; }
+}
 
 @media (max-width: 860px) {
   .terra { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); }
