@@ -331,31 +331,6 @@
 
 /* ---- what the map is for, underneath the map ---------------------- */
 
-.terraScroll {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 26px clamp(22px, 6vw, 60px) 0;
-  font: 500 10px/1 "Yu Gothic UI", sans-serif;
-  letter-spacing: 0.18em;
-  color: var(--muted);
-}
-.terraScroll i { display: block; width: 62px; height: 1px; background: var(--line); position: relative; }
-.terraScroll i:after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: -3px;
-  width: 7px;
-  height: 7px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  transform: rotate(-45deg);
-}
-
-/* The writing is not the tool, so it stands on its own lighter ground. */
-.terraNotes { background: var(--terra-notes); }
-
 .terraAbout {
   max-width: 720px;
   margin: 0 auto;
