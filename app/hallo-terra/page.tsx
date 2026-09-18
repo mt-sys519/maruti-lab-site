@@ -15,6 +15,15 @@ export const metadata: Metadata = {
   // thin thing not to hand a crawler; this comes off when HALLO TERRA joins
   // Works and the sitemap.
   robots: { index: false, follow: true },
+  // Its own tab icon: the mark with its meridian dropped, because at thirty-two
+  // pixels a line inside a circle is a smudge inside a circle. Drawn once as
+  // SVG, which is what almost everything asks for now, with a PNG behind it.
+  icons: {
+    icon: [
+      { url: "/hallo-terra/icon.svg", type: "image/svg+xml" },
+      { url: "/hallo-terra/icon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+  },
   openGraph: {
     type: "website",
     locale: "ja_JP",

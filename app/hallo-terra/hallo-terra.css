@@ -200,7 +200,8 @@
 }
 .terraTongues button {
   position: relative;
-  padding: 9px 14px;
+  border-radius: 999px;
+  padding: 9px 15px;
   border: 0;
   background: none;
   color: #5c5a50;
@@ -247,16 +248,24 @@
 /* What the katakana cannot carry, said right under the katakana. */
 .terraSound { margin: 3px 0 0; font-size: 11px; line-height: 1.7; color: #7b7f78; }
 .terraUse { margin: 7px 0 0; font-size: 11px; line-height: 1.8; color: var(--muted); }
+/* The same pill the languages wear, in the phrase's own colour: two things
+   that are "a small thing said about the thing below it" should look like
+   each other. */
 .terraRegister {
   display: inline-block;
-  margin-right: 8px;
-  padding: 2px 7px;
-  border: 1px solid var(--line);
-  font-size: 9.5px;
+  margin-right: 9px;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--green);
   vertical-align: 1px;
 }
+.terraPhrase-greeting .terraRegister { color: var(--terra-greeting); }
+.terraPhrase-thanks .terraRegister { color: var(--terra-thanks); }
+.terraPhrase-apology .terraRegister { color: var(--terra-apology); }
 
 .terraSources { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--terra-rule); }
 .terraSources ul { list-style: none; margin: 0; padding: 0; }

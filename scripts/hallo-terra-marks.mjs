@@ -149,6 +149,41 @@ function blob(seed, wander) {
 
 const BLOBS = [1.1, 2.4, 3.9, 5.2, 6.6, 7.8].map((seed, i) => blob(seed, 2 + (i % 3)));
 
+// A face, in the same hand as everything else. Three of them: eyes open, one
+// eye shut, and a pair of curved-up eyes - the last is the one that reads as
+// pleased rather than as a smiley sticker.
+const smile = (pen) => ({
+  round: [
+    ...paths(gen.circle(32, 32, 52, { ...pen, seed: 5 })),
+    ...paths(gen.circle(23, 26, 4, { ...pen, seed: 14 })),
+    ...paths(gen.circle(41, 26, 4, { ...pen, seed: 15 })),
+    ...paths(gen.curve([[20, 37], [26, 45], [38, 45], [44, 37]], { ...pen, seed: 22 })),
+  ],
+  wink: [
+    ...paths(gen.circle(32, 32, 52, { ...pen, seed: 31 })),
+    ...paths(gen.curve([[19, 27], [23, 23], [27, 27]], { ...pen, seed: 7 })),
+    ...paths(gen.circle(41, 26, 4, { ...pen, seed: 18 })),
+    ...paths(gen.curve([[20, 37], [26, 45], [38, 45], [44, 37]], { ...pen, seed: 9 })),
+  ],
+  pleased: [
+    ...paths(gen.circle(32, 32, 52, { ...pen, seed: 44 })),
+    ...paths(gen.curve([[18, 28], [23, 23], [28, 28]], { ...pen, seed: 11 })),
+    ...paths(gen.curve([[36, 28], [41, 23], [46, 28]], { ...pen, seed: 12 })),
+    ...paths(gen.curve([[21, 36], [26, 44], [38, 44], [43, 36]], { ...pen, seed: 23 })),
+  ],
+});
+const SMILES = smile(marker);
+
+// The mark again, for when it is 32 pixels across and nobody can afford a
+// meridian. Circle, equator, bubble - the three strokes that still say globe.
+const MARK_TINY = [
+  ...paths(gen.circle(28, 36, 42, { ...marker, seed: 11 })),
+  ...paths(gen.ellipse(28, 36, 42, 15, { ...marker, seed: 4 })),
+  ...paths(gen.ellipse(52, 13, 24, 18, { ...marker, seed: 21 })),
+  ...paths(gen.linearPath([[45, 20], [40, 27], [50, 22]], { ...marker, roughness: 0.5, seed: 6 })),
+];
+
+
 // A ring to draw round the place being looked at, in a 100-wide box so it can
 // be scaled to whatever the country needs.
 const ring = paths(gen.circle(50, 50, 92, { roughness: 1.5, bowing: 1.6, seed: 31 }));
@@ -173,6 +208,12 @@ export const WORDMARK_MARKER: string[] = ${JSON.stringify(nameMarker.strokes, nu
 
 /** A hand-drawn circle in a 100x100 box, for ringing the chosen place. */
 export const RING: string[] = ${JSON.stringify(ring, null, 2)};
+
+/** The mark with its meridian dropped, for the smallest sizes. */
+export const MARK_TINY: string[] = ${JSON.stringify(MARK_TINY, null, 2)};
+
+/** A face in a 64x64 box, three ways. */
+export const SMILES: Record<string, string[]> = ${JSON.stringify(SMILES, null, 2)};
 
 /** Loose shapes in a square box, to be scattered behind the writing. */
 export const BLOBS: { fill: string[]; line: string[] }[] = ${JSON.stringify(BLOBS, null, 2)};
@@ -204,15 +245,27 @@ const markerMarkSvg = (w, sw, color) =>
 const markerNameSvg = (w, sw, color) =>
   `<svg viewBox="${`0 -6 ${nameMarker.width + 6} 92`}" width="${w}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${nameMarker.strokes.map(line).join("")}</svg>`;
 
-const preview = `<!doctype html><meta charset="utf-8"><body style="background:#f2f0e9;padding:46px;color:#1c211e;font:12px/1.6 sans-serif">
-<p style="letter-spacing:.2em;color:#4a504a">大 - 太</p>
-<div style="display:flex;align-items:center;gap:22px;margin-bottom:34px">${markerMarkSvg(120, 4.2, "#1c211e")}${markerNameSvg(500, 5.2, "#1c211e")}</div>
-<p style="letter-spacing:.2em;color:#4a504a">中 - 細</p>
-<div style="display:flex;align-items:center;gap:14px;margin-bottom:34px">${markerMarkSvg(54, 2.4, "#1c211e")}${markerNameSvg(230, 3, "#1c211e")}</div>
-<p style="letter-spacing:.2em;color:#4a504a">中 - 細 (朱)</p>
-<div style="display:flex;align-items:center;gap:14px;margin-bottom:34px">${markerMarkSvg(44, 2.4, "#ad4434")}${markerNameSvg(190, 3, "#ad4434")}</div>
-<p style="letter-spacing:.2em;color:#4a504a">小 - ペン</p>
-<div style="display:flex;align-items:center;gap:10px">${markSvg(30, 1.8, "#1c211e")}${nameSvg(130, 2.4, "#1c211e")}</div>
+const faceSvg = (kind, w, sw, color) =>
+  `<svg viewBox="0 0 64 64" width="${w}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${SMILES[kind].map(line).join("")}</svg>`;
+
+const preview = `<!doctype html><meta charset="utf-8"><body style="background:#fdfaec;padding:46px;color:#1c211e;font:12px/1.6 sans-serif">
+<p style="letter-spacing:.2em;color:#4a504a">SMILE</p>
+<div style="display:flex;gap:40px;align-items:center;margin-bottom:30px">
+${faceSvg("round", 150, 2.4, "#1c211e")}${faceSvg("wink", 150, 2.4, "#1c211e")}${faceSvg("pleased", 150, 2.4, "#1c211e")}</div>
+<div style="display:flex;gap:26px;align-items:center;margin-bottom:30px">
+${faceSvg("round", 64, 3.2, "#ed83aa")}${faceSvg("wink", 64, 3.2, "#e0bc28")}${faceSvg("pleased", 64, 3.2, "#2098de")}</div>
+<div style="display:flex;gap:18px;align-items:center">
+${faceSvg("pleased", 30, 4.2, "#1c211e")}${faceSvg("round", 22, 5, "#1c211e")}
+<span style="font:700 15px/1 sans-serif">小さくすると</span></div>
 </body>`;
 // Kept out of public/ on purpose: it is a workbench, not part of the site.
+// Kept out of public/ on purpose: it is a workbench, not part of the site.
 await writeFile(join(here, "..", ".cache", "marks-preview.html"), preview);
+
+// The icon, as artwork. Turned into PNGs separately, because a favicon still
+// has to be a bitmap for most of the places that ask for one.
+const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="13" fill="#a1d3ec"/>
+  <g transform="translate(2.5 6) scale(0.9)" fill="none" stroke="#1c211e" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">${MARK_TINY.map(line).join("")}</g>
+</svg>`;
+await writeFile(join(here, "..", "public", "hallo-terra", "icon.svg"), icon);
