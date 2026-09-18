@@ -92,6 +92,13 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
         /* the crowd alone is still a picture */
       });
 
+    // The globe takes its colours from the stylesheet rather than keeping its
+    // own copy, so the sea in the opening is the sea on the map.
+    const skin = getComputedStyle(canvas);
+    const sea = skin.getPropertyValue("--terra-sea").trim() || "#cfe2e8";
+    const land = skin.getPropertyValue("--terra-land").trim() || "#ecdfc6";
+    const edge = skin.getPropertyValue("--terra-line").trim() || "#c2b49a";
+
     const draw = (now: number) => {
       const box = canvas.getBoundingClientRect();
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -107,7 +114,7 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
 
       context.beginPath();
       context.arc(cx, cy, r, 0, Math.PI * 2);
-      context.fillStyle = "#dce3e4";
+      context.fillStyle = sea;
       context.fill();
       context.save();
       context.clip();
@@ -117,10 +124,8 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
       const sinTilt = Math.sin(tilt);
       const cosTilt = Math.cos(tilt);
 
-      // Slightly deeper than the flat map's land, and outlined: at this size
-      // the map's own pairing of paper on water has almost no contrast left.
-      context.fillStyle = "#e0d9c7";
-      context.strokeStyle = "rgba(122, 130, 118, 0.5)";
+      context.fillStyle = land;
+      context.strokeStyle = edge;
       context.lineWidth = Math.max(1, dpr * 0.75);
       context.beginPath();
       for (const ring of rings) {

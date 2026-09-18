@@ -35,6 +35,7 @@ export default function HalloTerraPage() {
 
       <TerraMap />
 
+      <section className="terraNotes">
       <p className="terraScroll">
         <i aria-hidden="true" />
         このツールについて
@@ -113,6 +114,7 @@ export default function HalloTerraPage() {
           </p>
         </aside>
       </article>
+      </section>
     </>
   );
 }

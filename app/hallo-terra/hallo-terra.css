@@ -20,7 +20,19 @@
   --terra-wax: #e8b93f;
   --terra-rose: #e39bb2;
   --terra-hand: "Zen Maru Gothic", "Yu Gothic UI", sans-serif;
+
+  /* The big surfaces. These are what the tool looks like from across the
+     room: the sea and the land are most of the screen, so they carry the
+     mood, and the paper is pitched at the illustration's own ground so the
+     opening has no visible edge round the picture. */
+  --terra-paper: #f5ecda;
+  --terra-notes: #fbf6ec;
+  --terra-sea: #cfe2e8;
+  --terra-land: #ecdfc6;
+  --terra-line: #c2b49a;
 }
+
+.terraSkin { background: var(--terra-paper); }
 
 .terra {
   height: min(78dvh, 860px);
@@ -28,13 +40,13 @@
   overflow: hidden; /* and the peeking sheet is clipped by the map, not by the screen */
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
-  background: var(--paper);
+  background: var(--terra-paper);
 }
 
 .terraStage {
   position: relative;
   overflow: hidden;
-  background: #dce3e4;
+  background: var(--terra-sea);
   touch-action: none;
   overscroll-behavior: none;
   cursor: grab;
@@ -44,11 +56,11 @@
 .terraStage:active { cursor: grabbing; }
 
 .terraSvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.terraSea { fill: #dce3e4; }
+.terraSea { fill: var(--terra-sea); }
 
 .terraCountry {
-  fill: #e7e3d8;
-  stroke: #b3b8ab;
+  fill: var(--terra-land);
+  stroke: var(--terra-line);
   stroke-width: 0.9;
   vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
@@ -58,8 +70,8 @@
 /* Countries the size of a full stop still have people in them, so they get a
    mark of their own to aim at. */
 .terraDot {
-  fill: #b9a99a;
-  stroke: var(--paper);
+  fill: #b09a7e;
+  stroke: var(--terra-land);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
@@ -103,7 +115,7 @@
   min-width: 42px;
   height: 42px;
   border: 0;
-  background: rgba(242, 240, 233, 0.94);
+  background: rgba(245, 236, 218, 0.94);
   color: var(--ink);
   font: 500 15px/1 "Yu Gothic UI", sans-serif;
   cursor: pointer;
@@ -116,11 +128,11 @@
   width: 100%;
   padding: 12px 14px;
   border: 0;
-  background: rgba(242, 240, 233, 0.94);
+  background: rgba(245, 236, 218, 0.94);
   color: var(--ink);
   font: 400 13px/1 "Yu Gothic UI", sans-serif;
 }
-.terraSearch ul { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--line); background: var(--paper); }
+.terraSearch ul { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--line); background: var(--terra-paper); }
 .terraSearch li + li { border-top: 1px solid var(--line); }
 .terraSearch li button {
   width: 100%;
@@ -140,7 +152,7 @@
 
 .terraCard {
   border-left: 1px solid var(--line);
-  background: var(--paper);
+  background: var(--terra-paper);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -250,6 +262,7 @@
   /* The card becomes a sheet over the map: it peeks, and a tap or a
      selection raises it. The map keeps the whole screen underneath. */
   .terraCard {
+    background: var(--terra-paper);
     position: absolute;
     left: 0;
     right: 0;
@@ -306,6 +319,9 @@
   border-bottom: 1px solid var(--line);
   transform: rotate(-45deg);
 }
+
+/* The writing is not the tool, so it stands on its own lighter ground. */
+.terraNotes { background: var(--terra-notes); }
 
 .terraAbout {
   max-width: 720px;
@@ -417,7 +433,7 @@
   z-index: 60;
   display: grid;
   place-items: center;
-  background: var(--paper);
+  background: var(--terra-paper);
   cursor: pointer;
   animation: terraIntroIn 0.6s ease both;
 }
