@@ -1,3 +1,5 @@
+@import "./palette.generated.css";
+
 /* HALLO TERRA.
 
    Its own skin, under the lab's shared header. The colours are Headspace's
@@ -13,24 +15,7 @@
    must never be forced into a Japanese face at all. */
 
 .terraSkin {
-  --terra-greeting: #3a6ea5;
-  --terra-thanks: #4f9b5e;
-  --terra-apology: #6b4fa0;
-  --terra-sky: #5aa7cf;
-  --terra-wax: #e8b93f;
-  --terra-rose: #e39bb2;
   --terra-hand: "Zen Maru Gothic", "Yu Gothic UI", sans-serif;
-
-  /* The big surfaces. These are what the tool looks like from across the
-     room: the sea and the land are most of the screen, so they carry the
-     mood, and the paper is pitched at the illustration's own ground so the
-     opening has no visible edge round the picture. */
-  --terra-paper: #fae3a0;
-  --terra-card: #fdf3d6;
-  --terra-notes: #fffdf6;
-  --terra-sea: #cfe2e8;
-  --terra-land: #ecdfc6;
-  --terra-line: #c2b49a;
 }
 
 .terraSkin { background: var(--terra-paper); }
@@ -171,7 +156,7 @@
   gap: 7px;
   margin: 8px 0 18px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #ddd0ab;
+  border-bottom: 1px solid var(--terra-rule);
 }
 .terraTongues button {
   position: relative;
@@ -195,7 +180,7 @@
 .terraVariety h3 {
   margin: 6px 0 18px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #ddd0ab;
+  border-bottom: 1px solid var(--terra-rule);
   font: 700 17px/1.4 var(--terra-hand);
   letter-spacing: 0.03em;
   color: var(--ink);
@@ -230,7 +215,7 @@
   vertical-align: 1px;
 }
 
-.terraSources { margin-top: 28px; padding-top: 18px; border-top: 1px solid #ddd0ab; }
+.terraSources { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--terra-rule); }
 .terraSources ul { list-style: none; margin: 0; padding: 0; }
 .terraSources li { margin-bottom: 6px; }
 .terraSources a {
@@ -254,7 +239,7 @@
 }
 .terraSpeak:hover { opacity: 0.75; }
 
-.terraCulture { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd0ab; }
+.terraCulture { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--terra-rule); }
 .terraGesture { margin: 0 0 8px; font-size: 15px; }
 .terraCulture p { font-size: 12px; line-height: 1.95; color: var(--muted); margin: 0 0 8px; }
 .terraNote { color: #6b7069; }
