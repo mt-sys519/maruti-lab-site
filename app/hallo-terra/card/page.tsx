@@ -18,10 +18,9 @@ import { TerraMark, TerraName } from "../TerraLogo";
  */
 export const metadata = { robots: { index: false, follow: false } };
 
-export default function CardPreview({ searchParams }: { searchParams?: { only?: string } }) {
-  const only = searchParams?.only === "works" ? "works" : "wide";
+export default function CardPreview() {
   return (
-    <div className={`terraCard-shot terraCard-${only}`}>
+    <div className="terraCard-shot terraCard-wide">
       <div className="terraCardArt">
         <Image src="/hallo-terra/intro.webp" alt="" fill priority sizes="1200px" style={{ objectFit: "cover" }} />
       </div>

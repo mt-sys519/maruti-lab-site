@@ -48,6 +48,10 @@ export default function TerraMap() {
   // Shown when the wheel is turned without ctrl, so that "nothing happened"
   // says why. It takes itself away again.
   const [hint, setHint] = useState(false);
+  // Twice is teaching; every time is nagging. The page scrolls perfectly well
+  // under the wheel now, so after the convention has been said twice it stops
+  // being said.
+  const saidHint = useRef(0);
   const cardRef = useRef<HTMLElement>(null);
   // Which of the place's ways of speaking the card is showing.
   const [tongue, setTongue] = useState(0);
@@ -56,9 +60,11 @@ export default function TerraMap() {
   const [deviceVoices, setDeviceVoices] = useState<string[]>([]);
   // The phrase being held up for somebody else to read.
   const [showing, setShowing] = useState<{ text: string; language: string } | null>(null);
-  // null until the browser has been asked; the server cannot know whether
-  // this visitor has already been through the opening.
-  const [intro, setIntro] = useState<boolean | null>(null);
+  // True from the very first render, server included. It used to wait a frame
+  // so the map could paint underneath - and that frame is exactly what you
+  // saw: the site, then the drawing dropped over it. The opening is in the
+  // HTML now, so the first thing painted is the opening.
+  const [intro, setIntro] = useState(true);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<SVGGElement>(null);
@@ -94,18 +100,6 @@ export default function TerraMap() {
     return () => {
       live = false;
     };
-  }, []);
-
-  useEffect(() => {
-    // Every load, reload included. It was once a session, and once a session
-    // means you cannot see the thing again without clearing site data.
-    let show = true;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) show = false;
-    if (window.location.hash === "#map") show = false;
-    // On the next frame rather than now: the map gets to paint first, so the
-    // opening covers a drawn map and the dive lands on something real.
-    const frame = requestAnimationFrame(() => setIntro(show));
-    return () => cancelAnimationFrame(frame);
   }, []);
 
   const closeIntro = useCallback(() => setIntro(false), []);
@@ -571,7 +565,10 @@ export default function TerraMap() {
       // the world zooms instead. A trackpad pinch arrives here with ctrlKey
       // already set, so pinching still zooms without anyone being told.
       if (!e.ctrlKey && !e.metaKey) {
-        setHint(true);
+        if (saidHint.current < 2) {
+          saidHint.current += 1;
+          setHint(true);
+        }
         return;
       }
       e.preventDefault();

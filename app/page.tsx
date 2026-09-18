@@ -12,7 +12,7 @@ const works = [
     name: "HALLO TERRA",
     label: "WORLD GREETINGS",
     copy: "世界地図から場所を選ぶと、その土地の挨拶・お礼・お詫びが、現地の文字とカタカナの読みで出てきます。",
-    image: "/works/hallo-terra.jpg",
+    image: "/og/hallo-terra.jpg",
     href: "/hallo-terra",
     action: "使ってみる",
     external: false,

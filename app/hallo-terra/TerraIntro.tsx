@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import TerraLogo from "./TerraLogo";
 import { varieties } from "./content";
@@ -35,17 +34,13 @@ const POOL = Object.values(varieties)
 // looking for the widest run of pixels that are bright without being warm.
 // The globe is drawn a little larger than the space so the circle's soft edge
 // is covered rather than left showing as a ring.
-type Art = { src: string; x: number; y: number; size: number };
-const WIDE: Art = { src: "/hallo-terra/intro.webp", x: 49.5, y: 38.3, size: 34.0 };
-const TALL: Art = { src: "/hallo-terra/intro-tall.webp", x: 50.5, y: 41.7, size: 53.5 };
+// The numbers themselves live in the stylesheet, next to the drawing each one
+// belongs to: which drawing is shown is a media query, and a media query is
+// something the server can send in the HTML. Asking the window in JavaScript
+// meant the opening could not exist until JavaScript ran, and what ran first
+// was the site itself.
 
 export default function TerraIntro({ onDone }: { onDone: () => void }) {
-  // Which drawing, asked once at the width the rest of the page changes shape
-  // at. Read while the state is made rather than in an effect, which is safe
-  // here and nowhere else on the page: the opening is mounted a frame after
-  // the map by the client, so it never renders on the server and there is no
-  // first guess to be caught out by.
-  const [art] = useState<Art>(() => (window.matchMedia("(max-width: 860px)").matches ? TALL : WIDE));
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [leaving, setLeaving] = useState(false);
   const [word, setWord] = useState(0);
@@ -77,7 +72,12 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
   }, [onDone]);
 
   useEffect(() => {
-    const timer = window.setTimeout(leave, DWELL);
+    // Somebody who has asked for less movement gets none: the stylesheet keeps
+    // the opening off their screen, and this takes it off the page. On a tick
+    // rather than here, so nothing is set during the effect itself.
+    const still =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches || window.location.hash === "#map";
+    const timer = window.setTimeout(leave, still ? 0 : DWELL);
     const cycle = window.setInterval(() => setWord((n) => n + 1), WORD);
     return () => {
       window.clearTimeout(timer);
@@ -232,16 +232,24 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
           The zoom layer is separate from the name and the button: they belong
           to the page, not to the scene being dived into. */}
       <div className="terraIntroZoom">
-        <div className={`terraIntroScene${art === TALL ? " isTall" : ""}`}>
-          <Image src={art.src} alt="" fill priority sizes="100vw" style={{ objectFit: "cover" }} />
+        <div className="terraIntroScene">
+          {/* Two drawings of the same gathering, one lying down and one
+              standing up, chosen by the browser before a line of ours runs.
+              A plain picture element rather than next/image: these are already
+              webp at the size they are shown, and this one has to be in the
+              first paint. */}
+          <picture>
+            <source media="(max-width: 860px)" srcSet="/hallo-terra/intro-tall.webp" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/hallo-terra/intro.webp" alt="" fetchPriority="high" decoding="sync" />
+          </picture>
           <canvas
             ref={canvasRef}
             /* Width only: the height follows from aspect-ratio, because a
                percentage height here would answer to the frame, not the circle. */
-            style={{ left: `${art.x}%`, top: `${art.y}%`, width: `${art.size}%` }}
           />
           {!leaving && (
-            <p className="terraIntroWord" style={{ left: `${art.x}%`, top: `${art.y}%` }}>
+            <p className="terraIntroWord">
               <span key={word}>{greetings[word % Math.max(1, greetings.length)] ?? ""}</span>
             </p>
           )}

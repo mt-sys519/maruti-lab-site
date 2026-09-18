@@ -7,11 +7,13 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
-// HALLO TERRA's two pictures of itself: the card that goes out when the link
-// is shared, and the card on the front page. Both are photographs of real
-// pages in a real browser, the way the rest of the site's cards are made - the
+// HALLO TERRA's picture of itself: the card that goes out when the link is
+// shared, which is also the card on the front page. A photograph of a real
+// page in a real browser, the way the rest of the site's cards are made - the
 // drawing, the drawn wordmark and the rounded face are all things a standalone
-// rasteriser would get wrong.
+// rasteriser would get wrong. One size, 1200x630, because the front page fits
+// every card into the same box and a picture of another shape sits narrower
+// than its neighbours - which is exactly what the first one did.
 //
 // Chrome only writes PNG, and a PNG of a crayon drawing is a megabyte of paper
 // grain, so each shot is re-encoded as a JPEG on the way out: the same picture
@@ -55,6 +57,4 @@ async function shot(url, width, height, target) {
 }
 
 await mkdir(at("public/og"), { recursive: true });
-await mkdir(at("public/works"), { recursive: true });
-await shot(`http://localhost:${port}/hallo-terra/card?only=wide`, 1200, 630, "public/og/hallo-terra.jpg");
-await shot(`http://localhost:${port}/hallo-terra/card?only=works`, 900, 667, "public/works/hallo-terra.jpg");
+await shot(`http://localhost:${port}/hallo-terra/card`, 1200, 630, "public/og/hallo-terra.jpg");

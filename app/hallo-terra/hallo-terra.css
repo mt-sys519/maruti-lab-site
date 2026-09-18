@@ -40,7 +40,12 @@
   overflow: hidden;
   background: var(--terra-sea);
   touch-action: none;
-  overscroll-behavior: none;
+  /* Deliberately no overscroll-behavior. overflow:hidden makes this a scroll
+     container even though it never scrolls a pixel, and "none" on a scroll
+     container stops a wheel from chaining out to the page - so a wheel the map
+     politely declines went nowhere at all, which is worse than the zooming it
+     replaced. Touch cannot scroll it either way: touch-action is none and
+     every gesture here is handled. */
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
@@ -641,7 +646,6 @@
      picture does not reach simply cannot be seen. */
   background: #f8f4ec;
   cursor: pointer;
-  animation: terraIntroIn 0.6s ease both;
 }
 
 /* The dive lives on its own layer so that the name and the button, which
@@ -681,20 +685,27 @@
   transform: translate(-50%, -50%) scale(7);
 }
 
-/* The standing drawing is 9:16, so on a phone it covers the screen outright
-   and the globe lands where the drawing put it - no special centring, and no
-   crop that leaves a stranger's sleeve filling the window. */
-.terraIntroScene.isTall {
-  /* Plain 100%, and no dvh. The drawing is then exactly as wide as the window
-     and exactly its own shape, so the space it left for the globe is where
-     the arithmetic says it is on every browser. Sized off dvh it was not:
-     Chrome on Android gives a fixed layer the tall viewport and dvh the short
-     one, the two disagree while the address bar is on its way out, and the
-     globe sat up and to the left of the circle drawn for it. What the drawing
-     does not reach is its own cream, which is what that ground is for. */
+.terraIntroScene picture,
+.terraIntroScene img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  aspect-ratio: 1008 / 1792;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
+
+/* Where each drawing left its space for the globe, measured off the artwork:
+   the widest run of pixels that are bright without being warm, since the
+   paper is cream and the circle is not. The globe is drawn a little larger
+   than the space so the circle's soft edge is covered rather than left
+   showing as a ring. */
+.terraIntroScene canvas,
+.terraIntroWord {
+  left: 49.5%;
+  top: 38.3%;
+}
+.terraIntroScene canvas { width: 34%; }
 
 .terraIntroScene canvas {
   position: absolute;
@@ -762,10 +773,6 @@
 }
 .terraIntroWord span { display: inline-block; animation: terraWord 0.85s ease both; }
 
-@keyframes terraIntroIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 @keyframes terraCreep {
   from { transform: translate(-50%, -50%) scale(1); }
   to { transform: translate(-50%, -50%) scale(1.07); }
@@ -777,7 +784,29 @@
 }
 
 @media (max-width: 860px) {
+  /* The standing drawing. Plain 100%, and no dvh: the drawing is then exactly
+     as wide as the window and exactly its own shape, so the space it left for
+     the globe is where the arithmetic says on every browser. Sized off dvh it
+     was not - Chrome on Android gives a fixed layer the tall viewport and dvh
+     the short one, and while the address bar is on its way out the two
+     disagree. What the drawing does not reach is its own cream. */
+  .terraIntroScene {
+    width: 100%;
+    aspect-ratio: 1008 / 1792;
+  }
+  .terraIntroScene canvas,
+  .terraIntroWord {
+    left: 50.5%;
+    top: 41.7%;
+  }
+  .terraIntroScene canvas { width: 53.5%; }
   .terraIntroWord { width: 62%; font-size: clamp(19px, 5.4vw, 30px); }
+}
+
+/* Asked for less movement: the opening is never seen at all. It still takes
+   itself off the page a tick later, so nothing is left over it. */
+@media (prefers-reduced-motion: reduce) {
+  .terraIntro { display: none; }
 }
 
 /* ---- drawn boxes and drawn rules ------------------------------------ */
@@ -828,10 +857,8 @@
   background: #f8f4ec;
 }
 .terraCard-wide { width: 1200px; height: 630px; }
-.terraCard-works { width: 900px; height: 667px; }
 .terraCardArt { position: absolute; inset: 0; }
-.terraCard-wide .terraCardArt img { object-position: 50% 34%; }
-.terraCard-works .terraCardArt img { object-position: 50% 50%; }
+.terraCardArt img { object-position: 50% 34%; }
 
 /* The disc the drawing leaves empty lands in almost the same place at both
    sizes - a little above centre, about four hundred across - because the two
