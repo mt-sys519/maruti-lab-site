@@ -287,3 +287,63 @@
 }
 .terraAside h2 { font-size: 15px; margin-bottom: 12px; }
 .terraAside p { font-size: 12.5px; line-height: 1.95; }
+
+/* ---- the opening ---------------------------------------------------- */
+
+.terraIntro {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  cursor: pointer;
+  animation: terraIntroIn 0.6s ease both;
+}
+.terraIntroScene {
+  position: relative;
+  width: min(100%, 1180px);
+  aspect-ratio: 1168 / 784;
+  transform-origin: 50.09% 39.41%; /* the space the illustration left */
+  transition: transform 0.9s cubic-bezier(0.55, 0, 0.9, 0.55), opacity 0.9s ease-in;
+}
+.terraIntroScene canvas {
+  position: absolute;
+  z-index: 1;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+/* Going in scales the scene about the globe and lets the map, which has been
+   underneath the whole time, be what is left. */
+.terraIntro.leaving .terraIntroScene { transform: scale(7); opacity: 0; }
+.terraIntro.leaving { background: transparent; transition: background 0.5s ease 0.2s; }
+
+.terraIntroSkip {
+  position: absolute;
+  bottom: clamp(24px, 6vh, 54px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 13px 22px;
+  border: 1px solid var(--line);
+  background: rgba(242, 240, 233, 0.9);
+  color: var(--muted);
+  font: 500 11px/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+.terraIntroSkip:hover { border-color: var(--ink); color: var(--ink); }
+.terraIntro.leaving .terraIntroSkip { opacity: 0; transition: opacity 0.3s ease; }
+
+@keyframes terraIntroIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 860px) {
+  /* The art is wide and the phone is not, so it is allowed to run off the
+     sides: the globe sits in the middle either way. Wide enough that the
+     globe is about two thirds of the screen, and never so wide that it runs
+     off the top and bottom when the phone is on its side. */
+  .terraIntroScene { width: min(175%, 150vh); }
+}

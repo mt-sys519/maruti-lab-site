@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import TerraIntro from "./TerraIntro";
 import { KINDS, KIND_LABEL, places, varieties, type Country, type World } from "./content";
 
 /* The world is drawn once and shown three times, side by side. Miller is a
@@ -25,6 +26,9 @@ export default function TerraMap() {
   const [pointer, setPointer] = useState<Point>({ x: 0, y: 0 });
   const [query, setQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  // null until the browser has been asked; the server cannot know whether
+  // this visitor has already been through the opening.
+  const [intro, setIntro] = useState<boolean | null>(null);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<SVGGElement>(null);
@@ -42,6 +46,32 @@ export default function TerraMap() {
     return () => {
       live = false;
     };
+  }, []);
+
+  useEffect(() => {
+    // Once a visit, not once a lifetime: coming back tomorrow should feel like
+    // arriving again, but following a link twice in an hour should not.
+    let show = true;
+    try {
+      show = !sessionStorage.getItem("hallo-terra-seen");
+    } catch {
+      /* private windows refuse; the opening is not worth failing over */
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) show = false;
+    if (window.location.hash === "#map") show = false;
+    // On the next frame rather than now: the map gets to paint first, so the
+    // opening covers a drawn map and the dive lands on something real.
+    const frame = requestAnimationFrame(() => setIntro(show));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const closeIntro = useCallback(() => {
+    setIntro(false);
+    try {
+      sessionStorage.setItem("hallo-terra-seen", "1");
+    } catch {
+      /* see above */
+    }
   }, []);
 
   const byIso = useMemo(() => {
@@ -413,6 +443,7 @@ export default function TerraMap() {
 
   return (
     <div className="terra">
+      {intro && <TerraIntro onDone={closeIntro} />}
       <div className="terraStage" ref={stageRef}>
         {world ? (
           <svg className="terraSvg" aria-hidden="true">
