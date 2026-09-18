@@ -83,12 +83,25 @@ function packNumber(n) {
 }
 
 function ring(points, tolerance = TOLERANCE) {
-  const projected = simplify(points.map(project), tolerance);
+  const projected = points.map(project);
+  // Thin a country in proportion to its own size, not the world's. A quarter
+  // of a unit is nothing along the coast of Brazil and is most of Monaco: at a
+  // flat tolerance, forty-four countries came out as four-point diamonds. No
+  // ring gives up more than a fiftieth of its own width.
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of projected) {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const span = Math.max(maxX - minX, maxY - minY);
+  const thinned = simplify(projected, Math.min(tolerance, span / 50));
   let packed = "";
   let count = 0;
   let px = 0;
   let py = 0;
-  for (const [x, y] of projected) {
+  for (const [x, y] of thinned) {
     const qx = Math.round(x * 10);
     const qy = Math.round(y * 10);
     if (count && qx === px && qy === py) continue; // quantising makes duplicates
@@ -97,8 +110,9 @@ function ring(points, tolerance = TOLERANCE) {
     py = qy;
     count++;
   }
-  // A ring reduced to a speck is not a coastline.
-  return count > 4 ? { packed: `${packed}!`, points: projected } : null;
+  // Three points is a shape. Fewer than that is a place with no coastline in
+  // the data at all, and those get a mark of their own instead.
+  return count >= 3 ? { packed: `${packed}!`, points: thinned } : null;
 }
 
 // A diamond two units across: visible as a dot, and something for the finger

@@ -52,7 +52,11 @@ export default function TerraMap() {
 
   useEffect(() => {
     let live = true;
-    fetch("/hallo-terra/world.json")
+    // The number on the end is not decoration. The file's format changed once
+    // already - coordinates became steps - and a browser holding yesterday's
+    // copy while running today's code would unfold text that is not packed and
+    // draw nonsense. Bump it whenever the shape of the file changes.
+    fetch("/hallo-terra/world.json?v=2")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((data: World) => {
         // Unfolded once, here, rather than in every place that wants a shape.
@@ -150,7 +154,7 @@ export default function TerraMap() {
     if (!state.data) {
       if (state.asking) return;
       state.asking = true;
-      fetch("/hallo-terra/world-detail.json")
+      fetch("/hallo-terra/world-detail.json?v=2")
         .then((r) => r.json())
         .then((data: Record<string, string>) => {
           state.data = data;
