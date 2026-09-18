@@ -316,34 +316,33 @@
   margin: 0 auto;
   padding: 40px clamp(22px, 6vw, 60px) 90px;
 }
-/* Each piece of writing sits on its own sheet of paper, in its own colour. */
+/* The writing sits on the page; the shapes sit behind it and are allowed to
+   wander outside their section. */
 .terraAbout section,
-.terraAbout .terraAside { position: relative; padding: 30px clamp(20px, 4vw, 34px) 34px; }
-.terraAbout section + section { margin-top: 30px; }
+.terraAbout .terraAside { position: relative; padding: 26px clamp(18px, 3vw, 30px) 30px; }
+.terraAbout section + section { margin-top: 26px; }
+.terraAbout section > :not(.terraShapes),
+.terraAbout .terraAside > :not(.terraShapes) { position: relative; }
 
-/* Behind the words but not behind the page: a negative index here would put
-   the sheet under the ground it is lying on. */
-.terraPatch {
+.terraShapes {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  display: block;
+  pointer-events: none;
 }
-.terraAbout section > :not(.terraPatch),
-.terraAbout .terraAside > :not(.terraPatch) { position: relative; }
+.terraShape { position: absolute; aspect-ratio: 1; height: auto; overflow: visible; }
+.terraShapeFill { fill: currentColor; opacity: 0.13; stroke: none; }
+.terraShapeLine { fill: none; stroke: currentColor; stroke-width: 1.6; opacity: 0.38; stroke-linejoin: round; }
 
-/* Laid down by hand, so no two lie at quite the same angle - and the paper
-   leans, never the words on it. */
-.terraAbout section:nth-child(4n + 1) .terraPatch { transform: rotate(-0.45deg); }
-.terraAbout section:nth-child(4n + 2) .terraPatch { transform: rotate(0.35deg); }
-.terraAbout section:nth-child(4n + 3) .terraPatch { transform: rotate(0.55deg); }
-.terraAbout section:nth-child(4n) .terraPatch { transform: rotate(-0.3deg); }
-@media (prefers-reduced-motion: no-preference) {
-  .terraPatch { transition: transform 0.4s ease; }
-  .terraAbout section:hover .terraPatch { transform: rotate(0deg) scale(1.005); }
+/* Out in the margins on a wide screen; on a narrow one there are no margins
+   to put them in, so they hide rather than lie across the reading. */
+@media (max-width: 900px) {
+  .terraShape { opacity: 0.55; }
 }
-.terraPatchFill { fill: currentColor; opacity: 0.11; stroke: none; }
-.terraPatchLine { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: 0.55; stroke-linejoin: round; }
+@media (max-width: 620px) {
+  .terraShapes { display: none; }
+}
+
 .terraAbout h2 {
   margin: 0 0 18px;
   font-family: var(--terra-hand);

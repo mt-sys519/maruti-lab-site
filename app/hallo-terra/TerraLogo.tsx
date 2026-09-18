@@ -1,6 +1,6 @@
 import {
   FRAMES,
-  PATCHES,
+  BLOBS,
   RULE,
   MARK,
   MARK_MARKER,
@@ -103,27 +103,52 @@ export function TerraRule() {
 
 
 /**
- * A sheet of coloured paper for the writing to sit on. The fill is the colour
- * let right down so words stay readable on it; the drawn edge is the colour
- * at full strength. Four sheets in rotation, so a column of them is not one
- * rectangle repeated down the page.
+ * Shapes behind the writing, scattered rather than framing it.
+ *
+ * Each is drawn in a square box and shown square, never stretched: a wobble
+ * pulled seven times wider than it was drawn stops reading as a hand and
+ * starts reading as a slack curve, which is what the first attempt at this
+ * did. Two or three per section, some of them running off the edges, so the
+ * page looks like paper someone put shapes on rather than a stack of cards.
  */
-export function TerraPatch({ tone, variant = 0 }: { tone: string; variant?: number }) {
-  const patch = PATCHES[variant % PATCHES.length];
+const SCATTER: { blob: number; x: string; y: string; size: string; turn: number }[][] = [
+  [
+    { blob: 0, x: "-30%", y: "-14%", size: "clamp(120px, 24vw, 190px)", turn: -8 },
+    { blob: 3, x: "96%", y: "48%", size: "clamp(64px, 12vw, 96px)", turn: 14 },
+  ],
+  [
+    { blob: 1, x: "92%", y: "-20%", size: "clamp(115px, 23vw, 180px)", turn: 10 },
+    { blob: 4, x: "-24%", y: "55%", size: "clamp(58px, 11vw, 88px)", turn: -16 },
+  ],
+  [
+    { blob: 2, x: "-33%", y: "26%", size: "clamp(130px, 26vw, 205px)", turn: 6 },
+    { blob: 5, x: "98%", y: "-10%", size: "clamp(56px, 10vw, 84px)", turn: -10 },
+  ],
+  [
+    { blob: 4, x: "95%", y: "22%", size: "clamp(118px, 24vw, 185px)", turn: -12 },
+    { blob: 0, x: "-27%", y: "-10%", size: "clamp(60px, 11vw, 92px)", turn: 18 },
+  ],
+];
+
+export function TerraShapes({ tone, at = 0 }: { tone: string; at?: number }) {
+  const shapes = SCATTER[at % SCATTER.length];
   return (
-    <svg
-      className="terraPatch"
-      viewBox="0 0 100 60"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      style={{ color: `var(--terra-${tone})` }}
-    >
-      {patch.fill.map((d) => (
-        <path key={d} d={d} className="terraPatchFill" />
+    <span className="terraShapes" aria-hidden="true" style={{ color: `var(--terra-${tone})` }}>
+      {shapes.map((shape, i) => (
+        <svg
+          key={i}
+          className="terraShape"
+          viewBox="0 0 100 100"
+          style={{ left: shape.x, top: shape.y, width: shape.size, transform: `rotate(${shape.turn}deg)` }}
+        >
+          {BLOBS[shape.blob].fill.map((d) => (
+            <path key={d} d={d} className="terraShapeFill" />
+          ))}
+          {BLOBS[shape.blob].line.map((d) => (
+            <path key={d} d={d} className="terraShapeLine" />
+          ))}
+        </svg>
       ))}
-      {patch.line.map((d) => (
-        <path key={d} d={d} className="terraPatchLine" vectorEffect="non-scaling-stroke" />
-      ))}
-    </svg>
+    </span>
   );
 }
