@@ -103,13 +103,13 @@ export default function TerraMap() {
     if (!stage || !world) return;
     const w = stage.clientWidth;
     const h = stage.clientHeight;
-    // Pulled all the way back, the world fills the frame from top to bottom
-    // and no further: a band of empty sea above and below is not more world,
-    // it is just less map. East and west it goes on repeating, so there is
-    // nothing to fit there - only enough scale left that three copies still
-    // cover a very wide screen. Zoomed all the way in, a country the size of
-    // Portugal fills the frame.
-    const min = Math.max(h / world.height, (w * 0.4) / world.width);
+    // Pulled all the way back, the world covers the frame both ways and no
+    // further. Height alone is not enough: on a wide screen a world only as
+    // tall as the frame is narrower than it, and the copy beside it comes into
+    // view - two Japans on one screen. Covering the width instead means the
+    // seam can still be panned through, but is never on screen twice at once.
+    // Zoomed all the way in, a country the size of Portugal fills the frame.
+    const min = Math.max(h / world.height, w / world.width);
     limits.current = { min, max: min * 9 };
     return min;
   }, [world]);
