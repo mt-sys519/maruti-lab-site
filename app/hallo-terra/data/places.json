@@ -38,7 +38,8 @@
   "CAN": {
     "capital": "オタワ",
     "varieties": [
-      "en-CA"
+      "en-CA",
+      "fr-CA"
     ],
     "gesture": "握手など",
     "culture": "英語とフランス語が公用語で、地域によって日常的に聞く言語の比重が異なります。",
@@ -69,8 +70,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "DEU": {
     "capital": "ベルリン",
@@ -88,8 +90,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "EGY": {
     "capital": "カイロ",
@@ -116,8 +119,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "FIN": {
     "capital": "ヘルシンキ",
@@ -162,8 +166,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "IDN": {
     "capital": "ジャカルタ",
@@ -190,8 +195,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "ISR": {
     "capital": "エルサレム",
@@ -200,8 +206,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "ITA": {
     "capital": "ローマ",
@@ -264,8 +271,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "NLD": {
     "capital": "アムステルダム",
@@ -283,8 +291,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "NPL": {
     "capital": "カトマンズ",
@@ -293,8 +302,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "NZL": {
     "capital": "ウェリントン",
@@ -393,8 +403,9 @@
     ],
     "gesture": null,
     "culture": null,
-    "note": "文化メモは未検証。公開前に要レビュー。",
-    "sources": []
+    "note": null,
+    "sources": [],
+    "internalNote": "文化メモは未検証。公開前に要レビュー。"
   },
   "USA": {
     "capital": "ワシントンD.C.",

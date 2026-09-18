@@ -42,7 +42,7 @@
     }
   },
   "ar-MA": {
-    "name": "アラビア語・アマジグ語ほか",
+    "name": "モロッコ・アラビア語",
     "speech": "ar-MA",
     "expressions": {
       "greeting": {
@@ -204,7 +204,7 @@
     }
   },
   "en-AU": {
-    "name": "英語ほか",
+    "name": "英語",
     "speech": "en-AU",
     "expressions": {
       "greeting": {
@@ -225,28 +225,28 @@
     }
   },
   "en-CA": {
-    "name": "英語・フランス語ほか",
+    "name": "カナダ英語",
     "speech": "en-CA",
     "expressions": {
       "greeting": {
-        "text": "Hello / Bonjour",
-        "reading": "ハロー / ボンジュール",
+        "text": "Hello",
+        "reading": "ハロー",
         "meaning": "こんにちは"
       },
       "thanks": {
-        "text": "Thank you / Merci",
-        "reading": "サンキュー / メルシー",
+        "text": "Thank you",
+        "reading": "サンキュー",
         "meaning": "ありがとう"
       },
       "apology": {
-        "text": "Sorry / Désolé(e)",
-        "reading": "ソーリー / デゾレ",
+        "text": "Sorry",
+        "reading": "ソーリー",
         "meaning": "すみません"
       }
     }
   },
   "en-GB": {
-    "name": "英語ほか",
+    "name": "英語",
     "speech": "en-GB",
     "expressions": {
       "greeting": {
@@ -267,7 +267,7 @@
     }
   },
   "en-US": {
-    "name": "英語ほか",
+    "name": "英語",
     "speech": "en-US",
     "expressions": {
       "greeting": {
@@ -288,7 +288,7 @@
     }
   },
   "es-AR": {
-    "name": "スペイン語ほか",
+    "name": "スペイン語",
     "speech": "es-AR",
     "expressions": {
       "greeting": {
@@ -309,7 +309,7 @@
     }
   },
   "es-CL": {
-    "name": "スペイン語ほか",
+    "name": "スペイン語",
     "speech": "es-CL",
     "expressions": {
       "greeting": {
@@ -330,7 +330,7 @@
     }
   },
   "es-ES": {
-    "name": "スペイン語ほか",
+    "name": "スペイン語",
     "speech": "es-ES",
     "expressions": {
       "greeting": {
@@ -351,7 +351,7 @@
     }
   },
   "es-MX": {
-    "name": "スペイン語ほか",
+    "name": "スペイン語",
     "speech": "es-MX",
     "expressions": {
       "greeting": {
@@ -372,7 +372,7 @@
     }
   },
   "es-PE": {
-    "name": "スペイン語・ケチュア語ほか",
+    "name": "スペイン語",
     "speech": "es-PE",
     "expressions": {
       "greeting": {
@@ -471,7 +471,7 @@
     }
   },
   "fi-FI": {
-    "name": "フィンランド語・スウェーデン語",
+    "name": "フィンランド語",
     "speech": "fi-FI",
     "expressions": {
       "greeting": {
@@ -492,7 +492,7 @@
     }
   },
   "fil-PH": {
-    "name": "フィリピノ語・英語ほか",
+    "name": "フィリピノ語",
     "speech": "fil-PH",
     "expressions": {
       "greeting": {
@@ -508,6 +508,27 @@
       "apology": {
         "text": "Paumanhin",
         "reading": "パウマンヒン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "fr-CA": {
+    "name": "カナダフランス語",
+    "speech": "fr-CA",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
         "meaning": "すみません"
       }
     }
@@ -573,7 +594,7 @@
     }
   },
   "hi-IN": {
-    "name": "ヒンディー語ほか多数",
+    "name": "ヒンディー語",
     "speech": "hi-IN",
     "expressions": {
       "greeting": {
@@ -633,7 +654,7 @@
     }
   },
   "id-ID": {
-    "name": "インドネシア語ほか",
+    "name": "インドネシア語",
     "speech": "id-ID",
     "expressions": {
       "greeting": {
@@ -717,7 +738,7 @@
     }
   },
   "mi-NZ": {
-    "name": "英語・マオリ語ほか",
+    "name": "マオリ語",
     "speech": "mi-NZ",
     "expressions": {
       "greeting": {
@@ -939,7 +960,7 @@
     }
   },
   "ru-RU": {
-    "name": "ロシア語ほか",
+    "name": "ロシア語",
     "speech": "ru-RU",
     "expressions": {
       "greeting": {
@@ -981,7 +1002,7 @@
     }
   },
   "sw-KE": {
-    "name": "スワヒリ語・英語ほか",
+    "name": "スワヒリ語",
     "speech": "sw-KE",
     "expressions": {
       "greeting": {
@@ -1104,7 +1125,7 @@
     }
   },
   "zh-CN": {
-    "name": "中国語（普通話）ほか",
+    "name": "中国語（普通話）",
     "speech": "zh-CN",
     "expressions": {
       "greeting": {
@@ -1125,7 +1146,7 @@
     }
   },
   "zu-ZA": {
-    "name": "ズールー語・英語ほか多数",
+    "name": "ズールー語",
     "speech": "zu-ZA",
     "expressions": {
       "greeting": {

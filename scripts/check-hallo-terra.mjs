@@ -51,6 +51,11 @@ for (const [iso, place] of Object.entries(places)) {
   if (!/^[A-Z]{3}$/.test(iso)) complain(iso, "場所のキーはISOの3文字コードです");
   else if (!onTheMap.has(iso)) complain(iso, "この国コードは地図にありません（地図に出せません）");
   if (!place.varieties?.length) complain(iso, "varieties が空です");
+  // note is printed on the page and internalNote is not, so a working memo
+  // that lands in the wrong one is a memo published to the world.
+  if (place.note && /未検証|要レビュー|要確認|TODO/i.test(place.note)) {
+    complain(iso, `note は読者に出ます。作業メモは internalNote へ: ${place.note}`);
+  }
   for (const id of place.varieties ?? []) {
     if (!varieties[id]) complain(iso, `varieties.json にない言語変種を指しています: ${id}`);
   }

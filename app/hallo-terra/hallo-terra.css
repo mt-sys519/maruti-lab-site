@@ -133,6 +133,25 @@
 .terraCard h2 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0.02em; }
 .terraEn { margin: 7px 0 26px; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
 
+/* More than one way of speaking here: the choice is shown, not hidden. */
+.terraTongues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.terraTongues button {
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font: 500 11px/1 "Yu Gothic UI", sans-serif;
+  cursor: pointer;
+}
+.terraTongues button.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
 .terraVariety h3 {
   margin: 0 0 14px;
   padding-bottom: 9px;

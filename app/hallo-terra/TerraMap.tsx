@@ -26,6 +26,8 @@ export default function TerraMap() {
   const [pointer, setPointer] = useState<Point>({ x: 0, y: 0 });
   const [query, setQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Which of the place's ways of speaking the card is showing.
+  const [tongue, setTongue] = useState(0);
   // null until the browser has been asked; the server cannot know whether
   // this visitor has already been through the opening.
   const [intro, setIntro] = useState<boolean | null>(null);
@@ -225,6 +227,7 @@ export default function TerraMap() {
     (country: Country | null, move = true) => {
       if (!country) return;
       setSelected(country.iso);
+      setTongue(0);
       setSheetOpen(true);
       if (move) centreOn(country);
     },
@@ -418,13 +421,13 @@ export default function TerraMap() {
   const sources = useMemo(() => {
     if (!place) return [];
     const all = [...(place.sources ?? [])];
-    for (const id of place.varieties) {
-      for (const expression of Object.values(varieties[id]?.expressions ?? {})) {
-        all.push(...(expression.sources ?? []));
-      }
+    const ids = place.varieties.filter((id) => varieties[id]);
+    const showing = ids[Math.min(tongue, ids.length - 1)];
+    for (const expression of Object.values(varieties[showing]?.expressions ?? {})) {
+      all.push(...(expression.sources ?? []));
     }
     return [...new Set(all.filter(Boolean))];
-  }, [place]);
+  }, [place, tongue]);
 
   const found = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -533,12 +536,35 @@ export default function TerraMap() {
             </p>
 
             {place ? (
-              place.varieties.map((id) => {
+              (() => {
+                // A country is not a language. The card says "some of what is
+                // said here", names the language every time, and lets the ones
+                // with more than one be switched between - so a single entry
+                // never reads as the whole of a country's speech.
+                const ids = place.varieties.filter((id) => varieties[id]);
+                const id = ids[Math.min(tongue, ids.length - 1)];
                 const variety = varieties[id];
                 if (!variety) return null;
                 return (
-                  <section key={id} className="terraVariety">
-                    <h3>{variety.name}</h3>
+                  <section className="terraVariety">
+                    <p className="terraKind">この場所で紹介することば</p>
+                    {ids.length > 1 && (
+                      <div className="terraTongues">
+                        {ids.map((each, i) => (
+                          <button
+                            key={each}
+                            type="button"
+                            className={i === Math.min(tongue, ids.length - 1) ? "on" : undefined}
+                            onClick={() => setTongue(i)}
+                          >
+                            {varieties[each].name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {/* With the buttons above, the chosen one already says
+                        the name; without them, this is where it is said. */}
+                    {ids.length === 1 && <h3>{variety.name}</h3>}
                     {KINDS.map((kind) => {
                       const expression = variety.expressions[kind];
                       if (!expression) return null;
@@ -567,7 +593,7 @@ export default function TerraMap() {
                     })}
                   </section>
                 );
-              })
+              })()
             ) : (
               <p className="terraEmpty">この場所の挨拶はまだ書けていません。書けたところから増やしていきます。</p>
             )}

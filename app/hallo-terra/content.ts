@@ -55,7 +55,10 @@ export type Place = {
   varieties: string[];
   gesture?: string | null;
   culture?: string | null;
+  /** A line for the reader. */
   note?: string | null;
+  /** A line for whoever is writing this up. Never rendered, ever. */
+  internalNote?: string | null;
   sources?: string[] | null;
 };
 
