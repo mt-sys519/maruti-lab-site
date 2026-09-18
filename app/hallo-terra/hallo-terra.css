@@ -312,7 +312,77 @@
   letter-spacing: 0.08em;
   cursor: pointer;
 }
-.terraSpeak:hover { opacity: 0.75; }
+.terraSpeak:hover, .terraShow:hover { opacity: 0.75; }
+.terraDoing { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.terraShow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 8px 14px 8px 12px;
+  border: 0;
+  background: none;
+  color: #5c5a50;
+  font: 700 10px/1 var(--terra-hand);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.terraShow .terraFrame { color: var(--line); }
+/* Said where the silence would otherwise be. */
+.terraNoSound {
+  margin: 9px 0 0;
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: #6d6a5e;
+}
+
+/* The phrase, held up for somebody else to read. */
+.terraShown {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 20px;
+  padding: 8vh 6vw;
+  background: var(--terra-card);
+  cursor: pointer;
+}
+.terraShownText {
+  margin: 0;
+  max-width: 100%;
+  font-size: clamp(38px, 11vw, 120px);
+  line-height: 1.25;
+  font-weight: 600;
+  text-align: center;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.terraShownLanguage {
+  margin: 0;
+  font: 700 12px/1 var(--terra-hand);
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--terra-rose) 72%, #4b3740);
+}
+.terraShownSheet {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.terraShownText, .terraShownLanguage, .terraShownClose { position: relative; pointer-events: none; }
+.terraShownClose {
+  margin-top: 10px;
+  padding: 12px 22px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 700 11px/1 var(--terra-hand);
+  letter-spacing: 0.14em;
+}
 .terraSpeakMark { display: grid; place-items: center; width: 15px; height: 15px; }
 .terraSpeakMark svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linecap: round; stroke-linejoin: round; }
 

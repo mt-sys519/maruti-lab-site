@@ -93,3 +93,8 @@ export function SearchMark(props: IconProps) {
 export function SoundMark(props: IconProps) {
   return <Icon {...props}><path d='M4.2 9.4h3.1L11.9 5.6v12.8L7.3 14.6H4.2z'/><path d='M15.1 9.4a4.2 4.2 0 0 1 0 5.2'/><path d='M17.8 7a7.7 7.7 0 0 1 0 10'/></Icon>;
 }
+
+/** 相手に見せる */
+export function ShowMark(props: IconProps) {
+  return <Icon {...props}><rect x='3.2' y='4.4' width='17.6' height='13' rx='2'/><path d='M12 20.4v-3'/><path d='M8.6 20.4h6.8'/></Icon>;
+}

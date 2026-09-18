@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TerraIntro from "./TerraIntro";
 import { TerraFace, TerraFrame } from "./TerraLogo";
-import { SearchMark, SoundMark } from "../icons";
+import { SearchMark, ShowMark, SoundMark } from "../icons";
 import {
   KINDS,
   KIND_LABEL,
@@ -51,6 +51,8 @@ export default function TerraMap() {
   // Which languages this particular device can speak, which is nothing to do
   // with us and everything to do with what it has installed.
   const [deviceVoices, setDeviceVoices] = useState<string[]>([]);
+  // The phrase being held up for somebody else to read.
+  const [showing, setShowing] = useState<{ text: string; language: string } | null>(null);
   // null until the browser has been asked; the server cannot know whether
   // this visitor has already been through the opening.
   const [intro, setIntro] = useState<boolean | null>(null);
@@ -718,6 +720,20 @@ export default function TerraMap() {
         </div>
       </div>
 
+      {showing && (
+        // Held up to be read by somebody who does not read Japanese: the
+        // phrase in its own script, as large as the screen allows, and
+        // nothing else on the screen to explain away.
+        <div className="terraShown" role="dialog" aria-label="相手に見せる">
+          {/* The whole screen closes it, but the screen is a button rather
+              than a div with a click handler, so a keyboard can close it too. */}
+          <button type="button" className="terraShownSheet" onClick={() => setShowing(null)} aria-label="とじる" />
+          <p className="terraShownText">{showing.text}</p>
+          <p className="terraShownLanguage">{showing.language}</p>
+          <span className="terraShownClose" aria-hidden="true">とじる</span>
+        </div>
+      )}
+
       <aside className={`terraCard${sheetOpen ? " open" : ""}`} aria-live="polite">
         <button type="button" className="terraGrip" onClick={() => setSheetOpen((v) => !v)} aria-label={sheetOpen ? "閉じる" : "開く"}>
           <i />
@@ -811,6 +827,18 @@ export default function TerraMap() {
                               {expression.usage}
                             </p>
                           )}
+                          <div className="terraDoing">
+                            <button
+                              type="button"
+                              className="terraShow"
+                              onClick={() => setShowing({ text: expression.text, language: variety.name })}
+                            >
+                              <TerraFrame variant={kind === "greeting" ? 1 : kind === "thanks" ? 2 : 0} />
+                              <span className="terraSpeakMark" aria-hidden="true">
+                                <ShowMark />
+                              </span>
+                              相手に見せる
+                            </button>
                           {canSpeak(id, kind, variety.speech) && (
                             <button
                               type="button"
@@ -823,6 +851,12 @@ export default function TerraMap() {
                               </span>
                               音で聞く
                             </button>
+                          )}
+                          </div>
+                          {!canSpeak(id, kind, variety.speech) && (
+                            <p className="terraNoSound">
+                              音声はまだありません。よければ、お相手に発音を聞いてみてください。
+                            </p>
                           )}
                         </div>
                       );
