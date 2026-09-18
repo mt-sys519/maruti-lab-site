@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import { SiteFooter } from "../SiteFooter";
+import { SiteHeader } from "../SiteHeader";
 
 // Everything under /blog that does not exist ends here, with a real 404 rather
 // than a page that answers 200 and merely asks not to be indexed. A soft 404
@@ -9,10 +10,7 @@ import { SiteFooter } from "../SiteFooter";
 export default function NoteNotFound() {
   return (
     <main className="legalPage notePage">
-      <header className="legalHeader">
-        <a href="/">Maruti Lab</a>
-        <a href="/blog">LabNote一覧</a>
-      </header>
+      <SiteHeader />
       <article className="legalDocument">
         <p className="eyebrow">404</p>
         <h1>そのページはありません</h1>

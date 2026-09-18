@@ -134,8 +134,17 @@ export default function Home() {
       {posts.length > 0 && (
         <section id="notes" className="notesSection" aria-labelledby="notes-title">
           <div className="sectionHeading notesHeading">
-            <p className="eyebrow">LABNOTE</p>
-            <h2 id="notes-title">つくる途中の考えごと。</h2>
+            {/* LabNote is a thing this lab made and named, the way MarutiBit
+                and YURAMEKI are, so its name is the heading rather than a
+                13px label above one. The eyebrow that used to say LABNOTE is
+                gone with it - the wordmark says it. */}
+            <h2 id="notes-title" className="notesMark">
+              <a className="notesMarkLink" href="/blog">
+                <span className="notesMarkIcon" aria-hidden="true"><NoteMark /></span>
+                <span className="notesMarkWord">LabNote</span>
+              </a>
+            </h2>
+            <p className="notesCatch">つくる途中の考えごと。</p>
           </div>
           {/* Each note already has a square card drawn for it by
               scripts/capture-note-ogp.mjs, sitting unused in public/og/blog.

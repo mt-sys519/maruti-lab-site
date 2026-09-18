@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { formatDate, lastChanged, postBySlug, posts } from "../posts";
+import { SiteHeader } from "../../SiteHeader";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -52,10 +53,7 @@ export default async function BlogPost({ params }: Props) {
   };
   return (
     <main className="legalPage notePage">
-      <header className="legalHeader">
-        <a href="/">Maruti Lab</a>
-        <a href="/blog">LabNote一覧</a>
-      </header>
+      <SiteHeader />
       <div className="noteSheet">
       <article className="postDocument">
         <script

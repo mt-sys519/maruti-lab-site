@@ -282,7 +282,7 @@ test("the index runs newest first, and a time settles a shared day", async () =>
     .map((post) => ({ slug: post.data.slug || post.slug, stamp: post.data.date }))
     .sort((a, b) => (a.stamp < b.stamp ? 1 : a.stamp > b.stamp ? -1 : 0));
   const html = await (await render("/blog")).text();
-  const list = html.slice(html.indexOf('class="postList"'));
+  const list = html.slice(html.indexOf('class="postGrid"'));
   const shown = [...list.matchAll(/href="\/blog\/([a-z0-9-]+)"/g)].map((m) => m[1]);
   assert.deepEqual(shown.slice(0, notes.length), notes.map((n) => n.slug));
 });
