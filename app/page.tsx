@@ -9,6 +9,15 @@ const yuramekiUrl = "/yurameki";
 
 const works = [
   {
+    name: "HALLO TERRA",
+    label: "WORLD GREETINGS",
+    copy: "世界地図から場所を選ぶと、その土地の挨拶・お礼・お詫びが、現地の文字とカタカナの読みで出てきます。",
+    image: "/works/hallo-terra.jpg",
+    href: "/hallo-terra",
+    action: "使ってみる",
+    external: false,
+  },
+  {
     name: "SwiftCrop",
     label: "IMAGE UTILITY",
     copy: "画像を外へ送らず、必要な比率とサイズへ。複数枚もブラウザだけで整える画像ツール。",

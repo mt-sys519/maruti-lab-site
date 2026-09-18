@@ -8,6 +8,7 @@ const pages = [
   "/",
   "/clock",
   "/4track",
+  "/hallo-terra",
   "/swiftcrop",
   "/swiftcrop/faq",
   "/color-refine",

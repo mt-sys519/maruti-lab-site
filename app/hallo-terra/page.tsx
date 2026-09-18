@@ -12,11 +12,6 @@ export const metadata: Metadata = {
     "世界地図から国や地域を選ぶと、その土地の挨拶・お礼・お詫びが、現地の文字とカタカナの読み、意味、挨拶の仕草とあわせて出てきます。登録不要、ブラウザだけで動く無料の世界挨拶地図。",
   keywords: ["世界の挨拶", "挨拶 世界", "こんにちは 各国語", "ありがとう 世界の言葉", "世界地図", "HALLO TERRA"],
   alternates: { canonical: "https://marutilab.com/hallo-terra" },
-  // The URL is live before the content is. An unlinked page is still a page
-  // anyone can reach, and a map with 36 countries written up is exactly the
-  // thin thing not to hand a crawler; this comes off when HALLO TERRA joins
-  // Works and the sitemap.
-  robots: { index: false, follow: true },
   // Its own tab icon: the mark with its meridian dropped, because at thirty-two
   // pixels a line inside a circle is a smudge inside a circle. Drawn once as
   // SVG, which is what almost everything asks for now, with a PNG behind it.
