@@ -554,12 +554,35 @@ export default function TerraMap() {
         </button>
         {country ? (
           <div className="terraCardBody">
-            <p className="terraEyebrow">{country.region || "PLACE"}</p>
-            <h2>{country.ja}</h2>
-            <p className="terraEn">
-              {country.en}
-              {place?.capital ? ` · 首都 ${place.capital}` : ""}
-            </p>
+            {/* Its own outline beside its name: every place has one, it needs
+                no picture finding or licensing, and it cannot flatter or
+                caricature anybody. The frame is the portrait box worked out
+                with the map data: the archipelago but not the far-flung
+                speck, so Japan keeps Hokkaido and Chile loses Easter
+                Island. */}
+            <div className="terraHead">
+              <div>
+                <p className="terraEyebrow">{country.region || "PLACE"}</p>
+                <h2>{country.ja}</h2>
+                <p className="terraEn">
+                  {country.en}
+                  {place?.capital ? ` · 首都 ${place.capital}` : ""}
+                </p>
+              </div>
+              {(() => {
+                const [x0, y0, x1, y1] = country.crop ?? country.box;
+                const pad = Math.max(3, (x1 - x0 + y1 - y0) * 0.09);
+                return (
+                  <svg
+                    className="terraOutline"
+                    viewBox={`${x0 - pad} ${y0 - pad} ${x1 - x0 + pad * 2} ${y1 - y0 + pad * 2}`}
+                    aria-hidden="true"
+                  >
+                    <path d={country.d} vectorEffect="non-scaling-stroke" />
+                  </svg>
+                );
+              })()}
+            </div>
 
             {place ? (
               (() => {

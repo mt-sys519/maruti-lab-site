@@ -87,6 +87,8 @@ export type Country = {
   region: string;
   label: [number, number];
   box: [number, number, number, number];
+  /** The frame that holds the shape people picture, outliers left out. */
+  crop: [number, number, number, number];
   small: boolean;
   d: string;
 };

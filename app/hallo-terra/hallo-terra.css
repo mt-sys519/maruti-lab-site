@@ -147,6 +147,23 @@
 .terraCardBody { padding: 30px 26px 60px; }
 .terraEyebrow { margin: 0 0 10px; font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: 0.16em; color: var(--muted); }
 .terraCard h2 { margin: 0; font-family: var(--terra-hand); font-size: 30px; font-weight: 700; letter-spacing: 0.02em; }
+/* The name on the left, the country's own shape on the right. */
+.terraHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.terraHead > div { min-width: 0; }
+.terraOutline {
+  flex: 0 0 auto;
+  width: 82px;
+  height: 72px;
+  margin-top: 2px;
+  overflow: visible;
+  fill: color-mix(in srgb, var(--terra-greeting) 16%, transparent);
+  stroke: var(--terra-greeting);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
 .terraEn { margin: 7px 0 26px; font-size: 12px; letter-spacing: 0.06em; color: #6d6a5e; }
 
 /* More than one way of speaking here: the choice is shown, not hidden. */

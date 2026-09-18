@@ -121,6 +121,37 @@ function bbox(d) {
   return [round(minX), round(minY), round(maxX), round(maxY)];
 }
 
+// The shape people picture when they hear a country's name, as a box.
+//
+// The full extent is no use for a portrait: the United States measured to the
+// Aleutians, or Russia wrapped past the antimeridian, is a band the width of
+// the world with specks in it. But the largest single piece is no use either -
+// that would draw Japan as Honshu and throw away Hokkaido. So: start from the
+// biggest piece, and take in any other piece that is a real part of the
+// picture (at least a twelfth of it) as long as doing so does not pull the box
+// more than three times wider than the piece we started with.
+function portrait(d) {
+  const pieces = d
+    .split("M")
+    .slice(1)
+    .map((part) => bbox(`M${part}`))
+    .map((box) => ({ box, w: box[2] - box[0], area: (box[2] - box[0]) * (box[3] - box[1]) }))
+    .sort((a, b) => b.area - a.area);
+  if (!pieces.length) return null;
+  const first = pieces[0];
+  const box = [...first.box];
+  for (const piece of pieces.slice(1)) {
+    if (piece.area < first.area / 12) continue;
+    const width = Math.max(box[2], piece.box[2]) - Math.min(box[0], piece.box[0]);
+    if (width > Math.max(first.w * 3, 40)) continue;
+    box[0] = Math.min(box[0], piece.box[0]);
+    box[1] = Math.min(box[1], piece.box[1]);
+    box[2] = Math.max(box[2], piece.box[2]);
+    box[3] = Math.max(box[3], piece.box[3]);
+  }
+  return box.map(round);
+}
+
 // Shoelace on the projected rings: a rough on-screen area, used only to decide
 // which countries need a tap dot of their own.
 function area(geometry) {
@@ -193,6 +224,7 @@ for (const feature of geo.features) {
   const d = toPath(feature.geometry) || speck(label);
   countries.push({
     box: bbox(d),
+    crop: portrait(d),
     iso,
     ja: p.NAME_JA || p.NAME,
     en: p.NAME,
