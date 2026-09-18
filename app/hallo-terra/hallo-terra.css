@@ -605,7 +605,11 @@
 /* The strip that gives the map screen its name. */
 .terraTitle {
   display: flex;
-  align-items: baseline;
+  /* Centred, not on a baseline. The name is a drawing, not type, so there is
+     no baseline in it to sit on - the line was taking the bottom edge of the
+     picture and putting the words below that, which left them lower than the
+     letters they belong to and lower even than the globe. */
+  align-items: center;
   gap: clamp(14px, 3vw, 30px);
   padding: 20px clamp(22px, 5vw, 60px) 18px;
   flex-wrap: wrap;
