@@ -152,10 +152,12 @@
 .terraHead > div { min-width: 0; }
 .terraOutline {
   flex: 0 0 auto;
-  width: 82px;
-  height: 72px;
+  width: 84px;
+  height: 76px;
   margin-top: 2px;
-  overflow: visible;
+  /* Cropped to the portrait: the path holds the whole country, and the parts
+     the frame leaves out should stay out rather than sprawl across the card. */
+  overflow: hidden;
   fill: color-mix(in srgb, var(--terra-greeting) 16%, transparent);
   stroke: var(--terra-greeting);
   stroke-width: 1.6;

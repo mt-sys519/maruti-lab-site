@@ -571,7 +571,10 @@ export default function TerraMap() {
               </div>
               {(() => {
                 const [x0, y0, x1, y1] = country.crop ?? country.box;
-                const pad = Math.max(3, (x1 - x0 + y1 - y0) * 0.09);
+                // Proportional, with no floor: a fixed margin of three units
+                // is nothing round China and is most of the frame round
+                // Tuvalu, which is how the small places ended up as specks.
+                const pad = Math.max(0.2, (x1 - x0 + y1 - y0) * 0.1);
                 return (
                   <svg
                     className="terraOutline"
