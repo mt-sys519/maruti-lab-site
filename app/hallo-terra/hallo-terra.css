@@ -331,6 +331,9 @@
 
 /* ---- what the map is for, underneath the map ---------------------- */
 
+/* The writing is not the tool, so it stands on its own lighter ground. */
+.terraNotes { background: var(--terra-notes); padding-top: 26px; }
+
 .terraAbout {
   max-width: 720px;
   margin: 0 auto;
