@@ -47,9 +47,13 @@
 .terraCountry {
   fill: var(--terra-land);
   stroke: var(--terra-line);
-  stroke-width: 0.9;
+  /* A drawn line, held to one width at every zoom: a country's border is not
+     thicker because you leaned in. Round ends and joins, which is what a felt
+     tip leaves behind and what the rest of the page is drawn with. */
+  stroke-width: 1.3;
   vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 .terraCountry.on { fill: var(--verm); stroke: #8c3629; }
 
