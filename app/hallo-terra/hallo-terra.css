@@ -498,7 +498,7 @@
      picture, and covering it would blow the globe up past the screen. Standing
      the opening on the same cream the picture is painted on means the part the
      picture does not reach simply cannot be seen. */
-  background: #f5ecda;
+  background: #f8f4ec;
   cursor: pointer;
   animation: terraIntroIn 0.6s ease both;
 }
@@ -508,7 +508,7 @@
 .terraIntroZoom {
   position: absolute;
   inset: 0;
-  transform-origin: 50.09% 39.1%;
+  transform-origin: 49.5% 38.5%;
   transition: transform 0.9s cubic-bezier(0.55, 0, 0.9, 0.55), opacity 0.9s ease-in;
 }
 .terraIntro.leaving .terraIntroZoom { transform: scale(7); opacity: 0; }
@@ -521,8 +521,8 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: max(100%, 149dvh);
-  aspect-ratio: 1168 / 784;
+  width: max(100%, 178dvh);
+  aspect-ratio: 1672 / 941;
   animation: terraCreep 2.8s linear both;
 }
 .terraIntro.leaving .terraIntroScene { animation: none; }
@@ -544,8 +544,8 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(to top, rgba(245, 236, 218, 0.94) 0%, rgba(245, 236, 218, 0.55) 15%, transparent 30%),
-    radial-gradient(125% 100% at 50% 40%, transparent 55%, #f5ecda 98%);
+    linear-gradient(to top, rgba(248, 244, 236, 0.94) 0%, rgba(248, 244, 236, 0.55) 15%, transparent 30%),
+    radial-gradient(125% 100% at 50% 40%, transparent 55%, #f8f4ec 98%);
 }
 .terraIntro.leaving::after { opacity: 0; transition: opacity 0.5s ease; }
 
@@ -611,7 +611,7 @@
   /* A phone is much taller than the drawing, so covering it would blow the
      globe up past the screen. Here the width leads instead, and the sides of
      the crowd are allowed to run off. */
-  .terraIntroScene { width: min(190%, 149dvh); }
+  .terraIntroScene { width: min(190%, 178dvh); }
 }
 
 /* ---- drawn boxes and drawn rules ------------------------------------ */

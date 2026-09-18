@@ -26,13 +26,15 @@ const POOL = Object.values(varieties)
   .map((v) => v.expressions.greeting?.text?.split(" / ")[0]?.trim())
   .filter((t): t is string => !!t && t.length <= 12);
 
-// Where the illustration left a space for the globe, measured off the artwork:
-// the circle is 40.1% of the width, centred at 50.09% / 39.1%. The globe is
-// drawn a little larger than that so the pale edge of the painted circle is
-// covered rather than left showing as a ring.
-const DISC_X = 50.09;
-const DISC_Y = 39.1;
-const DISC_SIZE = 41.4;
+// Where the illustration left a space for the globe, measured off the artwork.
+// In the crayon drawing the circle is barely brighter than the paper - what
+// separates them is blue, since the paper is cream and the circle is not - so
+// it was found by looking at that channel alone: 32.5% of the width, centred
+// at 49.5% / 38.5%. The globe is drawn a little larger so the circle's soft
+// edge is covered rather than left showing as a ring.
+const DISC_X = 49.5;
+const DISC_Y = 38.5;
+const DISC_SIZE = 33.8;
 
 export default function TerraIntro({ onDone }: { onDone: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -175,7 +177,7 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
           to the page, not to the scene being dived into. */}
       <div className="terraIntroZoom">
         <div className="terraIntroScene">
-          <Image src="/hallo-terra/intro.jpg" alt="" fill priority sizes="100vw" style={{ objectFit: "cover" }} />
+          <Image src="/hallo-terra/intro.webp" alt="" fill priority sizes="100vw" style={{ objectFit: "cover" }} />
           <canvas
             ref={canvasRef}
             /* Width only: the height follows from aspect-ratio, because a
