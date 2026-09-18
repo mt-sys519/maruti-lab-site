@@ -246,6 +246,14 @@
   color: #454b46;
 }
 .terraAbout p:last-child { margin-bottom: 0; }
+/* The site strips link colour and underline globally; inside a paragraph of
+   prose a link has to look like one again. */
+.terraAbout a {
+  color: var(--verm);
+  border-bottom: 1px solid rgba(173, 68, 52, 0.4);
+  padding-bottom: 1px;
+}
+.terraAbout a:hover { border-bottom-color: var(--verm); }
 .terraLede { font-size: 15px !important; color: var(--ink) !important; }
 .terraAbout .terraEyebrow { margin-bottom: 14px; }
 .terraSteps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
