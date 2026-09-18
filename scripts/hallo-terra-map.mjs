@@ -90,7 +90,7 @@ function simplify(points, tolerance) {
 // It also costs nothing. Roughening properly - rough.js and the rest - works
 // by cutting each line into several drawn strokes, which would put the map's
 // weight up two or three times. This moves the points that are already there.
-const HAND = 0.9;
+const HAND = 2.8;
 function byHand([x, y]) {
   const dx = Math.sin(x * 0.21 + y * 0.13) + Math.sin(x * 0.07 - y * 0.31) * 0.6;
   const dy = Math.cos(x * 0.17 - y * 0.23) + Math.cos(x * 0.29 + y * 0.09) * 0.6;
