@@ -748,3 +748,49 @@
   stroke-linecap: round;
   pointer-events: none;
 }
+
+/* ---- the share card, which is only ever photographed ---------------- */
+
+/* Fixed, not in the flow: this route sits under the lab's header like every
+   other page here, and a card with a navigation bar across the top of it is
+   not a card. Covering the header is a smaller thing than lifting the route
+   out of the layout that gives it its colours and its hand. */
+.terraCard-shot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  overflow: hidden;
+  background: #f8f4ec;
+}
+.terraCard-wide { width: 1200px; height: 630px; }
+.terraCard-works { width: 900px; height: 667px; }
+.terraCardArt { position: absolute; inset: 0; }
+.terraCard-wide .terraCardArt img { object-position: 50% 34%; }
+.terraCard-works .terraCardArt img { object-position: 50% 50%; }
+
+/* The disc the drawing leaves empty lands in almost the same place at both
+   sizes - a little above centre, about four hundred across - because the two
+   crops differ in how much of the sides they keep, not in how they scale. So
+   the name is placed once, in real pixels, and fits both. */
+.terraCardWords {
+  position: absolute;
+  left: 50%;
+  top: 37.4%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  color: var(--ink);
+}
+.terraCardWords .terraLogoMark { width: 62px; stroke-width: 4.2px; }
+.terraCardWords .terraLogoName { width: 208px; stroke-width: 2.8px; }
+.terraCardWords svg { display: block; height: auto; }
+.terraCardWords p {
+  margin: 2px 0 0;
+  font-family: var(--terra-hand);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #4b4a42;
+}
