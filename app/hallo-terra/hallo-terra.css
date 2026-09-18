@@ -471,7 +471,17 @@
 /* ---- what the map is for, underneath the map ---------------------- */
 
 /* The writing is not the tool, so it stands on its own lighter ground. */
-.terraNotes { background: var(--terra-notes); padding-top: 26px; }
+.terraNotes {
+  background: var(--terra-notes);
+  padding-top: 26px;
+  /* The shapes are meant to wander off the edges of their sections, and on a
+     wide screen they wander into the page's own margins. On a phone there are
+     no margins, so they wandered off the document instead and the whole page
+     could be dragged sideways. Clipped here, at the edge of the writing: clip
+     rather than hidden, so nothing inside becomes a scroll container. */
+  overflow-x: hidden;
+  overflow-x: clip;
+}
 
 .terraAbout {
   max-width: 720px;
@@ -675,7 +685,14 @@
    and the globe lands where the drawing put it - no special centring, and no
    crop that leaves a stranger's sleeve filling the window. */
 .terraIntroScene.isTall {
-  width: max(100%, 56.3dvh);
+  /* Plain 100%, and no dvh. The drawing is then exactly as wide as the window
+     and exactly its own shape, so the space it left for the globe is where
+     the arithmetic says it is on every browser. Sized off dvh it was not:
+     Chrome on Android gives a fixed layer the tall viewport and dvh the short
+     one, the two disagree while the address bar is on its way out, and the
+     globe sat up and to the left of the circle drawn for it. What the drawing
+     does not reach is its own cream, which is what that ground is for. */
+  width: 100%;
   aspect-ratio: 1008 / 1792;
 }
 
