@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import TerraLogo from "./TerraLogo";
 import TerraMap from "./TerraMap";
 
 /* The map is the page, and the map is a client component, so the metadata
@@ -27,6 +28,11 @@ export const metadata: Metadata = {
 export default function HalloTerraPage() {
   return (
     <>
+      <div className="terraTitle">
+        <TerraLogo size="md" />
+        <p>世界の挨拶を、地図から。</p>
+      </div>
+
       <TerraMap />
 
       <p className="terraScroll">

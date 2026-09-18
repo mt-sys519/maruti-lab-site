@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import TerraLogo from "./TerraLogo";
 import { varieties } from "./content";
 
 /* The opening: a crowd with a space in the middle, and a turning globe in it.
@@ -178,6 +179,9 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
           style={{ left: `${DISC_X}%`, top: `${DISC_Y}%`, width: `${DISC_SIZE}%` }}
         />
       </div>
+      <span className="terraIntroName">
+        <TerraLogo size="lg" />
+      </span>
       <button type="button" className="terraIntroSkip" onClick={leave}>
         地図をひらく
       </button>

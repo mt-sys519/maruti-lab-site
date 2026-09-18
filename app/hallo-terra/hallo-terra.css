@@ -332,6 +332,43 @@
 .terraAside h2 { font-size: 15px; margin-bottom: 12px; }
 .terraAside p { font-size: 12.5px; line-height: 1.95; }
 
+/* ---- the name ------------------------------------------------------- */
+
+.terraLogo { display: inline-flex; align-items: center; color: var(--ink); }
+.terraLogo svg { display: block; height: auto; }
+.terraLogo-lg { gap: 22px; }
+.terraLogo-lg .terraLogoMark { width: 68px; }
+.terraLogo-lg .terraLogoName { width: 285px; }
+.terraLogo-md { gap: 13px; }
+.terraLogo-md .terraLogoMark { width: 38px; }
+.terraLogo-md .terraLogoName { width: 162px; }
+.terraLogo-sm { gap: 9px; }
+.terraLogo-sm .terraLogoMark { width: 26px; }
+.terraLogo-sm .terraLogoName { width: 112px; }
+
+/* The strip that gives the map screen its name. */
+.terraTitle {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(14px, 3vw, 30px);
+  padding: 20px clamp(22px, 5vw, 60px) 18px;
+  flex-wrap: wrap;
+}
+.terraTitle p {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .terraLogo-md { gap: 10px; }
+  .terraLogo-md .terraLogoMark { width: 30px; }
+  .terraLogo-md .terraLogoName { width: 128px; }
+  .terraTitle { padding: 16px 22px 14px; gap: 10px; }
+  .terraTitle p { font-size: 11px; }
+}
+
 /* ---- the opening ---------------------------------------------------- */
 
 .terraIntro {
@@ -367,6 +404,16 @@
 .terraIntro.leaving .terraIntroScene { animation: none; transform: scale(7); opacity: 0; }
 .terraIntro.leaving { background: transparent; transition: background 0.5s ease 0.2s; }
 
+.terraIntroName {
+  margin-top: clamp(14px, 3vh, 30px);
+  color: var(--ink);
+}
+.terraIntro.leaving .terraIntroName { opacity: 0; transition: opacity 0.35s ease; }
+@media (max-width: 640px) {
+  .terraIntroName .terraLogoMark { width: 44px; }
+  .terraIntroName .terraLogoName { width: 186px; }
+}
+
 .terraIntroSkip {
   position: absolute;
   bottom: clamp(24px, 6vh, 54px);
@@ -381,7 +428,17 @@
   cursor: pointer;
 }
 .terraIntroSkip:hover { border-color: var(--ink); color: var(--ink); }
-.terraIntro.leaving .terraIntroSkip { opacity: 0; transition: opacity 0.3s ease; }
+.terraIntro.leaving .terraIntroName {
+  margin-top: clamp(14px, 3vh, 30px);
+  color: var(--ink);
+}
+.terraIntro.leaving .terraIntroName { opacity: 0; transition: opacity 0.35s ease; }
+@media (max-width: 640px) {
+  .terraIntroName .terraLogoMark { width: 44px; }
+  .terraIntroName .terraLogoName { width: 186px; }
+}
+
+.terraIntroSkip { opacity: 0; transition: opacity 0.3s ease; }
 
 @keyframes terraIntroIn {
   from { opacity: 0; }
