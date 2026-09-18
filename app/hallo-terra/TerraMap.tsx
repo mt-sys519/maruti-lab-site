@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TerraIntro from "./TerraIntro";
 import { TerraFrame } from "./TerraLogo";
+import { SearchMark, SoundMark } from "../icons";
 import { KINDS, KIND_LABEL, REGISTER_LABEL, places, unpack, varieties, type Country, type World } from "./content";
 
 /* The world is drawn once and shown three times, side by side. Miller is a
@@ -622,6 +623,9 @@ export default function TerraMap() {
 
         <div className="terraSearch">
           <TerraFrame variant={1} />
+          <span className="terraSearchMark" aria-hidden="true">
+            <SearchMark />
+          </span>
           <input
             type="search"
             value={query}
@@ -746,6 +750,9 @@ export default function TerraMap() {
                             onClick={() => speak(expression.audioText || expression.text, variety.speech)}
                           >
                             <TerraFrame variant={kind === "greeting" ? 0 : kind === "thanks" ? 1 : 2} />
+                            <span className="terraSpeakMark" aria-hidden="true">
+                              <SoundMark />
+                            </span>
                             音で聞く
                           </button>
                         </div>

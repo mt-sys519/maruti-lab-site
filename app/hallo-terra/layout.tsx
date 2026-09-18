@@ -1,11 +1,11 @@
-/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { ReactNode } from "react";
 import "./hallo-terra.css";
-import { LabMark } from "../icons";
+import { SiteHeader } from "../SiteHeader";
 
 /**
- * Everything under /hallo-terra, with the lab's header above it: the map is a
- * room in this house and not a separate site.
+ * Everything under /hallo-terra, under the lab's own header with the lab's own
+ * links - the map is a room in this house, and a room you cannot leave by the
+ * usual doors does not feel like one.
  */
 export default function HalloTerraLayout({ children }: { children: ReactNode }) {
   return (
@@ -17,17 +17,7 @@ export default function HalloTerraLayout({ children }: { children: ReactNode }) 
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap"
       />
-      <header className="siteHeader">
-        <a className="brand" href="/" aria-label="Maruti Lab トップ">
-          <span className="brandMark" aria-hidden="true">
-            <LabMark />
-          </span>
-          <span>Maruti Lab</span>
-        </a>
-        <nav aria-label="ページナビゲーション">
-          <a href="/">Works</a>
-        </nav>
-      </header>
+      <SiteHeader />
       <div className="terraSkin">{children}</div>
     </>
   );

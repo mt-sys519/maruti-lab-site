@@ -1,0 +1,142 @@
+/* A throwaway skeleton for the front page, built to test one idea: that what
+ * makes the lab look unfinished is not the colours but the fact that every
+ * work is presented differently and the page has no edges.
+ *
+ * The palette is untouched on purpose - same paper, same ink, same red as the
+ * live site - so that anything that looks different here is structure and
+ * type, not colour.
+ *
+ * Measured off ia.net, which is the one reference that landed: a container
+ * that stops, a text column around 450px, and three type sizes rather than
+ * ten. The sizes below are the Japanese equivalents - kana and kanji fill
+ * their em box, so 17px here reads about as large as the 20.7px Latin there.
+ */
+.draftTop{
+  --t-title:clamp(28px,3.4vw,40px);
+  --t-lead:19px;
+  --t-body:17px;
+  --t-meta:12px;
+  background:var(--paper-deep);
+  padding-bottom:70px;
+  font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;
+}
+/* The frame, which is the whole point: the page ground stays visible down
+   both sides instead of the content running off the screen. */
+.draftFrame{width:min(1240px,100% - 96px);margin:0 auto;background:var(--paper);border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 clamp(20px,4vw,56px)}
+
+.draftNotice{width:min(1240px,100% - 96px);margin:0 auto;padding:10px clamp(20px,4vw,56px);font-size:var(--t-meta);letter-spacing:.06em;color:var(--paper);background:var(--ink)}
+
+.draftHead{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.draftHead b{font-size:var(--t-body);font-weight:600;letter-spacing:.04em}
+.draftHead nav{display:flex;gap:clamp(14px,2.4vw,28px);font-size:var(--t-meta);letter-spacing:.08em}
+.draftHead nav a{color:var(--muted)}
+.draftHead nav a:hover{color:var(--ink)}
+
+.draftIntro{padding:clamp(48px,7vw,86px) 0 clamp(30px,4vw,44px);max-width:620px}
+.draftIntro h1{margin:0;font-size:var(--t-title);font-weight:500;line-height:1.45;letter-spacing:.01em}
+.draftIntro p{margin:20px 0 0;font-size:var(--t-body);line-height:1.9;color:var(--muted)}
+
+.draftLabel{margin:0;font-size:var(--t-meta);letter-spacing:.16em;color:var(--muted)}
+
+/* One module, repeated for every work, in the same order every time. The live
+   page gives CLOCK and YURAMEKI a full-bleed half-screen each and files the
+   other three into small cards; that difference in treatment is most of why
+   it reads as a pile rather than a shelf. */
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,48px);align-items:center;padding:clamp(34px,4vw,50px) 0;border-top:1px solid var(--line)}
+.workShot{position:relative;aspect-ratio:var(--shot,1200/630);overflow:hidden;background:var(--paper-deep);border:1px solid var(--line)}
+/* contain, not cover: if a ratio is ever wrong the image letterboxes rather
+   than losing an edge without telling anyone. */
+.workShot img{object-fit:contain}
+.workText h2{margin:10px 0 0;font-size:var(--t-title);font-weight:500;line-height:1.25;letter-spacing:.01em}
+.workText .tagline{margin:12px 0 0;font-size:var(--t-lead);line-height:1.7;color:var(--ink)}
+.workText p:not(.tagline):not(.draftLabel){margin:14px 0 0;font-size:var(--t-body);line-height:1.9;color:var(--muted);max-width:34em}
+.workText a.go{display:inline-block;margin-top:20px;font-size:var(--t-body);color:var(--verm);border-bottom:1px solid currentColor;padding-bottom:3px}
+
+.draftNotes ol{font-size:var(--t-body)}
+.draftNotes{padding:clamp(40px,5vw,64px) 0 0;border-top:1px solid var(--line);margin-top:clamp(34px,4vw,50px)}
+.draftMore{margin:26px 0 0;font-size:var(--t-body)}
+.draftMore a{color:var(--verm);border-bottom:1px solid currentColor;padding-bottom:3px}
+
+.draftAbout{padding:clamp(44px,6vw,72px) 0 clamp(10px,2vw,20px);margin-top:clamp(34px,4vw,50px);border-top:1px solid var(--line);max-width:620px}
+.draftAbout h2{margin:10px 0 0;font-size:var(--t-title);font-weight:500;line-height:1.4}
+.draftAbout p{margin:18px 0 0;font-size:var(--t-body);line-height:1.9;color:var(--muted)}
+
+@media(max-width:760px){
+  .work{grid-template-columns:1fr}
+      .draftFrame{border-left:0;border-right:0}
+}
+
+.draftSupport{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:clamp(34px,4vw,50px);padding:clamp(34px,4vw,48px) 0;border-top:1px solid var(--line)}
+.draftSupport h2{margin:10px 0 0;font-size:var(--t-lead);font-weight:500;line-height:1.5}
+.draftSupport>a{font-size:var(--t-body);color:var(--verm);border-bottom:1px solid currentColor;padding-bottom:3px}
+/* The footer stays inside the frame: letting it run the full width would give
+   back the edge-to-edge the rest of this draft is arguing against. */
+.draftFoot{padding:clamp(30px,4vw,42px) 0 clamp(40px,5vw,56px)!important;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:22px}
+.draftFoot b{font-size:var(--t-body);font-weight:600;letter-spacing:.04em}
+.draftFoot nav{display:flex;flex-wrap:wrap;gap:12px clamp(20px,4vw,44px);font-size:var(--t-body)}
+.draftFoot nav span{display:flex;flex-wrap:wrap;gap:12px clamp(12px,2vw,20px)}
+.draftFoot nav a{color:var(--muted)}
+.draftFoot nav a:hover{color:var(--ink)}
+.draftFoot small{font-size:var(--t-meta);letter-spacing:.06em;color:var(--muted);text-align:left;justify-self:start}
+
+
+/* ---- character ----------------------------------------------------------
+ * The skeleton above is readable and anonymous. What follows is the part that
+ * is meant to be recognisably this lab's, and none of the colours in it were
+ * invented here: every accent is read out of the tool it belongs to, so the
+ * page borrows its palette from the things it is showing rather than imposing
+ * one on them. They are only ever seen one or two at a time on the way down.
+ */
+
+/* The rule above each work carries that work's colour and draws itself in as
+   the module arrives. Where view() timelines are unsupported it is simply a
+   line that is already there, which is the correct fallback. */
+.work{position:relative;border-top:0;align-items:center}
+.work:has(.workShot[style]) .workShot{max-height:none}
+.work::before{content:"";position:absolute;top:0;left:0;height:2px;width:100%;background:var(--accent,var(--line));transform-origin:left}
+@supports (animation-timeline: view()){
+  .work::before{transform:scaleX(0);animation:draftRule linear both;animation-timeline:view();animation-range:entry 10% entry 55%}
+  .work{animation:draftRise linear both;animation-timeline:view();animation-range:entry 0% entry 50%}
+}
+@keyframes draftRule{to{transform:scaleX(1)}}
+@keyframes draftRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+.draftLabel{display:flex;align-items:center;gap:8px}
+.workMark{width:17px;height:17px;flex:none;fill:none;stroke:var(--accent-ink,currentColor);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* The image sits still until you reach for it. */
+.workShot{transition:border-color .4s ease}
+.workShot img{transition:transform .7s cubic-bezier(.16,1,.3,1)}
+.work:hover .workShot{border-color:var(--accent)}
+.work:hover .workShot img{transform:scale(1.03)}
+
+/* The travelling dot the site already uses on its text links, in the work's
+   own colour rather than the one red for everything. */
+.workText a.go{display:inline-grid;grid-template-columns:auto 44px;align-items:center;gap:13px;margin-top:20px;font-size:var(--t-body);color:var(--accent-ink,var(--verm));border-bottom:0;padding:0}
+.workText a.go i{display:block;position:relative;height:1px;background:currentColor;opacity:.75}
+.workText a.go i:after{content:"";position:absolute;right:0;top:-2px;width:5px;height:5px;border-radius:50%;background:currentColor;transition:transform .55s cubic-bezier(.16,1,.3,1)}
+.workText a.go:hover i:after,.workText a.go:focus-visible i:after{transform:translateX(-39px)}
+
+@media(prefers-reduced-motion:reduce){
+  .work,.work::before{animation:none!important;transform:none!important;opacity:1!important}
+  .workShot img,.workText a.go i:after{transition:none}
+}
+
+
+/* The notes, as things to look at rather than a list of dates. */
+.noteGrid{list-style:none;margin:24px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(16px,2.2vw,30px)}
+.noteGrid a{display:grid;gap:12px}
+.noteArt{position:relative;display:block;aspect-ratio:1;overflow:hidden;border:1px solid var(--line);background:var(--paper-deep)}
+.noteArt img{object-fit:cover;transition:transform .7s cubic-bezier(.16,1,.3,1)}
+.noteGrid time{font-size:var(--t-meta);letter-spacing:.06em;color:var(--muted)}
+.noteGrid h3{margin:0;font-size:var(--t-body);font-weight:500;line-height:1.7}
+.noteGrid a:hover .noteArt{border-color:var(--ink)}
+.noteGrid a:hover .noteArt img{transform:scale(1.04)}
+.noteGrid a:hover time{color:var(--ink)}
+@supports (animation-timeline: view()){
+  .noteGrid li{animation:draftRise linear both;animation-timeline:view();animation-range:entry 0% entry 45%}
+}
+@media(prefers-reduced-motion:reduce){
+  .noteGrid li{animation:none!important;transform:none!important;opacity:1!important}
+  .noteArt img{transition:none}
+}
