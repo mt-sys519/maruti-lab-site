@@ -48,6 +48,9 @@ export default function TerraMap() {
   const [sheetOpen, setSheetOpen] = useState(false);
   // Which of the place's ways of speaking the card is showing.
   const [tongue, setTongue] = useState(0);
+  // Which languages this particular device can speak, which is nothing to do
+  // with us and everything to do with what it has installed.
+  const [deviceVoices, setDeviceVoices] = useState<string[]>([]);
   // null until the browser has been asked; the server cannot know whether
   // this visitor has already been through the opening.
   const [intro, setIntro] = useState<boolean | null>(null);
@@ -101,6 +104,37 @@ export default function TerraMap() {
   }, []);
 
   const closeIntro = useCallback(() => setIntro(false), []);
+
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) return;
+    // The list arrives late in some browsers and empty in others.
+    const read = () => setDeviceVoices(speechSynthesis.getVoices().map((v) => v.lang.toLowerCase()));
+    const frame = requestAnimationFrame(read);
+    speechSynthesis.addEventListener("voiceschanged", read);
+    return () => {
+      cancelAnimationFrame(frame);
+      speechSynthesis.removeEventListener("voiceschanged", read);
+    };
+  }, []);
+
+  /**
+   * Whether a phrase can be said out loud at all.
+   *
+   * A recording is best. Failing that, the device's own voice - but only if it
+   * has one for this language: asked for Chinese on a machine that has no
+   * Chinese, Windows hands the sentence to whatever voice is default and reads
+   * 你好 in Japanese, which is worse than silence. When neither is there, the
+   * button does not appear, because a button that lies is worse than no button.
+   */
+  const canSpeak = useCallback(
+    (varietyId: string, kind: ExpressionKind, speech: string) => {
+      if (audio[varietyId]?.kinds.includes(kind)) return true;
+      const want = speech.toLowerCase();
+      const language = want.split("-")[0];
+      return deviceVoices.some((v) => v === want || v.split("-")[0] === language);
+    },
+    [deviceVoices],
+  );
 
   const byIso = useMemo(() => {
     const map = new Map<string, Country>();
@@ -777,17 +811,19 @@ export default function TerraMap() {
                               {expression.usage}
                             </p>
                           )}
-                          <button
-                            type="button"
-                            className="terraSpeak"
-                            onClick={() => speak(id, kind, expression.audioText || expression.text, variety.speech)}
-                          >
-                            <TerraFrame variant={kind === "greeting" ? 0 : kind === "thanks" ? 1 : 2} />
-                            <span className="terraSpeakMark" aria-hidden="true">
-                              <SoundMark />
-                            </span>
-                            音で聞く
-                          </button>
+                          {canSpeak(id, kind, variety.speech) && (
+                            <button
+                              type="button"
+                              className="terraSpeak"
+                              onClick={() => speak(id, kind, expression.audioText || expression.text, variety.speech)}
+                            >
+                              <TerraFrame variant={kind === "greeting" ? 0 : kind === "thanks" ? 1 : 2} />
+                              <span className="terraSpeakMark" aria-hidden="true">
+                                <SoundMark />
+                              </span>
+                              音で聞く
+                            </button>
+                          )}
                         </div>
                       );
                     })}
