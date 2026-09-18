@@ -1,5 +1,6 @@
 import {
   FRAMES,
+  PATCHES,
   RULE,
   MARK,
   MARK_MARKER,
@@ -95,6 +96,33 @@ export function TerraRule() {
     <svg className="terraRule" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
       {RULE.map((d) => (
         <path key={d} d={d} vectorEffect="non-scaling-stroke" />
+      ))}
+    </svg>
+  );
+}
+
+
+/**
+ * A sheet of coloured paper for the writing to sit on. The fill is the colour
+ * let right down so words stay readable on it; the drawn edge is the colour
+ * at full strength. Four sheets in rotation, so a column of them is not one
+ * rectangle repeated down the page.
+ */
+export function TerraPatch({ tone, variant = 0 }: { tone: string; variant?: number }) {
+  const patch = PATCHES[variant % PATCHES.length];
+  return (
+    <svg
+      className="terraPatch"
+      viewBox="0 0 100 60"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      style={{ color: `var(--terra-${tone})` }}
+    >
+      {patch.fill.map((d) => (
+        <path key={d} d={d} className="terraPatchFill" />
+      ))}
+      {patch.line.map((d) => (
+        <path key={d} d={d} className="terraPatchLine" vectorEffect="non-scaling-stroke" />
       ))}
     </svg>
   );

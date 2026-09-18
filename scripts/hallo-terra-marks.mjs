@@ -109,6 +109,31 @@ const FRAMES = [3, 12, 27].map((seed) =>
   paths(gen.rectangle(2, 2, 96, 36, { roughness: 1.1, bowing: 1.5, disableMultiStroke: true, seed })),
 );
 
+// Sheets of coloured paper to lay the writing on. A rounded rectangle put
+// through the pen and filled solid, in a 100x60 box that is stretched to
+// whatever the section turns out to be. Four of them, and the corners are
+// deliberately uneven: torn paper, not a component.
+const sheet = (x, y, w, h, r) =>
+  `M${x + r} ${y}L${x + w - r} ${y}Q${x + w} ${y} ${x + w} ${y + r}L${x + w} ${y + h - r}` +
+  `Q${x + w} ${y + h} ${x + w - r} ${y + h}L${x + r} ${y + h}Q${x} ${y + h} ${x} ${y + h - r}` +
+  `L${x} ${y + r}Q${x} ${y} ${x + r} ${y}Z`;
+
+const PATCHES = [4, 15, 26, 37].map((seed, i) => {
+  const drawn = gen.path(sheet(2, 2, 96, 56, 7 + i), {
+    roughness: 1.15,
+    bowing: 1.4,
+    disableMultiStroke: true,
+    fill: "#000",
+    fillStyle: "solid",
+    seed,
+  });
+  const parts = gen.toPaths(drawn);
+  return {
+    fill: parts.filter((part) => part.fill && part.fill !== "none").map((part) => round(part.d)),
+    line: parts.filter((part) => part.stroke && part.stroke !== "none").map((part) => round(part.d)),
+  };
+});
+
 // A ring to draw round the place being looked at, in a 100-wide box so it can
 // be scaled to whatever the country needs.
 const ring = paths(gen.circle(50, 50, 92, { roughness: 1.5, bowing: 1.6, seed: 31 }));
@@ -133,6 +158,9 @@ export const WORDMARK_MARKER: string[] = ${JSON.stringify(nameMarker.strokes, nu
 
 /** A hand-drawn circle in a 100x100 box, for ringing the chosen place. */
 export const RING: string[] = ${JSON.stringify(ring, null, 2)};
+
+/** Sheets of paper in a 100x60 box, to be stretched behind a section. */
+export const PATCHES: { fill: string[]; line: string[] }[] = ${JSON.stringify(PATCHES, null, 2)};
 
 /** Hand-drawn boxes in a 100x40 frame, to be stretched over a control. */
 export const FRAMES: string[][] = ${JSON.stringify(FRAMES, null, 2)};

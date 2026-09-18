@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import TerraLogo from "./TerraLogo";
+import TerraLogo, { TerraPatch } from "./TerraLogo";
 import TerraMap from "./TerraMap";
 
 /* The map is the page, and the map is a client component, so the metadata
@@ -43,6 +43,7 @@ export default function HalloTerraPage() {
 
       <article className="terraAbout">
         <section>
+          <TerraPatch tone="greeting" variant={0} />
           <p className="terraEyebrow">ABOUT HALLO TERRA</p>
           <h2>世界の挨拶を、地図から。</h2>
           <p className="terraLede">
@@ -51,6 +52,7 @@ export default function HalloTerraPage() {
         </section>
 
         <section>
+          <TerraPatch tone="thanks" variant={1} />
           <h2>使い方</h2>
           <ol className="terraSteps">
             <li>
@@ -64,6 +66,7 @@ export default function HalloTerraPage() {
         </section>
 
         <section>
+          <TerraPatch tone="apology" variant={2} />
           <h2>この道具の願い</h2>
           <p>
             初対面のお相手にその方の言語で挨拶だけでもすると、とても素敵な笑顔で返してくれることがあります。わたしはその交流がとても大好きで、その瞬間を少しでも多くの方に体験してほしくてこのツールを作りました。
@@ -77,6 +80,7 @@ export default function HalloTerraPage() {
         </section>
 
         <section>
+          <TerraPatch tone="sky" variant={3} />
           <h2>なぜ地図なのか</h2>
           <p>
             一覧表ではなく地図にしたのは、どのあたりで話されている言葉なのか、隣は何語なのかが同時に見えるからです。左右に果てがないのも同じ理由で、太平洋のむこうにも人がいます。
@@ -84,6 +88,7 @@ export default function HalloTerraPage() {
         </section>
 
         <section>
+          <TerraPatch tone="rose" variant={0} />
           <h2>言葉と読みについて</h2>
           <p>
             カタカナは必ず付けていますが、近似です。日本語にない音は書き表せませんし、タイ語やベトナム語、中国語のように声調のある言語では、音の高さまでは示せません。まねる出発点として使ってください。
@@ -94,6 +99,7 @@ export default function HalloTerraPage() {
         </section>
 
         <section>
+          <TerraPatch tone="wax" variant={1} />
           <h2>仕草のこと</h2>
           <p>
             挨拶は言葉だけでできてはいないので、仕草も短く添えています。ただ、同じ国でも世代や間柄で変わるので、断定する書き方は避けています。
@@ -101,6 +107,7 @@ export default function HalloTerraPage() {
         </section>
 
         <section>
+          <TerraPatch tone="greeting" variant={2} />
           <h2>地図のデータ</h2>
           <p>
             国境と海岸線は Natural Earth（1:50m、パブリックドメイン）を、ミラー図法で描いています。道路や店舗は載せていません。国境の引き方は、地域によって見解が分かれます。
@@ -108,6 +115,7 @@ export default function HalloTerraPage() {
         </section>
 
         <aside className="terraAside">
+          <TerraPatch tone="wax" variant={2} />
           <h2>まだできていないこと</h2>
           <p>
             挨拶を書けている場所はまだ一部で、多くの国は「まだ書けていません」と出ます。音声もお使いの端末に入っているものを借りているため、言語によっては鳴りません。
