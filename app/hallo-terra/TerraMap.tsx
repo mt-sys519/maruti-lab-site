@@ -596,7 +596,7 @@ export default function TerraMap() {
                       const expression = variety.expressions[kind];
                       if (!expression) return null;
                       return (
-                        <div className="terraPhrase" key={kind}>
+                        <div className={`terraPhrase terraPhrase-${kind}`} key={kind}>
                           <p className="terraKind">{KIND_LABEL[kind]}</p>
                           <p className="terraText">{expression.text}</p>
                           <p className="terraReading">{expression.reading}</p>

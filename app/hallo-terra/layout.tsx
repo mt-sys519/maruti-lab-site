@@ -10,6 +10,13 @@ import { LabMark } from "../icons";
 export default function HalloTerraLayout({ children }: { children: ReactNode }) {
   return (
     <>
+      {/* React hoists this into <head>, and it only loads on these routes:
+          the rounded face is for headings here, not for the whole lab. */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap"
+      />
       <header className="siteHeader">
         <a className="brand" href="/" aria-label="Maruti Lab トップ">
           <span className="brandMark" aria-hidden="true">
@@ -21,7 +28,7 @@ export default function HalloTerraLayout({ children }: { children: ReactNode }) 
           <a href="/">Works</a>
         </nav>
       </header>
-      {children}
+      <div className="terraSkin">{children}</div>
     </>
   );
 }

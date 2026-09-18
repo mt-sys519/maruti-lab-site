@@ -1,10 +1,26 @@
 /* HALLO TERRA.
-   The map is a bounded room, not the whole house. Inside it nothing scrolls -
-   a map dragged sideways and a page dragged upwards cannot share one finger
-   without one stealing from the other, so within the map the page scroll is
-   switched off entirely. The way out is that the map stops short of the
-   bottom of the screen: there is always page below it to push against, and
-   the writing down there is the reason to go looking. */
+
+   Its own skin, under the lab's shared header. The colours are Headspace's
+   idea - a quiet warm ground, near-black text, and unmixed colour used in
+   small amounts - with a drop of wax in every hue so they sit next to a
+   drawn line without looking like a dashboard. Colour is given to meaning
+   here, never to decoration: a greeting, a thank you and an apology each own
+   one, and the map itself stays out of it, because a loud map beats every
+   colour put on top of it.
+
+   The rounded face is for headings and the tagline only. At 14px a rounded
+   Japanese body text stops being readable, and a phrase in Thai or Arabic
+   must never be forced into a Japanese face at all. */
+
+.terraSkin {
+  --terra-greeting: #3a6ea5;
+  --terra-thanks: #4f9b5e;
+  --terra-apology: #6b4fa0;
+  --terra-sky: #5aa7cf;
+  --terra-wax: #e8b93f;
+  --terra-rose: #e39bb2;
+  --terra-hand: "Zen Maru Gothic", "Yu Gothic UI", sans-serif;
+}
 
 .terra {
   height: min(78dvh, 860px);
@@ -132,7 +148,7 @@
 
 .terraCardBody { padding: 30px 26px 60px; }
 .terraEyebrow { margin: 0 0 10px; font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: 0.16em; color: var(--muted); }
-.terraCard h2 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0.02em; }
+.terraCard h2 { margin: 0; font-family: var(--terra-hand); font-size: 30px; font-weight: 700; letter-spacing: 0.02em; }
 .terraEn { margin: 7px 0 26px; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
 
 /* More than one way of speaking here: the choice is shown, not hidden. */
@@ -153,11 +169,16 @@
   font: 500 11px/1 "Yu Gothic UI", sans-serif;
   cursor: pointer;
 }
-.terraTongues button.on { background: var(--ink); color: var(--paper); }
-.terraTongues button.on .terraFrame { color: var(--ink); }
+.terraTongues button { color: var(--muted); }
+.terraTongues button:nth-child(3n + 1).on { background: var(--terra-greeting); }
+.terraTongues button:nth-child(3n + 2).on { background: var(--terra-thanks); }
+.terraTongues button:nth-child(3n).on { background: var(--terra-apology); }
+.terraTongues button.on { color: var(--paper); }
+.terraTongues button.on .terraFrame { opacity: 0; }
 
 .terraVariety h3 {
   margin: 0 0 14px;
+  font-family: var(--terra-hand);
   padding-bottom: 9px;
   border-bottom: 1px solid var(--line);
   font: 500 12px/1 "Yu Gothic UI", sans-serif;
@@ -165,7 +186,18 @@
   color: var(--muted);
 }
 .terraPhrase { margin-bottom: 22px; }
-.terraKind { margin: 0 0 6px; font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: 0.14em; color: var(--green); }
+/* Each of the three owns a colour, and its button is drawn in it. */
+.terraKind { margin: 0 0 7px; font: 700 10px/1 var(--terra-hand); letter-spacing: 0.12em; color: var(--muted); }
+.terraPhrase-greeting .terraKind { color: var(--terra-greeting); }
+.terraPhrase-thanks .terraKind { color: var(--terra-thanks); }
+.terraPhrase-apology .terraKind { color: var(--terra-apology); }
+.terraPhrase-greeting .terraSpeak { color: var(--terra-greeting); }
+.terraPhrase-thanks .terraSpeak { color: var(--terra-thanks); }
+.terraPhrase-apology .terraSpeak { color: var(--terra-apology); }
+.terraPhrase-greeting .terraSpeak .terraFrame,
+.terraPhrase-thanks .terraSpeak .terraFrame,
+.terraPhrase-apology .terraSpeak .terraFrame { color: currentColor; opacity: 0.55; }
+.terraPhrase:hover .terraSpeak .terraFrame { opacity: 1; }
 .terraText { margin: 0; font-size: 21px; line-height: 1.5; }
 .terraReading { margin: 4px 0 0; font-size: 13px; letter-spacing: 0.06em; color: var(--verm); }
 .terraMeaning { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
@@ -205,7 +237,7 @@
   letter-spacing: 0.08em;
   cursor: pointer;
 }
-.terraSpeak:hover { border-color: var(--ink); color: var(--ink); }
+.terraSpeak:hover { opacity: 0.75; }
 
 .terraCulture { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line); }
 .terraGesture { margin: 0 0 8px; font-size: 15px; }
@@ -283,6 +315,7 @@
 .terraAbout section + section { margin-top: 54px; }
 .terraAbout h2 {
   margin: 0 0 18px;
+  font-family: var(--terra-hand);
   font-size: clamp(19px, 2.4vw, 25px);
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -362,6 +395,7 @@
 }
 .terraTitle p {
   margin: 0;
+  font-family: var(--terra-hand);
   font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--muted);
