@@ -461,6 +461,28 @@
   .terraCard { transition: none; }
 }
 
+/* Said only when somebody turns the wheel and the map does not move. */
+.terraWheelHint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  z-index: 4;
+  padding: 14px 22px;
+  border-radius: 6px;
+  background: rgba(45, 44, 43, 0.78);
+  color: #fdfaf0;
+  font: 700 13px/1 var(--terra-hand);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  animation: terraHint 0.18s ease both;
+}
+@keyframes terraHint {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* ---- what the map is for, underneath the map ---------------------- */
 
 /* The writing is not the tool, so it stands on its own lighter ground. */

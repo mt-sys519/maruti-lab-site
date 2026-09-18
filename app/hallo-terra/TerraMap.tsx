@@ -46,6 +46,9 @@ export default function TerraMap() {
   const [pointer, setPointer] = useState<Point>({ x: 0, y: 0 });
   const [query, setQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Shown when the wheel is turned without ctrl, so that "nothing happened"
+  // says why. It takes itself away again.
+  const [hint, setHint] = useState(false);
   // Which of the place's ways of speaking the card is showing.
   const [tongue, setTongue] = useState(0);
   // Which languages this particular device can speak, which is nothing to do
@@ -106,6 +109,12 @@ export default function TerraMap() {
   }, []);
 
   const closeIntro = useCallback(() => setIntro(false), []);
+
+  useEffect(() => {
+    if (!hint) return;
+    const timer = window.setTimeout(() => setHint(false), 1600);
+    return () => window.clearTimeout(timer);
+  }, [hint]);
 
   useEffect(() => {
     if (!("speechSynthesis" in window)) return;
@@ -436,6 +445,12 @@ export default function TerraMap() {
     };
 
     const down = (e: PointerEvent) => {
+      // The zoom buttons and the search box live over the map, inside the
+      // surface that pans. Panning takes the pointer with setPointerCapture,
+      // and a captured pointer never gives the button its click back - which
+      // is why + and - did nothing to a real finger and everything to a
+      // scripted one. Press on a control and the map stays out of it.
+      if ((e.target as Element | null)?.closest?.(".terraZoom, .terraSearch")) return;
       stopGlide();
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       try {
@@ -539,6 +554,15 @@ export default function TerraMap() {
     };
 
     const wheel = (e: WheelEvent) => {
+      // The usual bargain on a page with a map in it: the wheel belongs to the
+      // page, and the map only takes it when ctrl (or cmd) is held. Otherwise
+      // a map this tall is a trap - you scroll to read what is underneath and
+      // the world zooms instead. A trackpad pinch arrives here with ctrlKey
+      // already set, so pinching still zooms without anyone being told.
+      if (!e.ctrlKey && !e.metaKey) {
+        setHint(true);
+        return;
+      }
       e.preventDefault();
       stopGlide();
       const rect = stage.getBoundingClientRect();
@@ -665,6 +689,8 @@ export default function TerraMap() {
             {hover.ja}
           </span>
         )}
+
+        {hint && <p className="terraWheelHint">Ctrl（Mac は ⌘）＋ ホイールで拡大・縮小</p>}
 
         <div className="terraZoom">
           <button type="button" onClick={() => zoomTo(view.current.s * 1.35)} aria-label="拡大">
