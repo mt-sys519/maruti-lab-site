@@ -38,10 +38,13 @@ const project = ([lon, lat]) => [millerX(lon) + WIDTH / 2, millerY(lat) - TOP];
 // at any zoom the map offers, and it halves the file.
 const round = (n) => Math.round(n * 10) / 10;
 
-// Natural Earth carries far more vertices than a map this size can show. The
-// tolerance is in projected units: at the deepest zoom the map allows, one
-// unit is still under a pixel, so nothing dropped here is visible.
-const TOLERANCE = 0.45;
+// Natural Earth carries more vertices than most of this map can show, but not
+// as many more as it first looked. The tolerance is in projected units, and at
+// the deepest zoom the map allows one unit is about five pixels - so the old
+// 0.45 was throwing away two pixels of coastline, which is exactly the
+// "roughly right" look Japan had when you leaned in. Halving it costs 46KB
+// over the wire and buys back the bays.
+const TOLERANCE = 0.25;
 
 function simplify(points, tolerance) {
   if (points.length < 4) return points;
