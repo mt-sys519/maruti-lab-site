@@ -134,6 +134,9 @@ export default function HalloTerraPage() {
           <p>
             人の声の録音と混ぜることはしていません。半分が人の声で半分が合成だと、同じ道具の中で声が二種類あることになるからです。
           </p>
+          <p className="terraNote">
+            声ごとの出どころと利用条件は<a href="/hallo-terra/credits">クレジットのページ</a>にまとめています。
+          </p>
           <details className="terraVoices">
             <summary>使った声と、その利用条件</summary>
             <ul>

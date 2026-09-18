@@ -846,6 +846,23 @@
   pointer-events: none;
 }
 
+/* ---- the credits list ----------------------------------------------- */
+
+.terraCreditList { margin: 0; padding: 0; list-style: none; }
+.terraCreditList li {
+  padding: 10px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--terra-rule) 45%, transparent);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.terraCreditList li:last-child { border-bottom: 0; }
+.terraCreditList code {
+  display: block;
+  font: 600 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--ink);
+}
+.terraCreditWhere { color: var(--muted); font-size: 12px; }
+
 /* ---- the share card, which is only ever photographed ---------------- */
 
 /* Fixed, not in the flow: this route sits under the lab's header like every

@@ -1,0 +1,205 @@
+{
+  "bg_BG-dimitar-medium": {
+    "language": "bg_BG (Bulgarian, Bulgaria)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/bg/bg_BG/dimitar/medium/MODEL_CARD"
+  },
+  "ca_ES-upc_ona-medium": {
+    "language": "ca_ES (Catalan, Spain)",
+    "quality": "medium",
+    "dataset": "https://collectivat.cat/asr#upc-festcat-tts-corpora",
+    "licence": "CC BY-SA 3.0 ES",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ca/ca_ES/upc_ona/medium/MODEL_CARD"
+  },
+  "cs_CZ-jirka-medium": {
+    "language": "cs_CZ (Czech, Czech Republic)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/cs/cs_CZ/jirka/medium/MODEL_CARD"
+  },
+  "da_DK-talesyntese-medium": {
+    "language": "da_DK (Danish, Denmark)",
+    "quality": "medium",
+    "dataset": "https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-21/",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/da/da_DK/talesyntese/medium/MODEL_CARD"
+  },
+  "de_DE-thorsten-medium": {
+    "language": "de_DE (German, Germany)",
+    "quality": "medium",
+    "dataset": "https://github.com/thorstenMueller/Thorsten-Voice",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/MODEL_CARD"
+  },
+  "el_GR-rapunzelina-medium": {
+    "language": "el_GR (Greek, Greece)",
+    "quality": "medium",
+    "dataset": "https://www.kaggle.com/datasets/bryanpark/greek-single-speaker-speech-dataset",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/el/el_GR/rapunzelina/medium/MODEL_CARD"
+  },
+  "en_GB-cori-medium": {
+    "language": "en_GB (English, Great Britain)",
+    "quality": "medium",
+    "dataset": "https://librivox.org",
+    "licence": "public domain",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/cori/medium/MODEL_CARD"
+  },
+  "en_US-bryce-medium": {
+    "language": "en_US (English, United States)",
+    "quality": "medium",
+    "dataset": "",
+    "licence": "public domain",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/bryce/medium/MODEL_CARD"
+  },
+  "es_AR-daniela-high": {
+    "language": "es_AR (Spanish, Argentina)",
+    "quality": "high",
+    "dataset": "https://www.openslr.org/61/",
+    "licence": "Attribution-ShareAlike 4.0 International",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_AR/daniela/high/MODEL_CARD"
+  },
+  "es_ES-davefx-medium": {
+    "language": "es_ES (Spanish, Spain)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/davefx/medium/MODEL_CARD"
+  },
+  "es_MX-claude-high": {
+    "language": "es_MX (Spanish, Mexico)",
+    "quality": "high",
+    "dataset": "https://huggingface.co/spaces/HirCoir/Piper-TTS-Spanish",
+    "licence": "apache-2.0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/MODEL_CARD"
+  },
+  "fa_IR-amir-medium": {
+    "language": "fa_IR (Persian, Iran)",
+    "quality": "medium",
+    "dataset": "https://datacula.com/tts-databases",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fa/fa_IR/amir/medium/MODEL_CARD"
+  },
+  "fi_FI-harri-medium": {
+    "language": "fi_FI (Finnish, Finland)",
+    "quality": "medium",
+    "dataset": "https://www.kaggle.com/bryanpark/finnish-single-speaker-speech-dataset",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fi/fi_FI/harri/medium/MODEL_CARD"
+  },
+  "fr_FR-siwis-medium": {
+    "language": "fr_FR (French, France)",
+    "quality": "medium",
+    "dataset": "https://datashare.is.ed.ac.uk/handle/10283/2353",
+    "licence": "CC-BY 4.0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/siwis/medium/MODEL_CARD"
+  },
+  "hu_HU-anna-medium": {
+    "language": "hu_HU (Hungarian, Hungary)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/anna/medium/MODEL_CARD"
+  },
+  "it_IT-serena-high": {
+    "language": "it_IT (Italian, Italy)",
+    "quality": "high",
+    "dataset": "https://huggingface.co/datasets/committa/serena-synthetic-it-27h",
+    "licence": "CC-BY-4.0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/it/it_IT/serena/high/MODEL_CARD"
+  },
+  "lv_LV-aivars-medium": {
+    "language": "lv_LV (Latvian, Latvia)",
+    "quality": "medium",
+    "dataset": "https://huggingface.co/RaivisDejus/Piper-lv_LV-Aivars-medium",
+    "licence": "CC0 1.0 Universal",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/lv/lv_LV/aivars/medium/MODEL_CARD"
+  },
+  "ne_NP-chitwan-medium": {
+    "language": "ne_NP (Nepali, Nepal)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ne/ne_NP/chitwan/medium/MODEL_CARD"
+  },
+  "nl_BE-nathalie-medium": {
+    "language": "nl_BE (Dutch, Belgium)",
+    "quality": "medium",
+    "dataset": "https://github.com/rhasspy/dataset-voice-nathalie",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_BE/nathalie/medium/MODEL_CARD"
+  },
+  "nl_NL-alex-medium": {
+    "language": "nl_NL (Dutch, Netherlands)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/alex/medium/MODEL_CARD"
+  },
+  "pl_PL-darkman-medium": {
+    "language": "pl_PL (Polish, Poland)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pl/pl_PL/darkman/medium/MODEL_CARD"
+  },
+  "pt_BR-cadu-medium": {
+    "language": "pt_BR (Portuguese, Brazil)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/cadu/medium/MODEL_CARD"
+  },
+  "ro_RO-mihai-medium": {
+    "language": "ro_RO (Romanian, Romania)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ro/ro_RO/mihai/medium/MODEL_CARD"
+  },
+  "ru_RU-denis-medium": {
+    "language": "ru_RU (Russian, Russia)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/denis/medium/MODEL_CARD"
+  },
+  "sk_SK-lili-medium": {
+    "language": "sk_SK (Slovak, Slovakia)",
+    "quality": "medium",
+    "dataset": "https://github.com/OHF-Voice/voice-datasets",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sk/sk_SK/lili/medium/MODEL_CARD"
+  },
+  "sq_AL-edon-medium": {
+    "language": "sq_AL (Albanian/Shqip, Albanian)",
+    "quality": "medium",
+    "dataset": "https://huggingface.co/edonseki/folsh.ai",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sq/sq_AL/edon/medium/MODEL_CARD"
+  },
+  "sv_SE-nst-medium": {
+    "language": "sv_SE (Swedish, Sweden)",
+    "quality": "medium",
+    "dataset": "https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-17/",
+    "licence": "CC0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sv/sv_SE/nst/medium/MODEL_CARD"
+  },
+  "uk_UA-mykyta-high": {
+    "language": "uk_UA (Ukrainian, Ukraine)",
+    "quality": "high",
+    "dataset": "https://github.com/egorsmkv/ukrainian-tts-datasets",
+    "licence": "Apache 2.0",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/uk/uk_UA/mykyta/high/MODEL_CARD"
+  },
+  "ur_PK-fasih-medium": {
+    "language": "ur",
+    "quality": "",
+    "dataset": "",
+    "licence": "mit",
+    "card": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ur/ur_PK/fasih/medium/MODEL_CARD"
+  }
+}

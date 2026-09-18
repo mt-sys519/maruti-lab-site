@@ -9,6 +9,7 @@ const pages = [
   "/clock",
   "/4track",
   "/hallo-terra",
+  "/hallo-terra/credits",
   "/swiftcrop",
   "/swiftcrop/faq",
   "/color-refine",
