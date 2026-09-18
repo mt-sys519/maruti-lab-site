@@ -25,10 +25,13 @@ const POOL = Object.values(varieties)
   .map((v) => v.expressions.greeting?.text?.split(" / ")[0]?.trim())
   .filter((t): t is string => !!t && t.length <= 12);
 
-// Where the illustration left a space for the globe, measured off the artwork.
+// Where the illustration left a space for the globe, measured off the artwork:
+// the circle is 40.1% of the width, centred at 50.09% / 39.1%. The globe is
+// drawn a little larger than that so the pale edge of the painted circle is
+// covered rather than left showing as a ring.
 const DISC_X = 50.09;
-const DISC_Y = 39.41;
-const DISC_SIZE = 39.9;
+const DISC_Y = 39.1;
+const DISC_SIZE = 41.4;
 
 export default function TerraIntro({ onDone }: { onDone: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -161,9 +164,13 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
     <div className={`terraIntro${leaving ? " leaving" : ""}`} role="presentation" onClick={leave}>
       <div className="terraIntroScene">
         <Image src="/hallo-terra/intro.jpg" alt="" fill priority sizes="100vw" style={{ objectFit: "contain" }} />
-        <p className="terraIntroWord" style={{ left: `${DISC_X}%`, top: `${DISC_Y}%` }}>
-          <span key={word}>{greetings[word % Math.max(1, greetings.length)] ?? ""}</span>
-        </p>
+        {/* The word belongs to the waiting, not to the dive: at seven times
+            the size it would be a wall of letters across the whole screen. */}
+        {!leaving && (
+          <p className="terraIntroWord" style={{ left: `${DISC_X}%`, top: `${DISC_Y}%` }}>
+            <span key={word}>{greetings[word % Math.max(1, greetings.length)] ?? ""}</span>
+          </p>
+        )}
         <canvas
           ref={canvasRef}
           /* Width only: the height follows from aspect-ratio, because a
