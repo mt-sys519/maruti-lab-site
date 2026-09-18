@@ -100,6 +100,15 @@ const markMarker = [
 ];
 const nameMarker = wordmark("HALLO TERRA", marker);
 
+// The boxes the interface is made of. Drawn in a 100x40 frame and stretched
+// to whatever the button or field needs: the wobble stretches with it, which
+// is what a drawn box does, while the stroke is held to a real width in the
+// stylesheet so a wide box is not drawn with a fatter pen than a narrow one.
+// Three of them, so a row of buttons is not the same box three times.
+const FRAMES = [3, 12, 27].map((seed) =>
+  paths(gen.rectangle(2, 2, 96, 36, { roughness: 1.1, bowing: 1.5, disableMultiStroke: true, seed })),
+);
+
 // A ring to draw round the place being looked at, in a 100-wide box so it can
 // be scaled to whatever the country needs.
 const ring = paths(gen.circle(50, 50, 92, { roughness: 1.5, bowing: 1.6, seed: 31 }));
@@ -124,6 +133,9 @@ export const WORDMARK_MARKER: string[] = ${JSON.stringify(nameMarker.strokes, nu
 
 /** A hand-drawn circle in a 100x100 box, for ringing the chosen place. */
 export const RING: string[] = ${JSON.stringify(ring, null, 2)};
+
+/** Hand-drawn boxes in a 100x40 frame, to be stretched over a control. */
+export const FRAMES: string[][] = ${JSON.stringify(FRAMES, null, 2)};
 
 /** A hand-drawn line 200 units wide, for underlining. */
 export const RULE: string[] = ${JSON.stringify(rule, null, 2)};

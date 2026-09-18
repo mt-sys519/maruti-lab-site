@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TerraIntro from "./TerraIntro";
+import { TerraFrame } from "./TerraLogo";
 import { KINDS, KIND_LABEL, REGISTER_LABEL, places, varieties, type Country, type World } from "./content";
 
 /* The world is drawn once and shown three times, side by side. Miller is a
@@ -497,8 +498,12 @@ export default function TerraMap() {
         )}
 
         <div className="terraZoom">
-          <button type="button" onClick={() => zoomTo(view.current.s * 1.35)} aria-label="拡大">＋</button>
-          <button type="button" onClick={() => zoomTo(view.current.s / 1.35)} aria-label="縮小">−</button>
+          <button type="button" onClick={() => zoomTo(view.current.s * 1.35)} aria-label="拡大">
+            <TerraFrame variant={0} />＋
+          </button>
+          <button type="button" onClick={() => zoomTo(view.current.s / 1.35)} aria-label="縮小">
+            <TerraFrame variant={1} />−
+          </button>
           <button
             type="button"
             className="terraReset"
@@ -508,11 +513,13 @@ export default function TerraMap() {
               if (country) centreOn(country);
             }}
           >
+            <TerraFrame variant={2} />
             RESET
           </button>
         </div>
 
         <div className="terraSearch">
+          <TerraFrame variant={1} />
           <input
             type="search"
             value={query}
@@ -576,6 +583,7 @@ export default function TerraMap() {
                             className={i === Math.min(tongue, ids.length - 1) ? "on" : undefined}
                             onClick={() => setTongue(i)}
                           >
+                            <TerraFrame variant={i} />
                             {varieties[each].name}
                           </button>
                         ))}
@@ -609,6 +617,7 @@ export default function TerraMap() {
                             className="terraSpeak"
                             onClick={() => speak(expression.audioText || expression.text, variety.speech)}
                           >
+                            <TerraFrame variant={kind === "greeting" ? 0 : kind === "thanks" ? 1 : 2} />
                             音で聞く
                           </button>
                         </div>

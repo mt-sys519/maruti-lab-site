@@ -1,4 +1,6 @@
 import {
+  FRAMES,
+  RULE,
   MARK,
   MARK_MARKER,
   WORDMARK,
@@ -71,5 +73,33 @@ export default function TerraLogo({ size = "md" }: { size?: Size }) {
       <TerraMark size={size} />
       <TerraName size={size} />
     </span>
+  );
+}
+
+/**
+ * A drawn box behind a control, and a drawn line in place of a rule.
+ *
+ * Both stretch to whatever they are put on - the wobble stretches with them,
+ * the way a box drawn round something does - while `non-scaling-stroke` keeps
+ * the pen the same width whatever the shape ends up being. Three frames, so a
+ * row of buttons is not one box repeated.
+ */
+export function TerraFrame({ variant = 0 }: { variant?: number }) {
+  return (
+    <svg className="terraFrame" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+      {FRAMES[variant % FRAMES.length].map((d) => (
+        <path key={d} d={d} vectorEffect="non-scaling-stroke" />
+      ))}
+    </svg>
+  );
+}
+
+export function TerraRule() {
+  return (
+    <svg className="terraRule" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+      {RULE.map((d) => (
+        <path key={d} d={d} vectorEffect="non-scaling-stroke" />
+      ))}
+    </svg>
   );
 }
