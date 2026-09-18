@@ -78,8 +78,27 @@ function simplify(points, tolerance) {
   return points.filter((_, i) => keep[i]);
 }
 
+// A drawn line, not a plotted one.
+//
+// The displacement is a smooth function of position and nothing else, which is
+// the whole trick: neighbours share their border vertex for vertex, and a
+// wobble drawn from each country's own random numbers would tear every border
+// in the world open and show the sea through the gap. Ask the same question of
+// the same point and it always answers the same, so the two sides move
+// together and the seam holds.
+//
+// It also costs nothing. Roughening properly - rough.js and the rest - works
+// by cutting each line into several drawn strokes, which would put the map's
+// weight up two or three times. This moves the points that are already there.
+const HAND = 0.9;
+function byHand([x, y]) {
+  const dx = Math.sin(x * 0.21 + y * 0.13) + Math.sin(x * 0.07 - y * 0.31) * 0.6;
+  const dy = Math.cos(x * 0.17 - y * 0.23) + Math.cos(x * 0.29 + y * 0.09) * 0.6;
+  return [x + dx * HAND, y + dy * HAND];
+}
+
 function ring(points) {
-  const projected = simplify(points.map(project), TOLERANCE);
+  const projected = simplify(points.map(project), TOLERANCE).map(byHand);
   let d = "";
   let last = null;
   for (const point of projected) {
