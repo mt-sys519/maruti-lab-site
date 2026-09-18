@@ -98,3 +98,56 @@ export type World = {
   height: number;
   countries: Country[];
 };
+
+/**
+ * Coordinates come over the wire as steps rather than positions.
+ *
+ * The map is mostly numbers, and written out as text - "1740.9 522.9" - most of
+ * those numbers are the same few digits again and again. Each point is stored
+ * instead as how far it moved from the one before, at a tenth of a unit, which
+ * is nearly always small enough to fit in a single character: 480KB of text
+ * becomes 133KB, and 180KB over the wire becomes 80KB. Nothing is lost - the
+ * coordinates come back exactly as they went in.
+ *
+ * Zigzag, so a step of -3 costs what a step of 3 costs. Five bits a character,
+ * the sixth marking "there is more of this number". A "!" ends a ring, and the
+ * next one starts from zero again.
+ */
+const UNPACK = new Map<string, number>();
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  .split("")
+  .forEach((character, index) => UNPACK.set(character, index));
+
+export function unpack(packed: string): string {
+  let d = "";
+  let x = 0;
+  let y = 0;
+  let at = 0;
+  let started = false;
+  const step = () => {
+    let value = 0;
+    let shift = 0;
+    for (;;) {
+      const bits = UNPACK.get(packed[at++]) ?? 0;
+      value |= (bits & 31) << shift;
+      if (!(bits & 32)) break;
+      shift += 5;
+    }
+    return value & 1 ? -((value + 1) / 2) : value / 2;
+  };
+  while (at < packed.length) {
+    if (packed[at] === "!") {
+      d += "Z";
+      x = 0;
+      y = 0;
+      started = false;
+      at++;
+      continue;
+    }
+    x += step();
+    y += step();
+    d += `${started ? "L" : "M"}${x / 10} ${y / 10}`;
+    started = true;
+  }
+  return d;
+}

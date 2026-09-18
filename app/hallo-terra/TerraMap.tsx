@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TerraIntro from "./TerraIntro";
 import { TerraFrame } from "./TerraLogo";
-import { KINDS, KIND_LABEL, REGISTER_LABEL, places, varieties, type Country, type World } from "./content";
+import { KINDS, KIND_LABEL, REGISTER_LABEL, places, unpack, varieties, type Country, type World } from "./content";
 
 /* The world is drawn once and shown three times, side by side. Miller is a
    cylindrical projection, so the drawing repeats exactly every world-width:
@@ -47,7 +47,11 @@ export default function TerraMap() {
     let live = true;
     fetch("/hallo-terra/world.json")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((data: World) => live && setWorld(data))
+      .then((data: World) => {
+        // Unfolded once, here, rather than in every place that wants a shape.
+        for (const country of data.countries) country.d = unpack(country.d);
+        if (live) setWorld(data);
+      })
       .catch(() => live && setFailed(true));
     return () => {
       live = false;

@@ -81,24 +81,58 @@ function simplify(points, tolerance) {
   return points.filter((_, i) => keep[i]);
 }
 
+// Coordinates as text - "1740.9 522.9" - is most of this file, and most of
+// that is the same few digits over and over. Written as the step from the
+// previous point instead, at a tenth of a unit, each number is nearly always
+// small enough to fit in one character. Zigzag first, so that -3 costs what 3
+// costs; five bits a character with the sixth marking "more to come".
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+function packNumber(n) {
+  let v = n < 0 ? -n * 2 - 1 : n * 2;
+  let out = "";
+  do {
+    const chunk = v & 31;
+    v >>= 5;
+    out += ALPHABET[chunk | (v > 0 ? 32 : 0)];
+  } while (v > 0);
+  return out;
+}
+
 function ring(points) {
   const projected = simplify(points.map(project), TOLERANCE);
-  let d = "";
-  let last = null;
-  for (const point of projected) {
-    const [x, y] = point.map(round);
-    if (last && x === last[0] && y === last[1]) continue; // quantising makes duplicates
-    d += `${last ? "L" : "M"}${x} ${y}`;
-    last = [x, y];
+  let packed = "";
+  let count = 0;
+  let px = 0;
+  let py = 0;
+  for (const [x, y] of projected) {
+    const qx = Math.round(x * 10);
+    const qy = Math.round(y * 10);
+    if (count && qx === px && qy === py) continue; // quantising makes duplicates
+    packed += packNumber(qx - px) + packNumber(qy - py);
+    px = qx;
+    py = qy;
+    count++;
   }
-  return d.length > 24 ? `${d}Z` : ""; // a ring reduced to a speck is not a coastline
+  // A ring reduced to a speck is not a coastline.
+  return count > 4 ? { packed: `${packed}!`, points: projected } : null;
 }
 
 // A diamond two units across: visible as a dot, and something for the finger
 // target to sit on.
 function speck([x, y]) {
   const r = 1.6;
-  return `M${round(x)} ${round(y - r)}L${round(x + r)} ${round(y)}L${round(x)} ${round(y + r)}L${round(x - r)} ${round(y)}Z`;
+  const points = [[x, y - r], [x + r, y], [x, y + r], [x - r, y]];
+  let packed = "";
+  let px = 0;
+  let py = 0;
+  for (const [cx, cy] of points) {
+    const qx = Math.round(cx * 10);
+    const qy = Math.round(cy * 10);
+    packed += packNumber(qx - px) + packNumber(qy - py);
+    px = qx;
+    py = qy;
+  }
+  return `${packed}!`;
 }
 
 function toPath(geometry) {
@@ -106,20 +140,30 @@ function toPath(geometry) {
     geometry.type === "Polygon" ? [geometry.coordinates]
     : geometry.type === "MultiPolygon" ? geometry.coordinates
     : [];
-  return polygons.map((rings) => rings.map(ring).join("")).join("");
+  let packed = "";
+  const rings = [];
+  for (const polygon of polygons) {
+    for (const each of polygon) {
+      const drawn = ring(each);
+      if (!drawn) continue;
+      packed += drawn.packed;
+      rings.push(drawn.points);
+    }
+  }
+  return { packed, rings };
 }
 
 // The drawn extent of a country, so a tap can rule out all but a handful of
 // paths before asking the expensive question of whether the point is inside.
-function bbox(d) {
+function extent(rings) {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const pair of d.matchAll(/([ML])(-?[\d.]+) (-?[\d.]+)/g)) {
-    const x = Number(pair[2]);
-    const y = Number(pair[3]);
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
+  for (const points of rings) {
+    for (const [x, y] of points) {
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
   }
   return [round(minX), round(minY), round(maxX), round(maxY)];
 }
@@ -133,11 +177,9 @@ function bbox(d) {
 // biggest piece, and take in any other piece that is a real part of the
 // picture (at least a twelfth of it) as long as doing so does not pull the box
 // more than three times wider than the piece we started with.
-function portrait(d) {
-  const pieces = d
-    .split("M")
-    .slice(1)
-    .map((part) => bbox(`M${part}`))
+function portrait(rings) {
+  const pieces = rings
+    .map((points) => extent([points]))
     .map((box) => ({ box, w: box[2] - box[0], area: (box[2] - box[0]) * (box[3] - box[1]) }))
     .sort((a, b) => b.area - a.area);
   if (!pieces.length) return null;
@@ -221,13 +263,15 @@ for (const feature of geo.features) {
   // they keep their Natural Earth code rather than being dropped.
   const iso = p.ISO_A3 && p.ISO_A3 !== "-99" ? p.ISO_A3 : p.ADM0_A3 || p.SU_A3;
   const label = project([p.LABEL_X, p.LABEL_Y]);
+  const drawn = toPath(feature.geometry);
   // Tuvalu, Nauru and the Vatican survive 1:50m as specks and then lose even
   // that to simplification. A country that disappears cannot be greeted, so
   // whatever is left of it is replaced by a mark at its label point.
-  const d = toPath(feature.geometry) || speck(label);
+  const rings = drawn.rings.length ? drawn.rings : [[[label[0] - 1.6, label[1] - 1.6], [label[0] + 1.6, label[1] + 1.6]]];
+  const d = drawn.packed || speck(label);
   countries.push({
-    box: bbox(d),
-    crop: portrait(d),
+    box: extent(rings),
+    crop: portrait(rings),
     iso,
     ja: p.NAME_JA || p.NAME,
     en: p.NAME,
