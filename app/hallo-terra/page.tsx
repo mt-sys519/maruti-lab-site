@@ -117,38 +117,15 @@ export default function HalloTerraPage() {
         </section>
 
         <section>
-          <TerraShapes tone="greeting" at={2} />
-          <h2>地図のデータ</h2>
-          <p>
-            国境と海岸線は Natural Earth（1:50m、パブリックドメイン）を、ミラー図法で描いています。道路や店舗は載せていません。国境の引き方は、地域によって見解が分かれます。
-          </p>
-        </section>
-
-        <section>
           <TerraShapes tone="sky" at={3} />
           <h2>音声について</h2>
           <p>
-            音声は Piper という音声合成で、こちらの手元で一度だけ作ったものを置いています。作るときに使った声は、広告のあるサイトで公開してよいと明記されていて、なおかつ、ひとりの声から作られたものだけに絞りました。大勢の声を混ぜて作られた音声は、誰の話し方でもない発音になることがあって、フランス語とベンガル語で実際にそうなりました。そのため用意できたのは{" "}
-            {Object.keys(audio).length}の言語ぶんで、ほかは端末に入っている音声に頼るか、鳴らないかのどちらかです。日本語の声はこの条件で使えるものが見つからず、いまは鳴りません。鳴らないときは、画面をお相手に見せて発音を聞いてみてください。
-          </p>
-          <p>
-            人の声の録音と混ぜることはしていません。半分が人の声で半分が合成だと、同じ道具の中で声が二種類あることになるからです。
+            音を出せるのは{Object.keys(audio).length}の言語で、ほかは端末に入っている音声に頼るか、鳴らないかのどちらかです。中国語とアラビア語と日本語はいまのところ鳴りません。鳴らないときは、画面をお相手に見せて発音を聞いてみてください。
           </p>
           <p className="terraNote">
-            声ごとの出どころと利用条件は<a href="/hallo-terra/credits">クレジットのページ</a>にまとめています。
+            どの声をどこから借りていて、どんな条件が付いているかは
+            <a href="/hallo-terra/credits">クレジットのページ</a>に書いています。地図のデータの出どころも同じところです。
           </p>
-          <details className="terraVoices">
-            <summary>使った声と、その利用条件</summary>
-            <ul>
-              {[...new Map(Object.values(audio).map((a) => [a.voice, a.licence])).entries()]
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([voice, licence]) => (
-                  <li key={voice}>
-                    <code>{voice}</code> — {licence}
-                  </li>
-                ))}
-            </ul>
-          </details>
         </section>
 
         <aside className="terraAside">
