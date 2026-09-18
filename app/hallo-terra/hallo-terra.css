@@ -196,7 +196,7 @@
   gap: 7px;
   margin: 8px 0 18px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--terra-rule);
+  border-bottom: 1px solid color-mix(in srgb, var(--terra-rose) 45%, transparent);
 }
 .terraTongues button {
   position: relative;
@@ -207,20 +207,23 @@
   font: 700 12px/1 var(--terra-hand);
   cursor: pointer;
 }
-.terraTongues button { color: var(--muted); }
-.terraTongues button:nth-child(3n + 1).on { background: var(--terra-greeting); }
-.terraTongues button:nth-child(3n + 2).on { background: var(--terra-thanks); }
-.terraTongues button:nth-child(3n).on { background: var(--terra-apology); }
-.terraTongues button.on { color: var(--paper); }
-.terraTongues button.on .terraFrame { opacity: 0; }
+.terraTongues button { color: color-mix(in srgb, var(--terra-rose) 72%, #4b3740); }
+.terraTongues button .terraFrame { color: color-mix(in srgb, var(--terra-rose) 70%, transparent); }
+.terraTongues button.on {
+  background: color-mix(in srgb, var(--terra-rose) 26%, transparent);
+  color: #6d3550;
+}
+.terraTongues button.on .terraFrame { color: var(--terra-rose); opacity: 1; }
 
 /* The language is the answer to "whose words are these", so it is said out
-   loud rather than filed as a caption. */
-.terraVariety > .terraKind { color: #6d6a5e; }
+   loud rather than filed as a caption - and it is given a colour of its own.
+   The three kinds of phrase own blue, green and purple; the language is not
+   one of the three, and borrowing one of their colours said it was. */
+.terraVariety > .terraKind { color: color-mix(in srgb, var(--terra-rose) 72%, #4b3740); }
 .terraVariety h3 {
   margin: 6px 0 18px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--terra-rule);
+  border-bottom: 1px solid color-mix(in srgb, var(--terra-rose) 45%, transparent);
   font: 700 17px/1.4 var(--terra-hand);
   letter-spacing: 0.03em;
   color: var(--ink);
