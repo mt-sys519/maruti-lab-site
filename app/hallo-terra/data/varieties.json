@@ -1,0 +1,758 @@
+{
+  "ar-AE": {
+    "name": "アラビア語",
+    "speech": "ar-AE",
+    "expressions": {
+      "greeting": {
+        "text": "مرحبا",
+        "reading": "マルハバ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "آسف / آسفة",
+        "reading": "アーセフ / アースファ",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "ar-EG": {
+    "name": "アラビア語",
+    "speech": "ar-EG",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "آسف / آسفة",
+        "reading": "アーセフ / アースファ",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "ar-MA": {
+    "name": "アラビア語・アマジグ語ほか",
+    "speech": "ar-MA",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "سمح لي",
+        "reading": "スマフ リ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "ar-SA": {
+    "name": "アラビア語",
+    "speech": "ar-SA",
+    "expressions": {
+      "greeting": {
+        "text": "السلام عليكم",
+        "reading": "アッサラーム アライクム",
+        "meaning": "こんにちは / 平安を"
+      },
+      "thanks": {
+        "text": "شكراً",
+        "reading": "シュクラン",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "آسف / آسفة",
+        "reading": "アーセフ / アースファ",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "de-DE": {
+    "name": "ドイツ語",
+    "speech": "de-DE",
+    "expressions": {
+      "greeting": {
+        "text": "Guten Tag",
+        "reading": "グーテン ターク",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Danke",
+        "reading": "ダンケ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Entschuldigung",
+        "reading": "エントシュルディグング",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "el-GR": {
+    "name": "ギリシャ語",
+    "speech": "el-GR",
+    "expressions": {
+      "greeting": {
+        "text": "Γεια σας",
+        "reading": "ヤ サス",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Ευχαριστώ",
+        "reading": "エフハリスト",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Συγγνώμη",
+        "reading": "シグノーミ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "en-AU": {
+    "name": "英語ほか",
+    "speech": "en-AU",
+    "expressions": {
+      "greeting": {
+        "text": "G'day / Hello",
+        "reading": "グダイ / ハロー",
+        "meaning": "やあ / こんにちは"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "en-CA": {
+    "name": "英語・フランス語ほか",
+    "speech": "en-CA",
+    "expressions": {
+      "greeting": {
+        "text": "Hello / Bonjour",
+        "reading": "ハロー / ボンジュール",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Thank you / Merci",
+        "reading": "サンキュー / メルシー",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Sorry / Désolé(e)",
+        "reading": "ソーリー / デゾレ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "en-GB": {
+    "name": "英語ほか",
+    "speech": "en-GB",
+    "expressions": {
+      "greeting": {
+        "text": "Hello",
+        "reading": "ハロー",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "en-US": {
+    "name": "英語ほか",
+    "speech": "en-US",
+    "expressions": {
+      "greeting": {
+        "text": "Hello / Hi",
+        "reading": "ハロー / ハイ",
+        "meaning": "こんにちは / やあ"
+      },
+      "thanks": {
+        "text": "Thank you",
+        "reading": "サンキュー",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソーリー",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "es-AR": {
+    "name": "スペイン語ほか",
+    "speech": "es-AR",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "es-CL": {
+    "name": "スペイン語ほか",
+    "speech": "es-CL",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "es-ES": {
+    "name": "スペイン語ほか",
+    "speech": "es-ES",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "es-MX": {
+    "name": "スペイン語ほか",
+    "speech": "es-MX",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "es-PE": {
+    "name": "スペイン語・ケチュア語ほか",
+    "speech": "es-PE",
+    "expressions": {
+      "greeting": {
+        "text": "Hola",
+        "reading": "オラ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Gracias",
+        "reading": "グラシアス",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Perdón",
+        "reading": "ペルドン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "fi-FI": {
+    "name": "フィンランド語・スウェーデン語",
+    "speech": "fi-FI",
+    "expressions": {
+      "greeting": {
+        "text": "Hei",
+        "reading": "ヘイ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Kiitos",
+        "reading": "キートス",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Anteeksi",
+        "reading": "アンテークシ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "fil-PH": {
+    "name": "フィリピノ語・英語ほか",
+    "speech": "fil-PH",
+    "expressions": {
+      "greeting": {
+        "text": "Kumusta?",
+        "reading": "クムスタ？",
+        "meaning": "こんにちは / 元気？"
+      },
+      "thanks": {
+        "text": "Salamat",
+        "reading": "サラマッ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Paumanhin",
+        "reading": "パウマンヒン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "fr-FR": {
+    "name": "フランス語",
+    "speech": "fr-FR",
+    "expressions": {
+      "greeting": {
+        "text": "Bonjour",
+        "reading": "ボンジュール",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Merci",
+        "reading": "メルシー",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Désolé(e)",
+        "reading": "デゾレ",
+        "meaning": "すみません / ごめんなさい"
+      }
+    }
+  },
+  "hi-IN": {
+    "name": "ヒンディー語ほか多数",
+    "speech": "hi-IN",
+    "expressions": {
+      "greeting": {
+        "text": "नमस्ते",
+        "reading": "ナマステ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "धन्यवाद",
+        "reading": "ダンニャヴァード",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "माफ़ कीजिए",
+        "reading": "マーフ キージエ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "id-ID": {
+    "name": "インドネシア語ほか",
+    "speech": "id-ID",
+    "expressions": {
+      "greeting": {
+        "text": "Selamat pagi",
+        "reading": "スラマッ パギ",
+        "meaning": "おはようございます"
+      },
+      "thanks": {
+        "text": "Terima kasih",
+        "reading": "トゥリマ カシ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Maaf",
+        "reading": "マアフ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "it-IT": {
+    "name": "イタリア語",
+    "speech": "it-IT",
+    "expressions": {
+      "greeting": {
+        "text": "Buongiorno",
+        "reading": "ブオンジョルノ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Grazie",
+        "reading": "グラツィエ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Mi dispiace",
+        "reading": "ミ ディスピアーチェ",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "ja-JP": {
+    "name": "日本語",
+    "speech": "ja-JP",
+    "expressions": {
+      "greeting": {
+        "text": "こんにちは",
+        "reading": "コンニチハ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "ありがとう",
+        "reading": "アリガトウ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "すみません",
+        "reading": "スミマセン",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "ko-KR": {
+    "name": "韓国語",
+    "speech": "ko-KR",
+    "expressions": {
+      "greeting": {
+        "text": "안녕하세요",
+        "reading": "アンニョンハセヨ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "감사합니다",
+        "reading": "カムサハムニダ",
+        "meaning": "ありがとうございます"
+      },
+      "apology": {
+        "text": "죄송합니다",
+        "reading": "チェソンハムニダ",
+        "meaning": "申し訳ありません"
+      }
+    }
+  },
+  "mi-NZ": {
+    "name": "英語・マオリ語ほか",
+    "speech": "mi-NZ",
+    "expressions": {
+      "greeting": {
+        "text": "Kia ora",
+        "reading": "キア オラ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Ngā mihi",
+        "reading": "ンガー ミヒ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Aroha mai",
+        "reading": "アロハ マイ",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "nl-NL": {
+    "name": "オランダ語",
+    "speech": "nl-NL",
+    "expressions": {
+      "greeting": {
+        "text": "Hallo",
+        "reading": "ハロー",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Dank u / Bedankt",
+        "reading": "ダンク ウー / ベダンクト",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Sorry",
+        "reading": "ソリー",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "pl-PL": {
+    "name": "ポーランド語",
+    "speech": "pl-PL",
+    "expressions": {
+      "greeting": {
+        "text": "Dzień dobry",
+        "reading": "ジェン ドブリ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Dziękuję",
+        "reading": "ジェンクイェ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Przepraszam",
+        "reading": "プシェプラシャム",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "pt-BR": {
+    "name": "ポルトガル語",
+    "speech": "pt-BR",
+    "expressions": {
+      "greeting": {
+        "text": "Olá / Oi",
+        "reading": "オラ / オイ",
+        "meaning": "こんにちは / やあ"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デスクウピ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "pt-PT": {
+    "name": "ポルトガル語",
+    "speech": "pt-PT",
+    "expressions": {
+      "greeting": {
+        "text": "Olá",
+        "reading": "オラ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Obrigado / Obrigada",
+        "reading": "オブリガード / オブリガーダ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Desculpe",
+        "reading": "デシュクルペ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "ru-RU": {
+    "name": "ロシア語ほか",
+    "speech": "ru-RU",
+    "expressions": {
+      "greeting": {
+        "text": "Здравствуйте",
+        "reading": "ズドラーストヴィチェ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Спасибо",
+        "reading": "スパシーバ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Извините",
+        "reading": "イズヴィニーチェ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "sv-SE": {
+    "name": "スウェーデン語",
+    "speech": "sv-SE",
+    "expressions": {
+      "greeting": {
+        "text": "Hej",
+        "reading": "ヘイ",
+        "meaning": "こんにちは / やあ"
+      },
+      "thanks": {
+        "text": "Tack",
+        "reading": "タック",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Förlåt",
+        "reading": "フォルロート",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "sw-KE": {
+    "name": "スワヒリ語・英語ほか",
+    "speech": "sw-KE",
+    "expressions": {
+      "greeting": {
+        "text": "Habari?",
+        "reading": "ハバリ？",
+        "meaning": "こんにちは / 調子はどう？"
+      },
+      "thanks": {
+        "text": "Asante",
+        "reading": "アサンテ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Samahani",
+        "reading": "サマハニ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "th-TH": {
+    "name": "タイ語",
+    "speech": "th-TH",
+    "expressions": {
+      "greeting": {
+        "text": "สวัสดีครับ / สวัสดีค่ะ",
+        "reading": "サワッディー クラップ / カー",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "ขอบคุณครับ / ขอบคุณค่ะ",
+        "reading": "コープクン クラップ / カー",
+        "meaning": "ありがとうございます"
+      },
+      "apology": {
+        "text": "ขอโทษครับ / ขอโทษค่ะ",
+        "reading": "コートート クラップ / カー",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "tr-TR": {
+    "name": "トルコ語",
+    "speech": "tr-TR",
+    "expressions": {
+      "greeting": {
+        "text": "Merhaba",
+        "reading": "メルハバ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Teşekkür ederim",
+        "reading": "テシェッキュル エデリム",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Özür dilerim",
+        "reading": "オズュル ディレリム",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "vi-VN": {
+    "name": "ベトナム語",
+    "speech": "vi-VN",
+    "expressions": {
+      "greeting": {
+        "text": "Xin chào",
+        "reading": "シン チャオ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Cảm ơn",
+        "reading": "カム オン",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Xin lỗi",
+        "reading": "シン ロイ",
+        "meaning": "すみません"
+      }
+    }
+  },
+  "zh-CN": {
+    "name": "中国語（普通話）ほか",
+    "speech": "zh-CN",
+    "expressions": {
+      "greeting": {
+        "text": "你好",
+        "reading": "ニーハオ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "谢谢",
+        "reading": "シエシエ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "对不起",
+        "reading": "ドゥイブチー",
+        "meaning": "ごめんなさい"
+      }
+    }
+  },
+  "zu-ZA": {
+    "name": "ズールー語・英語ほか多数",
+    "speech": "zu-ZA",
+    "expressions": {
+      "greeting": {
+        "text": "Sawubona",
+        "reading": "サウボナ",
+        "meaning": "こんにちは"
+      },
+      "thanks": {
+        "text": "Ngiyabonga",
+        "reading": "ンギヤボンガ",
+        "meaning": "ありがとう"
+      },
+      "apology": {
+        "text": "Ngiyaxolisa",
+        "reading": "ンギヤコリサ（近似）",
+        "meaning": "ごめんなさい"
+      }
+    }
+  }
+}

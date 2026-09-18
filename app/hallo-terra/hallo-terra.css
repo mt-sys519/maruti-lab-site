@@ -1,0 +1,205 @@
+/* HALLO TERRA.
+   The map screen is an app, not a document: it fills what is left under the
+   header and never scrolls. That is deliberate. A map you drag sideways and a
+   page you drag upwards cannot share one finger without one of them stealing
+   the other's gesture, so the page scroll is simply not there. */
+
+.terraPage {
+  height: calc(100dvh - 86px);
+  overflow: hidden;
+}
+
+.terra {
+  height: 100%;
+  position: relative; /* the sheet below is positioned against this, not the page */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  background: var(--paper);
+}
+
+.terraStage {
+  position: relative;
+  overflow: hidden;
+  background: #dce3e4;
+  touch-action: none;
+  overscroll-behavior: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.terraStage:active { cursor: grabbing; }
+
+.terraSvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.terraSea { fill: #dce3e4; }
+
+.terraCountry {
+  fill: #e7e3d8;
+  stroke: #b3b8ab;
+  stroke-width: 0.9;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.terraCountry.on { fill: var(--verm); stroke: #8c3629; }
+
+/* Countries the size of a full stop still have people in them, so they get a
+   mark of their own to aim at. */
+.terraDot {
+  fill: #b9a99a;
+  stroke: var(--paper);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.terraDot.on { fill: var(--verm); }
+
+.terraLoading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.terraTip {
+  position: fixed;
+  transform: translate(14px, -30px);
+  padding: 5px 9px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 4;
+}
+
+.terraZoom {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: grid;
+  gap: 6px;
+  justify-items: stretch;
+}
+.terraZoom button {
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: rgba(242, 240, 233, 0.94);
+  color: var(--ink);
+  font: 500 15px/1 "Yu Gothic UI", sans-serif;
+  cursor: pointer;
+}
+.terraZoom .terraReset { font-size: 9px; letter-spacing: 0.12em; height: 34px; }
+
+.terraSearch { position: absolute; left: 14px; top: 14px; width: min(260px, 60%); }
+.terraSearch input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  background: rgba(242, 240, 233, 0.94);
+  color: var(--ink);
+  font: 400 13px/1 "Yu Gothic UI", sans-serif;
+}
+.terraSearch ul { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--line); background: var(--paper); }
+.terraSearch li + li { border-top: 1px solid var(--line); }
+.terraSearch li button {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 13px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 400 13px/1 "Yu Gothic UI", sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.terraSearch li button:hover { background: var(--paper-deep); }
+.terraSearch small { font-size: 10px; color: var(--muted); }
+
+.terraCard {
+  border-left: 1px solid var(--line);
+  background: var(--paper);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.terraGrip { display: none; }
+
+.terraCardBody { padding: 30px 26px 60px; }
+.terraEyebrow { margin: 0 0 10px; font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: 0.16em; color: var(--muted); }
+.terraCard h2 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0.02em; }
+.terraEn { margin: 7px 0 26px; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+
+.terraVariety h3 {
+  margin: 0 0 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+  font: 500 12px/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.terraPhrase { margin-bottom: 22px; }
+.terraKind { margin: 0 0 6px; font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: 0.14em; color: var(--green); }
+.terraText { margin: 0; font-size: 21px; line-height: 1.5; }
+.terraReading { margin: 4px 0 0; font-size: 13px; letter-spacing: 0.06em; color: var(--verm); }
+.terraMeaning { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+.terraSpeak {
+  margin-top: 9px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font: 500 10px/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.terraSpeak:hover { border-color: var(--ink); color: var(--ink); }
+
+.terraCulture { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line); }
+.terraGesture { margin: 0 0 8px; font-size: 15px; }
+.terraCulture p { font-size: 12px; line-height: 1.95; color: var(--muted); margin: 0 0 8px; }
+.terraNote { color: #6b7069; }
+.terraEmpty { font-size: 12px; line-height: 1.95; color: var(--muted); }
+
+@media (max-width: 860px) {
+  .terra { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); }
+  /* The card becomes a sheet over the map: it peeks, and a tap or a
+     selection raises it. The map keeps the whole screen underneath. */
+  .terraCard {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 72%;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -12px 34px rgba(40, 46, 42, 0.12);
+    transform: translateY(calc(100% - 92px));
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 3;
+  }
+  .terraCard.open { transform: translateY(0); }
+  .terraGrip {
+    display: block;
+    width: 100%;
+    padding: 12px 0 8px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .terraGrip i { display: block; width: 44px; height: 4px; margin: 0 auto; border-radius: 2px; background: var(--line); }
+  .terraCardBody { padding: 4px 22px 40px; }
+  .terraCard h2 { font-size: 25px; }
+  .terraEn { margin-bottom: 20px; }
+  .terraZoom { bottom: 104px; }
+  .terraSearch { width: min(230px, 62%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terraCard { transition: none; }
+}
