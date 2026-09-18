@@ -37,6 +37,9 @@ export default function TerraMap() {
   const view = useRef<View>({ x: 0, y: 0, s: 1 });
   const limits = useRef({ min: 0.1, max: 4 });
   const glide = useRef<{ vx: number; vy: number; raf: number } | null>(null);
+  // What is in the middle of the frame, in world coordinates, so that a window
+  // resize or a phone turning on its side keeps looking at the same place.
+  const middle = useRef({ x: 1000, y: 700 });
   const drift = useRef<{ raf: number } | null>(null);
 
   useEffect(() => {
@@ -87,6 +90,12 @@ export default function TerraMap() {
       v.y = room > 0 ? room / 2 : Math.min(0, Math.max(room, v.y));
     }
     layer.setAttribute("transform", `translate(${v.x} ${v.y}) scale(${v.s})`);
+    if (stage) {
+      middle.current = {
+        x: (stage.clientWidth / 2 - v.x) / v.s,
+        y: (stage.clientHeight / 2 - v.y) / v.s,
+      };
+    }
   }, [world]);
 
   const fit = useCallback(() => {
@@ -94,10 +103,13 @@ export default function TerraMap() {
     if (!stage || !world) return;
     const w = stage.clientWidth;
     const h = stage.clientHeight;
-    // Zoomed all the way out the whole world is in view with room to spare,
-    // and three copies still cover the screen. Zoomed all the way in a country
-    // the size of Portugal fills it.
-    const min = Math.max((h * 0.62) / world.height, (w * 0.4) / world.width);
+    // Pulled all the way back, the world fills the frame from top to bottom
+    // and no further: a band of empty sea above and below is not more world,
+    // it is just less map. East and west it goes on repeating, so there is
+    // nothing to fit there - only enough scale left that three copies still
+    // cover a very wide screen. Zoomed all the way in, a country the size of
+    // Portugal fills the frame.
+    const min = Math.max(h / world.height, (w * 0.4) / world.width);
     limits.current = { min, max: min * 9 };
     return min;
   }, [world]);
@@ -242,7 +254,7 @@ export default function TerraMap() {
 
     const min = fit();
     if (min) {
-      view.current.s = min * 1.6;
+      view.current.s = min * 1.15;
       const japan = byIso.get("JPN");
       if (japan) centreOn(japan, false);
       else apply();
@@ -380,8 +392,15 @@ export default function TerraMap() {
     // and a zoomed page cannot be panned back by the map.
     const noGesture = (e: Event) => e.preventDefault();
     const resize = () => {
-      fit();
-      zoomTo(view.current.s);
+      const was = { ...middle.current };
+      const min = fit();
+      const v = view.current;
+      if (min) v.s = Math.min(limits.current.max, Math.max(min, v.s));
+      // Put back whatever was in the middle before the frame changed shape,
+      // rather than leaving the view wherever the old numbers left it.
+      v.x = stage.clientWidth / 2 - was.x * v.s;
+      v.y = stage.clientHeight / 2 - was.y * v.s;
+      apply();
     };
 
     stage.addEventListener("pointerdown", down);
@@ -485,7 +504,7 @@ export default function TerraMap() {
             className="terraReset"
             onClick={() => {
               const min = fit();
-              if (min) zoomTo(min * 1.6);
+              if (min) zoomTo(min * 1.15);
               if (country) centreOn(country);
             }}
           >
