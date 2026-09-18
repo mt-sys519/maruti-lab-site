@@ -19,6 +19,12 @@
 //   4. synthesise audioText (never the katakana), one mp3 per phrase at 64kbps mono
 //   5. write app/hallo-terra/audio.generated.json: which variety has which clips
 //
+// Single-speaker voices only. Several of the best-covered languages have a
+// model trained on a crowd - French on 125 speakers, German on 236 - and asked
+// for no speaker in particular it gives you nobody in particular: the French
+// "Bonjour" it produced was plainly not French. Where a locale has a
+// single-speaker voice under an acceptable licence, that is the one to use.
+//
 // The 2023 C++ build of piper cannot read some newer models ("aɪ is not a
 // single codepoint"); the current Python build reads them. Where both refuse -
 // Chinese, at the time of writing - the language simply has no audio.

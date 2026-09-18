@@ -36,8 +36,8 @@
   ]
  },
  "de-AT": {
-  "voice": "de_DE-mls-medium",
-  "licence": "CC-BY 4.0",
+  "voice": "de_DE-thorsten-medium",
+  "licence": "CC0",
   "kinds": [
    "greeting",
    "thanks",
@@ -45,8 +45,8 @@
   ]
  },
  "de-CH": {
-  "voice": "de_DE-mls-medium",
-  "licence": "CC-BY 4.0",
+  "voice": "de_DE-thorsten-medium",
+  "licence": "CC0",
   "kinds": [
    "greeting",
    "thanks",
@@ -54,8 +54,8 @@
   ]
  },
  "de-DE": {
-  "voice": "de_DE-mls-medium",
-  "licence": "CC-BY 4.0",
+  "voice": "de_DE-thorsten-medium",
+  "licence": "CC0",
   "kinds": [
    "greeting",
    "thanks",
@@ -63,8 +63,8 @@
   ]
  },
  "de-LI": {
-  "voice": "de_DE-mls-medium",
-  "licence": "CC-BY 4.0",
+  "voice": "de_DE-thorsten-medium",
+  "licence": "CC0",
   "kinds": [
    "greeting",
    "thanks",
@@ -675,7 +675,7 @@
   ]
  },
  "fr-BF": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -684,7 +684,7 @@
   ]
  },
  "fr-BI": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -693,7 +693,7 @@
   ]
  },
  "fr-BJ": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -702,7 +702,7 @@
   ]
  },
  "fr-BL": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -711,7 +711,7 @@
   ]
  },
  "fr-CA": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -720,7 +720,7 @@
   ]
  },
  "fr-CD": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -729,7 +729,7 @@
   ]
  },
  "fr-CF": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -738,7 +738,7 @@
   ]
  },
  "fr-CG": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -747,7 +747,7 @@
   ]
  },
  "fr-CI": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -756,7 +756,7 @@
   ]
  },
  "fr-CM": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -765,7 +765,7 @@
   ]
  },
  "fr-DJ": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -774,7 +774,7 @@
   ]
  },
  "fr-FR": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -783,7 +783,7 @@
   ]
  },
  "fr-GA": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -792,7 +792,7 @@
   ]
  },
  "fr-GF": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -801,7 +801,7 @@
   ]
  },
  "fr-GN": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -810,7 +810,7 @@
   ]
  },
  "fr-GP": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -819,7 +819,7 @@
   ]
  },
  "fr-HT": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -828,7 +828,7 @@
   ]
  },
  "fr-LU": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -837,7 +837,7 @@
   ]
  },
  "fr-MC": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -846,7 +846,7 @@
   ]
  },
  "fr-MF": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -855,7 +855,7 @@
   ]
  },
  "fr-ML": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -864,7 +864,7 @@
   ]
  },
  "fr-MQ": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -873,7 +873,7 @@
   ]
  },
  "fr-NC": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -882,7 +882,7 @@
   ]
  },
  "fr-NE": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -891,7 +891,7 @@
   ]
  },
  "fr-PF": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -900,7 +900,7 @@
   ]
  },
  "fr-PM": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -909,7 +909,7 @@
   ]
  },
  "fr-RE": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -918,7 +918,7 @@
   ]
  },
  "fr-SC": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -927,7 +927,7 @@
   ]
  },
  "fr-SN": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -936,7 +936,7 @@
   ]
  },
  "fr-TD": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -945,7 +945,7 @@
   ]
  },
  "fr-TF": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -954,7 +954,7 @@
   ]
  },
  "fr-TG": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -963,7 +963,7 @@
   ]
  },
  "fr-WF": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -972,7 +972,7 @@
   ]
  },
  "fr-YT": {
-  "voice": "fr_FR-mls-medium",
+  "voice": "fr_FR-siwis-medium",
   "licence": "CC-BY 4.0",
   "kinds": [
    "greeting",
@@ -990,7 +990,7 @@
   ]
  },
  "kk-KZ": {
-  "voice": "kk_KZ-issai-high",
+  "voice": "kk_KZ-iseke-x_low",
   "licence": "CC-BY-4.0",
   "kinds": [
    "greeting",
@@ -1215,8 +1215,8 @@
   ]
  },
  "uk-UA": {
-  "voice": "uk_UA-ukrainian_tts-medium",
-  "licence": "CC0",
+  "voice": "uk_UA-mykyta-high",
+  "licence": "Apache 2.0",
   "kinds": [
    "greeting",
    "thanks",
