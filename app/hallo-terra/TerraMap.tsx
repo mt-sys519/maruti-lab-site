@@ -48,6 +48,7 @@ export default function TerraMap() {
   // Shown when the wheel is turned without ctrl, so that "nothing happened"
   // says why. It takes itself away again.
   const [hint, setHint] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
   // Which of the place's ways of speaking the card is showing.
   const [tongue, setTongue] = useState(0);
   // Which languages this particular device can speak, which is nothing to do
@@ -407,6 +408,18 @@ export default function TerraMap() {
       setSelected(country.iso);
       setTongue(0);
       if (move) centreOn(country);
+      // On a narrow screen the card is below the map rather than over it, so
+      // choosing a country changes something you cannot see. The page comes
+      // down far enough to show the top of it - the scroll anyone would do by
+      // hand - and only ever downwards, so it never drags you back up from
+      // something you were already reading.
+      const card = cardRef.current;
+      if (!card || !window.matchMedia("(max-width: 860px)").matches) return;
+      requestAnimationFrame(() => {
+        const top = card.getBoundingClientRect().top + window.scrollY;
+        const want = Math.round(top - window.innerHeight * 0.42);
+        if (window.scrollY < want - 8) window.scrollTo({ top: want, behavior: "smooth" });
+      });
     },
     [centreOn],
   );
@@ -758,7 +771,7 @@ export default function TerraMap() {
         </div>
       )}
 
-      <aside className="terraCard" aria-live="polite">
+      <aside className="terraCard" ref={cardRef} aria-live="polite">
         {country ? (
           <div className="terraCardBody">
             {/* Its own outline beside its name: every place has one, it needs

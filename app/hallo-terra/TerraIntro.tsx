@@ -26,17 +26,26 @@ const POOL = Object.values(varieties)
   .map((v) => v.expressions.greeting?.text?.split(" / ")[0]?.trim())
   .filter((t): t is string => !!t && t.length <= 12);
 
-// Where the illustration left a space for the globe, measured off the artwork.
-// In the crayon drawing the circle is barely brighter than the paper - what
-// separates them is blue, since the paper is cream and the circle is not - so
-// it was found by looking at that channel alone: 32.5% of the width, centred
-// at 49.5% / 38.5%. The globe is drawn a little larger so the circle's soft
-// edge is covered rather than left showing as a ring.
-const DISC_X = 49.5;
-const DISC_Y = 38.5;
-const DISC_SIZE = 33.8;
+// Two drawings of the same gathering: one lying down for a window, one
+// standing up for a phone, where the wide one could only ever be a strip of
+// somebody's jumper. Each leaves its own space for the globe, and each space
+// was measured off the artwork rather than guessed. In the crayon drawing the
+// circle is barely brighter than the paper - what separates them is blue,
+// since the paper is cream and the circle is not - so each was found by
+// looking for the widest run of pixels that are bright without being warm.
+// The globe is drawn a little larger than the space so the circle's soft edge
+// is covered rather than left showing as a ring.
+type Art = { src: string; x: number; y: number; size: number };
+const WIDE: Art = { src: "/hallo-terra/intro.webp", x: 49.5, y: 38.3, size: 34.0 };
+const TALL: Art = { src: "/hallo-terra/intro-tall.webp", x: 50.5, y: 41.7, size: 53.5 };
 
 export default function TerraIntro({ onDone }: { onDone: () => void }) {
+  // Which drawing, asked once at the width the rest of the page changes shape
+  // at. Read while the state is made rather than in an effect, which is safe
+  // here and nowhere else on the page: the opening is mounted a frame after
+  // the map by the client, so it never renders on the server and there is no
+  // first guess to be caught out by.
+  const [art] = useState<Art>(() => (window.matchMedia("(max-width: 860px)").matches ? TALL : WIDE));
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [leaving, setLeaving] = useState(false);
   const [word, setWord] = useState(0);
@@ -223,16 +232,16 @@ export default function TerraIntro({ onDone }: { onDone: () => void }) {
           The zoom layer is separate from the name and the button: they belong
           to the page, not to the scene being dived into. */}
       <div className="terraIntroZoom">
-        <div className="terraIntroScene">
-          <Image src="/hallo-terra/intro.webp" alt="" fill priority sizes="100vw" style={{ objectFit: "cover" }} />
+        <div className={`terraIntroScene${art === TALL ? " isTall" : ""}`}>
+          <Image src={art.src} alt="" fill priority sizes="100vw" style={{ objectFit: "cover" }} />
           <canvas
             ref={canvasRef}
             /* Width only: the height follows from aspect-ratio, because a
                percentage height here would answer to the frame, not the circle. */
-            style={{ left: `${DISC_X}%`, top: `${DISC_Y}%`, width: `${DISC_SIZE}%` }}
+            style={{ left: `${art.x}%`, top: `${art.y}%`, width: `${art.size}%` }}
           />
           {!leaving && (
-            <p className="terraIntroWord" style={{ left: `${DISC_X}%`, top: `${DISC_Y}%` }}>
+            <p className="terraIntroWord" style={{ left: `${art.x}%`, top: `${art.y}%` }}>
               <span key={word}>{greetings[word % Math.max(1, greetings.length)] ?? ""}</span>
             </p>
           )}
