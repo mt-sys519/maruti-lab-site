@@ -169,7 +169,6 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.terraGrip { display: none; }
 
 .terraCardBody { padding: 30px 26px 60px; }
 .terraEyebrow { margin: 0 0 10px; font: 500 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: 0.16em; color: var(--muted); }
@@ -415,174 +414,34 @@
 }
 
 @media (max-width: 860px) {
-  /* A phone gets the whole first screen, not 78% of it: the header and the
-     name cost about 132px, the map takes the rest, and the writing starts
-     where the screen ends instead of poking up over it. The sheet is a share
-     of that, so this is also where the card stops being a letterbox. */
+  /* No sheet. The card used to climb over the map and sit there as a strip
+     you had to know to pull; now it is simply the next thing down the page,
+     the same order it is read in on a wide screen. Nothing moves on its own.
+     The map keeps the screen it is on less the top of the card, so that
+     touching a country visibly changes something without anything sliding. */
   .terra {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr);
-    height: min(860px, max(66dvh, 100dvh - 132px));
+    grid-template-rows: auto auto;
+    height: auto;
+    overflow: visible;
   }
-  /* The card becomes a sheet over the map: it peeks, and a tap or a
-     selection raises it. The map keeps the whole screen underneath. */
+  .terraStage { height: min(740px, max(52dvh, 100dvh - 252px)); }
   .terraCard {
-    background: var(--terra-card);
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    max-height: 82%;
+    position: static;
+    transform: none;
+    max-height: none;
+    overflow-y: visible;
     border-left: 0;
     border-top: 1px solid var(--line);
-    box-shadow: 0 -12px 34px rgba(40, 46, 42, 0.12);
-    transform: translateY(calc(100% - 92px));
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 3;
+    box-shadow: none;
   }
-  .terraCard.open { transform: translateY(0); }
-  .terraGrip {
-    display: block;
-    width: 100%;
-    padding: 12px 0 8px;
-    border: 0;
-    background: none;
-    cursor: pointer;
-  }
-  .terraGrip i { display: block; width: 44px; height: 4px; margin: 0 auto; border-radius: 2px; background: var(--line); }
-  .terraCardBody { padding: 4px 22px 40px; }
+  .terraCardBody { padding: 26px 22px 40px; }
   .terraCard h2 { font-size: 25px; }
   .terraEn { margin-bottom: 20px; }
-  .terraZoom { bottom: 104px; }
+  .terraZoom { bottom: 22px; }
   .terraSearch { width: min(230px, 62%); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .terraCard { transition: none; }
-}
-
-/* Said only when somebody turns the wheel and the map does not move. */
-.terraWheelHint {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0;
-  z-index: 4;
-  padding: 14px 22px;
-  border-radius: 6px;
-  background: rgba(45, 44, 43, 0.78);
-  color: #fdfaf0;
-  font: 700 13px/1 var(--terra-hand);
-  letter-spacing: 0.04em;
-  pointer-events: none;
-  animation: terraHint 0.18s ease both;
-}
-@keyframes terraHint {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* ---- what the map is for, underneath the map ---------------------- */
-
-/* The writing is not the tool, so it stands on its own lighter ground. */
-.terraNotes { background: var(--terra-notes); padding-top: 26px; }
-
-.terraAbout {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 40px clamp(22px, 6vw, 60px) 90px;
-}
-/* The writing sits on the page; the shapes sit behind it and are allowed to
-   wander outside their section. */
-.terraAbout section,
-.terraAbout .terraAside { position: relative; padding: 26px clamp(18px, 3vw, 30px) 30px; }
-.terraAbout section + section { margin-top: 26px; }
-.terraAbout section > :not(.terraShapes),
-.terraAbout .terraAside > :not(.terraShapes) { position: relative; }
-
-.terraShapes {
-  position: absolute;
-  inset: 0;
-  display: block;
-  pointer-events: none;
-}
-.terraShape { position: absolute; aspect-ratio: 1; height: auto; overflow: visible; }
-.terraShapeFill { fill: currentColor; opacity: 0.13; stroke: none; }
-.terraShapeLine { fill: none; stroke: currentColor; stroke-width: 1.6; opacity: 0.38; stroke-linejoin: round; }
-
-/* Out in the margins on a wide screen. On a narrow one there are no margins
-   to put them in, so they go under the writing instead - which is where they
-   already were, the text being the only thing here that is positioned - and
-   they are let down until a line of type crossing one is still just a line of
-   type on paper. */
-@media (max-width: 900px) {
-  .terraShape { opacity: 0.55; }
-}
-@media (max-width: 620px) {
-  .terraShape { opacity: 0.85; }
-  .terraShapeFill { opacity: 0.09; }
-  .terraShapeLine { opacity: 0.26; }
-}
-
-.terraAbout h2 {
-  margin: 0 0 18px;
-  font-family: var(--terra-hand);
-  font-size: clamp(19px, 2.4vw, 25px);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.5;
-}
-.terraAbout p {
-  margin: 0 0 16px;
-  font-size: 14px;
-  line-height: 2.05;
-  color: #454b46;
-}
-.terraAbout p:last-child { margin-bottom: 0; }
-/* The site strips link colour and underline globally; inside a paragraph of
-   prose a link has to look like one again. */
-.terraAbout a {
-  color: var(--verm);
-  border-bottom: 1px solid rgba(173, 68, 52, 0.4);
-  padding-bottom: 1px;
-}
-.terraAbout a:hover { border-bottom-color: var(--verm); }
-.terraLede { font-size: 15px !important; color: var(--ink) !important; }
-.terraAbout .terraEyebrow { margin-bottom: 14px; }
-.terraSteps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
-.terraSteps li {
-  counter-increment: step;
-  position: relative;
-  padding-left: 42px;
-  margin-bottom: 20px;
-  font-size: 14px;
-  line-height: 2.05;
-  color: #454b46;
-}
-.terraSteps li:before {
-  content: counter(step);
-  position: absolute;
-  left: 0;
-  top: 3px;
-  width: 25px;
-  height: 25px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  font: 500 11px/1 "Yu Gothic UI", sans-serif;
-  color: var(--muted);
-}
-.terraAside { margin-top: 30px; }
-
-/* The voices, and what each one allows. Folded away: it is a legal necessity
-   rather than something anybody came here to read. */
-.terraVoices { margin-top: 14px; font-size: 12px; color: var(--muted); }
-.terraVoices summary { cursor: pointer; letter-spacing: 0.04em; }
-.terraVoices ul { list-style: none; margin: 12px 0 0; padding: 0; columns: 2; column-gap: 26px; }
-.terraVoices li { margin-bottom: 5px; line-height: 1.7; break-inside: avoid; }
-.terraVoices code { font: 400 11px/1 Consolas, monospace; color: var(--ink); }
 @media (max-width: 640px) { .terraVoices ul { columns: 1; } }
 .terraAside h2 { font-size: 15px; margin-bottom: 12px; }
 .terraAside p { font-size: 12.5px; line-height: 1.95; }

@@ -45,7 +45,6 @@ export default function TerraMap() {
   const [hover, setHover] = useState<Country | null>(null);
   const [pointer, setPointer] = useState<Point>({ x: 0, y: 0 });
   const [query, setQuery] = useState("");
-  const [sheetOpen, setSheetOpen] = useState(false);
   // Shown when the wheel is turned without ctrl, so that "nothing happened"
   // says why. It takes itself away again.
   const [hint, setHint] = useState(false);
@@ -407,7 +406,6 @@ export default function TerraMap() {
       if (!country) return;
       setSelected(country.iso);
       setTongue(0);
-      setSheetOpen(true);
       if (move) centreOn(country);
     },
     [centreOn],
@@ -760,10 +758,7 @@ export default function TerraMap() {
         </div>
       )}
 
-      <aside className={`terraCard${sheetOpen ? " open" : ""}`} aria-live="polite">
-        <button type="button" className="terraGrip" onClick={() => setSheetOpen((v) => !v)} aria-label={sheetOpen ? "閉じる" : "開く"}>
-          <i />
-        </button>
+      <aside className="terraCard" aria-live="polite">
         {country ? (
           <div className="terraCardBody">
             {/* Its own outline beside its name: every place has one, it needs
