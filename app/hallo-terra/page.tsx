@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import TerraLogo, { TerraShapes } from "./TerraLogo";
+import { audio } from "./content";
 import TerraMap from "./TerraMap";
 
 /* The map is the page, and the map is a client component, so the metadata
@@ -118,11 +119,35 @@ export default function HalloTerraPage() {
           </p>
         </section>
 
+        <section>
+          <TerraShapes tone="sky" at={3} />
+          <h2>音声について</h2>
+          <p>
+            音声は Piper という音声合成で、こちらの手元で一度だけ作ったものを置いています。作るときに使った声は、広告のあるサイトで公開してよいと明記されているものだけに絞りました。そのため用意できたのは{" "}
+            {Object.keys(audio).length}の言語ぶんで、ほかは端末に入っている音声に頼るか、鳴らないかのどちらかです。日本語の声はこの条件で使えるものが見つからず、いまは鳴りません。
+          </p>
+          <p>
+            人の声の録音と混ぜることはしていません。半分が人の声で半分が合成だと、同じ道具の中で声が二種類あることになるからです。
+          </p>
+          <details className="terraVoices">
+            <summary>使った声と、その利用条件</summary>
+            <ul>
+              {[...new Map(Object.values(audio).map((a) => [a.voice, a.licence])).entries()]
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([voice, licence]) => (
+                  <li key={voice}>
+                    <code>{voice}</code> — {licence}
+                  </li>
+                ))}
+            </ul>
+          </details>
+        </section>
+
         <aside className="terraAside">
           <TerraShapes tone="thanks" at={3} />
           <h2>まだできていないこと</h2>
           <p>
-            挨拶を書けている場所はまだ一部で、多くの国は「まだ書けていません」と出ます。音声もお使いの端末に入っているものを借りているため、言語によっては鳴りません。
+            挨拶を書けている場所はまだ一部で、多くの国は「まだ書けていません」と出ます。音声のない言語もまだ多く、中国語とアラビア語と日本語はその中に入っています。
           </p>
         </aside>
       </article>

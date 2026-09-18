@@ -1,0 +1,1279 @@
+{
+ "bg-BG": {
+  "voice": "bg_BG-dimitar-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "ca-AD": {
+  "voice": "ca_ES-upc_ona-medium",
+  "licence": "CC BY-SA 3.0 ES",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "cs-CZ": {
+  "voice": "cs_CZ-jirka-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "da-DK": {
+  "voice": "da_DK-talesyntese-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "de-AT": {
+  "voice": "de_DE-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "de-CH": {
+  "voice": "de_DE-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "de-DE": {
+  "voice": "de_DE-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "de-LI": {
+  "voice": "de_DE-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "el-CY": {
+  "voice": "el_GR-rapunzelina-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "el-GR": {
+  "voice": "el_GR-rapunzelina-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-AG": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-AI": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-AQ": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-AU": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-BB": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-BM": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-BS": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-BZ": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-CA": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-CC": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-CM": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-CX": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-DM": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-FK": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-GB": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-GD": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-GG": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-GI": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-GS": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-GY": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-HM": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-IO": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-JE": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-KN": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-KY": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-LC": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-LR": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-MS": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-NF": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-NR": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-PN": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-SG": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-SH": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-SS": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-TC": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-TT": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-UM": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-US": {
+  "voice": "en_US-bryce-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-VC": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-VG": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "en-VI": {
+  "voice": "en_GB-cori-medium",
+  "licence": "public domain",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-AR": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-BO": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-CL": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-CO": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-CR": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-CU": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-DO": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-EC": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-EH": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-ES": {
+  "voice": "es_ES-davefx-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-GQ": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-GT": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-HN": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-MX": {
+  "voice": "es_MX-claude-high",
+  "licence": "apache-2.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-NI": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-PA": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-PE": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-PR": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-PY": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-SV": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-UY": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "es-VE": {
+  "voice": "es_AR-daniela-high",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fa-IR": {
+  "voice": "fa_IR-amir-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fi-FI": {
+  "voice": "fi_FI-harri-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-BF": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-BI": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-BJ": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-BL": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-CA": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-CD": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-CF": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-CG": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-CI": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-CM": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-DJ": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-FR": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-GA": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-GF": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-GN": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-GP": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-HT": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-LU": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-MC": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-MF": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-ML": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-MQ": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-NC": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-NE": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-PF": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-PM": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-RE": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-SC": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-SN": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-TD": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-TF": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-TG": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-WF": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "fr-YT": {
+  "voice": "fr_FR-mls-medium",
+  "licence": "CC-BY 4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "hu-HU": {
+  "voice": "hu_HU-anna-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "kk-KZ": {
+  "voice": "kk_KZ-issai-high",
+  "licence": "CC-BY-4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "lv-LV": {
+  "voice": "lv_LV-aivars-medium",
+  "licence": "CC0 1.0 Universal",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "ne-NP": {
+  "voice": "ne_NP-chitwan-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "nl-AW": {
+  "voice": "nl_BE-nathalie-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "nl-BE": {
+  "voice": "nl_BE-nathalie-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "nl-BQ": {
+  "voice": "nl_BE-nathalie-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "nl-NL": {
+  "voice": "nl_NL-alex-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "nl-SR": {
+  "voice": "nl_BE-nathalie-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "nl-SX": {
+  "voice": "nl_BE-nathalie-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pl-PL": {
+  "voice": "pl_PL-darkman-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-AO": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-BR": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-CV": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-GW": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-MZ": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-PT": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-ST": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "pt-TL": {
+  "voice": "pt_BR-cadu-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "ro-MD": {
+  "voice": "ro_RO-mihai-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "ro-RO": {
+  "voice": "ro_RO-mihai-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "ru-RU": {
+  "voice": "ru_RU-denis-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "sk-SK": {
+  "voice": "sk_SK-lili-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "sq-AL": {
+  "voice": "sq_AL-edon-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "sv-AX": {
+  "voice": "sv_SE-nst-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "sv-SE": {
+  "voice": "sv_SE-nst-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "uk-UA": {
+  "voice": "uk_UA-ukrainian_tts-medium",
+  "licence": "CC0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "ur-PK": {
+  "voice": "ur_PK-fasih-medium",
+  "licence": "mit",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "bn-BD": {
+  "voice": "bn_BD-google-medium",
+  "licence": "Attribution-ShareAlike 4.0 International",
+  "kinds": [
+   "greeting",
+   "thanks"
+  ]
+ },
+ "et-EE": {
+  "voice": "et_EE-news-medium",
+  "licence": "CC-BY (META-SHARE \"Available - Unrestricted Use\")",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "it-IT": {
+  "voice": "it_IT-serena-high",
+  "licence": "CC-BY-4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "it-SM": {
+  "voice": "it_IT-serena-high",
+  "licence": "CC-BY-4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ },
+ "it-VA": {
+  "voice": "it_IT-serena-high",
+  "licence": "CC-BY-4.0",
+  "kinds": [
+   "greeting",
+   "thanks",
+   "apology"
+  ]
+ }
+}

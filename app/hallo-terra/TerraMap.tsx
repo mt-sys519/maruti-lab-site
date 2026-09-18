@@ -4,7 +4,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TerraIntro from "./TerraIntro";
 import { TerraFace, TerraFrame } from "./TerraLogo";
 import { SearchMark, SoundMark } from "../icons";
-import { KINDS, KIND_LABEL, REGISTER_LABEL, places, unpack, varieties, type Country, type World } from "./content";
+import {
+  KINDS,
+  KIND_LABEL,
+  REGISTER_LABEL,
+  audio,
+  clipUrl,
+  places,
+  unpack,
+  varieties,
+  type Country,
+  type ExpressionKind,
+  type World,
+} from "./content";
 
 /* The world is drawn once and shown three times, side by side. Miller is a
    cylindrical projection, so the drawing repeats exactly every world-width:
@@ -15,6 +27,12 @@ import { KINDS, KIND_LABEL, REGISTER_LABEL, places, unpack, varieties, type Coun
 
 type Point = { x: number; y: number };
 type View = { x: number; y: number; s: number };
+
+// The clip that is sounding, if any. A module-level handle rather than a ref:
+// there is only ever one page playing one phrase, and a ref passed into a
+// callback built inside a render is a fight with the compiler's lint for no
+// gain.
+let playing: HTMLAudioElement | null = null;
 
 const TAP_SLOP = 9; // px of travel still counted as a tap, not a drag
 const FRICTION = 0.92;
@@ -560,13 +578,25 @@ export default function TerraMap() {
       .slice(0, 8);
   }, [query, world]);
 
-  const speak = (text: string, lang: string) => {
+  // A recording if one was made for this language, and the browser's own voice
+  // only as a fallback - which is a lottery: it depends entirely on what the
+  // visitor's device happens to have installed.
+  const speak = useCallback((variety: string, kind: ExpressionKind, text: string, lang: string) => {
+    playing?.pause();
+    if (audio[variety]?.kinds.includes(kind)) {
+      const sound = new Audio(clipUrl(variety, kind));
+      playing = sound;
+      sound.play().catch(() => {
+        /* a refused autoplay is not worth an error; the button can be pressed again */
+      });
+      return;
+    }
     if (!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
     speechSynthesis.speak(utterance);
-  };
+  }, []);
 
   return (
     <div className="terra">
@@ -750,7 +780,7 @@ export default function TerraMap() {
                           <button
                             type="button"
                             className="terraSpeak"
-                            onClick={() => speak(expression.audioText || expression.text, variety.speech)}
+                            onClick={() => speak(id, kind, expression.audioText || expression.text, variety.speech)}
                           >
                             <TerraFrame variant={kind === "greeting" ? 0 : kind === "thanks" ? 1 : 2} />
                             <span className="terraSpeakMark" aria-hidden="true">

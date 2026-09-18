@@ -1,3 +1,4 @@
+import audioJson from "./audio.generated.json";
 import placesJson from "./data/places.json";
 import varietiesJson from "./data/varieties.json";
 
@@ -69,6 +70,23 @@ export type Place = {
 };
 
 export const varieties = varietiesJson as Record<string, Variety>;
+
+/**
+ * Which ways of speaking have a recording, and whose voice it is.
+ *
+ * Every clip was made here with Piper, a synthesiser that runs on a desk
+ * rather than on somebody's servers, using only voices whose licence plainly
+ * allows a site with advertising on it to publish the audio. That rules out a
+ * good many, including - awkwardly - every Japanese one.
+ *
+ * One synthesiser for everything it can do, rather than a patchwork of
+ * sources: half the world in a human voice and the other half in a robot's
+ * would sound like two different tools.
+ */
+export const audio = audioJson as Record<string, { voice: string; licence: string; kinds: string[] }>;
+
+export const clipUrl = (variety: string, kind: ExpressionKind) =>
+  `/hallo-terra/audio/${variety}-${kind}.mp3`;
 export const places = placesJson as Record<string, Place>;
 
 export const KIND_LABEL: Record<ExpressionKind, string> = {
