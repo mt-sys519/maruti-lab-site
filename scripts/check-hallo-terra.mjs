@@ -20,9 +20,38 @@ const KINDS = ["greeting", "thanks", "apology"];
 const REGISTERS = ["formal", "polite", "neutral", "casual"];
 const KATAKANA = /[゠-ヿ]/;
 
+/**
+ * A source has to be the page that says the thing.
+ *
+ * Twice now a batch has arrived citing the front door of a site rather than a
+ * page: three Omniglot index pages for 750 phrases, and then
+ * "https://mofa.go.jp" on every cultural note in a run. A bare domain is not a
+ * citation - it is a promise that somewhere in there, something agrees - and
+ * printing it under the words tells the reader we checked when we did not.
+ * Better to have nothing in the sources list than that.
+ */
+function looksLikeAFrontDoor(url) {
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname.replace(/\/+$/, "");
+    return (path === "" || path === "/index.html") && !parsed.search;
+  } catch {
+    return false;
+  }
+}
+
 const problems = [];
 const notices = [];
 const complain = (where, what) => problems.push(`${where}: ${what}`);
+const checkSource = (where, source) => {
+  if (typeof source !== "string" || !/^https?:\/\//.test(source)) {
+    complain(where, `出典がURLではありません: ${source}`);
+    return;
+  }
+  if (looksLikeAFrontDoor(source)) {
+    complain(where, `出典がサイトの入口です。その記述が書かれているページのURLにしてください: ${source}`);
+  }
+};
 const note = (where, what) => notices.push(`${where}: ${what}`);
 
 for (const [id, variety] of Object.entries(varieties)) {
@@ -52,9 +81,7 @@ for (const [id, variety] of Object.entries(varieties)) {
       complain(at, "audioText にカタカナが入っています（読み上げるのは現地表記です）");
     }
     if (expression.sources && !Array.isArray(expression.sources)) complain(at, "sources が配列ではありません");
-    for (const source of expression.sources ?? []) {
-      if (typeof source !== "string" || !/^https?:\/\//.test(source)) complain(at, `出典がURLではありません: ${source}`);
-    }
+    for (const source of expression.sources ?? []) checkSource(at, source);
   }
 }
 
@@ -75,6 +102,7 @@ for (const [iso, place] of Object.entries(places)) {
   for (const id of place.varieties ?? []) {
     if (!varieties[id]) complain(iso, `varieties.json にない言語変種を指しています: ${id}`);
   }
+  for (const source of place.sources ?? []) checkSource(iso, source);
 }
 
 // Not an error, but worth saying out loud each time.
