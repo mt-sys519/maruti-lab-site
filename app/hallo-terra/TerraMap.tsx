@@ -49,14 +49,9 @@ export default function TerraMap() {
   }, []);
 
   useEffect(() => {
-    // Once a visit, not once a lifetime: coming back tomorrow should feel like
-    // arriving again, but following a link twice in an hour should not.
+    // Every load, reload included. It was once a session, and once a session
+    // means you cannot see the thing again without clearing site data.
     let show = true;
-    try {
-      show = !sessionStorage.getItem("hallo-terra-seen");
-    } catch {
-      /* private windows refuse; the opening is not worth failing over */
-    }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) show = false;
     if (window.location.hash === "#map") show = false;
     // On the next frame rather than now: the map gets to paint first, so the
@@ -65,14 +60,7 @@ export default function TerraMap() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const closeIntro = useCallback(() => {
-    setIntro(false);
-    try {
-      sessionStorage.setItem("hallo-terra-seen", "1");
-    } catch {
-      /* see above */
-    }
-  }, []);
+  const closeIntro = useCallback(() => setIntro(false), []);
 
   const byIso = useMemo(() => {
     const map = new Map<string, Country>();
