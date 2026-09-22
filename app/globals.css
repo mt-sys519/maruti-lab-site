@@ -341,7 +341,7 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitHeader{height:72px;padding:0 clamp(20px,5vw,70px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(21,33,29,.48);background:rgba(233,228,215,.9)}
 .bitBrand{font:800 24px/1 "Inter",sans-serif;letter-spacing:-.02em;font-feature-settings:"cv11" 1;color:var(--bit-blue)}.bitBrand b{color:var(--bit-teal);font-weight:700}.bitBack{display:inline-flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.08em;border-bottom:1px solid;padding:8px 1px 6px;cursor:pointer}.bitBack:before{content:"";display:block;width:18px;height:1px;background:currentColor}.bitBack:hover{color:var(--bit-teal);border-color:var(--bit-teal)}
 .bitSeriesNav{height:42px;padding:0 clamp(20px,5vw,70px);display:flex;align-items:stretch;gap:28px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.1);background:#232323}.bitSeriesNav::-webkit-scrollbar{display:none}.bitSeriesNav a{position:relative;display:flex;align-items:center;gap:8px;flex:0 0 auto;color:var(--pkg-color,#68736e);opacity:.62;font:600 10px/1 "Yu Gothic UI",sans-serif;letter-spacing:.12em;transition:opacity .15s ease}.bitSeriesNav a small{font-size:7px;color:inherit;opacity:.75}.bitSeriesNav a:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:transparent}.bitSeriesNav a:hover{opacity:.85}.bitSeriesNav a.isActive{opacity:1}.bitSeriesNav a.isActive:after{background:var(--pkg-color,var(--bit-teal))}
-.bitIntro{position:relative;overflow:hidden;min-height:150px;padding:clamp(26px,3vw,38px) clamp(20px,5vw,72px) clamp(18px,2.2vw,28px);border-left:6px solid var(--pkg-color,var(--bit-red));border-bottom:2.5px solid #232323;display:grid;grid-template-columns:minmax(90px,.4fr) max-content minmax(240px,1fr);gap:14px;align-items:center;background:var(--bit-paper)}
+.bitIntro{position:relative;overflow:hidden;min-height:120px;padding:clamp(20px,2vw,26px) clamp(20px,5vw,72px) clamp(16px,1.7vw,21px);border-left:6px solid var(--pkg-color,var(--bit-red));border-bottom:2.5px solid #232323;display:grid;grid-template-columns:minmax(90px,.4fr) max-content minmax(240px,1fr);gap:14px;align-items:center;background:var(--bit-paper)}
 .bitIntro:before,.bitIntro:after{content:"";position:absolute;z-index:0;pointer-events:none;background:var(--pkg-color,var(--bit-red));opacity:.45}
 .bitIntro:before{top:18%;right:7%;width:11px;height:11px;border-radius:50%}
 .bitIntro:after{bottom:16%;right:16%;width:0;height:0;background:none;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:11px solid var(--pkg-color,var(--bit-red));opacity:.45}
@@ -626,6 +626,11 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitPageDark .bitHowToPlaySub,.bitPageDark .bitNotesLead,.bitPageDark .bitNotesCard p{color:#9fc4d6}
 .bitPageDark .bitHowToPlayNum{opacity:.2}
 
+/* The band was 150px of floor with 38px of air over the title and 28px under
+   it, which on a desktop put a thumb's worth of nothing between the series
+   nav and the game. Trimmed to 120px and 26/21: the title still has room to
+   breathe, and every game starts that much sooner. NEON BREAK is untouched,
+   because .bitIntroNamed below overrides all three of these anyway. */
 /* Only for a game that names itself on screen: there the band is the label on
    the packaging, not the title, so it drops under the size the game shows and
    the page reads as a shelf label then the machine's own title. The six games

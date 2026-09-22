@@ -103,8 +103,7 @@
 .mpMeasure { position: absolute; right: 30px; top: 40px; text-align: right; font: 700 9.5px/2.4 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 1px; color: #c2c7bb; }
 .mpSip { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font: 700 11.5px/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 3px; color: #68785b; }
 .mpGlassFoot { display: flex; justify-content: space-between; margin-top: 14px; font-size: 11px; color: var(--mp-quiet); }
-.mpTools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-.mpDrinkBtn { grid-column: 1 / -1; }
+.mpTools { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 20px; }
 
 /* Cubes, floating at the top of the drink, placed from the centre so that the
    drink widening for a tilt leaves them where they were. */
@@ -315,7 +314,7 @@
   0%, 100% { transform: translateY(0) rotate(-0.6deg); }
   50% { transform: translateY(-3px) rotate(0.6deg); }
 }
-.mpFoot { margin: 22px 0 0; font-size: 11px; letter-spacing: 0.04em; color: var(--mp-quiet); }
+.mpShareRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 26px 0 0; }
 .mpRainbow {
   display: block;
   height: 2px;

@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { GamePauseOverlay } from "./shared/GamePauseOverlay";
-import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { createMixPopAudio, type MixPopAudio } from "./mixPopAudio";
 import { cardFile, drawMixPopCard } from "./mixPopCard";
 import { DRINKS, juice, nameMix, thinly } from "./mixPopNames";
@@ -65,10 +63,6 @@ export function MixPopGame() {
   const [named, setNamed] = useState<{ name: string; rows: string[]; serial: number } | null>(null);
   const [message, setMessage] = useState("");
   const [sound, setSound] = useState(true);
-  // A backgrounded page pauses and does not resume on its own: the shared rule
-  // for every game here, and the reason a pour loop cannot be left running in
-  // a tab nobody is looking at.
-  const { paused, resume } = useVisibilityPause(true);
   const [floatPx, setFloatPx] = useState(-CUBE);
 
   const audio = useRef<MixPopAudio | null>(null);
@@ -121,21 +115,34 @@ export function MixPopGame() {
     }
   }, []);
 
-  // Whatever the glass was doing, it stops while the page is away. Only the
-  // outside world is touched here - the timers and the sound. What the page
-  // shows while paused is worked out at render time instead, because setting
-  // state from an effect is how cascading renders start.
+  // The other games put up a PAUSED screen when the tab goes away. There is
+  // nothing here for one to protect: no clock running down, no music to cut,
+  // nothing you can lose by looking away. The one thing that must not carry
+  // on is a held pour filling a glass nobody is watching, so a hidden page
+  // simply puts the glass down - no wall to dismiss on the way back, and the
+  // next pour wakes the sound up by itself the way the first one did.
   useEffect(() => {
-    if (!paused) return;
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-    window.clearTimeout(hold.current.delay);
-    window.clearInterval(hold.current.repeat);
-    window.clearTimeout(effect.current);
-    window.clearTimeout(soundOff.current);
-    pouringRef.current = -1;
-    audio.current?.stop();
-  }, [paused]);
+    const putItDown = () => {
+      if (!document.hidden) return;
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+      window.clearTimeout(hold.current.delay);
+      window.clearInterval(hold.current.repeat);
+      window.clearTimeout(effect.current);
+      window.clearTimeout(soundOff.current);
+      pouringRef.current = -1;
+      setPouring(-1);
+      setDrinking(false);
+      setSip("");
+      audio.current?.stop();
+    };
+    document.addEventListener("visibilitychange", putItDown);
+    window.addEventListener("pagehide", putItDown);
+    return () => {
+      document.removeEventListener("visibilitychange", putItDown);
+      window.removeEventListener("pagehide", putItDown);
+    };
+  }, []);
 
   // How high the cubes ride: resting on the glass when there is nothing to
   // float in, and mostly under the surface once there is.
@@ -347,9 +354,7 @@ export function MixPopGame() {
   const status = drinking ? "ごく、ごく。" : total === 0 ? "まだ、空っぽ。" : total === CAP ? "ちょうど、いっぱい。" : "いい感じ。その調子。";
 
   return (
-    <section className={`mpStage${drinking && !paused ? " isDrinking" : ""}${pouring >= 0 && !paused ? " isPouring" : ""}`} aria-label="ドリンクをつくる">
-      <GamePauseOverlay active={paused} onResume={() => { void resume(); }} />
-
+    <section className={`mpStage${drinking ? " isDrinking" : ""}${pouring >= 0 ? " isPouring" : ""}`} aria-label="ドリンクをつくる">
       {/* The prototype kept its logotype here. It is the page's title now -
           the band above wears it - so the row is the sound switch alone. */}
       <header className="mpHead">
@@ -411,16 +416,10 @@ export function MixPopGame() {
             <span>{status}</span>
             <span>炭酸 {total ? (fizz > 0.65 ? "しっかり" : fizz > 0 ? "ほんのり" : "なし") : "—"}</span>
           </div>
-          {/* Drinking it and sharing it are the two things you do with a
-              finished glass, so they sit together under it. The share pair
-              stays in place and greys out until the drink has a name: a row
-              that appears out of nowhere would move everything below it. */}
           <div className="mpTools">
-            <button type="button" className="mpBtn mpDrinkBtn" onClick={drink} disabled={!total || drinking}>
+            <button type="button" className="mpBtn" onClick={drink} disabled={!total || drinking}>
               {drinking ? "飲んでいます…" : <>ひと息で飲む <CupIcon /></>}
             </button>
-            <button type="button" className="mpBtn" onClick={share} disabled={!named}>シェア <ShareIcon /></button>
-            <button type="button" className="mpBtn" onClick={shareX} disabled={!named}>Xでシェア <XIcon /></button>
           </div>
         </div>
 
@@ -467,8 +466,6 @@ export function MixPopGame() {
         </div>
       </div>
 
-      <p className="mpFoot">ほんの少しの、混ぜる楽しみ。</p>
-
       {named && (
         <section className="mpResult" aria-live="polite">
           <div className="mpResultMeta">
@@ -489,6 +486,14 @@ export function MixPopGame() {
         </section>
       )}
 
+      {/* Last of all, under everything including the card: sharing is what you
+          do after the glass is finished, and anywhere higher pushes the part
+          you came for down the page. It stays in place and greys out until
+          there is a drink with a name, so nothing shifts when one appears. */}
+      <div className="mpShareRow">
+        <button type="button" className="mpBtn" onClick={share} disabled={!named}>シェア <ShareIcon /></button>
+        <button type="button" className="mpBtn" onClick={shareX} disabled={!named}>Xでシェア <XIcon /></button>
+      </div>
     </section>
   );
 }
