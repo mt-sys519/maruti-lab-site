@@ -72,6 +72,13 @@ const scenes: Record<string, ReactNode> = {
       <path className={styles.rain} stroke="" d="M72 23 V35" />
     </svg>
   ),
+  mixpop: (
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <path stroke="" d="M34 26h32l-3 44a6 6 0 0 1-6 5.4H43a6 6 0 0 1-6-5.4z" />
+      <path className={styles.ball} stroke="" d="M36 48h28" />
+      <circle className={styles.ball} stroke="" cx="50" cy="60" r="4" />
+    </svg>
+  ),
   neonbreak: (
     <svg viewBox="0 0 100 100" aria-hidden="true">
       <rect stroke="" x="12" y="30" width="76" height="40" rx="6" />

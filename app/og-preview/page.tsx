@@ -35,6 +35,11 @@ const copy: Record<string, Card> = {
     sub: "1996年の雨の部屋で、偶然生まれる音を眺めて聴く。",
     art: "/games/rain-chime/room-lap.webp",
   },
+  mixpop: {
+    lead: "ドリンク調合トイ。",
+    sub: "六つのジュースを混ぜて、できた一杯に名前をつける。",
+    art: "/bit/mixpop/machine.webp",
+  },
   neonbreak: {
     lead: "ネオンの台のナインボール。",
     sub: "台につくのは、三人のオペレーター。",

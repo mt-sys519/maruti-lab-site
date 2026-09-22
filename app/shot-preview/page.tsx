@@ -4,6 +4,7 @@ import { AngleGame } from "../bit/AngleGame";
 import { BlankGame } from "../bit/BlankGame";
 import { InputRainGame } from "../bit/InputRainGame";
 import { LiltOrbGame } from "../bit/LiltOrbGame";
+import { MixPopGame } from "../bit/MixPopGame";
 import { NeonBreakGame } from "../bit/NeonBreakGame";
 import { PakuGame } from "../bit/PakuGame";
 import { RainChimeGame } from "../bit/RainChimeGame";
@@ -36,6 +37,7 @@ const games = {
   liltorb: LiltOrbGame,
   avenue: RainChimeGame,
   neonbreak: NeonBreakGame,
+  mixpop: MixPopGame,
 } as const;
 
 export default function ShotPreviewPage({ searchParams }: { searchParams?: Record<string, string> }) {

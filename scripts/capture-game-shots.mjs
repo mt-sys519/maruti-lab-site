@@ -24,7 +24,7 @@ const chrome = [
 ].find((path) => existsSync(path));
 if (!chrome) throw new Error("No Chrome or Edge found to capture with.");
 
-const ids = ["angle", "blank", "sequence", "input-rain", "paku", "liltorb", "avenue", "neonbreak"];
+const ids = ["angle", "blank", "sequence", "input-rain", "paku", "liltorb", "avenue", "neonbreak", "mixpop"];
 const args = process.argv.slice(2);
 const portFlag = args.indexOf("--port");
 const port = portFlag === -1 ? "3000" : args[portFlag + 1];

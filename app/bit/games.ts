@@ -14,6 +14,7 @@ export const bitGames = [
   { id: "liltorb", number: "006", name: "LILT ORB", kana: "リルトオーブ", kind: "粒子操作トイ", href: "/bit/liltorb", description: "触れると粒子が集まる、癒しと刺激の球体トイ。", featured: false, color: "#F2A0C1" },
   { id: "avenue", number: "007", name: "AVENUE", kana: "アベニュー", kind: "ピクセルアート・アンビエント", href: "/bit/avenue", description: "1996年の雨の部屋で、偶然生まれる音を眺めて聴く。", featured: false, color: "#7B8CDE" },
   { id: "neonbreak", number: "008", name: "NEON BREAK", kana: "ネオンブレイク", kind: "ナインボール", href: "/bit/neonbreak", description: "ネオンの台で9番を狙う、ナインボール。", featured: false, color: "#6B3FA0", tag: "NEW" },
+  { id: "mixpop", number: "009", name: "MIX POP", kana: "ミックスポップ", kind: "ドリンク調合トイ", href: "/bit/mixpop", description: "六つのジュースを混ぜて、できた一杯に名前をつける。", featured: false, color: "#FF7A5C" },
 ] as const;
 
 // The home hero only teases a handful of games (not the whole, ever-growing

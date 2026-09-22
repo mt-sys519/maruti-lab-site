@@ -3178,7 +3178,7 @@ export function NeonBreakGame() {
             </div>
             <div>
               <h1 className="title">NEON BREAK</h1>
-              <p className="kicker">NINE BALL PROTOCOL // SOLO & CPU</p>
+              <p className="kicker">NINE BALL PROTOCOL</p>
             </div>
           </div>
           <div className="modeSwitch" aria-label="ゲームモード">

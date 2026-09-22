@@ -1,0 +1,329 @@
+/* MIX POP — GAME 009.
+   Ported from the prototype, with every class renamed to an mp prefix: the
+   original used .glass, .actions, #liquid and friends, which are names this
+   site already spends elsewhere. */
+
+/* The machine and the toy share one ground: the cream the artwork is painted
+   on, so the picture does not float as a pale rectangle over the page's grid
+   and the quiet design underneath it has something to be quiet against. */
+/* And it is a card, like every other piece of the shop: 2.5px of black, a 9px
+   corner and a hard shadow with no blur. The fill stays the milk the machine
+   is painted on rather than the warmer cream the how-to cards use - the
+   artwork carries that colour baked into its own pixels, so any other fill
+   would draw a pale rectangle around the machine. The page's grid stopping at
+   the border is what makes it read as a card. */
+.mixpopPanel {
+  width: min(1120px, calc(100% - 40px));
+  margin: clamp(24px, 3.4vw, 48px) auto clamp(24px, 4vw, 48px);
+  padding: clamp(18px, 2.4vw, 28px) 0 clamp(22px, 2.8vw, 32px);
+  border: 2.5px solid #232323;
+  border-radius: 9px;
+  background: #fdfdfa;
+  box-shadow: 5px 5px 0 #232323;
+}
+
+.mpStage {
+  --mp-paper: #fefdfb;
+  --mp-ink: #262923;
+  --mp-line: #d5d8cd;
+  --mp-edge: #cdd3c6;
+  --mp-quiet: #686f60;
+  --mp-ctl: 44px;
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 1.8vw, 24px) 0;
+  color: var(--mp-ink);
+  font-family: Arial, "Helvetica Neue", "Yu Gothic", Meiryo, sans-serif;
+}
+
+.mpGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 clamp(24px, 4vw, 48px);
+  border-top: 1px solid var(--mp-line);
+}
+.mpPreview { padding: 24px 0 8px; border-right: 1px solid var(--mp-line); padding-right: clamp(24px, 4vw, 48px); }
+.mpControls { padding: 24px 0 8px; }
+/* Every small caps label on the toy is set in the series' display face, the
+   same one the how-to pills and the band wear. Baloo 2 only ships 700 and 800
+   here, so these are 700 - at 9px that reads as a printed label rather than
+   as bold text. */
+.mpLabel {
+  display: flex;
+  justify-content: space-between;
+  font: 700 9.5px/1 "Baloo 2", "Yu Gothic UI", sans-serif;
+  letter-spacing: 1.3px;
+  color: var(--mp-quiet);
+}
+
+/* ---- the glass ------------------------------------------------------ */
+
+.mpScene { position: relative; height: 308px; display: flex; align-items: center; justify-content: center; }
+.mpGlass {
+  position: relative;
+  z-index: 1;
+  width: 151px;
+  height: 215px;
+  border: 1px solid #aeb4a7;
+  border-top: 2px solid #969f8d;
+  border-radius: 4px 4px 25px 25px;
+  overflow: hidden;
+  background: linear-gradient(95deg, #ffffff60, transparent 40%, #d9ddd22b);
+  box-shadow: 0 14px 15px -16px #303b31;
+}
+/* The wall of the glass, as a box the drink is poured into rather than a
+   margin the drink politely keeps. Upright it makes no difference; tilted it
+   is the whole difference, because the drink has to run wide to keep its
+   surface level and something has to stop it at the glass. */
+.mpInner { position: absolute; inset: 0 5px 10px; overflow: hidden; border-radius: 0 0 16px 16px; }
+/* Something you can see through: thin where there is little of it, deep at the
+   bottom. The cubes live in here, so this cannot be done with opacity - that
+   would fade the ice too. */
+.mpLiquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(180deg, var(--thin) 0, var(--mid) 38%, var(--deep) 100%);
+  transition: height 0.35s, background 0.5s;
+}
+.mpSurface { position: absolute; left: 0; top: -4px; right: 0; height: 8px; border-radius: 50%; background: #ffffff35; }
+.mpBubbles {
+  height: 100%;
+  background-image: radial-gradient(circle, #fff 1px, transparent 2px), radial-gradient(circle, #fff 1px, transparent 2px);
+  background-size: 29px 43px, 43px 61px;
+  background-position: 5px 8px, 17px 29px;
+  animation: mpRise 2s linear infinite;
+}
+.mpHighlight { position: absolute; top: 12px; left: 12px; bottom: 18px; width: 5px; border-radius: 5px; background: #ffffff65; }
+.mpNote { position: absolute; left: 0; top: 53px; font: 700 10.5px/2 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 1.6px; color: #b9bfb1; }
+.mpMeasure { position: absolute; right: 30px; top: 40px; text-align: right; font: 700 9.5px/2.4 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 1px; color: #c2c7bb; }
+.mpSip { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font: 700 11.5px/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 3px; color: #68785b; }
+.mpGlassFoot { display: flex; justify-content: space-between; margin-top: 14px; font-size: 11px; color: var(--mp-quiet); }
+.mpTools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.mpDrinkBtn { grid-column: 1 / -1; }
+
+/* Cubes, floating at the top of the drink, placed from the centre so that the
+   drink widening for a tilt leaves them where they were. */
+.mpIce { position: absolute; left: 0; right: 0; top: 0; height: 0; }
+.mpIce i {
+  position: absolute;
+  left: calc(50% + var(--x));
+  top: calc(var(--float, -8px) + var(--y, 0px));
+  width: 34px;
+  height: 29px;
+  margin-left: -17px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #ffffffd9, #ffffff59);
+  box-shadow: inset 0 1px 0 #fff9, 0 1px 3px #6b705f2e;
+  transform: rotate(var(--turn));
+}
+
+/* ---- pouring, and drinking ----------------------------------------- */
+
+.isPouring .mpSurface { animation: mpRipple 0.3s ease-in-out infinite alternate; height: 13px; top: -6px; }
+.isDrinking .mpGlass { transform: translate(16px, -26px) rotate(var(--mp-tilt, 28deg)); }
+/* The drink stays level while the glass turns: it is a child of the glass, so
+   it inherits the tilt, and turning it back by exactly the glass's own angle
+   puts the surface flat against the world again. It is widened and given a
+   skirt below, because a rectangle turned inside its own box leaves the far
+   corners empty; neither moves the surface, and the glass clips the rest. */
+.isDrinking .mpLiquid {
+  transition: height 0.48s ease-in-out;
+  transform: rotate(calc(var(--mp-tilt, 28deg) * -1));
+  transform-origin: 50% 100%;
+  left: -90px;
+  right: -90px;
+  border-radius: 0;
+}
+.isDrinking .mpLiquid::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 1px);
+  height: 280px;
+  background: var(--deep);
+}
+.mpGlass { transition: transform 0.45s cubic-bezier(0.2, 0.6, 0.3, 1); transform-origin: 50% 80%; }
+
+@keyframes mpRipple { from { transform: scaleX(0.94) rotate(-2deg); } to { transform: scaleX(1.06) rotate(2deg); } }
+@keyframes mpRise { to { background-position: 5px -78px, 17px -93px; } }
+
+/* ---- the flavours --------------------------------------------------- */
+
+.mpFlavours { display: grid; grid-template-columns: 1fr 1fr; gap: 0 clamp(16px, 2vw, 28px); margin-top: 18px; }
+.mpFlavour {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 68px;
+  padding: 0 4px;
+  border: 0;
+  border-bottom: 1px solid var(--mp-line);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mpFlavour:disabled { opacity: 0.45; cursor: default; }
+.mpFlavour.isPouring { background: #e8edde; }
+.mpDot { width: 9px; height: 9px; border-radius: 50%; }
+.mpFlavourName { font-size: 13px; line-height: 1.5; }
+.mpFlavourName small { display: block; font: 700 8.5px/1.4 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 1.2px; color: var(--mp-quiet); }
+.mpAmount { font-size: 11px; color: var(--mp-quiet); }
+.mpPlus { font-size: 11px; color: #9aa192; transition: transform 0.2s; }
+.mpFlavour.isPouring .mpPlus { transform: rotate(45deg); }
+.mpHint { margin: 14px 0 18px; font-size: 10px; color: #8b9182; }
+
+/* ---- the controls, as one set rather than six one-offs -------------- */
+
+.mpBtn {
+  height: var(--mp-ctl);
+  padding: 0 16px;
+  border: 1px solid var(--mp-edge);
+  border-radius: 6px;
+  background: none;
+  color: #4e5747;
+  font: 500 12px/1 inherit;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.mpBtn:hover:not(:disabled) { border-color: #8f9a86; }
+.mpIco { width: 1em; height: 1em; display: inline-block; vertical-align: -0.13em; }
+.mpBtn:disabled { opacity: 0.38; cursor: default; }
+
+.mpActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
+.mpIceBtn { grid-column: 1; grid-row: 1; }
+.mpResetBtn { grid-column: 2; grid-row: 1; }
+.mpFinish {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 54px;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: #292f25;
+  border-color: #292f25;
+  color: #fff;
+}
+.mpFinish:hover:not(:disabled) { background: #1e231b; border-color: #1e231b; }
+.mpMessage { min-height: 16px; margin: 14px 0 0; font-size: 11px; color: #6f7767; }
+
+/* Beside the glass it belongs to; the page's own header is the lab's. */
+.mpSound { padding: 0 14px; font-size: 10px; letter-spacing: 0.12em; }
+
+/* ---- the result ----------------------------------------------------- */
+
+.mpResult { position: relative; margin-top: 32px; padding: 28px 32px; background: #e9eddf; }
+.mpResult::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ebe4d2 0, #873205 11%, #fe941a 29%, #f6d605 47%, #7bb42c 67%, #8124af 87%, #ebe4d2 100%);
+}
+.mpResultMeta { display: flex; justify-content: space-between; font: 700 9.5px/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 1.5px; color: var(--mp-quiet); }
+.mpResultBody { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 18px; }
+.mpToday { margin: 0 0 8px; font-size: 11px; color: var(--mp-quiet); }
+.mpName { margin: 0; font-size: clamp(24px, 3vw, 34px); font-weight: 700; letter-spacing: 0.02em; }
+.mpRecipe p { margin: 0 0 6px; font-size: 12px; color: #5d6356; }
+@media (max-width: 700px) {
+  .mixpopPanel { width: calc(100% - 24px); }
+  .mpStage { padding: 0 14px 8px; }
+  .mpGrid { grid-template-columns: 1fr; }
+  .mpPreview { border-right: 0; border-bottom: 1px solid var(--mp-line); padding: 14px 0 18px; }
+  .mpControls { padding: 18px 0 8px; }
+  .mpScene { height: 206px; }
+  .mpGlass { width: 116px; height: 162px; }
+  .mpNote { top: 44px; }
+  .mpMeasure { top: 34px; right: 22px; }
+  .mpFlavour { min-height: 58px; }
+  .mpResult { padding: 23px 20px; }
+  .mpResultBody { grid-template-columns: 1fr; gap: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpGlass, .mpLiquid { transition: none; }
+  .mpBubbles, .mpSurface { animation: none; }
+  .isDrinking .mpGlass { transform: none; }
+  .isDrinking .mpLiquid { transform: none; left: 0; right: 0; }
+  .isDrinking .mpLiquid::after { display: none; }
+}
+
+/* ---- the logo, and the machine -------------------------------------- */
+
+/* The logotype in the band, where the other games carry a small mark and
+   their name in Baloo. Sized in em off the band's own title size, so it grows
+   and shrinks with every other game's title; 1.7em of box puts the letters at
+   roughly the cap height Baloo would have had, because only the middle 45% of
+   this viewBox is lettering and the rest is the air the drink swells into. */
+.mixpopLogo { display: block; height: 1.7em; width: auto; flex: 0 0 auto; overflow: visible; }
+
+/* The line the prototype wore under its own header, kept: the six flavours
+   running the way a rainbow runs, with the cream one opening and closing it. */
+.mixpopRainbow {
+  display: block;
+  height: 2px;
+  margin: 0 clamp(24px, 5vw, 60px) 22px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ebe4d2 0, #873205 11%, #fe941a 29%, #f6d605 47%, #7bb42c 67%, #8124af 87%, #ebe4d2 100%);
+}
+
+.mpCatch {
+  margin: 4px 0 20px;
+  font-size: 19px;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  color: #4e5747;
+}
+.mpMachine { position: relative; max-width: 560px; margin: 0 auto 10px; }
+.mpMachine img { display: block; width: 100%; height: auto; }
+
+@media (max-width: 700px) {
+  .mpCatch { font-size: 16px; margin-bottom: 14px; }
+}
+
+/* ---- the prototype's own header row --------------------------------- */
+
+.mpHead {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 0 0 14px;
+}
+.mpType { font: 800 66px/1 Poppins, "Arial Black", Arial, sans-serif; letter-spacing: 6px; }
+.mpEmpty { fill: #f4efe4; }
+.mpEdge { fill: none; stroke: #262923; stroke-width: 2.4; stroke-linejoin: round; }
+.mpDeepWave { fill: #f0790a; opacity: 0.55; animation: mpDrift 5.5s linear infinite; }
+.mpTopWave { fill: #fe941a; animation: mpDrift 3.6s linear infinite; }
+.mpSwell { animation: mpRock 4.4s ease-in-out infinite; }
+@keyframes mpDrift { to { transform: translateX(-160px); } }
+@keyframes mpRock {
+  0%, 100% { transform: translateY(0) rotate(-0.6deg); }
+  50% { transform: translateY(-3px) rotate(0.6deg); }
+}
+.mpFoot { margin: 22px 0 0; font-size: 11px; letter-spacing: 0.04em; color: var(--mp-quiet); }
+.mpRainbow {
+  display: block;
+  height: 2px;
+  margin: 0 0 22px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ebe4d2 0, #873205 11%, #fe941a 29%, #f6d605 47%, #7bb42c 67%, #8124af 87%, #ebe4d2 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpDeepWave, .mpTopWave, .mpSwell { animation: none; }
+}

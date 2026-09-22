@@ -95,6 +95,16 @@ export function GameMark({ id }: { id: BitGameId }) {
         </svg>
       </span>
     );
+  if (id === "mixpop")
+    return (
+      <span className={`${styles.mark} ${styles.stroke}`} aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M7.5 5.5h9l-1 12.4a1.6 1.6 0 0 1-1.6 1.5h-3.8a1.6 1.6 0 0 1-1.6-1.5z" />
+          <path d="M8.2 11.2h7.6" />
+          <circle className={styles.dot} cx="12" cy="15.1" r="1.1" />
+        </svg>
+      </span>
+    );
   // Deliberately empty rather than a fallback picture: a game added without a
   // mark should show a gap, not another game's artwork.
   return <span className={styles.mark} aria-hidden="true" />;

@@ -366,16 +366,19 @@
     font-size: 9.5px;
     line-height: 1.62;
   }
+  /* The name beside the NB badge, which is 52x42: at 20px the badge was the
+     loud one and the name read as a caption on it. Tracking comes down with
+     the size going up, or the line grows wider than the block below it. */
   .title {
-    font: 800 20px/1 monospace;
-    letter-spacing: 0.18em;
+    font: 800 26px/1 monospace;
+    letter-spacing: 0.05em;
     text-shadow: 0 0 18px #25dfff55;
   }
   .kicker {
-    margin-top: 6px;
-    color: #708aa0;
+    margin-top: 5px;
+    color: #5d7a90;
     font: 600 9px/1 monospace;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.16em;
   }
   .turnBanner {
     margin-left: auto;
@@ -1340,11 +1343,12 @@
         center 30px;
     }
     .title {
-      font-size: 15px;
+      font-size: 24px;
+      letter-spacing: 0.04em;
     }
     .kicker {
-      font-size: 7px;
-      letter-spacing: 0.08em;
+      font-size: 9px;
+      letter-spacing: 0.1em;
     }
     .turnBanner {
       display: none;

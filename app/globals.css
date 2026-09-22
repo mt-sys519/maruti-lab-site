@@ -513,8 +513,8 @@ footer{padding-top:34px;padding-bottom:34px}
 @keyframes inputRainReject{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 @keyframes inputRainCursor{0%,48%{opacity:1}49%,100%{opacity:0}}
 @keyframes inputRainCount{from{opacity:0;transform:scale(.78)}to{opacity:1;transform:scale(1)}}
-@media(max-width:1100px){.inputRainIntro{grid-template-columns:1fr;align-items:start;gap:18px}.inputRainIntro h1{font-size:clamp(44px,8vw,72px)}.inputRainIntro>p:last-child{max-width:540px}}
-@media(max-width:700px){.inputRainIntro h1{font-size:clamp(38px,11vw,52px)}.inputRainTerminal{min-height:528px}.inputRainTerminalPreview{min-height:350px}.inputRainReady{min-height:254px}.inputRainChrome{height:46px;padding:0 11px;gap:8px}.inputRainChrome span{font-size:8px}.inputRainChrome small{font-size:7px}.inputRainHud{height:66px;padding:0 5px}.inputRainHud span{padding:0 6px;font-size:6px}.inputRainHud strong{display:block;float:none;margin-top:6px;font-size:10px}.inputRainLane{height:342px}.inputRainPrompt{font-size:clamp(22px,7.2vw,33px);letter-spacing:.025em}.inputRainGuide{font-size:clamp(8px,2.7vw,11px);letter-spacing:.01em}.inputRainEntry{height:66px;padding:0 11px;gap:8px}.inputRainEntry p{font-size:14px}.inputRainStatus{height:34px;padding:0 9px}.inputRainStatus span:nth-child(2){display:none}.inputRainCountdown{height:442px}.inputRainDrop{left:1%;right:1%}.inputRainDrop.is-timeout{transform:translateY(247px)}.inputRainResultStats{grid-template-columns:repeat(2,1fr)}.inputRainResultStats div:nth-child(2){border-right:0}.inputRainResultStats div:nth-child(-n+2){border-bottom:1px solid rgba(21,33,29,.25)}@keyframes inputRainFall{from{transform:translateY(0)}to{transform:translateY(247px)}}}
+@media(max-width:1100px){}
+@media(max-width:700px){.inputRainTerminal{min-height:528px}.inputRainTerminalPreview{min-height:350px}.inputRainReady{min-height:254px}.inputRainChrome{height:46px;padding:0 11px;gap:8px}.inputRainChrome span{font-size:8px}.inputRainChrome small{font-size:7px}.inputRainHud{height:66px;padding:0 5px}.inputRainHud span{padding:0 6px;font-size:6px}.inputRainHud strong{display:block;float:none;margin-top:6px;font-size:10px}.inputRainLane{height:342px}.inputRainPrompt{font-size:clamp(22px,7.2vw,33px);letter-spacing:.025em}.inputRainGuide{font-size:clamp(8px,2.7vw,11px);letter-spacing:.01em}.inputRainEntry{height:66px;padding:0 11px;gap:8px}.inputRainEntry p{font-size:14px}.inputRainStatus{height:34px;padding:0 9px}.inputRainStatus span:nth-child(2){display:none}.inputRainCountdown{height:442px}.inputRainDrop{left:1%;right:1%}.inputRainDrop.is-timeout{transform:translateY(247px)}.inputRainResultStats{grid-template-columns:repeat(2,1fr)}.inputRainResultStats div:nth-child(2){border-right:0}.inputRainResultStats div:nth-child(-n+2){border-bottom:1px solid rgba(21,33,29,.25)}@keyframes inputRainFall{from{transform:translateY(0)}to{transform:translateY(247px)}}}
 @media(prefers-reduced-motion:reduce){.inputRainDrop{animation-timing-function:linear}.inputRainGlyph:before,.inputRainGlyph:after{display:none}.inputRainCursor{animation:none}.inputRainDrop.is-timeout .inputRainGlyph{animation:none;opacity:0}}
 
 /* MarutiBit / PAKU */
@@ -608,3 +608,39 @@ footer{padding-top:34px;padding-bottom:34px}
    drags the whole page sideways. The words carry the meaning, so the marks
    step aside rather than the links. */
 @media(max-width:470px){.siteHeader nav{gap:11px;font-size:11px}.siteHeader nav .navIcon{display:none}}
+
+/* ---- a game page in its own colours ---------------------------------
+   The chrome above (MarutiBit's header and the series rail) stays the house's
+   own. From the intro band down, the page wears the colours of the game it is
+   showing, so a world like NEON BREAK's table is not butted against cream
+   paper. Nothing here changes the layout - only what it is painted in - so a
+   phone loses no width to it. Scoped to .bitPageDark: a page opts in. */
+.bitPageDark{--bit-paper:#05080e;--bit-ink:#effaff;--pkg-tint:rgba(53,225,255,.05);color:var(--bit-ink);background-image:linear-gradient(var(--pkg-tint) 1px,transparent 1px),linear-gradient(90deg,var(--pkg-tint) 1px,transparent 1px)}
+.bitPageDark .bitIntro{background:#0a121c;border-bottom-color:#1d3446}
+.bitPageDark .bitIntro h1{color:var(--bit-ink)}
+.bitPageDark .bitIntro p,.bitPageDark .bitIntroSub{color:#9fc4d6}
+.bitPageDark .bitIntro>p:last-child strong{color:var(--bit-ink)}
+.bitPageDark .bitSerial{color:var(--pkg-color,#35e1ff)}
+.bitPageDark .bitHowToPlayCard,.bitPageDark .bitNotesCard{background:#0d1620;border-color:#24405a;box-shadow:5px 5px 0 #13202c;color:#cfe6f2}
+.bitPageDark .bitHowToPlayCard h3,.bitPageDark .bitHowToPlayLead,.bitPageDark .bitNotesCard strong{color:var(--bit-ink)}
+.bitPageDark .bitHowToPlaySub,.bitPageDark .bitNotesLead,.bitPageDark .bitNotesCard p{color:#9fc4d6}
+.bitPageDark .bitHowToPlayNum{opacity:.2}
+
+/* Only for a game that names itself on screen: there the band is the label on
+   the packaging, not the title, so it drops under the size the game shows and
+   the page reads as a shelf label then the machine's own title. The six games
+   that never name themselves keep the big band title - it is the only one
+   they have, and shrinking it leaves the band standing empty. */
+/* Capped under the size a game shows on screen (24px on a phone, 26px on a
+   desktop), so the band stays the label however wide the window gets. And
+   the band stops holding 150px of air it no longer has a title to fill. */
+.bitIntroNamed h1{font-size:clamp(19px,1.7vw,22px);gap:.3em}
+.bitIntroNamed{min-height:0;padding-top:clamp(18px,2vw,24px);padding-bottom:clamp(16px,1.8vw,22px)}
+.bitIntroNamed h1 svg{width:.9em;height:.9em}
+
+/* MIX POP's own ground: the cream its machine is painted on. Same idea as
+   .bitPageDark - only the paint changes, never the layout - so the toy sits
+   on its own colour from the band down instead of on the shop's grid. */
+.bitPageMilk{--bit-paper:#fdfdfa;--pkg-tint:rgba(35,35,35,.035)}
+.bitPageMilk .bitIntro{background:#fdfdfa}
+.bitPageMilk .bitHowToPlayCard,.bitPageMilk .bitNotesCard{background:#f7f5ec}

@@ -29,6 +29,7 @@ const pages = [
   "/bit/liltorb",
   "/bit/avenue",
   "/bit/neonbreak",
+  "/bit/mixpop",
   "/blog",
   "/about",
   "/privacy",

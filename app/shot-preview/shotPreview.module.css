@@ -24,4 +24,5 @@
 .stage :global(.bitShare),
 .stage :global(.bitShareStatus),
 .stage :global(.bitPakuShareRow),
-.stage :global(.bitPakuFullscreen) { display: none !important; }
+.stage :global(.bitPakuFullscreen),
+.stage :global(.mpCatch) { display: none !important; }

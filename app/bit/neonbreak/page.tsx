@@ -28,10 +28,10 @@ export const metadata: Metadata = {
 
 export default function NeonBreakPage() {
   return (
-    <main className="bitPage" style={{ "--pkg-color": "#6B3FA0" } as CSSProperties}>
+    <main className="bitPage bitPageDark" style={{ "--pkg-color": "#6B3FA0" } as CSSProperties}>
       <BitHeader current="NEON BREAK" />
       <BitSeriesNav active="neonbreak" />
-      <section className="bitIntro">
+      <section className="bitIntro bitIntroNamed">
         <p className="bitSerial">MB / GAME 008</p>
         <h1>
           <svg className="bitNeonBreakLogo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
