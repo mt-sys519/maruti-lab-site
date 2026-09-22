@@ -81,8 +81,9 @@
   position: absolute;
   z-index: 0;
   box-sizing: border-box;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Centred by the offset, not by a transform: the transform is needed for
+     tipping, and the two cannot share the property. */
+  left: calc(50% - var(--mp-glass) / 2);
   top: calc(50% - var(--mp-glassh) / 2);
   width: var(--mp-glass);
   height: calc(var(--mp-glassh) * 0.0547);
@@ -90,6 +91,11 @@
   border-radius: 50%;
   clip-path: inset(0 0 50% 0);
   pointer-events: none;
+  /* Its box starts at the glass's top edge and is a sliver tall, so the
+     glass's own 50%/80% pivot lands far outside it. Same point in absolute
+     terms, measured from the same top edge. */
+  transform-origin: 50% calc(var(--mp-glassh) * 0.8);
+  transition: transform 0.45s cubic-bezier(0.2, 0.6, 0.3, 1);
 }
 
 .mpGlass {
@@ -261,7 +267,11 @@
 .isPouring .mpSurface { animation: mpRipple 0.3s ease-in-out infinite alternate; height: 13px; top: -6px; }
 /* A fizzy drink lands differently: a head of foam where it hits, not a ripple. */
 .isPouring.isFizzy .mpSurface { background: radial-gradient(ellipse, #ffffffd0 15%, #ffffff70 60%, transparent); height: 20px; top: -10px; }
-.isDrinking .mpGlass { transform: translate(16px, -26px) rotate(var(--mp-tilt, 28deg)); }
+.isDrinking .mpGlass,
+/* The far lip goes with it. It is not a child of the glass - it cannot be,
+   the drink is poured between the two lips - so nothing was carrying it, and
+   it hung in the air over a glass that had left. */
+.isDrinking .mpRimBack { transform: translate(16px, -26px) rotate(var(--mp-tilt, 28deg)); }
 /* The drink stays level while the glass turns: it is a child of the glass, so
    it inherits the tilt, and turning it back by exactly the glass's own angle
    puts the surface flat against the world again. It is widened and given a
@@ -305,6 +315,14 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+  /* Pouring is a long press, and a long press on text is how iOS is asked to
+     select a word: holding コーラ to fill the glass put the copy/look-up bar
+     on screen with the label handled in blue. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .mpFlavour:disabled { opacity: 0.45; cursor: default; }
 .mpFlavour.isPouring { background: #e8edde; }
@@ -332,6 +350,11 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .mpBtn:hover:not(:disabled) { border-color: #8f9a86; }
@@ -393,7 +416,7 @@
   .mpGlass, .mpLiquid { transition: none; }
   .mpBubbles i, .mpSurface, .mpStream { animation: none; }
   .mpStream { transition: none; }
-  .isDrinking .mpGlass { transform: none; }
+  .isDrinking .mpGlass, .isDrinking .mpRimBack { transform: none; }
   .isDrinking .mpLiquid { transform: none; left: 0; right: 0; }
   .isDrinking .mpLiquid::after { display: none; }
 }

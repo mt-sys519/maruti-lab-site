@@ -392,7 +392,10 @@ export function MixPopGame() {
     }
   }, [card]);
 
-  const status = drinking ? "ごく、ごく。" : total === 0 ? "まだ、空っぽ。" : total === CAP ? "ちょうど、いっぱい。" : "いい感じ。その調子。";
+  // Quiet while you are drinking: the line under the glass is saying it, and
+  // saying it better - it counts the mouthfuls and knows which one is the
+  // last. Two of the same words one above the other was one too many.
+  const status = drinking ? "" : total === 0 ? "まだ、空っぽ。" : total === CAP ? "ちょうど、いっぱい。" : "いい感じ。その調子。";
 
   return (
     <section
