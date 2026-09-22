@@ -358,7 +358,7 @@ footer{padding-top:34px;padding-bottom:34px}
 /* The chrome above the game was 289px on a 375px screen - a header, a nav, and
    an intro block with a 150px floor - so the table started most of a thumb's
    travel down the page. Roughly half of that is gone here. */
-@media(max-width:700px){.bitHeader{height:54px}.bitIntro{grid-template-columns:1fr;min-height:0;padding-top:16px;padding-bottom:14px;gap:6px}.bitIntro h1{font-size:clamp(27px,7.4vw,38px)}.bitIntroSub{display:none}.bitIntro>p:last-child{font-size:12.5px;line-height:1.6}.bitSerial{font-size:8px}.bitGameShell{width:calc(100% - 24px);margin-top:14px;padding:12px}.bitGameTop>div{padding:5px 8px 13px;display:block}.bitGameTop span,.bitGameTop strong{display:block}.bitGameTop strong{margin-top:7px}.bitBoard{height:320px}.bitDiagram{width:92%;height:230px}.bitModeSelect button{padding:14px 6px}.bitBack{font-size:9px}}
+@media(max-width:700px){.bitHeader{height:54px}.bitIntro{grid-template-columns:1fr;min-height:0;padding-top:16px;padding-bottom:14px;gap:6px}.bitIntroSub{display:none}.bitIntro>p:last-child{font-size:12.5px;line-height:1.6}.bitSerial{font-size:8px}.bitGameShell{width:calc(100% - 24px);margin-top:14px;padding:12px}.bitGameTop>div{padding:5px 8px 13px;display:block}.bitGameTop span,.bitGameTop strong{display:block}.bitGameTop strong{margin-top:7px}.bitBoard{height:320px}.bitDiagram{width:92%;height:230px}.bitModeSelect button{padding:14px 6px}.bitBack{font-size:9px}}
 
 /* NEON BREAK is a table plus a side panel rather than a single board, so it
    gets a wider shell than the rest of the cartridges. */
@@ -424,7 +424,7 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitSequenceBoard{min-height:clamp(270px,38vw,430px);display:grid;place-items:center;padding:44px 14px;border-bottom:1px solid rgba(21,33,29,.35)}.bitSequenceRow{position:relative;width:min(100%,820px);display:flex;align-items:center;justify-content:center;gap:clamp(5px,1.6vw,20px);white-space:nowrap;color:var(--bit-blue);font:500 clamp(23px,4.7vw,58px)/1 "Arial Narrow","Yu Gothic UI",sans-serif;font-variant-numeric:tabular-nums}.bitSequenceRow:after{content:"";position:absolute;left:3%;right:3%;bottom:-24px;height:1px;background:linear-gradient(90deg,transparent,rgba(35,35,35,.35),transparent)}.bitSequenceTerm{min-width:1.25em;text-align:center}.bitSequenceTerm.isUnknown{display:grid;place-items:center;width:1.4em;height:1.4em;min-width:1.4em;border-radius:50%;background:var(--bit-red);color:#fff;font-weight:600;box-shadow:0 0 0 8px rgba(255,122,92,.08)}
 @media(max-width:700px){.bitBoardPreview{height:300px}.bitInputRow input{width:92px;font-size:38px}.bitAnswerResult{grid-template-columns:1fr;padding:18px}.bitVerdict{border-right:0;border-bottom:1px solid rgba(21,33,29,.28);padding-bottom:18px}.bitAnswerResult ol{padding-left:18px}.bitGameShell .bitBoard{height:390px}.bitKeypad button{min-height:68px;font-size:21px}.bitCelebration{height:170px}.bitFooter{padding-top:24px;padding-bottom:24px}}
 @media(max-width:700px){.bitGameSummary{min-height:0;grid-template-columns:1fr;padding:28px 4px;gap:28px}.bitExampleEquation{font-size:clamp(21px,7.2vw,29px);gap:7px}.bitGameSummary>div:last-child{text-align:center}.bitGameSummary>div:last-child strong{font-size:17px}.bitGameSummary>div:last-child p{font-size:11px}.bitQuit{font-size:9px}}
-@media(max-width:700px){.bitSeriesNav{height:40px;gap:clamp(12px,4vw,24px);overflow-x:auto}.bitSeriesNav a{flex:0 0 auto}.bitSequenceIntro h1{font-size:clamp(39px,12.2vw,52px)}.bitBlankBoard,.bitSequenceBoard{min-height:250px;padding:34px 2px}.bitBlankExpression{gap:5px;font-size:clamp(24px,7vw,34px)}.bitBlankExpression em,.bitSequenceTerm.isUnknown{box-shadow:0 0 0 5px rgba(255,122,92,.08)}.bitSequenceRow{gap:clamp(3px,1.5vw,7px);font-size:clamp(20px,6.2vw,31px)}}
+@media(max-width:700px){.bitSeriesNav{height:40px;gap:clamp(12px,4vw,24px);overflow-x:auto}.bitSeriesNav a{flex:0 0 auto}.bitBlankBoard,.bitSequenceBoard{min-height:250px;padding:34px 2px}.bitBlankExpression{gap:5px;font-size:clamp(24px,7vw,34px)}.bitBlankExpression em,.bitSequenceTerm.isUnknown{box-shadow:0 0 0 5px rgba(255,122,92,.08)}.bitSequenceRow{gap:clamp(3px,1.5vw,7px);font-size:clamp(20px,6.2vw,31px)}}
 @media(prefers-reduced-motion:reduce){.bitSound.isOn .bitSoundBars i,.bitJudgeMark,.bitCelebrationMark,.bitResultBurst,.bitParticles i{animation:none!important}}
 
 /* MarutiBit / INPUT RAIN */
@@ -649,3 +649,26 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitPageMilk{--bit-paper:#fdfdfa;--pkg-tint:rgba(35,35,35,.035)}
 .bitPageMilk .bitIntro{background:#fdfdfa}
 .bitPageMilk .bitHowToPlayCard,.bitPageMilk .bitNotesCard{background:#f7f5ec}
+
+/* On a phone the names were all over the place: SEQUENCE took 12.2vw and
+   stood a third taller than BLANK, which sat on the 7.4vw floor - a
+   difference that came from the length of the word and nothing else. One
+   size for every game now. It lives at the end of the file on purpose, so it
+   lands after each game's own rule rather than fighting it on specificity,
+   and NEON BREAK's label-sized band is restated here so the line above does
+   not sweep it up with the rest. */
+@media(max-width:700px){
+  .bitIntro h1{font-size:clamp(30px,9vw,40px)}
+  .bitIntroNamed h1{font-size:clamp(19px,1.7vw,22px)}
+}
+
+/* The series nav scrolls as soon as nine names are wider than the window,
+   which on a narrowed desktop it always is, and a bar that scrolls with no
+   scrollbar and no edge is a bar nobody knows they can move. A step at each
+   end, shown only on the side there is more to see. */
+.bitSeriesNavWrap{position:relative}
+.bitSeriesNavStep{position:absolute;top:0;bottom:0;z-index:2;width:38px;display:grid;place-items:center;padding:0;border:0;color:#cfcbc2;cursor:pointer;background:linear-gradient(90deg,#232323 58%,rgba(35,35,35,0))}
+.bitSeriesNavStep svg{width:9px;height:11px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.bitSeriesNavStep:hover,.bitSeriesNavStep:focus-visible{color:#fff;outline:0}
+.bitSeriesNavStep.isPrev{left:0}
+.bitSeriesNavStep.isNext{right:0;background:linear-gradient(270deg,#232323 58%,rgba(35,35,35,0))}
