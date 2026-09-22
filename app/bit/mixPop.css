@@ -41,7 +41,11 @@
   margin: 0 auto;
   padding: 0 clamp(16px, 1.8vw, 24px) 0;
   color: var(--mp-ink);
-  font-family: Arial, "Helvetica Neue", "Yu Gothic", Meiryo, sans-serif;
+  /* The page's own face. The prototype asked for Arial first and plain Yu
+     Gothic behind it, which put every Japanese word inside the toy - the
+     buttons most of all - in a different face from the same words anywhere
+     else on the site, and left a Mac with no Hiragino to fall back to. */
+  font-family: "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif;
 }
 
 .mpGrid {
@@ -364,17 +368,45 @@
 .mpActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
 .mpIceBtn { grid-column: 1; grid-row: 1; }
 .mpResetBtn { grid-column: 2; grid-row: 1; }
-.mpFinish {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  height: 54px;
-  justify-content: space-between;
+/* The two things you are actually asked to press - one under the glass, one
+   under the flavours - wearing the shop's own primary button: black line,
+   hard shadow, the machine's colour. Flat slabs said "submit". Both of them,
+   because one loud and one quiet across two columns reads as a mistake, and
+   both centred, because a label pinned left with a mark pinned right is a
+   toolbar, not a button. Lettered, like everything else set in caps here. */
+.mpLoud {
+  height: 52px;
+  justify-content: center;
+  gap: 10px;
   padding: 0 20px;
-  background: #292f25;
-  border-color: #292f25;
-  color: #fff;
+  border: 2px solid #232323;
+  border-radius: 9px;
+  background: none;
+  color: #232323;
+  font: 700 12px/1 inherit;
+  letter-spacing: 0.14em;
+  box-shadow: 3px 3px 0 #232323;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
-.mpFinish:hover:not(:disabled) { background: #1e231b; border-color: #1e231b; }
+/* The colour arrives on the way in rather than sitting there. Two filled
+   slabs held it the whole time, on a page whose machine is already pouring
+   orange and whose band is already wearing it. */
+.mpLoud:hover:not(:disabled), .mpLoud:focus-visible:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #232323;
+  background: var(--pkg-color, #FE941A);
+  outline: 0;
+}
+/* Not yet, rather than broken: the colour and the shadow go, the outline
+   stays. Fading a black-edged orange slab to 38% just looks dirty. */
+.mpLoud:disabled {
+  opacity: 1;
+  background: none;
+  border-color: var(--mp-edge);
+  color: #a7ae9f;
+  box-shadow: none;
+}
+.mpFinish { grid-column: 1 / -1; grid-row: 2; }
 .mpMessage { min-height: 16px; margin: 14px 0 0; font-size: 11px; color: #6f7767; }
 
 /* Beside the glass it belongs to; the page's own header is the lab's. */
@@ -405,6 +437,7 @@
   .mpControls { padding: 18px 0 8px; }
   .mpScene { height: 232px; }
   .mpStage { --mp-glass: 132px; --mp-wall: 5px; --mp-foot: 14px; }
+  .mpEar { font-size: 9.5px; letter-spacing: 0; }
   .mpNote { top: 44px; }
   .mpMeasure { top: 34px; right: 22px; }
   .mpFlavour { min-height: 58px; }
@@ -462,9 +495,13 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 12px;
   padding: 0 0 14px;
 }
+.mpEar { margin: 0; font-size: 11px; letter-spacing: 0.02em; color: #8b9182; }
+/* The shared switch carries margin-left:auto to shove itself to the right of
+   whatever row it is in. Here the block it sits in does that. */
+.mpHead .bitSound { margin: 0; }
 .mpType { font: 800 66px/1 Poppins, "Arial Black", Arial, sans-serif; letter-spacing: 6px; }
 .mpEmpty { fill: #f4efe4; }
 .mpEdge { fill: none; stroke: #262923; stroke-width: 3; stroke-linejoin: round; }

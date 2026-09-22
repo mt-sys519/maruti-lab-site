@@ -9,17 +9,46 @@
  * Played from the top they are inaudible next to the gulp, which is why the
  * region and the gain are written down per sound instead of trusting the file.
  */
-type Region = { start?: number; starts?: number[]; end: number; level: number };
+type Region = {
+  start?: number;
+  starts?: number[];
+  end: number;
+  level: number;
+  /** Cut everything below this, in Hz, before the sound reaches the mix. */
+  hp?: number;
+};
 
 const REGION: Record<string, Region> = {
   pour: { start: 1.25, end: 3.5, level: 6 },
   fizzy: { start: 0.5, end: 3.5, level: 2.6 },
   gulp: { start: 0, end: 0.6, level: 1 },
-  // Five separate cubes, each landing in its own second of the recording.
+  // Four separate cubes, each landing in its own second of the recording.
   // Taking a different one each time means six cubes going in sound like six
   // cubes rather than one cube played six times.
-  ice: { starts: [0, 1.82, 3.22, 4.82, 6.0], end: 0.5, level: 1.2 },
+  //
+  // Each start is 45ms of silence before its clink, measured off the file
+  // rather than rounded to the nearest tenth. It matters because the gain
+  // ramps up over 35ms: a start sitting on top of a clink has that ramp
+  // slice the front off it, and a waveform beginning partway up reads as a
+  // knock rather than as ice. The worst was the fifth, at 0, where the
+  // recording itself begins halfway through a cube - a 5ms crack and then
+  // nothing. That one is gone. Evened out, the four peak within 4% of each
+  // other; before, they ran from 0.11 to 0.87.
+  // ...and a high pass, because two of the four land with a thud under the
+  // clink - the cube hitting something, or the tub being set down, caught on
+  // the same take. Measured across the band, the first of them carries eight
+  // times the energy below 260Hz that the cleanest one does, which is the
+  // knock you hear. Ice is all top end, so cutting under 500Hz takes the
+  // thud out and leaves the clink exactly where it was.
+  ice: { starts: [1.89, 3.25, 4.77, 6.075], end: 0.42, level: 0.75, hp: 500 },
 };
+
+// Loud enough to hear over a room on a phone speaker, which 0.65 was not.
+// Above 1 on purpose: the limiter below is what makes that safe. Rendered
+// offline through this exact graph, the four sounds come out around two and
+// a half times the old level with every peak still under 1 - the loudest,
+// the pour, lands at 0.98. At 1.35 it went over and would have clipped.
+const MASTER = 1.2;
 
 const NAMES = Object.keys(REGION);
 const src = (name: string) => `/bit/mixpop/audio/${name}.mp3`;
@@ -52,8 +81,19 @@ export function createMixPopAudio() {
       const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       context = new Ctor();
       master = context.createGain();
-      master.gain.value = enabled ? 0.65 : 0;
-      master.connect(context.destination);
+      master.gain.value = enabled ? MASTER : 0;
+      // A limiter between the mix and the speaker. A phone speaker is quiet
+      // and what it has is headroom it never uses, so the way to be heard is
+      // to push the average up and stop the peaks from clipping - not to turn
+      // everything up until the loudest sound tears.
+      const limiter = context.createDynamicsCompressor();
+      limiter.threshold.value = -10;
+      limiter.knee.value = 6;
+      limiter.ratio.value = 8;
+      limiter.attack.value = 0.003;
+      limiter.release.value = 0.12;
+      master.connect(limiter);
+      limiter.connect(context.destination);
     }
     await context.resume();
     if (!loading) {
@@ -105,7 +145,16 @@ export function createMixPopAudio() {
       gain.gain.setValueAtTime(0, context.currentTime);
       gain.gain.linearRampToValueAtTime(region.level, context.currentTime + 0.035);
       source.connect(gain);
-      gain.connect(master);
+      if (region.hp) {
+        const cut = context.createBiquadFilter();
+        cut.type = "highpass";
+        cut.frequency.value = region.hp;
+        cut.Q.value = 0.707;
+        gain.connect(cut);
+        cut.connect(master);
+      } else {
+        gain.connect(master);
+      }
       const voice = { source, gain };
       if (solo) active = voice;
       source.onended = () => {
@@ -129,7 +178,7 @@ export function createMixPopAudio() {
     toggle() {
       enabled = !enabled;
       if (!enabled) stop();
-      if (context && master) master.gain.setTargetAtTime(enabled ? 0.65 : 0, context.currentTime, 0.02);
+      if (context && master) master.gain.setTargetAtTime(enabled ? MASTER : 0, context.currentTime, 0.02);
       if (enabled) void ready().catch(() => {});
       return enabled;
     },

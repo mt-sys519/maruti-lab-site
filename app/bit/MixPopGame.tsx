@@ -408,6 +408,9 @@ export function MixPopGame() {
       {/* The prototype kept its logotype here. It is the page's title now -
           the band above wears it - so the row is the sound switch alone. */}
       <header className="mpHead">
+        {/* The switch starts off, so something has to say what is behind it,
+            right next to it where the two read as one thing. */}
+        <p className="mpEar">音を出すとリアルなサウンドが楽しめます</p>
         <button className={`bitSound ${sound ? "isOn" : ""}`} type="button" aria-pressed={sound} onClick={toggleSound}>
           <SoundMark />SOUND <strong>{sound ? "ON" : "OFF"}</strong>
         </button>
@@ -493,8 +496,8 @@ export function MixPopGame() {
             <span>炭酸 {total ? (fizz > 0.65 ? "しっかり" : fizz > 0 ? "ほんのり" : "なし") : "—"}</span>
           </div>
           <div className="mpTools">
-            <button type="button" className="mpBtn" onClick={drink} disabled={!total || drinking}>
-              {drinking ? "飲んでいます…" : <>ひと息で飲む <CupIcon /></>}
+            <button type="button" className="mpBtn mpLoud" onClick={drink} disabled={!total || drinking}>
+              {drinking ? "DRINKING…" : <>DRINK IT <CupIcon /></>}
             </button>
           </div>
         </div>
@@ -533,8 +536,8 @@ export function MixPopGame() {
             <button type="button" className="mpBtn mpResetBtn" onClick={reset} disabled={drinking}>
               やり直す
             </button>
-            <button type="button" className="mpBtn mpFinish" onClick={finish} disabled={!total || drinking}>
-              <span>{named ? "名前がつきました" : "この一杯に名前をつける"}</span>
+            <button type="button" className="mpBtn mpLoud mpFinish" onClick={finish} disabled={!total || drinking}>
+              <span>{named ? "NAMED" : "GET A NAME"}</span>
               {named ? <span aria-hidden="true">✓</span> : <TagIcon />}
             </button>
           </div>
