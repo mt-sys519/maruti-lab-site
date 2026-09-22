@@ -21,11 +21,11 @@ export const metadata: Metadata = {
     description,
     url: "/bit/mixpop",
     images: [
-      { url: "/og/bit/mixpop.png", width: 1200, height: 630, alt: "MarutiBit MIX POP" },
-      { url: "/og/bit/mixpop-square.png", width: 630, height: 630, alt: "MarutiBit MIX POP" },
+      { url: "/og/bit/mixpop-v2.png", width: 1200, height: 630, alt: "MarutiBit MIX POP" },
+      { url: "/og/bit/mixpop-v2-square.png", width: 630, height: 630, alt: "MarutiBit MIX POP" },
     ],
   },
-  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/mixpop.png"] },
+  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/mixpop-v2.png"] },
 };
 
 export default function MixPopPage() {
