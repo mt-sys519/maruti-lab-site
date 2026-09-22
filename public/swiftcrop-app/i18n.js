@@ -142,6 +142,13 @@
     'ZIPでまとめて保存': 'Save together as ZIP',
     'PC推奨・複数画像を一括保存': 'Recommended on desktop · save multiple images at once',
     '画像ファイル名': 'Image filename',
+    'すべての画像と、合わせた位置を消します。': 'This removes every image, and the positions you set on them.',
+    '消す': 'Remove',
+    'やめる': 'Keep them',
+    // The trailing space is deliberate: Japanese runs the sentence straight
+    // into the <code>###</code> that follows it, English needs the gap.
+    '空欄なら元のファイル名のままです。': "Leave this empty and each image keeps its own filename. ",
+    '空欄なら元のファイル名': 'Empty keeps the original filename',
     'は連番になります。': ' will be numbered sequentially.',
     'ZIPファイル名': 'ZIP filename',
     '画像を追加': 'Add images',
@@ -339,7 +346,11 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  // Same reason as the guard at the end of app.js: on /swiftcrop this file is
+  // fetched after the markup is parsed, so DOMContentLoaded has already been
+  // and gone and every string stayed Japanese while the lang attribute said
+  // otherwise. Standalone, the document is still parsing and this still waits.
+  const translatePage = () => {
     document.body.classList.add('lang-en');
     updateHead();
     translateNode(document.body);
@@ -391,5 +402,11 @@ if (logo) logo.href = '/?lang=en';
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
-  });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', translatePage);
+  } else {
+    translatePage();
+  }
 })();

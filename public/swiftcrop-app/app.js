@@ -94,6 +94,10 @@
     completeDetail: $('complete-detail'),
     download: $('btn-download'),
     clear: $('btn-clear'),
+    clearConfirm: $('clear-confirm'),
+    clearGo: $('btn-clear-go'),
+    clearCancel: $('btn-clear-cancel'),
+    actionsRow: document.querySelector('.gallery-actions-row'),
     progress: $('progress-container'),
     progressBar: $('progress-bar'),
     progressStatus: $('progress-status'),
@@ -136,10 +140,18 @@
   };
 
   window.addEventListener('pageshow', resetInitialPhoneScroll);
-  document.addEventListener('DOMContentLoaded', () => {
+  const start = () => {
     resetInitialPhoneScroll();
     init();
-  });
+  };
+  // The embedding page loads this script once the markup is already parsed, so
+  // waiting for DOMContentLoaded there means waiting for an event that has been
+  // and gone. Standalone, the document is still loading and this still waits.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
 
   function init() {
     initializeResponsiveUploadPosition();
@@ -581,7 +593,30 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
 
   function bindActionEvents() {
     dom.download.addEventListener('click', processAndDownload);
-    dom.clear.addEventListener('click', clearAllImages);
+    // One tap used to throw away every image and, worse, the position and zoom
+    // set by hand on each one - none of which can be got back. A native
+    // confirm() is no use here: embedded browsers (the pane this is developed
+    // in, and the in-app browsers of X, Instagram and LINE, which is how a
+    // phone most often arrives) suppress it and hand back a silent false, so
+    // the button just looks broken. The confirmation is part of the page.
+    //
+    // "やめる" takes the place the clear button was in, so a second tap landing
+    // in the same spot cancels rather than confirms.
+    const showClearConfirm = (show) => {
+      if (!dom.clearConfirm) return;
+      dom.clearConfirm.hidden = !show;
+      if (dom.actionsRow) dom.actionsRow.hidden = show;
+      if (show) dom.clearCancel?.focus();
+    };
+    dom.clear.addEventListener('click', () => {
+      if (!state.images.length) return;
+      showClearConfirm(true);
+    });
+    dom.clearCancel?.addEventListener('click', () => showClearConfirm(false));
+    dom.clearGo?.addEventListener('click', () => {
+      showClearConfirm(false);
+      clearAllImages();
+    });
     dom.modalClose.addEventListener('click', closeModal);
     dom.modal.addEventListener('click', (event) => {
       if (event.target === dom.modal) closeModal();
@@ -1070,9 +1105,12 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
   }
 
   async function createFaceDetector(delegate) {
-    const module = await import('./assets/mediapipe/vision_bundle.mjs');
+    // Absolute, not relative: the page that runs this script is /swiftcrop, and
+    // MediaPipe resolves the wasm directory against the document, not against
+    // this file. Relative, it looked for /assets/... and auto crop just stopped.
+    const module = await import('/swiftcrop-app/assets/mediapipe/vision_bundle.mjs');
     const vision = await module.FilesetResolver.forVisionTasks(
-      './assets/mediapipe/wasm'
+      '/swiftcrop-app/assets/mediapipe/wasm'
     );
 
     return module.FaceDetector.createFromOptions(vision, {
@@ -1635,6 +1673,9 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
 
   function updateUI() {
     const hasImages = state.images.length > 0;
+    // The phone-only pitch above the tool is for someone deciding whether to
+    // use it. Once there are images on screen, that decision is made.
+    document.body.classList.toggle('has-images', hasImages);
     if (dom.presetOriginal) dom.presetOriginal.disabled = !hasImages;
     if (dom.smartCropAll) dom.smartCropAll.disabled = !hasImages || state.processing;
     dom.dropZone.style.display = hasImages ? 'none' : 'flex';
@@ -1643,6 +1684,10 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
     dom.download.disabled = !hasImages || state.processing;
     dom.addMore.disabled = !hasImages || state.processing;
     dom.clear.disabled = !hasImages || state.processing;
+    if (!hasImages && dom.clearConfirm && !dom.clearConfirm.hidden) {
+      dom.clearConfirm.hidden = true;
+      if (dom.actionsRow) dom.actionsRow.hidden = false;
+    }
     updateGallerySummary();
     updateDatasetSummary();
   }
@@ -1671,6 +1716,10 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
     canvas.height = state.targetHeight;
     const ctx = canvas.getContext('2d', { alpha: format !== 'image/jpeg' });
     const results = [];
+    // Keeping each image's own name means two of them can now collide -
+    // photo.png and photo.jpeg both come out as photo.jpg, and in a zip the
+    // second would quietly replace the first.
+    const usedNames = new Map();
 
     try {
       for (let index = 0; index < state.images.length; index += 1) {
@@ -1684,7 +1733,7 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
         const blob = await canvasToBlob(canvas, format, quality);
         if (!blob) throw new Error('画像の生成に失敗しました');
 
-        const fileName = outputFileName(item.name, index, pattern, extension);
+        const fileName = uniqueFileName(outputFileName(item.name, index, pattern, extension), usedNames);
         results.push({
           blob,
           fileName,
@@ -2119,6 +2168,28 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
   function clampDimension(value) {
     const number = Number.parseInt(value, 10);
     return Number.isFinite(number) && number > 0 ? clamp(number, 1, MAX_DIMENSION) : 0;
+  }
+
+  // The first file of a given name keeps it; the ones after it get _2, _3 …
+  // Pattern names already carry an index, so in practice this only fires for
+  // names taken from the images themselves.
+  function uniqueFileName(fileName, used) {
+    if (!used.has(fileName)) {
+      used.set(fileName, 1);
+      return fileName;
+    }
+    const dot = fileName.lastIndexOf('.');
+    const base = dot === -1 ? fileName : fileName.slice(0, dot);
+    const tail = dot === -1 ? '' : fileName.slice(dot);
+    let count = used.get(fileName);
+    let candidate;
+    do {
+      count += 1;
+      candidate = `${base}_${count}${tail}`;
+    } while (used.has(candidate));
+    used.set(fileName, count);
+    used.set(candidate, 1);
+    return candidate;
   }
 
   function sanitizeFileName(value) {

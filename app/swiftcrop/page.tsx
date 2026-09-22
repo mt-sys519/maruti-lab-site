@@ -2,12 +2,29 @@
 import type { Metadata } from "next";
 import styles from "./SwiftCropPage.module.css";
 import { SiteFooter } from "../SiteFooter";
-import { ToolFrame } from "./ToolFrame";
+import { ToolScripts } from "./ToolScripts";
 import { LabMark } from "../icons";
+import appHtml from "../../public/swiftcrop-app/index.html?raw";
 
 const title = "SwiftCrop";
 const description =
   "画像を外へ送らずに、切り抜き・リサイズ・形式変換をまとめて。複数枚を同じ設定で処理して、1枚ずつでもZIPでも保存できるブラウザの画像ツール。";
+
+/* The tool used to sit in an iframe, which meant none of it - not the heading,
+ * not a word of the copy around it - was part of this page as far as anything
+ * reading the page was concerned, and the document inside was a second URL
+ * saying the same things as this one.
+ *
+ * So the markup comes from that same file, read at build time. One copy, still
+ * served on its own at /swiftcrop-app/index.html, and now also the body of this
+ * page. What is dropped is the parts a page cannot have twice: everything in
+ * <head>, and the three <script> tags, which ToolScripts loads in their order -
+ * markup injected this way never runs its own scripts.
+ */
+const toolMarkup = appHtml
+  .slice(appHtml.indexOf(">", appHtml.indexOf("<body")) + 1, appHtml.lastIndexOf("</body>"))
+  .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "")
+  .trim();
 
 // Everything below is what the tool's own interface offers - no feature is
 // described here that is not in the panel.
@@ -65,6 +82,24 @@ export default function SwiftCropPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+      {/* What the tool's own document loaded in its head. React hoists these,
+          and the stylesheet only reaches the tool: every rule in it that used to
+          address html, body or a bare element is scoped to .swiftcrop-app. */}
+      {/* The rule is written for the Pages Router, where a <link> outside
+          _document.js loads on one route only. That is the intent here: these
+          three belong to the tool and to no other page on the site. */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap"
+      />
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      />
+      {/* eslint-disable-next-line @next/next/no-css-tags */}
+      <link rel="stylesheet" href="/swiftcrop-app/style.css?v=4.0.3-export-time" />
+
       <header className="siteHeader">
         <a className="brand" href="/" aria-label="Maruti Lab トップ">
           <span className="brandMark" aria-hidden="true">
@@ -80,23 +115,9 @@ export default function SwiftCropPage() {
         </nav>
       </header>
 
-      <section className={styles.intro} aria-labelledby="swiftcrop-title">
-        <p className={styles.kicker}>MARUTI LAB / BROWSER TOOL</p>
-        <h1 id="swiftcrop-title">SwiftCrop</h1>
-        <p className={styles.sub}>
-          複数の画像を同じ設定で切り抜き、大きさを揃え、形式を変えて保存します。読み込んだ画像はこのブラウザの中だけで処理され、どこへも送信されません。
-        </p>
-      </section>
-
-      <section className={styles.toolSection} aria-label="SwiftCrop 本体">
-        <div className={styles.toolBar}>
-          <span>SWIFTCROP / READY</span>
-          <a href="/swiftcrop-app/index.html" target="_blank" rel="noreferrer">
-            大きな画面で開く
-          </a>
-        </div>
-        <ToolFrame src="/swiftcrop-app/index.html" title="SwiftCrop" />
-      </section>
+      {/* The tool, and the page's only h1, which lives in its hero. */}
+      <div className="swiftcrop-app" dangerouslySetInnerHTML={{ __html: toolMarkup }} />
+      <ToolScripts />
 
       <section className={styles.guide} id="guide" aria-labelledby="guide-title">
         <div className={styles.guideHead}>

@@ -6,7 +6,12 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>SwiftCrop</title>
 <meta content="複数画像をアップロードせず、ブラウザ内で一括切り抜き・リサイズ。登録・インストール不要で、LINEスタンプ、SNS、EC、AI学習データの画像作業を軽快に進められます。" name="description"/>
-<meta content="index,follow,max-image-preview:large" name="robots"/>
+<!-- This document is the tool itself, shown inside /swiftcrop. It is a second
+     URL carrying the same copy as that page, so left indexable the two compete
+     for the same query; noindex keeps the one with the site around it. follow
+     is kept so the links out of here still count. -->
+<meta content="noindex,follow" name="robots"/>
+<link href="https://marutilab.com/swiftcrop" rel="canonical"/>
 <meta content="#f7f8f3" name="theme-color"/>
 <meta content="light" name="color-scheme"/>
 
@@ -40,28 +45,10 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Outfit:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-<style id="hero-critical-style">
-.hero-free-label,.mobile-tool-intro{display:none}
-@media(max-width:720px){
-  .hero-copy>.eyebrow{order:1}.hero-copy>h1{order:2}
-  .hero-free-label{display:inline-flex;order:3}
-  .hero-copy>.hero-lead{display:none}
-  .mobile-tool-intro{display:flex}
-  .hero-copy>.hero-lead{order:4}.hero-visual{order:5}.hero-copy>.hero-trust{order:6}
-}
-</style>
 <link href="style.css?v=4.0.3-export-time" rel="stylesheet"/>
 
-<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-GTPT9ZK2HD"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-GTPT9ZK2HD');
-  </script>
-
 </head>
-<body>
+<body class="swiftcrop-app">
 <noscript><div class="noscript-message">SwiftCropを利用するにはJavaScriptを有効にしてください。</div></noscript>
 <div class="app-container">
 
@@ -159,8 +146,8 @@
 </div>
 <div class="input-group">
 <label for="rename-pattern">画像ファイル名</label>
-<input id="rename-pattern" placeholder="例：image_###" type="text" value="swiftcrop_###"/>
-<small class="help-text"><code>###</code> は連番になります。</small>
+<input id="rename-pattern" placeholder="空欄なら元のファイル名" type="text" value=""/>
+<small class="help-text">空欄なら元のファイル名のままです。<code>###</code> は連番になります。</small>
 </div>
 <div class="input-group" id="zip-name-group">
 <label for="zip-name">ZIPファイル名</label>
@@ -170,17 +157,6 @@
 </div>
 </div>
 </section>
-<div class="sidebar-tool-actions">
-<button class="btn btn-secondary" disabled="" id="btn-add-more" type="button">
-<i class="fa-solid fa-plus"></i> 画像を追加
-</button>
-<div class="sidebar-autocrop">
-<button class="btn btn-secondary btn-auto-crop" disabled="" id="btn-smart-crop-all" type="button">
-<i class="fa-solid fa-wand-magic-sparkles"></i> まとめて自動調整
-</button>
-<p class="smart-crop-note">顔や被写体が収まりやすい位置へ調整します。あとから手動でも変更できます。</p>
-</div>
-</div>
 <div aria-live="polite" class="progress-container" id="progress-container" role="status" style="display:none;">
 <div class="progress-bar-wrapper"><div class="progress-bar" id="progress-bar">0%</div></div>
 <span class="progress-status" id="progress-status">処理中...</span>
@@ -190,9 +166,6 @@
 <p><strong>画像は外部へ送信されません。</strong><br/>すべての処理はこのブラウザ内で完結します。</p>
 </div>
 
-<div class="sidebar-danger-zone">
-<button class="btn btn-link text-danger" disabled="" id="btn-clear" type="button"><i class="fa-solid fa-trash-can"></i> 画像をすべてクリア</button>
-</div>
 </aside>
 <main class="workspace-area">
 <section aria-labelledby="upload-title" class="drop-zone" id="drop-zone">
@@ -275,12 +248,34 @@ swiftcrop_dataset_0002.txt</code>
 <h2>画像リスト（<span id="image-count">0</span>枚）</h2>
 <p class="gallery-summary"><span id="total-size">0 MB</span>・ドラッグで順番を変更できます・画像ファイルを画面へドロップして追加できます</p>
 </div>
-<div class="instruction-tip">
-<span><i class="fa-solid fa-arrows-up-down-left-right"></i> 位置調整</span>
-<span><i class="fa-solid fa-magnifying-glass-plus"></i> ホイール／ピンチでズーム</span>
-<span><i class="fa-solid fa-sliders"></i> Shift＋ホイールで微調整</span>
-<span><i class="fa-solid fa-rotate-left"></i> ダブルクリックでリセット</span>
 </div>
+<div class="gallery-actions">
+<div class="gallery-actions-row">
+<div class="gallery-actions-main">
+<button class="btn btn-secondary" disabled="" id="btn-add-more" type="button">
+<i class="fa-solid fa-plus"></i> 画像を追加
+</button>
+<button class="btn btn-secondary btn-auto-crop" disabled="" id="btn-smart-crop-all" type="button">
+<i class="fa-solid fa-wand-magic-sparkles"></i> まとめて自動調整
+</button>
+</div>
+<button class="btn btn-link text-danger" disabled="" id="btn-clear" type="button"><i class="fa-solid fa-trash-can"></i> 画像をすべてクリア</button>
+</div>
+<p class="smart-crop-note">顔や被写体が収まりやすい位置へ調整します。あとから手動でも変更できます。</p>
+<div class="clear-confirm" hidden="" id="clear-confirm">
+<span id="clear-confirm-text">すべての画像と、合わせた位置を消します。</span>
+<button class="btn btn-clear-go" id="btn-clear-go" type="button">消す</button>
+<button class="btn btn-secondary" id="btn-clear-cancel" type="button">やめる</button>
+</div>
+</div>
+<div class="instruction-tip">
+<span class="tip-pointer"><i class="fa-solid fa-arrows-up-down-left-right"></i> ドラッグで位置調整</span>
+<span class="tip-pointer"><i class="fa-solid fa-magnifying-glass-plus"></i> ホイールでズーム</span>
+<span class="tip-pointer"><i class="fa-solid fa-sliders"></i> Shift＋ホイールで微調整</span>
+<span class="tip-pointer"><i class="fa-solid fa-rotate-left"></i> ダブルクリックでリセット</span>
+<span class="tip-touch"><i class="fa-solid fa-arrows-up-down-left-right"></i> ドラッグで位置調整</span>
+<span class="tip-touch"><i class="fa-solid fa-magnifying-glass-plus"></i> ピンチでズーム</span>
+<span class="tip-touch"><i class="fa-solid fa-rotate-left"></i> ダブルタップでリセット</span>
 </div>
 <div class="image-grid" id="image-grid"></div>
 </section>

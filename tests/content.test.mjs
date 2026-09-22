@@ -113,7 +113,12 @@ test("the SwiftCrop page embeds the tool and explains it", async () => {
   const response = await render("/swiftcrop");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /src="\/swiftcrop-app\/index\.html"/);
+  // The tool is part of this document now, not a frame pointing at a second
+  // URL that said the same things: its markup, and its heading, are here.
+  assert.match(html, /class="swiftcrop-app"/);
+  assert.match(html, /id="file-input"/);
+  assert.doesNotMatch(html, /<iframe/, "the tool is embedded again");
+  assert.equal((html.match(/<h1[ >]/g) ?? []).length, 1, "the page should have one h1");
   assert.match(html, /使い方/);
   for (const heading of ["出力サイズ", "フォーマットと品質", "保存方法"]) {
     assert.ok(html.includes(heading), `${heading} is missing from the guide`);
