@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createMixPopAudio, type MixPopAudio } from "./mixPopAudio";
 import { cardFile, drawMixPopCard } from "./mixPopCard";
 import { DRINKS, juice, nameMix, thinly } from "./mixPopNames";
+import { SoundMark } from "./shared/SoundMark";
 
 // Every MarutiBit game remembers the sound switch under the same key, so
 // turning it off in one turns it off in all of them.
@@ -393,7 +394,7 @@ export function MixPopGame() {
           the band above wears it - so the row is the sound switch alone. */}
       <header className="mpHead">
         <button className={`bitSound ${sound ? "isOn" : ""}`} type="button" aria-pressed={sound} onClick={toggleSound}>
-          <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{sound ? "ON" : "OFF"}</strong>
+          <SoundMark />SOUND <strong>{sound ? "ON" : "OFF"}</strong>
         </button>
       </header>
       <span className="mpRainbow" aria-hidden="true" />

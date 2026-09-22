@@ -9,6 +9,7 @@ import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { XShareButton } from "./shared/XShareButton";
 import { useMathSeriesAudio } from "./useMathSeriesAudio";
 import { blankProblemSignature, makeBlankProblem, tutorials, type Difficulty, type Problem } from "./blankProblems";
+import { SoundMark } from "./shared/SoundMark";
 
 type Phase = "select" | "playing" | "answered" | "complete";
 
@@ -195,7 +196,7 @@ export function BlankGame() {
 
   const soundButton = (
     <button className={`bitSound ${soundEnabled ? "isOn" : ""}`} type="button" aria-pressed={soundEnabled} onClick={() => { void toggleSound(); }}>
-      <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundEnabled ? "ON" : "OFF"}</strong>
+      <SoundMark />SOUND <strong>{soundEnabled ? "ON" : "OFF"}</strong>
     </button>
   );
   const soundOnlyControls = <div className="bitGameControls">{soundButton}</div>;

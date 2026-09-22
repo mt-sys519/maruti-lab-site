@@ -401,11 +401,13 @@
 /* ---- the logo, and the machine -------------------------------------- */
 
 /* The logotype in the band, where the other games carry a small mark and
-   their name in Baloo. Sized in em off the band's own title size, so it grows
-   and shrinks with every other game's title; 1.7em of box puts the letters at
-   roughly the cap height Baloo would have had, because only the middle 45% of
-   this viewBox is lettering and the rest is the air the drink swells into. */
-.mixpopLogo { display: block; height: 1.7em; width: auto; flex: 0 0 auto; overflow: visible; }
+   their name in Baloo. The viewBox is cropped to the lettering plus the room
+   its outline needs - it used to carry thirty units of empty air above and
+   below, which arrived in the band as padding nobody had asked for and made
+   this one hero taller than the other eight. The air over and under it is the
+   band's own now. Sized in em off the title size, so it moves with every
+   other game's title, and set a shade under Baloo's cap height. */
+.mixpopLogo { display: block; height: 0.82em; width: auto; flex: 0 0 auto; overflow: visible; }
 
 /* The line the prototype wore under its own header, kept: the six flavours
    running the way a rainbow runs, with the cream one opening and closing it. */
@@ -442,7 +444,7 @@
 }
 .mpType { font: 800 66px/1 Poppins, "Arial Black", Arial, sans-serif; letter-spacing: 6px; }
 .mpEmpty { fill: #f4efe4; }
-.mpEdge { fill: none; stroke: #262923; stroke-width: 2.4; stroke-linejoin: round; }
+.mpEdge { fill: none; stroke: #262923; stroke-width: 3; stroke-linejoin: round; }
 .mpDeepWave { fill: #f0790a; opacity: 0.55; animation: mpDrift 5.5s linear infinite; }
 .mpTopWave { fill: #fe941a; animation: mpDrift 3.6s linear infinite; }
 .mpSwell { animation: mpRock 4.4s ease-in-out infinite; }
@@ -456,11 +458,7 @@
    into a corner, so the foot of the toy has the same edges as everything
    above it. No margin over them - the row closes the card off, and any air
    there just left the buttons floating under the thing they belong to. */
-.mpShareRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
-/* Except behind the result. With nothing there the row closes the card off,
-   but flush against the panel that has just named your drink it reads as part
-   of it, and it is not - it belongs to the card underneath both. */
-.mpResult + .mpShareRow { margin-top: 18px; }
+.mpShareRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0 0; }
 .mpShareBtn {
   padding: 12px 10px;
   border: 1px solid var(--mp-edge);

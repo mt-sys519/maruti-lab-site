@@ -5,6 +5,7 @@ import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { XShareButton } from "./shared/XShareButton";
 import { ShareButton } from "./shared/ShareButton";
+import { SoundMark } from "./shared/SoundMark";
 
 const ENGINE_BASE = "/scripts/paku";
 const ENGINE_FILES = ["database.js", "botanical-engine.js", "audio.js", "particle-core.js", "aquarium.js"];
@@ -347,7 +348,7 @@ export function PakuGame() {
       <GamePauseOverlay active={paused} onResume={resumeFromPause} />
       <div className="bitGameControls">
         <button className={`bitSound ${soundOn ? "isOn" : ""}`} type="button" aria-pressed={soundOn} onClick={toggleSound}>
-          <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundOn ? "ON" : "OFF"}</strong>
+          <SoundMark />SOUND <strong>{soundOn ? "ON" : "OFF"}</strong>
         </button>
         <button className="bitPakuFullscreen" type="button" aria-pressed={fullscreenActive} onClick={toggleFullscreen} aria-label="全画面表示を切り替え">
           <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">

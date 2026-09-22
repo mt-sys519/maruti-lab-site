@@ -5,6 +5,7 @@ import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { ShareButton } from "./shared/ShareButton";
 import { XShareButton } from "./shared/XShareButton";
+import { SoundMark } from "./shared/SoundMark";
 
 // Shared with the other MarutiBit games' sound hooks, so toggling sound
 // anywhere carries over here too instead of this game tracking its own
@@ -1070,7 +1071,7 @@ export function LiltOrbGame() {
       <GamePauseOverlay active={paused} onResume={resumeFromPause} />
       <div className="bitGameControls">
         <button className={`bitSound ${soundOn ? "isOn" : ""}`} type="button" aria-pressed={soundOn} onClick={toggleSound}>
-          <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundOn ? "ON" : "OFF"}</strong>
+          <SoundMark />SOUND <strong>{soundOn ? "ON" : "OFF"}</strong>
         </button>
         <div className="bitLiltOrbControlsRight">
           <button

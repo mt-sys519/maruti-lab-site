@@ -49,7 +49,7 @@ export default function MixPopPage() {
               has a logotype of its own, with the drink moving inside the
               letters, so the band wears that instead - at full size, which is
               why the shrunk .bitIntroNamed band is off here. */}
-          <svg className="mixpopLogo" viewBox="-7 2 336 104" role="img" aria-label="MIX POP">
+          <svg className="mixpopLogo" viewBox="-7 26 336 54" role="img" aria-label="MIX POP">
             <defs>
               <clipPath id="mixpopLetters">
                 <text className="mpType" x="160" y="76" textAnchor="middle">MIX POP</text>

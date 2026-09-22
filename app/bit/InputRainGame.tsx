@@ -11,6 +11,7 @@ import { useInputRainAudio } from "./useInputRainAudio";
 import { spawnDissolve, spawnMaterialize } from "./inputRainParticles";
 import { InputRainFlickPad } from "./InputRainFlickPad";
 import { isReachableTowards, nextMutation } from "./inputRainFlickMap";
+import { SoundMark } from "./shared/SoundMark";
 
 type Phase = "select" | "countdown" | "playing" | "complete";
 type InputMode = "keyboard" | "flick";
@@ -653,7 +654,7 @@ export function InputRainGame() {
     <section ref={gameShellRef} className="bitGameShell inputRainGameShell" data-card-ready={shareCard ? "true" : "false"}>
       <div className="bitGameControls">
         <button type="button" className={`bitSound${soundEnabled ? " isOn" : ""}`} onClick={() => void toggleSound()} aria-pressed={soundEnabled}>
-          <span className="bitSoundBars" aria-hidden="true"><i /><i /><i /></span>SOUND <strong>{soundEnabled ? "ON" : "OFF"}</strong>
+          <SoundMark />SOUND <strong>{soundEnabled ? "ON" : "OFF"}</strong>
         </button>
         {phase === "playing" && <button type="button" className="bitQuit" onClick={() => setManualPaused(true)}>一時停止 / やめる</button>}
       </div>
