@@ -314,13 +314,14 @@
   0%, 100% { transform: translateY(0) rotate(-0.6deg); }
   50% { transform: translateY(-3px) rotate(0.6deg); }
 }
-/* The quiet pair AVENUE wears: a hairline box and eight pixels of letterspaced
-   caps. Not stretched across the card - two thin buttons a metre wide would be
-   the loudest thing on the page, and the gap down the middle of them read as a
-   seam in the card. They sit in the corner opposite the sound switch. */
-.mpShareRow { display: flex; justify-content: flex-end; gap: 8px; margin: 18px 0 0; }
+/* AVENUE's lettering on the full width of the card: a hairline box and eight
+   pixels of letterspaced caps, but halved across the card rather than shrunk
+   into a corner, so the foot of the toy has the same edges as everything
+   above it. No margin over them - the row closes the card off, and any air
+   there just left the buttons floating under the thing they belong to. */
+.mpShareRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
 .mpShareBtn {
-  padding: 7px 10px;
+  padding: 12px 10px;
   border: 1px solid var(--mp-edge);
   background: none;
   color: var(--mp-quiet);
