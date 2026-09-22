@@ -388,7 +388,7 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitHowToPlayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .bitHowToPlayCard{position:relative;overflow:hidden;padding:18px 18px 16px;border:2.5px solid #232323;border-radius:9px;background:#f1eee5;box-shadow:5px 5px 0 #232323;transition:transform .15s ease,box-shadow .15s ease}
 .bitHowToPlayCard:hover,.bitHowToPlayCard:focus-within{transform:translate(-2px,-2px);box-shadow:7px 7px 0 #232323}
-.bitHowToPlayNum{position:absolute;z-index:0;top:-16px;right:-2px;font:800 68px/1 "Baloo 2","Arial Narrow",sans-serif;color:#FF7A5C;opacity:.15;pointer-events:none}
+.bitHowToPlayNum{position:absolute;z-index:0;top:-16px;right:-2px;font:800 68px/1 "Baloo 2","Arial Narrow",sans-serif;color:var(--pkg-color,#FF7A5C);opacity:.15;pointer-events:none}
 .bitHowToPlayHead{position:relative;z-index:1;display:flex;align-items:center;gap:8px;margin:0 0 12px}
 .bitHowToPlayIcon{display:inline-block;font-size:16px;line-height:1}
 .bitHowToPlayGrid>article:nth-of-type(1) .bitHowToPlayIcon{transform:rotate(-10deg)}

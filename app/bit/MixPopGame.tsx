@@ -4,7 +4,9 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createMixPopAudio, type MixPopAudio } from "./mixPopAudio";
 import { cardFile, drawMixPopCard } from "./mixPopCard";
 import { DRINKS, juice, nameMix, thinly } from "./mixPopNames";
+import { ShareButton } from "./shared/ShareButton";
 import { SoundMark } from "./shared/SoundMark";
+import { XShareButton } from "./shared/XShareButton";
 
 // Every MarutiBit game remembers the sound switch under the same key, so
 // turning it off in one turns it off in all of them.
@@ -12,6 +14,7 @@ const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
 const CAP = 300;
 const POUR = 30;
 const ICE_MAX = 6;
+const HOME = "https://marutilab.com/bit/mixpop";
 // Where each cube sits and how it lies, fixed per cube so the ice does not
 // rearrange itself every render.
 const ICE_AT = [-34, 4, -12, 30, -24, 16];
@@ -39,14 +42,20 @@ const mix = (amounts: number[], pick: (i: number) => [number, number, number], f
   return [0, 1, 2].map((c) => Math.round(amounts.reduce((sum, ml, i) => sum + pick(i)[c] * ml, 0) / total)) as [number, number, number];
 };
 
-// The drawn icons from the prototype: a glass for drinking it and a tag for
-// naming it. Drawn here so they are the same line and the same size on every
-// machine. Sharing wears no mark - it borrows the series' plain lettered
-// buttons instead.
+// The drawn icons from the prototype: a glass for drinking it, a tag for
+// naming it, and a box-and-arrow for handing the card on. Drawn here so they
+// are the same line and the same size on every machine.
 const CupIcon = () => (
   <svg className="mpIco" viewBox="0 0 12 12" aria-hidden="true">
     <path d="M3.2 2.2h5.6l-.7 7.3a.9.9 0 0 1-.9.8H4.8a.9.9 0 0 1-.9-.8z" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
     <path d="M3.5 5.7h5" stroke="currentColor" strokeWidth="1.1" />
+  </svg>
+);
+const ShareIcon = () => (
+  <svg className="mpIco" viewBox="0 0 12 12" aria-hidden="true">
+    <path d="M6 1.4v6" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
+    <path d="M3.7 3.5 6 1.3l2.3 2.2" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2.4 6.6v3.1c0 .4.3.7.7.7h5.8c.4 0 .7-.3.7-.7V6.6" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
   </svg>
 );
 const TagIcon = () => (
@@ -347,40 +356,40 @@ export function MixPopGame() {
     return { picture: await cardFile(canvas), text: [named.name, ...named.rows, "", "#MIXPOP #MarutiBit"].join("\n") };
   }, [cubes, deep, fizz, named, thin, total]);
 
-  const keep = (picture: File, note: string) => {
-    const save = document.createElement("a");
-    save.href = URL.createObjectURL(picture);
-    save.download = "mixpop.png";
-    save.click();
-    window.setTimeout(() => URL.revokeObjectURL(save.href), 4000);
-    setMessage(note);
-  };
+  // Handing the card on means handing over a picture, and only a browser with
+  // a share sheet can do that. X's own composer cannot: its link carries text
+  // and nothing else, so the button that went there had to drop the PNG into
+  // your downloads folder and ask you to attach it yourself, which is not
+  // sharing, it is homework. Where there is no sheet the button is not there
+  // either, rather than quietly turning into a download.
+  const [canHandOver, setCanHandOver] = useState(false);
+  useEffect(() => {
+    // Off a tick, the way the sound switch reads its storage: the server has
+    // no navigator to ask, so this starts false and corrects itself.
+    let alive = true;
+    void (async () => {
+      await Promise.resolve();
+      if (!alive) return;
+      try {
+        if (navigator.canShare?.({ files: [new File([""], "x.png", { type: "image/png" })] })) setCanHandOver(true);
+      } catch {
+        /* A browser without canShare is a browser that cannot take the file. */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const share = useCallback(async () => {
     const made = await card();
     if (!made) return;
-    if (navigator.canShare?.({ files: [made.picture] })) {
-      try {
-        await navigator.share({ files: [made.picture], text: made.text });
-        return;
-      } catch (e) {
-        if ((e as Error).name === "AbortError") return;
-      }
+    try {
+      await navigator.share({ files: [made.picture], text: made.text, url: HOME });
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      setMessage("この端末ではカードを渡せませんでした。");
     }
-    keep(made.picture, "カードを保存しました。");
-  }, [card]);
-
-  const shareX = useCallback(async () => {
-    const made = await card();
-    if (!made) return;
-    keep(made.picture, "カードを保存しました。Xの投稿画面で画像を添えてください。");
-    // An anchor rather than window.open with a feature string: passing
-    // features has twice sent the page we were on to the share URL.
-    const post = document.createElement("a");
-    post.href = `https://x.com/intent/post?text=${encodeURIComponent(made.text)}`;
-    post.target = "_blank";
-    post.rel = "noopener noreferrer";
-    post.click();
   }, [card]);
 
   const status = drinking ? "ごく、ごく。" : total === 0 ? "まだ、空っぽ。" : total === CAP ? "ちょうど、いっぱい。" : "いい感じ。その調子。";
@@ -542,18 +551,36 @@ export function MixPopGame() {
               {named.rows.map((row) => (
                 <p key={row}>{row}</p>
               ))}
+              {/* This pair hands on the drink: the card drawn from what is in
+                  the glass. The pair at the foot of the page hands on the toy
+                  itself, which is a different thing to give somebody. */}
+              {canHandOver && (
+                <div className="mpCardShare">
+                  <button type="button" className="mpBtn" onClick={share}>カードをシェア <ShareIcon /></button>
+                </div>
+              )}
             </div>
           </div>
         </section>
       )}
 
-      {/* Last of all, under everything including the card: sharing is what you
-          do after the glass is finished, and anywhere higher pushes the part
-          you came for down the page. It stays in place and greys out until
-          there is a drink with a name, so nothing shifts when one appears. */}
+      {/* The toy itself, not the drink. Every other game in the series ends
+          on this pair and it means the same thing here: a link to the page,
+          for somebody who has not seen it. The drink you made goes out from
+          the card above, which is a different button doing a different job -
+          it was greyed out until there was a drink, which made it look like
+          the same one waiting its turn. */}
       <div className="mpShareRow">
-        <button type="button" className="mpShareBtn" onClick={share} disabled={!named}>SHARE</button>
-        <button type="button" className="mpShareBtn" onClick={shareX} disabled={!named}>X SHARE</button>
+        <ShareButton
+          title="MarutiBit「MIX POP」"
+          text="ジュースを好きにまぜて、好きなだけ飲めるドリンクバー"
+          url={HOME}
+        />
+        <XShareButton
+          variant="compact"
+          text={"MarutiBit「MIX POP」\nジュースを好きにまぜて、好きなだけ飲めるドリンクバー"}
+          url={HOME}
+        />
       </div>
     </section>
   );

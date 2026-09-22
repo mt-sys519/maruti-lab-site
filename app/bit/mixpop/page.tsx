@@ -36,7 +36,7 @@ export default function MixPopPage() {
           React hoists this into <head>, and it only loads on this route. */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" />
-    <main className="bitPage bitPageMilk" style={{ "--pkg-color": "#FF7A5C" } as CSSProperties}>
+    <main className="bitPage bitPageMilk" style={{ "--pkg-color": "#FE941A" } as CSSProperties}>
       <BitHeader current="MIX POP" />
 
       <BitSeriesNav active="mixpop" />

@@ -37,7 +37,7 @@ const copy: Record<string, Card> = {
   },
   mixpop: {
     lead: "ドリンク調合トイ。",
-    sub: "六つのジュースを混ぜて、できた一杯に名前をつける。",
+    sub: "ジュースを好きにまぜて、好きなだけ飲めるドリンクバー",
     art: "/bit/mixpop/machine.webp",
   },
   neonbreak: {

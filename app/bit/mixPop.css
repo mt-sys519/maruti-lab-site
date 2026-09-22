@@ -453,24 +453,16 @@
   0%, 100% { transform: translateY(0) rotate(-0.6deg); }
   50% { transform: translateY(-3px) rotate(0.6deg); }
 }
-/* AVENUE's lettering on the full width of the card: a hairline box and eight
-   pixels of letterspaced caps, but halved across the card rather than shrunk
-   into a corner, so the foot of the toy has the same edges as everything
-   above it. No margin over them - the row closes the card off, and any air
-   there just left the buttons floating under the thing they belong to. */
+/* The series' own share pair, for the page rather than the drink: the same
+   two buttons AVENUE and PAKU wear, halved across the foot of the card so its
+   bottom edge lines up with everything above it. They bring their own hairline
+   box and lettered caps; only the size is ours. */
 .mpShareRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0 0; }
-.mpShareBtn {
-  padding: 12px 10px;
-  border: 1px solid var(--mp-edge);
-  background: none;
-  color: var(--mp-quiet);
-  font: 700 8px/1 "Yu Gothic UI", sans-serif;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.mpShareBtn:hover:not(:disabled), .mpShareBtn:focus-visible { border-color: #8f9a86; color: #3d453a; outline: 0; }
-.mpShareBtn:disabled { opacity: 0.38; cursor: default; }
+.mpShareRow > button { width: 100%; margin: 0; padding: 12px 10px; }
+
+/* And the drink's own pair, beside the recipe it came from. */
+.mpCardShare { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.mpCardShare .mpBtn { flex: 1 1 auto; min-width: 140px; }
 .mpRainbow {
   display: block;
   height: 2px;
