@@ -30,6 +30,12 @@
   --mp-quiet: #686f60;
   --mp-ctl: 44px;
   --mp-glass: clamp(132px, 15.5vw, 176px);
+  /* The thickness of the glass, as the drink sees it: how far in from the
+     sides it sits, and how much solid glass is under it. The stream has to
+     know the second one to stop at the surface rather than at the floor. */
+  --mp-wall: 7px;
+  --mp-foot: 19px;
+  --mp-glassh: calc(var(--mp-glass) * 16 / 11);
   position: relative;
   max-width: 1180px;
   margin: 0 auto;
@@ -66,9 +72,33 @@
    box is only what clips the drink. What you see is the rim ellipse, the two
    walls and the foot, which is how a glass is actually read - an outline all
    the way round made it a drawn shape rather than something transparent. */
+/* The far lip of the glass, drawn on its own behind the stream. The drink is
+   poured between the two sides of the rim, so one line has to pass behind it
+   and the other in front; with the whole oval on one layer, whichever layer
+   that was, the stream went behind both or in front of both. Same geometry as
+   the ring on the glass, cut to its top half. */
+.mpRimBack {
+  position: absolute;
+  z-index: 0;
+  box-sizing: border-box;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(50% - var(--mp-glassh) / 2);
+  width: var(--mp-glass);
+  height: calc(var(--mp-glassh) * 0.0547);
+  border: 1.5px solid #a9b1a8;
+  border-radius: 50%;
+  clip-path: inset(0 0 50% 0);
+  pointer-events: none;
+}
+
 .mpGlass {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  /* It is a flex item, and a flex item gives up its width before it lets the
+     row overflow. The rim drawn behind it is not one, so a squeezed glass
+     would leave that line hanging out past the sides. */
+  flex: 0 0 auto;
   /* Drinking rotates the glass 28 degrees about a point four fifths of the
      way down, which throws its far corner out to the right by half again -
      enough, at full size, to cross the rule into the flavour list on a
@@ -89,6 +119,14 @@
     20% 100%, 16.2% 99.6%, 12.8% 98%, 10.4% 95%, 9.5% 91%
   );
   background:
+    /* The front wall, as one sheet: everything except the mouth of the glass.
+       What is behind the glass - the stream coming down - is seen through it
+       and softens, and it softens once, at the near edge of the rim, rather
+       than brightening for the width of the rim and going back. The hole is
+       the rim ellipse itself, so the line it softens along is the line you
+       can see. It sits behind the drink, not over it: a background paints
+       under its own element's children. */
+    radial-gradient(50% 2.73% at 50% 2.73%, transparent 0 99%, #ffffff3b 100%),
     /* the left wall, then the right: thick glass holding a band of light,
        fading to nothing a third of the way in */
     linear-gradient(90deg, #a9b1a8 0, #c8cfc5 2px, #fcfdfb 6px, #edf0e999 12px, transparent 19px),
@@ -111,17 +149,22 @@
   left: 0;
   right: 0;
   top: 0;
+  box-sizing: border-box;
   height: 5.47%;
   border: 1.5px solid #a9b1a8;
   border-radius: 50%;
-  background: linear-gradient(180deg, #ffffffb0, #e9ede44d);
+  /* The near lip only. Its far half is .mpRimBack, behind the stream. */
+  clip-path: inset(50% 0 0 0);
+  /* A ring, with nothing in it. Filling the oval with white put a bright
+     band across whatever was behind the glass at exactly the height of the
+     rim, which is the one place glass does not do that. */
   pointer-events: none;
 }
 /* The wall of the glass, as a box the drink is poured into rather than a
    margin the drink politely keeps. Upright it makes no difference; tilted it
    is the whole difference, because the drink has to run wide to keep its
    surface level and something has to stop it at the glass. */
-.mpInner { position: absolute; inset: 7px 7px 19px; overflow: hidden; border-radius: 0 0 18px 18px; }
+.mpInner { position: absolute; inset: var(--mp-wall) var(--mp-wall) var(--mp-foot); overflow: hidden; border-radius: 0 0 18px 18px; }
 /* Something you can see through: thin where there is little of it, deep at the
    bottom. The cubes live in here, so this cannot be done with opacity - that
    would fade the ice too. */
@@ -191,7 +234,33 @@
 
 /* ---- pouring, and drinking ----------------------------------------- */
 
+/* The drink coming down from the tap. Behind the glass, not over it: above
+   the rim you are looking at the stream itself, below the rim you are looking
+   at it through the front wall, and drawing it on top painted that wall out.
+   It ends at the surface of what is already in there - half the scene, plus
+   half a glass, less the solid foot and the depth of the drink. */
+.mpStream {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: calc(50% + var(--mp-glassh) / 2 - var(--mp-foot) - var(--mp-rise, 0px));
+  border-radius: 50% 50% 3px 3px;
+  /* Round, by light rather than by shape: dark at both edges where it turns
+     away and white down the middle where it faces you. */
+  background: linear-gradient(90deg, transparent, var(--mp-pour, #fe941a) 25%, #ffffffb0 50%, var(--mp-pour, #fe941a) 80%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: top;
+  transition: opacity 0.12s, height 0.3s;
+}
+.isPouring .mpStream { opacity: 0.8; animation: mpStreamFlow 0.2s linear infinite; }
+@keyframes mpStreamFlow { 0%, 100% { transform: scaleX(0.8); } 50% { transform: scaleX(1.1); } }
+
 .isPouring .mpSurface { animation: mpRipple 0.3s ease-in-out infinite alternate; height: 13px; top: -6px; }
+/* A fizzy drink lands differently: a head of foam where it hits, not a ripple. */
+.isPouring.isFizzy .mpSurface { background: radial-gradient(ellipse, #ffffffd0 15%, #ffffff70 60%, transparent); height: 20px; top: -10px; }
 .isDrinking .mpGlass { transform: translate(16px, -26px) rotate(var(--mp-tilt, 28deg)); }
 /* The drink stays level while the glass turns: it is a child of the glass, so
    it inherits the tilt, and turning it back by exactly the glass's own angle
@@ -312,8 +381,7 @@
   .mpPreview { border-right: 0; border-bottom: 1px solid var(--mp-line); padding: 14px 0 18px; }
   .mpControls { padding: 18px 0 8px; }
   .mpScene { height: 232px; }
-  .mpStage { --mp-glass: 132px; }
-  .mpInner { inset: 5px 5px 14px; }
+  .mpStage { --mp-glass: 132px; --mp-wall: 5px; --mp-foot: 14px; }
   .mpNote { top: 44px; }
   .mpMeasure { top: 34px; right: 22px; }
   .mpFlavour { min-height: 58px; }
@@ -323,7 +391,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mpGlass, .mpLiquid { transition: none; }
-  .mpBubbles i, .mpSurface { animation: none; }
+  .mpBubbles i, .mpSurface, .mpStream { animation: none; }
+  .mpStream { transition: none; }
   .isDrinking .mpGlass { transform: none; }
   .isDrinking .mpLiquid { transform: none; left: 0; right: 0; }
   .isDrinking .mpLiquid::after { display: none; }

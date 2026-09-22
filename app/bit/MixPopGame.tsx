@@ -79,6 +79,7 @@ export function MixPopGame() {
   const serial = useRef(0);
   const pouringRef = useRef(-1);
   const iced = useRef(0);
+  const filled = useRef(0);
   const innerRef = useRef<HTMLDivElement>(null);
 
   const total = amounts.reduce((a, b) => a + b, 0);
@@ -154,6 +155,10 @@ export function MixPopGame() {
   // How high the cubes ride: resting on the glass when there is nothing to
   // float in, and mostly under the surface once there is.
   useLayoutEffect(() => {
+    // The same number the buttons disable on, kept where a timer can read it.
+    // A held tap calls pour every 240ms, and state a button checks has not
+    // come back round by then.
+    filled.current = total;
     const box = innerRef.current?.getBoundingClientRect().height ?? 0;
     const depth = box * (total / CAP) * 0.85;
     setFloatPx(-(CUBE - Math.min(21, depth * 0.9)));
@@ -183,6 +188,16 @@ export function MixPopGame() {
   const pour = useCallback(
     (i: number) => {
       if (drinking) return;
+      // A full glass takes nothing more. The button disables itself, which
+      // stops a fresh tap, but a tap already being held runs on a timer the
+      // button knows nothing about - so the stream went on pouring and the
+      // water went on running into a glass that could not take it. Let go of
+      // the hold here, and the pour ends on its own the way it always does.
+      if (filled.current >= CAP) {
+        window.clearTimeout(hold.current.delay);
+        window.clearInterval(hold.current.repeat);
+        return;
+      }
       setAmounts((was) => {
         const now = was.reduce((a, b) => a + b, 0);
         if (now >= CAP) return was;
@@ -370,7 +385,10 @@ export function MixPopGame() {
   const status = drinking ? "ごく、ごく。" : total === 0 ? "まだ、空っぽ。" : total === CAP ? "ちょうど、いっぱい。" : "いい感じ。その調子。";
 
   return (
-    <section className={`mpStage${drinking ? " isDrinking" : ""}${pouring >= 0 ? " isPouring" : ""}`} aria-label="ドリンクをつくる">
+    <section
+      className={`mpStage${drinking ? " isDrinking" : ""}${pouring >= 0 ? " isPouring" : ""}${pouring >= 0 && DRINKS[pouring].fizz ? " isFizzy" : ""}`}
+      aria-label="ドリンクをつくる"
+    >
       {/* The prototype kept its logotype here. It is the page's title now -
           the band above wears it - so the row is the sound switch alone. */}
       <header className="mpHead">
@@ -394,8 +412,19 @@ export function MixPopGame() {
             <span>01 / YOUR GLASS</span>
             <span>{total} / {CAP} ml</span>
           </div>
-          <div className="mpScene">
+          <div
+            className="mpScene"
+            style={{
+              ["--mp-rise" as string]: `${risePx.toFixed(1)}px`,
+              ...(pouring >= 0 ? { ["--mp-pour" as string]: `rgb(${juice(DRINKS[pouring])})` } : null),
+            }}
+          >
             <span className="mpNote" aria-hidden="true">MAKE IT<br />YOUR MIX.</span>
+            <span className="mpRimBack" aria-hidden="true" />
+            {/* The drink arriving from the tap overhead. It stops at the top
+                of whatever is already in the glass, so it needs to know how
+                deep that is - the same measurement the bubbles climb. */}
+            <span className="mpStream" aria-hidden="true" />
             <div className="mpGlass">
               <div className="mpInner" ref={innerRef}>
                 <div
@@ -410,7 +439,7 @@ export function MixPopGame() {
                   <div className="mpSurface" />
                   {/* Only as many bubbles as the mix has fizz in it: lactic
                       drink is flat, melon soda is not. */}
-                  <div className="mpBubbles" style={{ opacity: 0.35 + fizz * 0.65, ["--mp-rise" as string]: `${risePx.toFixed(1)}px` }} aria-hidden="true">
+                  <div className="mpBubbles" style={{ opacity: 0.35 + fizz * 0.65 }} aria-hidden="true">
                     {FIZZ.slice(0, Math.round(FIZZ.length * Math.min(1, 0.25 + fizz))).map(([x, size, seconds, late], k) => (
                       <i
                         key={k}
