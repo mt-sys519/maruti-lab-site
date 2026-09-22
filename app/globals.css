@@ -646,8 +646,8 @@ footer{padding-top:34px;padding-bottom:34px}
 /* MIX POP's own ground: the cream its machine is painted on. Same idea as
    .bitPageDark - only the paint changes, never the layout - so the toy sits
    on its own colour from the band down instead of on the shop's grid. */
-.bitPageMilk{--bit-paper:#fdfdfa;--pkg-tint:rgba(35,35,35,.035)}
-.bitPageMilk .bitIntro{background:#fdfdfa}
+.bitPageMilk{--bit-paper:#faf6f1;--pkg-tint:rgba(35,35,35,.035)}
+.bitPageMilk .bitIntro{background:#faf6f1}
 .bitPageMilk .bitHowToPlayCard,.bitPageMilk .bitNotesCard{background:#f7f5ec}
 
 /* On a phone the names were all over the place: SEQUENCE took 12.2vw and

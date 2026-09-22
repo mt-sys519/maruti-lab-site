@@ -16,7 +16,21 @@ const ICE_MAX = 6;
 const ICE_AT = [-34, 4, -12, 30, -24, 16];
 const ICE_UP = [0, 2, -3, 1, -4, -1];
 const ICE_TURN = [-11, 8, -3, 15, 6, -14];
-const CUBE = 29;
+// Has to be the drawn height of a cube in mixPop.css: the float maths puts
+// the cubes exactly this far up before the drink pushes them back down.
+const CUBE = 31;
+// Carbonation, written down once. Random numbers in render would give the
+// server one set of bubbles and the browser another, and React would throw
+// the whole glass away rebuilding it. Each bubble is: how far across, how
+// wide, how long it takes to reach the surface, and how late it starts - the
+// small ones are quick and the big ones are slow, the way they actually are.
+const FIZZ = [
+  [8, 2.4, 3.1, 0.0], [17, 3.6, 4.2, 1.7], [24, 1.9, 2.6, 0.5], [31, 4.4, 5.0, 2.9],
+  [38, 2.1, 2.8, 1.2], [44, 3.1, 3.8, 3.4], [51, 5.0, 5.6, 0.8], [57, 2.6, 3.3, 2.2],
+  [63, 1.8, 2.4, 4.1], [69, 3.9, 4.6, 1.0], [75, 2.3, 3.0, 3.0], [81, 4.6, 5.2, 0.3],
+  [87, 2.0, 2.7, 2.6], [92, 3.4, 4.0, 4.5], [12, 4.1, 4.8, 3.8], [28, 1.7, 2.3, 1.5],
+  [48, 2.8, 3.5, 4.8], [66, 4.8, 5.4, 2.0], [84, 2.2, 2.9, 0.6], [35, 3.3, 3.9, 5.2],
+] as const;
 
 const mix = (amounts: number[], pick: (i: number) => [number, number, number], fallback: number) => {
   const total = amounts.reduce((a, b) => a + b, 0);
@@ -52,6 +66,10 @@ export function MixPopGame() {
   const [message, setMessage] = useState("");
   const [sound, setSound] = useState(true);
   const [floatPx, setFloatPx] = useState(-CUBE);
+  // How far a bubble has to climb before it breaks: the depth of the drink,
+  // in pixels, so the animation stops at the surface instead of at a number
+  // somebody guessed.
+  const [risePx, setRisePx] = useState(0);
 
   const audio = useRef<MixPopAudio | null>(null);
   const hold = useRef<{ delay?: number; repeat?: number }>({});
@@ -60,6 +78,7 @@ export function MixPopGame() {
   const soundOff = useRef<number | undefined>(undefined);
   const serial = useRef(0);
   const pouringRef = useRef(-1);
+  const iced = useRef(0);
   const innerRef = useRef<HTMLDivElement>(null);
 
   const total = amounts.reduce((a, b) => a + b, 0);
@@ -138,6 +157,7 @@ export function MixPopGame() {
     const box = innerRef.current?.getBoundingClientRect().height ?? 0;
     const depth = box * (total / CAP) * 0.85;
     setFloatPx(-(CUBE - Math.min(21, depth * 0.9)));
+    setRisePx(depth);
   }, [total]);
 
   useEffect(() => () => {
@@ -207,20 +227,26 @@ export function MixPopGame() {
     [drinking, pour],
   );
 
+  // The guard is a ref, not the state. Two taps inside one frame both read
+  // the same stale `ice`, both schedule a full tray, and the glass ends up
+  // with twelve cubes - six of them drawn with no position at all, which
+  // parks them in a heap outside the glass. The button disables itself on the
+  // next render, which is a frame too late for a fast double tap.
   const addIce = useCallback(() => {
-    if (ice >= ICE_MAX || drinking) return;
+    if (iced.current >= ICE_MAX || drinking) return;
     void ear().unlock();
-    const from = ice;
+    const from = iced.current;
+    iced.current = ICE_MAX;
     setIce(ICE_MAX);
     for (let k = from; k < ICE_MAX; k++) {
       timers.current.push(
         window.setTimeout(() => {
-          setCubes((n) => n + 1);
+          setCubes((n) => Math.min(ICE_MAX, n + 1));
           void ear().play("ice");
         }, (k - from) * 135),
       );
     }
-  }, [drinking, ice]);
+  }, [drinking]);
 
   const drink = useCallback(() => {
     if (drinking || !total) return;
@@ -248,6 +274,7 @@ export function MixPopGame() {
         () => {
           setDrinking(false);
           setSip("");
+          iced.current = 0;
           setIce(0);
           setCubes(0);
           setNamed(null);
@@ -267,6 +294,7 @@ export function MixPopGame() {
     setDrinking(false);
     setSip("");
     setAmounts(DRINKS.map(() => 0));
+    iced.current = 0;
     setIce(0);
     setCubes(0);
     setNamed(null);
@@ -358,7 +386,7 @@ export function MixPopGame() {
       <p className="mpCatch">ジュースを、好きなだけ。</p>
       <figure className="mpMachine">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/bit/mixpop/machine.webp" alt="六つの注ぎ口が並んだドリンクバーの機械" width={1448} height={1086} />
+        <img src="/bit/mixpop/machine.webp" alt="六つの注ぎ口が並んだドリンクバーの機械" width={1536} height={1024} />
       </figure>
       <div className="mpGrid">
         <div className="mpPreview">
@@ -380,7 +408,22 @@ export function MixPopGame() {
                   }}
                 >
                   <div className="mpSurface" />
-                  <div className="mpBubbles" style={{ opacity: fizz * 0.6 }} />
+                  {/* Only as many bubbles as the mix has fizz in it: lactic
+                      drink is flat, melon soda is not. */}
+                  <div className="mpBubbles" style={{ opacity: 0.35 + fizz * 0.65, ["--mp-rise" as string]: `${risePx.toFixed(1)}px` }} aria-hidden="true">
+                    {FIZZ.slice(0, Math.round(FIZZ.length * Math.min(1, 0.25 + fizz))).map(([x, size, seconds, late], k) => (
+                      <i
+                        key={k}
+                        style={{
+                          left: `${x}%`,
+                          width: `${size}px`,
+                          height: `${size}px`,
+                          animationDuration: `${seconds}s`,
+                          animationDelay: `${late}s`,
+                        }}
+                      />
+                    ))}
+                  </div>
                   <div className="mpIce" style={{ ["--float" as string]: `${floatPx.toFixed(1)}px` }} aria-hidden="true">
                     {Array.from({ length: cubes }, (_, k) => (
                       <i

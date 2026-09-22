@@ -7,8 +7,8 @@
    on, so the picture does not float as a pale rectangle over the page's grid
    and the quiet design underneath it has something to be quiet against. */
 /* And it is a card, like every other piece of the shop: 2.5px of black, a 9px
-   corner and a hard shadow with no blur. The fill stays the milk the machine
-   is painted on rather than the warmer cream the how-to cards use - the
+   corner and a hard shadow with no blur. The fill stays the cream the machine
+   is painted on rather than the one the how-to cards use - the
    artwork carries that colour baked into its own pixels, so any other fill
    would draw a pale rectangle around the machine. The page's grid stopping at
    the border is what makes it read as a card. */
@@ -18,7 +18,7 @@
   padding: clamp(18px, 2.4vw, 28px) 0 clamp(22px, 2.8vw, 32px);
   border: 2.5px solid #232323;
   border-radius: 9px;
-  background: #fdfdfa;
+  background: #faf6f1;
   box-shadow: 5px 5px 0 #232323;
 }
 
@@ -29,6 +29,7 @@
   --mp-edge: #cdd3c6;
   --mp-quiet: #686f60;
   --mp-ctl: 44px;
+  --mp-glass: clamp(132px, 15.5vw, 176px);
   position: relative;
   max-width: 1180px;
   margin: 0 auto;
@@ -43,8 +44,8 @@
   gap: 0 clamp(24px, 4vw, 48px);
   border-top: 1px solid var(--mp-line);
 }
-.mpPreview { padding: 24px 0 8px; border-right: 1px solid var(--mp-line); padding-right: clamp(24px, 4vw, 48px); }
-.mpControls { padding: 24px 0 8px; }
+.mpPreview { padding: 34px 0 8px; border-right: 1px solid var(--mp-line); padding-right: clamp(24px, 4vw, 48px); }
+.mpControls { padding: 34px 0 8px; }
 /* Every small caps label on the toy is set in the series' display face, the
    same one the how-to pills and the band wear. Baloo 2 only ships 700 and 800
    here, so these are 700 - at 9px that reads as a printed label rather than
@@ -59,24 +60,68 @@
 
 /* ---- the glass ------------------------------------------------------ */
 
-.mpScene { position: relative; height: 308px; display: flex; align-items: center; justify-content: center; }
+.mpScene { position: relative; height: 336px; display: flex; align-items: center; justify-content: center; }
+/* The tumbler the machine is pouring into, at the size the artwork draws it
+   now that the machine fills its frame. Its silhouette is not the box: the
+   box is only what clips the drink. What you see is the rim ellipse, the two
+   walls and the foot, which is how a glass is actually read - an outline all
+   the way round made it a drawn shape rather than something transparent. */
 .mpGlass {
   position: relative;
   z-index: 1;
-  width: 151px;
-  height: 215px;
-  border: 1px solid #aeb4a7;
-  border-top: 2px solid #969f8d;
-  border-radius: 4px 4px 25px 25px;
-  overflow: hidden;
-  background: linear-gradient(95deg, #ffffff60, transparent 40%, #d9ddd22b);
-  box-shadow: 0 14px 15px -16px #303b31;
+  /* Drinking rotates the glass 28 degrees about a point four fifths of the
+     way down, which throws its far corner out to the right by half again -
+     enough, at full size, to cross the rule into the flavour list on a
+     narrowed window. So the glass is as large as that corner allows at each
+     width rather than one size that only works when the window is wide. */
+  width: var(--mp-glass);
+  aspect-ratio: 11 / 16;
+  /* Straight sides drawing in towards the base, then a rounded heel. polygon()
+     cannot round a corner, so the heel is four short chords; at this size they
+     read as an arc. The taper also trims the wall gradients below, which is
+     what makes the sides look like they lean. */
+  /* The top edge is the near side of the rim ellipse, not a straight line
+     across the box - a flat top left two square shoulders standing outside
+     the oval, which is the one place a drawn glass gives itself away. */
+  clip-path: polygon(
+    0% 2.73%, 5% 1.54%, 12.5% 0.93%, 25% 0.37%, 50% 0%, 75% 0.37%, 87.5% 0.93%, 95% 1.54%, 100% 2.73%,
+    90.5% 91%, 89.6% 95%, 87.2% 98%, 83.8% 99.6%, 80% 100%,
+    20% 100%, 16.2% 99.6%, 12.8% 98%, 10.4% 95%, 9.5% 91%
+  );
+  background:
+    /* the left wall, then the right: thick glass holding a band of light,
+       fading to nothing a third of the way in */
+    linear-gradient(90deg, #a9b1a8 0, #c8cfc5 2px, #fcfdfb 6px, #edf0e999 12px, transparent 19px),
+    linear-gradient(270deg, #a9b1a8 0, #c8cfc5 2px, #fcfdfb 6px, #edf0e999 12px, transparent 19px),
+    /* the sheen across the body, and the foot: solid glass the drink sits on */
+    linear-gradient(101deg, #ffffff55 0, transparent 38%, #d9ddd224 100%),
+    linear-gradient(0deg, #dde2d8b3 0, #eff2ec66 14px, transparent 26px);
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 -1px 0 #cdd3c6,
+    0 18px 16px -19px #303b31;
+}
+/* The rim: the only part of a tumbler with a hard edge, and the part that
+   tells you which way it is turned. An ellipse rather than a line, because
+   from here you are looking slightly down into it. */
+.mpGlass::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 5.47%;
+  border: 1.5px solid #a9b1a8;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffffb0, #e9ede44d);
+  pointer-events: none;
 }
 /* The wall of the glass, as a box the drink is poured into rather than a
    margin the drink politely keeps. Upright it makes no difference; tilted it
    is the whole difference, because the drink has to run wide to keep its
    surface level and something has to stop it at the glass. */
-.mpInner { position: absolute; inset: 0 5px 10px; overflow: hidden; border-radius: 0 0 16px 16px; }
+.mpInner { position: absolute; inset: 7px 7px 19px; overflow: hidden; border-radius: 0 0 18px 18px; }
 /* Something you can see through: thin where there is little of it, deep at the
    bottom. The cubes live in here, so this cannot be done with opacity - that
    would fade the ice too. */
@@ -90,13 +135,31 @@
   background: linear-gradient(180deg, var(--thin) 0, var(--mid) 38%, var(--deep) 100%);
   transition: height 0.35s, background 0.5s;
 }
-.mpSurface { position: absolute; left: 0; top: -4px; right: 0; height: 8px; border-radius: 50%; background: #ffffff35; }
-.mpBubbles {
-  height: 100%;
-  background-image: radial-gradient(circle, #fff 1px, transparent 2px), radial-gradient(circle, #fff 1px, transparent 2px);
-  background-size: 29px 43px, 43px 61px;
-  background-position: 5px 8px, 17px 29px;
-  animation: mpRise 2s linear infinite;
+.mpSurface { position: absolute; z-index: 1; left: 0; top: -4px; right: 0; height: 8px; border-radius: 50%; background: #ffffff5c; box-shadow: 0 1px 0 #ffffff3d; }
+/* Carbonation. It used to be two tiled dot patterns scrolling upward, which
+   from a distance is fizz and up close is wallpaper: every bubble the same
+   size, the same speed, in rows. These are separate bubbles that start at the
+   bottom, get a little bigger as the pressure drops, and vanish at the
+   surface - which is what --mp-rise is, the depth of the drink in pixels. */
+.mpBubbles { position: absolute; inset: 0; overflow: hidden; }
+.mpBubbles i {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50%;
+  /* Lit from above and behind, so the highlight sits high and the far wall
+     of the bubble catches the light too. A flat white disc reads as a dot. */
+  background:
+    radial-gradient(circle at 34% 28%, #ffffffe0 0 22%, #ffffff5e 45%, #ffffff17 70%, transparent 74%),
+    radial-gradient(circle at 62% 76%, #ffffff8a 0 16%, transparent 40%);
+  animation-name: mpFizz;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.75, 0.4);
+  animation-iteration-count: infinite;
+}
+@keyframes mpFizz {
+  0% { transform: translateY(0) scale(0.55); opacity: 0; }
+  9% { opacity: 0.9; }
+  82% { opacity: 0.8; }
+  100% { transform: translateY(calc(var(--mp-rise, 60px) * -1)) scale(1.12); opacity: 0; }
 }
 .mpHighlight { position: absolute; top: 12px; left: 12px; bottom: 18px; width: 5px; border-radius: 5px; background: #ffffff65; }
 .mpNote { position: absolute; left: 0; top: 53px; font: 700 10.5px/2 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: 1.6px; color: #b9bfb1; }
@@ -112,12 +175,17 @@
   position: absolute;
   left: calc(50% + var(--x));
   top: calc(var(--float, -8px) + var(--y, 0px));
-  width: 34px;
-  height: 29px;
-  margin-left: -17px;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #ffffffd9, #ffffff59);
-  box-shadow: inset 0 1px 0 #fff9, 0 1px 3px #6b705f2e;
+  width: 36px;
+  height: 31px;
+  margin-left: -18px;
+  border-radius: 9px;
+  /* Ice in a drink is not white. It is the drink again, paler, with a lit
+     edge where the light turns the corner - so this is mostly transparent
+     and the colour underneath comes through it. Solid white lumps riding the
+     surface were the thing that made the glass look printed rather than
+     full. */
+  background: linear-gradient(145deg, #ffffff82, #ffffff1f 58%, #ffffff4d);
+  box-shadow: inset 0 1px 0 #ffffffb3, inset 0 -1px 0 #ffffff4d, 0 1px 3px #6b705f1f;
   transform: rotate(var(--turn));
 }
 
@@ -150,7 +218,6 @@
 .mpGlass { transition: transform 0.45s cubic-bezier(0.2, 0.6, 0.3, 1); transform-origin: 50% 80%; }
 
 @keyframes mpRipple { from { transform: scaleX(0.94) rotate(-2deg); } to { transform: scaleX(1.06) rotate(2deg); } }
-@keyframes mpRise { to { background-position: 5px -78px, 17px -93px; } }
 
 /* ---- the flavours --------------------------------------------------- */
 
@@ -244,8 +311,9 @@
   .mpGrid { grid-template-columns: 1fr; }
   .mpPreview { border-right: 0; border-bottom: 1px solid var(--mp-line); padding: 14px 0 18px; }
   .mpControls { padding: 18px 0 8px; }
-  .mpScene { height: 206px; }
-  .mpGlass { width: 116px; height: 162px; }
+  .mpScene { height: 232px; }
+  .mpStage { --mp-glass: 132px; }
+  .mpInner { inset: 5px 5px 14px; }
   .mpNote { top: 44px; }
   .mpMeasure { top: 34px; right: 22px; }
   .mpFlavour { min-height: 58px; }
@@ -255,7 +323,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mpGlass, .mpLiquid { transition: none; }
-  .mpBubbles, .mpSurface { animation: none; }
+  .mpBubbles i, .mpSurface { animation: none; }
   .isDrinking .mpGlass { transform: none; }
   .isDrinking .mpLiquid { transform: none; left: 0; right: 0; }
   .isDrinking .mpLiquid::after { display: none; }
@@ -287,7 +355,7 @@
   letter-spacing: 0.01em;
   color: #4e5747;
 }
-.mpMachine { position: relative; max-width: 560px; margin: 0 auto 10px; }
+.mpMachine { position: relative; max-width: 560px; margin: 0 auto 26px; }
 .mpMachine img { display: block; width: 100%; height: auto; }
 
 @media (max-width: 700px) {
@@ -320,6 +388,10 @@
    above it. No margin over them - the row closes the card off, and any air
    there just left the buttons floating under the thing they belong to. */
 .mpShareRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
+/* Except behind the result. With nothing there the row closes the card off,
+   but flush against the panel that has just named your drink it reads as part
+   of it, and it is not - it belongs to the card underneath both. */
+.mpResult + .mpShareRow { margin-top: 18px; }
 .mpShareBtn {
   padding: 12px 10px;
   border: 1px solid var(--mp-edge);
