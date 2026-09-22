@@ -314,7 +314,23 @@
   0%, 100% { transform: translateY(0) rotate(-0.6deg); }
   50% { transform: translateY(-3px) rotate(0.6deg); }
 }
-.mpShareRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 26px 0 0; }
+/* The quiet pair AVENUE wears: a hairline box and eight pixels of letterspaced
+   caps. Not stretched across the card - two thin buttons a metre wide would be
+   the loudest thing on the page, and the gap down the middle of them read as a
+   seam in the card. They sit in the corner opposite the sound switch. */
+.mpShareRow { display: flex; justify-content: flex-end; gap: 8px; margin: 18px 0 0; }
+.mpShareBtn {
+  padding: 7px 10px;
+  border: 1px solid var(--mp-edge);
+  background: none;
+  color: var(--mp-quiet);
+  font: 700 8px/1 "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.mpShareBtn:hover:not(:disabled), .mpShareBtn:focus-visible { border-color: #8f9a86; color: #3d453a; outline: 0; }
+.mpShareBtn:disabled { opacity: 0.38; cursor: default; }
 .mpRainbow {
   display: block;
   height: 2px;

@@ -24,9 +24,10 @@ const mix = (amounts: number[], pick: (i: number) => [number, number, number], f
   return [0, 1, 2].map((c) => Math.round(amounts.reduce((sum, ml, i) => sum + pick(i)[c] * ml, 0) / total)) as [number, number, number];
 };
 
-// The drawn icons from the prototype: a glass for drinking it, a tag for
-// naming it, a box-and-arrow for the share sheet, and X's own mark. Drawn
-// here so they are the same line and the same size on every machine.
+// The drawn icons from the prototype: a glass for drinking it and a tag for
+// naming it. Drawn here so they are the same line and the same size on every
+// machine. Sharing wears no mark - it borrows the series' plain lettered
+// buttons instead.
 const CupIcon = () => (
   <svg className="mpIco" viewBox="0 0 12 12" aria-hidden="true">
     <path d="M3.2 2.2h5.6l-.7 7.3a.9.9 0 0 1-.9.8H4.8a.9.9 0 0 1-.9-.8z" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
@@ -37,19 +38,6 @@ const TagIcon = () => (
   <svg className="mpIco" viewBox="0 0 12 12" aria-hidden="true">
     <path d="M6.6 1.2h4.2v4.2L6 10.2 1.8 6z" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
     <circle cx="8.9" cy="3.1" r=".9" fill="currentColor" />
-  </svg>
-);
-const ShareIcon = () => (
-  <svg className="mpIco" viewBox="0 0 12 12" aria-hidden="true">
-    <path d="M6 1.4v6" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
-    <path d="M3.7 3.5 6 1.3l2.3 2.2" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M2.4 6.6v3.1c0 .4.3.7.7.7h5.8c.4 0 .7-.3.7-.7V6.6" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
-  </svg>
-);
-const XIcon = () => (
-  <svg className="mpIco" viewBox="0 0 12 12" aria-hidden="true">
-    <path d="M1.6 1.6h2.3l6.5 8.8H8.1z" fill="currentColor" />
-    <path d="M1.9 10.4 4.9 7M7.2 5 10.2 1.6" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
   </svg>
 );
 
@@ -491,8 +479,8 @@ export function MixPopGame() {
           you came for down the page. It stays in place and greys out until
           there is a drink with a name, so nothing shifts when one appears. */}
       <div className="mpShareRow">
-        <button type="button" className="mpBtn" onClick={share} disabled={!named}>シェア <ShareIcon /></button>
-        <button type="button" className="mpBtn" onClick={shareX} disabled={!named}>Xでシェア <XIcon /></button>
+        <button type="button" className="mpShareBtn" onClick={share} disabled={!named}>SHARE</button>
+        <button type="button" className="mpShareBtn" onClick={shareX} disabled={!named}>X SHARE</button>
       </div>
     </section>
   );
