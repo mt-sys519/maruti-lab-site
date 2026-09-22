@@ -74,7 +74,7 @@ export function MixPopGame() {
   const [sip, setSip] = useState("");
   const [named, setNamed] = useState<{ name: string; rows: string[]; serial: number } | null>(null);
   const [message, setMessage] = useState("");
-  const [sound, setSound] = useState(true);
+  const [sound, setSound] = useState(false);
   const [floatPx, setFloatPx] = useState(-CUBE);
   // How far a bubble has to climb before it breaks: the depth of the drink,
   // in pixels, so the animation stops at the surface instead of at a number
@@ -100,22 +100,25 @@ export function MixPopGame() {
   const ear = () => (audio.current ??= createMixPopAudio());
 
   useEffect(() => {
-    // Off a tick, the way the other games read it: the server has no storage
-    // to read, so the switch starts on and corrects itself once mounted.
+    // Off a tick, the way the other eight read it: the server has no storage
+    // to ask, so the switch starts off and corrects itself once mounted.
+    // Off, not on. This one shipped reading the key the other way round and
+    // so began every visit making a noise nobody had asked for; the rest of
+    // the series has always waited to be switched on.
     let alive = true;
     void (async () => {
       await Promise.resolve();
       if (!alive) return;
-      let stored = true;
+      let on = false;
       try {
-        stored = window.localStorage.getItem(SOUND_STORAGE_KEY) !== "false";
+        on = window.localStorage.getItem(SOUND_STORAGE_KEY) === "true";
       } catch {
-        /* Local storage is optional. */
+        /* Local storage is optional; without it the sound stays off. */
       }
-      if (!stored) {
-        setSound(false);
-        ear().toggle();
-      }
+      // The audio starts enabled inside the module, so it is the off case
+      // that has to be told.
+      if (on) setSound(true);
+      else ear().toggle();
     })();
     return () => {
       alive = false;
