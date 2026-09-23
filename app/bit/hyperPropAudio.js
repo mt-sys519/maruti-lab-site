@@ -21,7 +21,8 @@ export function createHyperPropAudio() {
     const lim = ctx.createDynamicsCompressor();
     lim.threshold.value = -4; lim.knee.value = 6; lim.ratio.value = 8; lim.attack.value = 0.003; lim.release.value = 0.15;
     master.connect(lim).connect(ctx.destination);
-    sfx = ctx.createGain(); sfx.gain.value = 1; sfx.connect(master);
+    // effects sat on top of the loops on a phone; 0.7 is about 3dB under where they were
+    sfx = ctx.createGain(); sfx.gain.value = 0.7; sfx.connect(master);
     // raised from 0.4 after the first listen on a phone: the loops sat too far under the effects
     music = ctx.createGain(); music.gain.value = 0.6; music.connect(master);
     // a little room on the chimes and the lead, nothing more
