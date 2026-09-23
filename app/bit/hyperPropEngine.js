@@ -473,16 +473,37 @@ export function mountHyperProp(root) {
   // for those touches get cancelled or never arrive: a press goes missing, the next
   // one lands on the same side and counts as a stumble. Cancelling touchstart keeps
   // the page from ever treating the pad as a gesture.
+  //
+  // The playtest on an iPhone still stumbled after that, and never on Android Chrome.
+  // Three things guard the count now. A finger that is still down is never a new
+  // press, even when WebKit lists it among the changed touches as another one lands.
+  // A fingertip that bounces and touches the same pedal twice within 70ms is one
+  // press (drumming at 10 a second, the same pedal comes round every 200ms). And two
+  // pedals arriving in one event are taken in the order that alternates.
   const held = new Map();
+  const lastTap = { L: -Infinity, R: -Infinity };
+  const sideOf = (b) => (b.dataset.k === 'L' ? -1 : b.dataset.k === 'R' ? 1 : 0);
   on(root, 'touchstart', (e) => {
     touchMode = true;
     let hit = false;
+    const fresh = [];
     for (const t of e.changedTouches) {
       const b = t.target instanceof Element ? t.target.closest('[data-k]') : null;
       if (!b || !root.contains(b)) continue;
-      hit = true; held.set(t.identifier, b); press(b);
+      hit = true;
+      if (held.has(t.identifier)) continue;
+      held.set(t.identifier, b); fresh.push(b);
     }
     if (hit) e.preventDefault();
+    fresh.sort((x, y) => Number(sideOf(x) === s.lastFoot) - Number(sideOf(y) === s.lastFoot));
+    for (const b of fresh) {
+      const k = b.dataset.k;
+      if (k === 'L' || k === 'R') {
+        if (e.timeStamp - lastTap[k] < 70) { b.classList.add('on'); continue; }
+        lastTap[k] = e.timeStamp;
+      }
+      press(b);
+    }
   }, { passive: false });
   const lift = (e) => { for (const t of e.changedTouches) { const b = held.get(t.identifier); if (b) { held.delete(t.identifier); release(b); } } };
   on(root, 'touchend', lift); on(root, 'touchcancel', lift);
