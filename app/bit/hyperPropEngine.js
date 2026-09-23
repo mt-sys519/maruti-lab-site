@@ -104,7 +104,7 @@ export function mountHyperProp(root) {
   // AOI: navy bob, goggles, olive flight suit with a fleece collar, brown gloves and boots
   const AO = { n: '#1d2468', H: '#34429e', l: '#6379d8', g: '#6b4a2a', G: '#a8e0f2', s: C.skin, S: C.skinD, e: '#1d2468',
     o: '#5f6d3b', O: '#434d2a', q: '#808f52', f: '#f1e4c6', b: '#6b4a2a', B: '#46301c' };
-  // the plane: hand-built, round and a little toy-like. Canvas wing, egg gondola, wooden prop, bicycle wheel, chain drive
+  // the plane: hand-built and a little toy-like. Canvas wing, egg gondola, wooden prop, bicycle wheel, chain drive
   const PC = { canvas: '#f4ead0', canvasS: '#d8c8a2', canvasD: '#b09c74', wood: '#b0743e', woodD: '#724a26', woodL: '#d69a5c',
     tomato: '#e24a35', tomatoD: '#a8301f', tomatoL: '#ff7d62', cream: '#fff6dc', teal: '#2f9a93', tealL: '#62c9bd', mustard: '#eab43a', mustardD: '#b88420' };
   const PIV = { x: 34, y: 14 }, WHEEL_DY = 12, CARRY = { dx: 6, y: 13 };
@@ -117,14 +117,15 @@ export function mountHyperProp(root) {
         if (d <= 1) { const col = f(x, y, d); if (col) P(col, x, y); }
       }
     };
-    // tail: wooden boom, round rudder, red stabiliser
+    // tail: wooden boom, a plain triangular fin with a red stripe, red stabiliser
     P(PC.woodL, 5, 11, 20); P(PC.woodD, 5, 12, 20);
-    ell(5, 6.5, 4.5, 4.5, (x, y, d) => y === 6 || y === 7 ? PC.tomato : x < 4 && y < 5 ? PC.cream : d > 0.55 && x > 5 && y > 7 ? PC.mustardD : PC.mustard);
+    for (let y = 2; y <= 10; y++) { const w = Math.max(1, Math.round((y - 1) * 0.95)); P(y === 7 ? PC.tomato : PC.mustard, 1, y, w, 1); } P(PC.mustardD, 1, 3, 1, 8);
     P(PC.tomato, 0, 12, 10); P(PC.tomatoD, 1, 13, 8);
-    // canvas wing with ribs and red tips turned up a little
-    P(PC.canvas, 20, 0, 21); P(PC.canvas, 6, 1, 49); P(PC.cream, 21, 1, 19); P(PC.canvasS, 3, 2, 55); P(PC.canvasD, 8, 3, 43);
-    for (let x = 9; x < 54; x += 5) P(PC.canvasS, x, 1);
-    P(PC.tomato, 1, 0, 3); P(PC.tomato, 3, 1, 4); P(PC.tomatoD, 3, 2, 4); P(PC.tomato, 57, 0, 3); P(PC.tomato, 54, 1, 4); P(PC.tomatoD, 54, 2, 4);
+    // canvas wing with ribs and red tips turned up a little. Its front end stops short of
+    // the propeller: drawn running past it, the blade looked like it went through the wing
+    P(PC.canvas, 16, 0, 21); P(PC.canvas, 4, 1, 40); P(PC.cream, 17, 1, 19); P(PC.canvasS, 2, 2, 44); P(PC.canvasD, 6, 3, 36);
+    for (let x = 7; x < 43; x += 5) P(PC.canvasS, x, 1);
+    P(PC.tomato, 0, 0, 3); P(PC.tomato, 2, 1, 4); P(PC.tomatoD, 2, 2, 4); P(PC.tomato, 43, 0, 3); P(PC.tomato, 41, 1, 4); P(PC.tomatoD, 41, 2, 4);
     P(PC.wood, 29, 4, 1, 4); P(PC.wood, 37, 4, 1, 4);
     // bicycle wheel
     P(PC.woodD, 34, 18, 1, 2);
