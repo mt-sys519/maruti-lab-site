@@ -16,7 +16,10 @@
   --dw: min(100vw - 20px, 460px);
   --shell: #f1e6cc; --shellL: #fff8e6; --shellD: #d9c7a0; --shellDD: #b9a57c;
   --slate: #595470; --slateD: #3f3a52; --hpInk: #3a3450; --hpRed: #e24a35; --hpTeal: #3f9e96;
-  --s: 1; --u: min(46px, 6.4vh); --r: 22px; }
+  --s: 1; --u: min(46px, 6.4vh); --r: 22px;
+  /* the moulded rim around every control: the same width all round each of them, with
+     the button's own drop shadow counted as part of the button (so added to the bottom) */
+  --rim: 6px; }
 .hpStage *, .hpStage *::before, .hpStage *::after { box-sizing: border-box; }
 .hpDevice { position: relative; display: flex; flex-direction: column;
   /* Tall enough for the 4:3 screen and no taller. The top 61.8% holds the seam (34px),
@@ -83,12 +86,13 @@
 .hpBtn { position: relative; border: 0; padding: 0; font: inherit; touch-action: none; cursor: pointer; transition: transform .03s; }
 .hpBtn.on { transform: translateY(2px); filter: brightness(.9); }
 .hpRocker { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.hpWell { background: var(--shellD); box-shadow: inset 0 2px 3px #0003, 0 1px 0 #fff8; }
+.hpRockerWell { padding: var(--rim) var(--rim) calc(var(--rim) + 4px); border-radius: calc(var(--u) / 2 + var(--rim)); }
 .hpRockerBody { display: flex; flex-direction: column; width: var(--u); border-radius: calc(var(--u) / 2); overflow: hidden;
-  background: var(--hpInk); box-shadow: 0 4px 0 #221e30, 0 0 0 5px var(--shellD), 0 1px 0 5px #fff8; }
+  background: var(--hpInk); box-shadow: 0 4px 0 #221e30; }
 .hpRockerBody .hpBtn { width: var(--u); height: calc(var(--u) * 2.618 / 2); background: linear-gradient(#55507a, var(--hpInk)); color: #d6d0e8; font-size: 15px; }
 .hpRockerBody .hpBtn + .hpBtn { border-top: 2px solid #221e30; }
-.hpPedals { display: flex; gap: calc(var(--u) * 0.236); padding: calc(var(--u) * 0.236) calc(var(--u) * 0.382); border-radius: 999px; transform: rotate(-20deg);
-  background: var(--shellD); box-shadow: inset 0 3px 5px #0003, 0 1px 0 #fff8; }
+.hpPedals { display: flex; gap: calc(var(--u) * 0.236); padding: var(--rim) var(--rim) calc(var(--rim) + 5px); border-radius: 999px; transform: rotate(-20deg); }
 .hpPbox { position: relative; display: flex; flex-direction: column; align-items: center; }
 .hpPedal { width: calc(var(--u) * 1.618); aspect-ratio: 1; border-radius: 50%;
   background: radial-gradient(circle at 38% 32%, #ff9a80 0 12%, #e8503a 45%, #b0301f); box-shadow: 0 5px 0 #7c2014; }
@@ -98,8 +102,10 @@
 
 /* start on the 38.2% line; speaker at the golden point of the right column */
 .hpFoot { flex: 0 0 38.2%; min-height: 0; position: relative; }
-.hpStartBox { position: absolute; left: 38.2%; top: 38.2%; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%) rotate(-20deg); }
-.hpStartBox .hpCap { position: absolute; top: 100%; left: 50%; margin-top: 10px; transform: translateX(-50%); white-space: nowrap; }
-.hpStart { width: calc(var(--u) * 1.082); height: 12px; border-radius: 6px; background: #8f8aa4; box-shadow: 0 0 0 4px var(--shellD), 0 2px 0 4px #fff8; }
+.hpStartBox { position: absolute; left: 38.2%; top: 38.2%; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%) rotate(-20deg);
+  padding: var(--rim) var(--rim) calc(var(--rim) + 2px); border-radius: calc(6px + var(--rim)); }
+.hpStartBox .hpCap { position: absolute; top: 100%; left: 50%; margin-top: 6px; transform: translateX(-50%); white-space: nowrap; }
+.hpStart { width: calc(var(--u) * 1.082); height: 12px; border-radius: 6px; background: #8f8aa4; box-shadow: 0 2px 0 #6c6784; }
+.hpStart.on { box-shadow: 0 0 0 #6c6784; transform: translateY(2px); }
 .hpSpeaker { position: absolute; left: 76.4%; top: 61.8%; display: flex; gap: 7px; transform: translate(-50%, -50%) rotate(-28deg); }
 .hpSpeaker i { width: 5px; height: calc(var(--u) * 0.854); border-radius: 3px; background: var(--shellD); box-shadow: inset 1px 2px 2px #0003, 0 1px 0 #fff8; }

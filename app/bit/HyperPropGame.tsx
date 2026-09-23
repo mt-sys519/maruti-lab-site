@@ -48,13 +48,15 @@ export function HyperPropGame() {
         <div className="hpLower">
           <div className="hpPad">
             <div className="hpRocker">
-              <div className="hpRockerBody">
-                <button className="hpBtn" data-k="up" type="button" aria-label="機首上げ／乗り込む">▲</button>
-                <button className="hpBtn" data-k="down" type="button" aria-label="機首下げ">▼</button>
+              <div className="hpWell hpRockerWell">
+                <div className="hpRockerBody">
+                  <button className="hpBtn" data-k="up" type="button" aria-label="機首上げ／乗り込む">▲</button>
+                  <button className="hpBtn" data-k="down" type="button" aria-label="機首下げ">▼</button>
+                </div>
               </div>
               <span className="hpCap" data-hp="upCap">PITCH</span>
             </div>
-            <div className="hpPedals">
+            <div className="hpWell hpPedals">
               <div className="hpPbox">
                 <button className="hpBtn hpPedal" data-k="L" type="button" aria-label="ペダル左" />
                 <span className="hpCap">PEDAL</span>
@@ -66,7 +68,7 @@ export function HyperPropGame() {
             </div>
           </div>
           <div className="hpFoot">
-            <div className="hpStartBox">
+            <div className="hpWell hpStartBox">
               <button className="hpBtn hpStart" data-k="start" type="button" aria-label="スタート" />
               <span className="hpCap">START</span>
             </div>
