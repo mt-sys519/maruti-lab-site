@@ -110,6 +110,7 @@ export function createHyperPropAudio() {
     takeoff() { const t = ctx.currentTime; seq([74, 78, 81], t, 0.075, { g: 0.09, cut: 4000 }); tone({ f: hz(86), dur: 0.55, hold: 0.25, g: 0.09, at: t + 0.225, vib: 8, cut: 4000, send: 0.25 }); seq([69, 74, 78], t, 0.075, { g: 0.05, type: 'triangle' }); tone({ f: hz(81), dur: 0.55, g: 0.06, type: 'triangle', at: t + 0.225 }); },
     marker() { const t = ctx.currentTime; tone({ f: 1568, dur: 0.3, g: 0.09, type: 'sine', at: t, send: 0.3 }); tone({ f: 2093, dur: 0.45, g: 0.07, type: 'sine', at: t + 0.07, send: 0.3 }); },
     stall() { tone({ f: 988, dur: 0.09, g: 0.045, hold: 0.06 }); },
+    tick() { tone({ f: 1319, dur: 0.08, g: 0.05, type: 'square' }); },
     splash() { const t = ctx.currentTime; noise({ f: 2600, to: 250, type: 'lowpass', q: 0.6, dur: 0.8, g: 0.3 }); for (let i = 0; i < 6; i++) tone({ f: 300 + Math.random() * 500, to: 900 + Math.random() * 600, dur: 0.06, g: 0.04, type: 'sine', at: t + 0.25 + i * 0.07 + Math.random() * 0.04 }); },
     fall() { tone({ f: 1100, to: 220, slide: 1.0, dur: 1.0, g: 0.07, type: 'sine', vib: 25 }); },
     fail() { const t = ctx.currentTime + 0.5; [69, 68, 67].forEach((m, i) => tone({ f: hz(m), dur: 0.2, g: 0.09, at: t + i * 0.22, cut: 2200 })); tone({ f: hz(66), dur: 0.8, hold: 0.3, g: 0.09, at: t + 0.66, cut: 2400, cutTo: 400, vib: 6 }); },

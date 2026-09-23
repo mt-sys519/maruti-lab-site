@@ -69,6 +69,8 @@
 .hpPlate span { display: block; height: 1.45em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* controls: two columns, 38.2% | 61.8% */
+/* no gesture of any kind may start on the controls: they are for drumming */
+.hpPad, .hpFoot { touch-action: none; }
 .hpPad { flex: 0 0 61.8%; min-height: 0; display: grid; grid-template-columns: 38.2% 61.8%; align-items: center; justify-items: center; }
 .hpBtn { position: relative; border: 0; padding: 0; font: inherit; touch-action: none; cursor: pointer; transition: transform .03s; }
 .hpBtn.on { transform: translateY(2px); filter: brightness(.9); }

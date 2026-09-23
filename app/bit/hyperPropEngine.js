@@ -337,6 +337,17 @@ export function mountHyperProp(root) {
   const inp = { up: false, down: false };
   let touchMode = matchMedia('(pointer: coarse)').matches;
   let stallBeep = 0, lastMark = 0;
+  // TIME is the clock from the first step to the goal; it stops while paused.
+  // Until the stage has been cleared once the record is the longest distance,
+  // after that it is the fastest clear.
+  let ui = 0, runTime = 0, bestTime = 0, newRecord = false;
+  try { bestTime = +localStorage.getItem('hyperprop.bestTime') || 0; } catch { /* storage is optional */ }
+  const fmt = (t) => `${String(Math.floor(t / 60)).padStart(2, '0')}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+  // Pausing follows the rest of MarutiBit: a hidden page pauses by itself and only an
+  // explicit press brings it back. Here that press is START (or tapping the screen),
+  // and play restarts after a short count so the fingers can find the pedals again.
+  let paused = false, countdown = 0;
+  const COUNT_STEP = 0.5;
 
   // ---------- sound ----------
   const SOUND_KEY = 'marutibit:sound-enabled';
@@ -356,7 +367,10 @@ export function mountHyperProp(root) {
   on(window, 'pointerdown', (e) => { if (e.pointerType === 'mouse') au.unlock(); }, true);
   on(window, 'pointerup', (e) => { if (e.pointerType !== 'mouse') au.unlock(); }, true);
   on(window, 'touchend', () => au.unlock(), true);
-  on(document, 'visibilitychange', () => (document.hidden ? au.sleep() : au.wake()));
+  on(document, 'visibilitychange', () => {
+    if (document.hidden) { pauseGame(); au.sleep(); } else if (!paused) au.wake();
+  });
+  on(window, 'pagehide', () => { pauseGame(); au.sleep(); });
   on(window, 'pageshow', (e) => { if (e.persisted) au.reset(); });
 
   function show(big, sub = '', t = 1.4, jp = '') { banner = { big, sub, t }; if (jp) { jpMsg = jp; jpT = t; } }
@@ -366,7 +380,21 @@ export function mountHyperProp(root) {
 
   function begin() {
     S.start(s); parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
+    runTime = 0; newRecord = false; paused = false; countdown = 0;
     au.music('stage', 0); au.play('start');
+  }
+
+  const playing = () => s.phase === 'run' || s.phase === 'board' || s.phase === 'roll' || s.phase === 'fly';
+  function pauseGame() {
+    if (!playing()) return;
+    // hidden again mid-count: back to waiting, the count starts over on the next press
+    paused = true; countdown = 0; inp.up = false; inp.down = false;
+  }
+  // called from a press, which is also what lets the sound come back
+  function resumeGame() {
+    if (!paused || countdown > 0) return;
+    countdown = COUNT_STEP * 3;
+    au.wake(); au.play('tick');
   }
 
   function handleEvents() {
@@ -379,7 +407,12 @@ export function mountHyperProp(root) {
       if (e === 'stumble') { jpMsg = s.phase === 'run' ? 'つまずいた！ 左右交互に' : 'ペダルが空回り！ 左右交互に'; jpT = 0.9; }
       if (e === 'seated') { show('GO!', '', 0.8, '乗り込んだ！ 漕げ！'); au.play('seated'); au.layer(1); }
       if (e === 'climb') { show('TAKE OFF!', '', 1.6, '離陸！'); au.play('takeoff'); au.layer(2); }
-      if (e === 'goal') { au.music(null); au.play('goal'); show('STAGE CLEAR!', `${CFG.successDist * CFG.pxToM}M`, 1e9, '400m 飛行成功！'); setBest(CFG.successDist * CFG.pxToM); }
+      if (e === 'goal') {
+        au.music(null); au.play('goal'); setBest(CFG.successDist * CFG.pxToM);
+        newRecord = !bestTime || runTime < bestTime;
+        if (newRecord) { bestTime = runTime; try { localStorage.setItem('hyperprop.bestTime', bestTime.toFixed(2)); } catch { /* storage is optional */ } }
+        show('STAGE CLEAR!', `TIME ${fmt(runTime)}`, 1e9, newRecord ? `新記録！ ${fmt(runTime)}` : `400m 飛行成功！ ${fmt(runTime)}`);
+      }
       if (e === 'fail' || e === 'land') onFail();
     }
     s.events.length = 0;
@@ -400,8 +433,9 @@ export function mountHyperProp(root) {
 
   // ---------- input ----------
   const over = () => s.phase === 'over' || s.phase === 'clear';
-  function pressFoot(side) { if (s.phase === 'ready') return begin(); S.foot(s, side); }
+  function pressFoot(side) { if (paused) return; if (s.phase === 'ready') return begin(); S.foot(s, side); }
   function pressUp() {
+    if (paused) return;
     if (s.phase === 'ready') return begin();
     if (over()) { if (overT > 0.6) begin(); return; }
     S.board(s);
@@ -411,6 +445,8 @@ export function mountHyperProp(root) {
     const k = KEYS[e.code];
     if (k || e.code === 'Enter' || e.code === 'KeyR') e.preventDefault();
     touchMode = false;
+    if (e.code === 'Escape' || e.code === 'KeyP') { if (paused) resumeGame(); else pauseGame(); return; }
+    if (paused) { if (e.code === 'Enter') resumeGame(); return; }
     if (e.code === 'Enter' || e.code === 'KeyR') { if (s.phase === 'ready' || (over() && overT > 0.6) || e.code === 'KeyR') begin(); return; }
     if (e.repeat) { if (k === 'up') inp.up = true; if (k === 'down') inp.down = true; return; }
     if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
@@ -419,18 +455,47 @@ export function mountHyperProp(root) {
   });
   on(window, 'keyup', (e) => { const k = KEYS[e.code]; if (k === 'up') inp.up = false; if (k === 'down') inp.down = false; });
   on(window, 'touchstart', () => { touchMode = true; }, { passive: true });
-  root.querySelectorAll('[data-k]').forEach((b) => {
+  function press(b) {
     const k = b.dataset.k;
-    on(b, 'pointerdown', (e) => {
-      e.preventDefault(); b.classList.add('on');
-      if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
-      if (k === 'up') { inp.up = true; pressUp(); } if (k === 'down') inp.down = true;
-      if (k === 'start' && (s.phase === 'ready' || (over() && overT > 0.6))) begin();
-    });
-    const off = () => { b.classList.remove('on'); if (k === 'up') inp.up = false; if (k === 'down') inp.down = false; };
+    b.classList.add('on');
+    if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
+    if (k === 'up') { inp.up = true; pressUp(); } if (k === 'down') inp.down = true;
+    if (k === 'start') {
+      if (paused) resumeGame();
+      else if (playing()) pauseGame();
+      else if (s.phase === 'ready' || (over() && overT > 0.6)) begin();
+    }
+  }
+  function release(b) { const k = b.dataset.k; b.classList.remove('on'); if (k === 'up') inp.up = false; if (k === 'down') inp.down = false; }
+  // Fingers are read from touchstart, one touch at a time, with the default action
+  // cancelled. On iPhone Safari two fingers down together - which is exactly what
+  // drumming the pedals is - start the pinch-zoom recogniser, and the pointer events
+  // for those touches get cancelled or never arrive: a press goes missing, the next
+  // one lands on the same side and counts as a stumble. Cancelling touchstart keeps
+  // the page from ever treating the pad as a gesture.
+  const held = new Map();
+  on(root, 'touchstart', (e) => {
+    touchMode = true;
+    let hit = false;
+    for (const t of e.changedTouches) {
+      const b = t.target instanceof Element ? t.target.closest('[data-k]') : null;
+      if (!b || !root.contains(b)) continue;
+      hit = true; held.set(t.identifier, b); press(b);
+    }
+    if (hit) e.preventDefault();
+  }, { passive: false });
+  const lift = (e) => { for (const t of e.changedTouches) { const b = held.get(t.identifier); if (b) { held.delete(t.identifier); release(b); } } };
+  on(root, 'touchend', lift); on(root, 'touchcancel', lift);
+  // the mouse (and a pen) still come through pointer events
+  root.querySelectorAll('[data-k]').forEach((b) => {
+    on(b, 'pointerdown', (e) => { if (e.pointerType === 'touch') return; e.preventDefault(); press(b); });
+    const off = (e) => { if (e.pointerType !== 'touch') release(b); };
     on(b, 'pointerup', off); on(b, 'pointercancel', off); on(b, 'pointerleave', off);
   });
-  on($('wrap'), 'pointerdown', () => { if (s.phase === 'ready' || (over() && overT > 0.6)) begin(); });
+  on($('wrap'), 'pointerdown', () => {
+    if (paused) resumeGame();
+    else if (s.phase === 'ready' || (over() && overT > 0.6)) begin();
+  });
 
   // the monitor fills the top half; snap to whole device pixels when that costs little
   function fit() {
@@ -446,7 +511,21 @@ export function mountHyperProp(root) {
 
   // ---------- update ----------
   function update(dt) {
+    ui += dt;
+    if (paused) {
+      // the world holds still; only the count back in moves
+      if (countdown > 0) {
+        const before = Math.ceil(countdown / COUNT_STEP);
+        countdown -= dt;
+        const after = Math.ceil(countdown / COUNT_STEP);
+        if (countdown <= 0) { countdown = 0; paused = false; au.play('start'); }
+        else if (after !== before) au.play('tick');
+      }
+      au.engine({ phase: 'over', omega: 0, V: 0 });
+      return;
+    }
     time += dt;
+    if (playing()) runTime += dt;
     if (s.phase !== 'ready') S.step(s, dt, inp);
     handleEvents();
     if (over()) overT += dt;
@@ -628,14 +707,14 @@ export function mountHyperProp(root) {
   }
 
   function drawHud() {
-    const blink = Math.floor(time * 2.5) % 2 === 0;
+    const blink = Math.floor(ui * 2.5) % 2 === 0;
     if (s.phase === 'ready') {
       ctx.globalAlpha = 0.35; px(ctx, C.ink, 0, 0, W, H); ctx.globalAlpha = 1;
       text('HYPER', W / 2, 12, [C.white, C.white, '#d8ecf2', '#d8ecf2', '#b5d8ec', '#b5d8ec', '#8fbde2'], { s: 2, align: 'center', shadow: C.night });
       text('PROP', W / 2, 30, GOLD, { s: 4, align: 'center', shadow: C.redD });
       text('STAGE 1  LAKESIDE HILL', W / 2, 67, C.white, { align: 'center' });
       if (blink) text(touchMode ? 'PUSH PEDAL' : 'PRESS ENTER', W / 2, 150, C.yellow, { align: 'center' });
-      text(`BEST ${Math.round(best)}M`, W / 2, 172, C.greyL, { align: 'center' });
+      text(bestTime ? `BEST TIME ${fmt(bestTime)}` : `BEST ${Math.round(best)}M`, W / 2, 172, C.greyL, { align: 'center' });
       return;
     }
     px(ctx, C.ink, 0, 0, W, HUD_H); px(ctx, C.night, 0, HUD_H - 1, W, 1);
@@ -645,7 +724,7 @@ export function mountHyperProp(root) {
     const dist = Math.round(Math.max(0, s.x - CFG.edgeX) * CFG.pxToM);
     const goalTxt = `/${CFG.successDist * CFG.pxToM}M`;
     text(goalTxt, 252, 2, C.greyL, { outline: false, align: 'right' }); text(`${dist}M`, 252 - textW(goalTxt) - 1, 2, C.yellow, { outline: false, align: 'right' });
-    text(`BEST ${Math.round(best)}M`, 252, 10, C.greyL, { outline: false, align: 'right' });
+    text(`TIME ${fmt(runTime)}`, 252, 10, C.white, { outline: false, align: 'right' });
     // progress strip under the HUD
     const prog = Math.max(0, Math.min(1, (s.x - CFG.edgeX) / CFG.successDist));
     px(ctx, C.night, 88, 7, 60, 1); px(ctx, C.yellow, 88, 7, Math.round(prog * 60), 1); px(ctx, C.white, 88 + Math.round(prog * 60) - 1, 5, 3, 3);
@@ -653,8 +732,18 @@ export function mountHyperProp(root) {
     if (banner) {
       text(banner.big, W / 2, 52, GOLD, { s: 2, align: 'center', shadow: C.redD });
       if (banner.sub) text(banner.sub, W / 2, 74, C.white, { align: 'center' });
+      if (s.phase === 'clear' && newRecord && blink) text('NEW RECORD!', W / 2, 86, C.yellow, { align: 'center' });
     } else if (s.phase === 'fly' && s.stall && blink) text('STALL!', W / 2, 52, [C.white, C.redL, C.redL, C.red, C.red, C.redD, C.redD], { s: 2, align: 'center' });
-    if (over() && overT > 0.6 && blink) text(touchMode ? 'PUSH START' : 'PRESS ENTER', W / 2, 92, C.yellow, { align: 'center' });
+    if (over() && overT > 0.6 && blink) text(touchMode ? 'PUSH START' : 'PRESS ENTER', W / 2, 100, C.yellow, { align: 'center' });
+
+    if (paused) {
+      ctx.globalAlpha = 0.45; px(ctx, C.ink, 0, HUD_H, W, H - HUD_H); ctx.globalAlpha = 1;
+      if (countdown > 0) text(String(Math.ceil(countdown / COUNT_STEP)), W / 2, 76, GOLD, { s: 4, align: 'center', shadow: C.redD });
+      else {
+        text('PAUSED', W / 2, 70, C.white, { s: 2, align: 'center', shadow: C.night });
+        if (blink) text(touchMode ? 'PUSH START' : 'PRESS ENTER', W / 2, 100, C.yellow, { align: 'center' });
+      }
+    }
 
     const cap = s.phase === 'run' ? '▲ で乗る' : 'PITCH';
     if ($('upCap').textContent !== cap) $('upCap').textContent = cap;
@@ -675,7 +764,9 @@ export function mountHyperProp(root) {
       over: ['', t ? 'START でもう一度' : 'Enter / R でもう一度'],
       clear: ['', t ? 'START でもう一度' : 'Enter / R でもう一度'],
     }[s.phase] || ['', ''];
-    const lines = [jpMsg || what, press];
+    const lines = paused
+      ? (countdown > 0 ? ['もうすぐ再開', t ? 'PEDAL に指を置いて' : '← → に指を置いて'] : ['一時停止中', t ? 'START で続ける' : 'Enter / Esc で続ける'])
+      : [jpMsg || what, press];
     lines.forEach((txt, i) => { if (plateLines[i].textContent !== txt) plateLines[i].textContent = txt; });
   }
 
