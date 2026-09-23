@@ -2,26 +2,37 @@
    into the rest of MarutiBit.
 
    Proportions follow the golden ratio (phi = 1.618):
-   - shell: 1 : phi where the viewport allows it; on a phone the height is whatever the screen gives
+   - shell: as tall as the screen needs, which lands near 1 : phi (1 : 1.65 at full width)
    - vertical: display part : controls = 61.8% : 38.2%, and the controls split again 61.8% : 38.2%
    - horizontal: controls split 38.2% | 61.8%, PITCH and PEDAL centred in their columns, START on the dividing line
    - screen sits in its frame with space above : below = 1 : phi
    - PITCH width u, its height u*phi^2, PEDAL diameter u*phi; big corner radius = small radius * phi^2 */
-.hpStage { display: flex; justify-content: center; padding: 10px 0 18px; background: radial-gradient(ellipse at 50% 40%, #4a3f3a, #251e1c 75%);
+.hpStage { display: flex; justify-content: center;
+  /* the same card every MarutiBit game sits in: cream, a black line and a hard shadow */
+  width: min(1120px, calc(100% - 40px)); margin: clamp(24px, 3.4vw, 48px) auto; padding: clamp(18px, 3vw, 34px) 0;
+  border: 2.5px solid #232323; border-radius: 9px; background: #faf6f1; box-shadow: 5px 5px 0 #232323;
+  /* device width; the height follows from it (see .hpDevice) */
+  --dw: min(100vw - 48px, 460px);
   --shell: #f1e6cc; --shellL: #fff8e6; --shellD: #d9c7a0; --shellDD: #b9a57c;
   --slate: #595470; --slateD: #3f3a52; --hpInk: #3a3450; --hpRed: #e24a35; --hpTeal: #3f9e96;
   --s: 1; --u: min(46px, 6.4vh); --r: 22px; }
 .hpStage *, .hpStage *::before, .hpStage *::after { box-sizing: border-box; }
 .hpDevice { position: relative; display: flex; flex-direction: column;
-  width: min(100vw - 20px, 460px); height: calc(100vh - 20px); height: calc(100dvh - 20px); max-height: 900px;
+  /* Tall enough for the 4:3 screen and no taller. The top 61.8% holds the seam (34px),
+     the bezel's padding (50px), the sub display (75px) and the screen, which is 3/4 of
+     the bezel's inner width (device width - 56px), plus ~10px to sit it high in its frame.
+     Filling the phone's height instead left grey bands above and below the screen. */
+  width: var(--dw); height: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc(100vh - 24px));
+  height: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc(100dvh - 24px));
   padding: 0 16px; border-radius: var(--r) var(--r) calc(var(--r) * 2.618) var(--r);
   background: linear-gradient(160deg, var(--shellL), var(--shell) 30%, #eadcbc);
   box-shadow: inset 3px 3px 0 #fffdf4, inset -4px -5px 0 var(--shellD), inset -6px -8px 10px #0000001a,
-    0 0 0 1px var(--shellDD), 0 10px 20px #0008, 0 3px 0 1px #a8946c;
+    0 0 0 1px var(--shellDD), 0 8px 18px #0003, 0 3px 0 1px #a8946c;
   font-family: 'DotGothic16', monospace; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-@media (min-aspect-ratio: 7/10) {
-  .hpDevice { width: auto; height: calc(100vh - 40px); height: calc(100dvh - 40px); max-height: 940px; aspect-ratio: 1 / 1.618; max-width: calc(100vw - 20px); }
+/* on a phone the card gives up most of its margin: every pixel of width is screen */
+@media (max-width: 700px) {
+  .hpStage { width: calc(100% - 16px); margin-top: 14px; padding: 10px 0; --dw: min(100vw - 34px, 460px); }
 }
 .hpScrew { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e8e0d4, #9c9086);
   box-shadow: inset 0 0 0 1px #8a7e74, 0 1px 0 #fff8; }
