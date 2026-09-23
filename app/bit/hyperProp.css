@@ -8,11 +8,12 @@
    - screen sits in its frame with space above : below = 1 : phi
    - PITCH width u, its height u*phi^2, PEDAL diameter u*phi; big corner radius = small radius * phi^2 */
 .hpStage { display: flex; justify-content: center;
-  /* the same card every MarutiBit game sits in: cream, a black line and a hard shadow */
-  width: min(1120px, calc(100% - 40px)); margin: clamp(24px, 3.4vw, 48px) auto; padding: clamp(18px, 3vw, 34px) 0;
-  border: 2.5px solid #232323; border-radius: 9px; background: #faf6f1; box-shadow: 5px 5px 0 #232323;
+  /* No frame of its own: the handheld is the frame. It stands straight on the page's
+     grid paper at the full width the phone can give it (a card around it only made it
+     smaller). */
+  padding: 10px 0 clamp(18px, 3vw, 40px);
   /* device width; the height follows from it (see .hpDevice) */
-  --dw: min(100vw - 48px, 460px);
+  --dw: min(100vw - 20px, 460px);
   --shell: #f1e6cc; --shellL: #fff8e6; --shellD: #d9c7a0; --shellDD: #b9a57c;
   --slate: #595470; --slateD: #3f3a52; --hpInk: #3a3450; --hpRed: #e24a35; --hpTeal: #3f9e96;
   --s: 1; --u: min(46px, 6.4vh); --r: 22px; }
@@ -27,13 +28,9 @@
   padding: 0 16px; border-radius: var(--r) var(--r) calc(var(--r) * 2.618) var(--r);
   background: linear-gradient(160deg, var(--shellL), var(--shell) 30%, #eadcbc);
   box-shadow: inset 3px 3px 0 #fffdf4, inset -4px -5px 0 var(--shellD), inset -6px -8px 10px #0000001a,
-    0 0 0 1px var(--shellDD), 0 8px 18px #0003, 0 3px 0 1px #a8946c;
+    0 0 0 1px var(--shellDD), 0 10px 22px #0003, 0 3px 0 1px #a8946c;
   font-family: 'DotGothic16', monospace; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-/* on a phone the card gives up most of its margin: every pixel of width is screen */
-@media (max-width: 700px) {
-  .hpStage { width: calc(100% - 16px); margin-top: 14px; padding: 10px 0; --dw: min(100vw - 34px, 460px); }
-}
 .hpScrew { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e8e0d4, #9c9086);
   box-shadow: inset 0 0 0 1px #8a7e74, 0 1px 0 #fff8; }
 .hpScrew::after { content: ''; position: absolute; left: 1px; right: 1px; top: 3.5px; height: 1px; background: #6a5f58; transform: rotate(40deg); }
