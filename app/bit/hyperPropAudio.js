@@ -22,7 +22,8 @@ export function createHyperPropAudio() {
     lim.threshold.value = -4; lim.knee.value = 6; lim.ratio.value = 8; lim.attack.value = 0.003; lim.release.value = 0.15;
     master.connect(lim).connect(ctx.destination);
     sfx = ctx.createGain(); sfx.gain.value = 1; sfx.connect(master);
-    music = ctx.createGain(); music.gain.value = 0.4; music.connect(master);
+    // raised from 0.4 after the first listen on a phone: the loops sat too far under the effects
+    music = ctx.createGain(); music.gain.value = 0.6; music.connect(master);
     // a little room on the chimes and the lead, nothing more
     delay = ctx.createDelay(0.5); delay.delayTime.value = 0.18;
     const fb = ctx.createGain(); fb.gain.value = 0.25; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5000;

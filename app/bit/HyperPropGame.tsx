@@ -22,8 +22,15 @@ export function HyperPropGame() {
         <span className="hpScrew" style={{ left: 9, bottom: 16 }} />
         <div className="hpUpper">
           <div className="hpSeam">
+            {/* The sound switch, moulded into the seam. The speaker is the same mark every
+                MarutiBit sound switch wears: waves while on, the cone alone while off. */}
             <button className="hpSwitch" data-hp="sound" type="button" aria-label="サウンド" aria-pressed="false">
-              ◀ OFF<b />ON ▶
+              <svg className="hpSoundMark" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                <path className="hpSoundCone" d="M1.5 4.5h2L6.2 2.2v7.6L3.5 7.5h-2z" />
+                <path className="hpSoundWave" d="M8 4.4a2.5 2.5 0 0 1 0 3.2" />
+                <path className="hpSoundWave" d="M9.7 3a4.6 4.6 0 0 1 0 6" />
+              </svg>
+              SOUND<span className="hpSwitchGap" />OFF<b />ON
             </button>
           </div>
           <div className="hpBezel" data-hp="bezel">

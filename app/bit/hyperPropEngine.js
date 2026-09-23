@@ -667,7 +667,7 @@ export function mountHyperProp(root) {
     const t = touchMode;
     const pedal = t ? 'PEDAL を交互に叩いて' : '← → を交互に押して';
     const [what, press] = {
-      ready: [t ? 'PEDAL か START でスタート' : 'Enter / Space でスタート', au.enabled ? '' : '音は本体の上の OFF / ON で'],
+      ready: [t ? 'PEDAL か START でスタート' : 'Enter / Space でスタート', au.enabled ? '' : '音は本体の上の SOUND を ON に'],
       run: [pedal + '走る', t ? '赤い杭のあたりで ▲ で乗り込む' : '赤い杭のあたりで ↑ で乗り込む'],
       board: ['', ''],
       roll: [pedal + '漕ぐ', t ? '▲ で機首上げ' : '↑ で機首上げ'],
