@@ -78,16 +78,25 @@ export function createHyperPropAudio() {
     // the prop: a low buzz that pulses once per blade pass
     const osc = ctx.createOscillator(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), depth = ctx.createGain();
     osc.type = 'sawtooth'; osc.frequency.value = 40; fl.type = 'lowpass'; fl.frequency.value = 500; fl.Q.value = 2; g.gain.value = 0;
-    lfo.type = 'square'; lfo.frequency.value = 8; depth.gain.value = 0;
+    lfo.type = 'triangle'; lfo.frequency.value = 8; depth.gain.value = 0;
     lfo.connect(depth).connect(g.gain);
     osc.connect(fl).connect(g).connect(sfx); osc.start(); lfo.start();
     prop = { osc, fl, g, lfo, depth };
     wind = loopNoise('bandpass', 500, 0.7);
     roll = loopNoise('lowpass', 180, 0.8);
   }
+  // Called every game tick, but the loops only need retuning about 20 times a second.
+  // Each retune is an automation event on the param's timeline; at 120 a second across
+  // nine params Safari kept piling them up faster than it let them go, which is the kind
+  // of load that turns into crackle. So: throttle, and clear what is queued before
+  // setting the next target, so every timeline holds one event at a time.
+  let lastEngine = 0;
   function engine(st) {
     if (!ctx || !prop) return;
-    const t = ctx.currentTime, on = live() ? 1 : 0, set = (p, v, k = 0.06) => p.setTargetAtTime(v, t, k);
+    const t = ctx.currentTime;
+    if (t - lastEngine < 0.05) return;
+    lastEngine = t;
+    const on = live() ? 1 : 0, set = (p, v, k = 0.06) => { p.cancelScheduledValues(t); p.setTargetAtTime(v, t, k); };
     const turning = on && (st.phase === 'roll' || st.phase === 'fly' || st.phase === 'clear');
     const w = st.phase === 'clear' ? 0.7 : st.omega;
     set(prop.osc.frequency, 38 + w * 70); set(prop.fl.frequency, 300 + w * 1100); set(prop.lfo.frequency, 4 + w * 26);
@@ -128,7 +137,7 @@ export function createHyperPropAudio() {
   // Both loops are in D major so the jingles and the chimes never clash with them.
   const bus = () => music;
   const lead = (m, at, len, g = 0.034) => tone({ f: hz(m), at, dur: len, g, cut: 3200, bus: bus(), send: 0.18, attack: 0.008 });
-  const kick = (at) => tone({ f: 130, to: 45, dur: 0.14, g: 0.2, type: 'sine', at, bus: bus(), attack: 0.002 });
+  const kick = (at) => tone({ f: 150, to: 55, dur: 0.16, g: 0.18, type: 'sine', at, bus: bus(), attack: 0.006 });
   const snare = (at) => { noise({ f: 1900, q: 0.8, dur: 0.12, g: 0.11, at, bus: bus() }); tone({ f: 190, to: 140, dur: 0.08, g: 0.05, type: 'triangle', at, bus: bus() }); };
   const hat = (at, g = 0.035) => noise({ f: 9000, type: 'highpass', q: 0.7, dur: 0.03, g, at, bus: bus() });
   const STAGE = {
@@ -147,7 +156,7 @@ export function createHyperPropAudio() {
     play(i, at, beat) {
       const bar = Math.floor(i / 16) % 8, s = i % 16, [root, triad] = this.chords[bar], sx = beat / 4;
       // running: drums and bass. seated: chord stabs join. flying: the tune.
-      if (s % 4 === 0 || s % 4 === 2) tone({ f: hz(root + (s % 4 === 2 ? 12 : 0)), at, dur: sx * 1.8, g: 0.1, type: 'triangle', bus: bus() });
+      if (s % 4 === 0 || s % 4 === 2) tone({ f: hz(root + (s % 4 === 2 ? 12 : 0)), at, dur: sx * 1.8, g: 0.1, type: 'triangle', bus: bus(), attack: 0.012 });
       if (s === 0 || s === 8 || s === 11) kick(at);
       if (s === 4 || s === 12) snare(at);
       if (s % 2 === 0) hat(at, s % 4 === 0 ? 0.03 : 0.045);

@@ -1,17 +1,25 @@
 // HYPER PROP physics. A pure state machine with no DOM, so node can run it too
 // (the prototype tuned these numbers with a bot pressing at fixed rates).
 // Units are world pixels (y up, cliff top = 0) and seconds.
+// Tuned with a bot flying five pitch styles (hands off, ▲ held, ▲ whenever it sinks,
+// ▲ pulsed, and a careful pilot holding the angle of attack) at 6-8 pedal presses a
+// second. First playtest said the takeoff was too easy: everything got airborne and
+// even "hold ▲ whenever it sinks" cleared at 7 presses. Now the drop off the cliff is
+// shorter (less free speed), a stall costs real height, the water no longer carries
+// you along, and the pedals give less: a careful pilot needs 7 a second, a sloppy one
+// can still get there on 8, hands off is in the lake by ~60m and ▲ held by ~20m.
 export const CFG = {
   g: 50,
   edgeX: 170,
-  lakeY: -45,
+  lakeY: -32,
   run: { step: 6, vcap: 40, friction: 10 },
   boardTime: 0.55,
   boardKeep: 0.92,
-  prop: { add: 0.16, decay: 0.6, thrust: 20, vmax: 80 },
-  aero: { c: 0.075, cla: 5, stall: 0.3, cd0: 0.04, k: 0.08, ge: 18, geGain: 0.2 },
-  pitchRate: 1.3, relax: 1.6, trim: 0.05,
-  groundRoll: 6, rotateMax: 0.25,
+  prop: { add: 0.16, decay: 0.6, thrust: 17, vmax: 80 },
+  // past the stall the lift falls to stallFloor of its peak, drag gains stallDrag and the nose drops at stallDrop rad/s
+  aero: { c: 0.075, cla: 5, stall: 0.3, cd0: 0.04, k: 0.08, ge: 18, geGain: 0.1, stallFloor: 0.2, stallDrag: 0.25, stallDrop: 1.6 },
+  pitchRate: 1.6, relax: 1.6, trim: 0.05,
+  groundRoll: 8, rotateMax: 0.25,
   successDist: 800,
   pxToM: 0.5,
 };
@@ -61,14 +69,14 @@ export function aero(s) {
   if (Math.abs(alpha) < a.stall) cl = a.cla * alpha;
   else {
     stall = true;
-    cl = Math.sign(alpha) * a.cla * a.stall * Math.max(0.35, 1 - (Math.abs(alpha) - a.stall) * 4);
+    cl = Math.sign(alpha) * a.cla * a.stall * Math.max(a.stallFloor, 1 - (Math.abs(alpha) - a.stall) * 4);
   }
   const floor = s.x > CFG.edgeX ? CFG.lakeY : 0;
   const h = s.y - floor;
   const ge = h < a.ge ? 1 + a.geGain * (1 - Math.max(0, h) / a.ge) : 1;
   const q = a.c * V * V;
   const L = q * cl * ge;
-  const D = q * (a.cd0 + a.k * cl * cl / ge + (stall ? 0.1 : 0));
+  const D = q * (a.cd0 + a.k * cl * cl / ge + (stall ? a.stallDrag : 0));
   const T = CFG.prop.thrust * s.omega * Math.max(0, 1 - V / CFG.prop.vmax);
   return { V, gamma, alpha, stall, L, D, T, ge };
 }
@@ -111,7 +119,7 @@ export function step(s, dt, inp) {
     if (inp.up) s.theta += CFG.pitchRate * dt;
     else if (inp.down) s.theta -= CFG.pitchRate * dt;
     else s.theta += (f.gamma + CFG.trim - s.theta) * Math.min(1, CFG.relax * dt);
-    if (f.stall) s.theta -= 1.0 * dt;
+    if (f.stall) s.theta -= CFG.aero.stallDrop * dt;
     s.theta = Math.max(-0.8, Math.min(0.8, s.theta));
   }
 
