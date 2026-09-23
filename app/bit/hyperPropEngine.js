@@ -506,8 +506,24 @@ export function mountHyperProp(root) {
       press(b);
     }
   }, { passive: false });
-  const lift = (e) => { for (const t of e.changedTouches) { const b = held.get(t.identifier); if (b) { held.delete(t.identifier); release(b); } } };
-  on(root, 'touchend', lift); on(root, 'touchcancel', lift);
+  const lift = (e) => {
+    let hit = false;
+    for (const t of e.changedTouches) { const b = held.get(t.identifier); if (b) { hit = true; held.delete(t.identifier); release(b); } }
+    if (hit && e.type === 'touchend' && e.cancelable) e.preventDefault();
+  };
+  on(root, 'touchend', lift, { passive: false }); on(root, 'touchcancel', lift);
+  // Still stumbling on an iPhone, and the playtest said exactly where: fine at the BGM's
+  // tempo, broken above it. Drumming with two fingers, each finger comes back to its own
+  // pedal every other press - every 0.45s at the music's 4.4 a second, every 0.29s at 7.
+  // The second is inside Safari's double-tap-to-zoom window (~0.3s on one spot), and a
+  // tap Safari is still deciding about can reach the page late - behind the other
+  // finger's next press, which then counts as the same side twice. So Safari is told, in
+  // every way it listens, that nothing here is a double tap: the touchend is cancelled
+  // along with the touchstart, dblclick is cancelled, and while this page is up the
+  // document is touch-action: manipulation (scrolling and pinch-zoom still work).
+  on(root, 'dblclick', (e) => e.preventDefault(), { passive: false });
+  const docStyle = document.documentElement.style, prevTouchAction = docStyle.touchAction;
+  docStyle.touchAction = 'manipulation';
   // the mouse (and a pen) still come through pointer events
   root.querySelectorAll('[data-k]').forEach((b) => {
     on(b, 'pointerdown', (e) => { if (e.pointerType === 'touch') return; e.preventDefault(); press(b); });
@@ -805,6 +821,7 @@ export function mountHyperProp(root) {
   raf = requestAnimationFrame(frame);
 
   return () => {
+    docStyle.touchAction = prevTouchAction;
     cancelAnimationFrame(raf);
     ro.disconnect();
     offs.forEach((off) => off());
