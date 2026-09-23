@@ -1,0 +1,90 @@
+/* HYPER PROP: the handheld. Everything is scoped under .hpStage so none of it leaks
+   into the rest of MarutiBit.
+
+   Proportions follow the golden ratio (phi = 1.618):
+   - shell: 1 : phi where the viewport allows it; on a phone the height is whatever the screen gives
+   - vertical: display part : controls = 61.8% : 38.2%, and the controls split again 61.8% : 38.2%
+   - horizontal: controls split 38.2% | 61.8%, PITCH and PEDAL centred in their columns, START on the dividing line
+   - screen sits in its frame with space above : below = 1 : phi
+   - PITCH width u, its height u*phi^2, PEDAL diameter u*phi; big corner radius = small radius * phi^2 */
+.hpStage { display: flex; justify-content: center; padding: 10px 0 18px; background: radial-gradient(ellipse at 50% 40%, #4a3f3a, #251e1c 75%);
+  --shell: #f1e6cc; --shellL: #fff8e6; --shellD: #d9c7a0; --shellDD: #b9a57c;
+  --slate: #595470; --slateD: #3f3a52; --hpInk: #3a3450; --hpRed: #e24a35; --hpTeal: #3f9e96;
+  --s: 1; --u: min(46px, 6.4vh); --r: 22px; }
+.hpStage *, .hpStage *::before, .hpStage *::after { box-sizing: border-box; }
+.hpDevice { position: relative; display: flex; flex-direction: column;
+  width: min(100vw - 20px, 460px); height: calc(100vh - 20px); height: calc(100dvh - 20px); max-height: 900px;
+  padding: 0 16px; border-radius: var(--r) var(--r) calc(var(--r) * 2.618) var(--r);
+  background: linear-gradient(160deg, var(--shellL), var(--shell) 30%, #eadcbc);
+  box-shadow: inset 3px 3px 0 #fffdf4, inset -4px -5px 0 var(--shellD), inset -6px -8px 10px #0000001a,
+    0 0 0 1px var(--shellDD), 0 10px 20px #0008, 0 3px 0 1px #a8946c;
+  font-family: 'DotGothic16', monospace; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+@media (min-aspect-ratio: 7/10) {
+  .hpDevice { width: auto; height: calc(100vh - 40px); height: calc(100dvh - 40px); max-height: 940px; aspect-ratio: 1 / 1.618; max-width: calc(100vw - 20px); }
+}
+.hpScrew { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e8e0d4, #9c9086);
+  box-shadow: inset 0 0 0 1px #8a7e74, 0 1px 0 #fff8; }
+.hpScrew::after { content: ''; position: absolute; left: 1px; right: 1px; top: 3.5px; height: 1px; background: #6a5f58; transform: rotate(40deg); }
+.hpUpper { flex: 0 0 61.8%; min-height: 0; display: flex; flex-direction: column; }
+.hpLower { flex: 0 0 38.2%; min-height: 0; display: flex; flex-direction: column; }
+
+/* top seam, and the sound switch moulded into it */
+.hpSeam { flex: 0 0 auto; position: relative; height: 24px; margin: 0 -16px 10px; border-bottom: 2px solid var(--shellD); box-shadow: 0 1px 0 #fffdf4; }
+.hpSwitch { position: absolute; left: 22px; top: 1px; padding: 5px 8px; border: 0; background: none; font: inherit; font-size: 10px; letter-spacing: .12em;
+  color: var(--shellDD); cursor: pointer; touch-action: manipulation; }
+.hpSwitch.on { color: var(--hpInk); }
+.hpSwitch b { display: inline-block; width: 14px; height: 6px; margin: 0 5px; border-radius: 3px; background: var(--shellD); box-shadow: inset 0 1px 0 #0002; vertical-align: middle; }
+.hpSwitch b::after { content: ''; display: block; width: 6px; height: 6px; margin-left: 0; border-radius: 3px; background: var(--slate); transition: margin-left .12s; }
+.hpSwitch.on b::after { margin-left: 8px; background: var(--hpRed); }
+
+/* screen surround: a recessed slate frame, the screen a little high in it (1 : phi) */
+.hpBezel { flex: 1 1 auto; min-height: 0; position: relative; display: flex; flex-direction: column; align-items: center;
+  padding: 26px 12px 24px; border-radius: 12px 12px calc(12px * 2.618) 12px; background: linear-gradient(#524d68, var(--slate));
+  box-shadow: inset 0 3px 6px #0006, inset 0 -1px 0 #fff2, 0 1px 0 #fff8; }
+.hpBezel::before { content: ''; flex: 1 1 0; }
+.hpBezel::after { content: ''; flex: 1.618 1 0; }
+.hpRule { position: absolute; left: 14px; right: 14px; top: 11px; display: flex; align-items: center; gap: 8px;
+  font-size: 10px; letter-spacing: .14em; color: #d6d0e8; white-space: nowrap; }
+.hpRule::before, .hpRule::after { content: ''; flex: 1 1 auto; height: 5px; background: linear-gradient(var(--hpRed) 0 2px, transparent 2px 3px, var(--hpTeal) 3px 5px); }
+.hpLed { position: absolute; left: 14px; bottom: 9px; display: flex; align-items: center; gap: 6px; font-size: 9px; letter-spacing: .1em; color: #b8b2cc; }
+.hpLed i { width: 8px; height: 8px; border-radius: 50%; background: #ff5a45; box-shadow: 0 0 6px #ff5a45cc, inset 0 -1px 0 #0003; }
+.hpScreen { flex: 0 0 auto; position: relative; width: calc(256px * var(--s)); height: calc(192px * var(--s)); overflow: hidden; background: #000;
+  box-shadow: 0 0 0 2px #2c283c, 0 0 0 3px #6c6784; }
+.hpScreen canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+.hpScreen::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(transparent 0 calc(var(--s) * 1px), #0000001c calc(var(--s) * 1px) calc(var(--s) * 2px)); }
+.hpScreen::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: linear-gradient(155deg, #ffffff18 0%, #ffffff06 22%, transparent 38%); }
+
+/* the sub display: always exactly two lines tall, whatever it says - the buttons below must never move */
+.hpPlate { flex: 0 0 auto; margin: 14px 0 6px; height: calc(2 * 1.45em + .9em + 6px); display: flex; flex-direction: column; justify-content: center; text-align: center;
+  padding: .45em .8em; font-size: 13px; line-height: 1.45; overflow: hidden; color: #cfe9d6; background: #0f1a14; border-radius: 8px;
+  border: 3px solid var(--slateD); box-shadow: inset 0 3px 6px #000c, 0 1px 0 #fff8; text-shadow: 0 0 6px #7fe0a066; }
+.hpPlate span { display: block; height: 1.45em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* controls: two columns, 38.2% | 61.8% */
+.hpPad { flex: 0 0 61.8%; min-height: 0; display: grid; grid-template-columns: 38.2% 61.8%; align-items: center; justify-items: center; }
+.hpBtn { position: relative; border: 0; padding: 0; font: inherit; touch-action: none; cursor: pointer; transition: transform .03s; }
+.hpBtn.on { transform: translateY(2px); filter: brightness(.9); }
+.hpRocker { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.hpRockerBody { display: flex; flex-direction: column; width: var(--u); border-radius: calc(var(--u) / 2); overflow: hidden;
+  background: var(--hpInk); box-shadow: 0 4px 0 #221e30, 0 0 0 5px var(--shellD), 0 1px 0 5px #fff8; }
+.hpRockerBody .hpBtn { width: var(--u); height: calc(var(--u) * 2.618 / 2); background: linear-gradient(#55507a, var(--hpInk)); color: #d6d0e8; font-size: 15px; }
+.hpRockerBody .hpBtn + .hpBtn { border-top: 2px solid #221e30; }
+.hpPedals { display: flex; gap: calc(var(--u) * 0.236); padding: calc(var(--u) * 0.236) calc(var(--u) * 0.382); border-radius: 999px; transform: rotate(-20deg);
+  background: var(--shellD); box-shadow: inset 0 3px 5px #0003, 0 1px 0 #fff8; }
+.hpPbox { position: relative; display: flex; flex-direction: column; align-items: center; }
+.hpPedal { width: calc(var(--u) * 1.618); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #ff9a80 0 12%, #e8503a 45%, #b0301f); box-shadow: 0 5px 0 #7c2014; }
+.hpPedal.on { box-shadow: 0 2px 0 #7c2014; transform: translateY(3px); }
+.hpCap { font-size: 11px; letter-spacing: .14em; color: var(--hpInk); }
+.hpPedals .hpCap { position: absolute; bottom: -24px; left: -10px; right: -10px; text-align: center; }
+
+/* start on the 38.2% line; speaker at the golden point of the right column */
+.hpFoot { flex: 0 0 38.2%; min-height: 0; position: relative; }
+.hpStartBox { position: absolute; left: 38.2%; top: 38.2%; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%) rotate(-20deg); }
+.hpStartBox .hpCap { position: absolute; top: 100%; left: 50%; margin-top: 10px; transform: translateX(-50%); white-space: nowrap; }
+.hpStart { width: calc(var(--u) * 1.082); height: 12px; border-radius: 6px; background: #8f8aa4; box-shadow: 0 0 0 4px var(--shellD), 0 2px 0 4px #fff8; }
+.hpSpeaker { position: absolute; left: 76.4%; top: 61.8%; display: flex; gap: 7px; transform: translate(-50%, -50%) rotate(-28deg); }
+.hpSpeaker i { width: 5px; height: calc(var(--u) * 0.854); border-radius: 3px; background: var(--shellD); box-shadow: inset 1px 2px 2px #0003, 0 1px 0 #fff8; }
