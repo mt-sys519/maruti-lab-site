@@ -14,7 +14,7 @@ const TEXT = {
     kind: "人力飛行ゲーム",
     lead: "高台で機体を抱えて走り、飛び乗って、漕いで湖を越える。ペダルを連打する人力飛行ゲーム。",
     goal: "400m 先の GOAL まで飛べばクリア。水に落ちると、そこまでの距離が記録に残ります。",
-    feat: ["1 PLAYER", "4 STAGES", "RAPID TAP", "JP / EN"],
+    feat: ["1 PLAYER", "6 STAGES", "RAPID TAP", "JP / EN"],
     how: [
       ["RUN", "ペダルを人差し指と中指で連打して走る"],
       ["BOARD", "赤い杭のところで ▲ を押して飛び乗る"],
@@ -28,7 +28,7 @@ const TEXT = {
     kind: "A human-powered flight game",
     lead: "Run with the plane along the hilltop, jump aboard, pedal hard and cross the lake. A flight game about drumming the pedals.",
     goal: "Fly 400m to the GOAL to clear a stage. Come down in the water and the distance you made is kept as your record.",
-    feat: ["1 PLAYER", "4 STAGES", "RAPID TAP", "JP / EN"],
+    feat: ["1 PLAYER", "6 STAGES", "RAPID TAP", "JP / EN"],
     how: [
       ["RUN", "Drum the pedals with your index and middle fingers to run"],
       ["BOARD", "At the red stake, press ▲ to jump aboard"],

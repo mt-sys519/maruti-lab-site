@@ -702,9 +702,10 @@ export function mountHyperProp(root) {
     const [big, jp] = {
       edge: ['FELL OFF!', L('乗り込む前に崖の外へ…', 'Over the edge before boarding…')], miss: ['MISSED!', L('乗り込みが間に合わなかった', 'Too late to board')], stop: ['STOPPED', L('止まってしまった', 'Came to a stop')],
       splash: ['SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
+      sphinx: ['CRASH!', L(`スフィンクスにぶつかった… ${d}m`, `Hit the Sphinx… ${d}m`)],
       short: ['NOT ENOUGH!', L(`風船が足りない… ${s.got}/${st.need}`, `Not enough balloons… ${s.got}/${st.need}`)],
     }[r.reason];
-    show(big, r.reason === 'splash' || r.reason === 'obelisk' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
+    show(big, r.reason === 'splash' || r.reason === 'obelisk' || r.reason === 'sphinx' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
     au.music(null);
     if (r.reason === 'splash') { au.play('splash'); au.play('fail'); }
     else if (r.reason === 'stop' || r.reason === 'short') au.play('fail');
@@ -713,7 +714,7 @@ export function mountHyperProp(root) {
     else if (r.reason === 'splash') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true }; burst(s.x + 8, CFG.lakeY, 30, [C.white, theme().water[0], theme().water[1]], 60, 1.4); }
     else if (r.reason === 'sand') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, EG.sand, 40, 0.8); }
     // hitting an obelisk throws the plane back off it; running out at the goal lets it glide down
-    else if (r.reason === 'obelisk') { wreck = { x: s.x, y: s.y, vx: -12, vy: 6, rot: s.theta, vr: -1.5, splashed: false, whole: true }; burst(s.x + 16, s.y + 10, 16, EG.stone, 40, 1); }
+    else if (r.reason === 'obelisk' || r.reason === 'sphinx') { wreck = { x: s.x, y: s.y, vx: -12, vy: 6, rot: s.theta, vr: -1.5, splashed: false, whole: true }; burst(s.x + 16, s.y + 10, 16, EG.stone, 40, 1); }
     else if (r.reason === 'short') wreck = { x: s.x, y: s.y, vx: s.vx * 0.7, vy: 0, rot: s.theta, vr: -0.6, splashed: false, whole: true };
   }
 
@@ -911,6 +912,7 @@ export function mountHyperProp(root) {
       if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = L('下降気流！ 手前で高度を稼げ', 'Downdraft! Gain height before it'); jpT = 2.2; }
       if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`); jpT = 2.4; }
       if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it'); jpT = 2.2; }
+      if (!seen.sphinx && s.stone.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back'); jpT = 2.4; }
     }
     if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
     const mark = Math.floor(Math.max(0, s.x - CFG.edgeX) / 200);
@@ -968,6 +970,7 @@ export function mountHyperProp(root) {
     drawLake(hz, T);
     drawMarkers(T);
     drawObelisks();
+    drawSphinx();
     drawAir();
 
     // the ground the run starts on (the cliff, or the pyramid) and what stands on it
@@ -1114,6 +1117,45 @@ export function mountHyperProp(root) {
         else { px(ctx, EG.stone[0], x - hw, y, hw, 1); px(ctx, EG.stone[2], x, y, hw + 1, 1); if (i % 4 === 1) px(ctx, EG.stone[3], x - 1, y, 1, 1); }
       }
     }
+  }
+
+  // The Sphinx lies on its islet facing the plane: paws out front, the head in its
+  // striped headdress, then the long back and the haunch. Its silhouette stays a pixel
+  // inside the solid blocks in the stage (sphinx.blocks), so what you see is what you hit.
+  const sphinxSpr = (() => {
+    const w = 112, h = 26;
+    // height of the silhouette in each column, the plane's left to right
+    const top = (x) => x < 1 ? 5 : x < 3 ? 6 : x < 16 ? 7 // forepaws stretched out
+      : x < 18 ? 15 : x < 19 ? 20 : x < 21 ? 23 : x < 30 ? 26 : x < 32 ? 25 : x < 34 ? 21 : x < 36 ? 19 // chest, face, headdress
+      : x < 45 ? 18 : x < 88 ? 17 : x < 92 ? 16 : x < 96 ? 15 // the back
+      : x < 102 ? 13 - (x - 96) : 5; // rump and hind paw
+    const [c, g] = canvas(w + 2, h + 2);
+    for (let x = 0; x < w; x++) for (let k = 1; k <= top(x); k++) {
+      const d = top(x) - k, y = h - k + 1;
+      let col = k <= 2 ? EG.stone[3] : k % 3 === 0 ? EG.stone[2] : EG.stone[1]; // weathered courses
+      if (d === 0) col = EG.stone[0];
+      if (x < 18 && k === 8) col = EG.stone[3]; // forearm against the chest
+      // the headdress: bold stripes over the crown and down the flap behind the face
+      if ((x >= 20 && x < 34 && k >= 20) || (x >= 27 && x < 34 && k >= 12)) col = k % 2 ? EG.stone[0] : EG.stone[3];
+      // the face, lighter, looking left
+      if (x >= 17 && x < 23 && k >= 14 && k < 21 && !(x >= 20 && k >= 20)) col = '#f3dcaa';
+      // the haunch curving round on the flank
+      const r = Math.hypot(x - 97, (k - 3) * 1.4);
+      if (x < 101 && k > 2 && Math.abs(r - 11) < 0.7) col = EG.stone[3];
+      px(g, col, x + 1, y);
+    }
+    px(g, C.ink, 19, h - 19, 2, 1); px(g, C.ink, 19, h - 18, 1, 1); // brow and eye
+    px(g, EG.stone[3], 18, h - 15, 1, 1); px(g, C.ink, 19, h - 14, 2, 1); // nostril and mouth
+    for (const tx of [2, 6, 10]) px(g, EG.stone[3], tx + 1, h - 5, 1, 3); // toes
+    px(g, EG.stone[3], 86, h - 2, 8, 1); px(g, EG.stone[3], 93, h - 3, 2, 1); // the tail round the flank
+    return outline(c, C.ink);
+  })();
+  function drawSphinx() {
+    const sp = S.STAGES[s.stage].sphinx; if (!sp) return;
+    const x = sx(CFG.edgeX + sp.at / CFG.pxToM), surf = sy(CFG.lakeY);
+    if (x > W + 10 || x + sphinxSpr.width < -10) return;
+    px(ctx, C.ink, x - 4, surf - 3, sphinxSpr.width + 8, 4); px(ctx, EG.sand[1], x - 3, surf - 2, sphinxSpr.width + 6, 2); px(ctx, EG.sand[0], x - 1, surf - 3, sphinxSpr.width + 2, 1);
+    ctx.drawImage(sphinxSpr, x - 1, surf - sphinxSpr.height + 1);
   }
 
   function planeImg(pilot) {

@@ -42,6 +42,9 @@ export const CFG = {
 // playtest found the old low falcons never met a plane kept high over the obelisks.
 // Careful pilot clears from 8 a second; one that stays high eats all three falcons and
 // needs 8.5-9.
+// Stage 5: careful clears from 8 popping all ten (7.5 cannot climb to the obelisks in
+// time), flying straight pops 3. Stage 6: careful clears from 7.5 without a strike; one
+// that stays high takes two falcons and then needs 8.5 to carry over the Sphinx.
 export const STAGES = [
   null,
   { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
@@ -61,6 +64,19 @@ export const STAGES = [
   { name: 'NILE CROSSING', theme: 'egypt', startX: 80, air: [], sandTo: 25,
     birds: [[180, 50], [310, 50], [385, 50]],
     obelisks: [[118, 25], [250, 26], [355, 25]] },
+  // Stage 5: balloons among the obelisks - one on the climb to each obelisk, one over its
+  // tip, one down low after it. Eight of ten, and the stone still ends the flight.
+  { name: 'NILE BALLOONS', theme: 'egypt', startX: 80, air: [], sandTo: 25, birds: [], need: 8,
+    obelisks: [[125, 25], [235, 26], [340, 25]],
+    balloons: [[50, 22], [90, 32], [125, 40], [165, 20], [200, 32], [235, 41], [270, 20], [305, 32], [340, 40], [380, 20]] },
+  // Stage 6: the Sphinx before the goal. sphinx.at is where its paws start and each block
+  // is [metres from there, length, height]: paws, the head (the highest thing in Egypt),
+  // the long back, the haunch. A falcon over its back keeps the plane low along it after
+// the climb over the head.
+  { name: 'GREAT SPHINX', theme: 'egypt', startX: 80, air: [], sandTo: 25,
+    obelisks: [[110, 25], [240, 27]],
+    birds: [[178, 52], [272, 15], [350, 58]],
+    sphinx: { at: 310, blocks: [[0, 8, 10], [8, 10, 27], [18, 30, 19], [48, 8, 13]] } },
 ];
 
 export function create(stage = 1) {
@@ -71,7 +87,9 @@ export function create(stage = 1) {
     birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1 }; }),
     balloons: (STAGES[stage].balloons || []).map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 2.3, x, y, popT: -1 }; }),
     got: 0,
-    obelisks: (STAGES[stage].obelisks || []).map(([m, h]) => ({ x: CFG.edgeX + m / CFG.pxToM, top: CFG.lakeY + h })),
+    obelisks: (STAGES[stage].obelisks || []).map(([m, h]) => ({ x: CFG.edgeX + m / CFG.pxToM, w: 0, top: CFG.lakeY + h })),
+    // the sphinx is solid too, as a row of blocks [metres, length, height] along its back
+    stone: (STAGES[stage].sphinx?.blocks || []).map(([m, len, h]) => ({ x: CFG.edgeX + (STAGES[stage].sphinx.at + m) / CFG.pxToM, w: len / CFG.pxToM, top: CFG.lakeY + h })),
   };
 }
 
@@ -240,6 +258,9 @@ export function step(s, dt, inp) {
   // an obelisk is solid from the water to its tip
   for (const o of s.obelisks) {
     if (o.x > s.x - 12 && o.x < s.x + 16 && s.y + 2 < o.top) return fail(s, 'obelisk');
+  }
+  for (const o of s.stone) {
+    if (o.x < s.x + 16 && o.x + o.w > s.x - 12 && s.y + 2 < o.top) return fail(s, 'sphinx');
   }
 
   if (!s.climbed && s.x > CFG.edgeX + 10 && s.vy > 0) { s.climbed = true; s.events.push('climb'); }
