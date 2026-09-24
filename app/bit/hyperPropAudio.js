@@ -101,10 +101,10 @@ export function createHyperPropAudio() {
     const on = live() ? 1 : 0, set = (p, v, k = 0.06) => { p.cancelScheduledValues(t); p.setTargetAtTime(v, t, k); };
     const turning = on && (st.phase === 'roll' || st.phase === 'fly' || st.phase === 'clear');
     const w = st.phase === 'clear' ? 0.7 : st.omega;
-    // bandpassed noise carries about a fifth of the sawtooth's energy, hence the larger gains
+    // halved (-6dB) after the first listen: the swish sat over everything else
     set(prop.fl.frequency, 500 + w * 1300); set(prop.lfo.frequency, 2 + w * 16);
     const lv = turning ? 0.01 + w * 0.06 : 0;
-    set(prop.g.gain, lv * 2.4); set(prop.depth.gain, lv * 2.2);
+    set(prop.g.gain, lv * 1.2); set(prop.depth.gain, lv * 1.1);
     const airborne = on && (st.phase === 'fly' || st.phase === 'clear' || st.phase === 'run');
     set(wind.fl.frequency, 300 + st.V * 22); set(wind.g.gain, airborne ? Math.max(0, Math.min(1, (st.V - 8) / 40)) * (st.phase === 'run' ? 0.03 : 0.07) : 0, 0.15);
     set(roll.g.gain, on && st.phase === 'roll' ? Math.min(1, st.V / 35) * 0.09 : 0, 0.05);
