@@ -361,34 +361,7 @@ export function mountHyperProp(root) {
   }
   const pines = [[-200, pineSpr(30)], [-168, pineSpr(22)], [-120, pineSpr(34)], [-86, pineSpr(20)], [-52, pineSpr(27)], [-18, pineSpr(16)]];
   const bush = fromRows(['..gggg..', '.gGGggg.', 'gGGgggdg', 'ggggggdd'], { g: C.grass[2], G: C.grass[1], d: C.grass[3] });
-  // How to hold the pedals, for the title: a right hand from above, index finger on the
-  // left pedal and middle finger on the right, tapping in turn. People reached for them
-  // with a thumb. Frame k has finger k pressed.
   const GOAL_X = CFG.edgeX + CFG.successDist;
-  const fingers = [0, 1].map((k) => {
-    const [c, g] = canvas(50, 44);
-    const PL = [13, 33], PR = [33, 27];
-    for (const [i, [cx, cy]] of [PL, PR].entries()) {
-      const down = i === k, y0 = cy + (down ? 1 : 0);
-      for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) {
-        const d = (x * x + y * y) / 36;
-        if (d > 1) continue;
-        const lit = x + y < -4 && !down;
-        px(g, d > 0.72 ? C.redD : lit ? C.redL : down ? C.redD : C.red, cx + x, y0 + y);
-      }
-      if (down) { px(g, C.white, cx - 9, cy - 4, 2, 1); px(g, C.white, cx - 10, cy, 2, 1); px(g, C.white, cx + 8, cy - 5, 2, 1); }
-    }
-    // back of the hand, its lower edge slanting up to the right like the pedals
-    const low = (x) => Math.round(13 - (x - 9) * 0.2);
-    for (let x = 9; x <= 44; x++) for (let y = 0; y <= low(x); y++) px(g, y > low(x) - 2 ? C.skinD : C.skin, x, y);
-    px(g, C.skin, 4, 7, 6, 5); px(g, C.skinD, 4, 11, 6, 1);
-    // two fingers down, the other two curled under
-    const finger = (x, from, to) => { px(g, C.skin, x, from, 5, to - from); px(g, C.skinD, x + 4, from, 1, to - from); px(g, '#fff0e0', x + 1, to - 2, 3, 1); };
-    finger(11, low(11), PL[1] - 7 + (k === 0 ? 3 : 0));
-    finger(31, low(31), PR[1] - 7 + (k === 1 ? 3 : 0));
-    px(g, C.skinD, 38, low(38) + 1, 7, 2);
-    return outline(c, C.ink);
-  });
   // a gull, facing the plane: wings up, wings down
   const gull = [
     fromRows(['gg.........gg', '.gww.....wwg.', '..wwww.wwww..', '...wwwwwww...', '.oowwwwwww...', '....wwwww....'], { g: C.grey, w: C.white, o: C.orange }),
@@ -975,7 +948,6 @@ export function mountHyperProp(root) {
       text(`STAGE ${s.stage}  ${S.STAGES[s.stage].name}`, W / 2, 67, C.white, { align: 'center' });
       if (many && s.stage > 1) text('▼', W / 2, 77, C.white, { align: 'center' });
       if (teach()) text('- TUTORIAL -', W / 2, 88, C.yellow, { align: 'center' });
-      if (touchMode) { const img = fingers[Math.floor(ui * 5) % 2]; ctx.drawImage(img, (W - img.width) >> 1, 99); }
       if (blink) text(touchMode ? 'PUSH PEDAL' : 'PRESS ENTER', W / 2, 150, C.yellow, { align: 'center' });
       const bt = rec.time[s.stage];
       text(bt ? `BEST TIME ${fmt(bt)}` : `BEST ${Math.round(rec.best[s.stage])}M`, W / 2, 172, C.greyL, { align: 'center' });
@@ -1066,7 +1038,8 @@ export function mountHyperProp(root) {
     const t = touchMode;
     const pedal = t ? 'PEDAL を叩いて' : '← → を押して';
     const [what, press] = {
-      ready: [t ? 'PEDAL か START でスタート' : 'Enter / Space でスタート',
+      // people reached for the pedals with a thumb: the title says which fingers
+      ready: [t ? '人差し指と中指で PEDAL を連打' : 'Enter / Space でスタート',
         opened() > 1 ? (t ? '▲ ▼ で面をえらぶ' : '↑ ↓ で面をえらぶ') : au.enabled ? '' : '音は本体の上の SOUND を ON に'],
       run: [pedal + '走る', t ? '赤い杭のあたりで ▲ で乗り込む' : '赤い杭のあたりで ↑ で乗り込む'],
       board: ['', ''],
