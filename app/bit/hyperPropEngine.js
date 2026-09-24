@@ -476,8 +476,11 @@ export function mountHyperProp(root) {
     if (tut.hint === HINTS.board && teach()) s.vx = Math.max(s.vx, 8);
     return tut.k;
   }
+  // After a clear the next stage starts straight away, like the next part of one
+  // cartridge; only the last stage goes back to the title.
   function retry() {
-    if (s.phase === 'clear') toTitle(Math.min(LAST, s.stage + 1));
+    if (s.phase === 'clear' && s.stage < LAST) { s.stage += 1; begin(); camX = s.x - CAM_LEAD; camY = 0; }
+    else if (s.phase === 'clear') toTitle(LAST);
     else begin();
   }
 
@@ -591,6 +594,7 @@ export function mountHyperProp(root) {
   function pressFoot(side) {
     if (paused) return;
     if (s.phase === 'ready') return begin();
+    if (s.phase === 'clear') { if (canGo()) retry(); return; }
     tut.lastFootT = ui;
     if (s.phase === 'roll' || s.phase === 'fly') { tut.seatedWait = false; crankTo += Math.PI; }
     S.foot(s);
@@ -1069,7 +1073,7 @@ export function mountHyperProp(root) {
       roll: [pedal + '漕ぐ', t ? '▲ で機首上げ' : '↑ で機首上げ'],
       fly: s.stall ? ['失速！', t ? '▼ で機首を下げて速度を戻す' : '↓ で機首を下げて速度を戻す'] : [pedal + '漕ぐ', t ? '▲ ▼ で機首' : '↑ ↓ で機首'],
       over: ['', t ? 'START でもう一度' : 'Enter / R でもう一度'],
-      clear: ['', !canGo() ? '' : s.stage < LAST ? (t ? 'START で次の面へ' : 'Enter で次の面へ / R でもう一度') : (t ? 'START でタイトルへ' : 'Enter でタイトルへ / R でもう一度')],
+      clear: ['', !canGo() ? '' : s.stage < LAST ? (t ? 'PEDAL か START で次の面へ' : 'Enter で次の面へ / R でもう一度') : (t ? 'START でタイトルへ' : 'Enter でタイトルへ / R でもう一度')],
     }[s.phase] || ['', ''];
     const lines = paused
       ? (countdown > 0 ? ['もうすぐ再開', t ? 'PEDAL に指を置いて' : '← → に指を置いて'] : ['一時停止中', t ? 'START で続ける' : 'Enter / Esc で続ける'])
