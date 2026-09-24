@@ -374,6 +374,140 @@ export function mountHyperProp(root) {
   ];
   const boat = fromRows(['...w...', '...ww..', '...www.', '...wwww', '...k...', 'rrrrrrr', '.rrrrr.'], { w: C.white, k: C.ink, r: C.red });
 
+  // ---------- Egypt (stages 4-6) ----------
+  // Same layers as the lake - sky, far, middle, near strip, water, the ground the run starts
+  // on - drawn for the Nile: pyramids and dunes in the haze, palms along the bank, and a
+  // stepped limestone pyramid to run along the top of.
+  const EG = {
+    sky: ['#2c5b9e', '#3a70b3', '#5289c4', '#78a6d2', '#a9c6d8', '#d9d6bf', '#f1e0b0'],
+    water: ['#e0f2e2', '#a9dccd', '#7cc3b4', '#56a49c', '#3f8289', '#2f6776', '#244f62'],
+    stone: ['#f1e0b4', '#e2c996', '#cbaa74', '#a8855a', '#7d5f3d'],
+    sand: ['#f3dca0', '#e6c683', '#d2ab68', '#b88d50'],
+    palm: ['#8fc15a', '#5f9a44', '#3f7334'], trunk: '#8a6038',
+  };
+  const skyEg = (() => {
+    const [c, g] = canvas(W, H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(g, ramp(EG.sky, (y - HUD_H + 6) / (HORIZON - HUD_H - 4), x, y), x, y);
+    // a pale sun low in the sky
+    for (let y = -7; y <= 7; y++) for (let x = -7; x <= 7; x++) { const d = x * x + y * y; if (d <= 49) px(g, d > 36 ? '#fbf0cc' : '#fff8e4', 196 + x, 44 + y); }
+    return c;
+  })();
+  const cloudsEg = [[40, 30, cloudSpr(40, 8, 7)], [260, 52, cloudSpr(28, 6, 8)]];
+  // far: the Giza group and a second group in the haze, over low dunes
+  const farEg = (() => {
+    const w = 512, h = 112, [c, g] = canvas(w, h);
+    for (let x = 0; x < w; x++) {
+      const dh = Math.round(10 + Math.sin(x * 0.021) * 5 + Math.sin(x * 0.057 + 1) * 3);
+      for (let y = h - dh; y < h; y++) px(g, y === h - dh ? '#efd9a8' : (x + y) % 7 === 0 ? '#d9bf8c' : '#e3cb98', x, y);
+    }
+    const pyr = (cx, ph) => {
+      for (let y = 0; y < ph; y++) {
+        const hw = Math.round(y * 1.05), yy = h - 8 - ph + y;
+        for (let x = -hw; x <= hw; x++) {
+          const lit = x < 0;
+          let col = lit ? '#ecd8aa' : '#c9ad7e';
+          if (lit && y % 4 === 3) col = '#dcc493';
+          if (!lit && y % 4 === 3) col = '#b99d70';
+          px(g, col, ((cx + x) % w + w) % w, yy);
+        }
+      }
+    };
+    pyr(96, 62); pyr(150, 50); pyr(188, 30); pyr(392, 44); pyr(430, 28);
+    return c;
+  })();
+  // middle: closer dunes, each with a lit side and a shaded side
+  const midEg = (() => {
+    const w = 512, h = 62, [c, g] = canvas(w, h);
+    const top = (x) => 30 + Math.sin(x * 0.03) * 10 + Math.sin(x * 0.011 + 2) * 8 + Math.sin(x * 0.07) * 3;
+    for (let x = 0; x < w; x++) {
+      const t0 = Math.round(top(x)), lit = top(x + 1) > top(x - 1);
+      for (let y = h - t0; y < h; y++) {
+        let col = lit ? EG.sand[1] : EG.sand[2];
+        if (y === h - t0) col = EG.sand[0];
+        if (y > h - 8 && dith(x, y, (y - (h - 8)) / 8)) col = EG.sand[2];
+        px(g, col, x, y);
+      }
+    }
+    return c;
+  })();
+  // near: date palms along the bank, and the green strip of the bank itself
+  const nearEg = (() => {
+    const [c, g] = canvas(512, 30); const r = rng(21);
+    px(g, EG.palm[2], 0, 25, 512, 5); px(g, EG.palm[1], 0, 24, 512, 1);
+    for (let x = 0; x < 512; x += 3) if (hash(x) < 0.5) px(g, EG.palm[1], x, 23, 2, 1);
+    for (let x = 6; x < 512; x += 14 + Math.floor(r() * 16)) {
+      const ht = 11 + Math.floor(r() * 9), lean = r() < 0.5 ? -1 : 1;
+      for (let i = 0; i < ht; i++) px(g, i % 3 ? EG.trunk : '#6d4a2a', ((x + Math.round(i * lean * 0.15)) % 512 + 512) % 512, 25 - i);
+      const tx = x + Math.round(ht * lean * 0.15), ty = 25 - ht;
+      for (const [dx, dy, len] of [[-1, 0, 5], [1, 0, 5], [-1, -1, 3], [1, -1, 3], [0, -1, 2]]) {
+        for (let k = 1; k <= len; k++) px(g, k < 3 ? EG.palm[1] : EG.palm[0], ((tx + dx * k) % 512 + 512) % 512, ty + dy * (k < 3 ? 1 : 0) + (k > 2 ? k - 2 : 0));
+      }
+    }
+    return c;
+  })();
+  const reflEg = (() => {
+    const [c, g] = canvas(512, 40);
+    const src = farEg.getContext('2d').getImageData(0, 0, 512, 112).data;
+    for (let y = 0; y < 40; y++) {
+      if (y % 2 === 1 && y > 10) continue;
+      const sy = 111 - Math.floor(y * 2.2); if (sy < 0) continue;
+      for (let x = 0; x < 512; x++) {
+        const i = (sy * 512 + x) * 4; if (!src[i + 3]) continue;
+        px(g, src[i] > 225 ? EG.water[0] : EG.water[1], x, y);
+      }
+    }
+    return c;
+  })();
+  // The pyramid the run is on, and the sand at its foot. Its top is the runway, from a
+  // little behind the start to the edge; the back face steps down gently, the front face
+  // steeply (so a plane dropping off it stays clear of the stones). Sand runs from under it
+  // out to sandTo, then the Nile.
+  const SAND_TO = CFG.edgeX + (S.STAGES.find((st) => st && st.sandTo)?.sandTo || 25) / CFG.pxToM;
+  const cliffEg = (() => {
+    const drop = -CFG.lakeY, w = SAND_TO - CLIFF_L + 2, h = CLIFF_TOP + CLIFF_H; const [c, g] = canvas(w, h);
+    const X = (wx) => wx - CLIFF_L;
+    const topL = 56;
+    // sand: from the pyramid's foot down to the bottom of the picture
+    for (let y = drop; y < CLIFF_H; y++) for (let x = 0; x < w; x++) {
+      let col = y === drop ? EG.sand[0] : y < drop + 3 ? EG.sand[1] : dith(x, y, Math.min(1, (y - drop) / 30)) ? EG.sand[3] : EG.sand[2];
+      if (x > w - 3) col = EG.sand[3];
+      px(g, col, x, y + CLIFF_TOP);
+    }
+    // the pyramid, course by course: 3px tall, the back face 4px a course, the front 2px
+    for (let y = 0; y < drop; y++) {
+      const course = Math.floor(y / 3);
+      const left = topL - (course + 1) * 4, right = CFG.edgeX + course * 2;
+      for (let wx = left; wx <= right; wx++) {
+        const x = X(wx);
+        if (x < 0 || x >= w) continue;
+        const face = wx > CFG.edgeX - 2 ? 3 : wx < topL ? 1 : 0;
+        let col = EG.stone[face === 3 ? 2 : face === 1 ? 1 : 0];
+        if (y % 3 === 2) col = EG.stone[face === 3 ? 3 : 2];
+        if ((wx + course * 5) % 9 === 0 && y % 3 !== 2) col = EG.stone[face === 3 ? 3 : 2];
+        if (wx === right || wx === left) col = EG.stone[4];
+        px(g, col, x, y + CLIFF_TOP);
+      }
+    }
+    // the worn top: a lighter edge where feet have run
+    for (let wx = topL; wx < CFG.edgeX; wx++) { px(g, '#fff0c8', X(wx), CLIFF_TOP); if (hash(wx) < 0.2) px(g, EG.stone[2], X(wx), CLIFF_TOP + 1); }
+    return c;
+  })();
+  // a falcon, wings up and down: brown, pale breast, yellow beak
+  const falcon = [
+    fromRows(['bb.........bb', '.bBb.....bBb.', '..bBBb.bBBb..', '...bbwwwbb...', '.yybbwwwbb...', '....bbbbb....'], { b: '#8a5a32', B: '#5a3a20', w: '#f0dcb0', y: C.yellow }),
+    fromRows(['...bbwwwbb...', '.yybbwwwbb...', '..bBBb.bBBb..', '.bBb.....bBb.', 'bb.........bb', '.............'], { b: '#8a5a32', B: '#5a3a20', w: '#f0dcb0', y: C.yellow }),
+  ];
+  // a felucca: a tall slanted sail on a brown hull
+  const felucca = fromRows(['....w..', '...ww..', '..www..', '.wwww..', 'wwwww..', '...k...', 'hhhhhhh', '.hhhhh.'], { w: '#fbf4e2', k: C.ink, h: '#7a4e2a' });
+  // a balloon, three colours round the ring
+  const balloonSpr = ['#e24a35', '#f4c430', '#3f7fe0', '#2bb3a3', '#f2a0c1'].map((col) => fromRows([
+    '.cccc.', 'cWcccc', 'cWcccc', 'cccccc', 'cccccd', '.cccd.', '..dd..', '...s..', '..s...', '...s..'], { c: col, W: '#ffffff', d: '#0003', s: '#6b6259' }));
+
+  const THEMES = {
+    alps: { sky, clouds, far: alps, mid: range2, near: forest, refl, cliff, water: C.water, props: true, bird: gull, boat, goal: [C.rock[2], C.rock[1], C.grass[1], C.grass[0]] },
+    egypt: { sky: skyEg, clouds: cloudsEg, far: farEg, mid: midEg, near: nearEg, refl: reflEg, cliff: cliffEg, water: EG.water, props: false, bird: falcon, boat: felucca, goal: [EG.stone[2], EG.stone[1], EG.sand[1], EG.sand[0]] },
+  };
+
   // ---------- state ----------
   // Records are kept per stage; stage 1 keeps the keys it had before there were others.
   // A stage opens once the one before it has been cleared, and the title starts on the
@@ -532,6 +666,12 @@ export function mountHyperProp(root) {
         tut.seatedWait = true;
       }
       if (e === 'climb') { show('TAKE OFF!', '', 1.6, '離陸！'); au.play('takeoff'); au.layer(2); }
+      if (e === 'balloon') {
+        const b = s.balloons.find((q) => q.popT === s.t) || s.balloons.filter((q) => q.popT >= 0).at(-1);
+        au.play('pop'); if (b) burst(b.x, b.y, 12, ['#ffffff', '#e24a35', '#f4c430', '#3f7fe0'], 50, 1);
+        const need = S.STAGES[s.stage].need;
+        jpMsg = s.got >= need ? `風船 ${s.got}個！ あとはゴールへ` : `風船 ${s.got}個 あと${need - s.got}個`; jpT = 1.2;
+      }
       if (e === 'bird') {
         au.play('bird'); jpMsg = '鳥とぶつかった！ プロペラが止まる'; jpT = 1.2;
         burst(s.x + 8, s.y + 14, 14, [C.white, C.greyL, C.white], 40, 1);
@@ -554,14 +694,23 @@ export function mountHyperProp(root) {
   function onFail() {
     const r = s.result; setBest(r.dist);
     const d = Math.round(r.dist);
-    const [big, jp] = { edge: ['FELL OFF!', '乗り込む前に崖の外へ…'], miss: ['MISSED!', '乗り込みが間に合わなかった'], stop: ['STOPPED', '止まってしまった'], splash: ['SPLASH!', `湖に着水… ${d}m`] }[r.reason];
-    show(big, r.reason === 'splash' ? `${d}M` : '', 1e9, jp);
+    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? 'ナイルに着水' : '湖に着水';
+    const [big, jp] = {
+      edge: ['FELL OFF!', '乗り込む前に崖の外へ…'], miss: ['MISSED!', '乗り込みが間に合わなかった'], stop: ['STOPPED', '止まってしまった'],
+      splash: ['SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', '砂の上に不時着…'], obelisk: ['CRASH!', `オベリスクにぶつかった… ${d}m`],
+      short: ['NOT ENOUGH!', `風船が足りない… ${s.got}/${st.need}`],
+    }[r.reason];
+    show(big, r.reason === 'splash' || r.reason === 'obelisk' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
     au.music(null);
     if (r.reason === 'splash') { au.play('splash'); au.play('fail'); }
-    else if (r.reason === 'stop') au.play('fail');
+    else if (r.reason === 'stop' || r.reason === 'short') au.play('fail');
     else au.play('fall');
     if (r.reason === 'edge' || r.reason === 'miss') wreck = { x: s.x, y: s.boardT > 0 ? 6 : 12, vx: s.vx * 0.8, vy: 4, rot: 0, vr: 2.5, splashed: false };
-    else if (r.reason === 'splash') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0 }; burst(s.x + 8, CFG.lakeY, 30, [C.white, C.water[0], C.water[1]], 60, 1.4); }
+    else if (r.reason === 'splash') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true }; burst(s.x + 8, CFG.lakeY, 30, [C.white, theme().water[0], theme().water[1]], 60, 1.4); }
+    else if (r.reason === 'sand') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, EG.sand, 40, 0.8); }
+    // hitting an obelisk throws the plane back off it; running out at the goal lets it glide down
+    else if (r.reason === 'obelisk') { wreck = { x: s.x, y: s.y, vx: -12, vy: 6, rot: s.theta, vr: -1.5, splashed: false, whole: true }; burst(s.x + 16, s.y + 10, 16, EG.stone, 40, 1); }
+    else if (r.reason === 'short') wreck = { x: s.x, y: s.y, vx: s.vx * 0.7, vy: 0, rot: s.theta, vr: -0.6, splashed: false, whole: true };
   }
 
   // ---------- input ----------
@@ -725,6 +874,8 @@ export function mountHyperProp(root) {
     if (s.phase === 'fly' || s.phase === 'roll') {
       if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = '鳥だ！ 上か下をすり抜けろ'; jpT = 2.2; }
       if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = '下降気流！ 手前で高度を稼げ'; jpT = 2.2; }
+      if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = `プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`; jpT = 2.4; }
+      if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = 'オベリスク！ 上を越えろ'; jpT = 2.2; }
     }
     if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
     const mark = Math.floor(Math.max(0, s.x - CFG.edgeX) / 200);
@@ -735,7 +886,7 @@ export function mountHyperProp(root) {
       if (!wreck.splashed) {
         wreck.vy -= CFG.g * dt; wreck.x += wreck.vx * dt; wreck.y += wreck.vy * dt; wreck.rot += wreck.vr * dt;
         if (wreck.y <= CFG.lakeY) { au.play('splash'); au.play('fail'); wreck.splashed = true; wreck.y = CFG.lakeY; wreck.sink = 0; burst(wreck.x, CFG.lakeY, 30, [C.white, C.water[0], C.water[1]], 60, 1.4); }
-      } else wreck.sink = Math.min(10, wreck.sink + dt * 2.5);
+      } else if (!wreck.sand) wreck.sink = Math.min(10, wreck.sink + dt * 2.5);
     }
     if (s.phase === 'fly' && s.x > CFG.edgeX && s.y - CFG.lakeY < 8 && Math.random() < 0.5) burst(s.x - 6, CFG.lakeY, 1, [C.white, C.water[0]], 8, 0.8);
     if (s.phase === 'fly' && s.omega > 0.3 && Math.random() < 0.25) parts.push({ x: s.x - 42, y: s.y + 6 + Math.random() * 8, vx: -24, vy: 0, life: 0.2, col: C.white, noGrav: true });
@@ -761,10 +912,12 @@ export function mountHyperProp(root) {
     for (let x = off - img.width; x < W; x += img.width) ctx.drawImage(img, Math.round(x), Math.round(y));
   }
 
+  const theme = () => THEMES[S.STAGES[s.stage].theme || 'alps'];
   function draw() {
-    ctx.drawImage(sky, 0, 0);
+    const T = theme();
+    ctx.drawImage(T.sky, 0, 0);
     const hz = HORIZON + Math.round(camY * 0.25);
-    for (const [cx, cy, img] of clouds) {
+    for (const [cx, cy, img] of T.clouds) {
       const x = (((cx - camX * 0.04 - time * 1.5) % 420) + 420) % 420 - 70;
       ctx.drawImage(img, Math.round(x), Math.round(cy + camY * 0.08));
     }
@@ -774,17 +927,20 @@ export function mountHyperProp(root) {
       px(ctx, C.night, Math.round(bx), Math.round(by) + up, 1, 1); px(ctx, C.night, Math.round(bx) + 1, Math.round(by) + 1, 1, 1);
       px(ctx, C.night, Math.round(bx) + 2, Math.round(by), 1, 1); px(ctx, C.night, Math.round(bx) + 3, Math.round(by) + up, 1, 1);
     }
-    tile(alps, 0.05, hz - 112 + 2);
-    tile(range2, 0.1, hz - 62 + 2);
-    tile(forest, 0.22, hz - 30 + 1);
-    drawLake(hz);
-    drawMarkers();
+    tile(T.far, 0.05, hz - T.far.height + 2);
+    tile(T.mid, 0.1, hz - T.mid.height + 2);
+    tile(T.near, 0.22, hz - 30 + 1);
+    drawLake(hz, T);
+    drawMarkers(T);
+    drawObelisks();
     drawAir();
 
-    // cliff and what stands on it
-    ctx.drawImage(cliff, sx(CLIFF_L), sy(0) - CLIFF_TOP);
-    for (const [x, img] of pines) ctx.drawImage(img, sx(x) - (img.width >> 1), sy(0) - img.height + 2);
-    for (let x = -190; x < CFG.edgeX - 30; x += 37) ctx.drawImage(bush, sx(x + (hash(x) * 10 | 0)), sy(0) - 5);
+    // the ground the run starts on (the cliff, or the pyramid) and what stands on it
+    ctx.drawImage(T.cliff, sx(CLIFF_L), sy(0) - CLIFF_TOP);
+    if (T.props) {
+      for (const [x, img] of pines) ctx.drawImage(img, sx(x) - (img.width >> 1), sy(0) - img.height + 2);
+      for (let x = -190; x < CFG.edgeX - 30; x += 37) ctx.drawImage(bush, sx(x + (hash(x) * 10 | 0)), sy(0) - 5);
+    }
     const st = sx(CFG.edgeX - 28), g0 = sy(0);
     px(ctx, C.ink, st - 1, g0 - 11, 3, 11); px(ctx, C.dirt[0], st, g0 - 10, 1, 10);
     px(ctx, C.red, st + 1, g0 - 10 + Math.round(Math.sin(time * 6)), 3, 2);
@@ -793,65 +949,67 @@ export function mountHyperProp(root) {
     for (let i = 0; i < 4; i++) px(ctx, i % 2 ? C.white : C.red, ws + 1 + i * 3, g0 - 23 + Math.round(Math.sin(time * 5 + i) * i * 0.4) + (i >> 1), 3, 3 - (i >> 1));
     // water laps over the cliff foot
     const surf = sy(CFG.lakeY), ex = Math.max(0, sx(CFG.edgeX) + 1);
-    if (ex > 0) {
+    if (ex > 0 && T.props) {
       ctx.globalAlpha = 0.85; px(ctx, C.water[5], 0, surf + 1, ex, H - surf); ctx.globalAlpha = 1;
       crest(surf, 0, ex);
     }
 
-    drawBirds();
+    drawBirds(T);
+    drawBalloons();
     drawPlayer();
     for (const p of parts) px(ctx, p.col, sx(p.x), sy(p.y));
     drawHud();
   }
 
-  function crest(y, x0, x1) {
+  function crest(y, x0, x1, wp = theme().water) {
     const t = Math.floor(time * 8);
     for (let x = x0; x < x1; x++) {
       const k = (x + t + Math.floor(camX)) & 15;
-      px(ctx, k < 3 ? C.white : k < 7 ? C.water[1] : C.water[3], x, y);
+      px(ctx, k < 3 ? C.white : k < 7 ? wp[1] : wp[3], x, y);
     }
   }
 
   // the dithered water body only changes when the camera moves vertically, so keep it cached
   const [lakeC, lakeG] = canvas(W, H); let lakeKey = '';
-  function drawLake(hz) {
-    const surf = sy(CFG.lakeY);
-    if (lakeKey !== hz + ',' + surf) {
-      lakeKey = hz + ',' + surf; lakeG.clearRect(0, 0, W, H);
+  function drawLake(hz, T) {
+    const surf = sy(CFG.lakeY), wp = T.water;
+    if (lakeKey !== hz + ',' + surf + ',' + s.stage) {
+      lakeKey = hz + ',' + surf + ',' + s.stage; lakeG.clearRect(0, 0, W, H);
       for (let y = hz; y < H; y++) for (let x = 0; x < W; x++)
-        px(lakeG, y < surf ? ramp([C.water[1], C.water[2], C.water[3]], (y - hz) / Math.max(1, surf - hz), x, y) : ramp([C.water[4], C.water[5], C.water[6]], (y - surf) / 26, x, y), x, y);
+        px(lakeG, y < surf ? ramp([wp[1], wp[2], wp[3]], (y - hz) / Math.max(1, surf - hz), x, y) : ramp([wp[4], wp[5], wp[6]], (y - surf) / 26, x, y), x, y);
     }
     ctx.drawImage(lakeC, 0, 0);
-    px(ctx, C.water[0], 0, hz, W, 1);
+    px(ctx, wp[0], 0, hz, W, 1);
     // reflection, each row nudged by the ripple
     const off = ((-camX * 0.05) % 512 + 512) % 512;
     for (let r = 0; r < 40 && hz + 1 + r < surf; r++) {
       const wob = Math.round(Math.sin(time * 2 + r * 0.9) * (r > 4 ? 1 : 0));
-      for (let x = off - 512; x < W; x += 512) ctx.drawImage(refl, 0, r, 512, 1, Math.round(x) + wob, hz + 1 + r, 512, 1);
+      for (let x = off - 512; x < W; x += 512) ctx.drawImage(T.refl, 0, r, 512, 1, Math.round(x) + wob, hz + 1 + r, 512, 1);
     }
     for (let i = 0; i < 22; i++) {
       const y = hz + 3 + ((i * 37) % Math.max(4, surf - hz - 4));
       if (Math.floor(time * 2 + i * 0.7) % 3 === 0) continue;
       const x = ((i * 97 - camX * (0.2 + (y - hz) / 60)) % W + W) % W;
-      px(ctx, i % 3 ? C.water[0] : C.white, Math.round(x), y, 2 + (i % 3), 1);
+      px(ctx, i % 3 ? wp[0] : C.white, Math.round(x), y, 2 + (i % 3), 1);
     }
     const bx = ((300 - camX * 0.15 + time * 3) % 520 + 520) % 520 - 60;
-    ctx.drawImage(boat, Math.round(bx), hz + 1);
+    ctx.drawImage(T.boat, Math.round(bx), hz + 1);
     crest(surf, 0, W);
     for (let i = 0; i < 10; i++) {
       const y = surf + 4 + ((i * 7) % Math.max(1, H - surf - 5));
       const x = ((i * 53 - camX - time * 6) % (W + 20) + W + 20) % (W + 20) - 10;
-      px(ctx, C.water[3], Math.round(x), y, 4 + (i % 4), 1);
+      px(ctx, wp[3], Math.round(x), y, 4 + (i % 4), 1);
     }
   }
 
-  function drawMarkers() {
+  function drawMarkers(T) {
+    const [g2, g1, t1, t0] = T.goal;
     const surf = sy(CFG.lakeY);
     for (let d = 200; d <= CFG.successDist; d += 200) {
       const x = sx(CFG.edgeX + d); if (x < -40 || x > W + 40) continue;
       if (d === CFG.successDist) {
-        px(ctx, C.ink, x - 17, surf - 5, 34, 6); px(ctx, C.rock[2], x - 16, surf - 4, 32, 5); px(ctx, C.rock[1], x - 14, surf - 6, 26, 2);
-        px(ctx, C.ink, x - 12, surf - 8, 22, 2); px(ctx, C.grass[1], x - 11, surf - 8, 20, 2); px(ctx, C.grass[0], x - 9, surf - 8, 12, 1);
+        px(ctx, C.ink, x - 17, surf - 5, 34, 6); px(ctx, g2, x - 16, surf - 4, 32, 5); px(ctx, g1, x - 14, surf - 6, 26, 2);
+        px(ctx, C.ink, x - 12, surf - 8, 22, 2); px(ctx, t1, x - 11, surf - 8, 20, 2); px(ctx, t0, x - 9, surf - 8, 12, 1);
         px(ctx, C.ink, x - 1, surf - 36, 3, 28); px(ctx, C.greyL, x, surf - 35, 1, 27);
         for (let yy = 0; yy < 10; yy++) for (let xx = 0; xx < 14; xx++) px(ctx, ((xx >> 1) + (yy >> 1)) % 2 ? C.ink : C.white, x + 2 + xx, surf - 35 + yy + Math.round(Math.sin(time * 4 + xx * 0.5)));
         text('GOAL', x - 26, surf - 34, C.yellow);
@@ -886,7 +1044,7 @@ export function mountHyperProp(root) {
     }
     ctx.globalAlpha = 1;
   }
-  function drawBirds() {
+  function drawBirds(T) {
     for (const b of s.birds) {
       let x = b.x, y = b.y, f = Math.floor(time * 5 + b.p) % 2;
       if (b.hitT >= 0) {
@@ -894,8 +1052,32 @@ export function mountHyperProp(root) {
         if (t > 2) continue;
         x = b.hx + t * 30; y = b.hy + t * 28; f = Math.floor(t * 14) % 2;
       }
-      const img = gull[f];
+      const img = T.bird[f];
       ctx.drawImage(img, sx(x) - (img.width >> 1), sy(y) - (img.height >> 1));
+    }
+  }
+  // balloons hang by their strings; the sprite's middle is the balloon's middle
+  function drawBalloons() {
+    s.balloons.forEach((b, i) => {
+      if (b.popT >= 0) return;
+      const img = balloonSpr[i % balloonSpr.length];
+      ctx.drawImage(img, sx(b.x) - (img.width >> 1), sy(b.y) - 4);
+    });
+  }
+  // an obelisk on its islet: a tapering shaft, lit on the left, a gilt tip, marks carved down it
+  function drawObelisks() {
+    const surf = sy(CFG.lakeY);
+    for (const o of s.obelisks) {
+      const x = sx(o.x), top = sy(o.top);
+      if (x < -20 || x > W + 20) continue;
+      px(ctx, C.ink, x - 9, surf - 3, 19, 4); px(ctx, EG.sand[1], x - 8, surf - 2, 17, 2); px(ctx, EG.sand[0], x - 6, surf - 3, 13, 1);
+      const hgt = surf - 3 - top;
+      for (let i = 0; i < hgt; i++) {
+        const y = top + i, hw = i < 3 ? i : 2 + (i > hgt * 0.5 ? 1 : 0);
+        px(ctx, C.ink, x - hw - 1, y, hw * 2 + 3, 1);
+        if (i < 3) px(ctx, i === 0 ? C.yellowL : C.yellow, x - hw, y, hw * 2 + 1, 1);
+        else { px(ctx, EG.stone[0], x - hw, y, hw, 1); px(ctx, EG.stone[2], x, y, hw + 1, 1); if (i % 4 === 1) px(ctx, EG.stone[3], x - 1, y, 1, 1); }
+      }
     }
   }
 
@@ -915,7 +1097,7 @@ export function mountHyperProp(root) {
     if (wreck) {
       const sink = wreck.splashed ? wreck.sink : 0;
       ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, sy(CFG.lakeY) + 2); ctx.clip();
-      if (s.result.reason === 'splash') drawPlane(wreck.x, wreck.y - sink, wreck.rot * 0.5 + 0.15, planeSpr['110']);
+      if (wreck.whole) drawPlane(wreck.x, wreck.y - sink, wreck.rot * 0.5 + 0.15, planeSpr['110']);
       else { drawPlane(wreck.x + 6, wreck.y - sink, wreck.rot, planeSpr['000']); drawSpr(tuckR[Math.floor(wreck.rot * 2) & 3], wreck.x - 4, wreck.y - sink + 6); }
       ctx.restore();
       return;
@@ -962,6 +1144,12 @@ export function mountHyperProp(root) {
     const V = s.phase === 'over' ? 0 : Math.hypot(s.vx, s.vy), air = s.phase === 'roll' || s.phase === 'fly' || s.phase === 'clear';
     text('SPEED', 4, 2, C.white, { outline: false }); bar(36, 2, V / 34, C.yellow);
     text('PEDAL', 4, 10, C.white, { outline: false }); bar(36, 10, air ? s.omega : 0, C.green);
+    const need = S.STAGES[s.stage].need;
+    if (need) {
+      const ok = s.got >= need;
+      px(ctx, C.red, 96, 10, 5, 5); px(ctx, C.white, 97, 11, 1, 1); px(ctx, C.greyL, 98, 15, 1, 2);
+      text(`${s.got}/${need}`, 104, 10, ok ? C.yellow : C.white, { outline: false });
+    }
     const dist = Math.round(Math.min(CFG.successDist, Math.max(0, s.x - CFG.edgeX)) * CFG.pxToM);
     const goalTxt = `/${CFG.successDist * CFG.pxToM}M`;
     text(goalTxt, 252, 2, C.greyL, { outline: false, align: 'right' }); text(`${dist}M`, 252 - textW(goalTxt) - 1, 2, C.yellow, { outline: false, align: 'right' });

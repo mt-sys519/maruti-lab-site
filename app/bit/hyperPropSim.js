@@ -33,15 +33,32 @@ export const CFG = {
 // negative.
 // Tuned with bots (careful pilot dodging, sloppy one pulling up only when low):
 // stage 1 clears from 6 presses a second, stage 2 from 8 when dodging (one strike can
-// be survived, and a strike leaves the stick dead for 0.3s), stage 3 from 7.5 for both.
+// be survived, and a strike leaves the stick dead for 0.3s). The air zones are not used
+// by any stage at present (the downdraft stage was replaced by the balloons).
+// Stage 3: a careful pilot aiming the hub at each balloon pops exactly 7 at 7-8 presses
+// a second; flying straight pops 3-4. Stage 4 (short run on the pyramid, four obelisks
+// standing 26-28 tall, so the plane has to be kept high): 7.5 careful, 9 flying straight.
+// Its falcons fly low, like the obelisks asking for height - a high one right after an
+// obelisk could not be dived under in time.
 export const STAGES = [
   null,
   { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
   { name: 'BIRD CROSSING', startX: 50, air: [],
     birds: [[60, 5], [130, 42], [200, 15], [270, 42], [335, 15], [380, 5]] },
-  { name: 'DOWNDRAFT LAKE', startX: 0,
-    air: [[80, 115, -3.5], [115, 140, 4], [200, 240, -3.5], [240, 262, 4], [320, 360, -3.5]],
-    birds: [[100, 6], [225, 6], [345, 6]] },
+  // Stage 3: ten balloons over the lake, popped with the propeller. A balloon is [metres,
+  // height of its middle above the lake]; the hub is 13px above the wheel, so a balloon
+  // at 16 wants the wheel skimming the water and one at 40 wants the plane up high.
+  // Seven have to be popped by the goal or the flight does not count.
+  { name: 'BALLOON LAKE', startX: 0, air: [], birds: [], need: 7,
+    balloons: [[40, 30], [80, 17], [115, 38], [150, 20], [185, 40], [220, 16], [255, 36], [290, 19], [330, 40], [370, 24]] },
+  // Stages 4-6 are Egypt: the run is along the top of a pyramid, the plane drops off its
+  // steep face over a strip of sand (sandTo metres past the edge: coming down on it is a
+  // crash, not a splash) and then crosses the Nile. Obelisks stand on islets, [metres,
+  // height above the water], clear of the distance markers; hitting one is a crash. The
+  // birds are falcons.
+  { name: 'NILE CROSSING', theme: 'egypt', startX: 80, air: [], sandTo: 25,
+    birds: [[165, 16], [320, 15]],
+    obelisks: [[118, 26], [218, 27], [285, 28], [355, 26]] },
 ];
 
 export function create(stage = 1) {
@@ -50,6 +67,9 @@ export function create(stage = 1) {
     leg: 0, boardT: 0, stopT: 0, alpha: 0, stall: false, lift: 0, bonk: 0,
     onGround: true, climbed: false, success: false, result: null, events: [],
     birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1 }; }),
+    balloons: (STAGES[stage].balloons || []).map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 2.3, x, y, popT: -1 }; }),
+    got: 0,
+    obelisks: (STAGES[stage].obelisks || []).map(([m, h]) => ({ x: CFG.edgeX + m / CFG.pxToM, top: CFG.lakeY + h })),
   };
 }
 
@@ -65,6 +85,8 @@ function moveBirds(s) {
     b.x = b.x0 + Math.sin(s.t * 0.7 + b.p) * 6;
     b.y = b.y0 + Math.sin(s.t * 2.2 + b.p) * 2;
   }
+  // balloons only bob on their strings
+  for (const b of s.balloons) b.y = b.y0 + Math.sin(s.t * 1.6 + b.p) * 1.5;
 }
 // the gondola and the wing, in world pixels from the wheel, level flight
 function hitsPlane(s, b) {
@@ -208,12 +230,28 @@ export function step(s, dt, inp) {
     if (s.stopT > 1) return fail(s, 'stop');
   } else s.stopT = 0;
 
+  // the propeller pops a balloon it meets: the hub, 17px ahead of the wheel and 13 up
+  for (const b of s.balloons) {
+    if (b.popT >= 0 || Math.abs(b.x - (s.x + 17)) > 6 || Math.abs(b.y - (s.y + 13)) > 5) continue;
+    b.popT = s.t; s.got += 1; s.events.push('balloon');
+  }
+  // an obelisk is solid from the water to its tip
+  for (const o of s.obelisks) {
+    if (o.x > s.x - 12 && o.x < s.x + 16 && s.y + 2 < o.top) return fail(s, 'obelisk');
+  }
+
   if (!s.climbed && s.x > CFG.edgeX + 10 && s.vy > 0) { s.climbed = true; s.events.push('climb'); }
+  const need = STAGES[s.stage].need || 0;
+  if (!s.success && need && s.got < need && s.x - CFG.edgeX >= CFG.successDist) return fail(s, 'short');
   if (!s.success && s.x - CFG.edgeX >= CFG.successDist && s.y > CFG.lakeY + 2) {
     s.success = true; s.phase = 'clear';
     s.result = { ok: true, reason: 'goal', dist: CFG.successDist * CFG.pxToM };
     s.events.push('goal');
     return;
   }
-  if (!overGround && s.y <= CFG.lakeY) { s.y = CFG.lakeY; fail(s, 'splash'); }
+  if (!overGround && s.y <= CFG.lakeY) {
+    s.y = CFG.lakeY;
+    const sand = (STAGES[s.stage].sandTo || 0) / CFG.pxToM;
+    fail(s, s.x - CFG.edgeX < sand ? 'sand' : 'splash');
+  }
 }
