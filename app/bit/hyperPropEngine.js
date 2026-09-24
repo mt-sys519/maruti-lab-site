@@ -75,7 +75,7 @@ export function mountHyperProp(root) {
     Q: 'ehhhlid', R: 'uhhukih', S: 'fgge11u', T: 'v444444', U: 'hhhhhhe', V: 'hhhhha4', W: 'hhhllla', X: 'hha4ahh',
     Y: 'hha4444', Z: 'v1248gv', 0: 'ehjlphe', 1: '4c4444e', 2: 'eh1248v', 3: 'v2421he', 4: '26aiv22', 5: 'vgu11he',
     6: '68guhhe', 7: 'v124888', 8: 'ehhehhe', 9: 'ehhf12c', '!': '4444404', '/': '122488g', '.': '00000cc',
-    ':': '0cc0cc0', '-': '000v000', "'": '4480000', ' ': '0000000',
+    ':': '0cc0cc0', '-': '000v000', "'": '4480000', ' ': '0000000', '▲': '004ev00', '▼': '00ve400',
   };
   function glyphs(g, str, x, y, s, col) {
     [...str].forEach((ch, i) => {
@@ -350,6 +350,65 @@ export function mountHyperProp(root) {
   let paused = false, countdown = 0;
   const COUNT_STEP = 0.5;
 
+  // ---------- tutorial ----------
+  // Stage 1 is the tutorial. Nothing is explained up front: the game watches, and the
+  // moment the player hesitates at a step it stops (or slows) the world, lights the
+  // button to press and says what to do, on the monitor and on the sub display. Someone
+  // who already knows never sees it happen. Until stage 1 has been cleared once the
+  // world waits for them, and a miss after boarding restarts at the red stake instead
+  // of the top of the hill; after that the hints only light the button, and the stage
+  // plays as a time attack.
+  const TUTORIAL = true;
+  const teach = () => TUTORIAL && !bestTime;
+  const STAKE = CFG.edgeX - 28;
+  // k is how fast the world runs while the hint is up: 0 waits for the press
+  const HINTS = {
+    run: { keys: 'LR', k: 1, jp: (t) => ['助走をつけて走る', t ? 'PEDAL を連打' : '← → を連打'] },
+    soon: { keys: 'up', k: 1, jp: (t) => ['赤い杭のところで乗り込む', t ? '杭の手前で ▲' : '杭の手前で ↑'] },
+    board: { keys: 'up', k: 0, big: 'PUSH ▲', jp: (t) => ['赤い杭！ ここで乗り込む', t ? '▲ を押して飛び乗る' : '↑ を押して飛び乗る'] },
+    seated: { keys: 'LR', k: 0, big: 'PEDAL!', jp: (t) => ['乗り込んだ！ 漕いで加速', t ? 'PEDAL を連打して漕ぐ' : '← → を連打して漕ぐ'] },
+    edge: { keys: 'up', k: 1, jp: (t) => ['もうすぐ崖の先', t ? '▲ で機首を上げて飛ぶ' : '↑ で機首を上げて飛ぶ'] },
+    low: { keys: 'up', k: 0.35, big: 'NOSE UP ▲', jp: (t) => ['湖に近づいている', t ? '▲ で機首を上げる' : '↑ で機首を上げる'] },
+    stall: { keys: 'down', k: 0.35, big: 'NOSE DOWN ▼', jp: (t) => ['失速！ 機首の上げすぎ', t ? '▼ で機首を下げて速度を戻す' : '↓ で機首を下げて速度を戻す'] },
+    pedal: { keys: 'LR', k: 1, big: 'PEDAL!', jp: (t) => ['プロペラが止まりそう', t ? 'PEDAL を連打し続ける' : '← → を連打し続ける'] },
+  };
+  const tut = { hint: null, k: 1, seatedWait: false, lastFootT: -1e9, stallT: 0, cp: null, glow: '' };
+  function pickHint(dt) {
+    const idle = ui - tut.lastFootT;
+    tut.stallT = s.phase === 'fly' && s.stall ? tut.stallT + dt : 0;
+    if (s.phase === 'run') {
+      if (s.x >= STAKE - 2) return HINTS.board;
+      if (s.x >= STAKE - 44) return HINTS.soon;
+      return idle > 0.8 ? HINTS.run : null;
+    }
+    if (s.phase !== 'roll' && s.phase !== 'fly') return null;
+    if (tut.seatedWait && idle > 0.3) return HINTS.seated;
+    // the waits below let go as soon as the right button is down
+    if (tut.stallT > 0.25) return inp.down ? { ...HINTS.stall, k: 1 } : HINTS.stall;
+    if (s.phase === 'fly' && s.x > CFG.edgeX && s.y - CFG.lakeY < 10 && s.vy < 0 && !s.stall) return inp.up ? { ...HINTS.low, k: 1 } : HINTS.low;
+    if (s.phase === 'roll' && s.x > CFG.edgeX - 16 && !inp.up) return HINTS.edge;
+    return idle > 0.7 ? HINTS.pedal : null;
+  }
+  // returns how fast the world runs this tick
+  function tutor(dt) {
+    tut.hint = TUTORIAL && playing() ? pickHint(dt) : null;
+    const want = teach() && tut.hint ? tut.hint.k : 1;
+    tut.k = want < tut.k ? Math.max(want, tut.k - dt * 6) : Math.min(want, tut.k + dt * 4);
+    // a slow walker still has to be able to jump on
+    if (tut.hint === HINTS.board && teach()) s.vx = Math.max(s.vx, 8);
+    return tut.k;
+  }
+  const canResumeAtStake = () => teach() && tut.cp && s.phase === 'over' && (s.result.reason === 'splash' || s.result.reason === 'stop');
+  function retry() { if (canResumeAtStake()) resumeAtStake(); else begin(); }
+  function resumeAtStake() {
+    const cp = tut.cp;
+    Object.assign(s, cp.s, { events: [] });
+    runTime = cp.runTime; camX = cp.camX; camY = cp.camY; lastMark = cp.lastMark;
+    parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; stallBeep = 0; newRecord = false;
+    paused = false; countdown = 0; tut.seatedWait = true; tut.lastFootT = -1e9; tut.k = 0;
+    au.music('stage', 0); au.layer(1); au.play('start');
+  }
+
   // ---------- sound ----------
   const SOUND_KEY = 'marutibit:sound-enabled';
   const au = createHyperPropAudio();
@@ -382,6 +441,7 @@ export function mountHyperProp(root) {
   function begin() {
     S.start(s); parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
     runTime = 0; newRecord = false; paused = false; countdown = 0;
+    tut.cp = null; tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
     au.music('stage', 0); au.play('start');
   }
 
@@ -404,7 +464,11 @@ export function mountHyperProp(root) {
       if (e === 'pedal') au.play('pedal', s.omega);
       if (e === 'board') au.play('board');
       if (e === 'liftoff') au.play('liftoff');
-      if (e === 'seated') { show('GO!', '', 0.8, '乗り込んだ！ 漕げ！'); au.play('seated'); au.layer(1); }
+      if (e === 'seated') {
+        show('GO!', '', 0.8, '乗り込んだ！ 漕げ！'); au.play('seated'); au.layer(1);
+        tut.seatedWait = true;
+        tut.cp = { s: { ...s, events: [] }, runTime, camX, camY, lastMark };
+      }
       if (e === 'climb') { show('TAKE OFF!', '', 1.6, '離陸！'); au.play('takeoff'); au.layer(2); }
       if (e === 'goal') {
         au.music(null); au.play('goal'); setBest(CFG.successDist * CFG.pxToM);
@@ -432,11 +496,17 @@ export function mountHyperProp(root) {
 
   // ---------- input ----------
   const over = () => s.phase === 'over' || s.phase === 'clear';
-  function pressFoot(side) { if (paused) return; if (s.phase === 'ready') return begin(); S.foot(s); }
+  function pressFoot(side) {
+    if (paused) return;
+    if (s.phase === 'ready') return begin();
+    tut.lastFootT = ui;
+    if (s.phase === 'roll' || s.phase === 'fly') tut.seatedWait = false;
+    S.foot(s);
+  }
   function pressUp() {
     if (paused) return;
     if (s.phase === 'ready') return begin();
-    if (over()) { if (overT > 0.6) begin(); return; }
+    if (over()) { if (overT > 0.6) retry(); return; }
     S.board(s);
   }
   const KEYS = { ArrowLeft: 'L', KeyA: 'L', ArrowRight: 'R', KeyD: 'R', ArrowUp: 'up', KeyW: 'up', Space: 'up', ArrowDown: 'down', KeyS: 'down' };
@@ -446,7 +516,8 @@ export function mountHyperProp(root) {
     touchMode = false;
     if (e.code === 'Escape' || e.code === 'KeyP') { if (paused) resumeGame(); else pauseGame(); return; }
     if (paused) { if (e.code === 'Enter') resumeGame(); return; }
-    if (e.code === 'Enter' || e.code === 'KeyR') { if (s.phase === 'ready' || (over() && overT > 0.6) || e.code === 'KeyR') begin(); return; }
+    if (e.code === 'KeyR') { begin(); return; }
+    if (e.code === 'Enter') { if (s.phase === 'ready') begin(); else if (over() && overT > 0.6) retry(); return; }
     if (e.repeat) { if (k === 'up') inp.up = true; if (k === 'down') inp.down = true; return; }
     if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
     if (k === 'up') { inp.up = true; pressUp(); }
@@ -462,7 +533,8 @@ export function mountHyperProp(root) {
     if (k === 'start') {
       if (paused) resumeGame();
       else if (playing()) pauseGame();
-      else if (s.phase === 'ready' || (over() && overT > 0.6)) begin();
+      else if (s.phase === 'ready') begin();
+      else if (over() && overT > 0.6) retry();
     }
   }
   function release(b) { const k = b.dataset.k; b.classList.remove('on'); if (k === 'up') inp.up = false; if (k === 'down') inp.down = false; }
@@ -522,7 +594,8 @@ export function mountHyperProp(root) {
   });
   on($('wrap'), 'pointerdown', () => {
     if (paused) resumeGame();
-    else if (s.phase === 'ready' || (over() && overT > 0.6)) begin();
+    else if (s.phase === 'ready') begin();
+    else if (over() && overT > 0.6) retry();
   });
 
   // the monitor fills the top half; snap to whole device pixels when that costs little
@@ -552,16 +625,19 @@ export function mountHyperProp(root) {
       au.engine({ phase: 'over', omega: 0, V: 0 });
       return;
     }
+    // the tutorial may slow or stop the world; banners, the stall beep and the camera keep real time
+    const real = dt;
+    dt *= tutor(dt);
     time += dt;
     if (playing()) runTime += dt;
     if (s.phase !== 'ready') S.step(s, dt, inp);
     handleEvents();
     if (over()) overT += dt;
-    if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
-    jpT -= dt; if (jpT <= 0 && !over()) jpMsg = '';
+    if (banner) { banner.t -= real; if (banner.t <= 0) banner = null; }
+    jpT -= real; if (jpT <= 0 && !over()) jpMsg = '';
     propA += (s.phase === 'roll' || s.phase === 'fly' ? s.omega : s.phase === 'clear' ? 0.7 : 0) * 50 * dt;
     au.engine({ phase: s.phase, omega: s.omega, V: s.phase === 'over' ? 0 : Math.hypot(s.vx, s.vy) });
-    if (s.phase === 'fly' && s.stall) { stallBeep -= dt; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
+    if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
     const mark = Math.floor(Math.max(0, s.x - CFG.edgeX) / 200);
     if (mark > lastMark && mark * 200 < CFG.successDist && (s.phase === 'fly' || s.phase === 'roll')) au.play('marker');
     lastMark = Math.max(lastMark, mark);
@@ -579,9 +655,9 @@ export function mountHyperProp(root) {
     parts = parts.filter((p) => p.life > 0 && p.y > CFG.lakeY - 2);
 
     const fx = wreck ? wreck.x : s.x, fy = wreck ? Math.max(wreck.y, CFG.lakeY) : s.y;
-    camX += (fx - CAM_LEAD - camX) * Math.min(1, dt * 6);
+    camX += (fx - CAM_LEAD - camX) * Math.min(1, real * 6);
     camX = Math.max(-150, camX);
-    camY += (Math.max(0, fy - 40) - camY) * Math.min(1, dt * 3);
+    camY += (Math.max(0, fy - 40) - camY) * Math.min(1, real * 3);
   }
 
   // ---------- draw ----------
@@ -740,6 +816,7 @@ export function mountHyperProp(root) {
       text('HYPER', W / 2, 12, [C.white, C.white, '#d8ecf2', '#d8ecf2', '#b5d8ec', '#b5d8ec', '#8fbde2'], { s: 2, align: 'center', shadow: C.night });
       text('PROP', W / 2, 30, GOLD, { s: 4, align: 'center', shadow: C.redD });
       text('STAGE 1  LAKESIDE HILL', W / 2, 67, C.white, { align: 'center' });
+      if (teach()) text('- TUTORIAL -', W / 2, 79, C.yellow, { align: 'center' });
       if (blink) text(touchMode ? 'PUSH PEDAL' : 'PRESS ENTER', W / 2, 150, C.yellow, { align: 'center' });
       text(bestTime ? `BEST TIME ${fmt(bestTime)}` : `BEST ${Math.round(best)}M`, W / 2, 172, C.greyL, { align: 'center' });
       return;
@@ -762,6 +839,8 @@ export function mountHyperProp(root) {
       if (s.phase === 'clear' && newRecord && blink) text('NEW RECORD!', W / 2, 86, C.yellow, { align: 'center' });
     } else if (s.phase === 'fly' && s.stall && blink) text('STALL!', W / 2, 52, [C.white, C.redL, C.redL, C.red, C.red, C.redD, C.redD], { s: 2, align: 'center' });
     if (over() && overT > 0.6 && blink) text(touchMode ? 'PUSH START' : 'PRESS ENTER', W / 2, 100, C.yellow, { align: 'center' });
+    if (over() && overT > 0.6 && canResumeAtStake()) text('RETRY FROM THE STAKE', W / 2, 112, C.white, { align: 'center' });
+    drawHint(blink);
 
     if (paused) {
       ctx.globalAlpha = 0.45; px(ctx, C.ink, 0, HUD_H, W, H - HUD_H); ctx.globalAlpha = 1;
@@ -776,6 +855,34 @@ export function mountHyperProp(root) {
     if ($('upCap').textContent !== cap) $('upCap').textContent = cap;
   }
 
+  // The hint's words sit where the banner would, and a bouncing arrow at the foot of
+  // the monitor points down at the button it wants - the rocker is under the left of
+  // the screen, the pedals under the right.
+  function drawHint(blink) {
+    const h = tut.hint;
+    if (!h || paused) return;
+    if (h.big && !banner && (blink || tut.k < 1)) text(h.big, W / 2, 30, GOLD, { s: 2, align: 'center', shadow: C.redD });
+    if (!touchMode) return;
+    const ax = Math.round(W * (h.keys === 'LR' ? 0.69 : 0.19)), ay = H - 12 + (Math.floor(ui * 6) % 2);
+    px(ctx, C.ink, ax - 2, ay - 6, 5, 6);
+    for (let r = 0; r < 5; r++) px(ctx, C.ink, ax - 5 + r, ay - 1 + r, 11 - r * 2, 2);
+    px(ctx, C.yellow, ax - 1, ay - 5, 3, 5);
+    for (let r = 0; r < 4; r++) px(ctx, C.yellow, ax - 4 + r, ay + r, 9 - r * 2, 1);
+  }
+  // the buttons the game is waiting for light up
+  function updateGlow() {
+    const want = paused ? (countdown > 0 ? '' : 'start')
+      : tut.hint ? tut.hint.keys
+      : s.phase === 'ready' ? 'LR'
+      : over() && overT > 0.6 ? 'start' : '';
+    if (want === tut.glow) return;
+    tut.glow = want;
+    root.querySelectorAll('[data-k]').forEach((b) => {
+      const k = b.dataset.k;
+      b.classList.toggle('hint', want === 'LR' ? k === 'L' || k === 'R' : k === want);
+    });
+  }
+
   // The sub display is two fixed lines and never grows: the upper line says what is
   // happening, the lower one what to press. Every text here fits one line on a phone.
   const plateLines = [$('l1'), $('l2')];
@@ -788,11 +895,12 @@ export function mountHyperProp(root) {
       board: ['', ''],
       roll: [pedal + '漕ぐ', t ? '▲ で機首上げ' : '↑ で機首上げ'],
       fly: s.stall ? ['失速！', t ? '▼ で機首を下げて速度を戻す' : '↓ で機首を下げて速度を戻す'] : [pedal + '漕ぐ', t ? '▲ ▼ で機首' : '↑ ↓ で機首'],
-      over: ['', t ? 'START でもう一度' : 'Enter / R でもう一度'],
+      over: ['', canResumeAtStake() ? (t ? 'START で赤い杭からやり直す' : 'Enter で杭から / R で最初から') : (t ? 'START でもう一度' : 'Enter / R でもう一度')],
       clear: ['', t ? 'START でもう一度' : 'Enter / R でもう一度'],
     }[s.phase] || ['', ''];
     const lines = paused
       ? (countdown > 0 ? ['もうすぐ再開', t ? 'PEDAL に指を置いて' : '← → に指を置いて'] : ['一時停止中', t ? 'START で続ける' : 'Enter / Esc で続ける'])
+      : tut.hint ? tut.hint.jp(t)
       : [jpMsg || what, press];
     lines.forEach((txt, i) => { if (plateLines[i].textContent !== txt) plateLines[i].textContent = txt; });
   }
@@ -805,6 +913,7 @@ export function mountHyperProp(root) {
     while (acc >= STEP) { update(STEP); acc -= STEP; }
     draw();
     updatePlate();
+    updateGlow();
     raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
