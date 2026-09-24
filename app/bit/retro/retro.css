@@ -1,0 +1,80 @@
+/* RETRO: the series' own world inside MarutiBit. Every rule is scoped under .rtPage.
+   The page is the back of a game box: cream card stock with a halftone, the handheld and
+   its cartridge on it, a slate panel of blurb and screenshots, and a shelf of the series.
+   Latin in Press Start 2P, Japanese in DotGothic16 (the only 8-bit Japanese web face).
+   The handheld keeps the width it had (min(100vw - 20px, 460px)): nothing here adds room
+   around it, since a smaller screen changes how the game plays. */
+.rtPage {
+  --ink: #1c1a24; --shell: #f1e6cc; --shellD: #d9c7a0; --slate: #595470; --slateD: #3f3a52;
+  --red: #e24a35; --teal: #3f9e96; --gold: #d9b35a;
+  --px: 'Press Start 2P', 'DotGothic16', monospace; --dot: 'DotGothic16', monospace;
+  min-height: 100svh; color: var(--ink); font-family: var(--dot);
+  background: #efe5cc; background-image: radial-gradient(#0000000f 1px, transparent 1.2px); background-size: 7px 7px;
+}
+.rtPage *, .rtPage *::before, .rtPage *::after { box-sizing: border-box; }
+
+/* ---- the bar ---- */
+.rtBar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; background: #1d1a26; color: #cfc9e2; }
+.rtLogo { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.rtHome { font-family: var(--dot); font-size: 11px; letter-spacing: .12em; color: #948db0; text-decoration: none; white-space: nowrap; }
+.rtHome:hover { color: var(--shell); }
+.rtLogo strong { font-family: var(--px); font-size: 14px; letter-spacing: .08em; color: var(--shell); font-weight: 400; }
+.rtLogo i { display: inline-block; width: 26px; height: 5px; margin-left: 2px; vertical-align: 3px; background: linear-gradient(var(--red) 0 2px, transparent 2px 3px, var(--teal) 3px 5px); }
+.rtRight { display: flex; align-items: center; gap: 10px; font-family: var(--px); font-size: 8px; letter-spacing: .1em; color: #948db0; white-space: nowrap; }
+.rtLang { display: inline-flex; border: 2px solid #4b4660; border-radius: 4px; overflow: hidden; }
+.rtLang button { border: 0; padding: 5px 7px; font: inherit; font-size: 8px; letter-spacing: .1em; color: #948db0; background: transparent; cursor: pointer; }
+.rtLang button[aria-pressed="true"] { background: var(--shell); color: var(--ink); }
+
+/* ---- the handheld and its cartridge ---- */
+.rtStage { display: flex; flex-direction: column; align-items: center; }
+.rtSide { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 4px 16px 26px; }
+.rtSide p { margin: 0; font-family: var(--px); font-size: 8px; line-height: 1.9; letter-spacing: .1em; color: var(--slate); text-align: center; }
+@media (min-width: 820px) {
+  .rtStage { flex-direction: row; justify-content: center; align-items: center; gap: 30px; padding-right: 20px; }
+  .rtSide { padding: 0; }
+}
+
+/* ---- the cartridge ---- */
+.rtCart { position: relative; width: 206px; padding: 30px 19px 36px 15px; flex: 0 0 auto; filter: drop-shadow(5px 5px 0 var(--ink)); }
+.rtCartBody { position: absolute; inset: 0; border-radius: 6px 6px 12px 12px; background: linear-gradient(90deg, #6d6888, #5d5876 70%, #4c4863);
+  clip-path: polygon(0 0, 86% 0, 100% 8%, 100% 100%, 0 100%); }
+/* its thickness: a darker right side and a lip along the bottom */
+.rtCartBody::before { content: ''; position: absolute; right: 0; top: 8%; bottom: 0; width: 7px; background: #3d3950; }
+.rtCartBody::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 9px; background: #413d55; border-top: 1px solid #0003; }
+.rtCartGrip { position: absolute; left: 14px; right: 44px; top: 8px; height: 16px; border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #0000004d 0 3px, #ffffff14 3px 5px, transparent 5px 9px); }
+.rtCartLabel { position: relative; aspect-ratio: 1; border-radius: 4px; overflow: hidden; background: var(--shell); box-shadow: 0 0 0 2px #0003, 0 1px 0 2px #fff2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.rtCartLabel img { width: 100%; height: 100%; display: block; }
+.rtCartArrow { position: absolute; left: 0; right: 7px; bottom: 13px; text-align: center; font-family: var(--px); font-size: 9px; color: #0006; }
+.rtCartBlank .rtCartLabel { background: #d8d2c0; }
+.rtCartQ { font-family: var(--px); font-size: 22px; color: #0003; }
+.rtCartSoon { position: absolute; bottom: 10px; font-family: var(--px); font-size: 8px; color: #0005; }
+
+/* ---- the back of the box ---- */
+.rtBack { max-width: 980px; margin: 0 10px 14px; background: var(--slateD); color: var(--shell); border: 3px solid var(--ink); border-radius: 10px; padding: 20px; }
+@media (min-width: 1000px) { .rtBack { margin: 0 auto 14px; } }
+.rtBack h1 { font-family: var(--px); font-size: 16px; line-height: 1.5; margin: 0 0 4px; color: #fff; font-weight: 400; letter-spacing: .04em; }
+.rtKind { margin: 0 0 12px; font-size: 13px; color: #cbc4e2; }
+.rtLead { font-size: 15px; line-height: 1.75; margin: 0 0 6px; }
+.rtGoal { font-size: 13px; line-height: 1.7; margin: 0 0 14px; color: #cbc4e2; }
+.rtFeat { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 16px; padding: 0; list-style: none; }
+.rtFeat li { font-family: var(--px); font-size: 8px; line-height: 1; padding: 6px 7px; background: var(--shell); color: var(--slateD); border-radius: 3px; }
+.rtShots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rtShots img { width: 100%; height: auto; display: block; border: 2px solid var(--ink); image-rendering: pixelated; }
+.rtHow { margin: 16px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.rtHow li { background: #ffffff12; border-radius: 5px; padding: 9px 11px; font-size: 14px; line-height: 1.55; }
+.rtHow b { display: block; font-family: var(--px); font-size: 8px; font-weight: 400; color: var(--gold); margin-bottom: 5px; letter-spacing: .08em; }
+
+/* ---- the shelf of the series: the same cartridge, scaled whole ---- */
+.rtShelf { max-width: 980px; margin: 0 auto; padding: 18px 16px 40px; }
+.rtShelf h2 { font-family: var(--px); font-size: 9px; font-weight: 400; letter-spacing: .14em; color: var(--slate); margin: 0 0 14px; }
+.rtRow { display: flex; gap: 18px; overflow-x: auto; padding: 0 6px 10px 0; }
+.rtRow .rtCart { zoom: .73; }
+
+/* ---- foot ---- */
+.rtFoot { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; padding: 18px 16px 26px; background: #1d1a26; color: #948db0;
+  font-family: var(--px); font-size: 8px; letter-spacing: .08em; }
+.rtFoot nav { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.rtFoot a { color: #cfc9e2; text-decoration: none; }
+.rtFoot a:hover { color: #fff; }
