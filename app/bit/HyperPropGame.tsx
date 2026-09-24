@@ -37,7 +37,7 @@ export function HyperPropGame({ lang = "ja" }: { lang?: "ja" | "en" }) {
             </button>
           </div>
           <div className="hpBezel" data-hp="bezel">
-            <span className="hpRule">PIXEL VISION</span>
+            <span className="hpRule">MB-01 RETRO</span>
             <span className="hpLed"><i />POWER</span>
             <div className="hpScreen" data-hp="wrap">
               <canvas data-hp="c" width={256} height={192} aria-label={en ? "HYPER PROP game screen" : "HYPER PROP のゲーム画面"} />
