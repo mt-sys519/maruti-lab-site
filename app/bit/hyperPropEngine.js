@@ -133,11 +133,12 @@ export function mountHyperProp(root) {
     // The canvas wing, seen truly from the side like the rest of the plane: its cross-section,
     // thick and round at the front, thinning to a sharp trailing edge. Drawn as a long band
     // it read as seen from above, and nobody could tell it was a wing.
-    P(PC.cream, 30, 0, 10);
-    P(PC.cream, 26, 1, 4); P(PC.canvas, 30, 1, 12);
-    P(PC.canvas, 20, 2, 22);
-    P(PC.canvasS, 14, 3, 27);
-    P(PC.canvasS, 41, 1, 1, 2);
+    // Painted red like the wing tips on the label art: in canvas colours it looked odd.
+    P(PC.tomatoL, 30, 0, 10);
+    P(PC.tomatoL, 26, 1, 4); P(PC.tomato, 30, 1, 12);
+    P(PC.tomato, 20, 2, 22);
+    P(PC.tomatoD, 14, 3, 27);
+    P(PC.tomatoD, 41, 1, 1, 2);
     // bicycle wheel
     P(PC.woodD, 34, 18, 1, 2);
     ell(34, 21, 3.5, 3.5, (x, y, d) => d > 0.5 ? C.ink : (x === 34 || y === 21) ? C.greyL : null);
