@@ -130,23 +130,27 @@ export function mountHyperProp(root) {
     P(PC.woodL, 5, 11, 20); P(PC.woodD, 5, 12, 20);
     for (let y = 2; y <= 10; y++) { const w = Math.max(1, Math.round((y - 1) * 0.95)); P(y === 7 ? PC.tomato : PC.mustard, 1, y, w, 1); } P(PC.mustardD, 1, 3, 1, 8);
     P(PC.tomato, 0, 12, 10); P(PC.tomatoD, 1, 13, 8);
-    // canvas wing with ribs and red tips turned up a little. Its front end stops short of
-    // the propeller: drawn running past it, the blade looked like it went through the wing
-    P(PC.canvas, 16, 0, 21); P(PC.canvas, 4, 1, 40); P(PC.cream, 17, 1, 19); P(PC.canvasS, 2, 2, 44); P(PC.canvasD, 6, 3, 36);
-    for (let x = 7; x < 43; x += 5) P(PC.canvasS, x, 1);
-    P(PC.tomato, 0, 0, 3); P(PC.tomato, 2, 1, 4); P(PC.tomatoD, 2, 2, 4); P(PC.tomato, 43, 0, 3); P(PC.tomato, 41, 1, 4); P(PC.tomatoD, 41, 2, 4);
-    P(PC.wood, 37, 4, 1, 4);
+    // The canvas wing, seen truly from the side like the rest of the plane: its cross-section,
+    // thick and round at the front, thinning to a sharp trailing edge. Drawn as a long band
+    // it read as seen from above, and nobody could tell it was a wing.
+    P(PC.cream, 30, 0, 10);
+    P(PC.cream, 26, 1, 4); P(PC.canvas, 30, 1, 12);
+    P(PC.canvas, 20, 2, 22);
+    P(PC.canvasS, 14, 3, 27);
+    P(PC.canvasS, 41, 1, 1, 2);
     // bicycle wheel
     P(PC.woodD, 34, 18, 1, 2);
     ell(34, 21, 3.5, 3.5, (x, y, d) => d > 0.5 ? C.ink : (x === 34 || y === 21) ? C.greyL : null);
     P(PC.mustard, 34, 21);
+    // two wooden struts hold the wing over the egg
+    line(25, 4, 28, 8, PC.woodD); line(37, 4, 36, 7, PC.woodD);
     // the far wall of the egg, seen through the glass
     ell(33, 13, 10.5, 5.8, (x, y, d) => d > 0.7 && y > 15 ? (y > 16 ? PC.tomatoD : PC.tomato) : null);
     // seat and handlebar
-    P(PC.mustardD, 28, 12, 4); P(PC.mustard, 28, 11, 3);
-    P(PC.woodD, 38, 9, 1, 4); P(PC.woodD, 37, 9, 2, 1);
+    P(PC.mustardD, 28, 14, 4); P(PC.mustard, 28, 13, 3);
+    P(PC.woodD, 38, 11, 1, 3); P(PC.woodD, 37, 11, 2, 1);
     // crank, legs: hip over the seat, crank ahead of it and low
-    const a = crank / CRANK_STEPS * Math.PI * 2, CX = 37, CY = 15, R = 3, HX = 30, HY = 11;
+    const a = crank / CRANK_STEPS * Math.PI * 2, CX = 37, CY = 15, R = 3, HX = 30, HY = 13;
     const foot = (t) => [CX + Math.cos(t) * R, CY + Math.sin(t) * R];
     if (pilot) {
       // far leg first, in shade, then the near one
@@ -159,14 +163,14 @@ export function mountHyperProp(root) {
         P(boot, fx - 1, fy, 3, 1);
         if (i === 0) { P(C.grey, CX - 1, CY - 1, 3, 3); P(C.greyL, CX, CY); }
       });
-      // AOI: navy bob and goggles out of the open top, fleece collar, olive suit, brown glove on the bar
-      P(AO.n, 30, 3, 3); P(AO.H, 29, 4, 5); P(AO.l, 30, 4);
-      P(AO.n, 29, 5); P(AO.g, 30, 5); P(AO.G, 31, 5, 2); P(AO.g, 33, 5);
-      P(AO.n, 29, 6); P(AO.H, 30, 6); P(C.skin, 31, 6, 3);
-      P(AO.n, 29, 7); P(C.skinD, 30, 7); P(C.skin, 31, 7, 2);
-      P(AO.f, 28, 8, 6);
-      P(AO.o, 28, 9, 5, 2); P(AO.q, 29, 9, 2, 1); P(AO.O, 28, 11, 4, 1);
-      line(32, 9, 36, 10, AO.o); P(AO.b, 36, 9, 2, 2);
+      // AOI, sitting low enough that her head clears the wing: navy bob and goggles out of the open top, fleece collar, olive suit, brown glove on the bar
+      P(AO.n, 30, 5, 3); P(AO.H, 29, 6, 5); P(AO.l, 30, 6);
+      P(AO.n, 29, 7); P(AO.g, 30, 7); P(AO.G, 31, 7, 2); P(AO.g, 33, 7);
+      P(AO.n, 29, 8); P(AO.H, 30, 8); P(C.skin, 31, 8, 3);
+      P(AO.n, 29, 9); P(C.skinD, 30, 9); P(C.skin, 31, 9, 2);
+      P(AO.f, 28, 10, 6);
+      P(AO.o, 28, 11, 5, 2); P(AO.q, 29, 11, 2, 1); P(AO.O, 28, 13, 4, 1);
+      line(32, 11, 36, 12, AO.o); P(AO.b, 36, 11, 2, 2);
     } else {
       P(C.grey, CX - 1, CY - 1, 3, 3); P(C.greyL, CX, CY);
       for (const t of [a, a + Math.PI]) { const [fx, fy] = foot(t); P(C.ink, fx - 1, fy, 3, 1); }
