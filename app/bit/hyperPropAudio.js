@@ -113,7 +113,9 @@ export function createHyperPropAudio() {
   // ---------- effects ----------
   const fx = {
     start() { const t = ctx.currentTime; tone({ f: 988, dur: 0.07, g: 0.07, at: t }); tone({ f: 1319, dur: 0.3, g: 0.07, at: t + 0.07, send: 0.2 }); },
-    step(side) { noise({ f: 170 + side * 30, type: 'lowpass', q: 1, dur: 0.07, g: 0.35 }); tone({ f: 95, to: 60, dur: 0.06, g: 0.12, type: 'sine' }); },
+    // a running footstep, "ta": a short bright tap that a phone speaker can play, with a
+    // little body under it (the old one sat at 60-170Hz, below what a phone reproduces)
+    step(side) { noise({ f: 1500 + side * 180, type: 'bandpass', q: 1.6, dur: 0.035, g: 0.5 }); tone({ f: 380 + side * 30, to: 200, dur: 0.035, g: 0.05, type: 'triangle' }); },
     board() { const t = ctx.currentTime; tone({ f: 330, to: 990, slide: 0.14, dur: 0.16, g: 0.07 }); noise({ f: 600, to: 2400, q: 0.9, dur: 0.3, g: 0.12, at: t + 0.12 }); },
     seated() { const t = ctx.currentTime; noise({ f: 160, type: 'lowpass', dur: 0.1, g: 0.4 }); tone({ f: 1319, dur: 0.07, g: 0.05, at: t + 0.06 }); tone({ f: 1760, dur: 0.14, g: 0.05, at: t + 0.12, send: 0.2 }); },
     bird() { noise({ f: 900, q: 1.2, dur: 0.1, g: 0.3 }); tone({ f: 1500, to: 900, dur: 0.12, g: 0.05, type: 'square' }); tone({ f: 1300, to: 800, dur: 0.1, g: 0.04, type: 'square', at: ctx.currentTime + 0.09 }); },

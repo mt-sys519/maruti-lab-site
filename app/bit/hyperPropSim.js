@@ -32,8 +32,8 @@ export const CFG = {
 // only be passed under, skimming the lake. air is [from m, to m, px/s], sinking air
 // negative.
 // Tuned with bots (careful pilot dodging, sloppy one pulling up only when low):
-// stage 1 clears from 6 presses a second, stage 2 from ~7.5 when dodging (flying
-// straight costs 2-3 strikes), stage 3 from 7.5 for both.
+// stage 1 clears from 6 presses a second, stage 2 from 8 when dodging (one strike can
+// be survived, and a strike leaves the stick dead for 0.3s), stage 3 from 7.5 for both.
 export const STAGES = [
   null,
   { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
@@ -151,7 +151,8 @@ export function step(s, dt, inp) {
   }
   if (s.phase !== 'roll' && s.phase !== 'fly' && s.phase !== 'clear') return;
   const clear = s.phase === 'clear';
-  if (clear) inp = {};
+  // a strike leaves the pilot shaken for a moment: the stick does nothing while bonk runs
+  if (clear || s.bonk > 0) inp = {};
 
   s.omega = clear ? 0.7 : Math.max(0, s.omega - CFG.prop.decay * dt);
   s.lift = airAt(s, s.x);
@@ -192,11 +193,12 @@ export function step(s, dt, inp) {
     s.onGround = false;
   }
   if (clear) { s.y = Math.max(s.y, CFG.lakeY + 4); return; }
-  // a bird strike costs the propeller half its spin and knocks the nose down
+  // a bird strike takes most of the propeller's spin and a good part of the speed,
+  // throws the plane down and knocks the nose under
   for (const b of s.birds) {
     if (b.hitT >= 0 || !hitsPlane(s, b)) continue;
     b.hitT = s.t; b.hx = b.x; b.hy = b.y;
-    s.omega *= 0.3; s.vx *= 0.7; s.vy = Math.min(s.vy, 0) - 10; s.theta -= 0.2; s.bonk = 0.5;
+    s.omega *= 0.25; s.vx *= 0.65; s.vy = Math.min(s.vy, 0) - 18; s.theta -= 0.3; s.bonk = 0.3;
     s.events.push('bird');
   }
   s.phase = s.onGround ? 'roll' : 'fly';

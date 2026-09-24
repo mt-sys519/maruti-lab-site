@@ -412,7 +412,7 @@ export function mountHyperProp(root) {
   const opened = () => { let n = 1; while (n < LAST && rec.time[n]) n++; return n; };
   const s = S.create(opened());
   // the crank eases round to crankTo, which moves half a turn with every press once seated
-  let crank = 0, crankTo = 0;
+  let crank = 0, crankTo = 0, lastStride = 1;
   let camX = s.x - CAM_LEAD, camY = 0, time = 0, propA = 0, parts = [], wreck = null, overT = 0;
   let banner = null, jpMsg = '', jpT = 0, seen = {};
   const inp = { up: false, down: false };
@@ -542,7 +542,7 @@ export function mountHyperProp(root) {
 
   function handleEvents() {
     for (const e of s.events) {
-      if (e === 'step') { burst(s.x - 2, 0, 2, [C.dirt[0], C.grass[2]], 14, 0.6); au.play('step', s.leg); }
+      if (e === 'step') { burst(s.x - 2, 0, 2, [C.dirt[0], C.grass[2]], 14, 0.6); }
       if (e === 'pedal') au.play('pedal', s.omega);
       if (e === 'board') au.play('board');
       if (e === 'liftoff') au.play('liftoff');
@@ -733,6 +733,13 @@ export function mountHyperProp(root) {
     if (s.phase === 'clear') crankTo += Math.PI * 5 * dt;
     crank += (crankTo - crank) * Math.min(1, dt * 22);
     au.engine({ phase: s.phase, omega: s.omega, V: s.phase === 'over' ? 0 : Math.hypot(s.vx, s.vy) });
+    // footsteps land with the running animation (a foot down every 12px), tatta-tatta,
+    // however the presses fall
+    if (s.phase === 'run') {
+      const stride = Math.floor(s.x / 6) % 4;
+      if (stride !== lastStride && (stride === 0 || stride === 2) && s.vx > 2) au.play('step', stride === 0 ? -1 : 1);
+      lastStride = stride;
+    }
     if (s.phase === 'fly' || s.phase === 'roll') {
       if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = '鳥だ！ 上か下をすり抜けろ'; jpT = 2.2; }
       if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = '下降気流！ 手前で高度を稼げ'; jpT = 2.2; }
@@ -972,7 +979,7 @@ export function mountHyperProp(root) {
     }
     px(ctx, C.ink, 0, 0, W, HUD_H); px(ctx, C.night, 0, HUD_H - 1, W, 1);
     const V = s.phase === 'over' ? 0 : Math.hypot(s.vx, s.vy), air = s.phase === 'roll' || s.phase === 'fly' || s.phase === 'clear';
-    text('SPEED', 4, 2, C.white, { outline: false }); bar(36, 2, V / 50, C.yellow);
+    text('SPEED', 4, 2, C.white, { outline: false }); bar(36, 2, V / 34, C.yellow);
     text('PEDAL', 4, 10, C.white, { outline: false }); bar(36, 10, air ? s.omega : 0, C.green);
     const dist = Math.round(Math.min(CFG.successDist, Math.max(0, s.x - CFG.edgeX)) * CFG.pxToM);
     const goalTxt = `/${CFG.successDist * CFG.pxToM}M`;
