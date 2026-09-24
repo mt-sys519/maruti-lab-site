@@ -36,10 +36,12 @@ export const CFG = {
 // be survived, and a strike leaves the stick dead for 0.3s). The air zones are not used
 // by any stage at present (the downdraft stage was replaced by the balloons).
 // Stage 3: a careful pilot aiming the hub at each balloon pops exactly 7 at 7-8 presses
-// a second; flying straight pops 3-4. Stage 4 (short run on the pyramid, four obelisks
-// standing 26-28 tall, so the plane has to be kept high): 7.5 careful, 9 flying straight.
-// Its falcons fly low, like the obelisks asking for height - a high one right after an
-// obelisk could not be dived under in time.
+// a second; flying straight pops 3-4. Stage 4 (short run on the pyramid) weaves: three
+// obelisks 25-26 tall ask for height and three falcons at 50 ask for a dip under them
+// (the wheel below 20), each far enough from the next obelisk to climb back. The first
+// playtest found the old low falcons never met a plane kept high over the obelisks.
+// Careful pilot clears from 8 a second; one that stays high eats all three falcons and
+// needs 8.5-9.
 export const STAGES = [
   null,
   { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
@@ -57,8 +59,8 @@ export const STAGES = [
   // height above the water], clear of the distance markers; hitting one is a crash. The
   // birds are falcons.
   { name: 'NILE CROSSING', theme: 'egypt', startX: 80, air: [], sandTo: 25,
-    birds: [[165, 16], [320, 15]],
-    obelisks: [[118, 26], [218, 27], [285, 28], [355, 26]] },
+    birds: [[180, 50], [310, 50], [385, 50]],
+    obelisks: [[118, 25], [250, 26], [355, 25]] },
 ];
 
 export function create(stage = 1) {
