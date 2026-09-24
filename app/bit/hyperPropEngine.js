@@ -775,35 +775,66 @@ export function mountHyperProp(root) {
   // Two things guard the count. A finger that is still down is never a new press,
   // even when WebKit lists it among the changed touches as another one lands. And a
   // fingertip that bounces and touches the same pedal twice within 70ms is one press.
+  //
+  // iOS also drops touchstart outright when it lands in the same instant another
+  // finger lifts (a WebKit bug reported since iOS 15.6, Safari and Chrome alike, not on
+  // Android) - and drumming two fingers is exactly that, more often the faster it goes.
+  // The finger is still listed in e.touches though, so every touch event checks the
+  // list: a finger on a pedal that was never seen is a press whose touchstart got lost,
+  // and a held finger that has gone from the list is a lift that got lost.
   const held = new Map();
+  const known = new Set();
   const lastTap = { L: -Infinity, R: -Infinity };
+  const buttonOf = (t) => { const b = t.target instanceof Element ? t.target.closest('[data-k]') : null; return b && root.contains(b) ? b : null; };
+  function adopt(t, fresh) {
+    known.add(t.identifier);
+    const b = buttonOf(t);
+    if (b) { held.set(t.identifier, b); fresh.push(b); }
+  }
+  function sync(e, fresh) {
+    const now = new Set();
+    for (const t of e.touches) { now.add(t.identifier); if (!known.has(t.identifier)) adopt(t, fresh); }
+    for (const id of known) {
+      if (now.has(id)) continue;
+      known.delete(id);
+      const b = held.get(id); if (b) { held.delete(id); release(b); }
+    }
+  }
+  function pressAll(fresh, ts) {
+    for (const b of fresh) {
+      const k = b.dataset.k;
+      if (k === 'L' || k === 'R') {
+        if (ts - lastTap[k] < 70) { b.classList.add('on'); continue; }
+        lastTap[k] = ts;
+      }
+      press(b);
+    }
+  }
   on(root, 'touchstart', (e) => {
     touchMode = true;
     let hit = false;
     const fresh = [];
     for (const t of e.changedTouches) {
-      const b = t.target instanceof Element ? t.target.closest('[data-k]') : null;
-      if (!b || !root.contains(b)) continue;
-      hit = true;
-      if (held.has(t.identifier)) continue;
-      held.set(t.identifier, b); fresh.push(b);
+      if (buttonOf(t)) hit = true;
+      if (!known.has(t.identifier)) adopt(t, fresh);
     }
+    sync(e, fresh);
     if (hit) e.preventDefault();
-    for (const b of fresh) {
-      const k = b.dataset.k;
-      if (k === 'L' || k === 'R') {
-        if (e.timeStamp - lastTap[k] < 70) { b.classList.add('on'); continue; }
-        lastTap[k] = e.timeStamp;
-      }
-      press(b);
-    }
+    pressAll(fresh, e.timeStamp);
   }, { passive: false });
   const lift = (e) => {
     let hit = false;
-    for (const t of e.changedTouches) { const b = held.get(t.identifier); if (b) { hit = true; held.delete(t.identifier); release(b); } }
-    if (hit && e.type === 'touchend' && e.cancelable) e.preventDefault();
+    for (const t of e.changedTouches) {
+      known.delete(t.identifier);
+      const b = held.get(t.identifier); if (b) { hit = true; held.delete(t.identifier); release(b); }
+    }
+    const fresh = [];
+    sync(e, fresh);
+    if ((hit || fresh.length) && e.type === 'touchend' && e.cancelable) e.preventDefault();
+    pressAll(fresh, e.timeStamp);
   };
   on(root, 'touchend', lift, { passive: false }); on(root, 'touchcancel', lift);
+  on(root, 'touchmove', (e) => { const fresh = []; sync(e, fresh); pressAll(fresh, e.timeStamp); }, { passive: true });
   // The iPhone playtest was fine at the BGM's tempo and broken above it. Drumming, a
   // finger comes back to its own pedal every 0.45s at the music's 4.4 a second and every
   // 0.29s at 7 - inside Safari's double-tap-to-zoom window (~0.3s on one spot), and a
