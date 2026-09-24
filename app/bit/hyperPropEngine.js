@@ -670,6 +670,7 @@ export function mountHyperProp(root) {
     const dpr = devicePixelRatio || 1, dev = sc * dpr;
     if (dev >= 2 && Math.floor(dev) / dev > 0.93) sc = Math.floor(dev) / dpr;
     root.style.setProperty('--s', Math.max(0.5, sc));
+    root.dataset.fit = '';
   }
   const ro = new ResizeObserver(fit); ro.observe($('bezel')); fit();
 

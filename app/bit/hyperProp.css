@@ -19,7 +19,18 @@
   --s: 1; --u: min(46px, 6.4vh); --r: 22px;
   /* the moulded rim around every control: the same width all round each of them, with
      the button's own drop shadow counted as part of the button (so added to the bottom) */
-  --rim: 6px; }
+  --rim: 6px;
+  /* and every caption sits this far below its rim */
+  --capGap: 8px;
+  /* The screen's size before the script has measured the bezel: the same sum fit() in
+     hyperPropEngine.js does - 3/4 of the bezel's inner width, unless the bezel's inner
+     height (61.8% of the device less the seam, the sub display and the padding, 159px)
+     is shorter. Without it the screen came up at 256x192 and then jumped. */
+  --devH: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc(100vh - 24px));
+  --scrH: min(0.75 * (var(--dw) - 56px), 0.618 * var(--devH) - 159px); }
+@supports (height: 100dvh) {
+  .hpStage { --devH: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc(100dvh - 24px)); }
+}
 .hpStage *, .hpStage *::before, .hpStage *::after { box-sizing: border-box; }
 .hpDevice { position: relative; display: flex; flex-direction: column;
   /* Tall enough for the 4:3 screen and no taller. The top 61.8% holds the seam (34px),
@@ -65,8 +76,9 @@
 .hpRule::before, .hpRule::after { content: ''; flex: 1 1 auto; height: 5px; background: linear-gradient(var(--hpRed) 0 2px, transparent 2px 3px, var(--hpTeal) 3px 5px); }
 .hpLed { position: absolute; left: 14px; bottom: 9px; display: flex; align-items: center; gap: 6px; font-size: 9px; letter-spacing: .1em; color: #b8b2cc; }
 .hpLed i { width: 8px; height: 8px; border-radius: 50%; background: #ff5a45; box-shadow: 0 0 6px #ff5a45cc, inset 0 -1px 0 #0003; }
-.hpScreen { flex: 0 0 auto; position: relative; width: calc(256px * var(--s)); height: calc(192px * var(--s)); overflow: hidden; background: #000;
+.hpScreen { flex: 0 0 auto; position: relative; width: calc(var(--scrH) * 4 / 3); height: var(--scrH); overflow: hidden; background: #000;
   box-shadow: 0 0 0 2px #2c283c, 0 0 0 3px #6c6784; }
+.hpStage[data-fit] .hpScreen { width: calc(256px * var(--s)); height: calc(192px * var(--s)); }
 .hpScreen canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
 .hpScreen::after { content: ''; position: absolute; inset: 0; pointer-events: none;
   background: repeating-linear-gradient(transparent 0 calc(var(--s) * 1px), #0000001c calc(var(--s) * 1px) calc(var(--s) * 2px)); }
@@ -89,7 +101,7 @@
    takes no room and the rocker's rounded body does not clip it */
 .hpBtn.hint { animation: hpHint .5s steps(1) infinite; }
 @keyframes hpHint { 0% { outline: 3px solid #ffd35c; outline-offset: -3px; filter: brightness(1.3); } 50% { outline: 3px solid transparent; outline-offset: -3px; } }
-.hpRocker { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.hpRocker { display: flex; flex-direction: column; align-items: center; gap: var(--capGap); }
 .hpWell { background: var(--shellD); box-shadow: inset 0 2px 3px #0003, 0 1px 0 #fff8; }
 .hpRockerWell { padding: var(--rim) var(--rim) calc(var(--rim) + 4px); border-radius: calc(var(--u) / 2 + var(--rim)); }
 .hpRockerBody { display: flex; flex-direction: column; width: var(--u); border-radius: calc(var(--u) / 2); overflow: hidden;
@@ -102,13 +114,14 @@
   background: radial-gradient(circle at 38% 32%, #ff9a80 0 12%, #e8503a 45%, #b0301f); box-shadow: 0 5px 0 #7c2014; }
 .hpPedal.on { box-shadow: 0 2px 0 #7c2014; transform: translateY(3px); }
 .hpCap { font-size: 11px; letter-spacing: .14em; color: var(--hpInk); }
-.hpPedals .hpCap { position: absolute; bottom: -24px; left: -10px; right: -10px; text-align: center; }
+/* below the well: the pedal, then the well's bottom rim (--rim plus the 5px drop shadow), then the gap */
+.hpPedals .hpCap { position: absolute; top: calc(100% + var(--rim) + 5px + var(--capGap)); left: -10px; right: -10px; text-align: center; }
 
 /* start on the 38.2% line; speaker at the golden point of the right column */
 .hpFoot { flex: 0 0 38.2%; min-height: 0; position: relative; }
 .hpStartBox { position: absolute; left: 38.2%; top: 38.2%; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%) rotate(-20deg);
   padding: var(--rim) var(--rim) calc(var(--rim) + 2px); border-radius: calc(6px + var(--rim)); }
-.hpStartBox .hpCap { position: absolute; top: 100%; left: 50%; margin-top: 6px; transform: translateX(-50%); white-space: nowrap; }
+.hpStartBox .hpCap { position: absolute; top: 100%; left: 50%; margin-top: var(--capGap); transform: translateX(-50%); white-space: nowrap; }
 .hpStart { width: calc(var(--u) * 1.082); height: 12px; border-radius: 6px; background: #8f8aa4; box-shadow: 0 2px 0 #6c6784; }
 .hpStart.on { box-shadow: 0 0 0 #6c6784; transform: translateY(2px); }
 .hpSpeaker { position: absolute; left: 76.4%; top: 61.8%; display: flex; gap: 7px; transform: translate(-50%, -50%) rotate(-28deg); }
