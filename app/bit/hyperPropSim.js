@@ -28,12 +28,15 @@ export const CFG = {
 // the water and the air. A bird is [metres past the cliff, height above the lake]. The
 // plane is 26px tall from its wheel (s.y) to the wingtips and flies between the water
 // and about 35px up, so there are three kinds of bird: one skimming the water (5-6)
-// only catches a plane that sinks, one at 15 has to be climbed over, and one at 42 can
-// only be passed under, skimming the lake. air is [from m, to m, px/s], sinking air
+// only catches a plane that sinks, one at 15 has to be climbed over, and one at 42-58 can
+// only be passed under (the wheel below its height less 30). air is [from m, to m, px/s], sinking air
 // negative.
 // Tuned with bots (careful pilot dodging, sloppy one pulling up only when low):
-// stage 1 clears from 6 presses a second, stage 2 from 8 when dodging (one strike can
-// be survived, and a strike leaves the stick dead for 0.3s). The air zones are not used
+// stage 1 clears from 6 presses a second, stage 2 from 7 when dodging without a strike
+// (flying straight takes 2-3 and needs 7.5-8; a strike leaves the stick dead for 0.3s).
+// Once strikes got harder stage 2 had become harder than stage 3, so its high birds went
+// from 42 to 48 - under them no longer means skimming the water - and the last low one
+// went. The air zones are not used
 // by any stage at present (the downdraft stage was replaced by the balloons).
 // Stage 3: a careful pilot aiming the hub at each balloon pops exactly 7 at 7-8 presses
 // a second; flying straight pops 3-4. Stage 4 (short run on the pyramid) weaves: three
@@ -49,7 +52,7 @@ export const STAGES = [
   null,
   { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
   { name: 'BIRD CROSSING', startX: 50, air: [],
-    birds: [[60, 5], [130, 42], [200, 15], [270, 42], [335, 15], [380, 5]] },
+    birds: [[60, 5], [130, 48], [200, 15], [270, 48], [335, 15]] },
   // Stage 3: ten balloons over the lake, popped with the propeller. A balloon is [metres,
   // height of its middle above the lake]; the hub is 13px above the wheel, so a balloon
   // at 16 wants the wheel skimming the water and one at 40 wants the plane up high.

@@ -119,10 +119,10 @@
 
 /* start on the 38.2% line; speaker at the golden point of the right column */
 .hpFoot { flex: 0 0 38.2%; min-height: 0; position: relative; }
-.hpStartBox { position: absolute; left: 38.2%; top: 38.2%; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%) rotate(-20deg);
+.hpStartBox { position: absolute; left: 38.2%; top: 38.2%; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%);
   padding: var(--rim) var(--rim) calc(var(--rim) + 2px); border-radius: calc(6px + var(--rim)); }
 .hpStartBox .hpCap { position: absolute; top: 100%; left: 50%; margin-top: var(--capGap); transform: translateX(-50%); white-space: nowrap; }
 .hpStart { width: calc(var(--u) * 1.082); height: 12px; border-radius: 6px; background: #8f8aa4; box-shadow: 0 2px 0 #6c6784; }
 .hpStart.on { box-shadow: 0 0 0 #6c6784; transform: translateY(2px); }
-.hpSpeaker { position: absolute; left: 76.4%; top: 61.8%; display: flex; gap: 7px; transform: translate(-50%, -50%) rotate(-28deg); }
+.hpSpeaker { position: absolute; left: 76.4%; top: 61.8%; display: flex; gap: 7px; transform: translate(-50%, -50%); }
 .hpSpeaker i { width: 5px; height: calc(var(--u) * 0.854); border-radius: 3px; background: var(--shellD); box-shadow: inset 1px 2px 2px #0003, 0 1px 0 #fff8; }

@@ -64,6 +64,8 @@
 .rtShots img { width: 100%; height: auto; display: block; border: 2px solid var(--ink); image-rendering: pixelated; }
 .rtHow { margin: 16px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
 .rtHow li { background: #ffffff12; border-radius: 5px; padding: 9px 11px; font-size: 14px; line-height: 1.55; }
+.rtCare { margin: 12px 0 0; font-size: 12px; line-height: 1.7; color: #cbc4e2; }
+.rtCare::before { content: "!"; display: inline-block; width: 15px; height: 15px; margin-right: 7px; border-radius: 50%; background: var(--gold); color: #1d1a2e; font-family: var(--px); font-size: 8px; line-height: 15px; text-align: center; vertical-align: 1px; }
 .rtHow b { display: block; font-family: var(--px); font-size: 8px; font-weight: 400; color: var(--gold); margin-bottom: 5px; letter-spacing: .08em; }
 
 /* ---- the shelf of the series: the same cartridge, scaled whole ---- */

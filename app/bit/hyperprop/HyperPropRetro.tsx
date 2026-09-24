@@ -20,6 +20,7 @@ const TEXT = {
       ["BOARD", "赤い杭のところで ▲ を押して飛び乗る"],
       ["PITCH", "▲ ▼ で機首を上げ下げ。水に落ちないように"],
     ],
+    care: "連打は指や手首に負担がかかります。続けて長く遊ばず、痛みやしびれを感じたらすぐに休んでください。",
     shots: ["湖の上を飛ぶところ", "4面、ナイルの上を飛ぶところ"],
     label: "HYPER PROP のカートリッジ",
     soon: "COMING SOON",
@@ -34,6 +35,7 @@ const TEXT = {
       ["BOARD", "At the red stake, press ▲ to jump aboard"],
       ["PITCH", "▲ ▼ tip the nose. Keep out of the water"],
     ],
+    care: "Drumming is hard on fingers and wrists. Don't play for too long at a stretch, and stop right away if anything hurts or goes numb.",
     shots: ["Flying over the lake", "Stage 4, flying over the Nile"],
     label: "The HYPER PROP cartridge",
     soon: "COMING SOON",
@@ -82,6 +84,7 @@ export function HyperPropRetro() {
             </li>
           ))}
         </ol>
+        <p className="rtCare">{t.care}</p>
       </section>
 
       <section className="rtShelf">

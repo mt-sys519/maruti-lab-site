@@ -618,8 +618,14 @@ export function mountHyperProp(root) {
   on(window, 'pointerdown', (e) => { if (e.pointerType === 'mouse') au.unlock(); }, true);
   on(window, 'pointerup', (e) => { if (e.pointerType !== 'mouse') au.unlock(); }, true);
   on(window, 'touchend', () => au.unlock(), true);
+  // Drumming is hard on fingers and wrists. After 15 minutes of play the next result
+  // screen says to rest, once; five minutes away from the page counts as that rest.
+  const REST_AFTER = 15 * 60, AWAY_RESETS = 5 * 60 * 1000;
+  let playT = 0, awayAt = 0, rest = false;
+  const restNow = () => { if (playT < REST_AFTER) return; playT = 0; rest = true; };
   on(document, 'visibilitychange', () => {
-    if (document.hidden) { pauseGame(); au.sleep(); } else if (!paused) au.wake();
+    if (document.hidden) { awayAt = performance.now(); pauseGame(); au.sleep(); }
+    else { if (awayAt && performance.now() - awayAt > AWAY_RESETS) playT = 0; if (!paused) au.wake(); }
   });
   on(window, 'pagehide', () => { pauseGame(); au.sleep(); });
   on(window, 'pageshow', (e) => { if (e.persisted) au.reset(); });
@@ -631,7 +637,7 @@ export function mountHyperProp(root) {
 
   // back to the title, on stage n
   function toTitle(n) {
-    Object.assign(s, S.create(n)); parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; paused = false; countdown = 0;
+    Object.assign(s, S.create(n)); parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; paused = false; countdown = 0; rest = false;
     camX = s.x - CAM_LEAD; camY = 0; tut.hint = null; tut.k = 1;
     au.music('title');
   }
@@ -641,7 +647,7 @@ export function mountHyperProp(root) {
   }
   function begin() {
     S.start(s); parts = []; seen = {}; crank = crankTo = 0; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
-    runTime = 0; newRecord = false; paused = false; countdown = 0;
+    runTime = 0; newRecord = false; paused = false; countdown = 0; rest = false;
     tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
     au.music('stage', 0); au.play('start');
   }
@@ -686,6 +692,7 @@ export function mountHyperProp(root) {
         newRecord = !rec.time[n] || runTime < rec.time[n];
         if (newRecord) { rec.time[n] = runTime; try { localStorage.setItem(recKey('bestTime', n), runTime.toFixed(2)); } catch { /* storage is optional */ } }
         banner = null; jpMsg = newRecord ? L(`新記録！ ${fmt(runTime)}`, `New record! ${fmt(runTime)}`) : L(`400m 飛行成功！ ${fmt(runTime)}`, `Flew the 400m! ${fmt(runTime)}`); jpT = 1e9;
+        restNow();
       }
       if (e === 'fail' || e === 'land') onFail();
     }
@@ -697,6 +704,7 @@ export function mountHyperProp(root) {
   }
   function onFail() {
     const r = s.result; setBest(r.dist);
+    restNow();
     const d = Math.round(r.dist);
     const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : L('湖に着水', 'Down in the lake');
     const [big, jp] = {
@@ -891,7 +899,7 @@ export function mountHyperProp(root) {
     dt *= tutor(dt);
     time += dt;
     if (playing()) runTime += dt;
-    if (s.phase !== 'ready') S.step(s, dt, inp);
+    if (s.phase !== 'ready') { S.step(s, dt, inp); playT += real; }
     handleEvents();
     if (over()) overT += dt;
     if (banner) { banner.t -= real; if (banner.t <= 0) banner = null; }
@@ -1321,7 +1329,7 @@ export function mountHyperProp(root) {
     const lines = paused
       ? (countdown > 0 ? [L('もうすぐ再開', 'Resuming…'), t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')] : [L('一時停止中', 'Paused'), t ? L('START で続ける', 'START to continue') : L('Enter / Esc で続ける', 'Enter / Esc to continue')])
       : tut.hint ? tut.hint.jp(t)
-      : [jpMsg || what, press];
+      : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your fingers and wrists') : jpMsg || what, press];
     lines.forEach((txt, i) => { if (plateLines[i].textContent !== txt) plateLines[i].textContent = txt; });
   }
 
