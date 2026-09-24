@@ -76,13 +76,14 @@ export function createHyperPropAudio() {
     return { fl, g };
   }
   function buildLoops() {
-    // the prop: a low buzz that pulses once per blade pass
-    const osc = ctx.createOscillator(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), depth = ctx.createGain();
-    osc.type = 'sawtooth'; osc.frequency.value = 40; fl.type = 'lowpass'; fl.frequency.value = 500; fl.Q.value = 2; g.gain.value = 0;
-    lfo.type = 'triangle'; lfo.frequency.value = 8; depth.gain.value = 0;
+    // the prop is pushed round by a person, so there is no motor to hear: only a wooden
+    // blade swishing through the air, a band of noise that swells once per blade pass
+    const src = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), depth = ctx.createGain();
+    src.buffer = noiseBuf; src.loop = true; fl.type = 'bandpass'; fl.frequency.value = 700; fl.Q.value = 1.4; g.gain.value = 0;
+    lfo.type = 'sine'; lfo.frequency.value = 4; depth.gain.value = 0;
     lfo.connect(depth).connect(g.gain);
-    osc.connect(fl).connect(g).connect(sfx); osc.start(); lfo.start();
-    prop = { osc, fl, g, lfo, depth };
+    src.connect(fl).connect(g).connect(sfx); src.start(); lfo.start();
+    prop = { fl, g, lfo, depth };
     wind = loopNoise('bandpass', 500, 0.7);
     roll = loopNoise('lowpass', 180, 0.8);
   }
@@ -100,9 +101,10 @@ export function createHyperPropAudio() {
     const on = live() ? 1 : 0, set = (p, v, k = 0.06) => { p.cancelScheduledValues(t); p.setTargetAtTime(v, t, k); };
     const turning = on && (st.phase === 'roll' || st.phase === 'fly' || st.phase === 'clear');
     const w = st.phase === 'clear' ? 0.7 : st.omega;
-    set(prop.osc.frequency, 38 + w * 70); set(prop.fl.frequency, 300 + w * 1100); set(prop.lfo.frequency, 4 + w * 26);
-    const lv = turning ? 0.018 + w * 0.05 : 0;
-    set(prop.g.gain, lv * 0.6); set(prop.depth.gain, lv * 0.4);
+    // bandpassed noise carries about a fifth of the sawtooth's energy, hence the larger gains
+    set(prop.fl.frequency, 500 + w * 1300); set(prop.lfo.frequency, 2 + w * 16);
+    const lv = turning ? 0.01 + w * 0.06 : 0;
+    set(prop.g.gain, lv * 2.4); set(prop.depth.gain, lv * 2.2);
     const airborne = on && (st.phase === 'fly' || st.phase === 'clear' || st.phase === 'run');
     set(wind.fl.frequency, 300 + st.V * 22); set(wind.g.gain, airborne ? Math.max(0, Math.min(1, (st.V - 8) / 40)) * (st.phase === 'run' ? 0.03 : 0.07) : 0, 0.15);
     set(roll.g.gain, on && st.phase === 'roll' ? Math.min(1, st.V / 35) * 0.09 : 0, 0.05);

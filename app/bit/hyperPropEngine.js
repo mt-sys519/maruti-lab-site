@@ -108,14 +108,23 @@ export function mountHyperProp(root) {
   const PC = { canvas: '#f4ead0', canvasS: '#d8c8a2', canvasD: '#b09c74', wood: '#b0743e', woodD: '#724a26', woodL: '#d69a5c',
     tomato: '#e24a35', tomatoD: '#a8301f', tomatoL: '#ff7d62', cream: '#fff6dc', teal: '#2f9a93', tealL: '#62c9bd', mustard: '#eab43a', mustardD: '#b88420' };
   const PIV = { x: 34, y: 14 }, WHEEL_DY = 12, CARRY = { dx: 6, y: 13 };
-  function makePlane(prop, pilot, bob, chain) {
+  // The gondola is a glass egg so AOI can be seen pedalling. Each press turns the crank
+  // half a turn and both legs follow it; a sprite is made for CRANK_STEPS positions of
+  // the crank. The outline, the wheel and the wing are where they always were, so the
+  // plane is the same size and its hit box did not move.
+  const CRANK_STEPS = 8;
+  function makePlane(prop, pilot, crank) {
     const [c, g] = canvas(66, 28);
-    const P = (col, x, y, w = 1, h = 1) => px(g, col, x + 1, y + 1, w, h);
+    const P = (col, x, y, w = 1, h = 1) => px(g, col, Math.round(x) + 1, Math.round(y) + 1, w, h);
     const ell = (cx, cy, rx, ry, f) => {
       for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
         const d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2;
         if (d <= 1) { const col = f(x, y, d); if (col) P(col, x, y); }
       }
+    };
+    const line = (x0, y0, x1, y1, col, w = 1) => {
+      const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1) * 2;
+      for (let i = 0; i <= n; i++) P(col, x0 + (x1 - x0) * i / n - (w - 1) / 2, y0 + (y1 - y0) * i / n - (w - 1) / 2, w, w);
     };
     // tail: wooden boom, a plain triangular fin with a red stripe, red stabiliser
     P(PC.woodL, 5, 11, 20); P(PC.woodD, 5, 12, 20);
@@ -126,31 +135,55 @@ export function mountHyperProp(root) {
     P(PC.canvas, 16, 0, 21); P(PC.canvas, 4, 1, 40); P(PC.cream, 17, 1, 19); P(PC.canvasS, 2, 2, 44); P(PC.canvasD, 6, 3, 36);
     for (let x = 7; x < 43; x += 5) P(PC.canvasS, x, 1);
     P(PC.tomato, 0, 0, 3); P(PC.tomato, 2, 1, 4); P(PC.tomatoD, 2, 2, 4); P(PC.tomato, 43, 0, 3); P(PC.tomato, 41, 1, 4); P(PC.tomatoD, 41, 2, 4);
-    P(PC.wood, 29, 4, 1, 4); P(PC.wood, 37, 4, 1, 4);
+    P(PC.wood, 37, 4, 1, 4);
     // bicycle wheel
     P(PC.woodD, 34, 18, 1, 2);
     ell(34, 21, 3.5, 3.5, (x, y, d) => d > 0.5 ? C.ink : (x === 34 || y === 21) ? C.greyL : null);
     P(PC.mustard, 34, 21);
-    // egg gondola: cream top, teal band, tomato belly
-    ell(33, 13, 10.5, 5.8, (x, y, d) => {
-      if (y < 12) return (x < 29 && y < 11 && d > 0.45) ? PC.cream : d > 0.8 && x > 36 ? PC.canvasS : PC.canvas;
-      if (y === 12) return PC.tealL;
-      if (y === 13) return PC.teal;
-      return y > 16 || (d > 0.7 && x > 38) ? PC.tomatoD : (x < 28 && y === 14 ? PC.tomatoL : PC.tomato);
-    });
-    ell(26, 15.5, 2.4, 2.4, (x, y, d) => d > 0.45 ? PC.mustard : PC.cream); P(PC.tomato, 26, 15);
-    P('#3a2a22', 29, 8, 8);
-    // windscreen
-    P(PC.woodD, 38, 5, 1, 4); P(C.canopy, 39, 5, 2, 3); P(C.white, 39, 5); P(C.canopyD, 40, 7);
+    // the far wall of the egg, seen through the glass
+    ell(33, 13, 10.5, 5.8, (x, y, d) => d > 0.7 && y > 15 ? (y > 16 ? PC.tomatoD : PC.tomato) : null);
+    // seat and handlebar
+    P(PC.mustardD, 28, 12, 4); P(PC.mustard, 28, 11, 3);
+    P(PC.woodD, 38, 9, 1, 4); P(PC.woodD, 37, 9, 2, 1);
+    // crank, legs: hip over the seat, crank ahead of it and low
+    const a = crank / CRANK_STEPS * Math.PI * 2, CX = 37, CY = 15, R = 3, HX = 30, HY = 11;
+    const foot = (t) => [CX + Math.cos(t) * R, CY + Math.sin(t) * R];
     if (pilot) {
-      const b = bob ? 1 : 0, A = (col, x, y, w = 1) => P(col, x, y + b, w);
-      A(AO.n, 32, 3, 3); A(AO.H, 31, 4, 5); A(AO.l, 32, 4);
-      A(AO.n, 31, 5); A(AO.g, 32, 5); A(AO.G, 33, 5, 2); A(AO.g, 35, 5);
-      A(AO.n, 31, 6); A(AO.H, 32, 6); A(C.skin, 33, 6, 3);
-      A(AO.n, 31, 7); A(C.skinD, 32, 7); A(C.skin, 33, 7, 2); A(AO.f, 30, 8, 6);
+      // far leg first, in shade, then the near one
+      [[a + Math.PI, AO.O, AO.B], [a, AO.o, AO.b]].forEach(([t, col, boot], i) => {
+        const [fx, fy] = foot(t), L = 4.8;
+        const dx = fx - HX, dy = fy - HY, d = Math.min(Math.hypot(dx, dy), L * 2 - 0.01);
+        const k = Math.atan2(dy, dx) - Math.acos(d / (2 * L));
+        const kx = HX + Math.cos(k) * L, ky = HY + Math.sin(k) * L;
+        line(HX, HY, kx, ky, col, 2); line(kx, ky, fx, fy, col, 2);
+        P(boot, fx - 1, fy, 3, 1);
+        if (i === 0) { P(C.grey, CX - 1, CY - 1, 3, 3); P(C.greyL, CX, CY); }
+      });
+      // AOI: navy bob and goggles out of the open top, fleece collar, olive suit, brown glove on the bar
+      P(AO.n, 30, 3, 3); P(AO.H, 29, 4, 5); P(AO.l, 30, 4);
+      P(AO.n, 29, 5); P(AO.g, 30, 5); P(AO.G, 31, 5, 2); P(AO.g, 33, 5);
+      P(AO.n, 29, 6); P(AO.H, 30, 6); P(C.skin, 31, 6, 3);
+      P(AO.n, 29, 7); P(C.skinD, 30, 7); P(C.skin, 31, 7, 2);
+      P(AO.f, 28, 8, 6);
+      P(AO.o, 28, 9, 5, 2); P(AO.q, 29, 9, 2, 1); P(AO.O, 28, 11, 4, 1);
+      line(32, 9, 36, 10, AO.o); P(AO.b, 36, 9, 2, 2);
+    } else {
+      P(C.grey, CX - 1, CY - 1, 3, 3); P(C.greyL, CX, CY);
+      for (const t of [a, a + Math.PI]) { const [fx, fy] = foot(t); P(C.ink, fx - 1, fy, 3, 1); }
     }
-    // drive: chain from the pedals up to the hub, then the nose cone
-    for (let i = 0; i < 10; i++) P((i + chain) % 2 ? C.ink : C.greyL, 38 + i, Math.round(16 - i * 0.4));
+    // crank arm, and the chain up to the hub running as the crank turns
+    const [nx, ny] = foot(a);
+    line(CX, CY, nx, ny, C.ink);
+    for (let i = 0; i < 10; i++) P((i + crank) % 2 ? C.ink : C.greyL, CX + 1 + i, Math.round(CY - 0.5 - i * 0.3));
+    // glass: a faint tint over what is inside, a rim that shades from sky blue to red,
+    // a glint, and a thin red belly under the pedals
+    g.globalAlpha = 0.3;
+    ell(33, 13, 10.5, 5.8, (x, y, d) => y < 17 ? C.canopy : null);
+    g.globalAlpha = 1;
+    ell(33, 13, 10.5, 5.8, (x, y, d) => d > 0.8 ? (y < 12 ? C.canopyD : y < 16 ? PC.teal : PC.tomato) : null);
+    ell(33, 13, 10.5, 5.8, (x, y) => y >= 18 ? PC.tomatoD : null);
+    P(C.white, 25, 10); P(C.white, 26, 9); P(C.white, 27, 8);
+    // drive: the hub and nose cone
     P(C.grey, 43, 12, 4); P(PC.mustard, 47, 11, 2, 3); P(PC.mustardD, 47, 13, 2); P(PC.cream, 47, 11);
     if (prop === 0) { P(PC.wood, 49, 2, 2, 21); P(PC.woodL, 49, 5, 1, 5); P(PC.woodL, 49, 14, 1, 5); P(PC.tomato, 49, 1, 2, 3); P(PC.tomato, 49, 21, 2, 3); }
     else if (prop === 1) { P(PC.wood, 49, 8, 2, 9); P(PC.tomato, 49, 7, 2, 2); P(PC.tomato, 49, 16, 2, 2); }
@@ -162,7 +195,7 @@ export function mountHyperProp(root) {
     return c;
   }
   const planeSpr = {};
-  for (const pilot of [0, 1]) for (const f of [0, 1, 2]) for (const b of [0, 1]) for (const ch of [0, 1]) planeSpr[`${pilot}${f}${b}${ch}`] = makePlane(f, pilot, b, ch);
+  for (const pilot of [0, 1]) for (const f of [0, 1, 2]) for (let k = 0; k < CRANK_STEPS; k++) planeSpr[`${pilot}${f}${k}`] = makePlane(f, pilot, k);
 
   const aoiTop = [
     '..b.......b.', '..o.......o.', '..o.nHHHn.o.', '..onHlHHHHo.', '..ongGGgGGo.', '..onHHHssso.', '..onHHsseso.',
@@ -350,6 +383,8 @@ export function mountHyperProp(root) {
   }
   const opened = () => { let n = 1; while (n < LAST && rec.time[n]) n++; return n; };
   const s = S.create(opened());
+  // the crank eases round to crankTo, which moves half a turn with every press once seated
+  let crank = 0, crankTo = 0;
   let camX = s.x - CAM_LEAD, camY = 0, time = 0, propA = 0, parts = [], wreck = null, overT = 0;
   let banner = null, jpMsg = '', jpT = 0, seen = {};
   const inp = { up: false, down: false };
@@ -458,7 +493,7 @@ export function mountHyperProp(root) {
     if (n !== s.stage) { toTitle(n); au.play('tick'); }
   }
   function begin() {
-    S.start(s); parts = []; seen = {}; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
+    S.start(s); parts = []; seen = {}; crank = crankTo = 0; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
     runTime = 0; newRecord = false; paused = false; countdown = 0;
     tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
     au.music('stage', 0); au.play('start');
@@ -527,7 +562,7 @@ export function mountHyperProp(root) {
     if (paused) return;
     if (s.phase === 'ready') return begin();
     tut.lastFootT = ui;
-    if (s.phase === 'roll' || s.phase === 'fly') tut.seatedWait = false;
+    if (s.phase === 'roll' || s.phase === 'fly') { tut.seatedWait = false; crankTo += Math.PI; }
     S.foot(s);
   }
   function pressUp() {
@@ -664,6 +699,8 @@ export function mountHyperProp(root) {
     if (banner) { banner.t -= real; if (banner.t <= 0) banner = null; }
     jpT -= real; if (jpT <= 0 && !over()) jpMsg = '';
     propA += (s.phase === 'roll' || s.phase === 'fly' ? s.omega : s.phase === 'clear' ? 0.7 : 0) * 50 * dt;
+    if (s.phase === 'clear') crankTo += Math.PI * 5 * dt;
+    crank += (crankTo - crank) * Math.min(1, dt * 22);
     au.engine({ phase: s.phase, omega: s.omega, V: s.phase === 'over' ? 0 : Math.hypot(s.vx, s.vy) });
     if (s.phase === 'fly' || s.phase === 'roll') {
       if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = '鳥だ！ 上か下をすり抜けろ'; jpT = 2.2; }
@@ -839,7 +876,8 @@ export function mountHyperProp(root) {
 
   function planeImg(pilot) {
     const f = s.omega > 0.45 || s.phase === 'clear' ? 2 : Math.floor(propA) % 2;
-    return planeSpr[`${pilot ? 1 : 0}${f}${s.leg === 1 ? 1 : 0}${Math.floor(propA * 3) % 2}`];
+    const k = ((Math.round(crank / (Math.PI * 2) * CRANK_STEPS) % CRANK_STEPS) + CRANK_STEPS) % CRANK_STEPS;
+    return planeSpr[`${pilot ? 1 : 0}${f}${k}`];
   }
   function drawPlane(x, y, rot, img) {
     const q = Math.round(rot / (Math.PI / 48)) * (Math.PI / 48);
@@ -852,21 +890,21 @@ export function mountHyperProp(root) {
     if (wreck) {
       const sink = wreck.splashed ? wreck.sink : 0;
       ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, sy(CFG.lakeY) + 2); ctx.clip();
-      if (s.result.reason === 'splash') drawPlane(wreck.x, wreck.y - sink, wreck.rot * 0.5 + 0.15, planeSpr['1100']);
-      else { drawPlane(wreck.x + 6, wreck.y - sink, wreck.rot, planeSpr['0000']); drawSpr(tuckR[Math.floor(wreck.rot * 2) & 3], wreck.x - 4, wreck.y - sink + 6); }
+      if (s.result.reason === 'splash') drawPlane(wreck.x, wreck.y - sink, wreck.rot * 0.5 + 0.15, planeSpr['110']);
+      else { drawPlane(wreck.x + 6, wreck.y - sink, wreck.rot, planeSpr['000']); drawSpr(tuckR[Math.floor(wreck.rot * 2) & 3], wreck.x - 4, wreck.y - sink + 6); }
       ctx.restore();
       return;
     }
     if (ph === 'ready' || ph === 'run') {
       const moving = s.vx > 2, f = moving ? Math.floor(s.x / 6) % 4 : 1;
       const bob = f % 2 ? 1 : 0;
-      drawPlane(s.x + CARRY.dx, CARRY.y + bob, 0, planeSpr['0000']);
+      drawPlane(s.x + CARRY.dx, CARRY.y + bob, 0, planeSpr['000']);
       drawSpr(runF[f], s.x, bob);
       return;
     }
     if (ph === 'board') {
       const t = Math.min(1, s.boardT / CFG.boardTime), e = t * t * (3 - 2 * t);
-      drawPlane(s.x + CARRY.dx * (1 - e), (1 - e) * CARRY.y, 0, planeSpr['0000']);
+      drawPlane(s.x + CARRY.dx * (1 - e), (1 - e) * CARRY.y, 0, planeSpr['000']);
       if (t < 0.9) drawSpr(tuckR[Math.floor(e * 4) & 3], s.x - e * 2, Math.sin(t * Math.PI) * 24 + e * 8);
       return;
     }
