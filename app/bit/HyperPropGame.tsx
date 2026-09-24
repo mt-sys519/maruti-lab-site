@@ -54,7 +54,7 @@ export function HyperPropGame() {
                   <button className="hpBtn" data-k="down" type="button" aria-label="機首下げ">▼</button>
                 </div>
               </div>
-              <span className="hpCap" data-hp="upCap">PITCH</span>
+              <span className="hpCap">PITCH</span>
             </div>
             <div className="hpWell hpPedals">
               <div className="hpPbox">
