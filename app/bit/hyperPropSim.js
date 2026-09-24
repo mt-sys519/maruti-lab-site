@@ -27,7 +27,7 @@ export const CFG = {
 export function create() {
   return {
     phase: 'ready', t: 0, x: 0, y: 0, vx: 0, vy: 0, theta: 0, omega: 0,
-    lastFoot: 0, boardT: 0, stumble: 0, stopT: 0, alpha: 0, stall: false,
+    leg: 0, boardT: 0, stopT: 0, alpha: 0, stall: false,
     onGround: true, climbed: false, success: false, result: null, events: [],
   };
 }
@@ -36,18 +36,14 @@ export function start(s) {
   Object.assign(s, create(), { phase: 'run' });
 }
 
-export function foot(s, side) {
+// Every press counts, from either pedal: drumming one pedal is as good as
+// alternating, and the difficulty is the number of presses a second. The legs
+// still take turns on screen - leg flips with each press, whichever side it was.
+export function foot(s) {
   if (s.phase !== 'run' && s.phase !== 'roll' && s.phase !== 'fly') return;
-  const good = side !== s.lastFoot;
-  s.lastFoot = side;
-  if (s.phase === 'run') {
-    if (good) s.vx += CFG.run.step * (1 - s.vx / CFG.run.vcap);
-    else { s.vx *= 0.8; s.stumble = 0.25; s.events.push('stumble'); }
-    if (good) s.events.push('step');
-  } else {
-    if (good) { s.omega += CFG.prop.add * (1 - s.omega); s.events.push('pedal'); }
-    else { s.omega *= 0.9; s.stumble = 0.25; s.events.push('stumble'); }
-  }
+  s.leg = s.leg === 1 ? -1 : 1;
+  if (s.phase === 'run') { s.vx += CFG.run.step * (1 - s.vx / CFG.run.vcap); s.events.push('step'); }
+  else { s.omega += CFG.prop.add * (1 - s.omega); s.events.push('pedal'); }
 }
 
 export function board(s) {
@@ -83,7 +79,6 @@ export function aero(s) {
 
 export function step(s, dt, inp) {
   s.t += dt;
-  s.stumble = Math.max(0, s.stumble - dt);
   if (s.phase === 'run') {
     s.vx = Math.max(0, s.vx - CFG.run.friction * dt);
     s.x += s.vx * dt;

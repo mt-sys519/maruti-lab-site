@@ -400,12 +400,10 @@ export function mountHyperProp(root) {
 
   function handleEvents() {
     for (const e of s.events) {
-      if (e === 'step') { burst(s.x - 2, 0, 2, [C.dirt[0], C.grass[2]], 14, 0.6); au.play('step', s.lastFoot); }
+      if (e === 'step') { burst(s.x - 2, 0, 2, [C.dirt[0], C.grass[2]], 14, 0.6); au.play('step', s.leg); }
       if (e === 'pedal') au.play('pedal', s.omega);
       if (e === 'board') au.play('board');
       if (e === 'liftoff') au.play('liftoff');
-      if (e === 'stumble') au.play('stumble');
-      if (e === 'stumble') { jpMsg = s.phase === 'run' ? 'つまずいた！ 左右交互に' : 'ペダルが空回り！ 左右交互に'; jpT = 0.9; }
       if (e === 'seated') { show('GO!', '', 0.8, '乗り込んだ！ 漕げ！'); au.play('seated'); au.layer(1); }
       if (e === 'climb') { show('TAKE OFF!', '', 1.6, '離陸！'); au.play('takeoff'); au.layer(2); }
       if (e === 'goal') {
@@ -434,7 +432,7 @@ export function mountHyperProp(root) {
 
   // ---------- input ----------
   const over = () => s.phase === 'over' || s.phase === 'clear';
-  function pressFoot(side) { if (paused) return; if (s.phase === 'ready') return begin(); S.foot(s, side); }
+  function pressFoot(side) { if (paused) return; if (s.phase === 'ready') return begin(); S.foot(s); }
   function pressUp() {
     if (paused) return;
     if (s.phase === 'ready') return begin();
@@ -471,19 +469,14 @@ export function mountHyperProp(root) {
   // Fingers are read from touchstart, one touch at a time, with the default action
   // cancelled. On iPhone Safari two fingers down together - which is exactly what
   // drumming the pedals is - start the pinch-zoom recogniser, and the pointer events
-  // for those touches get cancelled or never arrive: a press goes missing, the next
-  // one lands on the same side and counts as a stumble. Cancelling touchstart keeps
+  // for those touches get cancelled or never arrive. Cancelling touchstart keeps
   // the page from ever treating the pad as a gesture.
   //
-  // The playtest on an iPhone still stumbled after that, and never on Android Chrome.
-  // Three things guard the count now. A finger that is still down is never a new
-  // press, even when WebKit lists it among the changed touches as another one lands.
-  // A fingertip that bounces and touches the same pedal twice within 70ms is one
-  // press (drumming at 10 a second, the same pedal comes round every 200ms). And two
-  // pedals arriving in one event are taken in the order that alternates.
+  // Two things guard the count. A finger that is still down is never a new press,
+  // even when WebKit lists it among the changed touches as another one lands. And a
+  // fingertip that bounces and touches the same pedal twice within 70ms is one press.
   const held = new Map();
   const lastTap = { L: -Infinity, R: -Infinity };
-  const sideOf = (b) => (b.dataset.k === 'L' ? -1 : b.dataset.k === 'R' ? 1 : 0);
   on(root, 'touchstart', (e) => {
     touchMode = true;
     let hit = false;
@@ -496,7 +489,6 @@ export function mountHyperProp(root) {
       held.set(t.identifier, b); fresh.push(b);
     }
     if (hit) e.preventDefault();
-    fresh.sort((x, y) => Number(sideOf(x) === s.lastFoot) - Number(sideOf(y) === s.lastFoot));
     for (const b of fresh) {
       const k = b.dataset.k;
       if (k === 'L' || k === 'R') {
@@ -512,12 +504,10 @@ export function mountHyperProp(root) {
     if (hit && e.type === 'touchend' && e.cancelable) e.preventDefault();
   };
   on(root, 'touchend', lift, { passive: false }); on(root, 'touchcancel', lift);
-  // Still stumbling on an iPhone, and the playtest said exactly where: fine at the BGM's
-  // tempo, broken above it. Drumming with two fingers, each finger comes back to its own
-  // pedal every other press - every 0.45s at the music's 4.4 a second, every 0.29s at 7.
-  // The second is inside Safari's double-tap-to-zoom window (~0.3s on one spot), and a
-  // tap Safari is still deciding about can reach the page late - behind the other
-  // finger's next press, which then counts as the same side twice. So Safari is told, in
+  // The iPhone playtest was fine at the BGM's tempo and broken above it. Drumming, a
+  // finger comes back to its own pedal every 0.45s at the music's 4.4 a second and every
+  // 0.29s at 7 - inside Safari's double-tap-to-zoom window (~0.3s on one spot), and a
+  // tap Safari is still deciding about can reach the page late. So Safari is told, in
   // every way it listens, that nothing here is a double tap: the touchend is cancelled
   // along with the touchstart, dblclick is cancelled, and while this page is up the
   // document is touch-action: manipulation (scrolling and pinch-zoom still work).
@@ -703,7 +693,7 @@ export function mountHyperProp(root) {
 
   function planeImg(pilot) {
     const f = s.omega > 0.45 || s.phase === 'clear' ? 2 : Math.floor(propA) % 2;
-    return planeSpr[`${pilot ? 1 : 0}${f}${s.lastFoot === 1 ? 1 : 0}${Math.floor(propA * 3) % 2}`];
+    return planeSpr[`${pilot ? 1 : 0}${f}${s.leg === 1 ? 1 : 0}${Math.floor(propA * 3) % 2}`];
   }
   function drawPlane(x, y, rot, img) {
     const q = Math.round(rot / (Math.PI / 48)) * (Math.PI / 48);
@@ -725,8 +715,7 @@ export function mountHyperProp(root) {
       const moving = s.vx > 2, f = moving ? Math.floor(s.x / 6) % 4 : 1;
       const bob = f % 2 ? 1 : 0;
       drawPlane(s.x + CARRY.dx, CARRY.y + bob, 0, planeSpr['0000']);
-      if (s.stumble > 0) drawSpr(tuckR[1], s.x, 0);
-      else drawSpr(runF[f], s.x, bob);
+      drawSpr(runF[f], s.x, bob);
       return;
     }
     if (ph === 'board') {
@@ -792,7 +781,7 @@ export function mountHyperProp(root) {
   const plateLines = [$('l1'), $('l2')];
   function updatePlate() {
     const t = touchMode;
-    const pedal = t ? 'PEDAL を交互に叩いて' : '← → を交互に押して';
+    const pedal = t ? 'PEDAL を叩いて' : '← → を押して';
     const [what, press] = {
       ready: [t ? 'PEDAL か START でスタート' : 'Enter / Space でスタート', au.enabled ? '' : '音は本体の上の SOUND を ON に'],
       run: [pedal + '走る', t ? '赤い杭のあたりで ▲ で乗り込む' : '赤い杭のあたりで ↑ で乗り込む'],

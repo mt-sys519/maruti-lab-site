@@ -112,7 +112,6 @@ export function createHyperPropAudio() {
   const fx = {
     start() { const t = ctx.currentTime; tone({ f: 988, dur: 0.07, g: 0.07, at: t }); tone({ f: 1319, dur: 0.3, g: 0.07, at: t + 0.07, send: 0.2 }); },
     step(side) { noise({ f: 170 + side * 30, type: 'lowpass', q: 1, dur: 0.07, g: 0.35 }); tone({ f: 95, to: 60, dur: 0.06, g: 0.12, type: 'sine' }); },
-    stumble() { tone({ f: 420, to: 150, dur: 0.2, g: 0.08 }); noise({ f: 300, q: 0.8, dur: 0.12, g: 0.25 }); },
     board() { const t = ctx.currentTime; tone({ f: 330, to: 990, slide: 0.14, dur: 0.16, g: 0.07 }); noise({ f: 600, to: 2400, q: 0.9, dur: 0.3, g: 0.12, at: t + 0.12 }); },
     seated() { const t = ctx.currentTime; noise({ f: 160, type: 'lowpass', dur: 0.1, g: 0.4 }); tone({ f: 1319, dur: 0.07, g: 0.05, at: t + 0.06 }); tone({ f: 1760, dur: 0.14, g: 0.05, at: t + 0.12, send: 0.2 }); },
     pedal(w) { noise({ f: 3800, type: 'highpass', q: 0.7, dur: 0.025, g: 0.06 }); tone({ f: 1800 + w * 900, dur: 0.018, g: 0.018 }); },
