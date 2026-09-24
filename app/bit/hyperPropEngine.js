@@ -371,9 +371,8 @@ export function mountHyperProp(root) {
   // moment the player hesitates at a step it stops (or slows) the world, lights the
   // button to press and says what to do, on the monitor and on the sub display. Someone
   // who already knows never sees it happen. Until stage 1 has been cleared once the
-  // world waits for them, and a miss after boarding restarts at the red stake instead
-  // of the top of the hill; after that the hints only light the button, and the stage
-  // plays as a time attack.
+  // world waits for them; after that the hints only light the button, and the stage
+  // plays as a time attack. A miss always starts again from the top of the hill.
   const tutorialStage = () => s.stage === 1;
   const teach = () => tutorialStage() && !rec.time[1];
   const STAKE = CFG.edgeX - 28;
@@ -388,7 +387,7 @@ export function mountHyperProp(root) {
     stall: { keys: 'down', k: 0.35, big: 'NOSE DOWN ▼', jp: (t) => ['失速！ 機首の上げすぎ', t ? '▼ で機首を下げて速度を戻す' : '↓ で機首を下げて速度を戻す'] },
     pedal: { keys: 'LR', k: 1, big: 'PEDAL!', jp: (t) => ['プロペラが止まりそう', t ? 'PEDAL を連打し続ける' : '← → を連打し続ける'] },
   };
-  const tut = { hint: null, k: 1, seatedWait: false, lastFootT: -1e9, stallT: 0, cp: null, glow: '' };
+  const tut = { hint: null, k: 1, seatedWait: false, lastFootT: -1e9, stallT: 0, glow: '' };
   function pickHint(dt) {
     const idle = ui - tut.lastFootT;
     tut.stallT = s.phase === 'fly' && s.stall ? tut.stallT + dt : 0;
@@ -414,19 +413,9 @@ export function mountHyperProp(root) {
     if (tut.hint === HINTS.board && teach()) s.vx = Math.max(s.vx, 8);
     return tut.k;
   }
-  const canResumeAtStake = () => teach() && tut.cp && s.phase === 'over' && (s.result.reason === 'splash' || s.result.reason === 'stop');
   function retry() {
     if (s.phase === 'clear') toTitle(Math.min(LAST, s.stage + 1));
-    else if (canResumeAtStake()) resumeAtStake();
     else begin();
-  }
-  function resumeAtStake() {
-    const cp = tut.cp;
-    Object.assign(s, cp.s, { events: [], birds: cp.s.birds.map((b) => ({ ...b })) });
-    runTime = cp.runTime; camX = cp.camX; camY = cp.camY; lastMark = cp.lastMark;
-    parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; stallBeep = 0; newRecord = false;
-    paused = false; countdown = 0; tut.seatedWait = true; tut.lastFootT = -1e9; tut.k = 0;
-    au.music('stage', 0); au.layer(1); au.play('start');
   }
 
   // ---------- sound ----------
@@ -471,7 +460,7 @@ export function mountHyperProp(root) {
   function begin() {
     S.start(s); parts = []; seen = {}; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
     runTime = 0; newRecord = false; paused = false; countdown = 0;
-    tut.cp = null; tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
+    tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
     au.music('stage', 0); au.play('start');
   }
 
@@ -497,7 +486,6 @@ export function mountHyperProp(root) {
       if (e === 'seated') {
         show('GO!', '', 0.8, '乗り込んだ！ 漕げ！'); au.play('seated'); au.layer(1);
         tut.seatedWait = true;
-        tut.cp = { s: { ...s, events: [], birds: s.birds.map((b) => ({ ...b })) }, runTime, camX, camY, lastMark };
       }
       if (e === 'climb') { show('TAKE OFF!', '', 1.6, '離陸！'); au.play('takeoff'); au.layer(2); }
       if (e === 'bird') {
@@ -925,7 +913,6 @@ export function mountHyperProp(root) {
       if (s.phase === 'clear' && newRecord && blink) text('NEW RECORD!', W / 2, 86, C.yellow, { align: 'center' });
     } else if (s.phase === 'fly' && s.stall && blink) text('STALL!', W / 2, 52, [C.white, C.redL, C.redL, C.red, C.red, C.redD, C.redD], { s: 2, align: 'center' });
     if (over() && overT > 0.6 && blink) text(touchMode ? 'PUSH START' : 'PRESS ENTER', W / 2, 100, C.yellow, { align: 'center' });
-    if (over() && overT > 0.6 && canResumeAtStake()) text('RETRY FROM THE STAKE', W / 2, 112, C.white, { align: 'center' });
     drawHint(blink);
 
     if (paused) {
@@ -979,7 +966,7 @@ export function mountHyperProp(root) {
       board: ['', ''],
       roll: [pedal + '漕ぐ', t ? '▲ で機首上げ' : '↑ で機首上げ'],
       fly: s.stall ? ['失速！', t ? '▼ で機首を下げて速度を戻す' : '↓ で機首を下げて速度を戻す'] : [pedal + '漕ぐ', t ? '▲ ▼ で機首' : '↑ ↓ で機首'],
-      over: ['', canResumeAtStake() ? (t ? 'START で赤い杭からやり直す' : 'Enter で杭から / R で最初から') : (t ? 'START でもう一度' : 'Enter / R でもう一度')],
+      over: ['', t ? 'START でもう一度' : 'Enter / R でもう一度'],
       clear: ['', s.stage < LAST ? (t ? 'START で次の面へ' : 'Enter で次の面へ / R でもう一度') : (t ? 'START でタイトルへ' : 'Enter でタイトルへ / R でもう一度')],
     }[s.phase] || ['', ''];
     const lines = paused
