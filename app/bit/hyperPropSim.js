@@ -24,16 +24,64 @@ export const CFG = {
   pxToM: 0.5,
 };
 
-export function create() {
+// The stages share one hill and one lake. What changes is the run-up, the birds over
+// the water and the air. A bird is [metres past the cliff, height above the lake]. The
+// plane is 26px tall from its wheel (s.y) to the wingtips and flies between the water
+// and about 35px up, so there are three kinds of bird: one skimming the water (5-6)
+// only catches a plane that sinks, one at 15 has to be climbed over, and one at 42 can
+// only be passed under, skimming the lake. air is [from m, to m, px/s], sinking air
+// negative.
+// Tuned with bots (careful pilot dodging, sloppy one pulling up only when low):
+// stage 1 clears from 6 presses a second, stage 2 from ~7.5 when dodging (flying
+// straight costs 2-3 strikes), stage 3 from 7.5 for both.
+export const STAGES = [
+  null,
+  { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
+  { name: 'BIRD CROSSING', startX: 50, air: [],
+    birds: [[60, 5], [130, 42], [200, 15], [270, 42], [335, 15], [380, 5]] },
+  { name: 'DOWNDRAFT LAKE', startX: 0,
+    air: [[80, 115, -3.5], [115, 140, 4], [200, 240, -3.5], [240, 262, 4], [320, 360, -3.5]],
+    birds: [[100, 6], [225, 6], [345, 6]] },
+];
+
+export function create(stage = 1) {
   return {
-    phase: 'ready', t: 0, x: 0, y: 0, vx: 0, vy: 0, theta: 0, omega: 0,
-    leg: 0, boardT: 0, stopT: 0, alpha: 0, stall: false,
+    phase: 'ready', stage, t: 0, x: STAGES[stage].startX, y: 0, vx: 0, vy: 0, theta: 0, omega: 0,
+    leg: 0, boardT: 0, stopT: 0, alpha: 0, stall: false, lift: 0, bonk: 0,
     onGround: true, climbed: false, success: false, result: null, events: [],
+    birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1 }; }),
   };
 }
 
-export function start(s) {
-  Object.assign(s, create(), { phase: 'run' });
+export function start(s, stage = s.stage || 1) {
+  Object.assign(s, create(stage), { phase: 'run' });
+  moveBirds(s);
+}
+
+// Birds hover over their spot, drifting a little, so a stage plays the same every time.
+function moveBirds(s) {
+  for (const b of s.birds) {
+    if (b.hitT >= 0) continue;
+    b.x = b.x0 + Math.sin(s.t * 0.7 + b.p) * 6;
+    b.y = b.y0 + Math.sin(s.t * 2.2 + b.p) * 2;
+  }
+}
+// the gondola and the wing, in world pixels from the wheel, level flight
+function hitsPlane(s, b) {
+  const dx = b.x - s.x, dy = b.y - s.y, r = 2;
+  const body = dx > -14 - r && dx < 19 + r && dy > 0 - r && dy < 26 + r;
+  const wing = dx > -31 - r && dx < 19 + r && dy > 20 - r && dy < 27 + r;
+  return body || wing;
+}
+
+// Rising (+) and sinking (-) air over stretches of the lake, px/s, eased in at the edges
+export function airAt(s, x) {
+  const m = (x - CFG.edgeX) * CFG.pxToM;
+  for (const [a, b, w] of STAGES[s.stage].air) {
+    if (m < a || m > b) continue;
+    return w * Math.min(1, (m - a) / 8, (b - m) / 8);
+  }
+  return 0;
 }
 
 // Every press counts, from either pedal: drumming one pedal is as good as
@@ -56,10 +104,12 @@ function fail(s, reason) {
   s.events.push(s.success ? 'land' : 'fail');
 }
 
+// flight is worked out against the air, which may be rising or sinking
 export function aero(s) {
   const a = CFG.aero;
-  const V = Math.max(0.1, Math.hypot(s.vx, s.vy));
-  const gamma = Math.atan2(s.vy, s.vx);
+  const ux = s.vx, uy = s.vy - s.lift;
+  const V = Math.max(0.1, Math.hypot(ux, uy));
+  const gamma = Math.atan2(uy, ux);
   const alpha = s.theta - gamma;
   let cl, stall = false;
   if (Math.abs(alpha) < a.stall) cl = a.cla * alpha;
@@ -74,11 +124,13 @@ export function aero(s) {
   const L = q * cl * ge;
   const D = q * (a.cd0 + a.k * cl * cl / ge + (stall ? a.stallDrag : 0));
   const T = CFG.prop.thrust * s.omega * Math.max(0, 1 - V / CFG.prop.vmax);
-  return { V, gamma, alpha, stall, L, D, T, ge };
+  return { V, ux, uy, gamma, alpha, stall, L, D, T, ge };
 }
 
 export function step(s, dt, inp) {
   s.t += dt;
+  moveBirds(s);
+  s.bonk = Math.max(0, s.bonk - dt);
   if (s.phase === 'run') {
     s.vx = Math.max(0, s.vx - CFG.run.friction * dt);
     s.x += s.vx * dt;
@@ -102,6 +154,7 @@ export function step(s, dt, inp) {
   if (clear) inp = {};
 
   s.omega = clear ? 0.7 : Math.max(0, s.omega - CFG.prop.decay * dt);
+  s.lift = airAt(s, s.x);
   const f = aero(s);
   s.alpha = f.alpha;
   s.stall = f.stall;
@@ -118,8 +171,8 @@ export function step(s, dt, inp) {
     s.theta = Math.max(-0.8, Math.min(0.8, s.theta));
   }
 
-  let ax = f.T * Math.cos(s.theta) - f.D * s.vx / f.V - f.L * s.vy / f.V;
-  let ay = f.T * Math.sin(s.theta) - f.D * s.vy / f.V + f.L * s.vx / f.V - CFG.g;
+  let ax = f.T * Math.cos(s.theta) - f.D * f.ux / f.V - f.L * f.uy / f.V;
+  let ay = f.T * Math.sin(s.theta) - f.D * f.uy / f.V + f.L * f.ux / f.V - CFG.g;
 
   const overGround = s.x <= CFG.edgeX;
   if (s.onGround && overGround) {
@@ -139,6 +192,13 @@ export function step(s, dt, inp) {
     s.onGround = false;
   }
   if (clear) { s.y = Math.max(s.y, CFG.lakeY + 4); return; }
+  // a bird strike costs the propeller half its spin and knocks the nose down
+  for (const b of s.birds) {
+    if (b.hitT >= 0 || !hitsPlane(s, b)) continue;
+    b.hitT = s.t; b.hx = b.x; b.hy = b.y;
+    s.omega *= 0.3; s.vx *= 0.7; s.vy = Math.min(s.vy, 0) - 10; s.theta -= 0.2; s.bonk = 0.5;
+    s.events.push('bird');
+  }
   s.phase = s.onGround ? 'roll' : 'fly';
 
   if (s.onGround && s.vx < 1) {

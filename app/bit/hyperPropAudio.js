@@ -114,6 +114,7 @@ export function createHyperPropAudio() {
     step(side) { noise({ f: 170 + side * 30, type: 'lowpass', q: 1, dur: 0.07, g: 0.35 }); tone({ f: 95, to: 60, dur: 0.06, g: 0.12, type: 'sine' }); },
     board() { const t = ctx.currentTime; tone({ f: 330, to: 990, slide: 0.14, dur: 0.16, g: 0.07 }); noise({ f: 600, to: 2400, q: 0.9, dur: 0.3, g: 0.12, at: t + 0.12 }); },
     seated() { const t = ctx.currentTime; noise({ f: 160, type: 'lowpass', dur: 0.1, g: 0.4 }); tone({ f: 1319, dur: 0.07, g: 0.05, at: t + 0.06 }); tone({ f: 1760, dur: 0.14, g: 0.05, at: t + 0.12, send: 0.2 }); },
+    bird() { noise({ f: 900, q: 1.2, dur: 0.1, g: 0.3 }); tone({ f: 1500, to: 900, dur: 0.12, g: 0.05, type: 'square' }); tone({ f: 1300, to: 800, dur: 0.1, g: 0.04, type: 'square', at: ctx.currentTime + 0.09 }); },
     pedal(w) { noise({ f: 3800, type: 'highpass', q: 0.7, dur: 0.025, g: 0.06 }); tone({ f: 1800 + w * 900, dur: 0.018, g: 0.018 }); },
     liftoff() { noise({ f: 400, to: 1800, q: 0.8, dur: 0.6, g: 0.12, attack: 0.15 }); },
     takeoff() { const t = ctx.currentTime; seq([74, 78, 81], t, 0.075, { g: 0.09, cut: 4000 }); tone({ f: hz(86), dur: 0.55, hold: 0.25, g: 0.09, at: t + 0.225, vib: 8, cut: 4000, send: 0.25 }); seq([69, 74, 78], t, 0.075, { g: 0.05, type: 'triangle' }); tone({ f: hz(81), dur: 0.55, g: 0.06, type: 'triangle', at: t + 0.225 }); },

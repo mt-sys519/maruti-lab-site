@@ -1,4 +1,4 @@
-// HYPER PROP stage 1: renderer, input and the handheld's buttons. Physics lives in
+// HYPER PROP: renderer, input and the handheld's buttons. Physics lives in
 // hyperPropSim.js, sound in hyperPropAudio.js. Everything on the monitor is drawn into
 // a 256x192 (4:3) canvas: world, HUD and text.
 //
@@ -328,21 +328,37 @@ export function mountHyperProp(root) {
   }
   const pines = [[-200, pineSpr(30)], [-168, pineSpr(22)], [-120, pineSpr(34)], [-86, pineSpr(20)], [-52, pineSpr(27)], [-18, pineSpr(16)]];
   const bush = fromRows(['..gggg..', '.gGGggg.', 'gGGgggdg', 'ggggggdd'], { g: C.grass[2], G: C.grass[1], d: C.grass[3] });
+  // a gull, facing the plane: wings up, wings down
+  const gull = [
+    fromRows(['gg.........gg', '.gww.....wwg.', '..wwww.wwww..', '...wwwwwww...', '.oowwwwwww...', '....wwwww....'], { g: C.grey, w: C.white, o: C.orange }),
+    fromRows(['...wwwwwww...', '.oowwwwwww...', '..wwww.wwww..', '.gww.....wwg.', 'gg.........gg', '.............'], { g: C.grey, w: C.white, o: C.orange }),
+  ];
   const boat = fromRows(['...w...', '...ww..', '...www.', '...wwww', '...k...', 'rrrrrrr', '.rrrrr.'], { w: C.white, k: C.ink, r: C.red });
 
   // ---------- state ----------
-  const s = S.create();
-  let camX = -CAM_LEAD, camY = 0, time = 0, propA = 0, parts = [], wreck = null, overT = 0, best = 0;
-  let banner = null, jpMsg = '', jpT = 0;
-  try { best = +localStorage.getItem('hyperprop.best') || 0; } catch { /* storage is optional */ }
+  // Records are kept per stage; stage 1 keeps the keys it had before there were others.
+  // A stage opens once the one before it has been cleared, and the title starts on the
+  // furthest open stage.
+  const LAST = S.STAGES.length - 1;
+  const recKey = (name, n) => (n === 1 ? `hyperprop.${name}` : `hyperprop.${name}.${n}`);
+  const rec = { best: [], time: [] };
+  for (let n = 1; n <= LAST; n++) {
+    try {
+      rec.best[n] = +localStorage.getItem(recKey('best', n)) || 0;
+      rec.time[n] = +localStorage.getItem(recKey('bestTime', n)) || 0;
+    } catch { rec.best[n] = 0; rec.time[n] = 0; /* storage is optional */ }
+  }
+  const opened = () => { let n = 1; while (n < LAST && rec.time[n]) n++; return n; };
+  const s = S.create(opened());
+  let camX = s.x - CAM_LEAD, camY = 0, time = 0, propA = 0, parts = [], wreck = null, overT = 0;
+  let banner = null, jpMsg = '', jpT = 0, seen = {};
   const inp = { up: false, down: false };
   let touchMode = matchMedia('(pointer: coarse)').matches;
   let stallBeep = 0, lastMark = 0;
   // TIME is the clock from the first step to the goal; it stops while paused.
   // Until the stage has been cleared once the record is the longest distance,
   // after that it is the fastest clear.
-  let ui = 0, runTime = 0, bestTime = 0, newRecord = false;
-  try { bestTime = +localStorage.getItem('hyperprop.bestTime') || 0; } catch { /* storage is optional */ }
+  let ui = 0, runTime = 0, newRecord = false;
   const fmt = (t) => `${String(Math.floor(t / 60)).padStart(2, '0')}:${(t % 60).toFixed(1).padStart(4, '0')}`;
   // Pausing follows the rest of MarutiBit: a hidden page pauses by itself and only an
   // explicit press brings it back. Here that press is START (or tapping the screen),
@@ -358,8 +374,8 @@ export function mountHyperProp(root) {
   // world waits for them, and a miss after boarding restarts at the red stake instead
   // of the top of the hill; after that the hints only light the button, and the stage
   // plays as a time attack.
-  const TUTORIAL = true;
-  const teach = () => TUTORIAL && !bestTime;
+  const tutorialStage = () => s.stage === 1;
+  const teach = () => tutorialStage() && !rec.time[1];
   const STAKE = CFG.edgeX - 28;
   // k is how fast the world runs while the hint is up: 0 waits for the press
   const HINTS = {
@@ -391,7 +407,7 @@ export function mountHyperProp(root) {
   }
   // returns how fast the world runs this tick
   function tutor(dt) {
-    tut.hint = TUTORIAL && playing() ? pickHint(dt) : null;
+    tut.hint = tutorialStage() && playing() ? pickHint(dt) : null;
     const want = teach() && tut.hint ? tut.hint.k : 1;
     tut.k = want < tut.k ? Math.max(want, tut.k - dt * 6) : Math.min(want, tut.k + dt * 4);
     // a slow walker still has to be able to jump on
@@ -399,10 +415,14 @@ export function mountHyperProp(root) {
     return tut.k;
   }
   const canResumeAtStake = () => teach() && tut.cp && s.phase === 'over' && (s.result.reason === 'splash' || s.result.reason === 'stop');
-  function retry() { if (canResumeAtStake()) resumeAtStake(); else begin(); }
+  function retry() {
+    if (s.phase === 'clear') toTitle(Math.min(LAST, s.stage + 1));
+    else if (canResumeAtStake()) resumeAtStake();
+    else begin();
+  }
   function resumeAtStake() {
     const cp = tut.cp;
-    Object.assign(s, cp.s, { events: [] });
+    Object.assign(s, cp.s, { events: [], birds: cp.s.birds.map((b) => ({ ...b })) });
     runTime = cp.runTime; camX = cp.camX; camY = cp.camY; lastMark = cp.lastMark;
     parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; stallBeep = 0; newRecord = false;
     paused = false; countdown = 0; tut.seatedWait = true; tut.lastFootT = -1e9; tut.k = 0;
@@ -438,8 +458,18 @@ export function mountHyperProp(root) {
     for (let i = 0; i < n; i++) parts.push({ x, y, vx: (Math.random() - 0.5) * spd, vy: Math.random() * spd * (up || 0.5), life: 0.5 + Math.random() * 0.6, col: cols[i % cols.length] });
   }
 
+  // back to the title, on stage n
+  function toTitle(n) {
+    Object.assign(s, S.create(n)); parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; paused = false; countdown = 0;
+    camX = s.x - CAM_LEAD; camY = 0; tut.hint = null; tut.k = 1;
+    au.music('title');
+  }
+  function pickStage(d) {
+    const n = Math.max(1, Math.min(opened(), s.stage + d));
+    if (n !== s.stage) { toTitle(n); au.play('tick'); }
+  }
   function begin() {
-    S.start(s); parts = []; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
+    S.start(s); parts = []; seen = {}; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
     runTime = 0; newRecord = false; paused = false; countdown = 0;
     tut.cp = null; tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
     au.music('stage', 0); au.play('start');
@@ -467,20 +497,29 @@ export function mountHyperProp(root) {
       if (e === 'seated') {
         show('GO!', '', 0.8, '乗り込んだ！ 漕げ！'); au.play('seated'); au.layer(1);
         tut.seatedWait = true;
-        tut.cp = { s: { ...s, events: [] }, runTime, camX, camY, lastMark };
+        tut.cp = { s: { ...s, events: [], birds: s.birds.map((b) => ({ ...b })) }, runTime, camX, camY, lastMark };
       }
       if (e === 'climb') { show('TAKE OFF!', '', 1.6, '離陸！'); au.play('takeoff'); au.layer(2); }
+      if (e === 'bird') {
+        au.play('bird'); jpMsg = '鳥とぶつかった！ プロペラが止まる'; jpT = 1.2;
+        burst(s.x + 8, s.y + 14, 14, [C.white, C.greyL, C.white], 40, 1);
+      }
       if (e === 'goal') {
+        const n = s.stage;
         au.music(null); au.play('goal'); setBest(CFG.successDist * CFG.pxToM);
-        newRecord = !bestTime || runTime < bestTime;
-        if (newRecord) { bestTime = runTime; try { localStorage.setItem('hyperprop.bestTime', bestTime.toFixed(2)); } catch { /* storage is optional */ } }
-        show('STAGE CLEAR!', `TIME ${fmt(runTime)}`, 1e9, newRecord ? `新記録！ ${fmt(runTime)}` : `400m 飛行成功！ ${fmt(runTime)}`);
+        newRecord = !rec.time[n] || runTime < rec.time[n];
+        if (newRecord) { rec.time[n] = runTime; try { localStorage.setItem(recKey('bestTime', n), runTime.toFixed(2)); } catch { /* storage is optional */ } }
+        const big = n === LAST ? 'ALL CLEAR!' : 'STAGE CLEAR!';
+        show(big, `TIME ${fmt(runTime)}`, 1e9, newRecord ? `新記録！ ${fmt(runTime)}` : `400m 飛行成功！ ${fmt(runTime)}`);
       }
       if (e === 'fail' || e === 'land') onFail();
     }
     s.events.length = 0;
   }
-  function setBest(d) { if (d > best) { best = d; try { localStorage.setItem('hyperprop.best', String(Math.round(best))); } catch { /* storage is optional */ } } }
+  function setBest(d) {
+    const n = s.stage;
+    if (d > rec.best[n]) { rec.best[n] = d; try { localStorage.setItem(recKey('best', n), String(Math.round(d))); } catch { /* storage is optional */ } }
+  }
   function onFail() {
     const r = s.result; setBest(r.dist);
     const d = Math.round(r.dist);
@@ -505,7 +544,7 @@ export function mountHyperProp(root) {
   }
   function pressUp() {
     if (paused) return;
-    if (s.phase === 'ready') return begin();
+    if (s.phase === 'ready') return pickStage(1);
     if (over()) { if (overT > 0.6) retry(); return; }
     S.board(s);
   }
@@ -517,11 +556,11 @@ export function mountHyperProp(root) {
     if (e.code === 'Escape' || e.code === 'KeyP') { if (paused) resumeGame(); else pauseGame(); return; }
     if (paused) { if (e.code === 'Enter') resumeGame(); return; }
     if (e.code === 'KeyR') { begin(); return; }
-    if (e.code === 'Enter') { if (s.phase === 'ready') begin(); else if (over() && overT > 0.6) retry(); return; }
+    if (e.code === 'Enter' || (e.code === 'Space' && s.phase === 'ready')) { if (s.phase === 'ready') begin(); else if (over() && overT > 0.6) retry(); return; }
     if (e.repeat) { if (k === 'up') inp.up = true; if (k === 'down') inp.down = true; return; }
     if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
     if (k === 'up') { inp.up = true; pressUp(); }
-    if (k === 'down') inp.down = true;
+    if (k === 'down') { inp.down = true; if (s.phase === 'ready') pickStage(-1); }
   });
   on(window, 'keyup', (e) => { const k = KEYS[e.code]; if (k === 'up') inp.up = false; if (k === 'down') inp.down = false; });
   on(window, 'touchstart', () => { touchMode = true; }, { passive: true });
@@ -529,7 +568,8 @@ export function mountHyperProp(root) {
     const k = b.dataset.k;
     b.classList.add('on');
     if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
-    if (k === 'up') { inp.up = true; pressUp(); } if (k === 'down') inp.down = true;
+    if (k === 'up') { inp.up = true; pressUp(); }
+    if (k === 'down') { inp.down = true; if (s.phase === 'ready' && !paused) pickStage(-1); }
     if (k === 'start') {
       if (paused) resumeGame();
       else if (playing()) pauseGame();
@@ -637,6 +677,10 @@ export function mountHyperProp(root) {
     jpT -= real; if (jpT <= 0 && !over()) jpMsg = '';
     propA += (s.phase === 'roll' || s.phase === 'fly' ? s.omega : s.phase === 'clear' ? 0.7 : 0) * 50 * dt;
     au.engine({ phase: s.phase, omega: s.omega, V: s.phase === 'over' ? 0 : Math.hypot(s.vx, s.vy) });
+    if (s.phase === 'fly' || s.phase === 'roll') {
+      if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = '鳥だ！ 上か下をすり抜けろ'; jpT = 2.2; }
+      if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = '下降気流！ 手前で高度を稼げ'; jpT = 2.2; }
+    }
     if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
     const mark = Math.floor(Math.max(0, s.x - CFG.edgeX) / 200);
     if (mark > lastMark && mark * 200 < CFG.successDist && (s.phase === 'fly' || s.phase === 'roll')) au.play('marker');
@@ -685,6 +729,7 @@ export function mountHyperProp(root) {
     tile(forest, 0.22, hz - 30 + 1);
     drawLake(hz);
     drawMarkers();
+    drawAir();
 
     // cliff and what stands on it
     ctx.drawImage(cliff, sx(CLIFF_L), sy(0) - CLIFF_TOP);
@@ -703,6 +748,7 @@ export function mountHyperProp(root) {
       crest(surf, 0, ex);
     }
 
+    drawBirds();
     drawPlayer();
     for (const p of parts) px(ctx, p.col, sx(p.x), sy(p.y));
     drawHud();
@@ -767,6 +813,42 @@ export function mountHyperProp(root) {
     }
   }
 
+  // Sinking air is a dim stretch of sky with dark streaks falling through it, rising air
+  // a warm one with yellow streaks climbing. Speed is exaggerated so a glance is enough.
+  // Dark and yellow both read over the snow, where white streaks vanished.
+  function drawAir() {
+    const zones = S.STAGES[s.stage].air;
+    if (!zones.length) return;
+    const top = HUD_H, bot = sy(CFG.lakeY) - 2, span = Math.max(1, bot - top);
+    for (const [a, b, w] of zones) {
+      const x0 = CFG.edgeX + a / CFG.pxToM, x1 = CFG.edgeX + b / CFG.pxToM;
+      if (sx(x1) < 0 || sx(x0) > W) continue;
+      ctx.globalAlpha = 0.12;
+      px(ctx, w < 0 ? C.night : C.yellow, sx(x0), top, Math.round(x1 - x0), span);
+      const n = Math.round((x1 - x0) / 2.5);
+      for (let i = 0; i < n; i++) {
+        const wx = x0 + (i + hash(i * 13 + a) * 0.8) * (x1 - x0) / n;
+        const k = S.airAt(s, wx) / Math.abs(w);
+        const y = top + ((((hash(i * 7 + b) * span - time * w * 9) % span) + span) % span);
+        ctx.globalAlpha = 0.7 * Math.abs(k);
+        px(ctx, w < 0 ? C.night : C.yellow, sx(wx), Math.round(y), 1, 6);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawBirds() {
+    for (const b of s.birds) {
+      let x = b.x, y = b.y, f = Math.floor(time * 5 + b.p) % 2;
+      if (b.hitT >= 0) {
+        const t = s.t - b.hitT;
+        if (t > 2) continue;
+        x = b.hx + t * 30; y = b.hy + t * 28; f = Math.floor(t * 14) % 2;
+      }
+      const img = gull[f];
+      ctx.drawImage(img, sx(x) - (img.width >> 1), sy(y) - (img.height >> 1));
+    }
+  }
+
   function planeImg(pilot) {
     const f = s.omega > 0.45 || s.phase === 'clear' ? 2 : Math.floor(propA) % 2;
     return planeSpr[`${pilot ? 1 : 0}${f}${s.leg === 1 ? 1 : 0}${Math.floor(propA * 3) % 2}`];
@@ -815,10 +897,14 @@ export function mountHyperProp(root) {
       ctx.globalAlpha = 0.35; px(ctx, C.ink, 0, 0, W, H); ctx.globalAlpha = 1;
       text('HYPER', W / 2, 12, [C.white, C.white, '#d8ecf2', '#d8ecf2', '#b5d8ec', '#b5d8ec', '#8fbde2'], { s: 2, align: 'center', shadow: C.night });
       text('PROP', W / 2, 30, GOLD, { s: 4, align: 'center', shadow: C.redD });
-      text('STAGE 1  LAKESIDE HILL', W / 2, 67, C.white, { align: 'center' });
-      if (teach()) text('- TUTORIAL -', W / 2, 79, C.yellow, { align: 'center' });
+      const many = opened() > 1;
+      if (many && s.stage < opened()) text('▲', W / 2, 57, C.white, { align: 'center' });
+      text(`STAGE ${s.stage}  ${S.STAGES[s.stage].name}`, W / 2, 67, C.white, { align: 'center' });
+      if (many && s.stage > 1) text('▼', W / 2, 77, C.white, { align: 'center' });
+      if (teach()) text('- TUTORIAL -', W / 2, 88, C.yellow, { align: 'center' });
       if (blink) text(touchMode ? 'PUSH PEDAL' : 'PRESS ENTER', W / 2, 150, C.yellow, { align: 'center' });
-      text(bestTime ? `BEST TIME ${fmt(bestTime)}` : `BEST ${Math.round(best)}M`, W / 2, 172, C.greyL, { align: 'center' });
+      const bt = rec.time[s.stage];
+      text(bt ? `BEST TIME ${fmt(bt)}` : `BEST ${Math.round(rec.best[s.stage])}M`, W / 2, 172, C.greyL, { align: 'center' });
       return;
     }
     px(ctx, C.ink, 0, 0, W, HUD_H); px(ctx, C.night, 0, HUD_H - 1, W, 1);
@@ -869,12 +955,9 @@ export function mountHyperProp(root) {
     px(ctx, C.yellow, ax - 1, ay - 5, 3, 5);
     for (let r = 0; r < 4; r++) px(ctx, C.yellow, ax - 4 + r, ay + r, 9 - r * 2, 1);
   }
-  // the buttons the game is waiting for light up
+  // the button a tutorial hint is waiting for lights up; nothing else ever glows
   function updateGlow() {
-    const want = paused ? (countdown > 0 ? '' : 'start')
-      : tut.hint ? tut.hint.keys
-      : s.phase === 'ready' ? 'LR'
-      : over() && overT > 0.6 ? 'start' : '';
+    const want = tut.hint && !paused ? tut.hint.keys : '';
     if (want === tut.glow) return;
     tut.glow = want;
     root.querySelectorAll('[data-k]').forEach((b) => {
@@ -890,13 +973,14 @@ export function mountHyperProp(root) {
     const t = touchMode;
     const pedal = t ? 'PEDAL を叩いて' : '← → を押して';
     const [what, press] = {
-      ready: [t ? 'PEDAL か START でスタート' : 'Enter / Space でスタート', au.enabled ? '' : '音は本体の上の SOUND を ON に'],
+      ready: [t ? 'PEDAL か START でスタート' : 'Enter / Space でスタート',
+        opened() > 1 ? (t ? '▲ ▼ で面をえらぶ' : '↑ ↓ で面をえらぶ') : au.enabled ? '' : '音は本体の上の SOUND を ON に'],
       run: [pedal + '走る', t ? '赤い杭のあたりで ▲ で乗り込む' : '赤い杭のあたりで ↑ で乗り込む'],
       board: ['', ''],
       roll: [pedal + '漕ぐ', t ? '▲ で機首上げ' : '↑ で機首上げ'],
       fly: s.stall ? ['失速！', t ? '▼ で機首を下げて速度を戻す' : '↓ で機首を下げて速度を戻す'] : [pedal + '漕ぐ', t ? '▲ ▼ で機首' : '↑ ↓ で機首'],
       over: ['', canResumeAtStake() ? (t ? 'START で赤い杭からやり直す' : 'Enter で杭から / R で最初から') : (t ? 'START でもう一度' : 'Enter / R でもう一度')],
-      clear: ['', t ? 'START でもう一度' : 'Enter / R でもう一度'],
+      clear: ['', s.stage < LAST ? (t ? 'START で次の面へ' : 'Enter で次の面へ / R でもう一度') : (t ? 'START でタイトルへ' : 'Enter でタイトルへ / R でもう一度')],
     }[s.phase] || ['', ''];
     const lines = paused
       ? (countdown > 0 ? ['もうすぐ再開', t ? 'PEDAL に指を置いて' : '← → に指を置いて'] : ['一時停止中', t ? 'START で続ける' : 'Enter / Esc で続ける'])
