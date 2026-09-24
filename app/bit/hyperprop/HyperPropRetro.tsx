@@ -20,6 +20,16 @@ const TEXT = {
       ["BOARD", "赤い杭のところで ▲ を押して飛び乗る"],
       ["PITCH", "▲ ▼ で機首を上げ下げ。水に落ちないように"],
     ],
+    // the data box a magazine ran with a new release; the date waits for the public launch
+    spec: [
+      ["発売日", "COMING SOON"],
+      ["ジャンル", "人力飛行アクション"],
+      ["プレイ人数", "1人"],
+      ["ステージ", "6"],
+      ["対応機種", "MB-01 RETRO"],
+      ["価格", "FREE"],
+      ["セーブ", "ベストタイム記録"],
+    ],
     care: "連打は指や手首に負担がかかります。続けて長く遊ばず、痛みやしびれを感じたらすぐに休んでください。",
     shots: ["湖の上を飛ぶところ", "4面、ナイルの上を飛ぶところ"],
     label: "HYPER PROP のカートリッジ",
@@ -34,6 +44,15 @@ const TEXT = {
       ["RUN", "Drum the pedals with your index and middle fingers to run"],
       ["BOARD", "At the red stake, press ▲ to jump aboard"],
       ["PITCH", "▲ ▼ tip the nose. Keep out of the water"],
+    ],
+    spec: [
+      ["RELEASE", "COMING SOON"],
+      ["GENRE", "Human-powered flight"],
+      ["PLAYERS", "1"],
+      ["STAGES", "6"],
+      ["SYSTEM", "MB-01 RETRO"],
+      ["PRICE", "FREE"],
+      ["SAVE", "Best times"],
     ],
     care: "Drumming is hard on fingers and wrists. Don't play for too long at a stretch, and stop right away if anything hurts or goes numb.",
     shots: ["Flying over the lake", "Stage 4, flying over the Nile"],
@@ -59,6 +78,14 @@ export function HyperPropRetro() {
             <br />
             HYPER PROP
           </p>
+          <dl className="rtSpec">
+            {t.spec.map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
