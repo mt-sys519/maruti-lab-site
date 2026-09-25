@@ -688,3 +688,7 @@ footer{padding-top:34px;padding-bottom:34px}
 .workNotes a{display:block;padding:16px 2px;color:inherit;font-size:15px;text-decoration:none}
 .workNotes a:hover,.workNotes a:focus-visible{text-decoration:underline;text-underline-offset:4px}
 .workNotes.rtNotes{padding-top:clamp(28px,4vw,44px)}
+
+/* A phone screenshot is taller than it is wide; at the column's full width it
+   would fill two screens. Name the file *-tall.* and it is set at phone size. */
+.postBody img[src*="-tall."]{display:block;width:min(100%,360px);margin-inline:auto}
