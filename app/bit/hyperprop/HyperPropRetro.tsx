@@ -73,19 +73,21 @@ export function HyperPropRetro() {
         <HyperPropGame lang={lang} />
         <div className="rtSide">
           <RetroCart label={LABEL} alt={t.label} />
-          <p>
-            RETRO 01
-            <br />
-            HYPER PROP
-          </p>
-          <dl className="rtSpec">
-            {t.spec.map(([k, v]) => (
-              <div key={k}>
-                <dt>{k}</dt>
-                <dd>{v}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="rtInfo">
+            <p>
+              RETRO 01
+              <br />
+              HYPER PROP
+            </p>
+            <dl className="rtSpec">
+              {t.spec.map(([k, v]) => (
+                <div key={k}>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
       </section>
 
