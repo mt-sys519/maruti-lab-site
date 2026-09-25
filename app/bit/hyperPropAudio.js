@@ -44,6 +44,10 @@ export function createHyperPropAudio() {
   // ---------- building blocks ----------
   function tone(o) {
     const at = o.at ?? ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain();
+    // A gain starts at 1. When a note's start and its first gain event land a sample apart,
+    // that one sample went out at full level - a click (1.0 at the output on the city loop's
+    // hats). Starting from silence closes the gap.
+    g.gain.value = 0;
     osc.type = o.type || 'square';
     osc.frequency.setValueAtTime(o.f, at);
     if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, at + (o.slide ?? o.dur));
@@ -60,6 +64,7 @@ export function createHyperPropAudio() {
   }
   function noise(o) {
     const at = o.at ?? ctx.currentTime, src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    g.gain.value = 0; // see tone(): no sample may pass before the envelope starts
     src.buffer = noiseBuf; src.loop = true;
     f.type = o.type || 'bandpass'; f.frequency.setValueAtTime(o.f, at); f.Q.value = o.q ?? 1;
     if (o.to) f.frequency.exponentialRampToValueAtTime(o.to, at + o.dur);
@@ -131,6 +136,8 @@ export function createHyperPropAudio() {
     stall() { tone({ f: 988, dur: 0.09, g: 0.045, hold: 0.06 }); },
     tick() { tone({ f: 1319, dur: 0.08, g: 0.05, type: 'square' }); },
     splash() { const t = ctx.currentTime; noise({ f: 2600, to: 250, type: 'lowpass', q: 0.6, dur: 0.8, g: 0.3 }); for (let i = 0; i < 6; i++) tone({ f: 300 + Math.random() * 500, to: 900 + Math.random() * 600, dur: 0.06, g: 0.04, type: 'sine', at: t + 0.25 + i * 0.07 + Math.random() * 0.04 }); },
+    // hitting the street: a heavy thud and a clank of metal
+    crash() { noise({ f: 900, to: 120, type: 'lowpass', q: 0.7, dur: 0.35, g: 0.35 }); tone({ f: 180, to: 60, dur: 0.25, g: 0.12, type: 'triangle' }); tone({ f: 1400, to: 900, dur: 0.12, g: 0.03, type: 'square', at: ctx.currentTime + 0.03 }); },
     fall() { tone({ f: 1100, to: 220, slide: 1.0, dur: 1.0, g: 0.07, type: 'sine', vib: 25 }); },
     fail() { const t = ctx.currentTime + 0.5; [69, 68, 67].forEach((m, i) => tone({ f: hz(m), dur: 0.2, g: 0.09, at: t + i * 0.22, cut: 2200 })); tone({ f: hz(66), dur: 0.8, hold: 0.3, g: 0.09, at: t + 0.66, cut: 2400, cutTo: 400, vib: 6 }); },
     goal() {
@@ -144,7 +151,8 @@ export function createHyperPropAudio() {
   };
 
   // ---------- music ----------
-  // Both loops are in D major so the jingles and the chimes never clash with them.
+  // The loops sit on D (the lake and the city in D major, Egypt in D Hijaz) so the jingles
+  // and the chimes never clash with them.
   const bus = () => music;
   const lead = (m, at, len, g = 0.034) => tone({ f: hz(m), at, dur: len, g, cut: 3200, bus: bus(), send: 0.18, attack: 0.008 });
   const kick = (at) => tone({ f: 150, to: 55, dur: 0.16, g: 0.18, type: 'sine', at, bus: bus(), attack: 0.006 });
@@ -185,7 +193,64 @@ export function createHyperPropAudio() {
       for (const [st, m, len] of this.melody[bar]) if (st === s) tone({ f: hz(m), at, dur: sx * len * 0.95, g: 0.12, type: 'triangle', bus: bus(), vib: 3, attack: 0.02, send: 0.2 });
     },
   };
-  const TRACKS = { stage: STAGE, title: TITLE };
+  // Egypt: D Hijaz (D Eb F# G A Bb C) over a darbuka's maqsum - doum, tek, tek, doum, tek -
+  // with a reedy lead that bends like a mizmar. It shares D, F# and A with the jingles.
+  const doum = (at) => tone({ f: 120, to: 62, dur: 0.2, g: 0.2, type: 'sine', at, bus: bus(), attack: 0.004 });
+  const tek = (at, g = 0.12) => { noise({ f: 3200, q: 1.8, dur: 0.05, g, at, bus: bus() }); tone({ f: 620, to: 480, dur: 0.03, g: 0.02, type: 'triangle', at, bus: bus() }); };
+  const DESERT = {
+    bpm: 120,
+    chords: [[50, [62, 66, 69]], [51, [63, 67, 70]], [50, [62, 66, 69]], [48, [60, 63, 67]], [50, [62, 66, 69]], [43, [62, 67, 70]], [51, [63, 67, 70]], [50, [62, 66, 69]]],
+    melody: [
+      [[0, 74, 2], [2, 75, 2], [4, 78, 6], [10, 75, 2], [12, 74, 4]],
+      [[0, 75, 2], [2, 78, 2], [4, 79, 4], [8, 78, 2], [10, 75, 2], [12, 74, 4]],
+      [[0, 78, 2], [2, 79, 2], [4, 81, 4], [8, 82, 2], [10, 81, 2], [12, 79, 2], [14, 78, 2]],
+      [[0, 79, 4], [4, 78, 2], [6, 75, 2], [8, 74, 8]],
+      [[0, 81, 2], [2, 82, 2], [4, 84, 4], [8, 82, 2], [10, 81, 2], [12, 79, 4]],
+      [[0, 79, 2], [2, 82, 2], [4, 81, 4], [8, 79, 2], [10, 78, 2], [12, 75, 4]],
+      [[0, 75, 2], [2, 78, 2], [4, 79, 2], [6, 78, 2], [8, 75, 4], [12, 78, 4]],
+      [[0, 74, 8], [8, 75, 2], [10, 74, 2], [12, 74, 4]],
+    ],
+    play(i, at, beat) {
+      const bar = Math.floor(i / 16) % 8, s = i % 16, [root, triad] = this.chords[bar], sx = beat / 4;
+      // running: the drum and a drone on the root. seated: the harmony. flying: the tune.
+      if (s === 0 || s === 8) doum(at);
+      if (s === 2 || s === 6 || s === 12) tek(at);
+      if (s % 2 === 1 && s !== 7) tek(at, 0.035);
+      if (s === 0 || s === 6 || s === 8 || s === 14) tone({ f: hz(root - 12 + (s === 6 ? 7 : 0)), at, dur: sx * 1.9, g: 0.14, type: 'triangle', bus: bus(), attack: 0.01 });
+      if (layer >= 1 && (s === 0 || s === 8)) triad.forEach((m) => tone({ f: hz(m), at, dur: beat * 1.6, g: 0.012, type: 'sawtooth', cut: 1400, bus: bus(), attack: 0.08 }));
+      if (layer >= 2) for (const [st, m, len] of this.melody[bar]) if (st === s) tone({ f: hz(m), at, dur: sx * len * 0.92, g: 0.04, type: 'sawtooth', cut: 2400, vib: 6, bus: bus(), send: 0.22, attack: 0.02 });
+    },
+  };
+  // the city at dusk: city pop in D - seventh chords, a bass that skips about, an electric
+  // piano on the offbeats, and a soft two-oscillator lead
+  const CITY = {
+    bpm: 112,
+    chords: [[43, [62, 66, 71]], [42, [61, 64, 69]], [40, [62, 67, 71]], [45, [61, 64, 67]], [50, [61, 66, 69]], [47, [62, 66, 69]], [40, [62, 67, 71]], [45, [61, 64, 67]]],
+    melody: [
+      [[0, 78, 3], [3, 76, 1], [4, 74, 2], [6, 71, 2], [8, 74, 6], [14, 76, 2]],
+      [[0, 73, 3], [3, 76, 1], [4, 78, 4], [8, 76, 2], [10, 73, 2], [12, 69, 4]],
+      [[0, 71, 2], [2, 74, 2], [4, 78, 3], [7, 76, 1], [8, 74, 2], [10, 71, 2], [12, 74, 4]],
+      [[0, 73, 4], [4, 76, 2], [6, 79, 2], [8, 78, 4], [12, 76, 4]],
+      [[0, 81, 3], [3, 78, 1], [4, 76, 2], [6, 74, 2], [8, 73, 6], [14, 74, 2]],
+      [[0, 78, 3], [3, 76, 1], [4, 74, 4], [8, 71, 2], [10, 73, 2], [12, 74, 4]],
+      [[0, 76, 2], [2, 78, 2], [4, 79, 4], [8, 78, 2], [10, 76, 2], [12, 74, 2], [14, 73, 2]],
+      [[0, 76, 8], [8, 73, 2], [10, 69, 2], [12, 73, 4]],
+    ],
+    play(i, at, beat) {
+      const bar = Math.floor(i / 16) % 8, s = i % 16, [root, triad] = this.chords[bar], sx = beat / 4;
+      if (s === 0 || s === 6 || s === 8) kick(at);
+      if (s === 4 || s === 12) snare(at);
+      hat(at, s % 2 ? 0.04 : 0.022);
+      const bass = { 0: 0, 3: 12, 6: 0, 8: 0, 10: 12, 14: 7 }[s];
+      if (bass !== undefined) tone({ f: hz(root + bass), at, dur: sx * 1.6, g: 0.11, type: 'triangle', bus: bus(), attack: 0.008 });
+      if (layer >= 1 && (s === 3 || s === 7 || s === 11)) triad.forEach((m) => tone({ f: hz(m), at, dur: sx * 1.4, g: 0.02, type: 'sine', bus: bus(), send: 0.2, attack: 0.004 }));
+      if (layer >= 2) for (const [st, m, len] of this.melody[bar]) if (st === s) {
+        tone({ f: hz(m), at, dur: sx * len * 0.9, g: 0.05, type: 'triangle', bus: bus(), send: 0.25, vib: 3, attack: 0.01 });
+        tone({ f: hz(m + 12), at, dur: sx * len * 0.9, g: 0.012, type: 'sine', bus: bus(), attack: 0.01 });
+      }
+    },
+  };
+  const TRACKS = { stage: STAGE, desert: DESERT, city: CITY, title: TITLE };
   function tick() {
     if (!track || !live()) return;
     const tr = TRACKS[track], sx = 60 / tr.bpm / 4;

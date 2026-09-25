@@ -508,85 +508,114 @@ export function mountHyperProp(root) {
     '.cccc.', 'cWcccc', 'cWcccc', 'cccccc', 'cccccd', '.cccd.', '..dd..', '...s..', '..s...', '...s..'], { c: col, W: '#ffffff', d: '#0003', s: '#6b6259' }));
 
   // ---------- the city (stages 7-9) ----------
-  // The same layers again for a bay at dusk: towers in the haze with their windows coming
-  // on, darker blocks nearer, the embankment with its lamps, and the roof of the tower
-  // the run starts on.
+  // Rooftop to rooftop across a city at blue hour. The run is along a tower's roof, and
+  // what was the lake is the street far below: come down there and the flight is over.
+  // Everything the plane meets rises from under the picture, so nothing stands in water.
+  // Drawn the way pixel artists build night skylines: the far towers are nearly sky-
+  // coloured silhouettes with varied crowns and a few pinpricks; nearer ones are darker
+  // with windows lit a floor at a time, not sprinkled; light comes from the last of the
+  // sunset on the left, so each face has a warm rim on that side; and the buildings in
+  // play are lighter and outlined, so they stand clear of the backdrop.
   const CT = {
-    sky: ['#2b2455', '#3d3170', '#5b3f86', '#8a4f8f', '#c66686', '#ef8f7f', '#f9c28c'],
-    water: ['#f6c79a', '#b9829c', '#8a6a9a', '#5d5690', '#43447a', '#343866', '#282b52'],
-    far: ['#7a689f', '#6b5a93', '#5d4e86'], mid: ['#43386f', '#3a3066', '#2f2758'],
-    lit: '#f6d27a', litD: '#caa865', dark: '#1d1838',
-    wall: ['#a7a1c4', '#7d7599', '#5f5783', '#463f6c', '#2e2850'],
+    sky: ['#141633', '#1d1f47', '#2c2a5e', '#4a3a78', '#7c4c86', '#c0607a', '#ec8a6c'],
+    far: { body: '#4b3f78', rim: '#6d5890', lit: '#c9ad7a' },
+    mid: { body: '#241f48', rim: '#3d3266', lit: '#f6d27a' },
+    wall: ['#b7b3d4', '#8f89b4', '#6f6897', '#524b78', '#37315a'],
+    rim: '#f3a57c', lit: '#ffe39a', dark: '#2a2548',
+    road: ['#2a2646', '#211d3a', '#17142b'], line: '#8c86b0',
     steel: ['#f08a4b', '#d6602e', '#9c3d1c'],
+    // kept for code shared with the lake: bursts and markers read the theme's water
+    water: ['#c9c3e0', '#8c86b0', '#524b78', '#37315a', '#2a2646', '#211d3a', '#17142b'],
   };
   const skyCity = (() => {
     const [c, g] = canvas(W, H);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(g, ramp(CT.sky, (y - HUD_H + 6) / (HORIZON - HUD_H - 4), x, y), x, y);
-    // a big low sun going down behind the towers
-    for (let y = -11; y <= 11; y++) for (let x = -11; x <= 11; x++) { const d = x * x + y * y; if (d <= 121) px(g, d > 90 ? '#ffc98a' : '#ffe6b8', 70 + x, 100 + y); }
+    // the first stars, only where the sky has gone dark
+    const r = rng(77);
+    for (let i = 0; i < 26; i++) { const x = Math.floor(r() * W), y = HUD_H + 2 + Math.floor(r() * 40); px(g, r() < 0.3 ? '#ffffff' : '#9fa6d8', x, y); }
     return c;
   })();
-  // thin streaks of cloud lit from below
   function streak(w, seed) {
-    const [c, g] = canvas(w, 4); const r = rng(seed);
-    for (let y = 0; y < 4; y++) { const a = Math.floor(r() * w * 0.3), b = w - Math.floor(r() * w * 0.3); px(g, y < 2 ? '#f7b3a0' : '#d98a92', a, y, b - a, 1); }
+    const [c, g] = canvas(w, 3); const r = rng(seed);
+    for (let y = 0; y < 3; y++) { const a = Math.floor(r() * w * 0.3), b = w - Math.floor(r() * w * 0.3); px(g, y < 1 ? '#d77d86' : '#8e5584', a, y, b - a, 1); }
     return c;
   }
-  const cloudsCity = [[30, 38, streak(60, 3)], [200, 58, streak(44, 5)], [330, 28, streak(36, 8)]];
-  // a row of towers: lit edge on the left, windows on a grid, some of them on
-  function towers(w, h, seed, cols, minH, maxH, lit, chance, spires) {
+  const cloudsCity = [[30, 70, streak(70, 3)], [220, 84, streak(50, 5)]];
+  // One tower: a crown chosen from a few kinds (flat, set back, stepped, spire, slanted,
+  // rounded), a rim on the left, and windows lit in runs along whole floors.
+  function tower(g, x0, base, bw, bh, r, pal, win) {
+    const kind = Math.floor(r() * 6), inset = Math.max(2, Math.floor(bw / 4));
+    const top = (xx) => {
+      if (kind === 1) return xx >= inset && xx < bw - inset ? bh : bh - 6;
+      if (kind === 2) return xx >= inset * 1.5 && xx < bw - inset * 1.5 ? bh : xx >= inset / 2 && xx < bw - inset / 2 ? bh - 5 : bh - 10;
+      if (kind === 4) return bh - Math.floor((xx / bw) * 6);
+      if (kind === 5) { const d = Math.abs(xx - bw / 2) / (bw / 2); return bh - Math.floor(d * d * 5); }
+      return bh;
+    };
+    for (let xx = 0; xx < bw; xx++) {
+      const t = top(xx);
+      for (let y = base - t; y < base; y++) px(g, xx === 0 || y === base - t ? pal.rim : pal.body, x0 + xx, y);
+    }
+    if (kind === 3) { const ax = x0 + (bw >> 1); px(g, pal.body, ax, base - bh - 9, 1, 9); px(g, C.red, ax, base - bh - 10); }
+    if (!win) return;
+    // floors every 3 rows; a floor is lit with some chance, and then a run of it
+    for (let fy = base - 3; fy > base - bh + 3; fy -= 3) {
+      if (r() > win.floors) { if (r() < win.single) px(g, pal.lit, x0 + 2 + Math.floor(r() * (bw - 4)), fy); continue; }
+      const a = 2 + Math.floor(r() * (bw - 6)), len = 2 + Math.floor(r() * (bw - a - 2));
+      for (let xx = a; xx < Math.min(bw - 2, a + len); xx += win.step) if (fy > base - top(xx) + 2) px(g, pal.lit, x0 + xx, fy);
+    }
+  }
+  function skyline(w, h, seed, pal, minH, maxH, win) {
     const [c, g] = canvas(w, h); const r = rng(seed);
     for (let x = 0; x < w;) {
-      const bw = 10 + Math.floor(r() * 16), bh = minH + Math.floor(r() * (maxH - minH)), col = cols[1 + Math.floor(r() * 2)];
-      for (let xx = 0; xx < bw && x + xx < w; xx++) for (let y = h - bh; y < h; y++) {
-        let k = xx === 0 ? cols[0] : col;
-        if (xx % 3 === 1 && (y - (h - bh)) % 4 === 2 && y < h - 2 && hash((x + xx) * 13 + y * 31) < chance) k = lit;
-        px(g, k, x + xx, y);
-      }
-      if (spires && bh > maxH - 18) { const ax = x + (bw >> 1); px(g, cols[2], ax, h - bh - 10, 1, 10); px(g, C.red, ax, h - bh - 11); }
-      x += bw + Math.floor(r() * 3);
+      const bw = 9 + Math.floor(r() * 18), bh = minH + Math.floor(r() * (maxH - minH));
+      tower(g, x, h, Math.min(bw, w - x), bh, r, pal, win);
+      x += bw + (r() < 0.3 ? 1 + Math.floor(r() * 3) : 0);
     }
     return c;
   }
-  const farCity = towers(512, 112, 31, CT.far, 30, 82, CT.litD, 0.3, true);
-  const midCity = towers(512, 62, 47, CT.mid, 16, 52, CT.lit, 0.4, false);
-  // near: the embankment wall, its railing, and the lamps along it
+  const farCity = skyline(512, 112, 31, CT.far, 34, 92, { floors: 0.12, single: 0.25, step: 2 });
+  const midCity = skyline(512, 62, 47, CT.mid, 18, 56, { floors: 0.3, single: 0.3, step: 1 });
+  // near: the low blocks just across the street, dark, with shop signs lit in colour
   const nearCity = (() => {
-    const [c, g] = canvas(512, 30);
-    px(g, CT.dark, 0, 23, 512, 7); px(g, CT.mid[0], 0, 22, 512, 1);
-    px(g, CT.mid[1], 0, 19, 512, 1);
-    for (let x = 0; x < 512; x += 4) px(g, CT.mid[1], x, 19, 1, 3);
-    for (let x = 10; x < 512; x += 32) {
-      px(g, CT.dark, x, 9, 1, 13); px(g, CT.dark, x - 1, 9, 3, 1);
-      px(g, CT.lit, x - 1, 10, 3, 1); px(g, '#ffe6b8', x, 10, 1, 1);
+    const [c, g] = canvas(512, 30); const r = rng(91);
+    for (let x = 0; x < 512;) {
+      const bw = 14 + Math.floor(r() * 20), bh = 10 + Math.floor(r() * 14);
+      for (let xx = 0; xx < bw && x + xx < 512; xx++) for (let y = 30 - bh; y < 30; y++) px(g, xx === 0 || y === 30 - bh ? '#2c2552' : '#16132c', x + xx, y);
+      if (r() < 0.7) { const sw = 4 + Math.floor(r() * 6), sx0 = x + 2 + Math.floor(r() * Math.max(1, bw - sw - 4)); px(g, ['#ff5fa2', '#5fe0ff', '#ffd35c', '#9dff7a'][Math.floor(r() * 4)], sx0, 30 - bh + 3, sw, 2); }
+      for (let xx = 2; xx < bw - 2; xx += 3) if (r() < 0.5) px(g, '#f6c77a', x + xx, 27, 2, 2);
+      x += bw;
     }
     return c;
   })();
-  const reflCity = (() => {
-    const [c, g] = canvas(512, 40);
-    const src = farCity.getContext('2d').getImageData(0, 0, 512, 112).data;
-    for (let y = 0; y < 40; y++) {
-      if (y % 2 === 1 && y > 10) continue;
-      const sy = 111 - Math.floor(y * 2.2); if (sy < 0) continue;
-      for (let x = 0; x < 512; x++) {
-        const i = (sy * 512 + x) * 4; if (!src[i + 3]) continue;
-        px(g, src[i] > 180 ? '#e9b27a' : CT.water[3], x, y);
-      }
+  // across the street, at street level: shopfronts glowing between the pillars
+  const shopsCity = (() => {
+    const [c, g] = canvas(512, 16); const r = rng(13);
+    px(g, '#141128', 0, 0, 512, 16);
+    for (let x = 0; x < 512; x += 12 + Math.floor(r() * 10)) {
+      const w = 6 + Math.floor(r() * 5), lit = r();
+      px(g, lit < 0.6 ? '#e8b46a' : lit < 0.8 ? '#6fd4e8' : '#3a3460', x, 6, w, 7);
+      if (lit < 0.6) px(g, '#ffe3a8', x + 1, 7, w - 2, 1);
+      px(g, '#2c2552', x - 1, 3, w + 2, 2);
     }
     return c;
   })();
-  // a building's face: a lit column on the left, a shaded one on the right, windows
+  // A building's face in the play: pale walls, the warm rim of the sunset on the left and
+  // along the top, windows in runs along its floors. Made once per size.
   function facade(g, x0, y0, w, h, seed) {
+    const r = rng(seed);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      let col = x === 0 ? CT.wall[1] : x >= w - 2 ? CT.wall[3] : CT.wall[2];
-      if (y === 0) col = CT.wall[0];
-      else if (y === 1) col = CT.wall[1];
-      else if (x > 1 && x < w - 2 && x % 4 > 1 && y % 5 > 2) col = hash(seed + (x >> 2) * 17 + Math.floor(y / 5) * 131) < 0.45 ? CT.lit : CT.dark;
+      let col = x < 2 ? CT.wall[1] : x >= w - 3 ? CT.wall[3] : CT.wall[2];
+      if (x === 0 || y === 0) col = CT.rim;
+      else if (y === 1) col = CT.wall[0];
       px(g, col, x0 + x, y0 + y);
     }
+    for (let fy = 4; fy < h - 1; fy += 4) {
+      const on = r() < 0.45, a = 2 + Math.floor(r() * Math.max(1, w - 6)), len = 3 + Math.floor(r() * w);
+      for (let x = 2; x < w - 3; x += 2) px(g, on && x >= a && x < a + len ? CT.lit : CT.dark, x0 + x, y0 + fy, 1, 2);
+    }
   }
-  // The tower the run is on: its roof is the runway, from a little behind the start to the
-  // edge, and it stands in the bay. Lower roofs step down behind it.
+  // The tower the run is on, reaching down out of the picture, with lower roofs behind.
   const cliffCity = (() => {
     const w = CFG.edgeX - CLIFF_L + 3, h = CLIFF_TOP + CLIFF_H; const [c, g] = canvas(w, h);
     const X = (wx) => wx - CLIFF_L;
@@ -594,17 +623,18 @@ export function mountHyperProp(root) {
     facade(g, X(-206), CLIFF_TOP + 14, 134, CLIFF_H - 14, 19);
     facade(g, X(-70), CLIFF_TOP, CFG.edgeX + 70, CLIFF_H, 3);
     for (let y = 0; y < CLIFF_H; y++) px(g, CT.wall[4], X(CFG.edgeX) - 1, CLIFF_TOP + y);
-    // the roof's edge where feet run
-    px(g, '#c9c3e0', X(-70), CLIFF_TOP, CFG.edgeX + 70, 1);
-    return c;
+    // a parapet along the roof's edge, and the lit crown of the lower roofs
+    px(g, '#e8e4f6', X(-70), CLIFF_TOP, CFG.edgeX + 70, 1);
+    return outline(c, C.ink);
   })();
-  // a drone, rotors spinning: two frames
+  // a drone, rotors spinning, its light blinking
   const drone = [
-    fromRows(['ww.......ww', '.k.......k.', '.kkkkkkkkk.', '...kbbbk...', '....k.k....'], { w: C.greyL, k: '#3a3f55', b: C.red }),
-    fromRows(['.w.......w.', '.k.......k.', '.kkkkkkkkk.', '...kbgbk...', '....k.k....'], { w: C.grey, k: '#3a3f55', b: '#2b2f45', g: C.green }),
+    fromRows(['ww.......ww', '.k.......k.', '.kkkkkkkkk.', '...kbbbk...', '....k.k....'], { w: C.greyL, k: '#4a4f68', b: C.red }),
+    fromRows(['.w.......w.', '.k.......k.', '.kkkkkkkkk.', '...kbgbk...', '....k.k....'], { w: C.grey, k: '#4a4f68', b: '#2b2f45', g: C.green }),
   ];
-  const ferry = fromRows(['...wwww.', '..wbwbww', 'kkkkkkkk', '.kkkkkk.'], { w: C.white, b: '#3c6fb0', k: '#3a3f55' });
-  // buildings in the bay and girders on crane cables, made once per size
+  // cars along the street: headlights ahead, tail lights behind
+  const carR = fromRows(['..bbbb...', 'rbbbbbbby', '.k....k..'], { b: '#5a5480', r: C.red, y: '#fff2b0', k: '#0e0c1c' });
+  const carL = fromRows(['...bbbb..', 'ybbbbbbbr', '..k....k.'], { b: '#6a4a70', r: C.red, y: '#fff2b0', k: '#0e0c1c' });
   const cityCache = new Map();
   function buildingSpr(w, h) {
     const key = `b${w}x${h}`;
@@ -621,16 +651,36 @@ export function mountHyperProp(root) {
     }
     return cityCache.get(key);
   }
-  function drawCityStone() {
+  // The street where the lake was: the lit shopfronts across it, the road at the surface
+  // line with cars going both ways, and the dark pavement on this side.
+  function drawStreet(hz) {
     const surf = sy(CFG.lakeY);
+    px(ctx, '#1b1734', 0, hz, W, Math.max(0, surf - hz));
+    const off = ((-camX * 0.6) % 512 + 512) % 512;
+    for (let x = off - 512; x < W; x += 512) ctx.drawImage(shopsCity, Math.round(x), surf - 16);
+    px(ctx, CT.road[0], 0, surf, W, 8); px(ctx, CT.line, 0, surf, W, 1);
+    for (let wx = Math.floor((camX - 8) / 24) * 24; wx < camX + W + 24; wx += 24) px(ctx, '#c9b36a', sx(wx), surf + 4, 10, 1);
+    for (let i = 0; i < 5; i++) {
+      const right = i % 2 === 0, sp = 26 + i * 7, span = W + 120;
+      const x = Math.round((((i * 157 + (right ? 1 : -1) * time * sp - camX) % span) + span) % span) - 60;
+      ctx.drawImage(right ? carR : carL, x, surf + (right ? 1 : 3));
+    }
+    px(ctx, CT.road[1], 0, surf + 8, W, 2); px(ctx, '#5a5480', 0, surf + 8, W, 1);
+    px(ctx, CT.road[2], 0, surf + 10, W, H - surf - 10);
+    for (let wx = Math.floor((camX - 40) / 64) * 64; wx < camX + W + 64; wx += 64) {
+      const x = sx(wx) + 20; px(ctx, '#2c2552', x, surf + 10, 1, H - surf - 10);
+      ctx.globalAlpha = 0.25; px(ctx, '#ffd98a', x - 6, surf + 10, 13, 3); ctx.globalAlpha = 1;
+    }
+  }
+  function drawCityStone() {
     for (const o of s.stone) {
       if (o.kind !== 'building' && o.kind !== 'girder') continue;
       const x0 = sx(o.x), w = Math.round(o.w);
       if (x0 > W + 4 || x0 + w < -4) continue;
       if (o.kind === 'building') {
-        const top = sy(o.top), img = buildingSpr(w, surf - top + 1);
+        // rising from below the picture, past the street, up to its roof
+        const top = sy(o.top), img = buildingSpr(w, H - top + 2);
         ctx.drawImage(img, x0 - 1, top - 1);
-        crest(surf, Math.max(0, x0 - 1), Math.min(W, x0 + w + 1));
       } else {
         // the cable runs up out of the picture to a crane nobody needs to see
         const bot = sy(o.bot), img = girderSpr(w), cx = x0 + (w >> 1);
@@ -643,7 +693,7 @@ export function mountHyperProp(root) {
 
   const THEMES = {
     alps: { sky, clouds, far: alps, mid: range2, near: forest, refl, cliff, water: C.water, props: true, lap: true, bird: gull, boat, goal: [C.rock[2], C.rock[1], C.grass[1], C.grass[0]] },
-    city: { sky: skyCity, clouds: cloudsCity, far: farCity, mid: midCity, near: nearCity, refl: reflCity, cliff: cliffCity, water: CT.water, props: false, lap: true, bird: drone, boat: ferry, goal: [CT.wall[3], CT.wall[2], CT.wall[1], CT.wall[0]] },
+    city: { sky: skyCity, clouds: cloudsCity, far: farCity, mid: midCity, near: nearCity, cliff: cliffCity, water: CT.water, props: false, street: true, bird: drone, goal: [CT.wall[3], CT.wall[2], CT.wall[1], CT.wall[0]] },
     egypt: { sky: skyEg, clouds: cloudsEg, far: farEg, mid: midEg, near: nearEg, refl: reflEg, cliff: cliffEg, water: EG.water, props: false, bird: falcon, boat: felucca, goal: [EG.stone[2], EG.stone[1], EG.sand[1], EG.sand[0]] },
   };
 
@@ -784,13 +834,15 @@ export function mountHyperProp(root) {
   // over a short fanfare - when it is entered from the title or from the stage before.
   // A retry after a miss goes straight back to the run.
   const INTRO = 1.8;
+  // each world has its own loop: the lake, Egypt, the city
+  const stageMusic = () => ({ egypt: 'desert', city: 'city' })[S.STAGES[s.stage].theme] || 'stage';
   let intro = 0;
   function begin(card = false) {
     S.start(s); parts = []; seen = {}; crank = crankTo = 0; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
     runTime = 0; newRecord = false; paused = false; countdown = 0; rest = false;
     tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
     intro = card ? INTRO : 0;
-    if (card) { au.music(null); au.play('intro'); } else { au.music('stage', 0); au.play('start'); }
+    if (card) { au.music(null); au.play('intro'); } else { au.music(stageMusic(), 0); au.play('start'); }
   }
 
   const playing = () => s.phase === 'run' || s.phase === 'board' || s.phase === 'roll' || s.phase === 'fly';
@@ -848,10 +900,10 @@ export function mountHyperProp(root) {
     const r = s.result; setBest(r.dist);
     restNow();
     const d = Math.round(r.dist);
-    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('湾に着水', 'Down in the bay') : L('湖に着水', 'Down in the lake');
+    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('通りに墜落', 'Down in the street') : L('湖に着水', 'Down in the lake');
     const [big, jp] = {
       edge: ['FELL OFF!', L('乗り込む前に崖の外へ…', 'Over the edge before boarding…')], miss: ['MISSED!', L('乗り込みが間に合わなかった', 'Too late to board')], stop: ['STOPPED', L('止まってしまった', 'Came to a stop')],
-      splash: ['SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
+      splash: [theme().street ? 'CRASH!' : 'SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
       sphinx: ['CRASH!', L(`スフィンクスにぶつかった… ${d}m`, `Hit the Sphinx… ${d}m`)],
       building: ['CRASH!', L(`ビルにぶつかった… ${d}m`, `Hit a building… ${d}m`)],
       girder: ['CRASH!', L(`吊り荷にぶつかった… ${d}m`, `Hit a hanging girder… ${d}m`)],
@@ -859,10 +911,12 @@ export function mountHyperProp(root) {
     }[r.reason];
     show(big, r.reason === 'splash' || r.reason === 'obelisk' || r.reason === 'sphinx' || r.reason === 'building' || r.reason === 'girder' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
     au.music(null);
-    if (r.reason === 'splash') { au.play('splash'); au.play('fail'); }
+    if (r.reason === 'splash' && theme().street) { au.play('crash'); au.play('fail'); }
+    else if (r.reason === 'splash') { au.play('splash'); au.play('fail'); }
     else if (r.reason === 'stop' || r.reason === 'short') au.play('fail');
     else au.play('fall');
     if (r.reason === 'edge' || r.reason === 'miss') wreck = { x: s.x, y: s.boardT > 0 ? 6 : 12, vx: s.vx * 0.8, vy: 4, rot: 0, vr: 2.5, splashed: false };
+    else if (r.reason === 'splash' && theme().street) { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, [C.yellow, C.orange, C.white], 50, 1); }
     else if (r.reason === 'splash') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true }; burst(s.x + 8, CFG.lakeY, 30, [C.white, theme().water[0], theme().water[1]], 60, 1.4); }
     else if (r.reason === 'sand') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, EG.sand, 40, 0.8); }
     // hitting an obelisk throws the plane back off it; running out at the goal lets it glide down
@@ -1041,7 +1095,7 @@ export function mountHyperProp(root) {
     // the stage card: the world waits, then the run and its music start together
     if (intro > 0) {
       intro -= dt;
-      if (intro <= 0) { intro = 0; tut.lastFootT = ui; au.music('stage', 0); au.play('start'); }
+      if (intro <= 0) { intro = 0; tut.lastFootT = ui; au.music(stageMusic(), 0); au.play('start'); }
       au.engine({ phase: 'over', omega: 0, V: 0 });
       return;
     }
@@ -1083,7 +1137,11 @@ export function mountHyperProp(root) {
     if (wreck) {
       if (!wreck.splashed) {
         wreck.vy -= CFG.g * dt; wreck.x += wreck.vx * dt; wreck.y += wreck.vy * dt; wreck.rot += wreck.vr * dt;
-        if (wreck.y <= CFG.lakeY) { au.play('splash'); au.play('fail'); wreck.splashed = true; wreck.y = CFG.lakeY; wreck.sink = 0; burst(wreck.x, CFG.lakeY, 30, [C.white, C.water[0], C.water[1]], 60, 1.4); }
+        if (wreck.y <= CFG.lakeY) {
+          wreck.splashed = true; wreck.y = CFG.lakeY; wreck.sink = 0; au.play('fail');
+          if (theme().street) { wreck.sand = true; au.play('crash'); burst(wreck.x, CFG.lakeY, 24, [C.yellow, C.orange, C.white], 50, 1); }
+          else { au.play('splash'); burst(wreck.x, CFG.lakeY, 30, [C.white, C.water[0], C.water[1]], 60, 1.4); }
+        }
       } else if (!wreck.sand) wreck.sink = Math.min(10, wreck.sink + dt * 2.5);
     }
     if (s.phase === 'fly' && s.x > CFG.edgeX && s.y - CFG.lakeY < 8 && Math.random() < 0.5) burst(s.x - 6, CFG.lakeY, 1, [C.white, C.water[0]], 8, 0.8);
@@ -1128,7 +1186,7 @@ export function mountHyperProp(root) {
     tile(T.far, 0.05, hz - T.far.height + 2);
     tile(T.mid, 0.1, hz - T.mid.height + 2);
     tile(T.near, 0.22, hz - 30 + 1);
-    drawLake(hz, T);
+    if (T.street) drawStreet(hz); else drawLake(hz, T);
     drawMarkers(T);
     drawObelisks();
     drawSphinx();
