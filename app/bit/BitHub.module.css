@@ -5,37 +5,6 @@
    glyphs, so it's reserved for the Latin game-name logotypes elsewhere;
    this page's Japanese copy stays on Yu Gothic UI, just recolored to the
    shop's ink tone instead of the old site-wide blue/red. */
-.hero {
-  min-height: 340px;
-  padding: clamp(40px, 5.5vw, 72px) clamp(24px, 8vw, 120px) clamp(30px, 3.6vw, 52px);
-  display: grid;
-  grid-template-columns: .42fr minmax(0, 1.2fr) .42fr;
-  gap: clamp(28px, 5vw, 80px);
-  align-items: center;
-  position: relative;
-  background-color: #F5EFE1;
-  background-image: linear-gradient(rgba(24, 61, 85, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(24, 61, 85, .06) 1px, transparent 1px);
-  background-size: 32px 32px, 32px 32px;
-}
-.hero::before, .hero::after { content: ""; position: absolute; pointer-events: none; }
-.hero::before { top: 14%; right: 6%; width: 12px; height: 12px; border-radius: 50%; background: #FF7A5C; opacity: .5; }
-.hero::after { bottom: 12%; left: 3%; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 11px solid #2BB3A3; opacity: .5; }
-/* The hero copy sits above the ambience layer, which would otherwise paint
-   over its own hero. The layer needs the type selector beaten, or it is laid
-   out as a grid cell and pushes the eyebrow into the next column. */
-.hero > p, .hero > div { position: relative; z-index: 1; }
-.hero > .ambient { grid-column: 1 / -1; position: absolute; inset: 0; z-index: 0; }
-.hero > p { margin: 0; align-self: start; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
-.hero > div { grid-column: 2; }
-.hero h1 { max-width: 26em; margin: 0; color: #232323; font: 700 clamp(32px, 3.6vw, 54px)/1.32 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; letter-spacing: .01em; }
-/* Japanese has no spaces, so the line was breaking inside a word and leaving
-   two characters stranded on the second line. Each phrase is its own
-   inline-block: the break lands between them, and a phrase too wide for the
-   column still wraps inside itself rather than overflowing. */
-.hero h1 span { display: inline-block; }
-.hero div > p { margin: 26px 0 0; color: #53615a; font: 400 13.5px/2.1 "Yu Gothic UI", sans-serif; }
-.hero div > a { display: inline-flex; margin-top: 34px; min-height: 50px; align-items: center; padding: 0 24px; background: #FF7A5C; border: 3px solid #232323; box-shadow: 5px 5px 0 #232323; color: #232323; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; transition: transform .14s ease, box-shadow .14s ease; }
-.hero div > a:hover, .hero div > a:focus-visible { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #232323; outline: 0; }
 .catalog {
   position: relative;
   padding: clamp(26px, 3vw, 44px) clamp(20px, 6vw, 90px) clamp(80px, 14vw, 260px);
@@ -88,15 +57,10 @@
 .listKind { grid-column: 2/-1; margin-top: 7px; color: #5d6963; font: 400 11px/1.7 "Yu Gothic UI", sans-serif; }
 
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; min-height: 0; align-items: start; }
-  .hero > p { align-self: auto; }
-  .hero > div { grid-column: 1; }
   .catalog > header { grid-template-columns: 1fr auto; gap: 16px; }
   .catalog > header p { grid-column: 1/-1; }
 }
 @media (max-width: 640px) {
-  .hero { padding-top: 40px; padding-bottom: 44px; }
-  .hero h1 { font-size: clamp(30px, 9vw, 42px); }
   .list a { grid-template-columns: 42px minmax(0, 1fr); }
   .listKana { grid-column: 2; }
   .catalog > header h2 { font-size: 30px; }
@@ -105,7 +69,7 @@
 /* The machine of the day, standing on the floor the fold used to leave bare. */
 .pick { position: relative; z-index: 1; margin-top: clamp(56px, 14vw, 260px); display: flex; align-items: center; gap: clamp(26px, 4vw, 56px); }
 .pickUnit, .pickCopy { position: relative; z-index: 1; }
-.pickUnit { flex: 0 0 auto; width: clamp(224px, 21vw, 292px); }
+.pickUnit { flex: 0 0 auto; width: clamp(200px, 15vw, 260px); }
 .pickCopy { min-width: 0; }
 .pickEyebrow { margin: 0; color: #65716c; font: 600 8px/1 "Yu Gothic UI", sans-serif; letter-spacing: .18em; }
 .pickTitle { margin: 15px 0 0; color: #232323; font: 700 clamp(21px, 2.2vw, 31px)/1.3 "Yu Gothic UI", "Hiragino Kaku Gothic ProN", sans-serif; }
@@ -117,7 +81,7 @@
 
 @media (max-width: 760px) {
   .pick { flex-direction: column; align-items: flex-start; gap: 30px; }
-  .pickUnit { width: min(72vw, 300px); }
+  .pickUnit { width: min(56vw, 260px); }
 }
 
 /* The screen dissolves into the shop floor at both edges rather than sitting
@@ -158,4 +122,54 @@
    would only squeeze both. */
 @media (max-width: 1040px) {
   .pickShot { display: none; }
+}
+
+/* MINI GAMES set into a rule, parting this catalog from the RETRO series above it */
+.rule { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; margin: 0 0 clamp(18px, 2vw, 26px); color: #232323; }
+.rule::before, .rule::after { content: ""; flex: 1 1 auto; height: 3px; background: #232323; }
+.rule::before { flex: 0 0 clamp(18px, 3vw, 44px); }
+.rule span { font: 800 clamp(20px, 2vw, 26px)/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: .06em; }
+.rule small { font: 600 12px/1 "Yu Gothic UI", sans-serif; letter-spacing: .12em; color: #65716c; }
+
+/* ---- the shop's sign and its two counters ---- */
+.hero {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(24px, 4vw, 64px); align-items: center;
+  padding: clamp(30px, 4vw, 56px) clamp(20px, 6vw, 90px) clamp(30px, 3.6vw, 50px);
+  background-color: #F5EFE1;
+  background-image: linear-gradient(rgba(24, 61, 85, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(24, 61, 85, .06) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px;
+}
+.heroHead { min-width: 0; }
+.heroEyebrow { margin: 0; color: #65716c; font: 600 9px/1 "Yu Gothic UI", sans-serif; letter-spacing: .2em; }
+.heroBrand { display: flex; align-items: baseline; margin: 14px 0 0; color: #232323; font: 800 clamp(52px, 7vw, 100px)/.9 Inter, sans-serif; letter-spacing: -.03em; }
+.heroBrand b { color: #2BB3A3; font-weight: 800; }
+.heroLine { margin: 16px 0 0; color: #53615a; font: 500 clamp(14px, 1.3vw, 17px)/1.7 "Yu Gothic UI", sans-serif; }
+.random { display: inline-flex; align-items: center; min-height: 42px; margin-top: 22px; padding: 0 20px; background: #FF7A5C; border: 3px solid #232323; box-shadow: 4px 4px 0 #232323; color: #232323; font: 700 11px/1 "Yu Gothic UI", sans-serif; letter-spacing: .15em; transition: transform .14s ease, box-shadow .14s ease; }
+.random:hover, .random:focus-visible { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #232323; outline: 0; }
+
+.doors { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 2vw, 26px); }
+.door { display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 18px; border: 3px solid #232323; border-radius: 9px; box-shadow: 5px 5px 0 #232323; text-decoration: none; transition: transform .14s ease, box-shadow .14s ease; }
+.door:hover, .door:focus-visible { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #232323; outline: 0; }
+.doorArt { position: relative; display: flex; align-items: center; justify-content: center; height: clamp(96px, 10vw, 136px); }
+.doorText { display: flex; flex-direction: column; gap: 6px; }
+.doorText b { font-weight: 400; }
+.doorText small { font: 500 12px/1.4 "Yu Gothic UI", sans-serif; }
+/* RETRO: the series' dark, its type, the cartridge's label */
+.doorRetro { background: #1d1a26; color: #f1e6cc; box-shadow: 5px 5px 0 #232323, inset 0 -5px 0 #e24a35; }
+.doorRetro .doorArt img { height: 100%; width: auto; aspect-ratio: 1; border: 3px solid #f1e6cc; border-radius: 4px; }
+.doorRetro .doorText b { font: 400 clamp(14px, 1.4vw, 18px)/1 "Press Start 2P", monospace; letter-spacing: .08em; }
+.doorRetro .doorText small { color: #cfc9e2; }
+/* MINI GAMES: the shop's cream, a fan of cards in the games' colours */
+.doorMini { background: #faf6f1; color: #232323; }
+.doorMini .doorArt i { position: absolute; width: 30%; aspect-ratio: 3 / 4; background: var(--pkg-color); border: 3px solid #232323; border-radius: 6px; box-shadow: 3px 3px 0 #232323; transform: translateX(calc((var(--i) - 2) * 38%)) rotate(calc((var(--i) - 2) * 8deg)); }
+.doorMini .doorText b { font: 800 clamp(18px, 1.8vw, 24px)/1 "Baloo 2", "Yu Gothic UI", sans-serif; letter-spacing: .04em; }
+.doorMini .doorText small { color: #5d6963; }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .door { padding: 12px 12px 14px; gap: 10px; }
+  .doorArt { height: 84px; }
+  .doorText small { font-size: 11px; }
 }

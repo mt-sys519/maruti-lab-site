@@ -22,6 +22,10 @@
   user-select: none;
 }
 .unit:hover, .unit:focus-visible { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 #232323; outline: 0; }
+/* The same machine cut off under its bezel: the controls and the chin go, so what is
+   left is a card in the game's colour. The shelf uses it. */
+.card { padding-bottom: clamp(16px, 1.6vw, 22px); border-radius: 17px; }
+.card .controls { display: none; }
 
 .bezel { display: flex; flex-direction: column; gap: 10px; padding: 13px 13px 15px; background: #232323; border-radius: 10px 10px 7px 7px; color: #f1eee5; }
 /* The screen follows the shell, not the window. Fixing its height in vh made

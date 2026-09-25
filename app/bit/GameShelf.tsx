@@ -208,6 +208,7 @@ export const GameShelf = forwardRef<
           <GameUnit
             game={game}
             key={`${copy}-${game.id}`}
+            card
             className={styles.railUnit}
             aria-hidden={copy === 1 ? undefined : true}
             tabIndex={copy === 1 ? undefined : -1}

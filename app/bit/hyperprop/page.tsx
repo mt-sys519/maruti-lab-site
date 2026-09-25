@@ -22,7 +22,6 @@ export const metadata: Metadata = {
     ],
   },
   twitter: { card: "summary_large_image", title, description, images: ["/og/bit/hyperprop.png"] },
-  robots: { index: false, follow: false },
 };
 
 // The first RETRO cartridge. The page is the series' own world rather than MarutiBit's:

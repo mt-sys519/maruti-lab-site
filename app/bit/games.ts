@@ -32,3 +32,18 @@ export const bitGames = [
 export const featuredBitGames = bitGames.filter((game) => game.featured);
 
 export type BitGameId = (typeof bitGames)[number]["id"];
+
+// The RETRO series: games for the MB-01 RETRO handheld, each one a cartridge. Kept apart
+// from the catalog above, whose games share MarutiBit's navs and shelf; on /bit the newest
+// cartridge is shown first, above the rest.
+export const retroGames = [
+  {
+    id: "hyperprop",
+    serial: "RETRO 01",
+    name: "HYPER PROP",
+    kind: "人力飛行ゲーム",
+    href: "/bit/hyperprop",
+    label: "/bit/retro/hyperprop-label.jpg",
+    description: "高台で機体を抱えて走り、飛び乗って、漕いで飛ぶ。ペダルを連打する人力飛行ゲーム。",
+  },
+] as const;

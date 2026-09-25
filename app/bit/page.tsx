@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BitFooter } from "./BitFooter";
 import { BitHeader } from "./BitHeader";
 import { BitHub } from "./BitHub";
+import "./retro/retro.css";
 
 const title = "MarutiBit — 小さなゲームの入口";
 const description = "考える。見抜く。打ち込む。短い時間で遊べる、Maruti Labのミニゲームシリーズ。";
@@ -17,6 +18,9 @@ export const metadata: Metadata = {
 export default function MarutiBitPage() {
   return (
     <main className="bitPage">
+      {/* The RETRO faces for the series block: Press Start 2P and DotGothic16. */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" />
       <BitHeader />
       <BitHub />
       <BitFooter />

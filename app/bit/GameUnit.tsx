@@ -7,15 +7,18 @@ export type BitGame = (typeof bitGames)[number];
 
 /** One game as a handheld: the shell in the game's package color, the name
  *  on the dark bezel where light text is readable whatever the shell is.
- *  Shared by the shelf and by the machine of the day, so they cannot drift. */
-export function GameUnit({ game, className, ...rest }: {
+ *  Shared by the shelf and by the machine of the day, so they cannot drift.
+ *  As a card (the shelf) the controls are cut off below the bezel. */
+export function GameUnit({ game, className, card, ...rest }: {
   game: BitGame;
   className?: string;
+  card?: boolean;
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  const cls = [styles.unit, card ? styles.card : "", className ?? ""].filter(Boolean).join(" ");
   return (
     <a
       href={game.href}
-      className={className ? `${styles.unit} ${className}` : styles.unit}
+      className={cls}
       style={{ "--pkg-color": game.color } as CSSProperties}
       draggable={false}
       {...rest}
