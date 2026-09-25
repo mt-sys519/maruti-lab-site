@@ -1072,10 +1072,10 @@ export function mountHyperProp(root) {
     const r = s.result; setBest(r.dist);
     restNow();
     const d = Math.round(r.dist);
-    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('通りに墜落', 'Down in the street') : L('湖に着水', 'Down in the lake');
+    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('ビルの谷間へ落ちていった', 'Down into the canyon') : L('湖に着水', 'Down in the lake');
     const [big, jp] = {
       edge: ['FELL OFF!', L('乗り込む前に崖の外へ…', 'Over the edge before boarding…')], miss: ['MISSED!', L('乗り込みが間に合わなかった', 'Too late to board')], stop: ['STOPPED', L('止まってしまった', 'Came to a stop')],
-      splash: [theme().street ? 'CRASH!' : 'SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
+      splash: [theme().street ? 'MAYDAY!' : 'SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
       sphinx: ['CRASH!', L(`スフィンクスにぶつかった… ${d}m`, `Hit the Sphinx… ${d}m`)],
       building: ['CRASH!', L(`ビルにぶつかった… ${d}m`, `Hit a building… ${d}m`)],
       girder: ['CRASH!', L(`吊り荷にぶつかった… ${d}m`, `Hit a hanging girder… ${d}m`)],
@@ -1085,13 +1085,15 @@ export function mountHyperProp(root) {
     }[r.reason];
     show(big, r.reason === 'splash' || r.reason === 'obelisk' || r.reason === 'sphinx' || r.reason === 'building' || r.reason === 'girder' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
     au.music(null);
-    if (r.reason === 'splash' && theme().street) { au.play('crash'); au.play('fail'); }
+    if (r.reason === 'splash' && theme().street) au.play('fall');
     else if (r.reason === 'splash') { au.play('splash'); au.play('fail'); }
     else if (r.reason === 'stop' || r.reason === 'short' || r.reason === 'overshoot') au.play('fail');
     else if (r.reason === 'hard') { au.play('crash'); au.play('fail'); }
     else au.play('fall');
     if (r.reason === 'edge' || r.reason === 'miss') wreck = { x: s.x, y: s.boardT > 0 ? 6 : 12, vx: s.vx * 0.8, vy: 4, rot: 0, vr: 2.5, splashed: false };
-    else if (r.reason === 'splash' && theme().street) { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, [C.yellow, C.orange, C.white], 50, 1); }
+    // in the city the street is far below, behind the play: the plane keeps falling, past
+    // it and out of the bottom of the picture, and the crash is only heard
+    else if (r.reason === 'splash' && theme().street) wreck = { x: s.x, y: s.y, vx: s.vx * 0.6, vy: Math.min(s.vy, 0) - 10, rot: s.theta, vr: -1.4, splashed: false, whole: true };
     else if (r.reason === 'splash') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true }; burst(s.x + 8, CFG.lakeY, 30, [C.white, theme().water[0], theme().water[1]], 60, 1.4); }
     else if (r.reason === 'sand') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, EG.sand, 40, 0.8); }
     // hitting an obelisk throws the plane back off it; running out at the goal lets it glide down
@@ -1320,14 +1322,15 @@ export function mountHyperProp(root) {
     if (wreck) {
       if (!wreck.splashed) {
         wreck.vy -= CFG.g * dt; wreck.x += wreck.vx * dt; wreck.y += wreck.vy * dt; wreck.rot += wreck.vr * dt;
-        if (wreck.y <= CFG.lakeY) {
+        if (theme().street) {
+          if (!wreck.gone && wreck.y < CFG.lakeY - 70) { wreck.gone = true; au.play('crash'); au.play('fail'); }
+        } else if (wreck.y <= CFG.lakeY) {
           wreck.splashed = true; wreck.y = CFG.lakeY; wreck.sink = 0; au.play('fail');
-          if (theme().street) { wreck.sand = true; au.play('crash'); burst(wreck.x, CFG.lakeY, 24, [C.yellow, C.orange, C.white], 50, 1); }
-          else { au.play('splash'); burst(wreck.x, CFG.lakeY, 30, [C.white, C.water[0], C.water[1]], 60, 1.4); }
+          au.play('splash'); burst(wreck.x, CFG.lakeY, 30, [C.white, C.water[0], C.water[1]], 60, 1.4);
         }
       } else if (!wreck.sand) wreck.sink = Math.min(10, wreck.sink + dt * 2.5);
     }
-    if (s.phase === 'fly' && s.x > CFG.edgeX && s.y - CFG.lakeY < 8 && Math.random() < 0.5) burst(s.x - 6, CFG.lakeY, 1, [C.white, C.water[0]], 8, 0.8);
+    if (s.phase === 'fly' && !theme().street && s.x > CFG.edgeX && s.y - CFG.lakeY < 8 && Math.random() < 0.5) burst(s.x - 6, CFG.lakeY, 1, [C.white, C.water[0]], 8, 0.8);
     if (s.phase === 'fly' && s.omega > 0.3 && Math.random() < 0.25) parts.push({ x: s.x - 42, y: s.y + 6 + Math.random() * 8, vx: -24, vy: 0, life: 0.2, col: C.white, noGrav: true });
 
     for (const p of parts) { if (!p.noGrav) p.vy -= CFG.g * 0.8 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
@@ -1579,7 +1582,7 @@ export function mountHyperProp(root) {
     const ph = s.phase;
     if (wreck) {
       const sink = wreck.splashed ? wreck.sink : 0;
-      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, sy(CFG.lakeY) + 2); ctx.clip();
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, theme().street ? H : sy(CFG.lakeY) + 2); ctx.clip();
       if (wreck.whole) drawPlane(wreck.x, wreck.y - sink, wreck.rot * 0.5 + 0.15, planeSpr['110']);
       else { drawPlane(wreck.x + 6, wreck.y - sink, wreck.rot, planeSpr['000']); drawSpr(tuckR[Math.floor(wreck.rot * 2) & 3], wreck.x - 4, wreck.y - sink + 6); }
       ctx.restore();
