@@ -746,31 +746,20 @@ export function createBreakAudio(): Engine {
     stopGroove();
   }
 
-  // Ball-on-ball: a clean, ringing tone taken from the chord being held,
-  // with the edges that make it read as not-quite-of-this-world - two sines a
-  // few hertz apart so the ring shimmers as it fades, a tiny downward chirp
-  // on the attack, a glassy partial on top and a digital echo behind. Which
-  // note comes from the pair of balls, so the same two balls always meet on
-  // the same note within a chord; a harder hit rings longer and louder and
-  // reaches into the upper octave.
+  // Ball-on-ball: a clean, ringing tone with the edges that make it read as
+  // not-quite-of-this-world - two sines a few hertz apart so the ring
+  // shimmers as it fades, a tiny downward chirp on the attack, a glassy
+  // partial on top and a digital echo behind. Not tuned to any scale (a
+  // version that played chord notes read as a tune, not a hit): the pitch
+  // just rises smoothly with the impact, with a hair of random spread so a
+  // break is not one note repeated, and a harder hit rings longer and louder.
   function chime(impact: number, a: number, b: number) {
     if (muted) return;
     resume();
     const c = ctx!;
     const now = c.currentTime;
     const norm = Math.min(1, impact / 40);
-    const pcs = [...new Set(chord().slice(1).map((m) => m % 12))];
-    const pool: number[] = [];
-    for (const base of [72, 84])
-      for (const pc of pcs) {
-        const m = base + pc;
-        if (m >= 76 && m <= 98) pool.push(m);
-      }
-    pool.sort((x, y) => x - y);
-    const half = Math.floor(pool.length / 2);
-    const pick = (a * 3 + b * 5 + chordIndex) % half;
-    const midi = pool[norm > 0.55 ? pick + half : pick];
-    const f = hz(midi);
+    const f = (1650 + norm * 900) * Math.pow(2, (Math.random() - 0.5) * 0.04);
     // A break fires a dozen of these at once; thin them out so it scatters
     // instead of piling up into one loud smear.
     const t = performance.now();
@@ -975,10 +964,10 @@ export function createBreakAudio(): Engine {
     // than ball-on-ball, harder and brighter as the shot gets stronger.
     cueStrike(power: number) {
       const norm = Math.min(1, power / 60);
-      // The collision notes come out of the current chord, so the harmony
-      // moves on each shot even when no music is playing.
-      chordIndex++;
-      if (musicTrack === 'solo' && !muted && ctx) playChord(0.25);
+      if (musicTrack === 'solo' && !muted && ctx) {
+        chordIndex++;
+        playChord(0.25);
+      }
       clack({
         freq: 1300 + norm * 900,
         body: 820 + norm * 260,
