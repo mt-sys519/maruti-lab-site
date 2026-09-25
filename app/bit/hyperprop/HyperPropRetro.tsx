@@ -5,6 +5,7 @@ import { HyperPropGame } from "../HyperPropGame";
 import { RetroBar, RetroFooter } from "../retro/RetroBar";
 import { RetroCart } from "../retro/RetroCart";
 import { useRetroLang } from "../retro/retroLang";
+import { XShareButton } from "../shared/XShareButton";
 
 const LABEL = "/bit/retro/hyperprop-label.jpg";
 
@@ -31,6 +32,7 @@ const TEXT = {
     care: "連打は指や手首に負担がかかります。続けて長く遊ばず、痛みやしびれを感じたらすぐに休んでください。",
     shots: ["6面、スフィンクスの上を飛ぶところ", "8面、夜の街で吊り荷の下をくぐるところ"],
     label: "HYPER PROP のカートリッジ",
+    share: "MarutiBit RETRO 01「HYPER PROP」\n高台を走って、飛び乗って、漕いで空へ。ペダル連打の人力飛行ゲーム",
     soon: "COMING SOON",
   },
   en: {
@@ -53,6 +55,7 @@ const TEXT = {
     care: "Drumming is hard on fingers and wrists. Don't play for too long at a stretch, and stop right away if anything hurts or goes numb.",
     shots: ["Stage 6, flying over the Sphinx", "Stage 8, under a hanging girder in the city at night"],
     label: "The HYPER PROP cartridge",
+    share: "MarutiBit RETRO 01 \"HYPER PROP\"\nRun, jump aboard, pedal into the air. A human-powered flight game about drumming the pedals.",
     soon: "COMING SOON",
   },
 } as const;
@@ -81,6 +84,9 @@ export function HyperPropRetro() {
                 </div>
               ))}
             </dl>
+            <div className="rtShare">
+              <XShareButton variant="compact" text={t.share} url="https://marutilab.com/bit/hyperprop" />
+            </div>
           </div>
         </div>
       </section>
