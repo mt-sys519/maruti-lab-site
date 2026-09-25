@@ -648,6 +648,51 @@ export function mountHyperProp(root) {
     if (!cityCache.has(key)) { const [c, g] = canvas(w + 2, h + 2); facade(g, 1, 1, w, h, w * 7 + h); cityCache.set(key, outline(c, C.ink)); }
     return cityCache.get(key);
   }
+  // a water tower on its legs: a wooden tank in staves and hoops under a pointed roof
+  function waterTowerSpr(w, h) {
+    const key = `t${w}x${h}`;
+    if (cityCache.has(key)) return cityCache.get(key);
+    const [c, g] = canvas(w + 2, h + 2);
+    const legH = Math.round(h * 0.34), roofH = Math.round(h * 0.22), tankTop = roofH, tankBot = h - legH;
+    for (const lx of [2, Math.round(w / 3), Math.round((w * 2) / 3), w - 3]) px(g, '#2c2552', 1 + lx, 1 + tankBot, 1, legH);
+    for (let i = 0; i < legH; i++) { px(g, '#3d3266', 1 + 2 + Math.round((i / legH) * (w / 3 - 2)), 1 + tankBot + i); px(g, '#3d3266', 1 + w - 3 - Math.round((i / legH) * (w / 3 - 2)), 1 + tankBot + i); }
+    px(g, '#3d3266', 1, 1 + tankBot, w, 2);
+    for (let y = tankTop; y < tankBot; y++) for (let x = 1; x < w - 1; x++) {
+      let col = x % 3 === 0 ? '#6e4a30' : '#9a6a44';
+      if (x === 1) col = CT.rim;
+      if (x >= w - 3) col = '#5a3a26';
+      if ((y - tankTop) % 5 === 2) col = '#3a2a2a';
+      px(g, col, 1 + x, 1 + y);
+    }
+    for (let y = 0; y < roofH; y++) {
+      const half = Math.round(((y + 1) / roofH) * (w / 2));
+      for (let x = Math.round(w / 2) - half; x < Math.round(w / 2) + half; x++) px(g, x < w / 2 ? '#7a6a8e' : '#4f4466', 1 + x, 1 + y);
+    }
+    px(g, CT.rim, 1 + Math.round(w / 2) - 1, 0, 2, 1);
+    const img = outline(c, C.ink); cityCache.set(key, img); return img;
+  }
+  // a seventies billboard on a steel frame: a sunset in stripes, bulbs along the edges
+  function billboardSpr(w, h, seed) {
+    const key = `v${w}x${h}`;
+    if (cityCache.has(key)) return cityCache.get(key);
+    const [c, g] = canvas(w + 2, h + 2);
+    const legH = Math.round(h * 0.38), panH = h - legH;
+    for (let lx = 3; lx < w - 2; lx += Math.max(6, Math.floor(w / 4))) {
+      px(g, '#2c2552', 1 + lx, 1 + panH, 1, legH);
+      for (let i = 0; i < legH; i += 2) px(g, '#3d3266', 1 + lx + (i % 4 === 0 ? 1 : -1), 1 + panH + i);
+    }
+    px(g, '#2c2552', 1, 1 + panH, w, 1);
+    const bands = ['#ffd35c', '#ffb14d', '#ff8a4d', '#ff5f7a', '#d0489a', '#8a3a9a'];
+    for (let y = 1; y < panH - 1; y++) px(g, bands[Math.floor(((y - 1) / (panH - 2)) * bands.length)], 2, 1 + y, w - 2, 1);
+    // a sun going down behind a palm, the ad's picture
+    const sx0 = 1 + Math.round(w * 0.62), sy0 = 1 + Math.round(panH * 0.55), rr = Math.max(3, Math.round(panH * 0.28));
+    for (let y = -rr; y <= 0; y++) for (let x = -rr; x <= rr; x++) if (x * x + y * y <= rr * rr) px(g, '#fff0c8', sx0 + x, sy0 + y);
+    const tx = 1 + Math.round(w * 0.25);
+    px(g, '#2a1838', tx, 1 + Math.round(panH * 0.35), 1, panH - Math.round(panH * 0.35) - 1);
+    px(g, '#2a1838', tx - 3, 1 + Math.round(panH * 0.35), 7, 1); px(g, '#2a1838', tx - 4, 2 + Math.round(panH * 0.35), 2, 1); px(g, '#2a1838', tx + 3, 2 + Math.round(panH * 0.35), 2, 1);
+    for (let x = 2; x < w; x += 3) { px(g, (x + seed) % 6 < 3 ? '#fff2b0' : '#c98a3a', 1 + x, 1, 1, 1); px(g, (x + seed) % 6 < 3 ? '#c98a3a' : '#fff2b0', 1 + x, panH, 1, 1); }
+    const img = outline(c, C.ink); cityCache.set(key, img); return img;
+  }
   function girderSpr(w) {
     const key = `g${w}`;
     if (!cityCache.has(key)) {
@@ -685,9 +730,13 @@ export function mountHyperProp(root) {
       const x0 = sx(o.x), w = Math.round(o.w);
       if (x0 > W + 4 || x0 + w < -4) continue;
       if (o.kind === 'building') {
-        // rising from below the picture, past the street, up to its roof
-        const top = sy(o.top), img = buildingSpr(w, H - top + 2);
-        ctx.drawImage(img, x0 - 1, top - 1);
+        // rising from below the picture, past the street, with what stands on its roof -
+        // a billboard on the wide ones, a water tower on the narrow - reaching exactly the
+        // top of the solid box, so what is seen is what is hit
+        const top = sy(o.top), deco = w > 32 ? 15 : 16, roof = top + deco;
+        ctx.drawImage(buildingSpr(w, H - roof + 2), x0 - 1, roof - 1);
+        if (w > 32) ctx.drawImage(billboardSpr(w - 4, deco, Math.round(o.x)), x0 + 1, top - 1);
+        else { const tw = Math.max(14, w - 8); ctx.drawImage(waterTowerSpr(tw, deco), x0 + ((w - tw) >> 1) - 1, top - 1); }
       } else {
         // the cable runs up out of the picture to a crane nobody needs to see
         const bot = sy(o.bot), img = girderSpr(w), cx = x0 + (w >> 1);
