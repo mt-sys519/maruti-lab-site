@@ -146,6 +146,42 @@ function NoteCard({ slug, square }: { slug: string; square?: boolean }) {
   );
 }
 
+/* A RETRO cartridge's card is drawn in the series' own dress, not MarutiBit's: the dark
+   bar with its red and teal rules, cream stock with a halftone, the square label as it
+   was drawn, Press Start 2P and DotGothic16. Captured by the same script:
+     node scripts/capture-bit-ogp.mjs hyperprop */
+const retroCopy: Record<string, { serial: string; name: string; kind: string; line: string; label: string; shot: string }> = {
+  hyperprop: {
+    serial: "RETRO 01",
+    name: "HYPER PROP",
+    kind: "人力飛行ゲーム",
+    line: "その指で、空を飛べ。",
+    label: "/bit/retro/hyperprop-label.jpg",
+    shot: "/bit/retro/hyperprop-shot-flight.png",
+  },
+};
+
+function RetroCard({ id, square }: { id: string; square?: boolean }) {
+  const c = retroCopy[id];
+  if (!c) return null;
+  return (
+    <div className={`${styles.card} ${styles.retro} ${square ? styles.square : styles.wide}`} id={square ? `${id}-square` : id}>
+      <div className={styles.retroBar}>
+        <span className={styles.retroBrand}>MARUTI BIT <b>RETRO</b></span>
+        <span className={styles.retroSerial}>{c.serial}</span>
+      </div>
+      <div className={styles.retroLabel}><img src={c.label} alt="" /></div>
+      <div className={styles.retroText}>
+        <h1>{c.name}</h1>
+        <p className={styles.retroKind}>{c.kind}</p>
+        <p className={styles.retroLine}>{c.line}</p>
+        {!square && <div className={styles.retroShot}><img src={c.shot} alt="" /></div>}
+      </div>
+      <p className={styles.retroFoot}>MARUTILAB.COM/BIT</p>
+    </div>
+  );
+}
+
 export default function OgPreviewPage({
   searchParams,
 }: {
@@ -158,6 +194,16 @@ export default function OgPreviewPage({
   const only = searchParams?.only;
   if (only === "index") {
     return <main className={styles.bare}><IndexCard /></main>;
+  }
+  if (retroCopy[id]) {
+    return (
+      <main className={only ? styles.bare : styles.stage}>
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=block" />
+        {(!only || only === "wide") && <RetroCard id={id} />}
+        {(!only || only === "square") && <RetroCard id={id} square />}
+      </main>
+    );
   }
   if (only === "wide" || only === "square") {
     return (

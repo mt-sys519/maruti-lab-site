@@ -12,6 +12,16 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/bit/hyperprop" },
+  openGraph: {
+    title,
+    description,
+    url: "/bit/hyperprop",
+    images: [
+      { url: "/og/bit/hyperprop.png", width: 1200, height: 630, alt: "MarutiBit RETRO 01 HYPER PROP" },
+      { url: "/og/bit/hyperprop-square.png", width: 630, height: 630, alt: "MarutiBit RETRO 01 HYPER PROP" },
+    ],
+  },
+  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/hyperprop.png"] },
   robots: { index: false, follow: false },
 };
 
