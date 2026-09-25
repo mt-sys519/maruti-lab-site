@@ -6,7 +6,7 @@ export type MusicTrack = 'solo' | 'cpu' | 'stage' | null;
 
 type Engine = {
   cueStrike: (power: number) => void;
-  collision: (impact: number, a: number, b: number) => void;
+  collision: (impact: number) => void;
   rail: (impact: number) => void;
   pocket: (ballId: number) => void;
   shield: () => void;
@@ -232,7 +232,6 @@ export function createBreakAudio(): Engine {
   let musicTrack: MusicTrack = null;
   let chordIndex = 0;
   let moving = false;
-  let recentHits: number[] = [];
   let chordStart = 0;
   let melodyTimer: ReturnType<typeof setInterval> | null = null;
   let nextStep = 0;
@@ -746,54 +745,53 @@ export function createBreakAudio(): Engine {
     stopGroove();
   }
 
-  // A 25% pulse, the NES square channel's usual voice. Both the collision
-  // and the pocket are modelled on Lunar Ball (Compile, 1985), a Famicom
-  // pool game on a space table like this one: a short, glassy one-note clink
-  // when balls meet, and a teleporter-like warble when one is sunk.
-  let pulse: PeriodicWave | null = null;
-  function pulseWave() {
-    if (pulse) return pulse;
-    const n = 32,
-      real = new Float32Array(n),
-      imag = new Float32Array(n);
-    for (let k = 1; k < n; k++) real[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * 0.25);
-    pulse = ctx!.createPeriodicWave(real, imag);
-    return pulse;
-  }
-
-  // Ball-on-ball: one short clink. Every layered attempt (ringing sines,
-  // FM, a resonant zap) came out as either a wind chime or a gadget; what
-  // reads as a clean hit is a single pulse note, a hair of pitch drop at the
-  // front, gone in a few hundredths of a second. Harder hits are a little
-  // louder, higher and longer; a small random spread keeps a break from
-  // being one note repeated.
-  function chime(impact: number, a: number, b: number) {
+  // Ball-on-ball "clack". Two earlier shapes both leaned on sustained sine
+  // tones (a 4-partial inharmonic bell, then a 4-partial major chord) and
+  // both read as musical/synthy rather than physical - checked against how
+  // real pool ball contact actually sounds (an elastic collision between
+  // two hard, near-lossless bodies) and it's described as a "crisp, sharp
+  // clack" / "pure, clean sound" - i.e. almost entirely a noise transient
+  // with a very bright spectrum and next to no sustained pitch, not a tone
+  // at all. So this version is noise-first: a short, hard bandpass-filtered
+  // burst carries the actual impact, with only a hair of high sine content
+  // underneath for "glassy" brightness rather than a full musical partial.
+  function crystalTing(baseFreq: number, gain: number, dur = 0.09) {
     if (muted) return;
     resume();
-    const c = ctx!;
-    const now = c.currentTime;
-    const norm = Math.min(1, impact / 40);
-    const t = performance.now();
-    recentHits = recentHits.filter((x) => t - x < 220);
-    recentHits.push(t);
-    const density = 1 / Math.sqrt(1 + (recentHits.length - 1) * 0.6);
-    const f = (1900 + norm * 500) * Math.pow(2, (Math.random() - 0.5) * 0.06);
-    const dur = 0.035 + norm * 0.035;
-    const o = c.createOscillator();
-    o.setPeriodicWave(pulseWave());
-    o.frequency.setValueAtTime(f * 1.12, now);
-    o.frequency.exponentialRampToValueAtTime(f, now + 0.008);
-    const g = c.createGain();
-    g.gain.value = 0;
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime((0.1 + norm * 0.18) * density, now + 0.001);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    const pan = c.createStereoPanner();
-    pan.pan.value = (((a * 7 + b * 3) % 9) / 9 - 0.45) * 0.6;
-    o.connect(g).connect(pan).connect(sfx!);
-    o.start(now);
-    o.stop(now + dur + 0.02);
+    const now = ctx!.currentTime;
+
+    // The clack itself: tight bandpass noise, sharp attack, fast decay.
+    const noise = noiseBurst();
+    const nf = ctx!.createBiquadFilter();
+    nf.type = 'bandpass';
+    nf.frequency.value = baseFreq * 2.2;
+    nf.Q.value = 2.2;
+    const ng = ctx!.createGain();
+    ng.gain.setValueAtTime(0.0001, now);
+    ng.gain.linearRampToValueAtTime(gain * 1.3, now + 0.0015);
+    ng.gain.exponentialRampToValueAtTime(0.0006, now + dur);
+    noise.connect(nf).connect(ng).connect(sfx!);
+    const nd = ctx!.createGain();
+    nd.gain.value = 0.1;
+    ng.connect(nd).connect(delay!);
+    noise.start(now);
+    noise.stop(now + dur + 0.02);
+
+    // A whisper-thin high sine underneath, gone well before the noise tail -
+    // just enough top-end sparkle to read as glass rather than plastic.
+    const shimmer = ctx!.createOscillator();
+    shimmer.type = 'sine';
+    shimmer.frequency.setValueAtTime(baseFreq * 2.6, now);
+    const sg = ctx!.createGain();
+    const shimmerDur = Math.min(dur * 0.5, 0.045);
+    sg.gain.setValueAtTime(0.0001, now);
+    sg.gain.linearRampToValueAtTime(gain * 0.22, now + 0.002);
+    sg.gain.exponentialRampToValueAtTime(0.0003, now + shimmerDur);
+    shimmer.connect(sg).connect(sfx!);
+    shimmer.start(now);
+    shimmer.stop(now + shimmerDur + 0.02);
   }
+
 
 
 
@@ -960,13 +958,15 @@ export function createBreakAudio(): Engine {
         dur: 0.04 + norm * 0.02,
       });
     },
-    // Ball-ball collision, with pitch, level and length all tracking the
-    // impact so a glancing kiss and a full carom sound different.
-    collision(impact: number, a: number, b: number) {
+    // Ball-ball collision - a crystal-ball ting rather than a mechanical
+    // click, with pitch/volume/ring-length all tracking impact force so a
+    // glancing tap and a full-power carom sound distinct.
+    collision(impact: number) {
       const now = performance.now();
       if (impact < 0.8 || now - lastCollision < 18) return;
       lastCollision = now;
-      chime(impact, a, b);
+      const norm = Math.min(1, impact / 40);
+      crystalTing(4200 + norm * 2600, 0.12 + norm * 0.16, 0.1 + norm * 0.1);
     },
     // Cushion - softer and duller than a ball hit.
     rail(impact: number) {
@@ -981,38 +981,23 @@ export function createBreakAudio(): Engine {
         dur: 0.06 + norm * 0.03,
       });
     },
-    // Pocket: a teleporter warble, as in Lunar Ball - a pulse voice
-    // whose pitch is swept up in quick repeated ramps while the whole thing
-    // climbs, so the ball reads as beamed out rather than dropped. The 9
-    // beams out longer and higher.
+    // Pocket capture: a bright descending shimmer landing on a soft thud -
+    // the one moment that should feel rewarding rather than incidental.
     pocket(ballId: number) {
       if (muted) return;
       resume();
-      const c = ctx!;
-      const now = c.currentTime;
-      const nine = ballId === 9;
-      const dur = nine ? 0.55 : 0.34;
-      const o = c.createOscillator();
-      o.setPeriodicWave(pulseWave());
-      o.frequency.setValueAtTime(420, now);
-      o.frequency.exponentialRampToValueAtTime(nine ? 1900 : 1300, now + dur);
-      const lfo = c.createOscillator();
-      lfo.type = 'sawtooth';
-      lfo.frequency.value = nine ? 22 : 26;
-      const depth = c.createGain();
-      depth.gain.value = 700;
-      lfo.connect(depth).connect(o.detune);
-      const g = c.createGain();
-      g.gain.value = 0;
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.16, now + 0.01);
-      g.gain.setValueAtTime(0.16, now + dur * 0.55);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-      o.connect(g).connect(sfx!);
-      o.start(now);
-      lfo.start(now);
-      o.stop(now + dur + 0.02);
-      lfo.stop(now + dur + 0.02);
+      const now = ctx!.currentTime;
+      const base = 4800 - ballId * 88;
+      [8, 1, 2, 3].forEach((i) => {
+        tone({
+          freq: base * Math.pow(0.82, i),
+          dur: 0.22,
+          gain: 0.05,
+          type: 'sine',
+          toDelay: 0.15,
+        });
+      });
+      later(() => crystalTing(2080, 0.14, 0.22), 90);
     },
     // Power-shot cue shield bouncing off a pocket rim - an electric zap, the
     // one sound in the palette that isn't felt/mechanical.
@@ -1315,7 +1300,6 @@ export function createBreakAudio(): Engine {
       sfx = null;
       delay = null;
       noiseBuffer = null;
-      pulse = null;
     },
   };
 }

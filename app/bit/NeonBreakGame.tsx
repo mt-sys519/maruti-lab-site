@@ -2916,7 +2916,7 @@ export function NeonBreakGame() {
                     if (b.id === 0 && a.id > 0) shotRef.current.first = a.id;
                   }
                   const impact = Math.abs(rel);
-                  audioEngineRef.current!.collision(impact, a.id, b.id);
+                  audioEngineRef.current!.collision(impact);
                   if (impact > 2)
                     spawnBurst(
                       sparksRef.current,
