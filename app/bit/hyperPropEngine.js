@@ -236,11 +236,14 @@ export function mountHyperProp(root) {
   const [sky, sg] = canvas(W, H);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(sg, ramp(C.sky, (y - HUD_H + 6) / (HORIZON - HUD_H - 4), x, y), x, y);
 
+  // The puffs can reach past the cloud's nominal box, so the canvas has a margin M round it
+  // (left, right and top); without it a puff near an edge was cut off square.
   function cloudSpr(w, h, seed) {
-    const [c, g] = canvas(w, h); const r = rng(seed);
-    const blobs = Array.from({ length: 7 }, () => [5 + r() * (w - 10), h * 0.4 + r() * h * 0.3, 3 + r() * h * 0.42]);
-    const inside = (x, y) => y < h * 0.82 && blobs.some(([bx, by, br]) => (x - bx) ** 2 + (y - by) ** 2 < br * br);
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const M = Math.ceil(3 + h * 0.42) + 1;
+    const [c, g] = canvas(w + 2 * M, h + M); const r = rng(seed);
+    const blobs = Array.from({ length: 7 }, () => [M + 5 + r() * (w - 10), M + h * 0.4 + r() * h * 0.3, 3 + r() * h * 0.42]);
+    const inside = (x, y) => y < M + h * 0.82 && blobs.some(([bx, by, br]) => (x - bx) ** 2 + (y - by) ** 2 < br * br);
+    for (let y = 0; y < h + M; y++) for (let x = 0; x < w + 2 * M; x++) {
       if (!inside(x, y)) continue;
       let col = C.cloudL;
       if (!inside(x, y + 1)) col = C.cloudD;
