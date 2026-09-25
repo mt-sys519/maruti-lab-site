@@ -1505,8 +1505,7 @@ export function mountHyperProp(root) {
     for (const [a, b, w] of zones) {
       const x0 = CFG.edgeX + a / CFG.pxToM, x1 = CFG.edgeX + b / CFG.pxToM;
       if (sx(x1) < 0 || sx(x0) > W) continue;
-      // over the city's dark sky dark streaks vanish: the wind between towers falls pale
-      const col = w > 0 ? C.yellow : theme() === THEMES.city ? '#a9bde0' : C.night;
+      const col = w < 0 ? C.night : C.yellow;
       ctx.globalAlpha = 0.12;
       px(ctx, col, sx(x0), top, Math.round(x1 - x0), span);
       const n = Math.round((x1 - x0) / 2.5);

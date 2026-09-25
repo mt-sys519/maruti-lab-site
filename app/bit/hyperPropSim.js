@@ -92,10 +92,8 @@ export const STAGES = [
   // Buildings rise from below and have to be flown over; girders hang from cranes out of
   // sight above and can only be passed under (the wheel below their underside less 30);
   // the birds are drones.
-  // Stage 7: buildings with drones high between them, like stage 4, and wind pouring down
-  // between the towers just after the takeoff: pedalled at 8 a second or more the plane
-  // rides it out and still clears the first building, slower it is pushed into it.
-  { name: 'SKYLINE', theme: 'city', startX: 60, air: [[22, 50, -6]],
+  // Stage 7: buildings with drones high between them, like stage 4.
+  { name: 'SKYLINE', theme: 'city', startX: 60, air: [],
     buildings: [[100, 14, 24], [210, 20, 26], [320, 16, 25]],
     birds: [[160, 52], [270, 52], [375, 52]] },
   // Stage 8: buildings and girders, over one and under the next, close together, with a
