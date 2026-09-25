@@ -166,6 +166,10 @@ function moveBirds(s) {
 }
 export const girderAt = (o, t) => o.base + o.amp * (0.5 - 0.5 * Math.cos((t / o.per) * Math.PI * 2 + o.ph));
 // the gondola and the wing, in world pixels from the wheel, level flight
+// The plane's top edge above the wheel, dx pixels ahead of it (behind is negative), as
+// drawn level: the wing over the gondola, the bare boom behind the wing, and the fin,
+// lowest where it meets the boom and highest at its tip.
+const topAt = (dx) => (dx > -20 ? 25 : dx > -24 ? 14 : Math.min(23, 15 + (-24 - dx)));
 function hitsPlane(s, b) {
   const dx = b.x - s.x, dy = b.y - s.y, r = 2;
   const body = dx > -14 - r && dx < 19 + r && dy > 0 - r && dy < 26 + r;
@@ -324,11 +328,16 @@ export function step(s, dt, inp) {
   for (const o of s.obelisks) {
     if (o.x > s.x - 12 && o.x < s.x + 16 && s.y + 2 < o.top) return fail(s, 'obelisk');
   }
-  // the gondola meets what stands up from the water; the wing, reaching back, meets
-  // what hangs down
+  // the gondola meets what stands up from the water; what hangs down meets the plane's
+  // top edge where it passes over it - the wing, then only the boom, then the fin rising to
+  // its tip (topAt). A box as tall as the wing all the way back caught planes whose wing
+  // had cleared a girder, on thin air behind it.
   for (const o of s.stone) {
-    const back = o.bot > -Infinity ? 31 : 12;
-    if (o.x < s.x + 16 && o.x + o.w > s.x - back && s.y + 2 < o.top && s.y + 25 > o.bot) return fail(s, o.kind);
+    if (o.bot === -Infinity) { if (o.x < s.x + 16 && o.x + o.w > s.x - 12 && s.y + 2 < o.top) return fail(s, o.kind); continue; }
+    const lo = Math.max(o.x - s.x, -32), hi = Math.min(o.x + o.w - s.x, 16);
+    let top = 0;
+    for (let dx = Math.ceil(lo); dx <= hi; dx++) top = Math.max(top, topAt(dx));
+    if (lo < hi && s.y + top > o.bot) return fail(s, o.kind);
   }
 
   if (!s.climbed && s.x > CFG.edgeX + 10 && s.vy > 0) { s.climbed = true; s.events.push('climb'); }
