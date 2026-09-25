@@ -1250,12 +1250,19 @@ export function NeonBreakGame() {
     audioEngineRef.current?.setMuted(!enabled);
     setMuted(!enabled);
   }, []);
-  // BGM is off. The three loops still live in breakAudio.ts (setMusic takes
-  // 'solo' | 'cpu' | 'stage' | null and starts the matching one); putting
-  // `setMusic(mode)` back in this effect is the whole switch.
+  // Each mode's operator has her own chords and timbre for the table's held
+  // chord (see neonBreakAudio.ts). It follows the sound toggle like every
+  // effect does, so it is silent until sound is on.
   useEffect(() => {
-    audioEngineRef.current?.setMusic(null);
+    // VS CPU and STAGE are being rebuilt around their own mechanics (the turn
+    // change, the single shot); until then only SOLO has music.
+    audioEngineRef.current?.setMusic(mode === "solo" ? "solo" : null);
   }, [mode]);
+  // The held chord opens up while balls are moving and settles once the
+  // table is still.
+  useEffect(() => {
+    audioEngineRef.current?.motion(phase === "rolling");
+  }, [phase]);
   const sparksRef = useRef<Spark[]>([]);
   // Full-screen color pulse (power shot fire = cyan/pink, foul = red),
   // 0 = none, counts down to 0 each frame.
@@ -2894,7 +2901,7 @@ export function NeonBreakGame() {
                     if (b.id === 0 && a.id > 0) shotRef.current.first = a.id;
                   }
                   const impact = Math.abs(rel);
-                  audioEngineRef.current!.collision(impact);
+                  audioEngineRef.current!.collision(impact, a.id, b.id);
                   if (impact > 2)
                     spawnBurst(
                       sparksRef.current,

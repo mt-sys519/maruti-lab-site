@@ -6,7 +6,7 @@ export type MusicTrack = 'solo' | 'cpu' | 'stage' | null;
 
 type Engine = {
   cueStrike: (power: number) => void;
-  collision: (impact: number) => void;
+  collision: (impact: number, a: number, b: number) => void;
   rail: (impact: number) => void;
   pocket: (ballId: number) => void;
   shield: () => void;
@@ -17,6 +17,7 @@ type Engine = {
   pullTick: (norm: number, armed: boolean) => void;
   uiClick: () => void;
   setMusic: (track: MusicTrack) => void;
+  motion: (moving: boolean) => void;
   unlock: () => void;
   setMuted: (muted: boolean) => void;
   dispose: () => void;
@@ -166,374 +167,522 @@ export function createBreakAudio(): Engine {
     noise.stop(now + opts.dur + 0.02);
   }
 
-  // Ball-on-ball "clack". Two earlier shapes both leaned on sustained sine
-  // tones (a 4-partial inharmonic bell, then a 4-partial major chord) and
-  // both read as musical/synthy rather than physical - checked against how
-  // real pool ball contact actually sounds (an elastic collision between
-  // two hard, near-lossless bodies) and it's described as a "crisp, sharp
-  // clack" / "pure, clean sound" - i.e. almost entirely a noise transient
-  // with a very bright spectrum and next to no sustained pitch, not a tone
-  // at all. So this version is noise-first: a short, hard bandpass-filtered
-  // burst carries the actual impact, with only a hair of high sine content
-  // underneath for "glassy" brightness rather than a full musical partial.
-  function crystalTing(baseFreq: number, gain: number, dur = 0.09) {
+  // Ball-on-ball "clack". Still noise-first, as it has been since the bell
+  // and chord versions read as synth notes rather than contact - but the
+  // noise used to be centred at 2.2x a 4-7kHz base, i.e. 9-15kHz, which on
+  // a phone speaker is a hiss with no knock in it. Real ball contact peaks
+  // around 2-4kHz, so the burst sits there now, with a very short tonal body
+  // under it for the hardness and only a trace of the glass on top.
+  function clack(o: { freq: number; body: number; gain: number; dur: number }) {
     if (muted) return;
     resume();
     const now = ctx!.currentTime;
-
-    // The clack itself: tight bandpass noise, sharp attack, fast decay.
     const noise = noiseBurst();
     const nf = ctx!.createBiquadFilter();
     nf.type = 'bandpass';
-    nf.frequency.value = baseFreq * 2.2;
-    nf.Q.value = 2.2;
+    nf.frequency.value = o.freq;
+    nf.Q.value = 1.4;
     const ng = ctx!.createGain();
     ng.gain.setValueAtTime(0.0001, now);
-    ng.gain.linearRampToValueAtTime(gain * 1.3, now + 0.0015);
-    ng.gain.exponentialRampToValueAtTime(0.0006, now + dur);
+    ng.gain.linearRampToValueAtTime(o.gain, now + 0.0012);
+    ng.gain.exponentialRampToValueAtTime(0.0005, now + o.dur);
     noise.connect(nf).connect(ng).connect(sfx!);
-    const nd = ctx!.createGain();
-    nd.gain.value = 0.1;
-    ng.connect(nd).connect(delay!);
     noise.start(now);
-    noise.stop(now + dur + 0.02);
+    noise.stop(now + o.dur + 0.02);
+    (
+      [
+        [o.body, 0.55, Math.min(0.045, o.dur)],
+        [o.body * 4.6, 0.1, 0.022],
+      ] as const
+    ).forEach(([f, level, d]) => {
+      const osc = ctx!.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now);
+      const g = ctx!.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(o.gain * level, now + 0.0015);
+      g.gain.exponentialRampToValueAtTime(0.0003, now + d);
+      osc.connect(g).connect(sfx!);
+      osc.start(now);
+      osc.stop(now + d + 0.02);
+    });
+  }
+  // ---------------------------------------------------------------- music
+  // There is no song. Pool is aiming, striking and then watching the balls
+  // until they stop, and a looping track with a beat talks over exactly the
+  // part that needs quiet. So the table is the instrument: a held chord sits
+  // under the game - low while you aim, opening up while balls are moving -
+  // and every ball-on-ball contact rings a note out of that chord. A break
+  // scatters the chord across the felt; a clean shot plays a short phrase.
+  // Each shot moves the harmony on to the next chord, and each operator has
+  // her own set of chords and her own timbre for the held part.
+  //
+  // Every chord stays inside C major / A minor, so the pocket bells (A minor
+  // pentatonic) always sit in whatever is being held.
+  let music: GainNode | null = null;
+  let reverbIn: GainNode | null = null;
+  let bedLevel: GainNode | null = null;
+  let bedFilter: BiquadFilterNode | null = null;
+  let bedVoices: { fade: (at: number, over: number) => void }[] = [];
+  let musicTrack: MusicTrack = null;
+  let chordIndex = 0;
+  let moving = false;
+  let recentHits: number[] = [];
+  let chordStart = 0;
+  let melodyTimer: ReturnType<typeof setInterval> | null = null;
+  let nextStep = 0;
+  let walk = 3;
+  let phraseLeft = 4;
+  let restLeft = 2;
+  const hz = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
-    // A whisper-thin high sine underneath, gone well before the noise tail -
-    // just enough top-end sparkle to read as glass rather than plastic.
-    const shimmer = ctx!.createOscillator();
-    shimmer.type = 'sine';
-    shimmer.frequency.setValueAtTime(baseFreq * 2.6, now);
-    const sg = ctx!.createGain();
-    const shimmerDur = Math.min(dur * 0.5, 0.045);
-    sg.gain.setValueAtTime(0.0001, now);
-    sg.gain.linearRampToValueAtTime(gain * 0.22, now + 0.002);
-    sg.gain.exponentialRampToValueAtTime(0.0003, now + shimmerDur);
-    shimmer.connect(sg).connect(sfx!);
-    shimmer.start(now);
-    shimmer.stop(now + shimmerDur + 0.02);
+  // Shared room. SFX bells use it too, so it returns to the master rather
+  // than through the music bus.
+  function space() {
+    if (reverbIn) return reverbIn;
+    const c = ctx!;
+    const seconds = 2.8,
+      len = Math.floor(c.sampleRate * seconds);
+    const impulse = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = impulse.getChannelData(ch);
+      for (let i = 0; i < len; i++)
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.4);
+    }
+    reverbIn = c.createGain();
+    const low = c.createBiquadFilter();
+    low.type = 'highpass';
+    low.frequency.value = 280;
+    const conv = c.createConvolver();
+    conv.buffer = impulse;
+    const damp = c.createBiquadFilter();
+    damp.type = 'lowpass';
+    damp.frequency.value = 6000;
+    const ret = c.createGain();
+    ret.gain.value = 0.8;
+    reverbIn.connect(low).connect(conv).connect(damp).connect(ret).connect(master!);
+    return reverbIn;
   }
 
+  // A bell: a sine with a quicker octave and a faint inharmonic partial on
+  // top. Used by the stage loop and by the pocket and win effects, so the
+  // game's rewards sound like they belong to the same record as its music.
+  function bell(o: {
+    freq: number;
+    at: number;
+    gain: number;
+    dur?: number;
+    out: AudioNode;
+    wet?: number;
+    wetTo?: AudioNode;
+    pan?: number;
+  }) {
+    const c = ctx!;
+    const dur = o.dur ?? 1.2;
+    const g = c.createGain();
+    let out: AudioNode = g;
+    if (o.pan) {
+      const p = c.createStereoPanner();
+      p.pan.value = o.pan;
+      g.connect(p);
+      out = p;
+    }
+    out.connect(o.out);
+    if (o.wet && o.wetTo) {
+      const s = c.createGain();
+      s.gain.value = o.wet;
+      out.connect(s).connect(o.wetTo);
+    }
+    (
+      [
+        [1, 1, dur],
+        [2, 0.32, dur * 0.45],
+        [4.07, 0.08, dur * 0.18],
+      ] as const
+    ).forEach(([ratio, level, d]) => {
+      const osc = c.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = o.freq * ratio;
+      const pg = c.createGain();
+      pg.gain.setValueAtTime(0, o.at);
+      pg.gain.linearRampToValueAtTime(o.gain * level, o.at + 0.004);
+      pg.gain.exponentialRampToValueAtTime(0.0001, o.at + d);
+      osc.connect(pg).connect(g);
+      osc.start(o.at);
+      osc.stop(o.at + d + 0.05);
+    });
+  }
 
-  // ---------------------------------------------------------------- music
-  // Three loops, one per operator, synthesized on the same context as the
-  // SFX so there are no files to load, no autoplay-blocked <audio> element,
-  // and the mute button already covers them. Notes are scheduled ahead on
-  // the audio clock rather than fired from setInterval directly - a timer
-  // tick only decides WHAT to schedule, never when it sounds, so the pulse
-  // does not drift or stutter when the main thread is busy drawing a break.
-  let music: GainNode | null = null;
-  let musicTrack: MusicTrack = null;
-  let musicTimer: ReturnType<typeof setInterval> | null = null;
-  let nextStepTime = 0;
-  let stepIndex = 0;
-  const hz = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
+  type Palette = {
+    // First note of each chord is the bass. Kept in the second octave and
+    // up: a held sine down around 40-60Hz that never changes is the sound of
+    // every horror film's empty corridor, which is what the first pass
+    // turned into.
+    chords: number[][];
+    wave: OscillatorType;
+    voiceGain: number;
+    cutoffIdle: number;
+    cutoffMoving: number;
+    wet: number;
+    // The slow melody over the chord, and how long each chord is held while
+    // nobody is shooting.
+    bpm: number;
+    chordBeats: number;
+    melody: 'keys' | 'pluck' | 'bell';
+  };
+  const PALETTES: Record<Exclude<MusicTrack, null>, Palette> = {
+    // AOI: cool and open. Cmaj9 - Fmaj9 - Am7 - G6.
+    solo: {
+      chords: [
+        [48, 55, 59, 62, 64],
+        [41, 57, 60, 64, 67],
+        [45, 55, 60, 64, 67],
+        [43, 55, 59, 62, 64],
+      ],
+      wave: 'triangle',
+      voiceGain: 0.02,
+      cutoffIdle: 1100,
+      cutoffMoving: 2400,
+      wet: 0.55,
+      bpm: 76,
+      chordBeats: 8,
+      melody: 'keys',
+    },
+    // AIKA: brighter and higher, a touch of edge in the timbre.
+    // Fmaj9 - G6 - Em7 - Am(add9).
+    cpu: {
+      chords: [
+        [41, 53, 57, 60, 64, 67],
+        [43, 55, 59, 62, 64, 67],
+        [40, 52, 55, 59, 62, 67],
+        [45, 57, 60, 64, 71, 72],
+      ],
+      wave: 'sawtooth',
+      voiceGain: 0.02,
+      cutoffIdle: 900,
+      cutoffMoving: 2000,
+      wet: 0.45,
+      bpm: 96,
+      chordBeats: 8,
+      melody: 'pluck',
+    },
+    // LUNA: pure sines, far away. Am9 - Fmaj9 - Cmaj7 - G6.
+    stage: {
+      chords: [
+        [45, 52, 59, 60, 64],
+        [41, 55, 57, 60, 64],
+        [48, 52, 55, 59, 62],
+        [43, 55, 59, 62, 64],
+      ],
+      wave: 'sine',
+      voiceGain: 0.026,
+      cutoffIdle: 1600,
+      cutoffMoving: 3000,
+      wet: 0.8,
+      bpm: 64,
+      chordBeats: 8,
+      melody: 'bell',
+    },
+  };
+  const palette = () => PALETTES[musicTrack ?? 'solo'];
+  const chord = () => {
+    const cs = palette().chords;
+    return cs[chordIndex % cs.length];
+  };
+
+  const IDLE_LEVEL = 0.4;
+  function levelFor() {
+    if (document.hidden) return 0;
+    return moving ? 1 : IDLE_LEVEL;
+  }
+  function onVisibility() {
+    if (!ctx || !bedLevel) return;
+    bedLevel.gain.setTargetAtTime(levelFor(), ctx.currentTime, 0.15);
+  }
 
   function musicBus() {
     if (music) return music;
-    music = ctx!.createGain();
-    // Well above 1: the per-note gains are deliberately tiny so a dozen
-    // overlapping voices never clip, and the limiter on the master catches
-    // whatever peaks through. This is the one knob for overall BGM level.
-    music.gain.value = 0.62;
+    const c = ctx!;
+    music = c.createGain();
+    music.gain.value = 1;
     music.connect(master!);
+    bedLevel = c.createGain();
+    bedLevel.gain.value = 0;
+    bedFilter = c.createBiquadFilter();
+    bedFilter.type = 'lowpass';
+    bedFilter.Q.value = 0.5;
+    bedFilter.frequency.value = palette().cutoffIdle;
+    bedFilter.connect(bedLevel).connect(music);
+    // The held chord drifts: a very slow sweep on the filter so it is never
+    // quite the same sound twice, without anything you would call movement.
+    const drift = c.createOscillator();
+    drift.frequency.value = 0.06;
+    const driftDepth = c.createGain();
+    driftDepth.gain.value = 180;
+    drift.connect(driftDepth).connect(bedFilter.frequency);
+    drift.start();
+    const wet = c.createGain();
+    wet.gain.value = 0.6;
+    bedLevel.connect(wet).connect(space());
+    document.addEventListener('visibilitychange', onVisibility);
     return music;
   }
-  // A single voice. Long attacks are what separate the pad from the pluck,
-  // so attack/release are explicit rather than a fixed envelope shape.
-  function voice(o: {
-    freq: number;
-    at: number;
-    dur: number;
-    gain: number;
-    type?: OscillatorType;
-    attack?: number;
-    cutoff?: number;
-    detune?: number;
-    send?: number;
-  }) {
-    const osc = ctx!.createOscillator();
-    osc.type = o.type ?? 'triangle';
-    osc.frequency.setValueAtTime(o.freq, o.at);
-    if (o.detune) osc.detune.setValueAtTime(o.detune, o.at);
-    const g = ctx!.createGain();
-    const attack = o.attack ?? 0.01;
-    g.gain.setValueAtTime(0.0001, o.at);
-    g.gain.linearRampToValueAtTime(o.gain, o.at + attack);
-    g.gain.exponentialRampToValueAtTime(0.0004, o.at + o.dur);
-    let tail: AudioNode = osc;
-    if (o.cutoff) {
-      const f = ctx!.createBiquadFilter();
-      f.type = 'lowpass';
-      f.frequency.setValueAtTime(o.cutoff, o.at);
-      f.Q.value = 6;
-      osc.connect(f);
-      tail = f;
-    }
-    tail.connect(g).connect(musicBus());
-    if (o.send) {
-      const dg = ctx!.createGain();
-      dg.gain.value = o.send;
-      g.connect(dg).connect(delay!);
-    }
-    osc.start(o.at);
-    osc.stop(o.at + o.dur + 0.03);
-  }
-  function drum(o: {
-    at: number;
-    freq: number;
-    drop?: number;
-    dur: number;
-    gain: number;
-  }) {
-    const osc = ctx!.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(o.freq, o.at);
-    if (o.drop) osc.frequency.exponentialRampToValueAtTime(o.drop, o.at + o.dur);
-    const g = ctx!.createGain();
-    g.gain.setValueAtTime(o.gain, o.at);
-    g.gain.exponentialRampToValueAtTime(0.0004, o.at + o.dur);
-    osc.connect(g).connect(musicBus());
-    osc.start(o.at);
-    osc.stop(o.at + o.dur + 0.02);
-  }
-  function hat(at: number, gain: number, dur = 0.03, freq = 9000) {
-    const noise = noiseBurst();
-    const f = ctx!.createBiquadFilter();
-    f.type = 'highpass';
-    f.frequency.value = freq;
-    const g = ctx!.createGain();
-    g.gain.setValueAtTime(gain, at);
-    g.gain.exponentialRampToValueAtTime(0.0004, at + dur);
-    noise.connect(f).connect(g).connect(musicBus());
-    noise.start(at);
-    noise.stop(at + dur + 0.02);
-  }
-  function snare(at: number, gain: number) {
-    const noise = noiseBurst();
-    const f = ctx!.createBiquadFilter();
-    f.type = 'bandpass';
-    f.frequency.value = 1900;
-    f.Q.value = 0.8;
-    const g = ctx!.createGain();
-    g.gain.setValueAtTime(gain, at);
-    g.gain.exponentialRampToValueAtTime(0.0004, at + 0.14);
-    noise.connect(f).connect(g).connect(musicBus());
-    noise.start(at);
-    noise.stop(at + 0.17);
+
+  // Bring in the current chord and fade out whatever was held before it.
+  function playChord(fadeIn: number) {
+    const c = ctx!;
+    musicBus();
+    const now = c.currentTime;
+    chordStart = now;
+    for (const v of bedVoices) v.fade(now, 1.8);
+    const p = palette();
+    bedVoices = chord().map((midi, k) => {
+      const bass = k === 0;
+      const g = c.createGain();
+      const level = bass ? p.voiceGain * 1.4 : p.voiceGain;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(level, now + fadeIn);
+      const pan = c.createStereoPanner();
+      pan.pan.value = bass ? 0 : ((k % 2 ? 1 : -1) * (0.2 + k * 0.08));
+      g.connect(pan).connect(bedFilter!);
+      const oscs = (bass ? [0] : [-5, 5]).map((cents) => {
+        const o = c.createOscillator();
+        o.type = bass ? 'sine' : p.wave;
+        o.frequency.value = hz(midi);
+        o.detune.value = cents;
+        o.connect(g);
+        o.start(now);
+        return o;
+      });
+      return {
+        fade(at: number, over: number) {
+          g.gain.cancelScheduledValues(at);
+          g.gain.setValueAtTime(g.gain.value, at);
+          g.gain.linearRampToValueAtTime(0, at + over);
+          for (const o of oscs) o.stop(at + over + 0.05);
+        },
+      };
+    });
   }
 
-  // AOI: unhurried and warm. A slow pad with a sine arpeggio drifting over
-  // it and a soft heartbeat underneath - it should sit behind a player who
-  // is being told to take their time, not push them.
-  const AOI_BARS = [
-    { bass: 45, pad: [69, 72, 76], arp: [76, 72, 81, 72] },
-    { bass: 41, pad: [65, 69, 72], arp: [72, 69, 77, 69] },
-    { bass: 48, pad: [64, 67, 72], arp: [72, 67, 79, 67] },
-    { bass: 43, pad: [67, 71, 74], arp: [74, 71, 79, 71] },
-  ];
-  // AIKA: a driving sixteenth bassline that never lets up, four-on-the-floor
-  // under it and a bright answer phrase every other bar. She is playing
-  // against you and the loop should feel like it is keeping score.
-  const AIKA_BARS = [
-    { bass: 33 },
-    { bass: 31 },
-    { bass: 29 },
-    { bass: 28 },
-  ];
-  // The plain version. Each bar plays its own chord: root on beat 3, fifth
-  // on beat 4. Nothing held across bars, nothing anticipating the next one,
-  // and the two closing bars filled - the loop is four bars of melody played
-  // twice, which is what a backing line in this style normally is. Bars 4
-  // and 8 break the two-note pattern into a run of eighths so each half has
-  // an ending: straight subdivision between the two beats that were already
-  // there, not a push across the bar line. Every clever
-  // pass before this one was audibly clever, which is the wrong thing for
-  // something that has to run under a whole match.
-  const AIKA_LEAD: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
-    [
-      [8, 81],
-      [12, 76],
-    ],
-    [
-      [8, 79],
-      [12, 74],
-    ],
-    [
-      [8, 77],
-      [12, 72],
-    ],
-    [
-      [8, 76],
-      [10, 74],
-      [12, 72],
-      [14, 71],
-    ],
-    [
-      [8, 81],
-      [12, 76],
-    ],
-    [
-      [8, 79],
-      [12, 74],
-    ],
-    [
-      [8, 77],
-      [12, 72],
-    ],
-    [
-      [6, 76],
-      [9, 74],
-      [10, 71],
-      [12, 69],
-    ],
-  ];
-  // LUNA: no drums at all. A held pad, a bell every few beats and a low
-  // pulse on the bar - the stages are a one-shot puzzle and the room should
-  // be quiet enough to think in.
-  const LUNA_BARS = [
-    { bass: 38, pad: [69, 74, 77], bell: [86, 81, 89] },
-    { bass: 38, pad: [69, 74, 77], bell: [84, 79, 88] },
-    { bass: 36, pad: [67, 72, 76], bell: [88, 83, 91] },
-    { bass: 43, pad: [71, 74, 79], bell: [86, 79, 90] },
-  ];
+  function startBed() {
+    if (!musicTrack || muted) return;
+    resume();
+    musicBus();
+    const now = ctx!.currentTime;
+    bedFilter!.frequency.setTargetAtTime(
+      moving ? palette().cutoffMoving : palette().cutoffIdle,
+      now,
+      0.2,
+    );
+    bedLevel!.gain.setTargetAtTime(levelFor(), now, 0.6);
+    playChord(1.5);
+    nextStep = now + 1.2;
+    if (!melodyTimer) melodyTimer = setInterval(melodyTick, 100);
+  }
+  function stopBed() {
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    for (const v of bedVoices) v.fade(now, 0.6);
+    bedVoices = [];
+    if (melodyTimer) clearInterval(melodyTimer);
+    melodyTimer = null;
+  }
 
-  const TRACKS: Record<
-    Exclude<MusicTrack, null>,
-    { bpm: number; play: (step: number, at: number, beat: number) => void }
-  > = {
-    solo: {
-      bpm: 84,
-      play(step, at, beat) {
-        const bar = AOI_BARS[Math.floor(step / 16) % 4],
-          i = step % 16;
-        if (i === 0) {
-          voice({
-            freq: hz(bar.bass),
-            at,
-            dur: beat * 3.6,
-            gain: 0.05,
-            type: 'sine',
-            attack: 0.12,
-          });
-          bar.pad.forEach((n, k) =>
-            voice({
-              freq: hz(n),
-              at,
-              dur: beat * 3.4,
-              gain: 0.021,
-              type: 'triangle',
-              attack: 0.5,
-              detune: k * 4 - 4,
-              send: 0.12,
-            }),
-          );
+  // Ball-on-ball: a clean, ringing tone taken from the chord being held,
+  // with the edges that make it read as not-quite-of-this-world - two sines a
+  // few hertz apart so the ring shimmers as it fades, a tiny downward chirp
+  // on the attack, a glassy partial on top and a digital echo behind. Which
+  // note comes from the pair of balls, so the same two balls always meet on
+  // the same note within a chord; a harder hit rings longer and louder and
+  // reaches into the upper octave.
+  function chime(impact: number, a: number, b: number) {
+    if (muted) return;
+    resume();
+    const c = ctx!;
+    const now = c.currentTime;
+    const norm = Math.min(1, impact / 40);
+    const pcs = [...new Set(chord().slice(1).map((m) => m % 12))];
+    const pool: number[] = [];
+    for (const base of [72, 84])
+      for (const pc of pcs) {
+        const m = base + pc;
+        if (m >= 76 && m <= 98) pool.push(m);
+      }
+    pool.sort((x, y) => x - y);
+    const half = Math.floor(pool.length / 2);
+    const pick = (a * 3 + b * 5 + chordIndex) % half;
+    const midi = pool[norm > 0.55 ? pick + half : pick];
+    const f = hz(midi);
+    // A break fires a dozen of these at once; thin them out so it scatters
+    // instead of piling up into one loud smear.
+    const t = performance.now();
+    recentHits = recentHits.filter((x) => t - x < 220);
+    recentHits.push(t);
+    const density = 1 / Math.sqrt(1 + (recentHits.length - 1) * 0.6);
+    const gain = (0.05 + norm * 0.13) * density;
+    const ring = 0.35 + norm * 0.75;
+
+    const out = c.createStereoPanner();
+    out.pan.value = ((a * 7 + b * 3) % 9) / 9 - 0.45;
+    out.connect(sfx!);
+    const wet = c.createGain();
+    wet.gain.value = 0.35;
+    out.connect(wet).connect(space());
+    const echoSend = c.createGain();
+    echoSend.gain.value = 0.16;
+    out.connect(echoSend).connect(delay!);
+
+    const partial = (
+      freq: number,
+      level: number,
+      dur: number,
+      glideFrom?: number,
+    ) => {
+      const o = c.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(glideFrom ?? freq, now);
+      if (glideFrom) o.frequency.exponentialRampToValueAtTime(freq, now + 0.035);
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(gain * level, now + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.connect(g).connect(out);
+      o.start(now);
+      o.stop(now + dur + 0.05);
+    };
+    partial(f, 0.55, ring);
+    partial(f + 3.1, 0.45, ring * 0.85);
+    partial(f * 2.76, 0.16, 0.14);
+    partial(f, 0.3, 0.06, f * 1.9);
+    // The point of contact, so it still reads as a hit and not just a note.
+    const n = noiseBurst();
+    const nf = c.createBiquadFilter();
+    nf.type = 'highpass';
+    nf.frequency.value = 5200;
+    const ng = c.createGain();
+    ng.gain.setValueAtTime(gain * 0.5, now);
+    ng.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
+    n.connect(nf).connect(ng).connect(out);
+    n.start(now);
+    n.stop(now + 0.03);
+  }
+
+  // The melody over the held chord: one voice per operator.
+  function melodyNote(midi: number, at: number, gain: number) {
+    const c = ctx!;
+    const p = palette();
+    const f = hz(midi);
+    const out = c.createStereoPanner();
+    out.pan.value = ((midi % 7) - 3) * 0.1;
+    out.connect(music!);
+    const wet = c.createGain();
+    wet.gain.value = p.wet * 0.7;
+    out.connect(wet).connect(space());
+    if (p.melody === 'bell') {
+      bell({ freq: f, at, gain, dur: 2.4, out });
+      return;
+    }
+    if (p.melody === 'pluck') {
+      const o = c.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = f;
+      const lp = c.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(3000, at);
+      lp.frequency.exponentialRampToValueAtTime(380, at + 0.4);
+      const g = c.createGain();
+      g.gain.setValueAtTime(0, at);
+      g.gain.linearRampToValueAtTime(gain * 0.8, at + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
+      o.connect(lp).connect(g).connect(out);
+      const echoSend = c.createGain();
+      echoSend.gain.value = 0.3;
+      g.connect(echoSend).connect(delay!);
+      o.start(at);
+      o.stop(at + 0.55);
+      return;
+    }
+    // Keys: a soft electric-piano-ish tone, sine body with a quick octave.
+    (
+      [
+        [1, 1, 1.6],
+        [2, 0.22, 0.35],
+        [3, 0.06, 0.15],
+      ] as const
+    ).forEach(([ratio, level, d]) => {
+      const o = c.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = f * ratio;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0, at);
+      g.gain.linearRampToValueAtTime(gain * level, at + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + d);
+      o.connect(g).connect(out);
+      o.start(at);
+      o.stop(at + d + 0.05);
+    });
+  }
+
+  // A slow walk over the chord's own notes, in short phrases with rests
+  // between, so something is always gently happening without it turning into
+  // a tune you would notice looping. While balls are moving it mostly steps
+  // aside - the collisions are the melody then. And when nobody has shot for
+  // a while the chord moves on by itself instead of hanging forever.
+  function melodyTick() {
+    if (!ctx || !musicTrack || muted || ctx.state !== 'running') return;
+    if (document.hidden) return;
+    const p = palette();
+    const stepDur = 60 / p.bpm / 2;
+    if (nextStep < ctx.currentTime) nextStep = ctx.currentTime + 0.05;
+    while (nextStep < ctx.currentTime + 0.35) {
+      const at = nextStep;
+      nextStep += stepDur;
+      if (!moving && at - chordStart > (60 / p.bpm) * p.chordBeats) {
+        chordIndex++;
+        playChord(1.4);
+        chordStart = at;
+      }
+      if (restLeft > 0) {
+        restLeft--;
+        continue;
+      }
+      const onBeat = Math.round((at - chordStart) / stepDur) % 2 === 0;
+      const chance = (onBeat ? 0.7 : 0.3) * (moving ? 0.35 : 1);
+      if (Math.random() > chance) continue;
+      const pcs = [...new Set(chord().slice(1).map((m) => m % 12))];
+      const pool: number[] = [];
+      for (const base of [60, 72, 84])
+        for (const pc of pcs) {
+          const m = base + pc;
+          if (m >= 67 && m <= 88) pool.push(m);
         }
-        if (i === 0 || i === 8)
-          drum({ at, freq: 92, drop: 44, dur: 0.2, gain: 0.07 });
-        if (i % 4 === 2)
-          voice({
-            freq: hz(bar.arp[(i >> 2) % 4]),
-            at,
-            dur: beat * 0.8,
-            gain: 0.026,
-            type: 'sine',
-            attack: 0.03,
-            send: 0.22,
-          });
-      },
-    },
-    cpu: {
-      bpm: 118,
-      play(step, at, beat) {
-        const barIndex = Math.floor(step / 16) % 8,
-          bar = AIKA_BARS[barIndex % 4],
-          lead = AIKA_LEAD[barIndex],
-          i = step % 16;
-        // Sixteenth bass, octave lift on the back half of each beat.
-        const accent = i % 4 === 0;
-        voice({
-          freq: hz(bar.bass + (i % 8 === 6 ? 12 : 0)),
-          at,
-          dur: beat * 0.22,
-          gain: accent ? 0.07 : 0.045,
-          type: 'sawtooth',
-          cutoff: accent ? 900 : 520,
-        });
-        if (i % 4 === 0) drum({ at, freq: 130, drop: 45, dur: 0.16, gain: 0.1 });
-        if (i === 4 || i === 12) snare(at, 0.06);
-        if (i % 2 === 1) hat(at, i % 4 === 3 ? 0.03 : 0.017);
-        // Length comes from the gap to the next note rather than a fixed
-        // value, so a bar written long-short-short-short actually sounds
-        // long-short-short-short instead of four equal blips at different
-        // spacings.
-        lead.forEach(([at16, note], k) => {
-          if (i !== at16) return;
-          const next = k + 1 < lead.length ? lead[k + 1][0] : 16;
-          voice({
-            freq: hz(note),
-            at,
-            dur: (beat * (next - at16) * 0.75) / 4,
-            gain: 0.03,
-            type: 'square',
-            cutoff: 2600,
-            send: 0.2,
-          });
-        });
-      },
-    },
-    stage: {
-      bpm: 66,
-      play(step, at, beat) {
-        const bar = LUNA_BARS[Math.floor(step / 16) % 4],
-          i = step % 16;
-        if (i === 0) {
-          voice({
-            freq: hz(bar.bass),
-            at,
-            dur: beat * 4.2,
-            gain: 0.04,
-            type: 'sine',
-            attack: 0.6,
-          });
-          bar.pad.forEach((n, k) =>
-            voice({
-              freq: hz(n),
-              at,
-              dur: beat * 4,
-              gain: 0.017,
-              type: 'sine',
-              attack: 1.1,
-              detune: k * 5 - 5,
-              send: 0.16,
-            }),
-          );
-        }
-        if (i === 2 || i === 9 || i === 13)
-          voice({
-            freq: hz(bar.bell[i === 2 ? 0 : i === 9 ? 1 : 2]),
-            at,
-            dur: beat * 1.4,
-            gain: 0.022,
-            type: 'sine',
-            attack: 0.004,
-            send: 0.3,
-          });
-      },
-    },
-  };
-
-  function musicTick() {
-    if (!ctx || !musicTrack || ctx.state !== 'running') return;
-    const track = TRACKS[musicTrack];
-    const stepDur = 60 / track.bpm / 4;
-    // Resync rather than fire a burst of backlogged notes if the context was
-    // suspended (tab hidden, phone locked) while the loop was running.
-    if (nextStepTime < ctx.currentTime) nextStepTime = ctx.currentTime + 0.06;
-    while (nextStepTime < ctx.currentTime + 0.25) {
-      track.play(stepIndex, nextStepTime, 60 / track.bpm);
-      stepIndex = (stepIndex + 1) % 128;
-      nextStepTime += stepDur;
+      pool.sort((x, y) => x - y);
+      const steps = [-2, -1, -1, 1, 1, 2];
+      walk += steps[Math.floor(Math.random() * steps.length)];
+      if (walk < 0) walk = 1;
+      if (walk >= pool.length) walk = pool.length - 2;
+      melodyNote(pool[walk], at, 0.04 + Math.random() * 0.015);
+      phraseLeft--;
+      if (phraseLeft <= 0) {
+        phraseLeft = 3 + Math.floor(Math.random() * 4);
+        restLeft = 4 + Math.floor(Math.random() * 7);
+      }
     }
+  }
+
+  function setMoving(next: boolean) {
+    moving = next;
+    if (!ctx || !bedLevel || !bedFilter) return;
+    const now = ctx.currentTime;
+    const p = palette();
+    // Opens quickly on the strike, settles slowly once the table is still.
+    bedLevel.gain.setTargetAtTime(levelFor(), now, next ? 0.12 : 1.2);
+    bedFilter.frequency.setTargetAtTime(
+      next ? p.cutoffMoving : p.cutoffIdle,
+      now,
+      next ? 0.15 : 1.4,
+    );
   }
 
   function tone(opts: {
@@ -565,54 +714,69 @@ export function createBreakAudio(): Engine {
   }
 
   return {
-    // Cue strike: the tip's mechanical knock plus a touch of the same glass
-    // ring the cue ball carries into every later contact - harder shots hit
-    // harder and brighter.
+    // Cue strike: the leather tip on the cue ball - a duller, rounder knock
+    // than ball-on-ball, harder and brighter as the shot gets stronger.
     cueStrike(power: number) {
       const norm = Math.min(1, power / 60);
-      click({
-        freq: 3600 + norm * 3600,
-        dur: 0.05,
-        gain: 0.1 + norm * 0.08,
-        toDelay: 0.08,
+      chordIndex++;
+      if (musicTrack && !muted && ctx) playChord(0.25);
+      clack({
+        freq: 1300 + norm * 900,
+        body: 820 + norm * 260,
+        gain: 0.12 + norm * 0.1,
+        dur: 0.04 + norm * 0.02,
       });
-      crystalTing(4000 + norm * 1400, 0.09 + norm * 0.08, 0.14);
     },
-    // Ball-ball collision - a crystal-ball ting rather than a mechanical
-    // click, with pitch/volume/ring-length all tracking impact force so a
-    // glancing tap and a full-power carom sound distinct.
-    collision(impact: number) {
+    // Ball-ball collision, with pitch, level and length all tracking the
+    // impact so a glancing kiss and a full carom sound different.
+    collision(impact: number, a: number, b: number) {
       const now = performance.now();
       if (impact < 0.8 || now - lastCollision < 18) return;
       lastCollision = now;
-      const norm = Math.min(1, impact / 40);
-      crystalTing(4200 + norm * 2600, 0.12 + norm * 0.16, 0.1 + norm * 0.1);
+      chime(impact, a, b);
     },
-    // Cushion/rail - duller and lower than a ball hit, felt more than heard.
+    // Cushion - softer and duller than a ball hit.
     rail(impact: number) {
       const now = performance.now();
       if (impact < 1 || now - lastRail < 35) return;
       lastRail = now;
       const norm = Math.min(1, impact / 30);
-      click({ freq: 1040 + norm * 800, dur: 0.07, gain: 0.06 + norm * 0.1 });
+      clack({
+        freq: 900 + norm * 500,
+        body: 420 + norm * 120,
+        gain: 0.05 + norm * 0.1,
+        dur: 0.06 + norm * 0.03,
+      });
     },
-    // Pocket capture: a bright descending shimmer landing on a soft thud -
-    // the one moment that should feel rewarding rather than incidental.
+    // Pocket: the ball is pulled into the void (a short falling sweep, the
+    // sound of the motes spiralling in) and a bell answers. The bells climb
+    // the A minor pentatonic by ball number - notes all three loops share -
+    // so a run of pots plays upward over whichever track is on, and the 9
+    // lands with a fourth under it.
     pocket(ballId: number) {
       if (muted) return;
       resume();
       const now = ctx!.currentTime;
-      const base = 4800 - ballId * 88;
-      [8, 1, 2, 3].forEach((i) => {
-        tone({
-          freq: base * Math.pow(0.82, i),
-          dur: 0.22,
-          gain: 0.05,
-          type: 'sine',
-          toDelay: 0.15,
-        });
-      });
-      later(() => crystalTing(2080, 0.14, 0.22), 90);
+      const src = noiseBurst();
+      const f = ctx!.createBiquadFilter();
+      f.type = 'bandpass';
+      f.Q.value = 2.5;
+      f.frequency.setValueAtTime(3200, now);
+      f.frequency.exponentialRampToValueAtTime(380, now + 0.15);
+      const g = ctx!.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.12, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0004, now + 0.15);
+      src.connect(f).connect(g).connect(sfx!);
+      src.start(now);
+      src.stop(now + 0.16);
+      const SCALE = [69, 72, 74, 76, 79, 81, 84, 86, 88];
+      const midi = SCALE[Math.max(0, Math.min(8, ballId - 1))];
+      const at = now + 0.07;
+      const room = space();
+      bell({ freq: hz(midi), at, gain: 0.15, dur: 1.4, out: sfx!, wet: 0.4, wetTo: room });
+      if (ballId === 9)
+        bell({ freq: hz(midi - 5), at: at + 0.06, gain: 0.11, dur: 1.8, out: sfx!, wet: 0.5, wetTo: room });
     },
     // Power-shot cue shield bouncing off a pocket rim - an electric zap, the
     // one sound in the palette that isn't felt/mechanical.
@@ -635,33 +799,67 @@ export function createBreakAudio(): Engine {
       osc.start(now);
       osc.stop(now + 0.16);
     },
-    // Foul: short dissonant two-note buzz, deliberately unpleasant.
+    // Foul: the table powering down for a moment - a detuned pair sliding
+    // down an octave with its filter closing, over a brief crackle. It has to
+    // read as "that was wrong" at once, but a square-wave buzzer made the
+    // whole game sound like a cheap one.
     foul() {
       if (muted) return;
       resume();
-      tone({ freq: 660, dur: 0.22, gain: 0.11, type: 'square' });
-      later(
-        () => tone({ freq: 624, dur: 0.24, gain: 0.1, type: 'square' }),
-        60,
-      );
+      const now = ctx!.currentTime;
+      const f = ctx!.createBiquadFilter();
+      f.type = 'lowpass';
+      f.Q.value = 3;
+      f.frequency.setValueAtTime(2200, now);
+      f.frequency.exponentialRampToValueAtTime(260, now + 0.42);
+      const g = ctx!.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.1, now + 0.01);
+      g.gain.setValueAtTime(0.1, now + 0.2);
+      g.gain.exponentialRampToValueAtTime(0.0005, now + 0.45);
+      f.connect(g).connect(sfx!);
+      [-14, 14].forEach((cents) => {
+        const osc = ctx!.createOscillator();
+        osc.type = 'sawtooth';
+        osc.detune.value = cents;
+        osc.frequency.setValueAtTime(hz(64), now);
+        osc.frequency.exponentialRampToValueAtTime(hz(52), now + 0.4);
+        osc.connect(f);
+        osc.start(now);
+        osc.stop(now + 0.47);
+      });
+      const src = noiseBurst();
+      const nf = ctx!.createBiquadFilter();
+      nf.type = 'bandpass';
+      nf.frequency.value = 1500;
+      const ng = ctx!.createGain();
+      ng.gain.setValueAtTime(0.05, now);
+      ng.gain.exponentialRampToValueAtTime(0.0005, now + 0.1);
+      src.connect(nf).connect(ng).connect(sfx!);
+      src.start(now);
+      src.stop(now + 0.12);
     },
-    // Win: a short rising arpeggio.
+    // Win: the pentatonic bells run up and settle on a chord in the room.
     win() {
       if (muted) return;
       resume();
-      [2092, 2636, 3136, 4188].forEach((freq, i) => {
-        later(
-          () =>
-            tone({
-              freq,
-              dur: 0.4,
-              gain: 0.09,
-              type: 'triangle',
-              toDelay: 0.2,
-            }),
-          i * 90,
-        );
-      });
+      const now = ctx!.currentTime;
+      const room = space();
+      [72, 76, 79, 84, 88].forEach((midi, i) =>
+        bell({
+          freq: hz(midi),
+          at: now + i * 0.085,
+          gain: 0.075,
+          dur: 1.6,
+          out: sfx!,
+          wet: 0.5,
+          wetTo: room,
+          pan: (i - 2) * 0.2,
+        }),
+      );
+      [60, 67, 71, 74].forEach((midi) =>
+        bell({ freq: hz(midi), at: now + 0.45, gain: 0.05, dur: 2.4, out: sfx!, wet: 0.7, wetTo: room }),
+      );
     },
     // Power shot armed - a rising whoosh to signal "loaded".
     armPower() {
@@ -755,23 +953,28 @@ export function createBreakAudio(): Engine {
     uiClick() {
       if (muted) return;
       resume();
-      click({ freq: 8800, dur: 0.02, gain: 0.06 });
+      click({ freq: 4200, dur: 0.025, gain: 0.06 });
     },
-    // Switching tracks restarts the loop from the top of its own four-bar
-    // cycle: the three run at different tempos, so carrying a step index
-    // across would drop the new one in mid-phrase.
+    // Which operator's chords and timbre the table holds. Switching fades
+    // the old chord out under the new one rather than cutting.
     setMusic(track: MusicTrack) {
       if (track === musicTrack) return;
       musicTrack = track;
-      stepIndex = 0;
-      if (!track || muted) {
-        if (musicTimer) clearInterval(musicTimer);
-        musicTimer = null;
+      chordIndex = 0;
+      if (!track) {
+        stopBed();
         return;
       }
-      resume();
-      nextStepTime = ctx!.currentTime + 0.08;
-      if (!musicTimer) musicTimer = setInterval(musicTick, 60);
+      if (bedFilter && ctx)
+        bedFilter.frequency.setTargetAtTime(
+          palette().cutoffIdle,
+          ctx.currentTime,
+          0.3,
+        );
+      startBed();
+    },
+    motion(next: boolean) {
+      setMoving(next);
     },
     // Every sound call already resumes the context first, but that's the
     // problem: the first call after any idle stretch (the very first shot
@@ -793,19 +996,21 @@ export function createBreakAudio(): Engine {
       // The bus is silent either way; stopping the scheduler as well means a
       // muted game is not still building and tearing down a few dozen
       // oscillators a second for nothing.
-      if (next) {
-        if (musicTimer) clearInterval(musicTimer);
-        musicTimer = null;
-      } else if (musicTrack && ctx && !musicTimer) {
-        nextStepTime = ctx.currentTime + 0.08;
-        musicTimer = setInterval(musicTick, 60);
-      }
+      if (next) stopBed();
+      // Unmuting is usually the very first sound of the session, so the
+      // context may not exist yet - startBed builds it.
+      else if (musicTrack && !bedVoices.length) startBed();
     },
     dispose() {
-      if (musicTimer) clearInterval(musicTimer);
-      musicTimer = null;
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (melodyTimer) clearInterval(melodyTimer);
+      melodyTimer = null;
       musicTrack = null;
       music = null;
+      bedLevel = null;
+      bedFilter = null;
+      bedVoices = [];
+      reverbIn = null;
       for (const timer of timers) clearTimeout(timer);
       timers.clear();
       if (ctx) void ctx.close();
