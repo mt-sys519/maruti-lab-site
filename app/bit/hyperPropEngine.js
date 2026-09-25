@@ -914,10 +914,10 @@ export function mountHyperProp(root) {
   const STAKE = CFG.edgeX - 28;
   // k is how fast the world runs while the hint is up: 0 waits for the press
   const HINTS = {
-    run: { keys: 'LR', k: 1, jp: (t) => [L('助走をつけて走る', 'Run to build up speed'), t ? L('人差し指と中指で PEDAL を連打', 'Drum PEDAL: index + middle finger') : L('← → を連打', 'Drum ← →')] },
+    run: { keys: 'LR', k: 1, jp: (t) => [L('助走をつけて走る', 'Run to build up speed'), t ? L('人差し指と中指で PEDAL を連打', 'Drum PEDAL with two fingers') : L('← → を連打', 'Drum ← →')] },
     soon: { keys: 'up', k: 1, jp: (t) => [L('赤い杭のところで乗り込む', 'Board at the red stake'), t ? L('杭の手前で ▲', '▲ just before the stake') : L('杭の手前で ↑', '↑ just before the stake')] },
     board: { keys: 'up', k: 0, big: 'PUSH ▲', jp: (t) => [L('赤い杭！ ここで乗り込む', 'The red stake! Board now'), t ? L('▲ を押して飛び乗る', 'Press ▲ to jump aboard') : L('↑ を押して飛び乗る', 'Press ↑ to jump aboard')] },
-    seated: { keys: 'LR', k: 0, big: 'PEDAL!', jp: (t) => [L('乗り込んだ！ 漕いで加速', 'Aboard! Pedal to speed up'), t ? L('PEDAL を連打して漕ぐ', 'Drum PEDAL to pedal') : L('← → を連打して漕ぐ', 'Drum ← → to pedal')] },
+    seated: { keys: 'LR', k: 0, big: 'PEDAL!', jp: (t) => [L('乗り込んだ！ 漕いで加速', 'Aboard! Pedal to speed up'), t ? L('PEDAL を連打して漕ぐ', 'Drum PEDAL to turn the prop') : L('← → を連打して漕ぐ', 'Drum ← → to turn the prop')] },
     edge: { keys: 'up', k: 1, jp: (t) => [L('もうすぐ崖の先', 'The edge is coming'), t ? L('▲ で機首を上げて飛ぶ', '▲ to lift the nose and fly') : L('↑ で機首を上げて飛ぶ', '↑ to lift the nose and fly')] },
     low: { keys: 'up', k: 0.35, big: 'NOSE UP ▲', jp: (t) => [L('水面に近づいている', 'Getting close to the water'), t ? L('▲ で機首を上げる', '▲ to lift the nose') : L('↑ で機首を上げる', '↑ to lift the nose')] },
     stall: { keys: 'down', k: 0.35, big: 'NOSE DOWN ▼', jp: (t) => [L('失速！ 機首の上げすぎ', 'Stall! The nose is too high'), t ? L('▼ で機首を下げて速度を戻す', '▼ to drop the nose, regain speed') : L('↓ で機首を下げて速度を戻す', '↓ to drop the nose, regain speed')] },
@@ -1079,7 +1079,7 @@ export function mountHyperProp(root) {
       sphinx: ['CRASH!', L(`スフィンクスにぶつかった… ${d}m`, `Hit the Sphinx… ${d}m`)],
       building: ['CRASH!', L(`ビルにぶつかった… ${d}m`, `Hit a building… ${d}m`)],
       girder: ['CRASH!', L(`吊り荷にぶつかった… ${d}m`, `Hit a hanging girder… ${d}m`)],
-      hard: ['HARD LANDING!', L('強く降りすぎた… ゆっくり降りろ', 'Came down too hard - ease it down')],
+      hard: ['HARD LANDING!', L('強く降りすぎた… ゆっくり降りろ', 'Too hard! Ease it down gently')],
       overshoot: ['OVERSHOT!', L('ヘリポートを通り過ぎた…', 'Flew past the helipad…')],
       short: ['NOT ENOUGH!', L(`風船が足りない… ${s.got}/${st.need}`, `Not enough balloons… ${s.got}/${st.need}`)],
     }[r.reason];
@@ -1308,10 +1308,10 @@ export function mountHyperProp(root) {
       if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = L('下降気流！ 手前で高度を稼げ', 'Downdraft! Gain height before it'); jpT = 2.2; }
       if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`); jpT = 2.4; }
       if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it'); jpT = 2.2; }
-      if (!seen.building && s.stone.some((o) => o.kind === 'building' && o.x - s.x < 170 && o.x > s.x)) { seen.building = true; jpMsg = L('ビル！ 屋上を越えろ', 'A building! Over the roof'); jpT = 2.2; }
+      if (!seen.building && s.stone.some((o) => o.kind === 'building' && o.x - s.x < 170 && o.x > s.x)) { seen.building = true; jpMsg = L('ビル！ 屋上を越えろ', 'Building! Fly over the roof'); jpT = 2.2; }
       if (!seen.pad && s.pad && s.pad.x0 - s.x < 200) { seen.pad = true; jpMsg = L('ヘリポートに着陸！ ゆっくり降りろ', 'Land on the helipad - gently'); jpT = 3; }
-      if (!seen.lift && s.stone.some((o) => o.kind === 'girder' && o.amp && o.x - s.x < 170 && o.x > s.x)) { seen.lift = seen.girder = true; jpMsg = L('吊り荷が上下する！ 上がった隙にくぐれ', 'The girders go up and down - under while it is up'); jpT = 2.6; }
-      if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = L('吊り荷！ 当たると落ちる、下をくぐれ', 'A hanging girder! Solid - go under'); jpT = 2.4; }
+      if (!seen.lift && s.stone.some((o) => o.kind === 'girder' && o.amp && o.x - s.x < 170 && o.x > s.x)) { seen.lift = seen.girder = true; jpMsg = L('吊り荷が上下する！ 上がった隙にくぐれ', 'Girders move! Pass under when up'); jpT = 2.6; }
+      if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = L('吊り荷！ 当たると落ちる、下をくぐれ', 'Hanging girder! Go under it'); jpT = 2.4; }
       if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back'); jpT = 2.4; }
     }
     if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
@@ -1739,12 +1739,12 @@ export function mountHyperProp(root) {
     const pedalTo = (ja, eng) => (t ? L(`PEDAL を叩いて${ja}`, `Drum PEDAL to ${eng}`) : L(`← → を押して${ja}`, `Press ← → to ${eng}`));
     const [what, press] = {
       // people reached for the pedals with a thumb: the title says which fingers
-      ready: [t ? L('人差し指と中指で PEDAL を連打', 'Drum PEDAL: index + middle finger') : L('Enter / Space でスタート', 'Enter / Space to start'),
-        opened() > 1 ? (t ? L('▲ ▼ で面をえらぶ', '▲ ▼ to choose a stage') : L('↑ ↓ で面をえらぶ', '↑ ↓ to choose a stage')) : au.enabled ? '' : L('音は本体の上の SOUND を ON に', 'Sound: switch SOUND on, at the top')],
+      ready: [t ? L('人差し指と中指で PEDAL を連打', 'Drum PEDAL with two fingers') : L('Enter / Space でスタート', 'Enter / Space to start'),
+        opened() > 1 ? (t ? L('▲ ▼ で面をえらぶ', '▲ ▼ to choose a stage') : L('↑ ↓ で面をえらぶ', '↑ ↓ to choose a stage')) : au.enabled ? '' : L('音は本体の上の SOUND を ON に', 'Turn SOUND on (top) to hear it')],
       run: [pedalTo('走る', 'run'), t ? L('赤い杭のあたりで ▲ で乗り込む', '▲ at the red stake to board') : L('赤い杭のあたりで ↑ で乗り込む', '↑ at the red stake to board')],
       board: ['', ''],
-      roll: [pedalTo('漕ぐ', 'pedal'), t ? L('▲ で機首上げ', '▲ to lift the nose') : L('↑ で機首上げ', '↑ to lift the nose')],
-      fly: s.stall ? [L('失速！', 'Stall!'), t ? L('▼ で機首を下げて速度を戻す', '▼ to drop the nose, regain speed') : L('↓ で機首を下げて速度を戻す', '↓ to drop the nose, regain speed')] : [pedalTo('漕ぐ', 'pedal'), t ? L('▲ ▼ で機首', '▲ ▼ to pitch') : L('↑ ↓ で機首', '↑ ↓ to pitch')],
+      roll: [pedalTo('漕ぐ', 'turn the prop'), t ? L('▲ で機首上げ', '▲ to lift the nose') : L('↑ で機首上げ', '↑ to lift the nose')],
+      fly: s.stall ? [L('失速！', 'Stall!'), t ? L('▼ で機首を下げて速度を戻す', '▼ to drop the nose, regain speed') : L('↓ で機首を下げて速度を戻す', '↓ to drop the nose, regain speed')] : [pedalTo('漕ぐ', 'turn the prop'), t ? L('▲ ▼ で機首', '▲ ▼ to pitch') : L('↑ ↓ で機首', '↑ ↓ to pitch')],
       over: ['', t ? L('START でもう一度', 'START to try again') : L('Enter / R でもう一度', 'Enter / R to try again')],
       clear: ['', !canGo() ? '' : s.stage < LAST ? (t ? L('PEDAL か START で次の面へ', 'PEDAL or START: next stage') : L('Enter で次の面へ / R でもう一度', 'Enter: next stage / R: retry')) : (t ? L('START でタイトルへ', 'START: back to the title') : L('Enter でタイトルへ / R でもう一度', 'Enter: title / R: retry'))],
     }[s.phase] || ['', ''];

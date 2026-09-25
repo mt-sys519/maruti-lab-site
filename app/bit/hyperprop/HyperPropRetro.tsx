@@ -13,12 +13,12 @@ const TEXT = {
   ja: {
     kind: "人力飛行ゲーム",
     lead: "高台で機体を抱えて走り、飛び乗って、漕いで湖を越える。ペダルを連打する人力飛行ゲーム。",
-    goal: "400m 先の GOAL まで飛べばクリア。水に落ちると、そこまでの距離が記録に残ります。",
+    goal: "400m 先の GOAL まで飛べばクリア。途中で落ちると、そこまでの距離が記録に残ります。",
     feat: ["1 PLAYER", "9 STAGES", "RAPID TAP", "JP / EN"],
     how: [
       ["RUN", "ペダルを人差し指と中指で連打して走る"],
       ["BOARD", "赤い杭のところで ▲ を押して飛び乗る"],
-      ["PITCH", "▲ ▼ で機首を上げ下げ。水に落ちないように"],
+      ["PITCH", "▲ ▼ で機首を上げ下げ。落ちないように"],
     ],
     // the data box a magazine ran with a new release; the date waits for the public launch
     spec: [
@@ -38,12 +38,12 @@ const TEXT = {
   en: {
     kind: "A human-powered flight game",
     lead: "Run with the plane along the hilltop, jump aboard, pedal hard and cross the lake. A flight game about drumming the pedals.",
-    goal: "Fly 400m to the GOAL to clear a stage. Come down in the water and the distance you made is kept as your record.",
+    goal: "Fly 400m to the GOAL to clear a stage. Come down short of it and the distance you made is kept as your record.",
     feat: ["1 PLAYER", "9 STAGES", "RAPID TAP", "JP / EN"],
     how: [
       ["RUN", "Drum the pedals with your index and middle fingers to run"],
       ["BOARD", "At the red stake, press ▲ to jump aboard"],
-      ["PITCH", "▲ ▼ tip the nose. Keep out of the water"],
+      ["PITCH", "▲ ▼ tip the nose. Stay in the air"],
     ],
     spec: [
       ["RELEASE", "COMING SOON"],
