@@ -746,73 +746,72 @@ export function createBreakAudio(): Engine {
     stopGroove();
   }
 
-  // Ball-on-ball: a clean, ringing tone with the edges that make it read as
-  // not-quite-of-this-world - two sines a few hertz apart so the ring
-  // shimmers as it fades, a tiny downward chirp on the attack, a glassy
-  // partial on top and a digital echo behind. Not tuned to any scale (a
-  // version that played chord notes read as a tune, not a hit): the pitch
-  // just rises smoothly with the impact, with a hair of random spread so a
-  // break is not one note repeated, and a harder hit rings longer and louder.
+  // Ball-on-ball: a hit, not a note. The last version let a pair of sines
+  // ring for up to a second through the room and the echo, and a table full
+  // of those was a wind chime. Now it is all over in about a tenth of a
+  // second: a click for the contact, a short glassy ping for the clean part,
+  // and a tiny laser-like "pew" - a sine dropping fast from well above the
+  // ping - for the sci-fi edge. Pitch rises with the impact (not tuned to
+  // any scale), with a hair of random spread so a break is not one note
+  // repeated.
   function chime(impact: number, a: number, b: number) {
     if (muted) return;
     resume();
     const c = ctx!;
     const now = c.currentTime;
     const norm = Math.min(1, impact / 40);
-    const f = (1650 + norm * 900) * Math.pow(2, (Math.random() - 0.5) * 0.04);
+    const f = (2000 + norm * 900) * Math.pow(2, (Math.random() - 0.5) * 0.05);
     // A break fires a dozen of these at once; thin them out so it scatters
     // instead of piling up into one loud smear.
     const t = performance.now();
     recentHits = recentHits.filter((x) => t - x < 220);
     recentHits.push(t);
     const density = 1 / Math.sqrt(1 + (recentHits.length - 1) * 0.6);
-    const gain = (0.05 + norm * 0.13) * density;
-    const ring = 0.35 + norm * 0.75;
+    const gain = (0.07 + norm * 0.16) * density;
+    const ping = 0.06 + norm * 0.06;
 
     const out = c.createStereoPanner();
     out.pan.value = ((a * 7 + b * 3) % 9) / 9 - 0.45;
     out.connect(sfx!);
-    const wet = c.createGain();
-    wet.gain.value = 0.35;
-    out.connect(wet).connect(space());
-    const echoSend = c.createGain();
-    echoSend.gain.value = 0.16;
-    out.connect(echoSend).connect(delay!);
 
-    const partial = (
-      freq: number,
+    const tone = (
+      from: number,
+      to: number,
+      glide: number,
       level: number,
       dur: number,
-      glideFrom?: number,
     ) => {
       const o = c.createOscillator();
       o.type = 'sine';
-      o.frequency.setValueAtTime(glideFrom ?? freq, now);
-      if (glideFrom) o.frequency.exponentialRampToValueAtTime(freq, now + 0.035);
+      o.frequency.setValueAtTime(from, now);
+      if (from !== to) o.frequency.exponentialRampToValueAtTime(to, now + glide);
       const g = c.createGain();
-      g.gain.setValueAtTime(0.0001, now);
-      g.gain.linearRampToValueAtTime(gain * level, now + 0.003);
+      g.gain.value = 0;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(gain * level, now + 0.002);
       g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
       o.connect(g).connect(out);
       o.start(now);
-      o.stop(now + dur + 0.05);
+      o.stop(now + dur + 0.03);
     };
-    partial(f, 0.55, ring);
-    partial(f + 3.1, 0.45, ring * 0.85);
-    partial(f * 2.76, 0.16, 0.14);
-    partial(f, 0.3, 0.06, f * 1.9);
-    // The point of contact, so it still reads as a hit and not just a note.
+    tone(f, f, 0, 0.55, ping);
+    tone(f * 2.76, f * 2.76, 0, 0.14, 0.025);
+    tone(f * 2.4, f * 0.8, 0.05, 0.3, 0.055);
+    // The contact itself.
     const n = noiseBurst();
     const nf = c.createBiquadFilter();
-    nf.type = 'highpass';
-    nf.frequency.value = 5200;
+    nf.type = 'bandpass';
+    nf.frequency.value = 3800;
+    nf.Q.value = 1.2;
     const ng = c.createGain();
-    ng.gain.setValueAtTime(gain * 0.5, now);
-    ng.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
+    ng.gain.value = 0;
+    ng.gain.setValueAtTime(gain * 0.7, now);
+    ng.gain.exponentialRampToValueAtTime(0.0001, now + 0.014);
     n.connect(nf).connect(ng).connect(out);
     n.start(now);
     n.stop(now + 0.03);
   }
+
 
   // The melody over the held chord: one voice per operator.
   function melodyNote(midi: number, at: number, gain: number) {
