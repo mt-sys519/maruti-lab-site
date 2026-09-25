@@ -20,14 +20,12 @@ const TEXT = {
       ["BOARD", "赤い杭のところで ▲ を押して飛び乗る"],
       ["PITCH", "▲ ▼ で機首を上げ下げ。落ちないように"],
     ],
-    // the data box a magazine ran with a new release; the date waits for the public launch
+    // the data box a magazine ran with a new release
     spec: [
-      ["発売日", "COMING SOON"],
       ["ジャンル", "人力飛行アクション"],
       ["プレイ人数", "1人"],
       ["ステージ", "9"],
       ["対応機種", "MB-01 RETRO"],
-      ["価格", "FREE"],
       ["セーブ", "ベストタイム記録"],
     ],
     care: "連打は指や手首に負担がかかります。続けて長く遊ばず、痛みやしびれを感じたらすぐに休んでください。",
@@ -46,12 +44,10 @@ const TEXT = {
       ["PITCH", "▲ ▼ tip the nose. Stay in the air"],
     ],
     spec: [
-      ["RELEASE", "COMING SOON"],
       ["GENRE", "Human-powered flight"],
       ["PLAYERS", "1"],
       ["STAGES", "9"],
       ["SYSTEM", "MB-01 RETRO"],
-      ["PRICE", "FREE"],
       ["SAVE", "Best times"],
     ],
     care: "Drumming is hard on fingers and wrists. Don't play for too long at a stretch, and stop right away if anything hurts or goes numb.",
