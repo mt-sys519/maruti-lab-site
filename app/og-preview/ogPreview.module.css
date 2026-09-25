@@ -237,9 +237,19 @@
 }
 .note.hasArt h1 {
   max-width: 9.4em;
+  /* Narrowed beside the picture, a title breaks mid-word (ハイ/パー) unless it
+     is told to break between phrases. */
+  word-break: auto-phrase;
 }
 .note.hasArt .noteDesc {
   max-width: 19em;
+  /* A long description beside a three-line title would run into the
+     signature; the card only needs its opening. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: auto-phrase;
+  overflow: hidden;
 }
 
 .note.square h1 {

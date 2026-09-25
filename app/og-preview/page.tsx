@@ -115,6 +115,7 @@ function Card({ id, square }: { id: string; square?: boolean }) {
 // room for it without becoming a different composition.
 const noteArt: Record<string, string> = {
   paku: "/games/paku/tank.png",
+  "mb-01-retro": "/blog/mb-01-retro-screen.png",
 };
 
 // The notes get the same treatment: a real page captured by the same script,
