@@ -219,6 +219,18 @@ export function mountHyperProp(root) {
     '...nHHHn...', '..nHlHHHH..', '..ngGGgGG..', '..nHHsssse.', '...nHsssS..', '..offfffo..',
     'bqoooooOOb.', '.ooqoooOO..', '..oOOOoo...', '..bbB.bbB..'], AO);
   const tuckR = [0, 1, 2, 3].map((k) => rot90(tuck, k));
+  // AOI on her feet at the end, waving: the carrying pose with the left arm let down and
+  // the right hand going side to side
+  const standLegs = ['...oo.OO....', '...oo.OO....', '...bb.bb....', '..bbB.bbB...'];
+  const waveF = [0, 1].map((fr) => fromRows([...aoiTop.map((r, y) => {
+    const a = [...r];
+    if (y <= 8) a[2] = '.';
+    if (y >= 10 && y <= 11) a[2] = 'o';
+    if (y === 12) a[2] = 'b';
+    if (fr === 1 && y === 0) { a[10] = '.'; a[11] = 'b'; }
+    if (fr === 1 && y === 1) { a[10] = '.'; a[11] = 'o'; }
+    return a.join('');
+  }), ...standLegs], AO));
 
   // ---------- backdrop ----------
   const [sky, sg] = canvas(W, H);
@@ -763,6 +775,19 @@ export function mountHyperProp(root) {
       ctx.globalAlpha = 0.25; px(ctx, '#ffd98a', x - 6, surf + 10, 13, 3); ctx.globalAlpha = 1;
     }
   }
+  // the helipad the last stage ends on: a tower's top with a deck, its edge lights
+  // blinking green and white, and the H on a yellow disc on its face
+  function drawPad() {
+    const P = s.pad; if (!P) return;
+    const x0 = sx(P.x0), w = Math.round(P.x1 - P.x0), top = sy(P.top);
+    if (x0 > W + 4 || x0 + w < -4) return;
+    ctx.drawImage(buildingSpr(w, H - top + 2), x0 - 1, top - 1);
+    px(ctx, C.ink, x0 - 3, top - 3, w + 6, 4); px(ctx, '#6f6897', x0 - 2, top - 2, w + 4, 2); px(ctx, '#c9c3e0', x0 - 2, top - 2, w + 4, 1);
+    for (let x = 0; x < w + 4; x += 5) px(ctx, (Math.floor(time * 3) + x / 5) % 2 ? C.green : C.white, x0 - 2 + x, top - 4, 2, 1);
+    const cx = x0 + (w >> 1), cy = top + 10;
+    for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) if (x * x + y * y <= 40) px(ctx, x * x + y * y > 30 ? C.ink : C.yellow, cx + x, cy + y);
+    px(ctx, C.ink, cx - 3, cy - 3, 1, 7); px(ctx, C.ink, cx + 3, cy - 3, 1, 7); px(ctx, C.ink, cx - 3, cy, 7, 1);
+  }
   function drawCityStone() {
     for (const o of s.stone) {
       if (o.kind !== 'building' && o.kind !== 'girder') continue;
@@ -980,7 +1005,7 @@ export function mountHyperProp(root) {
         au.music(null); au.play('goal'); setBest(CFG.successDist * CFG.pxToM);
         newRecord = !rec.time[n] || runTime < rec.time[n];
         if (newRecord) { rec.time[n] = runTime; try { localStorage.setItem(recKey('bestTime', n), runTime.toFixed(2)); } catch { /* storage is optional */ } }
-        banner = null; jpMsg = newRecord ? L(`新記録！ ${fmt(runTime)}`, `New record! ${fmt(runTime)}`) : L(`400m 飛行成功！ ${fmt(runTime)}`, `Flew the 400m! ${fmt(runTime)}`); jpT = 1e9;
+        banner = null; jpMsg = newRecord ? L(`新記録！ ${fmt(runTime)}`, `New record! ${fmt(runTime)}`) : s.landed && S.STAGES[s.stage].ending ? L('おめでとう！ 最後まで飛びきった', 'Congratulations! You flew all the way') : s.landed ? L(`着陸成功！ ${fmt(runTime)}`, `Landed! ${fmt(runTime)}`) : L(`400m 飛行成功！ ${fmt(runTime)}`, `Flew the 400m! ${fmt(runTime)}`); jpT = 1e9;
         restNow();
       }
       if (e === 'fail' || e === 'land') onFail();
@@ -1002,13 +1027,16 @@ export function mountHyperProp(root) {
       sphinx: ['CRASH!', L(`スフィンクスにぶつかった… ${d}m`, `Hit the Sphinx… ${d}m`)],
       building: ['CRASH!', L(`ビルにぶつかった… ${d}m`, `Hit a building… ${d}m`)],
       girder: ['CRASH!', L(`吊り荷にぶつかった… ${d}m`, `Hit a hanging girder… ${d}m`)],
+      hard: ['HARD LANDING!', L('強く降りすぎた… ゆっくり降りろ', 'Came down too hard - ease it down')],
+      overshoot: ['OVERSHOT!', L('ヘリポートを通り過ぎた…', 'Flew past the helipad…')],
       short: ['NOT ENOUGH!', L(`風船が足りない… ${s.got}/${st.need}`, `Not enough balloons… ${s.got}/${st.need}`)],
     }[r.reason];
     show(big, r.reason === 'splash' || r.reason === 'obelisk' || r.reason === 'sphinx' || r.reason === 'building' || r.reason === 'girder' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
     au.music(null);
     if (r.reason === 'splash' && theme().street) { au.play('crash'); au.play('fail'); }
     else if (r.reason === 'splash') { au.play('splash'); au.play('fail'); }
-    else if (r.reason === 'stop' || r.reason === 'short') au.play('fail');
+    else if (r.reason === 'stop' || r.reason === 'short' || r.reason === 'overshoot') au.play('fail');
+    else if (r.reason === 'hard') { au.play('crash'); au.play('fail'); }
     else au.play('fall');
     if (r.reason === 'edge' || r.reason === 'miss') wreck = { x: s.x, y: s.boardT > 0 ? 6 : 12, vx: s.vx * 0.8, vy: 4, rot: 0, vr: 2.5, splashed: false };
     else if (r.reason === 'splash' && theme().street) { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, [C.yellow, C.orange, C.white], 50, 1); }
@@ -1016,6 +1044,8 @@ export function mountHyperProp(root) {
     else if (r.reason === 'sand') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, EG.sand, 40, 0.8); }
     // hitting an obelisk throws the plane back off it; running out at the goal lets it glide down
     else if (r.reason === 'obelisk' || r.reason === 'sphinx' || r.reason === 'building' || r.reason === 'girder') { wreck = { x: s.x, y: s.y, vx: -12, vy: 6, rot: s.theta, vr: -1.5, splashed: false, whole: true }; burst(s.x + 16, s.y + 10, 16, EG.stone, 40, 1); }
+    else if (r.reason === 'hard') { wreck = { x: s.x, y: s.pad.top, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, s.pad.top, 20, [C.yellow, C.orange, C.white], 45, 1); }
+    else if (r.reason === 'overshoot') wreck = { x: s.x, y: s.y, vx: s.vx * 0.7, vy: 0, rot: s.theta, vr: -0.6, splashed: false, whole: true };
     else if (r.reason === 'short') wreck = { x: s.x, y: s.y, vx: s.vx * 0.7, vy: 0, rot: s.theta, vr: -0.6, splashed: false, whole: true };
   }
 
@@ -1023,7 +1053,11 @@ export function mountHyperProp(root) {
   const over = () => s.phase === 'over' || s.phase === 'clear';
   // the result screen needs time to come in before START moves on
   const CLEAR_WAIT = 2.4;
-  const canGo = () => overT > (s.phase === 'clear' ? CLEAR_WAIT : 0.6);
+  // the ending, after a landing on the stage marked for it: AOI gets out at out, waves
+  // with CONGRATULATIONS! over her, and the result panel comes down after hold more
+  const ENDING = { out: 1.4, hold: 3.6 };
+  const clearDelay = () => (s.landed && S.STAGES[s.stage].ending ? ENDING.hold : 0);
+  const canGo = () => overT > (s.phase === 'clear' ? CLEAR_WAIT + clearDelay() : 0.6);
   function pressFoot(side) {
     if (paused || intro > 0) return;
     if (s.phase === 'ready') return begin(true);
@@ -1204,8 +1238,8 @@ export function mountHyperProp(root) {
     if (over()) overT += dt;
     if (banner) { banner.t -= real; if (banner.t <= 0) banner = null; }
     jpT -= real; if (jpT <= 0 && !over()) jpMsg = '';
-    propA += (s.phase === 'roll' || s.phase === 'fly' ? s.omega : s.phase === 'clear' ? 0.7 : 0) * 50 * dt;
-    if (s.phase === 'clear') crankTo += Math.PI * 5 * dt;
+    propA += (s.phase === 'roll' || s.phase === 'fly' ? s.omega : s.phase === 'clear' && !s.landed ? 0.7 : 0) * 50 * dt;
+    if (s.phase === 'clear' && !s.landed) crankTo += Math.PI * 5 * dt;
     crank += (crankTo - crank) * Math.min(1, dt * 22);
     au.engine({ phase: s.phase, omega: s.omega, V: s.phase === 'over' ? 0 : Math.hypot(s.vx, s.vy) });
     // footsteps land with the running animation (a foot down every 12px), tatta-tatta,
@@ -1221,6 +1255,7 @@ export function mountHyperProp(root) {
       if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`); jpT = 2.4; }
       if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it'); jpT = 2.2; }
       if (!seen.building && s.stone.some((o) => o.kind === 'building' && o.x - s.x < 170 && o.x > s.x)) { seen.building = true; jpMsg = L('ビル！ 屋上を越えろ', 'A building! Over the roof'); jpT = 2.2; }
+      if (!seen.pad && s.pad && s.pad.x0 - s.x < 200) { seen.pad = true; jpMsg = L('ヘリポートに着陸！ ゆっくり降りろ', 'Land on the helipad - gently'); jpT = 3; }
       if (!seen.lift && s.stone.some((o) => o.kind === 'girder' && o.amp && o.x - s.x < 170 && o.x > s.x)) { seen.lift = seen.girder = true; jpMsg = L('吊り荷が上下する！ 上がった隙にくぐれ', 'The girders go up and down - under while it is up'); jpT = 2.6; }
       if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = L('吊り荷！ 当たると落ちる、下をくぐれ', 'A hanging girder! Solid - go under'); jpT = 2.4; }
       if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back'); jpT = 2.4; }
@@ -1247,7 +1282,7 @@ export function mountHyperProp(root) {
     parts = parts.filter((p) => p.life > 0 && p.y > CFG.lakeY - 2);
 
     // past the goal the camera stays with the flag and the plane flies on out of the picture
-    if (s.phase === 'clear' && overT < 1.4 && Math.random() < 0.7) {
+    if (s.phase === 'clear' && !s.landed && overT < 1.4 && Math.random() < 0.7) {
       const cols = [C.yellow, C.red, C.white, C.green, C.blue, C.orange];
       parts.push({ x: GOAL_X + 4 + Math.random() * 14, y: CFG.lakeY + 34, vx: (Math.random() - 0.5) * 50, vy: 25 + Math.random() * 45, life: 1 + Math.random() * 0.8, col: cols[Math.floor(Math.random() * cols.length)] });
     }
@@ -1287,6 +1322,7 @@ export function mountHyperProp(root) {
     drawObelisks();
     drawSphinx();
     drawCityStone();
+    drawPad();
     drawAir();
 
     // the ground the run starts on (the cliff, or the pyramid) and what stands on it
@@ -1362,6 +1398,7 @@ export function mountHyperProp(root) {
     const surf = sy(CFG.lakeY);
     for (let d = 200; d <= CFG.successDist; d += 200) {
       const x = sx(CFG.edgeX + d); if (x < -40 || x > W + 40) continue;
+      if (d === CFG.successDist && s.pad) continue;
       if (d === CFG.successDist) {
         px(ctx, C.ink, x - 17, surf - 5, 34, 6); px(ctx, g2, x - 16, surf - 4, 32, 5); px(ctx, g1, x - 14, surf - 6, 26, 2);
         px(ctx, C.ink, x - 12, surf - 8, 22, 2); px(ctx, t1, x - 11, surf - 8, 20, 2); px(ctx, t0, x - 9, surf - 8, 12, 1);
@@ -1509,6 +1546,13 @@ export function mountHyperProp(root) {
       if (t < 0.9) drawSpr(tuckR[Math.floor(e * 4) & 3], s.x - e * 2, Math.sin(t * Math.PI) * 24 + e * 8);
       return;
     }
+    if (s.landed && S.STAGES[s.stage].ending && overT > ENDING.out) {
+      drawPlane(s.x, s.y, s.theta, planeImg(false));
+      const t = Math.min(1, (overT - ENDING.out) / 0.6), ax = s.x + 4 + t * 22, ay = s.y + Math.sin(t * Math.PI) * 14;
+      if (t < 1) drawSpr(tuckR[Math.floor(t * 4) & 3], ax, ay + 4);
+      else drawSpr(waveF[Math.floor(overT * 3) % 2], ax, s.y);
+      return;
+    }
     drawPlane(s.x, s.y, s.theta, planeImg(true));
   }
 
@@ -1579,10 +1623,18 @@ export function mountHyperProp(root) {
   // The result screen: GOAL! drops in over the flag, then a panel comes down with the
   // time, the best time and what comes next. START only works once it has settled.
   function drawClear(blink) {
-    const t = overT, n = s.stage, last = n === LAST;
+    const n = s.stage, last = n === LAST, hold = clearDelay(), t = overT - hold;
+    if (overT < 1.4) {
+      const k = Math.min(1, overT / 0.25);
+      text(s.landed ? 'LANDED!' : 'GOAL!', W / 2, 40 - Math.round((1 - k) * 24), GOLD, { s: 3, align: 'center', shadow: C.redD });
+      return;
+    }
     if (t < 1.4) {
-      const k = Math.min(1, t / 0.25);
-      text('GOAL!', W / 2, 40 - Math.round((1 - k) * 24), GOLD, { s: 3, align: 'center', shadow: C.redD });
+      const k = Math.min(1, (overT - 1.4 - 0.6) / 0.3);
+      if (k > 0) {
+        text('CONGRATULATIONS!', W / 2, 34 - Math.round((1 - k) * 20), GOLD, { s: 2, align: 'center', shadow: C.redD });
+        if (overT > 2.6) text('YOU FLEW ALL THE WAY!', W / 2, 56, C.white, { align: 'center', shadow: C.night });
+      }
       return;
     }
     const k = Math.min(1, (t - 1.4) / 0.35), e = 1 - (1 - k) ** 3;

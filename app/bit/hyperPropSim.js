@@ -21,6 +21,9 @@ export const CFG = {
   pitchRate: 1.6, relax: 1.6, trim: 0.05,
   groundRoll: 8, rotateMax: 0.25,
   successDist: 800,
+  // coming down on a helipad: faster than landHard px/s is a crash (a glide settles at
+  // about 13, easing off the pedals about 7, pushing the nose down onto it about 25)
+  landHard: 20, landBrake: 40,
   pxToM: 0.5,
 };
 
@@ -106,7 +109,12 @@ export const STAGES = [
   { name: 'SKYSCRAPERS', theme: 'city', startX: 60, air: [],
     buildings: [[90, 12, 25], [190, 16, 27], [290, 14, 26]],
     girders: [[140, 12, 46, 20, 2.4, 0], [240, 12, 46, 20, 2.4, 2], [340, 12, 46, 20, 2.4, 4]],
-    birds: [[160, 15], [260, 5], [380, 52]] },
+    birds: [[160, 15], [260, 5]],
+    // The journey ends on a helipad instead of past a line: pad is [metres from the edge
+    // where it starts, its length, its height above the street], and the wheel has to come
+    // down on it gently. ending plays the ending after the landing; when stages are added
+    // later, pad and ending move to whichever stage is last.
+    pad: [372, 28, 20], ending: true },
 ];
 
 export function create(stage = 1) {
@@ -116,7 +124,8 @@ export function create(stage = 1) {
     onGround: true, climbed: false, success: false, result: null, events: [],
     birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1 }; }),
     balloons: (STAGES[stage].balloons || []).map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 2.3, x, y, popT: -1 }; }),
-    got: 0,
+    got: 0, landed: false,
+    pad: STAGES[stage].pad ? { x0: CFG.edgeX + STAGES[stage].pad[0] / CFG.pxToM, x1: CFG.edgeX + (STAGES[stage].pad[0] + STAGES[stage].pad[1]) / CFG.pxToM, top: CFG.lakeY + STAGES[stage].pad[2] } : null,
     obelisks: (STAGES[stage].obelisks || []).map(([m, h]) => ({ x: CFG.edgeX + m / CFG.pxToM, w: 0, top: CFG.lakeY + h })),
     // Solid stone and steel, each a box from bot to top: the sphinx as a row of blocks
     // [metres, length, height] along its back; the city's buildings [metres, length,
@@ -233,6 +242,14 @@ export function step(s, dt, inp) {
   }
   if (s.phase !== 'roll' && s.phase !== 'fly' && s.phase !== 'clear') return;
   const clear = s.phase === 'clear';
+  // down on the helipad: brake to a stop, short of its far end, with room for the pilot
+  if (clear && s.landed) {
+    s.vx = Math.max(0, s.vx - CFG.landBrake * dt);
+    s.x = Math.min(s.x + s.vx * dt, s.pad.x1 - 34);
+    s.y = s.pad.top; s.vy = 0; s.omega = Math.max(0, s.omega - dt);
+    s.theta += (0 - s.theta) * Math.min(1, 6 * dt);
+    return;
+  }
   // a strike leaves the pilot shaken for a moment: the stick does nothing while bonk runs
   if (clear || s.bonk > 0) inp = {};
 
@@ -309,7 +326,20 @@ export function step(s, dt, inp) {
   if (!s.climbed && s.x > CFG.edgeX + 10 && s.vy > 0) { s.climbed = true; s.events.push('climb'); }
   const need = STAGES[s.stage].need || 0;
   if (!s.success && need && s.got < need && s.x - CFG.edgeX >= CFG.successDist) return fail(s, 'short');
-  if (!s.success && s.x - CFG.edgeX >= CFG.successDist && s.y > CFG.lakeY + 2) {
+  // a helipad: the wheel coming down onto it gently is the landing; too fast is a crash,
+  // running into its side is a crash, and passing its far end is an overshoot
+  if (s.pad) {
+    const P = s.pad, y0 = s.y - s.vy * dt;
+    if (s.x > P.x0 - 2 && s.x < P.x1 && y0 >= P.top - 0.5 && s.y <= P.top) {
+      if (s.vy < -CFG.landHard) return fail(s, 'hard');
+      s.success = true; s.landed = true; s.phase = 'clear'; s.y = P.top; s.vy = 0; s.onGround = true;
+      s.result = { ok: true, reason: 'landed', dist: (s.x - CFG.edgeX) * CFG.pxToM };
+      s.events.push('goal');
+      return;
+    }
+    if (s.x + 16 > P.x0 && s.x - 12 < P.x1 && s.y + 2 < P.top) return fail(s, 'building');
+    if (s.x > P.x1) return fail(s, 'overshoot');
+  } else if (!s.success && s.x - CFG.edgeX >= CFG.successDist && s.y > CFG.lakeY + 2) {
     s.success = true; s.phase = 'clear';
     s.result = { ok: true, reason: 'goal', dist: CFG.successDist * CFG.pxToM };
     s.events.push('goal');
