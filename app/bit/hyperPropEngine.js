@@ -633,16 +633,18 @@ export function mountHyperProp(root) {
     px(g, '#e8e4f6', X(-70), CLIFF_TOP, CFG.edgeX + 70, 1);
     return outline(c, C.ink);
   })();
-  // An ad balloon, the city's kind of seventies advertising: a red balloon with a shine, a
-  // cream banner hanging under it with a line of lettering, lit from the street. The
-  // banner is drawn to its length in drawAd, the tether too.
-  const adBall = fromRows(['...rrrr...', '.rrwwrrrr.', '.rwwrrrrrr', 'rrwrrrrrrd', 'rrrrrrrrrd', 'rrrrrrrrdd', '.rrrrrrdd.', '.rrrrrddd.', '...dddd...', '....kk....'],
-    { r: '#e24a35', w: '#ffc0b0', d: '#a82a1c', k: '#3a3f55' });
-  // the sky's own seventies advertiser, far off and small: a blimp with a lit sign on its flank
-  const blimp = [0, 1].map((f) => fromRows([
-    '.....gggggggggggg.....', '...ggGGGGGGGGGGGGgg...', '.ggGyYyYyYyYyYyYyGGgg.', 'gGGGyYyYyYyYyYyYyGGGGg',
-    '.ggGGGGGGGGGGGGGGGgg.g', '...gggggggggggggg...gg', '.........kkk..........'],
-  { g: '#6d6a8c', G: '#8f8cb0', y: f ? '#ffd35c' : '#b8913c', Y: f ? '#b8913c' : '#ffd35c', k: '#2a2640' }));
+  // An ad balloon, the city's kind of seventies advertising: a big red balloon with a shine;
+  // its long lettered banner and tether are drawn to length in drawAd.
+  const adBall = (() => {
+    const [c, g] = canvas(15, 15);
+    for (let y = 0; y < 15; y++) for (let x = 0; x < 15; x++) {
+      const d = ((x - 7) ** 2 + (y - 7) ** 2) / 49;
+      if (d > 1) continue;
+      const lit = ((x - 4.5) ** 2 + (y - 4.5) ** 2) / 49;
+      px(g, lit < 0.06 ? '#ffd9cc' : d > 0.62 && x + y > 13 ? '#a82a1c' : '#e24a35', x, y);
+    }
+    return outline(c, C.ink);
+  })();
   // across the street, at street level: shopfronts glowing between the pillars
   const shopsCity = (() => {
     const [c, g] = canvas(512, 16); const r = rng(13);
@@ -1394,10 +1396,6 @@ export function mountHyperProp(root) {
       const x = (((cx - camX * 0.04 - time * 1.5) % 420) + 420) % 420 - 70;
       ctx.drawImage(img, Math.round(x), Math.round(cy + camY * 0.08));
     }
-    if (T.street) {
-      const x = (((180 - camX * 0.03 - time * 2) % 460) + 460) % 460 - 60;
-      ctx.drawImage(blimp[Math.floor(time * 1.5) % 2], Math.round(x), Math.round(34 + camY * 0.06 + Math.sin(time * 0.5) * 1.5));
-    }
     for (let i = 0; i < 3; i++) {
       const bx = ((i * 97 + time * (7 + i * 2) - camX * 0.08) % 330 + 330) % 330 - 40, by = 50 + i * 9 + Math.sin(time * 0.7 + i) * 3;
       const up = Math.floor(time * 5 + i * 2) % 2;
@@ -1528,10 +1526,14 @@ export function mountHyperProp(root) {
     ctx.globalAlpha = 1;
   }
   function drawAd(b, x, y, loose) {
-    const cx = sx(x), top = sy(y) - (adBall.height >> 1), foot = top + adBall.height - 1, n = S.adBanner(b);
-    // the tether, thin and dim, running down and back to a roof behind the street
-    if (!loose) { ctx.globalAlpha = 0.45; const gy = sy(CFG.lakeY); for (let yy = foot + n; yy < gy; yy += 1) px(ctx, '#8f8cb0', cx - Math.round((yy - foot - n) * 0.35), yy); ctx.globalAlpha = 1; }
-    if (n > 1) { px(ctx, C.ink, cx - 3, foot, 6, n + 1); px(ctx, '#f1e6cc', cx - 2, foot, 4, n); for (let i = 1; i < n - 1; i += 2) px(ctx, '#e24a35', cx - 1, foot + i, 2, 1); }
+    const cx = sx(x), top = sy(y) - (adBall.height >> 1), foot = sy(y) + S.AD.r, n = S.adBanner(b), w = S.AD.w;
+    // a high one's tether, thin and dim, running down and back to a roof behind the street
+    if (!loose && b.bot > CFG.lakeY) { ctx.globalAlpha = 0.45; const gy = sy(CFG.lakeY); for (let yy = foot + n; yy < gy; yy += 1) px(ctx, '#8f8cb0', cx - Math.round((yy - foot - n) * 0.35), yy); ctx.globalAlpha = 1; }
+    // the banner: cream cloth edged dark, a column of bold red characters down it
+    if (n > 1) {
+      px(ctx, C.ink, cx - w - 1, foot, 2 * w + 2, n + 1); px(ctx, '#f1e6cc', cx - w, foot, 2 * w, n);
+      for (let i = 2; i + 4 < n; i += 6) { px(ctx, '#c8321f', cx - 2, i + foot, 4, 1); px(ctx, '#c8321f', cx - 1, i + foot + 1, 1, 3); px(ctx, '#c8321f', cx + 1, i + foot + 2, 1, 2); px(ctx, '#c8321f', cx - 2, i + foot + 4, 4, 1); }
+    }
     ctx.drawImage(adBall, cx - (adBall.width >> 1), top);
   }
   function drawBirds(T) {

@@ -134,7 +134,14 @@ export function create(stage = 1) {
     phase: 'ready', stage, t: 0, x: STAGES[stage].startX, y: 0, vx: 0, vy: 0, theta: 0, omega: 0,
     leg: 0, boardT: 0, stopT: 0, alpha: 0, stall: false, lift: 0, bonk: 0,
     onGround: true, climbed: false, success: false, result: null, events: [],
-    birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1, ad: STAGES[stage].theme === 'city' }; }),
+    birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM; let y = CFG.lakeY + h;
+      // an ad balloon keeps the edge it is played against (see AD): a low one its top, with
+      // the banner down to the street; a high one the foot of its banner, the balloon above
+      let bot = -Infinity;
+      if (STAGES[stage].theme === 'city') {
+        if (h < 40) { bot = CFG.lakeY; y = CFG.lakeY + h + 5 - AD.r; } else { bot = CFG.lakeY + h - 13; y = bot + AD.hang + AD.r; }
+      }
+      return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1, ad: bot > -Infinity, bot }; }),
     balloons: (STAGES[stage].balloons || []).map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 2.3, x, y, popT: -1 }; }),
     got: 0, landed: false,
     pad: STAGES[stage].pad ? { x0: CFG.edgeX + STAGES[stage].pad[0] / CFG.pxToM, x1: CFG.edgeX + (STAGES[stage].pad[0] + STAGES[stage].pad[1]) / CFG.pxToM, top: CFG.lakeY + STAGES[stage].pad[2] } : null,
@@ -160,10 +167,10 @@ export function start(s, stage = s.stage || 1) {
 function moveBirds(s) {
   for (const b of s.birds) {
     if (b.hitT >= 0) continue;
-    // an ad balloon only sways a little on its tether
-    const k = b.ad ? 0.35 : 1;
-    b.x = b.x0 + Math.sin(s.t * 0.7 + b.p) * 6 * k;
-    b.y = b.y0 + Math.sin(s.t * 2.2 + b.p) * 2 * k;
+    // an ad balloon only leans a little on its tether, and never rises or falls
+    if (b.ad) { b.x = b.x0 + Math.sin(s.t * 0.7 + b.p) * 1.5; continue; }
+    b.x = b.x0 + Math.sin(s.t * 0.7 + b.p) * 6;
+    b.y = b.y0 + Math.sin(s.t * 2.2 + b.p) * 2;
   }
   // balloons only bob on their strings
   for (const b of s.balloons) b.y = b.y0 + Math.sin(s.t * 1.6 + b.p) * 1.5;
@@ -176,16 +183,17 @@ export const girderAt = (o, t) => o.base + o.amp * (0.5 - 0.5 * Math.cos((t / o.
 // drawn level: the wing over the gondola, the bare boom behind the wing, and the fin,
 // lowest where it meets the boom and highest at its tip.
 const topAt = (dx) => (dx > -20 ? 25 : dx > -24 ? 14 : Math.min(23, 15 + (-24 - dx)));
-// The city's ad balloons: a balloon AD.r around its middle with a banner hanging under it,
-// AD.banner long or cut short above the street. Its tether runs back to a roof out of the
-// way and is not in the plane's path.
-export const AD = { r: 5, banner: 8 };
-export const adBanner = (b) => Math.max(0, Math.min(AD.banner, b.y - AD.r - CFG.lakeY));
+// The city's ad balloons, as they were flown over seventies streets: a big balloon AD.r
+// around its middle and a long lettered banner hanging from it (AD.w wide) down to b.bot -
+// the street for a low one, AD.hang below the balloon for a high one, whose tether then
+// runs back to a roof out of the plane's path. Both the balloon and the banner are solid.
+export const AD = { r: 7, w: 3, hang: 30 };
+export const adBanner = (b) => Math.max(0, b.y - AD.r - b.bot);
 function hitsPlane(s, b) {
   if (b.ad) {
-    const x0 = b.x - AD.r, x1 = b.x + AD.r, y0 = b.y - AD.r - adBanner(b), y1 = b.y + AD.r;
-    const box = (l, r, bt, tp) => x1 > s.x + l && x0 < s.x + r && y1 > s.y + bt && y0 < s.y + tp;
-    return box(-14, 19, 0, 26) || box(-31, 19, 20, 27);
+    const box = (x0, x1, y0, y1) => (l, r, bt, tp) => x1 > s.x + l && x0 < s.x + r && y1 > s.y + bt && y0 < s.y + tp;
+    const ball = box(b.x - AD.r, b.x + AD.r, b.y - AD.r, b.y + AD.r), flag = box(b.x - AD.w, b.x + AD.w, b.bot, b.y - AD.r);
+    return [ball, flag].some((f) => f(-14, 19, 0, 26) || f(-31, 19, 20, 27));
   }
   const dx = b.x - s.x, dy = b.y - s.y, r = 2;
   const body = dx > -14 - r && dx < 19 + r && dy > 0 - r && dy < 26 + r;
