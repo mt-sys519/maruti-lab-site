@@ -746,86 +746,55 @@ export function createBreakAudio(): Engine {
     stopGroove();
   }
 
-  // Ball-on-ball: a hit, not a note, over in about a tenth of a second with
-  // no room or echo behind it (sines ringing through the reverb made a table
-  // of collisions sound like a wind chime; a short sine ping after that was
-  // clean but weak and not the least bit sci-fi). The sci-fi comes from the
-  // same place as the power shot and the shield, the two sounds that already
-  // read as this table's: a saw swept through a sharp resonant filter - here
-  // a fast downward zap - with a ring-modulated metallic glint on top and a
-  // hard clack underneath so it still lands as contact. Pitch and sweep rise
-  // with the impact (not tuned to any scale), with a little random spread so
-  // a break is not one sound repeated.
+  // A 25% pulse, the NES square channel's usual voice. Both the collision
+  // and the pocket are modelled on Lunar Ball (Compile, 1985), a Famicom
+  // pool game on a space table like this one: a short, glassy one-note clink
+  // when balls meet, and a teleporter-like warble when one is sunk.
+  let pulse: PeriodicWave | null = null;
+  function pulseWave() {
+    if (pulse) return pulse;
+    const n = 32,
+      real = new Float32Array(n),
+      imag = new Float32Array(n);
+    for (let k = 1; k < n; k++) real[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * 0.25);
+    pulse = ctx!.createPeriodicWave(real, imag);
+    return pulse;
+  }
+
+  // Ball-on-ball: one short clink. Every layered attempt (ringing sines,
+  // FM, a resonant zap) came out as either a wind chime or a gadget; what
+  // reads as a clean hit is a single pulse note, a hair of pitch drop at the
+  // front, gone in a few hundredths of a second. Harder hits are a little
+  // louder, higher and longer; a small random spread keeps a break from
+  // being one note repeated.
   function chime(impact: number, a: number, b: number) {
     if (muted) return;
     resume();
     const c = ctx!;
     const now = c.currentTime;
     const norm = Math.min(1, impact / 40);
-    const spread = Math.pow(2, (Math.random() - 0.5) * 0.08);
-    // A break fires a dozen of these at once; thin them out so it scatters
-    // instead of piling up into one loud smear.
     const t = performance.now();
     recentHits = recentHits.filter((x) => t - x < 220);
     recentHits.push(t);
     const density = 1 / Math.sqrt(1 + (recentHits.length - 1) * 0.6);
-    const level = (0.6 + norm * 1.1) * density;
-
-    const out = c.createStereoPanner();
-    out.pan.value = ((a * 7 + b * 3) % 9) / 9 - 0.45;
-    out.connect(sfx!);
-
-    // Contact.
-    clack({
-      freq: 2600 + norm * 900,
-      body: 1400 + norm * 400,
-      gain: 0.1 * level,
-      dur: 0.03 + norm * 0.02,
-    });
-
-    // Zap: a narrow bandpass swept down across a saw's harmonics. Most of the
-    // saw is thrown away at this Q, hence the large gain (as in powerFire).
-    const dur = 0.07 + norm * 0.05;
-    const saw = c.createOscillator();
-    saw.type = 'sawtooth';
-    saw.frequency.setValueAtTime((190 + norm * 90) * spread, now);
-    const band = c.createBiquadFilter();
-    band.type = 'bandpass';
-    band.Q.value = 11;
-    band.frequency.setValueAtTime((5200 + norm * 2600) * spread, now);
-    band.frequency.exponentialRampToValueAtTime(700 * spread, now + dur);
-    const zg = c.createGain();
-    zg.gain.value = 0;
-    zg.gain.setValueAtTime(0, now);
-    zg.gain.linearRampToValueAtTime(0.75 * level, now + 0.003);
-    zg.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    saw.connect(band).connect(zg).connect(out);
-    saw.start(now);
-    saw.stop(now + dur + 0.03);
-
-    // Glint: a sine ring-modulated by another at a non-harmonic ratio, which
-    // leaves only the metallic sum and difference tones.
-    const f = (2300 + norm * 900) * spread;
-    const carrier = c.createOscillator();
-    carrier.type = 'sine';
-    carrier.frequency.value = f;
-    const ring = c.createGain();
-    ring.gain.value = 0;
-    const mod = c.createOscillator();
-    mod.type = 'sine';
-    mod.frequency.value = f * 1.37;
-    mod.connect(ring.gain);
-    const gg = c.createGain();
-    gg.gain.value = 0;
-    gg.gain.setValueAtTime(0, now);
-    gg.gain.linearRampToValueAtTime(0.07 * level, now + 0.002);
-    gg.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-    carrier.connect(ring).connect(gg).connect(out);
-    carrier.start(now);
-    mod.start(now);
-    carrier.stop(now + 0.09);
-    mod.stop(now + 0.09);
+    const f = (1900 + norm * 500) * Math.pow(2, (Math.random() - 0.5) * 0.06);
+    const dur = 0.035 + norm * 0.035;
+    const o = c.createOscillator();
+    o.setPeriodicWave(pulseWave());
+    o.frequency.setValueAtTime(f * 1.12, now);
+    o.frequency.exponentialRampToValueAtTime(f, now + 0.008);
+    const g = c.createGain();
+    g.gain.value = 0;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime((0.1 + norm * 0.18) * density, now + 0.001);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    const pan = c.createStereoPanner();
+    pan.pan.value = (((a * 7 + b * 3) % 9) / 9 - 0.45) * 0.6;
+    o.connect(g).connect(pan).connect(sfx!);
+    o.start(now);
+    o.stop(now + dur + 0.02);
   }
+
 
 
 
@@ -1012,67 +981,38 @@ export function createBreakAudio(): Engine {
         dur: 0.06 + norm * 0.03,
       });
     },
-    // Pocket: the same family as the collision - short, clean, a little
-    // sci-fi - rather than a bell ringing out in a room. The ball drops into
-    // the void (a sine and a band of noise falling together, the motes
-    // spiralling in), then one bright glassy blip says it counted. Not tuned
-    // to a scale; the blip just sits a little higher for higher numbers. The
-    // 9 falls deeper and blips twice.
+    // Pocket: a teleporter warble, as in Lunar Ball - a pulse voice
+    // whose pitch is swept up in quick repeated ramps while the whole thing
+    // climbs, so the ball reads as beamed out rather than dropped. The 9
+    // beams out longer and higher.
     pocket(ballId: number) {
       if (muted) return;
       resume();
       const c = ctx!;
       const now = c.currentTime;
       const nine = ballId === 9;
-      const fall = nine ? 0.26 : 0.18;
-      const src = noiseBurst();
-      const nf = c.createBiquadFilter();
-      nf.type = 'bandpass';
-      nf.Q.value = 2.5;
-      nf.frequency.setValueAtTime(3200, now);
-      nf.frequency.exponentialRampToValueAtTime(380, now + 0.15);
-      const ng = c.createGain();
-      ng.gain.value = 0;
-      ng.gain.setValueAtTime(0.0001, now);
-      ng.gain.linearRampToValueAtTime(0.09, now + 0.02);
-      ng.gain.exponentialRampToValueAtTime(0.0004, now + 0.15);
-      src.connect(nf).connect(ng).connect(sfx!);
-      src.start(now);
-      src.stop(now + 0.16);
-      const drop = c.createOscillator();
-      drop.type = 'sine';
-      drop.frequency.setValueAtTime(1600, now);
-      drop.frequency.exponentialRampToValueAtTime(nine ? 110 : 160, now + fall);
-      const dg = c.createGain();
-      dg.gain.value = 0;
-      dg.gain.setValueAtTime(0, now);
-      dg.gain.linearRampToValueAtTime(0.12, now + 0.01);
-      dg.gain.exponentialRampToValueAtTime(0.0001, now + fall);
-      drop.connect(dg).connect(sfx!);
-      drop.start(now);
-      drop.stop(now + fall + 0.03);
-      const blip = (at: number, freq: number, level: number) => {
-        [
-          [freq, level, 0.09],
-          [freq * 2.76, level * 0.25, 0.03],
-        ].forEach(([fq, lv, d]) => {
-          const o = c.createOscillator();
-          o.type = 'sine';
-          o.frequency.setValueAtTime(fq * 1.25, at);
-          o.frequency.exponentialRampToValueAtTime(fq, at + 0.02);
-          const g = c.createGain();
-          g.gain.value = 0;
-          g.gain.setValueAtTime(0, at);
-          g.gain.linearRampToValueAtTime(lv, at + 0.003);
-          g.gain.exponentialRampToValueAtTime(0.0001, at + d);
-          o.connect(g).connect(sfx!);
-          o.start(at);
-          o.stop(at + d + 0.03);
-        });
-      };
-      const pitch = 2700 + Math.max(0, Math.min(8, ballId - 1)) * 70;
-      blip(now + fall * 0.6, pitch, 0.12);
-      if (nine) blip(now + fall * 0.6 + 0.09, pitch * 1.3, 0.1);
+      const dur = nine ? 0.55 : 0.34;
+      const o = c.createOscillator();
+      o.setPeriodicWave(pulseWave());
+      o.frequency.setValueAtTime(420, now);
+      o.frequency.exponentialRampToValueAtTime(nine ? 1900 : 1300, now + dur);
+      const lfo = c.createOscillator();
+      lfo.type = 'sawtooth';
+      lfo.frequency.value = nine ? 22 : 26;
+      const depth = c.createGain();
+      depth.gain.value = 700;
+      lfo.connect(depth).connect(o.detune);
+      const g = c.createGain();
+      g.gain.value = 0;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.16, now + 0.01);
+      g.gain.setValueAtTime(0.16, now + dur * 0.55);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.connect(g).connect(sfx!);
+      o.start(now);
+      lfo.start(now);
+      o.stop(now + dur + 0.02);
+      lfo.stop(now + dur + 0.02);
     },
     // Power-shot cue shield bouncing off a pocket rim - an electric zap, the
     // one sound in the palette that isn't felt/mechanical.
@@ -1375,6 +1315,7 @@ export function createBreakAudio(): Engine {
       sfx = null;
       delay = null;
       noiseBuffer = null;
+      pulse = null;
     },
   };
 }
