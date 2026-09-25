@@ -61,11 +61,11 @@ export function LabHero() {
           <span>Maruti</span>
           <b>Bit</b>
         </h1>
-        <p className={styles.lead}>短い時間で、頭を少し動かす。</p>
+        <p className={styles.lead}>短い時間で、ちょっと遊ぶ。</p>
         <p className={styles.copy}>
-          考える。見抜く。打ち込む。
+          考える。打ち込む。眺める。触ってみる。
           <br />
-          ひと息で遊べる、小さなゲームを少しずつ増やしています。
+          ひと息で楽しめる、小さなゲームや遊びを少しずつ増やしています。
         </p>
         <div className={styles.actions}>
           <a className={styles.primary} href="/bit" onClick={chooseRandomGame}>

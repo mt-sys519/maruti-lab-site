@@ -41,7 +41,7 @@ export const retroGames = [
     kind: "人力飛行ゲーム",
     href: "/bit/hyperprop",
     label: "/bit/retro/hyperprop-label.jpg",
-    description: "高台で機体を抱えて走り、飛び乗って、漕いで飛ぶ。ペダルを連打する人力飛行ゲーム。",
+    description: "高台で機体を抱えて走り、飛び乗って、ペダルを連打して湖の向こうを目指す。",
   },
 ] as const;
 

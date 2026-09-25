@@ -5,7 +5,7 @@ import { BitHub } from "./BitHub";
 import "./retro/retro.css";
 
 const title = "MarutiBit — 小さなゲームの入口";
-const description = "考える。見抜く。打ち込む。短い時間で遊べる、Maruti Labのミニゲームシリーズ。";
+const description = "考える。打ち込む。眺める。触ってみる。短い時間で遊べる、Maruti Labのミニゲームシリーズ。";
 
 export const metadata: Metadata = {
   title,

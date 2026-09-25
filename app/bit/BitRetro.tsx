@@ -15,7 +15,7 @@ export function BitRetro({ id }: { id?: string } = {}) {
         <p className="rtBitBrand">
           MARUTI BIT <b>RETRO</b>
         </p>
-        <p className="rtBitNote">上下とボタン2つで遊ぶ、携帯機のシリーズ</p>
+        <p className="rtBitNote">上下と赤い2ボタンで遊ぶ、携帯機のシリーズ</p>
       </div>
       <div className="rtBitBody">
         <a className="rtBitCart" href={game.href} aria-label={`${game.name}で遊ぶ`}>
