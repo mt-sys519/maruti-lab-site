@@ -21,14 +21,11 @@ export const bitGames = [
   { id: "liltorb", number: "006", name: "LILT ORB", kana: "リルトオーブ", kind: "粒子操作トイ", href: "/bit/liltorb", description: "触れると粒子が集まる、癒しと刺激の球体トイ。", featured: false, color: "#F2A0C1" },
   { id: "avenue", number: "007", name: "AVENUE", kana: "アベニュー", kind: "ピクセルアート・アンビエント", href: "/bit/avenue", description: "1996年の雨の部屋で、偶然生まれる音を眺めて聴く。", featured: false, color: "#7B8CDE" },
   { id: "neonbreak", number: "008", name: "NEON BREAK", kana: "ネオンブレイク", kind: "ナインボール", href: "/bit/neonbreak", description: "ネオンの台で9番を狙う、ナインボール。", featured: false, color: "#6B3FA0" },
-  { id: "mixpop", number: "009", name: "MIX POP", kana: "ミックスポップ", kind: "ドリンク調合トイ", href: "/bit/mixpop", description: "六つのジュースを混ぜて、できた一杯に名前をつける。", featured: false, color: "#FE941A", tag: "NEW" },
+  { id: "mixpop", number: "009", name: "MIX POP", kana: "ミックスポップ", kind: "ドリンク調合トイ", href: "/bit/mixpop", description: "六つのジュースを混ぜて、できた一杯に名前をつける。", featured: false, color: "#FE941A" },
 ] as const;
 
 // The home hero only teases a handful of games (not the whole, ever-growing
 // catalog) - /bit is the full index.
-// A shelf tag, shown on the machine as a sticker over its top edge. Leave it
-// off and nothing is drawn: adding "人気" or "おすすめ" later is a word on the
-// row below, not a new piece of design.
 export const featuredBitGames = bitGames.filter((game) => game.featured);
 
 export type BitGameId = (typeof bitGames)[number]["id"];
@@ -47,3 +44,10 @@ export const retroGames = [
     description: "高台で機体を抱えて走り、飛び乗って、漕いで飛ぶ。ペダルを連打する人力飛行ゲーム。",
   },
 ] as const;
+
+// The one NEW on the whole site. A NEW on every section's latest meant three
+// of them at once (a mini game, the RETRO cartridge, the desktop clock), and a
+// sticker that is on everything says nothing. Whatever is named here - a mini
+// game or a RETRO cartridge - wears the sticker, and nothing else does; the
+// next release moves it by changing this one word.
+export const newestRelease: string = "hyperprop";

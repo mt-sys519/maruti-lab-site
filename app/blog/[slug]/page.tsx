@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { formatDate, lastChanged, postBySlug, posts } from "../posts";
 import { SiteHeader } from "../../SiteHeader";
+import { NoteWork } from "../NoteWork";
+import "../../bit/retro/retro.css";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -95,6 +97,14 @@ export default async function BlogPost({ params }: Props) {
         </nav>
       )}
       </div>
+      {post.work && (
+        <>
+          {/* The RETRO faces, for when the work is a cartridge. */}
+          {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" />
+          <NoteWork href={post.work} />
+        </>
+      )}
       {/* The reader has just finished three thousand characters. Until now the
           only way to say thank you from a note was one word among eleven in
           the footer; this is the same band the home page ends with. */}

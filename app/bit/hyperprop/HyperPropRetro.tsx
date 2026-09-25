@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- small fixed pixel-art screenshots, served as is */
 import { HyperPropGame } from "../HyperPropGame";
 import { RetroBar, RetroFooter } from "../retro/RetroBar";
+import { WorkNotes } from "../../blog/NoteWork";
 import { RetroCart } from "../retro/RetroCart";
 import { useRetroLang } from "../retro/retroLang";
 import { ShareButton } from "../shared/ShareButton";
@@ -126,6 +127,8 @@ export function HyperPropRetro() {
           <RetroCart soon={t.soon} />
         </div>
       </section>
+
+      <WorkNotes href="/bit/hyperprop" className="rtNotes" />
 
       <RetroFooter />
     </main>

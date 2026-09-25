@@ -1,12 +1,14 @@
-import { retroGames } from "./games";
+import { newestRelease, retroGames } from "./games";
 import { RetroCart } from "./retro/RetroCart";
 
 // The RETRO series on the MarutiBit page: its own world (the dark bar, cream stock with a
 // halftone, the handheld's type), set in right under the hero. The newest cartridge is
 // the one shown; the rest of the series waits on the shelf beside it as blank cartridges.
+// The same block closes a LabNote about a cartridge (given its id) and sits under the
+// home page's hero, so the series is visible from the front door too.
 // Styles are in retro/retro.css, under .rtBit.
-export function BitRetro() {
-  const game = retroGames[0];
+export function BitRetro({ id }: { id?: string } = {}) {
+  const game = retroGames.find((cart) => cart.id === id) ?? retroGames[0];
   return (
     <section className="rtPage rtBit" id="bit-retro" lang="ja" aria-labelledby="bit-retro-title">
       <div className="rtBitBar">
@@ -22,7 +24,7 @@ export function BitRetro() {
         <div className="rtBitInfo">
           <p className="rtBitSerial">
             {game.serial}
-            <span>NEW</span>
+            {game.id === newestRelease && <span>NEW</span>}
           </p>
           <h2 id="bit-retro-title">{game.name}</h2>
           <p className="rtBitKind">{game.kind}</p>

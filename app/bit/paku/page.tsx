@@ -7,6 +7,7 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitNotes } from "../BitNotes";
 import { BitSeriesNav } from "../BitSeriesNav";
+import { WorkNotes } from "../../blog/NoteWork";
 
 export const metadata: Metadata = {
   title: "MarutiBit — PAKU（エサやりゲーム）",
@@ -83,6 +84,8 @@ export default function PakuPage() {
         ]}
         footnote="上層と中層の魚は、沈みきった餌をある深さより下までは追いません。底に落ちたぶんはコリドラスの取り分になります。"
       />
+
+      <WorkNotes href="/bit/paku" />
 
       <BitCartridgeNav current="paku" />
       <BitFooter label="MARUTIBIT / GAME 005" />

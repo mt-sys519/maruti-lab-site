@@ -672,3 +672,19 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitSeriesNavStep:hover,.bitSeriesNavStep:focus-visible{color:#fff;outline:0}
 .bitSeriesNavStep.isPrev{left:0}
 .bitSeriesNavStep.isNext{right:0;background:linear-gradient(270deg,#232323 58%,rgba(35,35,35,0))}
+
+/* A note and the work it is about, joined by the note's `work:` line
+   (app/blog/NoteWork.tsx). The note ends on the work's machine; the work's
+   page lists the notes above its footer. */
+.noteWork{display:flex;align-items:center;gap:clamp(24px,5vw,56px);width:min(760px,calc(100% - 48px));margin:0 auto clamp(50px,6vw,74px);padding:clamp(26px,4vw,40px) 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.noteWorkUnit{flex:0 0 auto;width:150px}
+.noteWorkCopy h2{margin:10px 0 0;font-size:24px}
+.noteWorkCopy p:not(.eyebrow){margin:10px 0 18px;font-size:14px;line-height:1.9}
+@media(max-width:640px){.noteWork{flex-direction:column;align-items:flex-start}}
+.workNotes{width:min(760px,calc(100% - 40px));margin:0 auto clamp(36px,5vw,56px);color:inherit}
+.workNotesHead{margin:0 0 10px;font-size:11px;letter-spacing:.16em;opacity:.7}
+.workNotes ul{list-style:none;margin:0;padding:0;border-top:1px solid currentColor}
+.workNotes li{border-bottom:1px solid currentColor}
+.workNotes a{display:block;padding:16px 2px;color:inherit;font-size:15px;text-decoration:none}
+.workNotes a:hover,.workNotes a:focus-visible{text-decoration:underline;text-underline-offset:4px}
+.workNotes.rtNotes{padding-top:clamp(28px,4vw,44px)}

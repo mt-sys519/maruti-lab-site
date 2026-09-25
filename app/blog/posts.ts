@@ -16,6 +16,9 @@ export type Post = {
   minutes: number;
   /** Share card, written by scripts/capture-note-ogp.mjs. */
   image?: string;
+  /** The page of the work the note is about (`work: /bit/paku`), if it is
+   *  about one. The note ends on that work, and the work lists the note. */
+  work?: string;
 };
 
 // Cloudflare Workers have no filesystem, so the articles are bundled at build
@@ -75,6 +78,7 @@ function build(path: string, source: string): Post {
     tags: list(data.tags),
     draft: data.draft === "true",
     image: data.image || undefined,
+    work: data.work || undefined,
     html: marked.parse(body) as string,
     // Japanese runs about 500 characters a minute; round up so a short note
     // never claims to take zero.
@@ -97,6 +101,10 @@ export const posts = all.filter((post) => !post.draft);
 export const postBySlug = (slug: string) =>
   posts.find((post) => post.slug === slug);
 export const allTags = [...new Set(posts.flatMap((post) => post.tags))];
+
+/** The notes about one work, newest first - for the foot of that work's page. */
+export const postsAbout = (href: string) =>
+  posts.filter((post) => post.work === href);
 
 /** What a search engine should treat as the age of the page. */
 export const lastChanged = (post: Post) => post.updated || post.date;

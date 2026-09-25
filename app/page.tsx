@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { LabHero } from "./LabHero";
+import { BitRetro } from "./bit/BitRetro";
+import "./bit/retro/retro.css";
 import { ClockPreview } from "./ClockPreview";
 import { formatDate, posts } from "./blog/posts";
 import { SiteFooter } from "./SiteFooter";
@@ -92,9 +94,14 @@ export default function Home() {
 
       <LabHero />
 
+      {/* The RETRO faces for the series block: Press Start 2P and DotGothic16. */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" />
+      <BitRetro />
+
       <section className="feature featureClock" aria-labelledby="clock-title">
         <div className="clockCopy">
-          <p className="workNumber">NEW RELEASE</p>
+          <p className="workNumber">DESKTOP APP</p>
           <h2 id="clock-title">PromptTerm<br />CLOCK</h2>
           <p className="workTagline">秒まで刻み続ける、6管の端末時計。</p>
           <p>架空の端末環境PromptTermに組み込まれた、Windowsデスクトップ時計。無料、登録不要、オフラインで動きます。</p>

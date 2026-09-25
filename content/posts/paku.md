@@ -5,6 +5,7 @@ description: PAKUは水槽をタップして餌をやるだけのミニゲーム
 tags: [制作記, MarutiBit, PAKU]
 draft: false
 image: /og/blog/paku.png
+work: /bit/paku
 ---
 
 MarutiBitのPAKUは、水槽をタップすると餌が落ちて、魚が寄ってきて食べる。それだけのミニゲームです。点数もなければ勝ち負けもなく、終わりもありません。
