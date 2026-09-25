@@ -685,7 +685,7 @@ export function mountHyperProp(root) {
   }
   // Seventies billboards on steel frames, bulbs along the edges. Six ads, none of them a
   // real brand: a sunset behind a palm, a cola, a disco, a hotel in neon, a flight, a record.
-  const GLYPH = { H: ['101', '101', '111', '101', '101'], O: ['111', '101', '101', '101', '111'], T: ['111', '010', '010', '010', '010'], E: ['111', '100', '110', '100', '111'], L: ['100', '100', '100', '100', '111'] };
+  const GLYPH = { H: ['101', '101', '111', '101', '101'], O: ['111', '101', '101', '101', '111'], T: ['111', '010', '010', '010', '010'], E: ['111', '100', '110', '100', '111'], L: ['100', '100', '100', '100', '111'], S: ['111', '100', '111', '001', '111'], K: ['101', '110', '100', '110', '101'], Y: ['101', '101', '010', '010', '010'] };
   function billboardSpr(w, h, kind) {
     const key = `v${w}x${h}k${kind}`;
     if (cityCache.has(key)) return cityCache.get(key);
@@ -775,18 +775,70 @@ export function mountHyperProp(root) {
       ctx.globalAlpha = 0.25; px(ctx, '#ffd98a', x - 6, surf + 10, 13, 3); ctx.globalAlpha = 1;
     }
   }
-  // the helipad the last stage ends on: a tower's top with a deck, its edge lights
-  // blinking green and white, and the H on a yellow disc on its face
+  // The destination: an art-deco hotel, the one building in the city that is not like the
+  // rest - cream stone, gold pilasters, tall arched windows, its name in neon under the
+  // deck - with the helipad on its top. The crown steps down beyond the pad's far end,
+  // never on the side the plane comes in from, so nothing drawn stands where it is not
+  // solid. Three things say "land here": two searchlights sweeping the sky from the deck,
+  // lights along the deck's edge running toward the far end, and a windsock.
+  const DECO = { stone: ['#f4ead2', '#e2d2ae', '#c8b48a', '#9a8662'], gold: ['#ffe8a0', '#e8b84a', '#a87a24'], glass: ['#ffd98a', '#c98a3a', '#3a2e48'] };
+  function hotelSpr(w, h) {
+    const key = `h${w}x${h}`;
+    if (cityCache.has(key)) return cityCache.get(key);
+    const step = 14, [c, g] = canvas(w + step + 2, h + 2);
+    const face = (x0, y0, ww, hh) => {
+      for (let y = 0; y < hh; y++) for (let x = 0; x < ww; x++) {
+        let col = x < 2 ? DECO.stone[0] : x >= ww - 2 ? DECO.stone[2] : DECO.stone[1];
+        if (x % 14 === 6) col = DECO.gold[1];
+        if (x % 14 === 7) col = DECO.gold[2];
+        px(g, col, 1 + x0 + x, 1 + y0 + y);
+      }
+      // tall arched windows between the pilasters, lit warm
+      for (let wy = 14; wy < hh - 4; wy += 22) for (let wx = 1; wx + 4 < ww; wx += 14) {
+        const x = 1 + x0 + wx, y = 1 + y0 + wy;
+        px(g, DECO.glass[0], x + 1, y, 2, 1); px(g, DECO.glass[0], x, y + 1, 4, 11); px(g, DECO.glass[1], x + 3, y + 1, 1, 11);
+        px(g, DECO.glass[2], x, y + 6, 4, 1); px(g, DECO.stone[3], x - 1, y + 12, 6, 1);
+      }
+    };
+    face(0, 0, w, h);
+    // the crown's lower step, beyond the far end: a terrace with a gold cap
+    face(w, 8, step, h - 8);
+    px(g, DECO.gold[0], 1 + w, 1 + 8, step, 1); px(g, DECO.gold[1], 1 + w, 1 + 9, step, 1);
+    // the name in neon under the deck
+    px(g, '#241f48', 1, 1 + 3, w, 8);
+    const word = 'SKY HOTEL', tw = word.length * 4 - 1, tx = 1 + Math.floor((w - tw) / 2);
+    [...word].forEach((ch, i) => (GLYPH[ch] || []).forEach((row, yy) => [...row].forEach((bit, xx) => { if (bit === '1') px(g, '#ff5fa2', tx + i * 4 + xx, 1 + 4 + yy); })));
+    px(g, DECO.gold[1], 1, 1 + 2, w, 1); px(g, DECO.gold[1], 1, 1 + 11, w, 1);
+    const img = outline(c, C.ink); cityCache.set(key, img); return img;
+  }
   function drawPad() {
     const P = s.pad; if (!P) return;
     const x0 = sx(P.x0), w = Math.round(P.x1 - P.x0), top = sy(P.top);
-    if (x0 > W + 4 || x0 + w < -4) return;
-    ctx.drawImage(buildingSpr(w, H - top + 2), x0 - 1, top - 1);
-    px(ctx, C.ink, x0 - 3, top - 3, w + 6, 4); px(ctx, '#6f6897', x0 - 2, top - 2, w + 4, 2); px(ctx, '#c9c3e0', x0 - 2, top - 2, w + 4, 1);
-    for (let x = 0; x < w + 4; x += 5) px(ctx, (Math.floor(time * 3) + x / 5) % 2 ? C.green : C.white, x0 - 2 + x, top - 4, 2, 1);
-    const cx = x0 + (w >> 1), cy = top + 10;
-    for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) if (x * x + y * y <= 40) px(ctx, x * x + y * y > 30 ? C.ink : C.yellow, cx + x, cy + y);
-    px(ctx, C.ink, cx - 3, cy - 3, 1, 7); px(ctx, C.ink, cx + 3, cy - 3, 1, 7); px(ctx, C.ink, cx - 3, cy, 7, 1);
+    // searchlights from the deck, sweeping; seen in the sky before the tower comes in
+    if (x0 < W + 160 && x0 + w > -160) {
+      ctx.save(); ctx.globalAlpha = 0.16; ctx.fillStyle = '#fff2c8';
+      for (const [bx, sp, ph] of [[x0 + 10, 0.5, 0], [x0 + w - 10, 0.37, 2]]) {
+        const a = -Math.PI / 2 + Math.sin(time * sp + ph) * 0.55, len = 220, spread = 0.07;
+        ctx.beginPath(); ctx.moveTo(bx, top - 3);
+        ctx.lineTo(bx + Math.cos(a - spread) * len, top - 3 + Math.sin(a - spread) * len);
+        ctx.lineTo(bx + Math.cos(a + spread) * len, top - 3 + Math.sin(a + spread) * len);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    }
+    if (x0 > W + 4 || x0 + w + 16 < -4) return;
+    ctx.drawImage(hotelSpr(w, H - top + 2), x0 - 1, top - 1);
+    // the deck, gold-edged
+    px(ctx, C.ink, x0 - 1, top - 3, w + 2, 4); px(ctx, '#6f6897', x0, top - 2, w, 2); px(ctx, DECO.gold[0], x0, top - 2, w, 1);
+    // lights along its edge, running toward the far end
+    const run = Math.floor(time * 10);
+    for (let i = 0, n = Math.floor(w / 4); i < n; i++) px(ctx, (run - i) % n === 0 || (run - i) % n === 1 ? C.white : '#5aa060', x0 + 1 + i * 4, top - 4, 2, 1);
+    // the searchlights' lamps, and the windsock at the far end, streaming back
+    px(ctx, C.ink, x0 + 8, top - 6, 5, 3); px(ctx, '#fff2c8', x0 + 9, top - 5, 3, 1);
+    px(ctx, C.ink, x0 + w - 12, top - 6, 5, 3); px(ctx, '#fff2c8', x0 + w - 11, top - 5, 3, 1);
+    const pole = x0 + w - 3;
+    px(ctx, C.ink, pole - 1, top - 16, 3, 13); px(ctx, C.greyL, pole, top - 15, 1, 12);
+    for (let i = 0; i < 4; i++) px(ctx, i % 2 ? C.white : C.orange, pole - 3 - i * 3, top - 15 + (i >> 1) + Math.round(Math.sin(time * 6 + i) * 0.6), 3, 3 - (i >> 1));
   }
   function drawCityStone() {
     for (const o of s.stone) {
