@@ -692,3 +692,7 @@ footer{padding-top:34px;padding-bottom:34px}
 /* A phone screenshot is taller than it is wide; at the column's full width it
    would fill two screens. Name the file *-tall.* and it is set at phone size. */
 .postBody img[src*="-tall."]{display:block;width:min(100%,360px);margin-inline:auto}
+
+/* A caption: an italic line written straight under an image in the Markdown,
+   *like this*, lands in the image's paragraph and is set as its caption. */
+.postBody p:has(>img)>em{display:block;margin:-20px auto 34px;max-width:560px;text-align:center;font-size:12.5px;font-style:normal;line-height:1.8;color:var(--muted)}
