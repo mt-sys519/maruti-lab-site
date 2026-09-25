@@ -1051,7 +1051,7 @@ export function mountHyperProp(root) {
         jpMsg = () => (s.got >= need ? L(`風船 ${s.got}個！ あとはゴールへ`, `${s.got} balloons! Now for the goal`) : L(`風船 ${s.got}個 あと${need - s.got}個`, `${s.got} balloons, ${need - s.got} to go`)); jpT = 1.2;
       }
       if (e === 'bird') {
-        au.play('bird'); jpMsg = () => (theme() === THEMES.city ? L('ドローンとぶつかった！ プロペラが止まる', 'Hit a drone! The propeller stalls') : L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls')); jpT = 1.2;
+        au.play('bird'); jpMsg = () => (theme() === THEMES.city ? L('ドローンに当たった！ プロペラが止まる', 'Hit a drone! The propeller stalls') : L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls')); jpT = 1.2;
         burst(s.x + 8, s.y + 14, 14, [C.white, C.greyL, C.white], 40, 1);
       }
       if (e === 'goal') {
@@ -1316,7 +1316,7 @@ export function mountHyperProp(root) {
       if (!seen.pad && s.pad && s.pad.x0 - s.x < 200) { seen.pad = true; jpMsg = () => (L('ヘリポートに着陸！ ゆっくり降りろ', 'Land on the helipad, gently')); jpT = 3; }
       if (!seen.lift && s.stone.some((o) => o.kind === 'girder' && o.amp && o.x - s.x < 170 && o.x > s.x)) { seen.lift = seen.girder = true; jpMsg = () => (L('吊り荷が上下する！ 上がった隙にくぐれ', 'Girders move! Pass under when up')); jpT = 2.6; }
       if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = () => (L('吊り荷！ 当たると落ちる、下をくぐれ', 'Hanging girder! Go under it')); jpT = 2.4; }
-      if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = () => (L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back')); jpT = 2.4; }
+      if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = () => (L('スフィンクス！ 頭と背中の上を抜けろ', 'Sphinx! Over its head and back')); jpT = 2.4; }
     }
     if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
     const mark = Math.floor(Math.max(0, s.x - CFG.edgeX) / 200);
@@ -1756,7 +1756,7 @@ export function mountHyperProp(root) {
       : paused
       ? (countdown > 0 ? [L('もうすぐ再開', 'Resuming…'), t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')] : [L('一時停止中', 'Paused'), t ? L('START で続ける', 'START to continue') : L('Enter / Esc で続ける', 'Enter / Esc to continue')])
       : tut.hint ? tut.hint.jp(t)
-      : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your fingers and wrists') : (jpMsg ? jpMsg() : '') || what, press];
+      : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your hands') : (jpMsg ? jpMsg() : '') || what, press];
     lines.forEach((txt, i) => { if (plateLines[i].textContent !== txt) plateLines[i].textContent = txt; });
   }
 

@@ -24,6 +24,9 @@
 .rtLang { display: inline-flex; border: 2px solid #4b4660; border-radius: 4px; overflow: hidden; }
 .rtLang button { border: 0; padding: 5px 7px; font: inherit; font-size: 8px; letter-spacing: .1em; color: #948db0; background: transparent; cursor: pointer; }
 .rtLang button[aria-pressed="true"] { background: var(--shell); color: var(--ink); }
+/* The bar needs about 342px; below that the serial goes, as the page names the cartridge
+   again under the handheld, rather than RETRO 01 running into RETRO. */
+@media (max-width: 359px) { .rtRight > span { display: none; } }
 
 /* ---- the handheld and its cartridge ---- */
 .rtStage { display: flex; flex-direction: column; align-items: center; }

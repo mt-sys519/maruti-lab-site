@@ -12,7 +12,7 @@ const LABEL = "/bit/retro/hyperprop-label.jpg";
 const TEXT = {
   ja: {
     kind: "人力飛行ゲーム",
-    lead: "高台で機体を抱えて走り、飛び乗って、漕いで湖を越える。ペダルを連打する人力飛行ゲーム。",
+    lead: "高台で機体を抱えて走り、飛び乗って、漕いで空へ。湖から砂漠、夜の街へと飛んでいく、ペダル連打の人力飛行ゲーム。",
     goal: "400m 先の GOAL まで飛べばクリア。途中で落ちると、そこまでの距離が記録に残ります。",
     feat: ["1 PLAYER", "9 STAGES", "RAPID TAP", "JP / EN"],
     how: [
@@ -29,13 +29,13 @@ const TEXT = {
       ["セーブ", "ベストタイム記録"],
     ],
     care: "連打は指や手首に負担がかかります。続けて長く遊ばず、痛みやしびれを感じたらすぐに休んでください。",
-    shots: ["湖の上を飛ぶところ", "4面、ナイルの上を飛ぶところ"],
+    shots: ["6面、スフィンクスの上を飛ぶところ", "8面、夜の街で吊り荷の下をくぐるところ"],
     label: "HYPER PROP のカートリッジ",
     soon: "COMING SOON",
   },
   en: {
     kind: "A human-powered flight game",
-    lead: "Run with the plane along the hilltop, jump aboard, pedal hard and cross the lake. A flight game about drumming the pedals.",
+    lead: "Run with the plane along the hilltop, jump aboard and pedal into the air, on over a lake, a desert and a city at night. A flight game about drumming the pedals.",
     goal: "Fly 400m to the GOAL to clear a stage. Come down short of it and the distance you made is kept as your record.",
     feat: ["1 PLAYER", "9 STAGES", "RAPID TAP", "JP / EN"],
     how: [
@@ -51,7 +51,7 @@ const TEXT = {
       ["SAVE", "Best times"],
     ],
     care: "Drumming is hard on fingers and wrists. Don't play for too long at a stretch, and stop right away if anything hurts or goes numb.",
-    shots: ["Flying over the lake", "Stage 4, flying over the Nile"],
+    shots: ["Stage 6, flying over the Sphinx", "Stage 8, under a hanging girder in the city at night"],
     label: "The HYPER PROP cartridge",
     soon: "COMING SOON",
   },
@@ -96,8 +96,8 @@ export function HyperPropRetro() {
           ))}
         </ul>
         <div className="rtShots">
-          <img src="/bit/retro/hyperprop-shot-flight.png" alt={t.shots[0]} width={256} height={192} />
-          <img src="/bit/retro/hyperprop-shot-nile.png" alt={t.shots[1]} width={256} height={192} />
+          <img src="/bit/retro/hyperprop-shot-sphinx.png" alt={t.shots[0]} width={256} height={192} />
+          <img src="/bit/retro/hyperprop-shot-city.png" alt={t.shots[1]} width={256} height={192} />
         </div>
         <ol className="rtHow">
           {t.how.map(([k, v]) => (

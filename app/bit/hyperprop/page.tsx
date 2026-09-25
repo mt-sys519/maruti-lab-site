@@ -4,7 +4,7 @@ import "../hyperProp.css";
 import "../retro/retro.css";
 
 const title = "MarutiBit — HYPER PROP（人力飛行ゲーム）";
-const description = "高台から機体を抱えて走り、飛び乗って、漕いで湖を越える。ペダルを連打する人力飛行ゲーム。無料、登録不要。";
+const description = "高台から機体を抱えて走り、飛び乗って、漕いで空へ。湖から砂漠、夜の街へと飛んでいく、ペダル連打の人力飛行ゲーム。無料、登録不要。";
 
 // On test while it is played on real phones: kept out of search, the sitemap and
 // every shelf and nav (it is not in games.ts yet), so only the address reaches it.
