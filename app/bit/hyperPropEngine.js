@@ -601,18 +601,25 @@ export function mountHyperProp(root) {
     return c;
   })();
   // A building's face in the play: pale walls, the warm rim of the sunset on the left and
-  // along the top, windows in runs along its floors. Made once per size.
+  // along the top. The windows are fine - one pixel, a floor every three rows, with the
+  // structure's columns between bays - so a building the height of the plane reads as a
+  // tower of many floors, not a house the pilot could step over. Lit in runs along floors.
   function facade(g, x0, y0, w, h, seed) {
     const r = rng(seed);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       let col = x < 2 ? CT.wall[1] : x >= w - 3 ? CT.wall[3] : CT.wall[2];
+      if (x > 2 && x < w - 3 && x % 6 === 2) col = CT.wall[3];
       if (x === 0 || y === 0) col = CT.rim;
-      else if (y === 1) col = CT.wall[0];
+      else if (y === 1 || y === 2) col = CT.wall[0];
       px(g, col, x0 + x, y0 + y);
     }
-    for (let fy = 4; fy < h - 1; fy += 4) {
-      const on = r() < 0.45, a = 2 + Math.floor(r() * Math.max(1, w - 6)), len = 3 + Math.floor(r() * w);
-      for (let x = 2; x < w - 3; x += 2) px(g, on && x >= a && x < a + len ? CT.lit : CT.dark, x0 + x, y0 + fy, 1, 2);
+    for (let fy = 4; fy < h - 1; fy += 3) {
+      const on = r() < 0.4, a = 3 + Math.floor(r() * Math.max(1, w - 8)), len = 4 + Math.floor(r() * w * 0.7);
+      for (let x = 3; x < w - 3; x++) {
+        if (x % 6 === 2) continue;
+        if (x % 2 === 0) continue;
+        px(g, on && x >= a && x < a + len ? CT.lit : CT.dark, x0 + x, y0 + fy);
+      }
     }
   }
   // The tower the run is on, reaching down out of the picture, with lower roofs behind.
@@ -627,10 +634,11 @@ export function mountHyperProp(root) {
     px(g, '#e8e4f6', X(-70), CLIFF_TOP, CFG.edgeX + 70, 1);
     return outline(c, C.ink);
   })();
-  // a drone, rotors spinning, its light blinking
+  // A drone, rotors spinning and its lights blinking. Yellow on the night sky, with red
+  // and green lamps, so it reads at a glance against the towers.
   const drone = [
-    fromRows(['ww.......ww', '.k.......k.', '.kkkkkkkkk.', '...kbbbk...', '....k.k....'], { w: C.greyL, k: '#4a4f68', b: C.red }),
-    fromRows(['.w.......w.', '.k.......k.', '.kkkkkkkkk.', '...kbgbk...', '....k.k....'], { w: C.grey, k: '#4a4f68', b: '#2b2f45', g: C.green }),
+    fromRows(['www.......www', '..k.......k..', '.kkkkkkkkkkk.', '..kYYYYYYYk..', '...kRk.kGk...', '....k...k....'], { w: C.white, k: '#3a3f55', Y: '#ffd35c', R: C.red, G: C.green }),
+    fromRows(['.w.........w.', '..k.......k..', '.kkkkkkkkkkk.', '..kYYYYYYYk..', '...kkk.kkk...', '....k...k....'], { w: C.greyL, k: '#3a3f55', Y: '#ffd35c' }),
   ];
   // cars along the street: headlights ahead, tail lights behind
   const carR = fromRows(['..bbbb...', 'rbbbbbbby', '.k....k..'], { b: '#5a5480', r: C.red, y: '#fff2b0', k: '#0e0c1c' });
@@ -1126,6 +1134,7 @@ export function mountHyperProp(root) {
       if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`); jpT = 2.4; }
       if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it'); jpT = 2.2; }
       if (!seen.building && s.stone.some((o) => o.kind === 'building' && o.x - s.x < 170 && o.x > s.x)) { seen.building = true; jpMsg = L('ビル！ 屋上を越えろ', 'A building! Over the roof'); jpT = 2.2; }
+      if (!seen.lift && s.stone.some((o) => o.kind === 'girder' && o.amp && o.x - s.x < 170 && o.x > s.x)) { seen.lift = seen.girder = true; jpMsg = L('吊り荷が上下する！ 上がった隙にくぐれ', 'The girders go up and down - under while it is up'); jpT = 2.6; }
       if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = L('吊り荷！ 当たると落ちる、下をくぐれ', 'A hanging girder! Solid - go under'); jpT = 2.4; }
       if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back'); jpT = 2.4; }
     }

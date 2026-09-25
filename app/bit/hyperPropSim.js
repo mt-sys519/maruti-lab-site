@@ -49,8 +49,8 @@ export const CFG = {
 // time), flying straight pops 3. Stage 6: careful clears from 7.5 without a strike; one
 // that stays high takes two falcons and then needs 8.5 to carry over the Sphinx.
 // Stage 7: careful from 7.5 without a strike, staying high takes all three drones and
-// needs 8.5. Stage 8: careful from 8; staying high meets the first girder. Stage 9:
-// careful from 8.5.
+// needs 8.5. Stage 8: careful from 8.5; staying high meets the first girder. Stage 9:
+// careful from 9 (a bot that times the moving girders from their motion).
 export const STAGES = [
   null,
   { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
@@ -92,17 +92,21 @@ export const STAGES = [
   { name: 'SKYLINE', theme: 'city', startX: 60, air: [],
     buildings: [[100, 14, 24], [210, 20, 26], [320, 16, 25]],
     birds: [[160, 52], [270, 52], [375, 52]] },
-  // Stage 8: buildings and girders, over one and under the next. A girder is not a bird:
+  // Stage 8: buildings and girders, over one and under the next, close together, with
+  // drones low after the girders for a plane that dives too deep. A girder is not a bird:
   // meeting one ends the flight.
-  { name: 'CRANE YARD', theme: 'city', startX: 60, air: [], birds: [],
-    buildings: [[95, 12, 24], [215, 14, 26], [330, 14, 25]],
-    girders: [[150, 12, 48], [270, 12, 48], [380, 10, 48]] },
-  // Stage 9: all of it, closer together, with drones low after the girders for a plane
-  // that dives too deep.
-  { name: 'SKYSCRAPERS', theme: 'city', startX: 60, air: [],
+  { name: 'CRANE YARD', theme: 'city', startX: 60, air: [],
     buildings: [[90, 12, 24], [190, 18, 27], [300, 14, 26]],
     girders: [[140, 12, 47], [245, 12, 47], [350, 12, 47]],
     birds: [[165, 15], [272, 5], [385, 52]] },
+  // Stage 9, the last: the cranes are working. Each girder rises and falls on its cable
+  // ([metres, length, lowest underside, rise, seconds per lift, phase]): at its lowest the
+  // wheel has to skim under 16, at its highest it passes at a cruise. When a plane gets
+  // there depends on how it was pedalled, so the timing is the player's to read.
+  { name: 'SKYSCRAPERS', theme: 'city', startX: 60, air: [],
+    buildings: [[90, 12, 25], [190, 16, 27], [290, 14, 26]],
+    girders: [[140, 12, 46, 20, 2.4, 0], [240, 12, 46, 20, 2.4, 2], [340, 12, 46, 20, 2.4, 4]],
+    birds: [[160, 15], [260, 5], [380, 52]] },
 ];
 
 export function create(stage = 1) {
@@ -121,7 +125,7 @@ export function create(stage = 1) {
     stone: [
       ...(STAGES[stage].sphinx?.blocks || []).map(([m, len, h]) => ({ kind: 'sphinx', x: CFG.edgeX + (STAGES[stage].sphinx.at + m) / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
       ...(STAGES[stage].buildings || []).map(([m, len, h]) => ({ kind: 'building', x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
-      ...(STAGES[stage].girders || []).map(([m, len, h]) => ({ kind: 'girder', x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, bot: CFG.lakeY + h, top: Infinity })),
+      ...(STAGES[stage].girders || []).map(([m, len, h, amp = 0, per = 1, ph = 0]) => ({ kind: 'girder', x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, base: CFG.lakeY + h, bot: CFG.lakeY + h, top: Infinity, amp, per, ph })),
     ],
   };
 }
@@ -140,7 +144,10 @@ function moveBirds(s) {
   }
   // balloons only bob on their strings
   for (const b of s.balloons) b.y = b.y0 + Math.sin(s.t * 1.6 + b.p) * 1.5;
+  // a crane working its load: from its lowest (h) up by amp and back, every per seconds
+  for (const o of s.stone) if (o.amp) o.bot = girderAt(o, s.t);
 }
+export const girderAt = (o, t) => o.base + o.amp * (0.5 - 0.5 * Math.cos((t / o.per) * Math.PI * 2 + o.ph));
 // the gondola and the wing, in world pixels from the wheel, level flight
 function hitsPlane(s, b) {
   const dx = b.x - s.x, dy = b.y - s.y, r = 2;

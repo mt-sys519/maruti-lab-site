@@ -193,60 +193,73 @@ export function createHyperPropAudio() {
       for (const [st, m, len] of this.melody[bar]) if (st === s) tone({ f: hz(m), at, dur: sx * len * 0.95, g: 0.12, type: 'triangle', bus: bus(), vib: 3, attack: 0.02, send: 0.2 });
     },
   };
-  // Egypt: D Hijaz (D Eb F# G A Bb C) over a darbuka's maqsum - doum, tek, tek, doum, tek -
-  // with a reedy lead that bends like a mizmar. It shares D, F# and A with the jingles.
-  const doum = (at) => tone({ f: 120, to: 62, dur: 0.2, g: 0.2, type: 'sine', at, bus: bus(), attack: 0.004 });
-  const tek = (at, g = 0.12) => { noise({ f: 3200, q: 1.8, dur: 0.05, g, at, bus: bus() }); tone({ f: 620, to: 480, dur: 0.03, g: 0.02, type: 'triangle', at, bus: bus() }); };
+  // Ancient Egypt: D Hijaz (D Eb F# G A Bb C), slower and grander - a frame drum, the
+  // shimmer of a sistrum, a harp plucking up the chord, and a reedy lead that runs up the
+  // scale the way every film about the pharaohs does. It shares D, F# and A with the jingles.
+  const doum = (at, g = 0.22) => tone({ f: 110, to: 55, dur: 0.28, g, type: 'sine', at, bus: bus(), attack: 0.004 });
+  const tek = (at, g = 0.1) => { noise({ f: 2600, q: 1.6, dur: 0.06, g, at, bus: bus() }); tone({ f: 520, to: 400, dur: 0.035, g: 0.03, type: 'triangle', at, bus: bus() }); };
+  const sistrum = (at, g = 0.05) => noise({ f: 7000, q: 3, dur: 0.14, g, at, bus: bus(), attack: 0.01 });
+  const harp = (m, at, g = 0.042) => tone({ f: hz(m), at, dur: 0.5, g, type: 'triangle', bus: bus(), send: 0.3, attack: 0.002 });
   const DESERT = {
-    bpm: 120,
+    bpm: 104,
     chords: [[50, [62, 66, 69]], [51, [63, 67, 70]], [50, [62, 66, 69]], [48, [60, 63, 67]], [50, [62, 66, 69]], [43, [62, 67, 70]], [51, [63, 67, 70]], [50, [62, 66, 69]]],
     melody: [
-      [[0, 74, 2], [2, 75, 2], [4, 78, 6], [10, 75, 2], [12, 74, 4]],
-      [[0, 75, 2], [2, 78, 2], [4, 79, 4], [8, 78, 2], [10, 75, 2], [12, 74, 4]],
-      [[0, 78, 2], [2, 79, 2], [4, 81, 4], [8, 82, 2], [10, 81, 2], [12, 79, 2], [14, 78, 2]],
-      [[0, 79, 4], [4, 78, 2], [6, 75, 2], [8, 74, 8]],
-      [[0, 81, 2], [2, 82, 2], [4, 84, 4], [8, 82, 2], [10, 81, 2], [12, 79, 4]],
-      [[0, 79, 2], [2, 82, 2], [4, 81, 4], [8, 79, 2], [10, 78, 2], [12, 75, 4]],
-      [[0, 75, 2], [2, 78, 2], [4, 79, 2], [6, 78, 2], [8, 75, 4], [12, 78, 4]],
-      [[0, 74, 8], [8, 75, 2], [10, 74, 2], [12, 74, 4]],
+      [[0, 74, 1], [1, 75, 1], [2, 78, 1], [3, 79, 1], [4, 81, 8], [12, 79, 2], [14, 78, 2]],
+      [[0, 79, 2], [2, 78, 2], [4, 75, 2], [6, 78, 2], [8, 74, 8]],
+      [[0, 81, 1], [1, 82, 1], [2, 81, 1], [3, 79, 1], [4, 78, 4], [8, 79, 2], [10, 81, 2], [12, 82, 4]],
+      [[0, 84, 4], [4, 82, 2], [6, 81, 2], [8, 79, 4], [12, 78, 4]],
+      [[0, 74, 1], [1, 75, 1], [2, 78, 1], [3, 79, 1], [4, 81, 8], [12, 82, 2], [14, 81, 2]],
+      [[0, 79, 2], [2, 81, 2], [4, 82, 4], [8, 81, 2], [10, 79, 2], [12, 78, 4]],
+      [[0, 79, 1], [1, 78, 1], [2, 75, 1], [3, 78, 1], [4, 79, 4], [8, 78, 1], [9, 75, 1], [10, 74, 1], [11, 75, 1], [12, 78, 4]],
+      [[0, 74, 12], [12, 75, 2], [14, 78, 2]],
     ],
     play(i, at, beat) {
       const bar = Math.floor(i / 16) % 8, s = i % 16, [root, triad] = this.chords[bar], sx = beat / 4;
-      // running: the drum and a drone on the root. seated: the harmony. flying: the tune.
-      if (s === 0 || s === 8) doum(at);
-      if (s === 2 || s === 6 || s === 12) tek(at);
-      if (s % 2 === 1 && s !== 7) tek(at, 0.035);
-      if (s === 0 || s === 6 || s === 8 || s === 14) tone({ f: hz(root - 12 + (s === 6 ? 7 : 0)), at, dur: sx * 1.9, g: 0.14, type: 'triangle', bus: bus(), attack: 0.01 });
-      if (layer >= 1 && (s === 0 || s === 8)) triad.forEach((m) => tone({ f: hz(m), at, dur: beat * 1.6, g: 0.012, type: 'sawtooth', cut: 1400, bus: bus(), attack: 0.08 }));
-      if (layer >= 2) for (const [st, m, len] of this.melody[bar]) if (st === s) tone({ f: hz(m), at, dur: sx * len * 0.92, g: 0.04, type: 'sawtooth', cut: 2400, vib: 6, bus: bus(), send: 0.22, attack: 0.02 });
+      // running: the frame drum, the sistrum and a drone. seated: the harp. flying: the tune.
+      if (s === 0 || s === 6 || s === 8) doum(at, s === 6 ? 0.15 : 0.22);
+      if (s === 4 || s === 12) tek(at);
+      if (s === 10 || s === 14) tek(at, 0.05);
+      if (s % 4 === 2) sistrum(at);
+      if (s === 0) tone({ f: hz(root - 12), at, dur: beat * 3.9, g: 0.11, type: 'triangle', bus: bus(), attack: 0.05 });
+      if (s === 8) tone({ f: hz(root - 5), at, dur: beat * 1.9, g: 0.07, type: 'triangle', bus: bus(), attack: 0.05 });
+      if (layer >= 1 && s % 2 === 0) harp(triad[(s / 2) % 3] + (s < 8 ? 0 : 12), at);
+      if (layer >= 2) for (const [st, m, len] of this.melody[bar]) if (st === s) {
+        tone({ f: hz(m), at, dur: sx * len * 0.95, g: 0.05, type: 'sawtooth', cut: 2200, vib: 7, bus: bus(), send: 0.25, attack: 0.03 });
+        tone({ f: hz(m - 12), at, dur: sx * len * 0.95, g: 0.025, type: 'square', cut: 1200, vib: 7, bus: bus(), attack: 0.03 });
+      }
     },
   };
-  // the city at dusk: city pop in D - seventh chords, a bass that skips about, an electric
-  // piano on the offbeats, and a soft two-oscillator lead
+  // The city in the seventies: disco. Four on the floor, open hats on the offbeats, an
+  // octave bass, a string pad and a horn-ish hook that repeats until it sticks. In D.
+  const openHat = (at, g = 0.06) => noise({ f: 8000, type: 'highpass', q: 0.7, dur: 0.14, g, at, bus: bus() });
+  const clap = (at) => { for (let k = 0; k < 3; k++) noise({ f: 1500, q: 1.2, dur: 0.1, g: 0.09, at: at + k * 0.008, bus: bus() }); };
   const CITY = {
-    bpm: 112,
-    chords: [[43, [62, 66, 71]], [42, [61, 64, 69]], [40, [62, 67, 71]], [45, [61, 64, 67]], [50, [61, 66, 69]], [47, [62, 66, 69]], [40, [62, 67, 71]], [45, [61, 64, 67]]],
+    bpm: 118,
+    chords: [[43, [62, 66, 71]], [42, [61, 64, 69]], [40, [62, 67, 71]], [45, [61, 64, 67]], [43, [62, 66, 71]], [42, [61, 64, 69]], [40, [62, 67, 71]], [45, [61, 64, 67]]],
     melody: [
-      [[0, 78, 3], [3, 76, 1], [4, 74, 2], [6, 71, 2], [8, 74, 6], [14, 76, 2]],
-      [[0, 73, 3], [3, 76, 1], [4, 78, 4], [8, 76, 2], [10, 73, 2], [12, 69, 4]],
-      [[0, 71, 2], [2, 74, 2], [4, 78, 3], [7, 76, 1], [8, 74, 2], [10, 71, 2], [12, 74, 4]],
-      [[0, 73, 4], [4, 76, 2], [6, 79, 2], [8, 78, 4], [12, 76, 4]],
-      [[0, 81, 3], [3, 78, 1], [4, 76, 2], [6, 74, 2], [8, 73, 6], [14, 74, 2]],
-      [[0, 78, 3], [3, 76, 1], [4, 74, 4], [8, 71, 2], [10, 73, 2], [12, 74, 4]],
-      [[0, 76, 2], [2, 78, 2], [4, 79, 4], [8, 78, 2], [10, 76, 2], [12, 74, 2], [14, 73, 2]],
-      [[0, 76, 8], [8, 73, 2], [10, 69, 2], [12, 73, 4]],
+      [[0, 78, 2], [2, 78, 1], [3, 76, 1], [4, 78, 2], [6, 81, 2], [8, 79, 4], [12, 78, 2], [14, 76, 2]],
+      [[0, 76, 2], [2, 76, 1], [3, 74, 1], [4, 76, 2], [6, 78, 2], [8, 73, 6], [14, 74, 2]],
+      [[0, 74, 2], [2, 74, 1], [3, 73, 1], [4, 74, 2], [6, 76, 2], [8, 79, 4], [12, 78, 2], [14, 76, 2]],
+      [[0, 73, 2], [2, 76, 2], [4, 79, 2], [6, 81, 2], [8, 79, 4], [12, 76, 4]],
+      [[0, 78, 2], [2, 78, 1], [3, 76, 1], [4, 78, 2], [6, 81, 2], [8, 79, 4], [12, 78, 2], [14, 76, 2]],
+      [[0, 76, 2], [2, 76, 1], [3, 74, 1], [4, 76, 2], [6, 78, 2], [8, 73, 6], [14, 74, 2]],
+      [[0, 79, 2], [2, 79, 1], [3, 78, 1], [4, 79, 2], [6, 83, 2], [8, 81, 4], [12, 79, 2], [14, 78, 2]],
+      [[0, 76, 4], [4, 78, 4], [8, 81, 8]],
     ],
     play(i, at, beat) {
       const bar = Math.floor(i / 16) % 8, s = i % 16, [root, triad] = this.chords[bar], sx = beat / 4;
-      if (s === 0 || s === 6 || s === 8) kick(at);
-      if (s === 4 || s === 12) snare(at);
-      hat(at, s % 2 ? 0.04 : 0.022);
-      const bass = { 0: 0, 3: 12, 6: 0, 8: 0, 10: 12, 14: 7 }[s];
-      if (bass !== undefined) tone({ f: hz(root + bass), at, dur: sx * 1.6, g: 0.11, type: 'triangle', bus: bus(), attack: 0.008 });
-      if (layer >= 1 && (s === 3 || s === 7 || s === 11)) triad.forEach((m) => tone({ f: hz(m), at, dur: sx * 1.4, g: 0.02, type: 'sine', bus: bus(), send: 0.2, attack: 0.004 }));
+      // running: the beat and the bass. seated: the strings. flying: the hook.
+      if (s % 4 === 0) kick(at);
+      if (s === 4 || s === 12) clap(at);
+      if (s % 4 === 2) openHat(at); else hat(at, 0.025);
+      if (s % 2 === 0) tone({ f: hz(root + (s % 4 === 2 ? 12 : 0)), at, dur: sx * 1.7, g: 0.13, type: 'sawtooth', cut: 900, bus: bus(), attack: 0.005 });
+      if (layer >= 1) {
+        if (s === 0) triad.forEach((m) => tone({ f: hz(m), at, dur: beat * 3.8, g: 0.018, type: 'sawtooth', cut: 1800, bus: bus(), send: 0.2, attack: 0.25, hold: beat * 2 }));
+        if (s === 14) triad.forEach((m) => tone({ f: hz(m + 12), at, dur: sx * 1.5, g: 0.02, type: 'sawtooth', cut: 3000, bus: bus(), attack: 0.004 }));
+      }
       if (layer >= 2) for (const [st, m, len] of this.melody[bar]) if (st === s) {
-        tone({ f: hz(m), at, dur: sx * len * 0.9, g: 0.05, type: 'triangle', bus: bus(), send: 0.25, vib: 3, attack: 0.01 });
-        tone({ f: hz(m + 12), at, dur: sx * len * 0.9, g: 0.012, type: 'sine', bus: bus(), attack: 0.01 });
+        tone({ f: hz(m), at, dur: sx * len * 0.85, g: 0.05, type: 'sawtooth', cut: 2800, bus: bus(), send: 0.2, attack: 0.012 });
+        tone({ f: hz(m - 12), at, dur: sx * len * 0.85, g: 0.03, type: 'square', cut: 1600, bus: bus(), attack: 0.012 });
       }
     },
   };
