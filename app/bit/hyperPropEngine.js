@@ -1040,10 +1040,10 @@ export function mountHyperProp(root) {
       if (e === 'board') au.play('board');
       if (e === 'liftoff') au.play('liftoff');
       if (e === 'seated') {
-        show('GO!', '', 0.8, L('乗り込んだ！ 漕げ！', 'Aboard! Pedal!')); au.play('seated'); au.layer(1);
+        show('GO!', '', 0.8, () => L('乗り込んだ！ 漕げ！', 'Aboard! Pedal!')); au.play('seated'); au.layer(1);
         tut.seatedWait = true;
       }
-      if (e === 'climb') { show('TAKE OFF!', '', 1.6, L('離陸！', 'Airborne!')); au.play('takeoff'); au.layer(2); }
+      if (e === 'climb') { show('TAKE OFF!', '', 1.6, () => L('離陸！', 'Airborne!')); au.play('takeoff'); au.layer(2); }
       if (e === 'balloon') {
         const b = s.balloons.find((q) => q.popT === s.t) || s.balloons.filter((q) => q.popT >= 0).at(-1);
         au.play('pop'); if (b) burst(b.x, b.y, 12, ['#ffffff', '#e24a35', '#f4c430', '#3f7fe0'], 50, 1);
@@ -1756,7 +1756,7 @@ export function mountHyperProp(root) {
       : paused
       ? (countdown > 0 ? [L('もうすぐ再開', 'Resuming…'), t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')] : [L('一時停止中', 'Paused'), t ? L('START で続ける', 'START to continue') : L('Enter / Esc で続ける', 'Enter / Esc to continue')])
       : tut.hint ? tut.hint.jp(t)
-      : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your hands') : (jpMsg ? jpMsg() : '') || what, press];
+      : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your hands') : (typeof jpMsg === 'function' ? jpMsg() : jpMsg) || what, press];
     lines.forEach((txt, i) => { if (plateLines[i].textContent !== txt) plateLines[i].textContent = txt; });
   }
 
