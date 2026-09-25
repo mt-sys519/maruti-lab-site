@@ -150,14 +150,15 @@ function NoteCard({ slug, square }: { slug: string; square?: boolean }) {
    bar with its red and teal rules, cream stock with a halftone, the square label as it
    was drawn, Press Start 2P and DotGothic16. Captured by the same script:
      node scripts/capture-bit-ogp.mjs hyperprop */
-const retroCopy: Record<string, { serial: string; name: string; kind: string; line: string; label: string; shot: string }> = {
+const retroCopy: Record<string, { serial: string; name: string; kind: string; line: string; label: string; spec: [string, string][] }> = {
   hyperprop: {
     serial: "RETRO 01",
     name: "HYPER PROP",
     kind: "人力飛行ゲーム",
     line: "その指で、空を飛べ。",
     label: "/bit/retro/hyperprop-label.jpg",
-    shot: "/bit/retro/hyperprop-shot-flight.png",
+    // no stage count: stages get added, and a picture cannot be updated with them
+    spec: [["ジャンル", "人力飛行アクション"], ["プレイ人数", "1人"], ["対応機種", "MB-01 RETRO"], ["価格", "FREE"]],
   },
 };
 
@@ -175,7 +176,13 @@ function RetroCard({ id, square }: { id: string; square?: boolean }) {
         <h1>{c.name}</h1>
         <p className={styles.retroKind}>{c.kind}</p>
         <p className={styles.retroLine}>{c.line}</p>
-        {!square && <div className={styles.retroShot}><img src={c.shot} alt="" /></div>}
+        {!square && (
+          <dl className={styles.retroSpec}>
+            {c.spec.map(([k, v]) => (
+              <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
+            ))}
+          </dl>
+        )}
       </div>
       <p className={styles.retroFoot}>MARUTILAB.COM/BIT</p>
     </div>
