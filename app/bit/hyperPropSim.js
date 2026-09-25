@@ -84,9 +84,8 @@ export const STAGES = [
     birds: [[178, 52], [272, 15], [350, 58]],
     sphinx: { at: 310, blocks: [[0, 8, 10], [8, 10, 27], [18, 30, 19], [48, 8, 13]] } },
   // Stages 7-9 are the city at blue hour, rooftop to rooftop: the run is along a tower's
-  // roof, and the lake's level is the roofs of a lower block - coming down there is a
-  // crash. 'buildings' are what stands on those roofs (water towers, billboards, drawn at
-  // the plane's scale) and have to be flown over; girders hang from cranes out of
+  // roof, and the lake's level is the street far below - coming down there is a crash.
+  // Buildings rise from below and have to be flown over; girders hang from cranes out of
   // sight above and can only be passed under (the wheel below their underside less 30);
   // the birds are drones.
   // Stage 7: buildings with drones high between them, like stage 4.
@@ -121,7 +120,7 @@ export function create(stage = 1) {
     obelisks: (STAGES[stage].obelisks || []).map(([m, h]) => ({ x: CFG.edgeX + m / CFG.pxToM, w: 0, top: CFG.lakeY + h })),
     // Solid stone and steel, each a box from bot to top: the sphinx as a row of blocks
     // [metres, length, height] along its back; the city's buildings [metres, length,
-    // height] standing on the block's roofs; and the girders hanging from cranes [metres, length,
+    // height] rising from the street; and the girders hanging from cranes [metres, length,
     // height of their underside], which reach up out of the picture.
     stone: [
       ...(STAGES[stage].sphinx?.blocks || []).map(([m, len, h]) => ({ kind: 'sphinx', x: CFG.edgeX + (STAGES[stage].sphinx.at + m) / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
