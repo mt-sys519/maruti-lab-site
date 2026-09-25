@@ -18,6 +18,11 @@ type Engine = {
   uiClick: () => void;
   setMusic: (track: MusicTrack) => void;
   motion: (moving: boolean) => void;
+  aikaTurn: (on: boolean) => void;
+  ballsLeft: (count: number) => void;
+  stage: (index: number) => void;
+  stageResult: (cleared: boolean) => void;
+  warp: () => void;
   unlock: () => void;
   setMuted: (muted: boolean) => void;
   dispose: () => void;
@@ -362,7 +367,7 @@ export function createBreakAudio(): Engine {
       cutoffIdle: 900,
       cutoffMoving: 2000,
       wet: 0.45,
-      bpm: 96,
+      bpm: 112,
       chordBeats: 8,
       melody: 'pluck',
     },
@@ -379,16 +384,263 @@ export function createBreakAudio(): Engine {
       cutoffIdle: 1600,
       cutoffMoving: 3000,
       wet: 0.8,
-      bpm: 64,
+      bpm: 100,
       chordBeats: 8,
       melody: 'bell',
     },
   };
   const palette = () => PALETTES[musicTrack ?? 'solo'];
+  // STAGE runs Am - F - C - G, in a key that changes from stage to stage so
+  // working through them travels.
+  const STAGE_PROG = [
+    [45, 57, 60, 64, 71],
+    [41, 57, 60, 65, 69],
+    [48, 55, 60, 64, 67],
+    [43, 55, 59, 62, 67],
+  ];
+  const STAGE_KEYS = [0, 5, 2, 7, 4, 9, 3, 10];
+  let keyShift = 0;
+  // After a clear the stage beat rests for a moment under the resolving
+  // chord, then comes back in for the next stage.
+  let restUntil = 0;
   const chord = () => {
+    if (musicTrack === 'stage')
+      return STAGE_PROG[chordIndex % STAGE_PROG.length].map((m) => m + keyShift);
     const cs = palette().chords;
     return cs[chordIndex % cs.length];
   };
+
+  // ---- VS CPU and STAGE: tracks with a beat
+  // Only SOLO is the quiet held-chord table. A match and a puzzle want a
+  // pulse: VS CPU runs a four-on-the-floor groove the whole game - AIKA's
+  // turn puts an arpeggio on top, and it thickens as the rack empties - and
+  // STAGE runs a tight sixteenth-note ostinato, like a clock on the shot.
+  let aikaOn = false;
+  let ballsRemaining = 9;
+  let grooveTimer: ReturnType<typeof setInterval> | null = null;
+  let grooveNext = 0;
+  let grooveStep = 0;
+  let noiseLong: AudioBuffer | null = null;
+  function musicNoise() {
+    if (noiseLong) return noiseLong;
+    const c = ctx!;
+    noiseLong = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    const d = noiseLong.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return noiseLong;
+  }
+  function hit(o: {
+    at: number;
+    gain: number;
+    dur: number;
+    type: BiquadFilterType;
+    freq: number;
+    q?: number;
+    pan?: number;
+    wet?: number;
+  }) {
+    const c = ctx!;
+    const src = c.createBufferSource();
+    src.buffer = musicNoise();
+    const f = c.createBiquadFilter();
+    f.type = o.type;
+    f.frequency.value = o.freq;
+    f.Q.value = o.q ?? 0.7;
+    // Silent before the envelope starts, not at the GainNode's default of 1:
+    // a source started with an offset can begin a few samples ahead of its
+    // start time, and at gain 1 those samples came out as a -4dB click -
+    // the "first beats run hot" spike, measured on its own.
+    const g = c.createGain();
+    g.gain.value = 0;
+    g.gain.setValueAtTime(0, o.at);
+    g.gain.linearRampToValueAtTime(o.gain, o.at + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, o.at + o.dur);
+    const pan = c.createStereoPanner();
+    pan.pan.value = o.pan ?? 0;
+    src.connect(f).connect(g).connect(pan).connect(music!);
+    if (o.wet) {
+      const w = c.createGain();
+      w.gain.value = o.wet;
+      pan.connect(w).connect(space());
+    }
+    src.start(o.at, Math.random() * 0.6);
+    src.stop(o.at + o.dur + 0.02);
+  }
+  function kickAt(at: number, gain: number) {
+    const c = ctx!;
+    const o = c.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(130, at);
+    o.frequency.exponentialRampToValueAtTime(50, at + 0.1);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(gain, at + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.32);
+    o.connect(g).connect(music!);
+    o.start(at);
+    o.stop(at + 0.35);
+    hit({ at, gain: gain * 0.15, dur: 0.012, type: 'highpass', freq: 3000 });
+  }
+  function pluckAt(o: {
+    midi: number;
+    at: number;
+    gain: number;
+    dur: number;
+    type: OscillatorType;
+    from: number;
+    to: number;
+    pan?: number;
+    echo?: number;
+    q?: number;
+  }) {
+    const c = ctx!;
+    const osc = c.createOscillator();
+    osc.type = o.type;
+    osc.frequency.value = hz(o.midi);
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = o.q ?? 1;
+    lp.frequency.setValueAtTime(o.from, o.at);
+    lp.frequency.exponentialRampToValueAtTime(o.to, o.at + o.dur);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0, o.at);
+    g.gain.linearRampToValueAtTime(o.gain, o.at + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, o.at + o.dur);
+    const pan = c.createStereoPanner();
+    pan.pan.value = o.pan ?? 0;
+    osc.connect(lp).connect(g).connect(pan).connect(music!);
+    if (o.echo) {
+      const e = c.createGain();
+      e.gain.value = o.echo;
+      pan.connect(e).connect(delay!);
+    }
+    osc.start(o.at);
+    osc.stop(o.at + o.dur + 0.05);
+  }
+  function stab(ch: number[], at: number, gain: number, dur: number) {
+    ch.slice(1).forEach((m, k) =>
+      pluckAt({
+        midi: m,
+        at,
+        gain,
+        dur,
+        type: 'sawtooth',
+        from: 2600,
+        to: 700,
+        pan: (k - 1.5) * 0.3,
+        echo: 0.12,
+      }),
+    );
+  }
+  function cpuStep(i: number, at: number, s16: number) {
+    const layer =
+      ballsRemaining >= 7 ? 0 : ballsRemaining >= 4 ? 1 : ballsRemaining >= 2 ? 2 : 3;
+    const ch = chord();
+    if (i % 4 === 0) kickAt(at, 0.13 + layer * 0.015);
+    if (i % 2 === 0)
+      pluckAt({
+        midi: ch[0] + 12 + (i % 4 === 2 ? 12 : 0),
+        at,
+        gain: i % 4 === 0 ? 0.035 : 0.025,
+        dur: s16 * 1.8,
+        type: 'sawtooth',
+        from: 1300 + layer * 300,
+        to: 200,
+        q: 2,
+      });
+    if (i === 4 || i === 12)
+      hit({ at, gain: 0.04, dur: 0.18, type: 'bandpass', freq: 1800, q: 0.9, wet: 0.35 });
+    if (i % 4 === 2)
+      hit({ at, gain: 0.02, dur: 0.035, type: 'highpass', freq: 8200, pan: 0.25 });
+    else if (layer >= 1 && i % 2 === 1)
+      hit({ at, gain: 0.008, dur: 0.03, type: 'highpass', freq: 8800, pan: -0.2 });
+    if (i === 0 || i === 6) stab(ch, at, 0.011, s16 * 1.6);
+    if (aikaOn || layer >= 2) {
+      const tones = ch.slice(1);
+      const order = [0, 1, 2, 3, 2, 3, 1, 2];
+      pluckAt({
+        midi: tones[order[i % 8] % tones.length] + 12,
+        at,
+        gain: i % 4 === 0 ? 0.02 : 0.014,
+        dur: s16 * 1.2,
+        type: 'square',
+        from: 3200,
+        to: 600,
+        pan: i % 2 ? 0.4 : -0.4,
+        echo: 0.35,
+      });
+    }
+    if (layer >= 3 && i % 4 === 2)
+      hit({ at, gain: 0.025, dur: 0.2, type: 'highpass', freq: 7000, pan: -0.25 });
+  }
+  function stageStep(i: number, at: number, s16: number) {
+    if (at < restUntil) return;
+    const ch = chord();
+    const accent = i === 0 || i === 3 || i === 6 || i === 10 || i === 12;
+    pluckAt({
+      midi: ch[0] + 12,
+      at,
+      gain: accent ? 0.04 : 0.02,
+      dur: s16 * 0.9,
+      type: 'sawtooth',
+      from: moving ? 1800 : 1000,
+      to: 180,
+      q: 3,
+    });
+    if (i === 0 || i === 8) kickAt(at, 0.12);
+    if (i === 12)
+      hit({ at, gain: 0.03, dur: 0.04, type: 'bandpass', freq: 2600, q: 5, wet: 0.3 });
+    hit({
+      at,
+      gain: i % 4 === 2 ? 0.014 : 0.006,
+      dur: 0.025,
+      type: 'highpass',
+      freq: 9000,
+      pan: 0.2,
+    });
+    if (i % 2 === 0) {
+      const tones = ch.slice(1);
+      const order = [0, 2, 1, 3, 2, 0, 3, 1];
+      pluckAt({
+        midi: tones[order[(i >> 1) % 8] % tones.length] + 12,
+        at,
+        gain: 0.016,
+        dur: s16 * 1.6,
+        type: 'square',
+        from: 2800,
+        to: 500,
+        pan: (i >> 1) % 2 ? 0.35 : -0.35,
+        echo: 0.4,
+      });
+    }
+  }
+  function grooveTick() {
+    if (!ctx || muted || ctx.state !== 'running') return;
+    if (musicTrack !== 'cpu' && musicTrack !== 'stage') return;
+    if (document.hidden) return;
+    const s16 = 60 / palette().bpm / 4;
+    if (grooveNext < ctx.currentTime) grooveNext = ctx.currentTime + 0.05;
+    while (grooveNext < ctx.currentTime + 0.25) {
+      const at = grooveNext,
+        i = grooveStep % 16;
+      grooveNext += s16;
+      grooveStep++;
+      if (i === 0 && grooveStep > 1) chordIndex++;
+      if (musicTrack === 'cpu') cpuStep(i, at, s16);
+      else stageStep(i, at, s16);
+    }
+  }
+  function startGroove() {
+    if (!ctx || grooveTimer || muted) return;
+    musicBus();
+    grooveStep = 0;
+    grooveNext = ctx.currentTime + 0.08;
+    grooveTimer = setInterval(grooveTick, 60);
+  }
+  function stopGroove() {
+    if (grooveTimer) clearInterval(grooveTimer);
+    grooveTimer = null;
+  }
 
   const IDLE_LEVEL = 0.4;
   function levelFor() {
@@ -469,6 +721,10 @@ export function createBreakAudio(): Engine {
     if (!musicTrack || muted) return;
     resume();
     musicBus();
+    if (musicTrack !== 'solo') {
+      startGroove();
+      return;
+    }
     const now = ctx!.currentTime;
     bedFilter!.frequency.setTargetAtTime(
       moving ? palette().cutoffMoving : palette().cutoffIdle,
@@ -487,6 +743,7 @@ export function createBreakAudio(): Engine {
     bedVoices = [];
     if (melodyTimer) clearInterval(melodyTimer);
     melodyTimer = null;
+    stopGroove();
   }
 
   // Ball-on-ball: a clean, ringing tone taken from the chord being held,
@@ -718,8 +975,10 @@ export function createBreakAudio(): Engine {
     // than ball-on-ball, harder and brighter as the shot gets stronger.
     cueStrike(power: number) {
       const norm = Math.min(1, power / 60);
+      // The collision notes come out of the current chord, so the harmony
+      // moves on each shot even when no music is playing.
       chordIndex++;
-      if (musicTrack && !muted && ctx) playChord(0.25);
+      if (musicTrack === 'solo' && !muted && ctx) playChord(0.25);
       clack({
         freq: 1300 + norm * 900,
         body: 820 + norm * 260,
@@ -771,7 +1030,7 @@ export function createBreakAudio(): Engine {
       src.start(now);
       src.stop(now + 0.16);
       const SCALE = [69, 72, 74, 76, 79, 81, 84, 86, 88];
-      const midi = SCALE[Math.max(0, Math.min(8, ballId - 1))];
+      const midi = SCALE[Math.max(0, Math.min(8, ballId - 1))] + keyShift;
       const at = now + 0.07;
       const room = space();
       bell({ freq: hz(midi), at, gain: 0.15, dur: 1.4, out: sfx!, wet: 0.4, wetTo: room });
@@ -845,7 +1104,7 @@ export function createBreakAudio(): Engine {
       resume();
       const now = ctx!.currentTime;
       const room = space();
-      [72, 76, 79, 84, 88].forEach((midi, i) =>
+      [72, 76, 79, 84, 88].map((m) => m + keyShift).forEach((midi, i) =>
         bell({
           freq: hz(midi),
           at: now + i * 0.085,
@@ -857,7 +1116,7 @@ export function createBreakAudio(): Engine {
           pan: (i - 2) * 0.2,
         }),
       );
-      [60, 67, 71, 74].forEach((midi) =>
+      [60, 67, 71, 74].map((m) => m + keyShift).forEach((midi) =>
         bell({ freq: hz(midi), at: now + 0.45, gain: 0.05, dur: 2.4, out: sfx!, wet: 0.7, wetTo: room }),
       );
     },
@@ -961,10 +1220,11 @@ export function createBreakAudio(): Engine {
       if (track === musicTrack) return;
       musicTrack = track;
       chordIndex = 0;
-      if (!track) {
-        stopBed();
-        return;
-      }
+      restUntil = 0;
+      if (track !== 'stage') keyShift = 0;
+      aikaOn = false;
+      stopBed();
+      if (!track) return;
       if (bedFilter && ctx)
         bedFilter.frequency.setTargetAtTime(
           palette().cutoffIdle,
@@ -975,6 +1235,63 @@ export function createBreakAudio(): Engine {
     },
     motion(next: boolean) {
       setMoving(next);
+    },
+    aikaTurn(on: boolean) {
+      aikaOn = on && musicTrack === 'cpu';
+    },
+    ballsLeft(count: number) {
+      ballsRemaining = count;
+    },
+    stage(index: number) {
+      keyShift = STAGE_KEYS[index % STAGE_KEYS.length];
+    },
+    // A clear stops the beat for two bars under a major ninth in the stage's
+    // key (the win bells ring over it); a miss just keeps the clock running.
+    stageResult(cleared: boolean) {
+      if (musicTrack !== 'stage' || !ctx || muted || !cleared) return;
+      const now = ctx.currentTime;
+      const beat = 60 / palette().bpm;
+      restUntil = now + beat * 8;
+      [48, 55, 59, 62, 64, 67].forEach((m, k) =>
+        pluckAt({
+          midi: m + keyShift,
+          at: now + 0.05,
+          gain: k === 0 ? 0.05 : 0.022,
+          dur: beat * 7,
+          type: 'triangle',
+          from: 3000,
+          to: 900,
+          pan: (k - 2.5) * 0.2,
+        }),
+      );
+    },
+    // Through a wormhole: the pitch is bent down into one hole and back up
+    // out of the other, with the room swallowing the middle.
+    warp() {
+      if (muted) return;
+      resume();
+      const c = ctx!,
+        now = c.currentTime;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.09, now + 0.02);
+      g.gain.setValueAtTime(0.09, now + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+      g.connect(sfx!);
+      const w = c.createGain();
+      w.gain.value = 0.6;
+      g.connect(w).connect(space());
+      [0, 7].forEach((cents) => {
+        const o = c.createOscillator();
+        o.type = 'sine';
+        o.detune.value = cents;
+        o.frequency.setValueAtTime(hz(88 + keyShift), now);
+        o.frequency.exponentialRampToValueAtTime(hz(64 + keyShift), now + 0.12);
+        o.frequency.exponentialRampToValueAtTime(hz(83 + keyShift), now + 0.3);
+        o.connect(g);
+        o.start(now);
+        o.stop(now + 0.36);
+      });
     },
     // Every sound call already resumes the context first, but that's the
     // problem: the first call after any idle stretch (the very first shot
@@ -1003,6 +1320,8 @@ export function createBreakAudio(): Engine {
     },
     dispose() {
       document.removeEventListener('visibilitychange', onVisibility);
+      stopGroove();
+      noiseLong = null;
       if (melodyTimer) clearInterval(melodyTimer);
       melodyTimer = null;
       musicTrack = null;

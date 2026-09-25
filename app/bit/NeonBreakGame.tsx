@@ -1250,14 +1250,27 @@ export function NeonBreakGame() {
     audioEngineRef.current?.setMuted(!enabled);
     setMuted(!enabled);
   }, []);
-  // Each mode's operator has her own chords and timbre for the table's held
-  // chord (see neonBreakAudio.ts). It follows the sound toggle like every
-  // effect does, so it is silent until sound is on.
+  // BGM is off. The music still lives in neonBreakAudio.ts - SOLO's quiet
+  // held-chord table, and beat tracks for VS CPU and STAGE - and putting
+  // `setMusic(mode)` back in this effect is the whole switch.
   useEffect(() => {
-    // VS CPU and STAGE are being rebuilt around their own mechanics (the turn
-    // change, the single shot); until then only SOLO has music.
-    audioEngineRef.current?.setMusic(mode === "solo" ? "solo" : null);
+    audioEngineRef.current?.setMusic(null);
   }, [mode]);
+  // VS CPU: AIKA's turn adds an arpeggio to the groove, and the groove
+  // thickens as the rack empties.
+  useEffect(() => {
+    audioEngineRef.current?.aikaTurn(mode === "cpu" && turn === 1);
+  }, [mode, turn]);
+  useEffect(() => {
+    audioEngineRef.current?.ballsLeft(
+      ballsRef.current.filter((b) => b.active && b.id > 0).length,
+    );
+  }, [mode, turn, phase]);
+  // STAGE: each stage is in its own key.
+  useEffect(() => {
+    if (mode === "stage" && phase === "aim")
+      audioEngineRef.current?.stage(stageIndex);
+  }, [mode, stageIndex, phase]);
   // The held chord opens up while balls are moving and settles once the
   // table is still.
   useEffect(() => {
@@ -2364,6 +2377,7 @@ export function NeonBreakGame() {
             : `STAGE ${stageIndexRef.current + 1} CLEAR — ${shotsRef.current}打目`,
         );
         audioEngineRef.current!.win();
+        audioEngineRef.current!.stageResult(true);
         const nine = ballsRef.current.find((b) => b.id === 9);
         if (nine)
           spawnBurst(sparksRef.current, nine.x, nine.y, {
@@ -2382,6 +2396,7 @@ export function NeonBreakGame() {
               : VOICE.luna.fail,
         );
         audioEngineRef.current!.foul();
+        audioEngineRef.current!.stageResult(false);
         triggerFlash("#ff2e4a", 0.25);
         ballsRef.current = stageRack(stageIndexRef.current + 1, geo);
         phaseRef.current = "aim";
@@ -2854,7 +2869,7 @@ export function NeonBreakGame() {
                   ny3 = b.vy / speed;
                 b.x = dest.x + nx3 * (dest.r + b.r + 2);
                 b.y = dest.y + ny3 * (dest.r + b.r + 2);
-                audioEngineRef.current!.shield();
+                audioEngineRef.current!.warp();
                 spawnBurst(sparksRef.current, warp.x, warp.y, {
                   count: 16,
                   speed: 100,
