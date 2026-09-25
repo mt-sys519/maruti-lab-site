@@ -507,8 +507,143 @@ export function mountHyperProp(root) {
   const balloonSpr = ['#e24a35', '#f4c430', '#3f7fe0', '#2bb3a3', '#f2a0c1'].map((col) => fromRows([
     '.cccc.', 'cWcccc', 'cWcccc', 'cccccc', 'cccccd', '.cccd.', '..dd..', '...s..', '..s...', '...s..'], { c: col, W: '#ffffff', d: '#0003', s: '#6b6259' }));
 
+  // ---------- the city (stages 7-9) ----------
+  // The same layers again for a bay at dusk: towers in the haze with their windows coming
+  // on, darker blocks nearer, the embankment with its lamps, and the roof of the tower
+  // the run starts on.
+  const CT = {
+    sky: ['#2b2455', '#3d3170', '#5b3f86', '#8a4f8f', '#c66686', '#ef8f7f', '#f9c28c'],
+    water: ['#f6c79a', '#b9829c', '#8a6a9a', '#5d5690', '#43447a', '#343866', '#282b52'],
+    far: ['#7a689f', '#6b5a93', '#5d4e86'], mid: ['#43386f', '#3a3066', '#2f2758'],
+    lit: '#f6d27a', litD: '#caa865', dark: '#1d1838',
+    wall: ['#a7a1c4', '#7d7599', '#5f5783', '#463f6c', '#2e2850'],
+    steel: ['#f08a4b', '#d6602e', '#9c3d1c'],
+  };
+  const skyCity = (() => {
+    const [c, g] = canvas(W, H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) px(g, ramp(CT.sky, (y - HUD_H + 6) / (HORIZON - HUD_H - 4), x, y), x, y);
+    // a big low sun going down behind the towers
+    for (let y = -11; y <= 11; y++) for (let x = -11; x <= 11; x++) { const d = x * x + y * y; if (d <= 121) px(g, d > 90 ? '#ffc98a' : '#ffe6b8', 70 + x, 100 + y); }
+    return c;
+  })();
+  // thin streaks of cloud lit from below
+  function streak(w, seed) {
+    const [c, g] = canvas(w, 4); const r = rng(seed);
+    for (let y = 0; y < 4; y++) { const a = Math.floor(r() * w * 0.3), b = w - Math.floor(r() * w * 0.3); px(g, y < 2 ? '#f7b3a0' : '#d98a92', a, y, b - a, 1); }
+    return c;
+  }
+  const cloudsCity = [[30, 38, streak(60, 3)], [200, 58, streak(44, 5)], [330, 28, streak(36, 8)]];
+  // a row of towers: lit edge on the left, windows on a grid, some of them on
+  function towers(w, h, seed, cols, minH, maxH, lit, chance, spires) {
+    const [c, g] = canvas(w, h); const r = rng(seed);
+    for (let x = 0; x < w;) {
+      const bw = 10 + Math.floor(r() * 16), bh = minH + Math.floor(r() * (maxH - minH)), col = cols[1 + Math.floor(r() * 2)];
+      for (let xx = 0; xx < bw && x + xx < w; xx++) for (let y = h - bh; y < h; y++) {
+        let k = xx === 0 ? cols[0] : col;
+        if (xx % 3 === 1 && (y - (h - bh)) % 4 === 2 && y < h - 2 && hash((x + xx) * 13 + y * 31) < chance) k = lit;
+        px(g, k, x + xx, y);
+      }
+      if (spires && bh > maxH - 18) { const ax = x + (bw >> 1); px(g, cols[2], ax, h - bh - 10, 1, 10); px(g, C.red, ax, h - bh - 11); }
+      x += bw + Math.floor(r() * 3);
+    }
+    return c;
+  }
+  const farCity = towers(512, 112, 31, CT.far, 30, 82, CT.litD, 0.3, true);
+  const midCity = towers(512, 62, 47, CT.mid, 16, 52, CT.lit, 0.4, false);
+  // near: the embankment wall, its railing, and the lamps along it
+  const nearCity = (() => {
+    const [c, g] = canvas(512, 30);
+    px(g, CT.dark, 0, 23, 512, 7); px(g, CT.mid[0], 0, 22, 512, 1);
+    px(g, CT.mid[1], 0, 19, 512, 1);
+    for (let x = 0; x < 512; x += 4) px(g, CT.mid[1], x, 19, 1, 3);
+    for (let x = 10; x < 512; x += 32) {
+      px(g, CT.dark, x, 9, 1, 13); px(g, CT.dark, x - 1, 9, 3, 1);
+      px(g, CT.lit, x - 1, 10, 3, 1); px(g, '#ffe6b8', x, 10, 1, 1);
+    }
+    return c;
+  })();
+  const reflCity = (() => {
+    const [c, g] = canvas(512, 40);
+    const src = farCity.getContext('2d').getImageData(0, 0, 512, 112).data;
+    for (let y = 0; y < 40; y++) {
+      if (y % 2 === 1 && y > 10) continue;
+      const sy = 111 - Math.floor(y * 2.2); if (sy < 0) continue;
+      for (let x = 0; x < 512; x++) {
+        const i = (sy * 512 + x) * 4; if (!src[i + 3]) continue;
+        px(g, src[i] > 180 ? '#e9b27a' : CT.water[3], x, y);
+      }
+    }
+    return c;
+  })();
+  // a building's face: a lit column on the left, a shaded one on the right, windows
+  function facade(g, x0, y0, w, h, seed) {
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let col = x === 0 ? CT.wall[1] : x >= w - 2 ? CT.wall[3] : CT.wall[2];
+      if (y === 0) col = CT.wall[0];
+      else if (y === 1) col = CT.wall[1];
+      else if (x > 1 && x < w - 2 && x % 4 > 1 && y % 5 > 2) col = hash(seed + (x >> 2) * 17 + Math.floor(y / 5) * 131) < 0.45 ? CT.lit : CT.dark;
+      px(g, col, x0 + x, y0 + y);
+    }
+  }
+  // The tower the run is on: its roof is the runway, from a little behind the start to the
+  // edge, and it stands in the bay. Lower roofs step down behind it.
+  const cliffCity = (() => {
+    const w = CFG.edgeX - CLIFF_L + 3, h = CLIFF_TOP + CLIFF_H; const [c, g] = canvas(w, h);
+    const X = (wx) => wx - CLIFF_L;
+    facade(g, X(-420), CLIFF_TOP + 30, 214, CLIFF_H - 30, 7);
+    facade(g, X(-206), CLIFF_TOP + 14, 134, CLIFF_H - 14, 19);
+    facade(g, X(-70), CLIFF_TOP, CFG.edgeX + 70, CLIFF_H, 3);
+    for (let y = 0; y < CLIFF_H; y++) px(g, CT.wall[4], X(CFG.edgeX) - 1, CLIFF_TOP + y);
+    // the roof's edge where feet run
+    px(g, '#c9c3e0', X(-70), CLIFF_TOP, CFG.edgeX + 70, 1);
+    return c;
+  })();
+  // a drone, rotors spinning: two frames
+  const drone = [
+    fromRows(['ww.......ww', '.k.......k.', '.kkkkkkkkk.', '...kbbbk...', '....k.k....'], { w: C.greyL, k: '#3a3f55', b: C.red }),
+    fromRows(['.w.......w.', '.k.......k.', '.kkkkkkkkk.', '...kbgbk...', '....k.k....'], { w: C.grey, k: '#3a3f55', b: '#2b2f45', g: C.green }),
+  ];
+  const ferry = fromRows(['...wwww.', '..wbwbww', 'kkkkkkkk', '.kkkkkk.'], { w: C.white, b: '#3c6fb0', k: '#3a3f55' });
+  // buildings in the bay and girders on crane cables, made once per size
+  const cityCache = new Map();
+  function buildingSpr(w, h) {
+    const key = `b${w}x${h}`;
+    if (!cityCache.has(key)) { const [c, g] = canvas(w + 2, h + 2); facade(g, 1, 1, w, h, w * 7 + h); cityCache.set(key, outline(c, C.ink)); }
+    return cityCache.get(key);
+  }
+  function girderSpr(w) {
+    const key = `g${w}`;
+    if (!cityCache.has(key)) {
+      const [c, g] = canvas(w + 2, 7);
+      px(g, CT.steel[2], 1, 1, w, 1); px(g, CT.steel[0], 1, 2, w, 1); px(g, CT.steel[1], 1, 3, w, 2); px(g, CT.steel[2], 1, 5, w, 1);
+      for (let x = 3; x < w - 1; x += 4) px(g, CT.steel[2], x, 3, 2, 2);
+      cityCache.set(key, outline(c, C.ink));
+    }
+    return cityCache.get(key);
+  }
+  function drawCityStone() {
+    const surf = sy(CFG.lakeY);
+    for (const o of s.stone) {
+      if (o.kind !== 'building' && o.kind !== 'girder') continue;
+      const x0 = sx(o.x), w = Math.round(o.w);
+      if (x0 > W + 4 || x0 + w < -4) continue;
+      if (o.kind === 'building') {
+        const top = sy(o.top), img = buildingSpr(w, surf - top + 1);
+        ctx.drawImage(img, x0 - 1, top - 1);
+        crest(surf, Math.max(0, x0 - 1), Math.min(W, x0 + w + 1));
+      } else {
+        // the cable runs up out of the picture to a crane nobody needs to see
+        const bot = sy(o.bot), img = girderSpr(w), cx = x0 + (w >> 1);
+        px(ctx, C.ink, cx - 1, HUD_H, 3, bot - 7 - HUD_H); px(ctx, C.greyL, cx, HUD_H, 1, bot - 7 - HUD_H);
+        px(ctx, C.ink, cx - 2, bot - 8, 5, 2);
+        ctx.drawImage(img, x0 - 1, bot - 7);
+      }
+    }
+  }
+
   const THEMES = {
-    alps: { sky, clouds, far: alps, mid: range2, near: forest, refl, cliff, water: C.water, props: true, bird: gull, boat, goal: [C.rock[2], C.rock[1], C.grass[1], C.grass[0]] },
+    alps: { sky, clouds, far: alps, mid: range2, near: forest, refl, cliff, water: C.water, props: true, lap: true, bird: gull, boat, goal: [C.rock[2], C.rock[1], C.grass[1], C.grass[0]] },
+    city: { sky: skyCity, clouds: cloudsCity, far: farCity, mid: midCity, near: nearCity, refl: reflCity, cliff: cliffCity, water: CT.water, props: false, lap: true, bird: drone, boat: ferry, goal: [CT.wall[3], CT.wall[2], CT.wall[1], CT.wall[0]] },
     egypt: { sky: skyEg, clouds: cloudsEg, far: farEg, mid: midEg, near: nearEg, refl: reflEg, cliff: cliffEg, water: EG.water, props: false, bird: falcon, boat: felucca, goal: [EG.stone[2], EG.stone[1], EG.sand[1], EG.sand[0]] },
   };
 
@@ -690,7 +825,7 @@ export function mountHyperProp(root) {
         jpMsg = s.got >= need ? L(`風船 ${s.got}個！ あとはゴールへ`, `${s.got} balloons! Now for the goal`) : L(`風船 ${s.got}個 あと${need - s.got}個`, `${s.got} balloons, ${need - s.got} to go`); jpT = 1.2;
       }
       if (e === 'bird') {
-        au.play('bird'); jpMsg = L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls'); jpT = 1.2;
+        au.play('bird'); jpMsg = theme() === THEMES.city ? L('ドローンとぶつかった！ プロペラが止まる', 'Hit a drone! The propeller stalls') : L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls'); jpT = 1.2;
         burst(s.x + 8, s.y + 14, 14, [C.white, C.greyL, C.white], 40, 1);
       }
       if (e === 'goal') {
@@ -713,14 +848,16 @@ export function mountHyperProp(root) {
     const r = s.result; setBest(r.dist);
     restNow();
     const d = Math.round(r.dist);
-    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : L('湖に着水', 'Down in the lake');
+    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('湾に着水', 'Down in the bay') : L('湖に着水', 'Down in the lake');
     const [big, jp] = {
       edge: ['FELL OFF!', L('乗り込む前に崖の外へ…', 'Over the edge before boarding…')], miss: ['MISSED!', L('乗り込みが間に合わなかった', 'Too late to board')], stop: ['STOPPED', L('止まってしまった', 'Came to a stop')],
       splash: ['SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
       sphinx: ['CRASH!', L(`スフィンクスにぶつかった… ${d}m`, `Hit the Sphinx… ${d}m`)],
+      building: ['CRASH!', L(`ビルにぶつかった… ${d}m`, `Hit a building… ${d}m`)],
+      girder: ['CRASH!', L(`吊り荷にぶつかった… ${d}m`, `Hit a hanging girder… ${d}m`)],
       short: ['NOT ENOUGH!', L(`風船が足りない… ${s.got}/${st.need}`, `Not enough balloons… ${s.got}/${st.need}`)],
     }[r.reason];
-    show(big, r.reason === 'splash' || r.reason === 'obelisk' || r.reason === 'sphinx' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
+    show(big, r.reason === 'splash' || r.reason === 'obelisk' || r.reason === 'sphinx' || r.reason === 'building' || r.reason === 'girder' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
     au.music(null);
     if (r.reason === 'splash') { au.play('splash'); au.play('fail'); }
     else if (r.reason === 'stop' || r.reason === 'short') au.play('fail');
@@ -729,7 +866,7 @@ export function mountHyperProp(root) {
     else if (r.reason === 'splash') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true }; burst(s.x + 8, CFG.lakeY, 30, [C.white, theme().water[0], theme().water[1]], 60, 1.4); }
     else if (r.reason === 'sand') { wreck = { x: s.x, y: CFG.lakeY, vx: 0, vy: 0, rot: s.theta, vr: 0, splashed: true, sink: 0, whole: true, sand: true }; burst(s.x + 8, CFG.lakeY, 24, EG.sand, 40, 0.8); }
     // hitting an obelisk throws the plane back off it; running out at the goal lets it glide down
-    else if (r.reason === 'obelisk' || r.reason === 'sphinx') { wreck = { x: s.x, y: s.y, vx: -12, vy: 6, rot: s.theta, vr: -1.5, splashed: false, whole: true }; burst(s.x + 16, s.y + 10, 16, EG.stone, 40, 1); }
+    else if (r.reason === 'obelisk' || r.reason === 'sphinx' || r.reason === 'building' || r.reason === 'girder') { wreck = { x: s.x, y: s.y, vx: -12, vy: 6, rot: s.theta, vr: -1.5, splashed: false, whole: true }; burst(s.x + 16, s.y + 10, 16, EG.stone, 40, 1); }
     else if (r.reason === 'short') wreck = { x: s.x, y: s.y, vx: s.vx * 0.7, vy: 0, rot: s.theta, vr: -0.6, splashed: false, whole: true };
   }
 
@@ -930,11 +1067,13 @@ export function mountHyperProp(root) {
       lastStride = stride;
     }
     if (s.phase === 'fly' || s.phase === 'roll') {
-      if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = L('鳥だ！ 上か下をすり抜けろ', 'Birds! Slip over or under them'); jpT = 2.2; }
+      if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = theme() === THEMES.city ? L('ドローンだ！ 上か下をすり抜けろ', 'Drones! Slip over or under them') : L('鳥だ！ 上か下をすり抜けろ', 'Birds! Slip over or under them'); jpT = 2.2; }
       if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = L('下降気流！ 手前で高度を稼げ', 'Downdraft! Gain height before it'); jpT = 2.2; }
       if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`); jpT = 2.4; }
       if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it'); jpT = 2.2; }
-      if (!seen.sphinx && s.stone.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back'); jpT = 2.4; }
+      if (!seen.building && s.stone.some((o) => o.kind === 'building' && o.x - s.x < 170 && o.x > s.x)) { seen.building = true; jpMsg = L('ビル！ 屋上を越えろ', 'A building! Over the roof'); jpT = 2.2; }
+      if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = L('吊り荷！ 当たると落ちる、下をくぐれ', 'A hanging girder! Solid - go under'); jpT = 2.4; }
+      if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back'); jpT = 2.4; }
     }
     if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
     const mark = Math.floor(Math.max(0, s.x - CFG.edgeX) / 200);
@@ -993,6 +1132,7 @@ export function mountHyperProp(root) {
     drawMarkers(T);
     drawObelisks();
     drawSphinx();
+    drawCityStone();
     drawAir();
 
     // the ground the run starts on (the cliff, or the pyramid) and what stands on it
@@ -1009,8 +1149,8 @@ export function mountHyperProp(root) {
     for (let i = 0; i < 4; i++) px(ctx, i % 2 ? C.white : C.red, ws + 1 + i * 3, g0 - 23 + Math.round(Math.sin(time * 5 + i) * i * 0.4) + (i >> 1), 3, 3 - (i >> 1));
     // water laps over the cliff foot
     const surf = sy(CFG.lakeY), ex = Math.max(0, sx(CFG.edgeX) + 1);
-    if (ex > 0 && T.props) {
-      ctx.globalAlpha = 0.85; px(ctx, C.water[5], 0, surf + 1, ex, H - surf); ctx.globalAlpha = 1;
+    if (ex > 0 && T.lap) {
+      ctx.globalAlpha = 0.85; px(ctx, T.water[5], 0, surf + 1, ex, H - surf); ctx.globalAlpha = 1;
       crest(surf, 0, ex);
     }
 

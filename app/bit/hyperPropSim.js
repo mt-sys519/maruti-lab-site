@@ -48,6 +48,9 @@ export const CFG = {
 // Stage 5: careful clears from 8 popping all ten (7.5 cannot climb to the obelisks in
 // time), flying straight pops 3. Stage 6: careful clears from 7.5 without a strike; one
 // that stays high takes two falcons and then needs 8.5 to carry over the Sphinx.
+// Stage 7: careful from 7.5 without a strike, staying high takes all three drones and
+// needs 8.5. Stage 8: careful from 8; staying high meets the first girder. Stage 9:
+// careful from 8.5.
 export const STAGES = [
   null,
   { name: 'LAKESIDE HILL', startX: 0, birds: [], air: [] },
@@ -80,6 +83,25 @@ export const STAGES = [
     obelisks: [[110, 25], [240, 27]],
     birds: [[178, 52], [272, 15], [350, 58]],
     sphinx: { at: 310, blocks: [[0, 8, 10], [8, 10, 27], [18, 30, 19], [48, 8, 13]] } },
+  // Stages 7-9 are the city at dusk: the run is along a tower's roof, the plane crosses
+  // the bay. Buildings stand in the water and have to be flown over; girders hang from
+  // cranes out of sight above and can only be passed under (the wheel below their
+  // underside less 30); the birds are drones.
+  // Stage 7: buildings with drones high between them, like stage 4.
+  { name: 'SKYLINE', theme: 'city', startX: 60, air: [],
+    buildings: [[100, 14, 24], [210, 20, 26], [320, 16, 25]],
+    birds: [[160, 52], [270, 52], [375, 52]] },
+  // Stage 8: buildings and girders, over one and under the next. A girder is not a bird:
+  // meeting one ends the flight.
+  { name: 'CRANE YARD', theme: 'city', startX: 60, air: [], birds: [],
+    buildings: [[95, 12, 24], [215, 14, 26], [330, 14, 25]],
+    girders: [[150, 12, 48], [270, 12, 48], [380, 10, 48]] },
+  // Stage 9: all of it, closer together, with drones low after the girders for a plane
+  // that dives too deep.
+  { name: 'SKYSCRAPERS', theme: 'city', startX: 60, air: [],
+    buildings: [[90, 12, 24], [190, 18, 27], [300, 14, 26]],
+    girders: [[140, 12, 47], [245, 12, 47], [350, 12, 47]],
+    birds: [[165, 15], [272, 5], [385, 52]] },
 ];
 
 export function create(stage = 1) {
@@ -91,8 +113,15 @@ export function create(stage = 1) {
     balloons: (STAGES[stage].balloons || []).map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 2.3, x, y, popT: -1 }; }),
     got: 0,
     obelisks: (STAGES[stage].obelisks || []).map(([m, h]) => ({ x: CFG.edgeX + m / CFG.pxToM, w: 0, top: CFG.lakeY + h })),
-    // the sphinx is solid too, as a row of blocks [metres, length, height] along its back
-    stone: (STAGES[stage].sphinx?.blocks || []).map(([m, len, h]) => ({ x: CFG.edgeX + (STAGES[stage].sphinx.at + m) / CFG.pxToM, w: len / CFG.pxToM, top: CFG.lakeY + h })),
+    // Solid stone and steel, each a box from bot to top: the sphinx as a row of blocks
+    // [metres, length, height] along its back; the city's buildings [metres, length,
+    // height] standing in the bay; and the girders hanging from cranes [metres, length,
+    // height of their underside], which reach up out of the picture.
+    stone: [
+      ...(STAGES[stage].sphinx?.blocks || []).map(([m, len, h]) => ({ kind: 'sphinx', x: CFG.edgeX + (STAGES[stage].sphinx.at + m) / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
+      ...(STAGES[stage].buildings || []).map(([m, len, h]) => ({ kind: 'building', x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
+      ...(STAGES[stage].girders || []).map(([m, len, h]) => ({ kind: 'girder', x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, bot: CFG.lakeY + h, top: Infinity })),
+    ],
   };
 }
 
@@ -262,8 +291,11 @@ export function step(s, dt, inp) {
   for (const o of s.obelisks) {
     if (o.x > s.x - 12 && o.x < s.x + 16 && s.y + 2 < o.top) return fail(s, 'obelisk');
   }
+  // the gondola meets what stands up from the water; the wing, reaching back, meets
+  // what hangs down
   for (const o of s.stone) {
-    if (o.x < s.x + 16 && o.x + o.w > s.x - 12 && s.y + 2 < o.top) return fail(s, 'sphinx');
+    const back = o.bot > -Infinity ? 31 : 12;
+    if (o.x < s.x + 16 && o.x + o.w > s.x - back && s.y + 2 < o.top && s.y + 25 > o.bot) return fail(s, o.kind);
   }
 
   if (!s.climbed && s.x > CFG.edgeX + 10 && s.vy > 0) { s.climbed = true; s.events.push('climb'); }
