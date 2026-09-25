@@ -42,7 +42,7 @@
 .rtSpec dt { font-family: var(--px); font-size: 7px; letter-spacing: .08em; color: var(--red); margin-bottom: 3px; }
 .rtSpec dd { margin: 0; font-size: 13px; line-height: 1.35; color: var(--ink); }
 /* the X share, in the page's own type and ink rather than the mini games' grey pill */
-.rtShare { margin-top: 10px; }
+.rtShare { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .rtShare button { padding: 7px 10px; border: 2px solid var(--ink); border-radius: 4px; background: transparent; color: var(--ink); font-family: var(--px); font-size: 8px; letter-spacing: .1em; }
 .rtShare button:hover, .rtShare button:focus-visible { background: var(--ink); color: var(--shell); }
 .rtPage[lang="ja"] .rtSpec dt { font-family: var(--dot); font-size: 11px; letter-spacing: 0; }

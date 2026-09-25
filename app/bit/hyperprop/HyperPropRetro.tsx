@@ -5,6 +5,7 @@ import { HyperPropGame } from "../HyperPropGame";
 import { RetroBar, RetroFooter } from "../retro/RetroBar";
 import { RetroCart } from "../retro/RetroCart";
 import { useRetroLang } from "../retro/retroLang";
+import { ShareButton } from "../shared/ShareButton";
 import { XShareButton } from "../shared/XShareButton";
 
 const LABEL = "/bit/retro/hyperprop-label.jpg";
@@ -85,6 +86,7 @@ export function HyperPropRetro() {
               ))}
             </dl>
             <div className="rtShare">
+              <ShareButton title="MarutiBit RETRO 01 HYPER PROP" text={t.share} url="https://marutilab.com/bit/hyperprop" />
               <XShareButton variant="compact" text={t.share} url="https://marutilab.com/bit/hyperprop" />
             </div>
           </div>
