@@ -1477,6 +1477,36 @@ export function NeonBreakGame() {
   useEffect(() => {
     const canvas = canvasRef.current!,
       ctx = canvas.getContext("2d")!;
+    // The table is laid out in fixed W x H units, but the canvas is shown at
+    // whatever width the page gives it and on screens up to 3x dense. Drawing
+    // straight into a W x H bitmap meant a phone was stretching roughly half
+    // the pixels it needed, and even desktop was upscaling a little - every
+    // ball number and neon line came out soft. The bitmap now matches the
+    // displayed size, and draw() scales into it so nothing else needs to know.
+    // shadowBlur is the one thing a transform doesn't scale, hence pxScale on
+    // every glow.
+    let pxScale = 1;
+    const fitBacking = () => {
+      const shown = canvas.clientWidth || W;
+      const s = Math.min(3, Math.max(1, ((window.devicePixelRatio || 1) * shown) / W));
+      const bw = Math.round(W * s),
+        bh = Math.round(H * s);
+      if (canvas.width !== bw || canvas.height !== bh) {
+        canvas.width = bw;
+        canvas.height = bh;
+      }
+      pxScale = bw / W;
+    };
+    // Resizing the bitmap from inside the observer callback re-lays the
+    // canvas out and fires the observer again ("ResizeObserver loop"), so the
+    // callback only marks it stale and the next frame does the work.
+    let backingStale = true;
+    const markBackingStale = () => {
+      backingStale = true;
+    };
+    const backingObserver = new ResizeObserver(markBackingStale);
+    backingObserver.observe(canvas);
+    window.addEventListener("resize", markBackingStale);
     let raf = 0,
       last = performance.now(),
       cpuTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1531,8 +1561,66 @@ export function NeonBreakGame() {
     // this and cut diagonal notches at the corners while dipping the rail
     // ~30px into the playfield at the sides, which put drawn rail where the
     // simulation had none; the rectangle itself is untouched here.
+    // The lit line is the cushion nose the physics bounces off; outside it
+    // the table used to stop, so the whole thing read as a rectangle drawn on
+    // the backdrop rather than as furniture. A dark band gives the rail some
+    // body, and the sights sit on it where a real table has its diamonds
+    // (six down each long rail, three across each short one) instead of as
+    // tick marks scratched into the cloth. Only the margin outside the felt
+    // is shaded - the cloth itself is left exactly as see-through as before.
+    const RAIL = 20;
+    const drawRail = () => {
+      ctx.fillStyle = "rgba(3,8,16,.62)";
+      ctx.beginPath();
+      ctx.rect(TX - RAIL, TY - RAIL, TR - TX + RAIL * 2, TB - TY + RAIL * 2);
+      ctx.rect(TX, TY, TR - TX, TB - TY);
+      ctx.fill("evenodd");
+      ctx.strokeStyle = "rgba(55,231,255,.2)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        TX - RAIL + 0.5,
+        TY - RAIL + 0.5,
+        TR - TX + RAIL * 2 - 1,
+        TB - TY + RAIL * 2 - 1,
+      );
+      const across = TR - TX >= TB - TY;
+      const sight = (x: number, y: number) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-1.8, -1.8, 3.6, 3.6);
+        ctx.restore();
+      };
+      ctx.fillStyle = "rgba(170,240,255,.5)";
+      const mid = RAIL / 2;
+      for (let i = 1; i < 8; i++) {
+        if (i === 4) continue;
+        const f = i / 8;
+        if (across) {
+          const x = TX + (TR - TX) * f;
+          sight(x, TY - mid);
+          sight(x, TB + mid);
+        } else {
+          const y = TY + (TB - TY) * f;
+          sight(TX - mid, y);
+          sight(TR + mid, y);
+        }
+      }
+      for (let i = 1; i < 4; i++) {
+        const f = i / 4;
+        if (across) {
+          const y = TY + (TB - TY) * f;
+          sight(TX - mid, y);
+          sight(TR + mid, y);
+        } else {
+          const x = TX + (TR - TX) * f;
+          sight(x, TY - mid);
+          sight(x, TB + mid);
+        }
+      }
+    };
     const drawTableOutline = () => {
-      ctx.shadowBlur = 26;
+      ctx.shadowBlur = 26 * pxScale;
       ctx.shadowColor = "#1bdfff";
       ctx.strokeStyle = "#37e7ff";
       ctx.lineWidth = 4;
@@ -1613,22 +1701,22 @@ export function NeonBreakGame() {
       // array and with the previous pocket's leftover mote glow for every one
       // after it, so the top-left pocket - drawn first - came out flat and
       // visibly darker than the other five.
-      ctx.shadowColor = "#37e7ff";
-      ctx.shadowBlur = 6;
-      for (let i = 4; i >= 1; i--) {
-        const rad = r * (i / 4);
-        ctx.fillStyle =
-          i === 4
-            ? "#0a1a20"
-            : i === 3
-              ? "#051015"
-              : i === 2
-                ? "#020a0e"
-                : "#000";
-        ctx.beginPath();
-        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // One smooth fall-off to black instead of four stepped rings: with a
+      // glow on every ring edge the holes read as speakers or targets bolted
+      // onto the table, and they outshone the rail. A soft dark shadow round
+      // the outside is what makes it sit down into the rail as a recess.
+      const hole = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      hole.addColorStop(0, "#000");
+      hole.addColorStop(0.6, "#01060a");
+      hole.addColorStop(0.9, "#061319");
+      hole.addColorStop(1, "#0b1d24");
+      ctx.shadowColor = "rgba(0,0,0,.85)";
+      ctx.shadowBlur = 10 * pxScale;
+      ctx.fillStyle = hole;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
       // Motes falling inward along a spiral and shrinking/fading as they
       // approach the center - actual inward motion is what reads as "pulling
       // things in", which a static ring (however it's styled) can't convey on
@@ -1648,7 +1736,7 @@ export function NeonBreakGame() {
         ctx.globalAlpha = alpha;
         ctx.fillStyle = mc;
         ctx.shadowColor = mc;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 6 * pxScale;
         ctx.beginPath();
         ctx.arc(mx, my, 1.3 * (1 - phase * 0.6), 0, Math.PI * 2);
         ctx.fill();
@@ -1658,7 +1746,7 @@ export function NeonBreakGame() {
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         ctx.shadowColor = color;
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 14 * pxScale;
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.stroke();
@@ -1835,7 +1923,7 @@ export function NeonBreakGame() {
       ctx.strokeStyle = "#ff3bce";
       ctx.lineWidth = 3;
       ctx.shadowColor = "#ff3bce";
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 12 * pxScale;
       ctx.setLineDash([10, 8]);
       ctx.lineDashOffset = -(t / 40) % 18;
       ctx.beginPath();
@@ -1874,7 +1962,7 @@ export function NeonBreakGame() {
         ctx.globalAlpha = 1;
       }
       ctx.shadowColor = c;
-      ctx.shadowBlur = 16 + b.flash * 20;
+      ctx.shadowBlur = (16 + b.flash * 20) * pxScale;
       const g = ctx.createRadialGradient(b.x - 5, b.y - 6, 1, b.x, b.y, b.r);
       g.addColorStop(0, "#fff");
       g.addColorStop(0.35, c);
@@ -1910,7 +1998,7 @@ export function NeonBreakGame() {
         ctx.strokeStyle = "#ff3bce";
         ctx.lineWidth = 3;
         ctx.shadowColor = "#ff3bce";
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 14 * pxScale;
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r + 7, 0, Math.PI * 2);
         ctx.stroke();
@@ -1927,6 +2015,11 @@ export function NeonBreakGame() {
     // top of whatever the previous frame left behind) is what keeps a moving
     // ball's old position from ghosting through instead of being erased.
     const draw = (t: number) => {
+      if (backingStale) {
+        backingStale = false;
+        fitBacking();
+      }
+      ctx.setTransform(pxScale, 0, 0, pxScale, 0, 0);
       ctx.clearRect(0, 0, W, H);
       const bg = ctx.createLinearGradient(0, 0, W, H);
       // The felt wash only covers the table, so any part of the character
@@ -1952,18 +2045,8 @@ export function NeonBreakGame() {
         ctx.lineTo(TR, y);
         ctx.stroke();
       }
+      drawRail();
       drawTableOutline();
-      ctx.strokeStyle = "rgba(255,255,255,.07)";
-      ctx.lineWidth = 1;
-      for (let i = 1; i < 8; i++) {
-        const x = TX + ((TR - TX) * i) / 8;
-        ctx.beginPath();
-        ctx.moveTo(x, TY);
-        ctx.lineTo(x, TY + 9);
-        ctx.moveTo(x, TB);
-        ctx.lineTo(x, TB - 9);
-        ctx.stroke();
-      }
       pockets.forEach((p) => {
         drawPocketVoid(p, t);
       });
@@ -2000,7 +2083,7 @@ export function NeonBreakGame() {
           ctx.strokeStyle = "#ff3bce";
           ctx.lineWidth = 2.5 * (1 - p) + 0.5;
           ctx.shadowColor = "#ff3bce";
-          ctx.shadowBlur = 16;
+          ctx.shadowBlur = 16 * pxScale;
           ctx.beginPath();
           ctx.arc(cue.x, cue.y, R + 3 + p * 26, 0, Math.PI * 2);
           ctx.stroke();
@@ -2082,7 +2165,7 @@ export function NeonBreakGame() {
         ctx.globalAlpha = a;
         ctx.fillStyle = s.color;
         ctx.shadowColor = s.color;
-        ctx.shadowBlur = 8 * a;
+        ctx.shadowBlur = 8 * a * pxScale;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.size * a, 0, Math.PI * 2);
         ctx.fill();
@@ -2101,7 +2184,7 @@ export function NeonBreakGame() {
           ctx.strokeStyle = "#ff3bce";
           ctx.lineWidth = 3 * (1 - p) + 1;
           ctx.shadowColor = "#ff3bce";
-          ctx.shadowBlur = 18;
+          ctx.shadowBlur = 18 * pxScale;
           ctx.beginPath();
           ctx.arc(ring.x, ring.y, R + 4 + p * 58, 0, Math.PI * 2);
           ctx.stroke();
@@ -2116,7 +2199,7 @@ export function NeonBreakGame() {
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 6 * (1 - t) + 1;
         ctx.shadowColor = "#ff3bce";
-        ctx.shadowBlur = 26;
+        ctx.shadowBlur = 26 * pxScale;
         ctx.beginPath();
         ctx.arc(blast.x, blast.y, R + t * 150, 0, Math.PI * 2);
         ctx.stroke();
@@ -2884,6 +2967,8 @@ export function NeonBreakGame() {
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
+      backingObserver.disconnect();
+      window.removeEventListener("resize", markBackingStale);
       if (cpuTimer) clearTimeout(cpuTimer);
       if (msgTimer.current) clearTimeout(msgTimer.current);
     };
@@ -3680,6 +3765,7 @@ export function NeonBreakGame() {
                 ref={canvasRef}
                 width={W}
                 height={H}
+                style={{ aspectRatio: `${W} / ${H}` }}
                 className="game"
                 tabIndex={0}
                 aria-label="ビリヤード台。手球を引いて離す。矢印キーで照準と強さ、スペースでショット、Escapeで中止"
@@ -3749,16 +3835,10 @@ export function NeonBreakGame() {
             </div>
           </div>
         </section>
-        <footer className="mx-auto mt-3 flex max-w-[1380px] justify-between text-[9px] tracking-[.2em] text-slate-500">
-          <span>
-            {mode === "stage"
-              ? "LOCAL STAGE CHALLENGE"
-              : mode === "solo"
-                ? "LOCAL SOLO RUN"
-                : "LOCAL VS CPU MATCH"}
-          </span>
-          <span>DRAG CUE BALL · AIM · RELEASE</span>
-        </footer>
+        {/* A strip under the table used to repeat the mode name and "DRAG CUE
+            BALL · AIM · RELEASE" - both already on screen (the mode switch,
+            and the shot strip's own hint), and the how-to-play below says it
+            a third time. */}
         {/* Same pair AVENUE and PAKU use, but on the game's own dark ground
             rather than the cream below it - the cartridge frame has no padding
             here, so there is no light strip to sit on. Its own row, split in
