@@ -113,6 +113,8 @@ export function createHyperPropAudio() {
   // ---------- effects ----------
   const fx = {
     start() { const t = ctx.currentTime; tone({ f: 988, dur: 0.07, g: 0.07, at: t }); tone({ f: 1319, dur: 0.3, g: 0.07, at: t + 0.07, send: 0.2 }); },
+    // the stage card's fanfare, D major like the loops: up the triad to a held F#, about a second
+    intro() { const t = ctx.currentTime; seq([62, 66, 69, 74], t, 0.11, { g: 0.08, cut: 3500 }); tone({ f: hz(78), dur: 0.6, hold: 0.3, g: 0.08, at: t + 0.44, vib: 6, cut: 3500, send: 0.25 }); seq([50, 57, 62, 57], t, 0.11, { g: 0.05, type: 'triangle' }); tone({ f: hz(62), dur: 0.6, g: 0.05, type: 'triangle', at: t + 0.44 }); },
     // a running footstep, "ta": a short bright tap that a phone speaker can play, with a
     // little body under it (the old one sat at 60-170Hz, below what a phone reproduces)
     step(side) { noise({ f: 1500 + side * 180, type: 'bandpass', q: 1.6, dur: 0.035, g: 0.5 }); tone({ f: 380 + side * 30, to: 200, dur: 0.035, g: 0.05, type: 'triangle' }); },

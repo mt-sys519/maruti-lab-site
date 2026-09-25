@@ -595,7 +595,7 @@ export function mountHyperProp(root) {
   // After a clear the next stage starts straight away, like the next part of one
   // cartridge; only the last stage goes back to the title.
   function retry() {
-    if (s.phase === 'clear' && s.stage < LAST) { s.stage += 1; begin(); camX = s.x - CAM_LEAD; camY = 0; }
+    if (s.phase === 'clear' && s.stage < LAST) { s.stage += 1; begin(true); camX = s.x - CAM_LEAD; camY = 0; }
     else if (s.phase === 'clear') toTitle(LAST);
     else begin();
   }
@@ -645,11 +645,17 @@ export function mountHyperProp(root) {
     const n = Math.max(1, Math.min(opened(), s.stage + d));
     if (n !== s.stage) { toTitle(n); au.play('tick'); }
   }
-  function begin() {
+  // A stage opens with its card - STAGE n and its name on a band that slides across,
+  // over a short fanfare - when it is entered from the title or from the stage before.
+  // A retry after a miss goes straight back to the run.
+  const INTRO = 1.8;
+  let intro = 0;
+  function begin(card = false) {
     S.start(s); parts = []; seen = {}; crank = crankTo = 0; wreck = null; overT = 0; banner = null; jpMsg = ''; lastMark = 0; stallBeep = 0;
     runTime = 0; newRecord = false; paused = false; countdown = 0; rest = false;
     tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
-    au.music('stage', 0); au.play('start');
+    intro = card ? INTRO : 0;
+    if (card) { au.music(null); au.play('intro'); } else { au.music('stage', 0); au.play('start'); }
   }
 
   const playing = () => s.phase === 'run' || s.phase === 'board' || s.phase === 'roll' || s.phase === 'fly';
@@ -732,15 +738,15 @@ export function mountHyperProp(root) {
   const CLEAR_WAIT = 2.4;
   const canGo = () => overT > (s.phase === 'clear' ? CLEAR_WAIT : 0.6);
   function pressFoot(side) {
-    if (paused) return;
-    if (s.phase === 'ready') return begin();
+    if (paused || intro > 0) return;
+    if (s.phase === 'ready') return begin(true);
     if (s.phase === 'clear') { if (canGo()) retry(); return; }
     tut.lastFootT = ui;
     if (s.phase === 'roll' || s.phase === 'fly') { tut.seatedWait = false; crankTo += Math.PI; }
     S.foot(s);
   }
   function pressUp() {
-    if (paused) return;
+    if (paused || intro > 0) return;
     if (s.phase === 'ready') return pickStage(1);
     if (over()) { if (canGo()) retry(); return; }
     S.board(s);
@@ -753,7 +759,7 @@ export function mountHyperProp(root) {
     if (e.code === 'Escape' || e.code === 'KeyP') { if (paused) resumeGame(); else pauseGame(); return; }
     if (paused) { if (e.code === 'Enter') resumeGame(); return; }
     if (e.code === 'KeyR') { begin(); return; }
-    if (e.code === 'Enter' || (e.code === 'Space' && s.phase === 'ready')) { if (s.phase === 'ready') begin(); else if (over() && canGo()) retry(); return; }
+    if (e.code === 'Enter' || (e.code === 'Space' && s.phase === 'ready')) { if (s.phase === 'ready') begin(true); else if (over() && canGo()) retry(); return; }
     if (e.repeat) { if (k === 'up') inp.up = true; if (k === 'down') inp.down = true; return; }
     if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
     if (k === 'up') { inp.up = true; pressUp(); }
@@ -770,7 +776,7 @@ export function mountHyperProp(root) {
     if (k === 'start') {
       if (paused) resumeGame();
       else if (playing()) pauseGame();
-      else if (s.phase === 'ready') begin();
+      else if (s.phase === 'ready') begin(true);
       else if (over() && canGo()) retry();
     }
   }
@@ -862,7 +868,7 @@ export function mountHyperProp(root) {
   });
   on($('wrap'), 'pointerdown', () => {
     if (paused) resumeGame();
-    else if (s.phase === 'ready') begin();
+    else if (s.phase === 'ready') begin(true);
     else if (over() && canGo()) retry();
   });
 
@@ -891,6 +897,13 @@ export function mountHyperProp(root) {
         if (countdown <= 0) { countdown = 0; paused = false; au.play('start'); }
         else if (after !== before) au.play('tick');
       }
+      au.engine({ phase: 'over', omega: 0, V: 0 });
+      return;
+    }
+    // the stage card: the world waits, then the run and its music start together
+    if (intro > 0) {
+      intro -= dt;
+      if (intro <= 0) { intro = 0; tut.lastFootT = ui; au.music('stage', 0); au.play('start'); }
       au.engine({ phase: 'over', omega: 0, V: 0 });
       return;
     }
@@ -1005,6 +1018,7 @@ export function mountHyperProp(root) {
     drawPlayer();
     for (const p of parts) px(ctx, p.col, sx(p.x), sy(p.y));
     drawHud();
+    if (intro > 0) drawIntro();
   }
 
   function crest(y, x0, x1, wp = theme().water) {
@@ -1209,6 +1223,16 @@ export function mountHyperProp(root) {
     px(ctx, col, x + 1, y + 1, w, 5); px(ctx, C.white, x + 1, y + 1, w, 1);
   }
 
+  // the stage card: a band slides in from the left, holds, and leaves to the right
+  function drawIntro() {
+    const e = INTRO - intro, slide = e < 0.25 ? (e / 0.25 - 1) * W : intro < 0.3 ? (1 - intro / 0.3) * W : 0;
+    const x = Math.round(slide), y = 62;
+    px(ctx, C.ink, x, y, W, 52);
+    px(ctx, C.red, x, y + 3, W, 2); px(ctx, '#3f9e96', x, y + 6, W, 1);
+    px(ctx, '#3f9e96', x, y + 45, W, 1); px(ctx, C.red, x, y + 47, W, 2);
+    text(`STAGE ${s.stage}`, W / 2 + x, y + 12, GOLD, { s: 2, align: 'center', shadow: C.redD });
+    text(S.STAGES[s.stage].name, W / 2 + x, y + 33, C.white, { align: 'center' });
+  }
   function drawHud() {
     const blink = Math.floor(ui * 2.5) % 2 === 0;
     if (s.phase === 'ready') {
@@ -1326,7 +1350,8 @@ export function mountHyperProp(root) {
       over: ['', t ? L('START でもう一度', 'START to try again') : L('Enter / R でもう一度', 'Enter / R to try again')],
       clear: ['', !canGo() ? '' : s.stage < LAST ? (t ? L('PEDAL か START で次の面へ', 'PEDAL or START: next stage') : L('Enter で次の面へ / R でもう一度', 'Enter: next stage / R: retry')) : (t ? L('START でタイトルへ', 'START: back to the title') : L('Enter でタイトルへ / R でもう一度', 'Enter: title / R: retry'))],
     }[s.phase] || ['', ''];
-    const lines = paused
+    const lines = intro > 0 ? [`STAGE ${s.stage}  ${S.STAGES[s.stage].name}`, t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')]
+      : paused
       ? (countdown > 0 ? [L('もうすぐ再開', 'Resuming…'), t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')] : [L('一時停止中', 'Paused'), t ? L('START で続ける', 'START to continue') : L('Enter / Esc で続ける', 'Enter / Esc to continue')])
       : tut.hint ? tut.hint.jp(t)
       : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your fingers and wrists') : jpMsg || what, press];
