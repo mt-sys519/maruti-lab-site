@@ -746,71 +746,88 @@ export function createBreakAudio(): Engine {
     stopGroove();
   }
 
-  // Ball-on-ball: a hit, not a note. The last version let a pair of sines
-  // ring for up to a second through the room and the echo, and a table full
-  // of those was a wind chime. Now it is all over in about a tenth of a
-  // second: a click for the contact, a short glassy ping for the clean part,
-  // and a tiny laser-like "pew" - a sine dropping fast from well above the
-  // ping - for the sci-fi edge. Pitch rises with the impact (not tuned to
-  // any scale), with a hair of random spread so a break is not one note
-  // repeated.
+  // Ball-on-ball: a hit, not a note, over in about a tenth of a second with
+  // no room or echo behind it (sines ringing through the reverb made a table
+  // of collisions sound like a wind chime; a short sine ping after that was
+  // clean but weak and not the least bit sci-fi). The sci-fi comes from the
+  // same place as the power shot and the shield, the two sounds that already
+  // read as this table's: a saw swept through a sharp resonant filter - here
+  // a fast downward zap - with a ring-modulated metallic glint on top and a
+  // hard clack underneath so it still lands as contact. Pitch and sweep rise
+  // with the impact (not tuned to any scale), with a little random spread so
+  // a break is not one sound repeated.
   function chime(impact: number, a: number, b: number) {
     if (muted) return;
     resume();
     const c = ctx!;
     const now = c.currentTime;
     const norm = Math.min(1, impact / 40);
-    const f = (2000 + norm * 900) * Math.pow(2, (Math.random() - 0.5) * 0.05);
+    const spread = Math.pow(2, (Math.random() - 0.5) * 0.08);
     // A break fires a dozen of these at once; thin them out so it scatters
     // instead of piling up into one loud smear.
     const t = performance.now();
     recentHits = recentHits.filter((x) => t - x < 220);
     recentHits.push(t);
     const density = 1 / Math.sqrt(1 + (recentHits.length - 1) * 0.6);
-    const gain = (0.07 + norm * 0.16) * density;
-    const ping = 0.06 + norm * 0.06;
+    const level = (0.6 + norm * 1.1) * density;
 
     const out = c.createStereoPanner();
     out.pan.value = ((a * 7 + b * 3) % 9) / 9 - 0.45;
     out.connect(sfx!);
 
-    const tone = (
-      from: number,
-      to: number,
-      glide: number,
-      level: number,
-      dur: number,
-    ) => {
-      const o = c.createOscillator();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(from, now);
-      if (from !== to) o.frequency.exponentialRampToValueAtTime(to, now + glide);
-      const g = c.createGain();
-      g.gain.value = 0;
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(gain * level, now + 0.002);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-      o.connect(g).connect(out);
-      o.start(now);
-      o.stop(now + dur + 0.03);
-    };
-    tone(f, f, 0, 0.55, ping);
-    tone(f * 2.76, f * 2.76, 0, 0.14, 0.025);
-    tone(f * 2.4, f * 0.8, 0.05, 0.3, 0.055);
-    // The contact itself.
-    const n = noiseBurst();
-    const nf = c.createBiquadFilter();
-    nf.type = 'bandpass';
-    nf.frequency.value = 3800;
-    nf.Q.value = 1.2;
-    const ng = c.createGain();
-    ng.gain.value = 0;
-    ng.gain.setValueAtTime(gain * 0.7, now);
-    ng.gain.exponentialRampToValueAtTime(0.0001, now + 0.014);
-    n.connect(nf).connect(ng).connect(out);
-    n.start(now);
-    n.stop(now + 0.03);
+    // Contact.
+    clack({
+      freq: 2600 + norm * 900,
+      body: 1400 + norm * 400,
+      gain: 0.1 * level,
+      dur: 0.03 + norm * 0.02,
+    });
+
+    // Zap: a narrow bandpass swept down across a saw's harmonics. Most of the
+    // saw is thrown away at this Q, hence the large gain (as in powerFire).
+    const dur = 0.07 + norm * 0.05;
+    const saw = c.createOscillator();
+    saw.type = 'sawtooth';
+    saw.frequency.setValueAtTime((190 + norm * 90) * spread, now);
+    const band = c.createBiquadFilter();
+    band.type = 'bandpass';
+    band.Q.value = 11;
+    band.frequency.setValueAtTime((5200 + norm * 2600) * spread, now);
+    band.frequency.exponentialRampToValueAtTime(700 * spread, now + dur);
+    const zg = c.createGain();
+    zg.gain.value = 0;
+    zg.gain.setValueAtTime(0, now);
+    zg.gain.linearRampToValueAtTime(0.75 * level, now + 0.003);
+    zg.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    saw.connect(band).connect(zg).connect(out);
+    saw.start(now);
+    saw.stop(now + dur + 0.03);
+
+    // Glint: a sine ring-modulated by another at a non-harmonic ratio, which
+    // leaves only the metallic sum and difference tones.
+    const f = (2300 + norm * 900) * spread;
+    const carrier = c.createOscillator();
+    carrier.type = 'sine';
+    carrier.frequency.value = f;
+    const ring = c.createGain();
+    ring.gain.value = 0;
+    const mod = c.createOscillator();
+    mod.type = 'sine';
+    mod.frequency.value = f * 1.37;
+    mod.connect(ring.gain);
+    const gg = c.createGain();
+    gg.gain.value = 0;
+    gg.gain.setValueAtTime(0, now);
+    gg.gain.linearRampToValueAtTime(0.07 * level, now + 0.002);
+    gg.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+    carrier.connect(ring).connect(gg).connect(out);
+    carrier.start(now);
+    mod.start(now);
+    carrier.stop(now + 0.09);
+    mod.stop(now + 0.09);
   }
+
+
 
 
   // The melody over the held chord: one voice per operator.
