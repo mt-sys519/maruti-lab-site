@@ -108,7 +108,12 @@ export const STAGES = [
   // there depends on how it was pedalled, so the timing is the player's to read.
   { name: 'SKYSCRAPERS', theme: 'city', startX: 60, air: [],
     buildings: [[90, 12, 25], [190, 16, 27], [290, 14, 26]],
-    girders: [[140, 12, 46, 20, 2.4, 0], [240, 12, 46, 20, 2.4, 2], [340, 12, 46, 20, 2.4, 4]],
+    // First a still one just after the takeoff, hung where the plane sinks as it leaves the
+    // roof: flown as it comes, the plane meets it; the nose has to go down a little to pass
+    // under and come back up for the building at 90 (too deep, and pedalling 8 a second
+    // does not climb back in time). It also shows that girders here are passed under
+    // before the moving ones start.
+    girders: [[40, 12, 46], [140, 12, 46, 20, 2.4, 0], [240, 12, 46, 20, 2.4, 2], [340, 12, 46, 20, 2.4, 4]],
     birds: [[160, 15], [260, 5]],
     // The journey ends on a helipad instead of past a line: pad is [metres from the edge
     // where it starts, its length, its height above the street], and the wheel has to come
