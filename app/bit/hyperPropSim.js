@@ -81,9 +81,10 @@ export const STAGES = [
   // Stage 6: the Sphinx before the goal. sphinx.at is where its paws start and each block
   // is [metres from there, length, height]: paws, the head (the highest thing in Egypt),
   // the long back, the haunch. A falcon over its back keeps the plane low along it after
-// the climb over the head.
+// the climb over the head. The first obelisk stands just past the sand, where a plane
+// leaving the pyramid sinks: it has to be held up from the start.
   { name: 'GREAT SPHINX', theme: 'egypt', startX: 80, air: [], sandTo: 25,
-    obelisks: [[110, 25], [240, 27]],
+    obelisks: [[42, 25], [110, 25], [240, 27]],
     birds: [[178, 52], [272, 15], [350, 58]],
     sphinx: { at: 310, blocks: [[0, 8, 10], [8, 10, 27], [18, 30, 19], [48, 8, 13]] } },
   // Stages 7-9 are the city at blue hour, rooftop to rooftop: the run is along a tower's
@@ -91,17 +92,20 @@ export const STAGES = [
   // Buildings rise from below and have to be flown over; girders hang from cranes out of
   // sight above and can only be passed under (the wheel below their underside less 30);
   // the birds are drones.
-  // Stage 7: buildings with drones high between them, like stage 4.
-  { name: 'SKYLINE', theme: 'city', startX: 60, air: [],
+  // Stage 7: buildings with drones high between them, like stage 4, and wind pouring down
+  // between the towers just after the takeoff: pedalled at 8 a second or more the plane
+  // rides it out and still clears the first building, slower it is pushed into it.
+  { name: 'SKYLINE', theme: 'city', startX: 60, air: [[22, 50, -6]],
     buildings: [[100, 14, 24], [210, 20, 26], [320, 16, 25]],
     birds: [[160, 52], [270, 52], [375, 52]] },
-  // Stage 8: buildings and girders, over one and under the next, close together, with
-  // drones low after the girders for a plane that dives too deep. A girder is not a bird:
-  // meeting one ends the flight.
+  // Stage 8: buildings and girders, over one and under the next, close together, with a
+  // drone low after a girder for a plane that dives too deep. It opens with a building
+  // taller than the roof the run is on, so the plane has to climb at once, and a girder
+  // right behind it to dive under. A girder is not a bird: meeting one ends the flight.
   { name: 'CRANE YARD', theme: 'city', startX: 60, air: [],
-    buildings: [[90, 12, 24], [190, 18, 27], [300, 14, 26]],
-    girders: [[140, 12, 47], [245, 12, 47], [350, 12, 47]],
-    birds: [[165, 15], [272, 5], [385, 52]] },
+    buildings: [[30, 12, 28], [125, 12, 24], [190, 18, 27], [300, 14, 26]],
+    girders: [[70, 12, 49], [245, 12, 47], [350, 12, 47]],
+    birds: [[272, 5], [385, 52]] },
   // Stage 9, the last: the cranes are working. Each girder rises and falls on its cable
   // ([metres, length, lowest underside, rise, seconds per lift, phase]): at its lowest the
   // wheel has to skim under 16, at its highest it passes at a cruise. When a plane gets

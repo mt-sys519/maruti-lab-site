@@ -1505,15 +1505,17 @@ export function mountHyperProp(root) {
     for (const [a, b, w] of zones) {
       const x0 = CFG.edgeX + a / CFG.pxToM, x1 = CFG.edgeX + b / CFG.pxToM;
       if (sx(x1) < 0 || sx(x0) > W) continue;
+      // over the city's dark sky dark streaks vanish: the wind between towers falls pale
+      const col = w > 0 ? C.yellow : theme() === THEMES.city ? '#a9bde0' : C.night;
       ctx.globalAlpha = 0.12;
-      px(ctx, w < 0 ? C.night : C.yellow, sx(x0), top, Math.round(x1 - x0), span);
+      px(ctx, col, sx(x0), top, Math.round(x1 - x0), span);
       const n = Math.round((x1 - x0) / 2.5);
       for (let i = 0; i < n; i++) {
         const wx = x0 + (i + hash(i * 13 + a) * 0.8) * (x1 - x0) / n;
         const k = S.airAt(s, wx) / Math.abs(w);
         const y = top + ((((hash(i * 7 + b) * span - time * w * 9) % span) + span) % span);
         ctx.globalAlpha = 0.7 * Math.abs(k);
-        px(ctx, w < 0 ? C.night : C.yellow, sx(wx), Math.round(y), 1, 6);
+        px(ctx, col, sx(wx), Math.round(y), 1, 6);
       }
     }
     ctx.globalAlpha = 1;
