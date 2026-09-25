@@ -671,26 +671,65 @@ export function mountHyperProp(root) {
     px(g, CT.rim, 1 + Math.round(w / 2) - 1, 0, 2, 1);
     const img = outline(c, C.ink); cityCache.set(key, img); return img;
   }
-  // a seventies billboard on a steel frame: a sunset in stripes, bulbs along the edges
-  function billboardSpr(w, h, seed) {
-    const key = `v${w}x${h}`;
+  // Seventies billboards on steel frames, bulbs along the edges. Six ads, none of them a
+  // real brand: a sunset behind a palm, a cola, a disco, a hotel in neon, a flight, a record.
+  const GLYPH = { H: ['101', '101', '111', '101', '101'], O: ['111', '101', '101', '101', '111'], T: ['111', '010', '010', '010', '010'], E: ['111', '100', '110', '100', '111'], L: ['100', '100', '100', '100', '111'] };
+  function billboardSpr(w, h, kind) {
+    const key = `v${w}x${h}k${kind}`;
     if (cityCache.has(key)) return cityCache.get(key);
     const [c, g] = canvas(w + 2, h + 2);
-    const legH = Math.round(h * 0.38), panH = h - legH;
+    const legH = Math.max(4, Math.round(h * 0.3)), panH = h - legH;
     for (let lx = 3; lx < w - 2; lx += Math.max(6, Math.floor(w / 4))) {
       px(g, '#2c2552', 1 + lx, 1 + panH, 1, legH);
       for (let i = 0; i < legH; i += 2) px(g, '#3d3266', 1 + lx + (i % 4 === 0 ? 1 : -1), 1 + panH + i);
     }
     px(g, '#2c2552', 1, 1 + panH, w, 1);
-    const bands = ['#ffd35c', '#ffb14d', '#ff8a4d', '#ff5f7a', '#d0489a', '#8a3a9a'];
-    for (let y = 1; y < panH - 1; y++) px(g, bands[Math.floor(((y - 1) / (panH - 2)) * bands.length)], 2, 1 + y, w - 2, 1);
-    // a sun going down behind a palm, the ad's picture
-    const sx0 = 1 + Math.round(w * 0.62), sy0 = 1 + Math.round(panH * 0.55), rr = Math.max(3, Math.round(panH * 0.28));
-    for (let y = -rr; y <= 0; y++) for (let x = -rr; x <= rr; x++) if (x * x + y * y <= rr * rr) px(g, '#fff0c8', sx0 + x, sy0 + y);
-    const tx = 1 + Math.round(w * 0.25);
-    px(g, '#2a1838', tx, 1 + Math.round(panH * 0.35), 1, panH - Math.round(panH * 0.35) - 1);
-    px(g, '#2a1838', tx - 3, 1 + Math.round(panH * 0.35), 7, 1); px(g, '#2a1838', tx - 4, 2 + Math.round(panH * 0.35), 2, 1); px(g, '#2a1838', tx + 3, 2 + Math.round(panH * 0.35), 2, 1);
-    for (let x = 2; x < w; x += 3) { px(g, (x + seed) % 6 < 3 ? '#fff2b0' : '#c98a3a', 1 + x, 1, 1, 1); px(g, (x + seed) % 6 < 3 ? '#c98a3a' : '#fff2b0', 1 + x, panH, 1, 1); }
+    // the picture, inside the frame: x from 2 to w, y from 2 to panH - 1
+    const X0 = 2, Y0 = 2, PW = w - 2, PH = panH - 2, P = (col, x, y, ww = 1, hh = 1) => { const x1 = Math.max(0, x), y1 = Math.max(0, y), x2 = Math.min(PW, x + ww), y2 = Math.min(PH, y + hh); if (x2 > x1 && y2 > y1) px(g, col, X0 + x1, Y0 + y1, x2 - x1, y2 - y1); };
+    const disc = (cx, cy, r, f) => { for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) if (x * x + y * y <= r * r + r * 0.4) f(cx + x, cy + y, x, y); };
+    if (kind === 0) {
+      // a sun going down behind a palm
+      const bands = ['#ffd35c', '#ffb14d', '#ff8a4d', '#ff5f7a', '#d0489a', '#8a3a9a'];
+      for (let y = 0; y < PH; y++) P(bands[Math.floor((y / PH) * bands.length)], 0, y, PW, 1);
+      disc(Math.round(PW * 0.62), Math.round(PH * 0.6), Math.max(3, Math.round(PH * 0.34)), (x, y, dx, dy) => { if (dy <= 0) P('#fff0c8', x, y); });
+      const tx = Math.round(PW * 0.25), ty = Math.round(PH * 0.25);
+      P('#2a1838', tx, ty, 1, PH - ty); P('#2a1838', tx - 3, ty, 7, 1); P('#2a1838', tx - 4, ty + 1, 2, 1); P('#2a1838', tx + 3, ty + 1, 2, 1);
+    } else if (kind === 1) {
+      // a cola: red, a white wave across it, the bottle on the left
+      P('#d8342c', 0, 0, PW, PH);
+      for (let x = 0; x < PW; x++) { const y = Math.round(PH / 2 + Math.sin(x * 0.35) * 1.5); P('#ffffff', x, y, 1, 2); }
+      const bx = 3;
+      P('#5a1410', bx + 1, 0, 1, 2); P('#5a1410', bx, 2, 3, PH - 2); P('#ffffff', bx, 3, 1, PH - 4); P('#ffd35c', bx, Math.round(PH / 2), 3, 1);
+    } else if (kind === 2) {
+      // a disco: a mirror ball throwing rays across the dark
+      P('#2a1840', 0, 0, PW, PH);
+      const cx = Math.round(PW * 0.28), cy = Math.round(PH / 2), r = Math.max(3, Math.floor(PH / 2) - 1);
+      for (let i = 0; i < 5; i++) for (let k = r + 1; k < PW - cx; k++) { const y = cy + Math.round(((i - 2) * k) / 5); if (y >= 0 && y < PH && k % 2 === 0) P(i % 2 ? '#ff5fa2' : '#5fe0ff', cx + k, y); }
+      disc(cx, cy, r, (x, y) => P((x + y) % 2 ? '#e8e8f4' : '#8a8aac', x, y));
+      P('#ffffff', cx - 1, cy - 1);
+    } else if (kind === 3) {
+      // a hotel in pink neon, with a star
+      P('#161436', 0, 0, PW, PH);
+      const word = 'HOTEL', tw = word.length * 4 - 1, x0 = Math.max(1, Math.floor((PW - tw) / 2)), y0 = Math.max(0, Math.floor((PH - 5) / 2));
+      [...word].forEach((ch, i) => GLYPH[ch].forEach((row, yy) => [...row].forEach((b, xx) => {
+        if (b === '1') { P('#ff5fa2', x0 + i * 4 + xx, y0 + yy); if (yy === 0) P('#ffc0dc', x0 + i * 4 + xx, y0 + yy); }
+      })));
+      P('#ffd35c', PW - 3, 1); P('#ffd35c', PW - 4, 2, 3, 1); P('#ffd35c', PW - 3, 3);
+    } else if (kind === 4) {
+      // a flight: blue sky, a cloud, an airliner climbing
+      for (let y = 0; y < PH; y++) P(y < PH / 2 ? '#5fb8e8' : '#8fd0f0', 0, y, PW, 1);
+      P('#ffffff', 2, PH - 3, 7, 2); P('#ffffff', 4, PH - 4, 3, 1);
+      const ax = Math.round(PW * 0.55), ay = Math.round(PH * 0.4);
+      P('#ffffff', ax - 5, ay + 1, 10, 1); P('#ffffff', ax + 4, ay, 2, 1); P('#ffffff', ax - 1, ay - 1, 2, 1); P('#ffffff', ax - 1, ay + 2, 3, 1); P('#ffffff', ax - 5, ay, 1, 1);
+      P('#d8342c', ax - 4, ay + 1, 8, 1);
+    } else {
+      // a record: yellow, a black disc with a red label, stripes running off it
+      P('#ffd35c', 0, 0, PW, PH);
+      for (let y = 1; y < PH - 1; y += 2) P('#ff8a4d', Math.round(PW * 0.45), y, PW - Math.round(PW * 0.45), 1);
+      const cx = Math.round(PW * 0.28), cy = Math.round(PH / 2), r = Math.max(3, Math.floor(PH / 2));
+      disc(cx, cy, r, (x, y, dx, dy) => P(dx * dx + dy * dy <= 2 ? (dx === 0 && dy === 0 ? '#ffffff' : '#d8342c') : (dx + dy) % 3 === 0 ? '#3a3a4a' : '#141420', x, y));
+    }
+    for (let x = 2; x < w; x += 3) { px(g, (x + kind) % 6 < 3 ? '#fff2b0' : '#c98a3a', 1 + x, 1, 1, 1); px(g, (x + kind) % 6 < 3 ? '#c98a3a' : '#fff2b0', 1 + x, panH, 1, 1); }
     const img = outline(c, C.ink); cityCache.set(key, img); return img;
   }
   function girderSpr(w) {
@@ -731,11 +770,11 @@ export function mountHyperProp(root) {
       if (x0 > W + 4 || x0 + w < -4) continue;
       if (o.kind === 'building') {
         // rising from below the picture, past the street, with what stands on its roof -
-        // a billboard on the wide ones, a water tower on the narrow - reaching exactly the
-        // top of the solid box, so what is seen is what is hit
-        const top = sy(o.top), deco = w > 32 ? 15 : 16, roof = top + deco;
+        // a billboard, or a water tower on the narrowest - reaching exactly the top of the
+        // solid box, so what is seen is what is hit. The ads take turns across the stages.
+        const top = sy(o.top), board = w > 24, deco = board ? 15 : 16, roof = top + deco;
         ctx.drawImage(buildingSpr(w, H - roof + 2), x0 - 1, roof - 1);
-        if (w > 32) ctx.drawImage(billboardSpr(w - 4, deco, Math.round(o.x)), x0 + 1, top - 1);
+        if (board) ctx.drawImage(billboardSpr(w - 4, deco, (s.stage * 2 + o.i) % 6), x0 + 1, top - 1);
         else { const tw = Math.max(14, w - 8); ctx.drawImage(waterTowerSpr(tw, deco), x0 + ((w - tw) >> 1) - 1, top - 1); }
       } else {
         // the cable runs up out of the picture to a crane nobody needs to see

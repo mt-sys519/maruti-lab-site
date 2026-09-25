@@ -124,7 +124,7 @@ export function create(stage = 1) {
     // height of their underside], which reach up out of the picture.
     stone: [
       ...(STAGES[stage].sphinx?.blocks || []).map(([m, len, h]) => ({ kind: 'sphinx', x: CFG.edgeX + (STAGES[stage].sphinx.at + m) / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
-      ...(STAGES[stage].buildings || []).map(([m, len, h]) => ({ kind: 'building', x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
+      ...(STAGES[stage].buildings || []).map(([m, len, h], i) => ({ kind: 'building', i, x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, bot: -Infinity, top: CFG.lakeY + h })),
       ...(STAGES[stage].girders || []).map(([m, len, h, amp = 0, per = 1, ph = 0]) => ({ kind: 'girder', x: CFG.edgeX + m / CFG.pxToM, w: len / CFG.pxToM, base: CFG.lakeY + h, bot: CFG.lakeY + h, top: Infinity, amp, per, ph })),
     ],
   };
