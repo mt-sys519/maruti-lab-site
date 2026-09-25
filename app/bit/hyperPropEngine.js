@@ -663,6 +663,7 @@ export function mountHyperProp(root) {
     if (!playing()) return;
     // hidden again mid-count: back to waiting, the count starts over on the next press
     paused = true; countdown = 0; inp.up = false; inp.down = false;
+    au.sleep(); // the music and the propeller stop with the world
   }
   // called from a press, which is also what lets the sound come back
   function resumeGame() {

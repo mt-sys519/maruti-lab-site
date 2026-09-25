@@ -9,6 +9,8 @@ export function createHyperPropAudio() {
   let ctx = null, master = null, sfx = null, music = null, delay = null, noiseBuf = null;
   let enabled = false, track = null, layer = 0, timer = null, nextStep = 0, step = 0;
   let prop = null, wind = null, roll = null;
+  // asleep while the game is paused or hidden: a stray touch must not bring the sound back
+  let held = false;
   const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
   // overall loudness, measured: play peaks land around 0.7-0.9 through the limiter
   const LEVEL = 2.2;
@@ -198,7 +200,7 @@ export function createHyperPropAudio() {
     unlock() {
       if (!enabled) return;
       ensure();
-      if (ctx.state !== 'running') ctx.resume().catch(() => {});
+      if (!held && ctx.state !== 'running') ctx.resume().catch(() => {});
     },
     setEnabled(on) {
       enabled = on;
@@ -214,9 +216,10 @@ export function createHyperPropAudio() {
       if (ctx) startScheduler();
     },
     layer(n) { layer = n; },
-    // hidden tab: stop the clock; coming back, try to carry on (sticky activation usually allows it)
-    sleep() { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); },
-    wake() { if (ctx && enabled && ctx.state !== 'running') ctx.resume().catch(() => {}); },
+    // paused or hidden: stop the clock; carrying on, try to resume (sticky activation usually
+    // allows it, and the next touch release finishes the job on iOS)
+    sleep() { held = true; if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); },
+    wake() { held = false; if (ctx && enabled && ctx.state !== 'running') ctx.resume().catch(() => {}); },
     // restored from the back/forward cache: the old context may be frozen for good, so throw it away
     reset() {
       clearInterval(timer); timer = null;
