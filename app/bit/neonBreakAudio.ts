@@ -995,35 +995,67 @@ export function createBreakAudio(): Engine {
         dur: 0.06 + norm * 0.03,
       });
     },
-    // Pocket: the ball is pulled into the void (a short falling sweep, the
-    // sound of the motes spiralling in) and a bell answers. The bells climb
-    // the A minor pentatonic by ball number - notes all three loops share -
-    // so a run of pots plays upward over whichever track is on, and the 9
-    // lands with a fourth under it.
+    // Pocket: the same family as the collision - short, clean, a little
+    // sci-fi - rather than a bell ringing out in a room. The ball drops into
+    // the void (a sine and a band of noise falling together, the motes
+    // spiralling in), then one bright glassy blip says it counted. Not tuned
+    // to a scale; the blip just sits a little higher for higher numbers. The
+    // 9 falls deeper and blips twice.
     pocket(ballId: number) {
       if (muted) return;
       resume();
-      const now = ctx!.currentTime;
+      const c = ctx!;
+      const now = c.currentTime;
+      const nine = ballId === 9;
+      const fall = nine ? 0.26 : 0.18;
       const src = noiseBurst();
-      const f = ctx!.createBiquadFilter();
-      f.type = 'bandpass';
-      f.Q.value = 2.5;
-      f.frequency.setValueAtTime(3200, now);
-      f.frequency.exponentialRampToValueAtTime(380, now + 0.15);
-      const g = ctx!.createGain();
-      g.gain.setValueAtTime(0.0001, now);
-      g.gain.linearRampToValueAtTime(0.12, now + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0004, now + 0.15);
-      src.connect(f).connect(g).connect(sfx!);
+      const nf = c.createBiquadFilter();
+      nf.type = 'bandpass';
+      nf.Q.value = 2.5;
+      nf.frequency.setValueAtTime(3200, now);
+      nf.frequency.exponentialRampToValueAtTime(380, now + 0.15);
+      const ng = c.createGain();
+      ng.gain.value = 0;
+      ng.gain.setValueAtTime(0.0001, now);
+      ng.gain.linearRampToValueAtTime(0.09, now + 0.02);
+      ng.gain.exponentialRampToValueAtTime(0.0004, now + 0.15);
+      src.connect(nf).connect(ng).connect(sfx!);
       src.start(now);
       src.stop(now + 0.16);
-      const SCALE = [69, 72, 74, 76, 79, 81, 84, 86, 88];
-      const midi = SCALE[Math.max(0, Math.min(8, ballId - 1))] + keyShift;
-      const at = now + 0.07;
-      const room = space();
-      bell({ freq: hz(midi), at, gain: 0.15, dur: 1.4, out: sfx!, wet: 0.4, wetTo: room });
-      if (ballId === 9)
-        bell({ freq: hz(midi - 5), at: at + 0.06, gain: 0.11, dur: 1.8, out: sfx!, wet: 0.5, wetTo: room });
+      const drop = c.createOscillator();
+      drop.type = 'sine';
+      drop.frequency.setValueAtTime(1600, now);
+      drop.frequency.exponentialRampToValueAtTime(nine ? 110 : 160, now + fall);
+      const dg = c.createGain();
+      dg.gain.value = 0;
+      dg.gain.setValueAtTime(0, now);
+      dg.gain.linearRampToValueAtTime(0.12, now + 0.01);
+      dg.gain.exponentialRampToValueAtTime(0.0001, now + fall);
+      drop.connect(dg).connect(sfx!);
+      drop.start(now);
+      drop.stop(now + fall + 0.03);
+      const blip = (at: number, freq: number, level: number) => {
+        [
+          [freq, level, 0.09],
+          [freq * 2.76, level * 0.25, 0.03],
+        ].forEach(([fq, lv, d]) => {
+          const o = c.createOscillator();
+          o.type = 'sine';
+          o.frequency.setValueAtTime(fq * 1.25, at);
+          o.frequency.exponentialRampToValueAtTime(fq, at + 0.02);
+          const g = c.createGain();
+          g.gain.value = 0;
+          g.gain.setValueAtTime(0, at);
+          g.gain.linearRampToValueAtTime(lv, at + 0.003);
+          g.gain.exponentialRampToValueAtTime(0.0001, at + d);
+          o.connect(g).connect(sfx!);
+          o.start(at);
+          o.stop(at + d + 0.03);
+        });
+      };
+      const pitch = 2700 + Math.max(0, Math.min(8, ballId - 1)) * 70;
+      blip(now + fall * 0.6, pitch, 0.12);
+      if (nine) blip(now + fall * 0.6 + 0.09, pitch * 1.3, 0.1);
     },
     // Power-shot cue shield bouncing off a pocket rim - an electric zap, the
     // one sound in the palette that isn't felt/mechanical.
