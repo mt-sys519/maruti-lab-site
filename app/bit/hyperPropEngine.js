@@ -79,7 +79,7 @@ export function mountHyperProp(root) {
     Q: 'ehhhlid', R: 'uhhukih', S: 'fgge11u', T: 'v444444', U: 'hhhhhhe', V: 'hhhhha4', W: 'hhhllla', X: 'hha4ahh',
     Y: 'hha4444', Z: 'v1248gv', 0: 'ehjlphe', 1: '4c4444e', 2: 'eh1248v', 3: 'v2421he', 4: '26aiv22', 5: 'vgu11he',
     6: '68guhhe', 7: 'v124888', 8: 'ehhehhe', 9: 'ehhf12c', '!': '4444404', '/': '122488g', '.': '00000cc',
-    ':': '0cc0cc0', '-': '000v000', "'": '4480000', ' ': '0000000', '▲': '004ev00', '▼': '00ve400',
+    ':': '0cc0cc0', '-': '000v000', "'": '4480000', ' ': '0000000', '▲': '004ev00', '▼': '00ve400', '>': 'g84248g',
   };
   function glyphs(g, str, x, y, s, col) {
     [...str].forEach((ch, i) => {
@@ -902,6 +902,11 @@ export function mountHyperProp(root) {
   // explicit press brings it back. Here that press is START (or tapping the screen),
   // and play restarts after a short count so the fingers can find the pedals again.
   let paused = false, countdown = 0;
+  // Paused, the game is a menu: CONTINUE, RETRY (this stage from the start) or TITLE,
+  // chosen with ▲ ▼ and taken with PEDAL or START. No button of its own - every RETRO
+  // cartridge has the same four.
+  const MENU = ['CONTINUE', 'RETRY', 'TITLE'];
+  let menu = 0;
   const COUNT_STEP = 0.5;
 
   // ---------- tutorial ----------
@@ -1023,7 +1028,7 @@ export function mountHyperProp(root) {
   function pauseGame() {
     if (!playing()) return;
     // hidden again mid-count: back to waiting, the count starts over on the next press
-    paused = true; countdown = 0; inp.up = false; inp.down = false;
+    paused = true; countdown = 0; menu = 0; inp.up = false; inp.down = false;
     au.sleep(); // the music and the propeller stop with the world
   }
   // called from a press, which is also what lets the sound come back
@@ -1031,6 +1036,17 @@ export function mountHyperProp(root) {
     if (!paused || countdown > 0) return;
     countdown = COUNT_STEP * 3;
     au.wake(); au.play('tick');
+  }
+  function menuMove(d) {
+    if (!paused || countdown > 0) return;
+    menu = (menu + d + MENU.length) % MENU.length;
+    au.play('tick');
+  }
+  function menuPick() {
+    if (!paused || countdown > 0) return;
+    if (menu === 0) return resumeGame();
+    au.wake();
+    if (menu === 1) begin(); else toTitle(s.stage);
   }
 
   function handleEvents() {
@@ -1117,7 +1133,8 @@ export function mountHyperProp(root) {
   const clearDelay = () => (s.landed && S.STAGES[s.stage].ending ? ENDING.hold : 0);
   const canGo = () => overT > (s.phase === 'clear' ? CLEAR_WAIT + clearDelay() : 0.6);
   function pressFoot(side) {
-    if (paused || intro > 0) return;
+    if (paused) return menuPick();
+    if (intro > 0) return;
     if (s.phase === 'ready') return begin(true);
     if (s.phase === 'clear') { if (canGo()) retry(); return; }
     tut.lastFootT = ui;
@@ -1125,7 +1142,8 @@ export function mountHyperProp(root) {
     S.foot(s);
   }
   function pressUp() {
-    if (paused || intro > 0) return;
+    if (paused) return menuMove(-1);
+    if (intro > 0) return;
     if (s.phase === 'ready') return pickStage(1);
     if (over()) { if (canGo()) retry(); return; }
     S.board(s);
@@ -1136,7 +1154,12 @@ export function mountHyperProp(root) {
     if (k || e.code === 'Enter' || e.code === 'KeyR') e.preventDefault();
     touchMode = false;
     if (e.code === 'Escape' || e.code === 'KeyP') { if (paused) resumeGame(); else pauseGame(); return; }
-    if (paused) { if (e.code === 'Enter') resumeGame(); return; }
+    if (paused) {
+      if (e.repeat) return;
+      if (e.code === 'Enter' || e.code === 'Space' || k === 'L' || k === 'R') menuPick();
+      else if (k === 'up') menuMove(-1); else if (k === 'down') menuMove(1);
+      return;
+    }
     if (e.code === 'KeyR') { begin(); return; }
     if (e.code === 'Enter' || (e.code === 'Space' && s.phase === 'ready')) { if (s.phase === 'ready') begin(true); else if (over() && canGo()) retry(); return; }
     if (e.repeat) { if (k === 'up') inp.up = true; if (k === 'down') inp.down = true; return; }
@@ -1151,9 +1174,9 @@ export function mountHyperProp(root) {
     b.classList.add('on');
     if (k === 'L') pressFoot(-1); if (k === 'R') pressFoot(1);
     if (k === 'up') { inp.up = true; pressUp(); }
-    if (k === 'down') { inp.down = true; if (s.phase === 'ready' && !paused) pickStage(-1); }
+    if (k === 'down') { inp.down = true; if (paused) menuMove(1); else if (s.phase === 'ready') pickStage(-1); }
     if (k === 'start') {
-      if (paused) resumeGame();
+      if (paused) menuPick();
       else if (playing()) pauseGame();
       else if (s.phase === 'ready') begin(true);
       else if (over() && canGo()) retry();
@@ -1673,8 +1696,11 @@ export function mountHyperProp(root) {
       ctx.globalAlpha = 0.45; px(ctx, C.ink, 0, HUD_H, W, H - HUD_H); ctx.globalAlpha = 1;
       if (countdown > 0) text(String(Math.ceil(countdown / COUNT_STEP)), W / 2, 76, GOLD, { s: 4, align: 'center', shadow: C.redD });
       else {
-        text('PAUSED', W / 2, 70, C.white, { s: 2, align: 'center', shadow: C.night });
-        if (blink) text(touchMode ? 'PUSH START' : 'PRESS ENTER', W / 2, 100, C.yellow, { align: 'center' });
+        text('PAUSED', W / 2, 62, C.white, { s: 2, align: 'center', shadow: C.night });
+        MENU.forEach((m, i) => {
+          text(m, W / 2 - 22, 90 + i * 13, i === menu ? C.yellow : C.white);
+          if (i === menu && blink) text('>', W / 2 - 32, 90 + i * 13, C.yellow);
+        });
       }
     }
   }
@@ -1754,7 +1780,8 @@ export function mountHyperProp(root) {
     }[s.phase] || ['', ''];
     const lines = intro > 0 ? [`STAGE ${s.stage}  ${S.STAGES[s.stage].name}`, t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')]
       : paused
-      ? (countdown > 0 ? [L('もうすぐ再開', 'Resuming…'), t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')] : [L('一時停止中', 'Paused'), t ? L('START で続ける', 'START to continue') : L('Enter / Esc で続ける', 'Enter / Esc to continue')])
+      ? (countdown > 0 ? [L('もうすぐ再開', 'Resuming…'), t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')] : [[L('▶ つづける', '▶ Continue'), L('▶ この面を最初から', '▶ Restart this stage'), L('▶ タイトルへもどる', '▶ Back to the title')][menu],
+          t ? L('▲ ▼ でえらぶ　PEDAL で決定', '▲ ▼ to choose, PEDAL to select') : L('↑ ↓ でえらぶ　Enter で決定', '↑ ↓ to choose, Enter to select')])
       : tut.hint ? tut.hint.jp(t)
       : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your hands') : (typeof jpMsg === 'function' ? jpMsg() : jpMsg) || what, press];
     lines.forEach((txt, i) => { if (plateLines[i].textContent !== txt) plateLines[i].textContent = txt; });
