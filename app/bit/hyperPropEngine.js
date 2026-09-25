@@ -645,7 +645,7 @@ export function mountHyperProp(root) {
     const n = Math.max(1, Math.min(opened(), s.stage + d));
     if (n !== s.stage) { toTitle(n); au.play('tick'); }
   }
-  // A stage opens with its card - STAGE n and its name on a band that slides across,
+  // A stage opens with its card - STAGE n dropping in like GOAL!, its name under it,
   // over a short fanfare - when it is entered from the title or from the stage before.
   // A retry after a miss goes straight back to the run.
   const INTRO = 1.8;
@@ -1223,15 +1223,11 @@ export function mountHyperProp(root) {
     px(ctx, col, x + 1, y + 1, w, 5); px(ctx, C.white, x + 1, y + 1, w, 1);
   }
 
-  // the stage card: a band slides in from the left, holds, and leaves to the right
+  // the stage card, in the same hand as GOAL!: STAGE n drops in, the name comes under it
   function drawIntro() {
-    const e = INTRO - intro, slide = e < 0.25 ? (e / 0.25 - 1) * W : intro < 0.3 ? (1 - intro / 0.3) * W : 0;
-    const x = Math.round(slide), y = 62;
-    px(ctx, C.ink, x, y, W, 52);
-    px(ctx, C.red, x, y + 3, W, 2); px(ctx, '#3f9e96', x, y + 6, W, 1);
-    px(ctx, '#3f9e96', x, y + 45, W, 1); px(ctx, C.red, x, y + 47, W, 2);
-    text(`STAGE ${s.stage}`, W / 2 + x, y + 12, GOLD, { s: 2, align: 'center', shadow: C.redD });
-    text(S.STAGES[s.stage].name, W / 2 + x, y + 33, C.white, { align: 'center' });
+    const e = INTRO - intro, k = Math.min(1, e / 0.25);
+    text(`STAGE ${s.stage}`, W / 2, 40 - Math.round((1 - k) * 24), GOLD, { s: 3, align: 'center', shadow: C.redD });
+    if (e > 0.35) text(S.STAGES[s.stage].name, W / 2, 70, C.white, { align: 'center', shadow: C.night });
   }
   function drawHud() {
     const blink = Math.floor(ui * 2.5) % 2 === 0;
