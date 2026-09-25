@@ -114,7 +114,10 @@ export const STAGES = [
     // does not climb back in time). It also shows that girders here are passed under
     // before the moving ones start.
     girders: [[40, 12, 46], [140, 12, 46, 20, 2.4, 0], [240, 12, 46, 20, 2.4, 2], [340, 12, 46, 20, 2.4, 4]],
-    birds: [[160, 15], [260, 5]],
+    // The drone after the first moving girder flies just low enough to leave a gap: a plane
+    // that ducks under the girder as it comes down skims over the drone's back. Higher, the
+    // two closed on each other and a pass at the girder's lowest had no room at all.
+    birds: [[160, 12], [260, 5]],
     // The journey ends on a helipad instead of past a line: pad is [metres from the edge
     // where it starts, its length, its height above the street], and the wheel has to come
     // down on it gently. ending plays the ending after the landing; when stages are added
