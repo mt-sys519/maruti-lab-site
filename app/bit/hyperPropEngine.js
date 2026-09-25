@@ -509,20 +509,17 @@ export function mountHyperProp(root) {
 
   // ---------- the city (stages 7-9) ----------
   // Rooftop to rooftop across a city at blue hour. The run is along a tower's roof, and
-  // what was the lake is the street far below: come down there and the flight is over.
-  // Everything the plane meets rises from under the picture, so nothing stands in water.
-  // Drawn the way pixel artists build night skylines: the far towers are nearly sky-
-  // coloured silhouettes with varied crowns and a few pinpricks; nearer ones are darker
-  // with windows lit a floor at a time, not sprinkled; light comes from the last of the
-  // sunset on the left, so each face has a warm rim on that side; and the buildings in
-  // play are lighter and outlined, so they stand clear of the backdrop.
+  // what was the lake is the roofs of a lower block: come down there and the flight is
+  // over. The skyscrapers are the backdrop, drawn the way pixel artists build night
+  // skylines: far towers nearly sky-coloured with varied crowns and a few pinpricks,
+  // nearer ones darker with windows lit a floor at a time, light from the last of the
+  // sunset on the left. Where the plane flies everything is at its scale (see facade).
   const CT = {
     sky: ['#141633', '#1d1f47', '#2c2a5e', '#4a3a78', '#7c4c86', '#c0607a', '#ec8a6c'],
     far: { body: '#4b3f78', rim: '#6d5890', lit: '#c9ad7a' },
     mid: { body: '#241f48', rim: '#3d3266', lit: '#f6d27a' },
     wall: ['#b7b3d4', '#8f89b4', '#6f6897', '#524b78', '#37315a'],
     rim: '#f3a57c', lit: '#ffe39a', dark: '#2a2548',
-    road: ['#2a2646', '#211d3a', '#17142b'], line: '#8c86b0',
     steel: ['#f08a4b', '#d6602e', '#9c3d1c'],
     // kept for code shared with the lake: bursts and markers read the theme's water
     water: ['#c9c3e0', '#8c86b0', '#524b78', '#37315a', '#2a2646', '#211d3a', '#17142b'],
@@ -588,49 +585,40 @@ export function mountHyperProp(root) {
     }
     return c;
   })();
-  // across the street, at street level: shopfronts glowing between the pillars
-  const shopsCity = (() => {
-    const [c, g] = canvas(512, 16); const r = rng(13);
-    px(g, '#141128', 0, 0, 512, 16);
-    for (let x = 0; x < 512; x += 12 + Math.floor(r() * 10)) {
-      const w = 6 + Math.floor(r() * 5), lit = r();
-      px(g, lit < 0.6 ? '#e8b46a' : lit < 0.8 ? '#6fd4e8' : '#3a3460', x, 6, w, 7);
-      if (lit < 0.6) px(g, '#ffe3a8', x + 1, 7, w - 2, 1);
-      px(g, '#2c2552', x - 1, 3, w + 2, 2);
-    }
-    return c;
-  })();
-  // A building's face in the play: pale walls, the warm rim of the sunset on the left and
-  // along the top. The windows are fine - one pixel, a floor every three rows, with the
-  // structure's columns between bays - so a building the height of the plane reads as a
-  // tower of many floors, not a house the pilot could step over. Lit in runs along floors.
+  // ---- the play at human scale ----
+  // The plane's depth has its own scale: the pilot is about 10px, so a pixel is about
+  // 17cm and a storey about 20px. Only the backdrop may hold skyscrapers; where the plane
+  // flies it is the roofs of a lower block, the lake's level being their tops, and what
+  // stands in the way is what stands on roofs - water towers and billboards, a few metres
+  // tall. Windows here are the size of a person, as they have to be at this distance.
   function facade(g, x0, y0, w, h, seed) {
     const r = rng(seed);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      let col = x < 2 ? CT.wall[1] : x >= w - 3 ? CT.wall[3] : CT.wall[2];
-      if (x > 2 && x < w - 3 && x % 6 === 2) col = CT.wall[3];
+      let col = x < 3 ? CT.wall[1] : x >= w - 3 ? CT.wall[3] : CT.wall[2];
       if (x === 0 || y === 0) col = CT.rim;
-      else if (y === 1 || y === 2) col = CT.wall[0];
+      else if (y < 3) col = CT.wall[0];
+      else if (y < 5) col = CT.wall[3];
       px(g, col, x0 + x, y0 + y);
     }
-    for (let fy = 4; fy < h - 1; fy += 3) {
-      const on = r() < 0.4, a = 3 + Math.floor(r() * Math.max(1, w - 8)), len = 4 + Math.floor(r() * w * 0.7);
-      for (let x = 3; x < w - 3; x++) {
-        if (x % 6 === 2) continue;
-        if (x % 2 === 0) continue;
-        px(g, on && x >= a && x < a + len ? CT.lit : CT.dark, x0 + x, y0 + fy);
-      }
+    // a storey every 20 rows; windows 6 wide and 9 tall, 5 of wall between them
+    for (let fy = 7; fy < h - 2; fy += 20) for (let x = 4; x + 6 < w - 2; x += 11) {
+      const lit = r() < 0.45, wh = Math.min(9, h - fy - 1);
+      px(g, CT.wall[4], x0 + x - 1, y0 + fy - 1, 8, 1);
+      px(g, lit ? CT.lit : CT.dark, x0 + x, y0 + fy, 6, wh);
+      if (lit) { px(g, '#fff4c8', x0 + x, y0 + fy, 6, 1); px(g, '#e0a85a', x0 + x + 5, y0 + fy + 1, 1, wh - 1); }
+      else px(g, '#4a4478', x0 + x + 1, y0 + fy + 1, 1, Math.max(1, wh - 3));
+      px(g, CT.wall[0], x0 + x - 1, y0 + fy + wh, 8, 1);
     }
   }
-  // The tower the run is on, reaching down out of the picture, with lower roofs behind.
+  // The tower the run is on: the top storeys of it, reaching down past the roofs of the
+  // block, with setbacks behind.
   const cliffCity = (() => {
     const w = CFG.edgeX - CLIFF_L + 3, h = CLIFF_TOP + CLIFF_H; const [c, g] = canvas(w, h);
     const X = (wx) => wx - CLIFF_L;
-    facade(g, X(-420), CLIFF_TOP + 30, 214, CLIFF_H - 30, 7);
-    facade(g, X(-206), CLIFF_TOP + 14, 134, CLIFF_H - 14, 19);
+    facade(g, X(-420), CLIFF_TOP + 20, 214, CLIFF_H - 20, 7);
+    facade(g, X(-206), CLIFF_TOP + 10, 134, CLIFF_H - 10, 19);
     facade(g, X(-70), CLIFF_TOP, CFG.edgeX + 70, CLIFF_H, 3);
     for (let y = 0; y < CLIFF_H; y++) px(g, CT.wall[4], X(CFG.edgeX) - 1, CLIFF_TOP + y);
-    // a parapet along the roof's edge, and the lit crown of the lower roofs
     px(g, '#e8e4f6', X(-70), CLIFF_TOP, CFG.edgeX + 70, 1);
     return outline(c, C.ink);
   })();
@@ -640,14 +628,78 @@ export function mountHyperProp(root) {
     fromRows(['www.......www', '..k.......k..', '.kkkkkkkkkkk.', '..kYYYYYYYk..', '...kRk.kGk...', '....k...k....'], { w: C.white, k: '#3a3f55', Y: '#ffd35c', R: C.red, G: C.green }),
     fromRows(['.w.........w.', '..k.......k..', '.kkkkkkkkkkk.', '..kYYYYYYYk..', '...kkk.kkk...', '....k...k....'], { w: C.greyL, k: '#3a3f55', Y: '#ffd35c' }),
   ];
-  // cars along the street: headlights ahead, tail lights behind
-  const carR = fromRows(['..bbbb...', 'rbbbbbbby', '.k....k..'], { b: '#5a5480', r: C.red, y: '#fff2b0', k: '#0e0c1c' });
-  const carL = fromRows(['...bbbb..', 'ybbbbbbbr', '..k....k.'], { b: '#6a4a70', r: C.red, y: '#fff2b0', k: '#0e0c1c' });
+  // The block's roofs at the lake's level, in the play's own scale: parapets along the
+  // top, a storey of big windows under them, and dark gaps between the buildings. It
+  // scrolls with the play. Behind it, a row of farther roofs with their own tanks.
+  const roofsFront = (() => {
+    const w = 512, h = 48, [c, g] = canvas(w, h); const r = rng(5);
+    for (let x = 0; x < w;) {
+      const bw = 90 + Math.floor(r() * 90), gap = 12 + Math.floor(r() * 8);
+      const [fc, fg] = canvas(bw, h); facade(fg, 0, 0, bw, h, 100 + x);
+      g.drawImage(fc, x, 0);
+      px(g, C.ink, x, 0, 1, h); px(g, C.ink, x + bw - 1, 0, 1, h); px(g, C.ink, x, 0, bw, 1);
+      // the gap: a drop into the dark, the street's glow far down
+      for (let y = 0; y < h; y++) px(g, dith(x, y, y / h) ? '#2a2046' : '#0d0b1a', x + bw, y, gap, 1);
+      x += bw + gap;
+    }
+    return c;
+  })();
+  const roofsBack = (() => {
+    const [c, g] = canvas(512, 16); const r = rng(17);
+    px(g, '#191531', 0, 6, 512, 10);
+    for (let x = 0; x < 512; x += 20 + Math.floor(r() * 40)) {
+      const k = r();
+      if (k < 0.4) { px(g, '#221d40', x, 0, 7, 4); px(g, '#221d40', x - 1, 4, 9, 1); px(g, '#221d40', x + 1, 5, 1, 2); px(g, '#221d40', x + 5, 5, 1, 2); }
+      else if (k < 0.7) { px(g, '#221d40', x, 2, 10, 4); px(g, r() < 0.5 ? '#ff5fa2' : '#5fe0ff', x + 1, 3, 8, 1); }
+      for (let xx = 0; xx < 16; xx += 4) if (r() < 0.35) px(g, '#c9a060', x + xx, 9, 2, 3);
+    }
+    return c;
+  })();
   const cityCache = new Map();
-  function buildingSpr(w, h) {
-    const key = `b${w}x${h}`;
-    if (!cityCache.has(key)) { const [c, g] = canvas(w + 2, h + 2); facade(g, 1, 1, w, h, w * 7 + h); cityCache.set(key, outline(c, C.ink)); }
-    return cityCache.get(key);
+  // a water tower on its legs: a wooden tank in staves and hoops under a pointed roof
+  function waterTowerSpr(w, h) {
+    const key = `t${w}x${h}`;
+    if (cityCache.has(key)) return cityCache.get(key);
+    const [c, g] = canvas(w + 2, h + 2);
+    const legH = Math.round(h * 0.34), roofH = Math.round(h * 0.22), tankTop = roofH, tankBot = h - legH;
+    for (const lx of [2, Math.round(w / 3), Math.round((w * 2) / 3), w - 3]) px(g, '#2c2552', 1 + lx, 1 + tankBot, 1, legH);
+    for (let i = 0; i < legH; i++) { px(g, '#3d3266', 1 + 2 + Math.round((i / legH) * (w / 3 - 2)), 1 + tankBot + i); px(g, '#3d3266', 1 + w - 3 - Math.round((i / legH) * (w / 3 - 2)), 1 + tankBot + i); }
+    px(g, '#3d3266', 1, 1 + tankBot, w, 2);
+    for (let y = tankTop; y < tankBot; y++) for (let x = 1; x < w - 1; x++) {
+      let col = x % 3 === 0 ? '#6e4a30' : '#9a6a44';
+      if (x === 1) col = CT.rim;
+      if (x >= w - 3) col = '#5a3a26';
+      if ((y - tankTop) % 5 === 2) col = '#3a2a2a';
+      px(g, col, 1 + x, 1 + y);
+    }
+    for (let y = 0; y < roofH; y++) {
+      const half = Math.round(((y + 1) / roofH) * (w / 2));
+      for (let x = Math.round(w / 2) - half; x < Math.round(w / 2) + half; x++) px(g, x < w / 2 ? '#7a6a8e' : '#4f4466', 1 + x, 1 + y);
+    }
+    px(g, CT.rim, 1 + Math.round(w / 2) - 1, 0, 2, 1);
+    const img = outline(c, C.ink); cityCache.set(key, img); return img;
+  }
+  // a seventies billboard on a steel frame: a sunset in stripes, bulbs along the edges
+  function billboardSpr(w, h, seed) {
+    const key = `v${w}x${h}`;
+    if (cityCache.has(key)) return cityCache.get(key);
+    const [c, g] = canvas(w + 2, h + 2);
+    const legH = Math.round(h * 0.38), panH = h - legH;
+    for (let lx = 3; lx < w - 2; lx += Math.max(6, Math.floor(w / 4))) {
+      px(g, '#2c2552', 1 + lx, 1 + panH, 1, legH);
+      for (let i = 0; i < legH; i += 2) px(g, '#3d3266', 1 + lx + (i % 4 === 0 ? 1 : -1), 1 + panH + i);
+    }
+    px(g, '#2c2552', 1, 1 + panH, w, 1);
+    const bands = ['#ffd35c', '#ffb14d', '#ff8a4d', '#ff5f7a', '#d0489a', '#8a3a9a'];
+    for (let y = 1; y < panH - 1; y++) px(g, bands[Math.floor(((y - 1) / (panH - 2)) * bands.length)], 2, 1 + y, w - 2, 1);
+    // a sun going down behind a palm, the ad's picture
+    const sx0 = 1 + Math.round(w * 0.62), sy0 = 1 + Math.round(panH * 0.55), rr = Math.max(3, Math.round(panH * 0.28));
+    for (let y = -rr; y <= 0; y++) for (let x = -rr; x <= rr; x++) if (x * x + y * y <= rr * rr) px(g, '#fff0c8', sx0 + x, sy0 + y);
+    const tx = 1 + Math.round(w * 0.25);
+    px(g, '#2a1838', tx, 1 + Math.round(panH * 0.35), 1, panH - Math.round(panH * 0.35) - 1);
+    px(g, '#2a1838', tx - 3, 1 + Math.round(panH * 0.35), 7, 1); px(g, '#2a1838', tx - 4, 2 + Math.round(panH * 0.35), 2, 1); px(g, '#2a1838', tx + 3, 2 + Math.round(panH * 0.35), 2, 1);
+    for (let x = 2; x < w; x += 3) { px(g, (x + seed) % 6 < 3 ? '#fff2b0' : '#c98a3a', 1 + x, 1, 1, 1); px(g, (x + seed) % 6 < 3 ? '#c98a3a' : '#fff2b0', 1 + x, panH, 1, 1); }
+    const img = outline(c, C.ink); cityCache.set(key, img); return img;
   }
   function girderSpr(w) {
     const key = `g${w}`;
@@ -659,35 +711,25 @@ export function mountHyperProp(root) {
     }
     return cityCache.get(key);
   }
-  // The street where the lake was: the lit shopfronts across it, the road at the surface
-  // line with cars going both ways, and the dark pavement on this side.
+  // where the lake was: the farther roofs at the horizon, then the block's roofs, which
+  // are where a plane that comes down crashes
   function drawStreet(hz) {
     const surf = sy(CFG.lakeY);
-    px(ctx, '#1b1734', 0, hz, W, Math.max(0, surf - hz));
-    const off = ((-camX * 0.6) % 512 + 512) % 512;
-    for (let x = off - 512; x < W; x += 512) ctx.drawImage(shopsCity, Math.round(x), surf - 16);
-    px(ctx, CT.road[0], 0, surf, W, 8); px(ctx, CT.line, 0, surf, W, 1);
-    for (let wx = Math.floor((camX - 8) / 24) * 24; wx < camX + W + 24; wx += 24) px(ctx, '#c9b36a', sx(wx), surf + 4, 10, 1);
-    for (let i = 0; i < 5; i++) {
-      const right = i % 2 === 0, sp = 26 + i * 7, span = W + 120;
-      const x = Math.round((((i * 157 + (right ? 1 : -1) * time * sp - camX) % span) + span) % span) - 60;
-      ctx.drawImage(right ? carR : carL, x, surf + (right ? 1 : 3));
-    }
-    px(ctx, CT.road[1], 0, surf + 8, W, 2); px(ctx, '#5a5480', 0, surf + 8, W, 1);
-    px(ctx, CT.road[2], 0, surf + 10, W, H - surf - 10);
-    for (let wx = Math.floor((camX - 40) / 64) * 64; wx < camX + W + 64; wx += 64) {
-      const x = sx(wx) + 20; px(ctx, '#2c2552', x, surf + 10, 1, H - surf - 10);
-      ctx.globalAlpha = 0.25; px(ctx, '#ffd98a', x - 6, surf + 10, 13, 3); ctx.globalAlpha = 1;
-    }
+    px(ctx, '#15122a', 0, hz, W, Math.max(0, surf - hz));
+    const offB = ((-camX * 0.6) % 512 + 512) % 512;
+    for (let x = offB - 512; x < W; x += 512) ctx.drawImage(roofsBack, Math.round(x), surf - 16);
+    const offF = ((-camX) % 512 + 512) % 512;
+    for (let x = offF - 512; x < W; x += 512) ctx.drawImage(roofsFront, Math.round(x), surf);
   }
   function drawCityStone() {
+    const surf = sy(CFG.lakeY);
     for (const o of s.stone) {
       if (o.kind !== 'building' && o.kind !== 'girder') continue;
       const x0 = sx(o.x), w = Math.round(o.w);
       if (x0 > W + 4 || x0 + w < -4) continue;
       if (o.kind === 'building') {
-        // rising from below the picture, past the street, up to its roof
-        const top = sy(o.top), img = buildingSpr(w, H - top + 2);
+        // standing on the roofs: narrow ones are water towers, wide ones billboards
+        const top = sy(o.top), h = surf - top, img = w <= 32 ? waterTowerSpr(w, h) : billboardSpr(w, h, Math.round(o.x));
         ctx.drawImage(img, x0 - 1, top - 1);
       } else {
         // the cable runs up out of the picture to a crane nobody needs to see
@@ -908,7 +950,7 @@ export function mountHyperProp(root) {
     const r = s.result; setBest(r.dist);
     restNow();
     const d = Math.round(r.dist);
-    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('通りに墜落', 'Down in the street') : L('湖に着水', 'Down in the lake');
+    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('屋上に墜落', 'Down on the roofs') : L('湖に着水', 'Down in the lake');
     const [big, jp] = {
       edge: ['FELL OFF!', L('乗り込む前に崖の外へ…', 'Over the edge before boarding…')], miss: ['MISSED!', L('乗り込みが間に合わなかった', 'Too late to board')], stop: ['STOPPED', L('止まってしまった', 'Came to a stop')],
       splash: [theme().street ? 'CRASH!' : 'SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
