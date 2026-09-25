@@ -51,7 +51,7 @@ export const CFG = {
 // Stage 5: careful clears from 8 popping all ten (7.5 cannot climb to the obelisks in
 // time), flying straight pops 3. Stage 6: careful clears from 7.5 without a strike; one
 // that stays high takes two falcons and then needs 8.5 to carry over the Sphinx.
-// Stage 7: careful from 7.5 without a strike, staying high takes all three drones and
+// Stage 7: careful from 7.5 without a strike, staying high takes all three balloons and
 // needs 8.5. Stage 8: careful from 8.5; staying high meets the first girder. Stage 9:
 // careful from 9 (a bot that times the moving girders from their motion).
 export const STAGES = [
@@ -91,19 +91,21 @@ export const STAGES = [
   // roof, and the lake's level is the street far below - coming down there is a crash.
   // Buildings rise from below and have to be flown over; girders hang from cranes out of
   // sight above and can only be passed under (the wheel below their underside less 30);
-  // the birds are drones.
-  // Stage 7: buildings with drones high between them, like stage 4.
+  // the birds are ad balloons, tethered to roofs: an ad balloon is [metres, height of the
+  // balloon's middle], and its banner hangs below it (see AD).
+  // Stage 7: buildings with ad balloons high between them, like stage 4, and one low just
+  // after the takeoff where the plane sinks, to be kept above.
   { name: 'SKYLINE', theme: 'city', startX: 60, air: [],
     buildings: [[100, 14, 24], [210, 20, 26], [320, 16, 25]],
-    birds: [[160, 52], [270, 52], [375, 52]] },
+    birds: [[40, 20], [160, 62], [270, 62], [375, 62]] },
   // Stage 8: buildings and girders, over one and under the next, close together, with a
-  // drone low after a girder for a plane that dives too deep. It opens with a building
+  // balloon low after a girder for a plane that dives too deep. It opens with a building
   // taller than the roof the run is on, so the plane has to climb at once, and a girder
   // right behind it to dive under. A girder is not a bird: meeting one ends the flight.
   { name: 'CRANE YARD', theme: 'city', startX: 60, air: [],
     buildings: [[30, 12, 28], [125, 12, 24], [190, 18, 27], [300, 14, 26]],
     girders: [[70, 12, 49], [245, 12, 47], [350, 12, 47]],
-    birds: [[272, 5], [385, 52]] },
+    birds: [[272, 4], [385, 62]] },
   // Stage 9, the last: the cranes are working. Each girder rises and falls on its cable
   // ([metres, length, lowest underside, rise, seconds per lift, phase]): at its lowest the
   // wheel has to skim under 16, at its highest it passes at a cruise. When a plane gets
@@ -116,10 +118,10 @@ export const STAGES = [
     // does not climb back in time). It also shows that girders here are passed under
     // before the moving ones start.
     girders: [[40, 12, 46], [140, 12, 46, 20, 2.4, 0], [240, 12, 46, 20, 2.4, 2], [340, 12, 46, 20, 2.4, 4]],
-    // The drone after the first moving girder flies just low enough to leave a gap: a plane
-    // that ducks under the girder as it comes down skims over the drone's back. Higher, the
+    // The balloon after the first moving girder floats just low enough to leave a gap: a plane
+    // that ducks under the girder as it comes down skims over its top. Higher, the
     // two closed on each other and a pass at the girder's lowest had no room at all.
-    birds: [[160, 12], [260, 5]],
+    birds: [[160, 11], [260, 4]],
     // The journey ends on a helipad instead of past a line: pad is [metres from the edge
     // where it starts, its length, its height above the street], and the wheel has to come
     // down on it gently. ending plays the ending after the landing; when stages are added
@@ -132,7 +134,7 @@ export function create(stage = 1) {
     phase: 'ready', stage, t: 0, x: STAGES[stage].startX, y: 0, vx: 0, vy: 0, theta: 0, omega: 0,
     leg: 0, boardT: 0, stopT: 0, alpha: 0, stall: false, lift: 0, bonk: 0,
     onGround: true, climbed: false, success: false, result: null, events: [],
-    birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1 }; }),
+    birds: STAGES[stage].birds.map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 1.7, x, y, hitT: -1, ad: STAGES[stage].theme === 'city' }; }),
     balloons: (STAGES[stage].balloons || []).map(([m, h], i) => { const x = CFG.edgeX + m / CFG.pxToM, y = CFG.lakeY + h; return { x0: x, y0: y, p: i * 2.3, x, y, popT: -1 }; }),
     got: 0, landed: false,
     pad: STAGES[stage].pad ? { x0: CFG.edgeX + STAGES[stage].pad[0] / CFG.pxToM, x1: CFG.edgeX + (STAGES[stage].pad[0] + STAGES[stage].pad[1]) / CFG.pxToM, top: CFG.lakeY + STAGES[stage].pad[2] } : null,
@@ -158,8 +160,10 @@ export function start(s, stage = s.stage || 1) {
 function moveBirds(s) {
   for (const b of s.birds) {
     if (b.hitT >= 0) continue;
-    b.x = b.x0 + Math.sin(s.t * 0.7 + b.p) * 6;
-    b.y = b.y0 + Math.sin(s.t * 2.2 + b.p) * 2;
+    // an ad balloon only sways a little on its tether
+    const k = b.ad ? 0.35 : 1;
+    b.x = b.x0 + Math.sin(s.t * 0.7 + b.p) * 6 * k;
+    b.y = b.y0 + Math.sin(s.t * 2.2 + b.p) * 2 * k;
   }
   // balloons only bob on their strings
   for (const b of s.balloons) b.y = b.y0 + Math.sin(s.t * 1.6 + b.p) * 1.5;
@@ -172,7 +176,17 @@ export const girderAt = (o, t) => o.base + o.amp * (0.5 - 0.5 * Math.cos((t / o.
 // drawn level: the wing over the gondola, the bare boom behind the wing, and the fin,
 // lowest where it meets the boom and highest at its tip.
 const topAt = (dx) => (dx > -20 ? 25 : dx > -24 ? 14 : Math.min(23, 15 + (-24 - dx)));
+// The city's ad balloons: a balloon AD.r around its middle with a banner hanging under it,
+// AD.banner long or cut short above the street. Its tether runs back to a roof out of the
+// way and is not in the plane's path.
+export const AD = { r: 5, banner: 8 };
+export const adBanner = (b) => Math.max(0, Math.min(AD.banner, b.y - AD.r - CFG.lakeY));
 function hitsPlane(s, b) {
+  if (b.ad) {
+    const x0 = b.x - AD.r, x1 = b.x + AD.r, y0 = b.y - AD.r - adBanner(b), y1 = b.y + AD.r;
+    const box = (l, r, bt, tp) => x1 > s.x + l && x0 < s.x + r && y1 > s.y + bt && y0 < s.y + tp;
+    return box(-14, 19, 0, 26) || box(-31, 19, 20, 27);
+  }
   const dx = b.x - s.x, dy = b.y - s.y, r = 2;
   const body = dx > -14 - r && dx < 19 + r && dy > 0 - r && dy < 26 + r;
   const wing = dx > -31 - r && dx < 19 + r && dy > 20 - r && dy < 27 + r;

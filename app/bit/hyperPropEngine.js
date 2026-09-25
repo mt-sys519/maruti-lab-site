@@ -633,12 +633,16 @@ export function mountHyperProp(root) {
     px(g, '#e8e4f6', X(-70), CLIFF_TOP, CFG.edgeX + 70, 1);
     return outline(c, C.ink);
   })();
-  // A drone, rotors spinning and its lights blinking. Yellow on the night sky, with red
-  // and green lamps, so it reads at a glance against the towers.
-  const drone = [
-    fromRows(['www.......www', '..k.......k..', '.kkkkkkkkkkk.', '..kYYYYYYYk..', '...kRk.kGk...', '....k...k....'], { w: C.white, k: '#3a3f55', Y: '#ffd35c', R: C.red, G: C.green }),
-    fromRows(['.w.........w.', '..k.......k..', '.kkkkkkkkkkk.', '..kYYYYYYYk..', '...kkk.kkk...', '....k...k....'], { w: C.greyL, k: '#3a3f55', Y: '#ffd35c' }),
-  ];
+  // An ad balloon, the city's kind of seventies advertising: a red balloon with a shine, a
+  // cream banner hanging under it with a line of lettering, lit from the street. The
+  // banner is drawn to its length in drawAd, the tether too.
+  const adBall = fromRows(['...rrrr...', '.rrwwrrrr.', '.rwwrrrrrr', 'rrwrrrrrrd', 'rrrrrrrrrd', 'rrrrrrrrdd', '.rrrrrrdd.', '.rrrrrddd.', '...dddd...', '....kk....'],
+    { r: '#e24a35', w: '#ffc0b0', d: '#a82a1c', k: '#3a3f55' });
+  // the sky's own seventies advertiser, far off and small: a blimp with a lit sign on its flank
+  const blimp = [0, 1].map((f) => fromRows([
+    '.....gggggggggggg.....', '...ggGGGGGGGGGGGGgg...', '.ggGyYyYyYyYyYyYyGGgg.', 'gGGGyYyYyYyYyYyYyGGGGg',
+    '.ggGGGGGGGGGGGGGGGgg.g', '...gggggggggggggg...gg', '.........kkk..........'],
+  { g: '#6d6a8c', G: '#8f8cb0', y: f ? '#ffd35c' : '#b8913c', Y: f ? '#b8913c' : '#ffd35c', k: '#2a2640' }));
   // across the street, at street level: shopfronts glowing between the pillars
   const shopsCity = (() => {
     const [c, g] = canvas(512, 16); const r = rng(13);
@@ -865,7 +869,7 @@ export function mountHyperProp(root) {
 
   const THEMES = {
     alps: { sky, clouds, far: alps, mid: range2, near: forest, refl, cliff, water: C.water, props: true, lap: true, bird: gull, boat, goal: [C.rock[2], C.rock[1], C.grass[1], C.grass[0]] },
-    city: { sky: skyCity, clouds: cloudsCity, far: farCity, mid: midCity, near: nearCity, cliff: cliffCity, water: CT.water, props: false, street: true, bird: drone, goal: [CT.wall[3], CT.wall[2], CT.wall[1], CT.wall[0]] },
+    city: { sky: skyCity, clouds: cloudsCity, far: farCity, mid: midCity, near: nearCity, cliff: cliffCity, water: CT.water, props: false, street: true, bird: null, goal: [CT.wall[3], CT.wall[2], CT.wall[1], CT.wall[0]] },
     egypt: { sky: skyEg, clouds: cloudsEg, far: farEg, mid: midEg, near: nearEg, refl: reflEg, cliff: cliffEg, water: EG.water, props: false, bird: falcon, boat: felucca, goal: [EG.stone[2], EG.stone[1], EG.sand[1], EG.sand[0]] },
   };
 
@@ -1067,7 +1071,7 @@ export function mountHyperProp(root) {
         jpMsg = () => (s.got >= need ? L(`風船 ${s.got}個！ あとはゴールへ`, `${s.got} balloons! Now for the goal`) : L(`風船 ${s.got}個 あと${need - s.got}個`, `${s.got} balloons, ${need - s.got} to go`)); jpT = 1.2;
       }
       if (e === 'bird') {
-        au.play('bird'); jpMsg = () => (theme() === THEMES.city ? L('ドローンに当たった！ プロペラが止まる', 'Hit a drone! The propeller stalls') : L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls')); jpT = 1.2;
+        au.play('bird'); jpMsg = () => (theme() === THEMES.city ? L('アドバルーン衝突！ プロペラが止まる', 'Hit a balloon! The propeller stalls') : L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls')); jpT = 1.2;
         burst(s.x + 8, s.y + 14, 14, [C.white, C.greyL, C.white], 40, 1);
       }
       if (e === 'goal') {
@@ -1331,7 +1335,7 @@ export function mountHyperProp(root) {
       lastStride = stride;
     }
     if (s.phase === 'fly' || s.phase === 'roll') {
-      if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = () => (theme() === THEMES.city ? L('ドローンだ！ 上か下をすり抜けろ', 'Drones! Slip over or under them') : L('鳥だ！ 上か下をすり抜けろ', 'Birds! Slip over or under them')); jpT = 2.2; }
+      if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = () => (theme() === THEMES.city ? L('アドバルーン！ 上か下を抜けろ', 'Ad balloons! Over or under them') : L('鳥だ！ 上か下をすり抜けろ', 'Birds! Slip over or under them')); jpT = 2.2; }
       if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = () => (L('下降気流！ 手前で高度を稼げ', 'Downdraft! Gain height before it')); jpT = 2.2; }
       if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = () => (L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`)); jpT = 2.4; }
       if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = () => (L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it')); jpT = 2.2; }
@@ -1389,6 +1393,10 @@ export function mountHyperProp(root) {
     for (const [cx, cy, img] of T.clouds) {
       const x = (((cx - camX * 0.04 - time * 1.5) % 420) + 420) % 420 - 70;
       ctx.drawImage(img, Math.round(x), Math.round(cy + camY * 0.08));
+    }
+    if (T.street) {
+      const x = (((180 - camX * 0.03 - time * 2) % 460) + 460) % 460 - 60;
+      ctx.drawImage(blimp[Math.floor(time * 1.5) % 2], Math.round(x), Math.round(34 + camY * 0.06 + Math.sin(time * 0.5) * 1.5));
     }
     for (let i = 0; i < 3; i++) {
       const bx = ((i * 97 + time * (7 + i * 2) - camX * 0.08) % 330 + 330) % 330 - 40, by = 50 + i * 9 + Math.sin(time * 0.7 + i) * 3;
@@ -1519,6 +1527,13 @@ export function mountHyperProp(root) {
     }
     ctx.globalAlpha = 1;
   }
+  function drawAd(b, x, y, loose) {
+    const cx = sx(x), top = sy(y) - (adBall.height >> 1), foot = top + adBall.height - 1, n = S.adBanner(b);
+    // the tether, thin and dim, running down and back to a roof behind the street
+    if (!loose) { ctx.globalAlpha = 0.45; const gy = sy(CFG.lakeY); for (let yy = foot + n; yy < gy; yy += 1) px(ctx, '#8f8cb0', cx - Math.round((yy - foot - n) * 0.35), yy); ctx.globalAlpha = 1; }
+    if (n > 1) { px(ctx, C.ink, cx - 3, foot, 6, n + 1); px(ctx, '#f1e6cc', cx - 2, foot, 4, n); for (let i = 1; i < n - 1; i += 2) px(ctx, '#e24a35', cx - 1, foot + i, 2, 1); }
+    ctx.drawImage(adBall, cx - (adBall.width >> 1), top);
+  }
   function drawBirds(T) {
     for (const b of s.birds) {
       let x = b.x, y = b.y, f = Math.floor(time * 5 + b.p) % 2;
@@ -1527,6 +1542,7 @@ export function mountHyperProp(root) {
         if (t > 2) continue;
         x = b.hx + t * 30; y = b.hy + t * 28; f = Math.floor(t * 14) % 2;
       }
+      if (b.ad) { drawAd(b, x, y, b.hitT >= 0); continue; }
       const img = T.bird[f];
       ctx.drawImage(img, sx(x) - (img.width >> 1), sy(y) - (img.height >> 1));
     }
