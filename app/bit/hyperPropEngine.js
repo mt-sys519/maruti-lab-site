@@ -887,6 +887,8 @@ export function mountHyperProp(root) {
   // the crank eases round to crankTo, which moves half a turn with every press once seated
   let crank = 0, crankTo = 0, lastStride = 1;
   let camX = s.x - CAM_LEAD, camY = 0, time = 0, propA = 0, parts = [], wreck = null, overT = 0;
+  // jpMsg is a function returning the sub display's upper line, called each time it is
+  // drawn: a string made when the message was set stayed in that language after a switch
   let banner = null, jpMsg = '', jpT = 0, seen = {};
   const inp = { up: false, down: false };
   let touchMode = matchMedia('(pointer: coarse)').matches;
@@ -1046,10 +1048,10 @@ export function mountHyperProp(root) {
         const b = s.balloons.find((q) => q.popT === s.t) || s.balloons.filter((q) => q.popT >= 0).at(-1);
         au.play('pop'); if (b) burst(b.x, b.y, 12, ['#ffffff', '#e24a35', '#f4c430', '#3f7fe0'], 50, 1);
         const need = S.STAGES[s.stage].need;
-        jpMsg = s.got >= need ? L(`風船 ${s.got}個！ あとはゴールへ`, `${s.got} balloons! Now for the goal`) : L(`風船 ${s.got}個 あと${need - s.got}個`, `${s.got} balloons, ${need - s.got} to go`); jpT = 1.2;
+        jpMsg = () => (s.got >= need ? L(`風船 ${s.got}個！ あとはゴールへ`, `${s.got} balloons! Now for the goal`) : L(`風船 ${s.got}個 あと${need - s.got}個`, `${s.got} balloons, ${need - s.got} to go`)); jpT = 1.2;
       }
       if (e === 'bird') {
-        au.play('bird'); jpMsg = theme() === THEMES.city ? L('ドローンとぶつかった！ プロペラが止まる', 'Hit a drone! The propeller stalls') : L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls'); jpT = 1.2;
+        au.play('bird'); jpMsg = () => (theme() === THEMES.city ? L('ドローンとぶつかった！ プロペラが止まる', 'Hit a drone! The propeller stalls') : L('鳥とぶつかった！ プロペラが止まる', 'Bird strike! The propeller stalls')); jpT = 1.2;
         burst(s.x + 8, s.y + 14, 14, [C.white, C.greyL, C.white], 40, 1);
       }
       if (e === 'goal') {
@@ -1057,7 +1059,7 @@ export function mountHyperProp(root) {
         au.music(null); au.play('goal'); setBest(CFG.successDist * CFG.pxToM);
         newRecord = !rec.time[n] || runTime < rec.time[n];
         if (newRecord) { rec.time[n] = runTime; try { localStorage.setItem(recKey('bestTime', n), runTime.toFixed(2)); } catch { /* storage is optional */ } }
-        banner = null; jpMsg = newRecord ? L(`新記録！ ${fmt(runTime)}`, `New record! ${fmt(runTime)}`) : s.landed && S.STAGES[s.stage].ending ? L('おめでとう！ 最後まで飛びきった', 'Congratulations! You flew all the way') : s.landed ? L(`着陸成功！ ${fmt(runTime)}`, `Landed! ${fmt(runTime)}`) : L(`400m 飛行成功！ ${fmt(runTime)}`, `Flew the 400m! ${fmt(runTime)}`); jpT = 1e9;
+        banner = null; jpMsg = () => (newRecord ? L(`新記録！ ${fmt(runTime)}`, `New record! ${fmt(runTime)}`) : s.landed && S.STAGES[s.stage].ending ? L('おめでとう！ 最後まで飛びきった', 'Congratulations! You flew all the way') : s.landed ? L(`着陸成功！ ${fmt(runTime)}`, `Landed! ${fmt(runTime)}`) : L(`400m 飛行成功！ ${fmt(runTime)}`, `Flew the 400m! ${fmt(runTime)}`)); jpT = 1e9;
         restNow();
       }
       if (e === 'fail' || e === 'land') onFail();
@@ -1072,8 +1074,9 @@ export function mountHyperProp(root) {
     const r = s.result; setBest(r.dist);
     restNow();
     const d = Math.round(r.dist);
-    const st = S.STAGES[s.stage], water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('ビルの谷間へ落ちていった', 'Down into the canyon') : L('湖に着水', 'Down in the lake');
-    const [big, jp] = {
+    const st = S.STAGES[s.stage];
+    const texts = () => { const water = theme() === THEMES.egypt ? L('ナイルに着水', 'Down in the Nile') : theme() === THEMES.city ? L('ビルの谷間へ落ちていった', 'Down into the canyon') : L('湖に着水', 'Down in the lake');
+    return {
       edge: ['FELL OFF!', L('乗り込む前に崖の外へ…', 'Over the edge before boarding…')], miss: ['MISSED!', L('乗り込みが間に合わなかった', 'Too late to board')], stop: ['STOPPED', L('止まってしまった', 'Came to a stop')],
       splash: [theme().street ? 'MAYDAY!' : 'SPLASH!', `${water}… ${d}m`], sand: ['CRASH!', L('砂の上に不時着…', 'Crash-landed on the sand…')], obelisk: ['CRASH!', L(`オベリスクにぶつかった… ${d}m`, `Hit an obelisk… ${d}m`)],
       sphinx: ['CRASH!', L(`スフィンクスにぶつかった… ${d}m`, `Hit the Sphinx… ${d}m`)],
@@ -1082,7 +1085,8 @@ export function mountHyperProp(root) {
       hard: ['HARD LANDING!', L('強く降りすぎた… ゆっくり降りろ', 'Too hard! Ease it down gently')],
       overshoot: ['OVERSHOT!', L('ヘリポートを通り過ぎた…', 'Flew past the helipad…')],
       short: ['NOT ENOUGH!', L(`風船が足りない… ${s.got}/${st.need}`, `Not enough balloons… ${s.got}/${st.need}`)],
-    }[r.reason];
+    }[r.reason]; };
+    const [big] = texts(), jp = () => texts()[1];
     show(big, r.reason === 'splash' || r.reason === 'obelisk' || r.reason === 'sphinx' || r.reason === 'building' || r.reason === 'girder' ? `${d}M` : r.reason === 'short' ? `${s.got}/${st.need}` : '', 1e9, jp);
     au.music(null);
     if (r.reason === 'splash' && theme().street) au.play('fall');
@@ -1304,15 +1308,15 @@ export function mountHyperProp(root) {
       lastStride = stride;
     }
     if (s.phase === 'fly' || s.phase === 'roll') {
-      if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = theme() === THEMES.city ? L('ドローンだ！ 上か下をすり抜けろ', 'Drones! Slip over or under them') : L('鳥だ！ 上か下をすり抜けろ', 'Birds! Slip over or under them'); jpT = 2.2; }
-      if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = L('下降気流！ 手前で高度を稼げ', 'Downdraft! Gain height before it'); jpT = 2.2; }
-      if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`); jpT = 2.4; }
-      if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it'); jpT = 2.2; }
-      if (!seen.building && s.stone.some((o) => o.kind === 'building' && o.x - s.x < 170 && o.x > s.x)) { seen.building = true; jpMsg = L('ビル！ 屋上を越えろ', 'Building! Fly over the roof'); jpT = 2.2; }
-      if (!seen.pad && s.pad && s.pad.x0 - s.x < 200) { seen.pad = true; jpMsg = L('ヘリポートに着陸！ ゆっくり降りろ', 'Land on the helipad - gently'); jpT = 3; }
-      if (!seen.lift && s.stone.some((o) => o.kind === 'girder' && o.amp && o.x - s.x < 170 && o.x > s.x)) { seen.lift = seen.girder = true; jpMsg = L('吊り荷が上下する！ 上がった隙にくぐれ', 'Girders move! Pass under when up'); jpT = 2.6; }
-      if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = L('吊り荷！ 当たると落ちる、下をくぐれ', 'Hanging girder! Go under it'); jpT = 2.4; }
-      if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back'); jpT = 2.4; }
+      if (!seen.bird && s.birds.some((b) => b.hitT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.bird = true; jpMsg = () => (theme() === THEMES.city ? L('ドローンだ！ 上か下をすり抜けろ', 'Drones! Slip over or under them') : L('鳥だ！ 上か下をすり抜けろ', 'Birds! Slip over or under them')); jpT = 2.2; }
+      if (!seen.sink && S.airAt(s, s.x + 120) < -1) { seen.sink = true; jpMsg = () => (L('下降気流！ 手前で高度を稼げ', 'Downdraft! Gain height before it')); jpT = 2.2; }
+      if (!seen.balloon && s.balloons.some((b) => b.popT < 0 && b.x - s.x < 170 && b.x > s.x)) { seen.balloon = true; jpMsg = () => (L(`プロペラで風船を割れ（${S.STAGES[s.stage].need}個以上）`, `Pop balloons with the propeller (${S.STAGES[s.stage].need}+)`)); jpT = 2.4; }
+      if (!seen.obelisk && s.obelisks.some((o) => o.x - s.x < 170 && o.x > s.x)) { seen.obelisk = true; jpMsg = () => (L('オベリスク！ 上を越えろ', 'Obelisk! Fly over it')); jpT = 2.2; }
+      if (!seen.building && s.stone.some((o) => o.kind === 'building' && o.x - s.x < 170 && o.x > s.x)) { seen.building = true; jpMsg = () => (L('ビル！ 屋上を越えろ', 'Building! Fly over the roof')); jpT = 2.2; }
+      if (!seen.pad && s.pad && s.pad.x0 - s.x < 200) { seen.pad = true; jpMsg = () => (L('ヘリポートに着陸！ ゆっくり降りろ', 'Land on the helipad, gently')); jpT = 3; }
+      if (!seen.lift && s.stone.some((o) => o.kind === 'girder' && o.amp && o.x - s.x < 170 && o.x > s.x)) { seen.lift = seen.girder = true; jpMsg = () => (L('吊り荷が上下する！ 上がった隙にくぐれ', 'Girders move! Pass under when up')); jpT = 2.6; }
+      if (!seen.girder && s.stone.some((o) => o.kind === 'girder' && o.x - s.x < 170 && o.x > s.x)) { seen.girder = true; jpMsg = () => (L('吊り荷！ 当たると落ちる、下をくぐれ', 'Hanging girder! Go under it')); jpT = 2.4; }
+      if (!seen.sphinx && s.stone.some((o) => o.kind === 'sphinx' && o.x - s.x < 170 && o.x > s.x)) { seen.sphinx = true; jpMsg = () => (L('スフィンクス！ 頭を越えて背中の上を抜けろ', 'The Sphinx! Over its head, along its back')); jpT = 2.4; }
     }
     if (s.phase === 'fly' && s.stall) { stallBeep -= real; if (stallBeep <= 0) { au.play('stall'); stallBeep = 0.32; } } else stallBeep = 0;
     const mark = Math.floor(Math.max(0, s.x - CFG.edgeX) / 200);
@@ -1752,7 +1756,7 @@ export function mountHyperProp(root) {
       : paused
       ? (countdown > 0 ? [L('もうすぐ再開', 'Resuming…'), t ? L('PEDAL に指を置いて', 'Fingers on PEDAL') : L('← → に指を置いて', 'Fingers on ← →')] : [L('一時停止中', 'Paused'), t ? L('START で続ける', 'START to continue') : L('Enter / Esc で続ける', 'Enter / Esc to continue')])
       : tut.hint ? tut.hint.jp(t)
-      : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your fingers and wrists') : jpMsg || what, press];
+      : [rest && over() ? L('15分たったよ。指と手首をひと休み', '15 minutes in. Rest your fingers and wrists') : (jpMsg ? jpMsg() : '') || what, press];
     lines.forEach((txt, i) => { if (plateLines[i].textContent !== txt) plateLines[i].textContent = txt; });
   }
 
