@@ -709,6 +709,14 @@ export function mountHyperProp(root) {
     }
     return outline(c, C.ink);
   })();
+  // the banners are only 6px across, so their words are in a 4x5 hand of their own
+  const AD_WORDS = ['SALE', 'OPEN'];
+  const AD_FONT = {
+    S: ['.###', '#...', '.##.', '...#', '###.'], A: ['.##.', '#..#', '####', '#..#', '#..#'],
+    L: ['#...', '#...', '#...', '#...', '####'], E: ['####', '#...', '###.', '#...', '####'],
+    O: ['.##.', '#..#', '#..#', '#..#', '.##.'], P: ['###.', '#..#', '###.', '#...', '#...'],
+    N: ['#..#', '##.#', '#.##', '#..#', '#..#'],
+  };
   // across the street, at street level: shopfronts glowing between the pillars
   const shopsCity = (() => {
     const [c, g] = canvas(512, 16); const r = rng(13);
@@ -1593,10 +1601,13 @@ export function mountHyperProp(root) {
     const cx = sx(x), top = sy(y) - (adBall.height >> 1), foot = sy(y) + S.AD.r, n = S.adBanner(b), w = S.AD.w;
     // a high one's tether, thin and dim, running down and back to a roof behind the street
     if (!loose && b.bot > CFG.lakeY) { ctx.globalAlpha = 0.45; const gy = sy(CFG.lakeY); for (let yy = foot + n; yy < gy; yy += 1) px(ctx, '#8f8cb0', cx - Math.round((yy - foot - n) * 0.35), yy); ctx.globalAlpha = 1; }
-    // the banner: cream cloth edged dark, a column of bold red characters down it
+    // the banner: cream cloth edged dark, its word spelt down it in red, again while it fits
     if (n > 1) {
       px(ctx, C.ink, cx - w - 1, foot, 2 * w + 2, n + 1); px(ctx, '#f1e6cc', cx - w, foot, 2 * w, n);
-      for (let i = 2; i + 4 < n; i += 6) { px(ctx, '#c8321f', cx - 2, i + foot, 4, 1); px(ctx, '#c8321f', cx - 1, i + foot + 1, 1, 3); px(ctx, '#c8321f', cx + 1, i + foot + 2, 1, 2); px(ctx, '#c8321f', cx - 2, i + foot + 4, 4, 1); }
+      const word = AD_WORDS[Math.round(b.p / 1.7) % AD_WORDS.length], len = word.length * 6 + 3;
+      for (let w0 = 3; w0 + len - 3 <= n; w0 += len) [...word].forEach((ch, k) => {
+        AD_FONT[ch].forEach((row, ry) => [...row].forEach((on, rx) => { if (on === '#') px(ctx, '#c8321f', cx - 2 + rx, foot + w0 + k * 6 + ry); }));
+      });
     }
     ctx.drawImage(adBall, cx - (adBall.width >> 1), top);
   }
