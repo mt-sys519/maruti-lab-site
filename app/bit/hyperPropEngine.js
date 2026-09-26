@@ -255,12 +255,17 @@ export function mountHyperProp(root) {
   }
   const clouds = [[10, 26, cloudSpr(52, 18, 1)], [120, 40, cloudSpr(30, 11, 2)], [190, 22, cloudSpr(64, 20, 3)], [330, 46, cloudSpr(36, 13, 4)]];
 
-  // mountains: explicit peaks, lit face on the left of each ridge crease, snow caps on the tall ones
-  function mountains(w, h, n, seed, lo, hi, pal, snowFrac) {
+  // mountains, peak by peak from a list of [x, top, left width, right width, col, flat top]:
+  // lit face on the left of each ridge crease. Snow stays where the wind can't take it,
+  // in the hollows: above a snow line shared by the whole range, each face has two gullies
+  // between its outer edge and the arete that open into a bowl under the summit and run
+  // down as narrowing tongues below the line, while the arete and the ribs between stay
+  // rock. A col between two snowy peaks carries a glacier along its crest.
+  function mountains(w, h, seed, pal, snowLine, list) {
     const [c, g] = canvas(w, h); const r = rng(seed);
-    const peaks = Array.from({ length: n }, (_, i) => {
-      const top = lo + r() * (hi - lo);
-      return { id: i + seed * 31, x: (i + r() * 0.8) * (w / n), top, wl: top * (1.0 + r() * 0.7), wr: top * (1.0 + r() * 0.7), skew: (r() - 0.5) * 0.5 };
+    const peaks = list.map(([x, top, wl, wr, col, cap], i) => {
+      r(); const rl = r(), rr = r(), sk = r();
+      return { id: i + seed * 31, x, top, wl: wl || top * (1 + rl * 0.7), wr: wr || top * (1 + rr * 0.7), skew: (sk - 0.5) * 0.5, col, cap };
     }).sort((a, b) => b.top - a.top);
     for (const p of peaks) {
       const apex = h - p.top;
@@ -268,10 +273,10 @@ export function mountHyperProp(root) {
         const dx = cx - p.x;
         let hh = dx < 0 ? p.top * (1 + dx / p.wl) : p.top * (1 - dx / p.wr);
         hh += (hash(p.id * 997 + (cx >> 1)) - 0.5) * 3 + Math.sin(cx * 0.31 + p.id) * 1.4;
-        hh = Math.round(Math.min(hh, p.top));
+        hh = Math.round(Math.min(hh, p.cap || p.top));
         if (hh <= 0) continue;
         const X = ((cx % w) + w) % w;
-        const snowAt = p.top * snowFrac * (0.75 + hash(p.id * 13 + Math.floor(cx / 3)) * 0.5);
+        const line = snowLine * (0.94 + hash(p.id * 13 + Math.floor(cx / 3)) * 0.12);
         for (let y = h - hh; y < h; y++) {
           const alt = h - y, down = y - apex;
           const crease = p.x + Math.round(down * p.skew + Math.sin(down * 0.45 + p.id) * 1.2);
@@ -279,18 +284,74 @@ export function mountHyperProp(root) {
           let col = lit ? pal[0] : pal[2];
           const q = Math.floor(cx + alt * (lit ? 0.75 : -0.75));
           if (hash(Math.floor(q / 2) * 13 + p.id) < 0.14 && (q & 1) && hash(Math.floor(q / 2) * 7 + Math.floor(alt / 6) * 131) < 0.35 && y > h - hh + 2) col = lit ? pal[1] : pal[3];
-          const snow = snowFrac && p.top > 30 && down < snowAt;
-          if (snow || (snowFrac && p.top > 30 && down < snowAt + 2 && dith(X, y, 0.5))) col = lit ? C.snowW : C.snowS;
+          let snow = false;
+          if (snowLine) {
+            const t = Math.max(0, (p.top - alt) / p.top), edge = lit ? p.x - t * p.wl : p.x + t * p.wr, span = crease - edge;
+            const jig = (hash(p.id * 53 + Math.floor(alt / 3) * 7 + (lit ? 1 : 2)) - 0.5) * 2, below = line - alt;
+            for (const k of [0, 1]) {
+              const f = [0.34, 0.7][k] + (hash(p.id * 17 + k * 5 + (lit ? 0 : 9)) - 0.5) * 0.12;
+              const len = 10 + hash(p.id * 41 + k * 3 + (lit ? 0 : 7)) * 26;
+              if (below > len) continue;
+              const wide = Math.abs(span) * (below < 0 ? 0.12 + Math.min(1, -below / 20) * 0.08 : 0.12 * (1 - below / len));
+              if (Math.abs(cx - (edge + span * f) - jig * 0.8) < wide + 0.5) snow = true;
+            }
+            if (alt > p.top - (lit ? 5 : 3) && alt > line - 2) snow = true;
+            if (Math.abs(cx - crease) <= 1 && down > 3) snow = false;
+          }
+          if (p.col && y - (h - hh) < 4 + Math.round(hash(p.id * 7 + (cx >> 2)) * 3)) snow = true;
+          if (snow) col = lit ? C.snowW : C.snowS;
           if (alt < 12 && dith(X, y, (12 - alt) / 14)) col = pal[4];
-          if (y === h - hh) col = snow || down < 3 ? C.white : lit ? pal[0] : pal[3];
+          if (y === h - hh) col = snow ? C.white : lit ? pal[0] : pal[3];
           px(g, col, X, y);
         }
       }
     }
     return c;
   }
-  const alps = mountains(512, 112, 9, 3, 40, 94, ['#b9c8de', '#9fb1cc', '#7b8db0', '#65779c', '#b3c8de'], 0.27);
-  const range2 = mountains(512, 62, 11, 8, 16, 44, ['#86a0b4', '#7690a6', '#5d7690', '#4d647e', '#9fb7c9'], 0.12);
+  // the peaks joined into a range: between neighbours a low saddle with a hump either side,
+  // or, between two peaks both over the snow line, a higher shoulder with a short flat top
+  // for the glacier to lie on
+  function withCols(list, col, snowLine, w = 512) {
+    const sorted = [...list].sort((a, b) => a[0] - b[0]), out = [...list];
+    sorted.forEach((a, i) => {
+      const b = sorted[(i + 1) % sorted.length], gap = b[0] + (i + 1 === sorted.length ? w : 0) - a[0];
+      const low = Math.min(a[1], b[1]), snowy = low >= snowLine;
+      if (snowy) {
+        const top = low * 0.74;
+        out.push([a[0] + gap * 0.5, top * 1.12, gap * 0.5, gap * 0.5, true, top], [a[0] + gap * 0.36, top + 2, gap * 0.25, gap * 0.25, true]);
+      } else {
+        const top = low * col;
+        out.push([a[0] + gap * 0.5, top, gap * 0.5, gap * 0.5], [a[0] + gap * 0.3, top + 3, gap * 0.2, gap * 0.2], [a[0] + gap * 0.7, top + 2, gap * 0.2, gap * 0.2]);
+      }
+    });
+    return out;
+  }
+  // wooded hills in front of the range, [x, height, half width] each: dark green, the
+  // treetops along the top edge, lit where the ground rises to the right
+  function woods(w, h, humps, seed) {
+    const [c, g] = canvas(w, h);
+    const top = new Float32Array(w);
+    for (let x = 0; x < w; x++) for (const [hx, ht, hw] of humps) for (const k of [-w, 0, w]) {
+      const d = (x - hx - k) / hw;
+      if (Math.abs(d) < 1) top[x] = Math.max(top[x], ht * (1 - d * d) ** 0.8);
+    }
+    for (let x = 0; x < w; x++) {
+      if (top[x] < 1) continue;
+      const sl = top[(x + 3) % w] - top[(x - 3 + w) % w];
+      const tip = x % 4 === 1 ? 2 : x % 4 === 3 ? 0 : 1;
+      const t0 = Math.round(top[x] + tip * Math.min(1, top[x] / 6));
+      for (let y = h - t0; y < h; y++) {
+        let col = sl > 0.3 ? '#3f6f55' : sl < -0.3 ? '#274836' : '#325a44';
+        if (hash(Math.floor(x / 3) * 31 + Math.floor((y + (x % 3)) / 3) * 7 + seed) < 0.3) col = '#23402f';
+        if (y === h - t0) col = sl < -0.3 ? '#325a44' : '#4f8060';
+        px(g, col, x, y);
+      }
+    }
+    return c;
+  }
+  const alps = mountains(512, 112, 3, ['#b9c8de', '#9fb1cc', '#7b8db0', '#65779c', '#b3c8de'], 60,
+    withCols([[48, 90], [150, 60], [250, 78], [352, 52], [440, 70]], 0.62, 60));
+  const range2 = woods(512, 62, [[10, 44, 70], [70, 30, 60], [250, 38, 70], [300, 26, 60], [420, 30, 90]], 3);
   const forest = (() => {
     const [c, g] = canvas(512, 30); const r = rng(5);
     const pine = (cx, base, hgt, l, d, dd) => {
