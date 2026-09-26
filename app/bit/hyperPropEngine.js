@@ -255,125 +255,42 @@ export function mountHyperProp(root) {
   }
   const clouds = [[10, 26, cloudSpr(52, 18, 1)], [120, 40, cloudSpr(30, 11, 2)], [190, 22, cloudSpr(64, 20, 3)], [330, 46, cloudSpr(36, 13, 4)]];
 
-  // A range the way it stands behind a Swiss lake. Summits come in massifs: a few high
-  // ones joined by cols that stay high, so the crest runs on instead of dropping to the
-  // foot between every peak. From each summit an arête comes down the front and splits
-  // as it goes, so the face breaks into facets, lit where they face the sun on the left
-  // and shaded where they turn away. Snow lies over everything above a wavering line and
-  // runs further down the gullies between arêtes; the steep shaded walls stay bare rock.
-  function range(w, h, o) {
-    const [c, g] = canvas(w, h); const r = rng(o.seed);
-    const wrap = (x) => ((Math.round(x) % w) + w) % w;
-    // summits: massif centres, each with a few summits round it
-    const sums = [];
-    for (const m of o.massifs) {
-      const n = m.n;
-      for (let i = 0; i < n; i++) {
-        const x = m.x + (i - (n - 1) / 2) * m.span / Math.max(1, n - 1) + (r() - 0.5) * m.span * 0.25;
-        const hh = m.h * (i === m.main ? 1 : 0.72 + r() * 0.2);
-        sums.push({ x, h: hh, sl: o.slope * (0.8 + r() * 0.5), sr: o.slope * (0.8 + r() * 0.5) });
-      }
-    }
-    // crest: the highest of the pyramids, plus a little periodic roughness
-    const rough = new Float32Array(w);
-    { let step = w, amp = o.jag; rough[0] = 0;
-      while (step > 1) { const half = step >> 1; for (let i = 0; i < w; i += step) rough[i + half] = (rough[i] + rough[(i + step) % w]) / 2 + (r() * 2 - 1) * amp; step = half; amp *= 0.6; } }
-    const top = new Float32Array(w);
-    for (let x = 0; x < w; x++) {
-      let best = o.lo;
-      for (const s of sums) for (const k of [-w, 0, w]) {
-        const dx = x - (s.x + k);
-        const ad = Math.abs(dx), v = s.h - (ad + 10 * (1 - Math.exp(-ad / 8))) * (dx < 0 ? s.sl : s.sr) * 0.82;
-        if (v > best) best = v;
-      }
-      top[x] = Math.max(2, best + rough[x] * Math.min(1, (best - o.lo) / 12 + 0.3));
-    }
-    const T = (x) => top[wrap(x)];
-    // arêtes: down the front from each summit, forking as they go
-    const ridge = new Uint8Array(w * h);
-    const mark = (x, y) => { const X = wrap(x); if (y >= 0 && y < h && y >= h - T(X)) ridge[y * w + X] = 1; };
-    function arete(x, y, dx, len, depth) {
-      const bend = (r() - 0.5) * 0.02, ph = r() * 6;
-      for (let k = 0; k < len && y < h; k++) {
-        x += dx + Math.sin(k * 0.25 + ph) * 0.25; dx += bend; y++;
-        mark(x, y);
-        if (depth < 2 && k > 5 && r() < o.fork) arete(x, y, dx + (r() < 0.5 ? -1 : 1) * (0.45 + r() * 0.5), len * (0.35 + r() * 0.3), depth + 1);
-      }
-    }
-    for (const s of sums) {
-      const y0 = Math.round(h - T(s.x));
-      arete(s.x, y0, (r() - 0.5) * 0.5, (h - y0) * 0.95, 0);
-    }
-    // shoulders along the crest send shorter ones
-    for (let x = 0; x < w; x++) {
-      let ok = true; for (let d = -5; d <= 5 && ok; d++) if (d && T(x + d) > T(x)) ok = false;
-      if (ok && !sums.some((s) => Math.abs(wrap(s.x) - x) < 8)) arete(x, Math.round(h - T(x)), (r() - 0.5) * 0.6, T(x) * 0.6, 1);
-    }
-    const snowAt = (X) => o.snow + Math.sin(X * 0.031 + o.seed) * 4 + Math.sin(X * 0.11 + 1) * 2;
-    for (let y = 0; y < h; y++) {
-      const alt = h - y;
-      let start = 0; for (let x = 0; x < w; x++) if (T(x) < alt) { start = x; break; }
-      let k = 0;
-      while (k < w) {
-        const X0 = (start + k) % w;
-        if (T(X0) < alt) { k++; continue; }
-        let e = k; while (e < w && T((start + e) % w) >= alt) e++;
-        const rs = [];
-        for (let j = k; j < e; j++) if (ridge[y * w + (start + j) % w]) rs.push(j);
-        let ri = 0;
-        for (let j = k; j < e; j++) {
-          const X = (start + j) % w;
-          while (ri < rs.length && rs[ri] < j) ri++;
-          const right = ri < rs.length ? rs[ri] : undefined, left = rs[ri] === j ? j : ri > 0 ? rs[ri - 1] : undefined;
-          // the outer flanks: the left one faces the sun, the right one doesn't
-          const lit = right === undefined ? false : left === undefined ? true : right - j <= j - left;
-          const gully = left !== undefined && right !== undefined ? Math.abs(j - (left + right) / 2) / Math.max(1, (right - left) / 2) : 1;
-          const under = T(X) - alt;
-          const sl = snowAt(X);
-          let snow = o.snow > 0 && (alt > sl || (gully < 0.5 && alt > sl - (1 - gully * 2) * o.tongue));
-          // steep shaded walls shed their snow in bands
-          if (snow && !lit && under > 4 && gully > 0.35 && hash(Math.floor((X - y * 0.35) / 2) * 131 + Math.floor(y / 9) * 17 + o.seed) < o.bare) snow = false;
-          let col = snow ? (lit ? C.snowW : C.snowS) : lit ? o.pal[0] : o.pal[2];
-          if (!snow && hash(Math.floor((X - y * 0.35) / 2) * 17 + Math.floor(y / 7) * 71 + o.seed) < 0.16) col = lit ? o.pal[1] : o.pal[3];
-          if (ridge[y * w + X]) col = snow ? C.snowW : o.pal[0];
-          if (under < 1) col = snow ? C.white : lit ? o.pal[0] : o.pal[1];
-          if (alt < o.haze && dith(X, y, (o.haze - alt) / (o.haze + 2))) col = o.pal[4];
+  // mountains: explicit peaks, lit face on the left of each ridge crease, snow caps on the tall ones
+  function mountains(w, h, n, seed, lo, hi, pal, snowFrac) {
+    const [c, g] = canvas(w, h); const r = rng(seed);
+    const peaks = Array.from({ length: n }, (_, i) => {
+      const top = lo + r() * (hi - lo);
+      return { id: i + seed * 31, x: (i + r() * 0.8) * (w / n), top, wl: top * (1.0 + r() * 0.7), wr: top * (1.0 + r() * 0.7), skew: (r() - 0.5) * 0.5 };
+    }).sort((a, b) => b.top - a.top);
+    for (const p of peaks) {
+      const apex = h - p.top;
+      for (let cx = Math.floor(p.x - p.wl); cx <= p.x + p.wr; cx++) {
+        const dx = cx - p.x;
+        let hh = dx < 0 ? p.top * (1 + dx / p.wl) : p.top * (1 - dx / p.wr);
+        hh += (hash(p.id * 997 + (cx >> 1)) - 0.5) * 3 + Math.sin(cx * 0.31 + p.id) * 1.4;
+        hh = Math.round(Math.min(hh, p.top));
+        if (hh <= 0) continue;
+        const X = ((cx % w) + w) % w;
+        const snowAt = p.top * snowFrac * (0.75 + hash(p.id * 13 + Math.floor(cx / 3)) * 0.5);
+        for (let y = h - hh; y < h; y++) {
+          const alt = h - y, down = y - apex;
+          const crease = p.x + Math.round(down * p.skew + Math.sin(down * 0.45 + p.id) * 1.2);
+          const lit = cx < crease;
+          let col = lit ? pal[0] : pal[2];
+          const q = Math.floor(cx + alt * (lit ? 0.75 : -0.75));
+          if (hash(Math.floor(q / 2) * 13 + p.id) < 0.14 && (q & 1) && hash(Math.floor(q / 2) * 7 + Math.floor(alt / 6) * 131) < 0.35 && y > h - hh + 2) col = lit ? pal[1] : pal[3];
+          const snow = snowFrac && p.top > 30 && down < snowAt;
+          if (snow || (snowFrac && p.top > 30 && down < snowAt + 2 && dith(X, y, 0.5))) col = lit ? C.snowW : C.snowS;
+          if (alt < 12 && dith(X, y, (12 - alt) / 14)) col = pal[4];
+          if (y === h - hh) col = snow || down < 3 ? C.white : lit ? pal[0] : pal[3];
           px(g, col, X, y);
         }
-        k = e;
       }
     }
     return c;
   }
-
-  // Foothills in front of the high range: rounded, wooded, no snow. Lit where the ground
-  // rises to the right (faces the sun on the left), the woods speckled darker.
-  function hills(w, h, o) {
-    const [c, g] = canvas(w, h); const r = rng(o.seed);
-    const waves = Array.from({ length: 6 }, (_, i) => [1 + i + Math.floor(r() * 2) * (i + 1), r() * 6.28, (r() * 0.6 + 0.4) / (i + 1)]);
-    const top = new Float32Array(w);
-    let mn = 1e9, mx = -1e9;
-    for (let x = 0; x < w; x++) { let v = 0; for (const [f, p, a] of waves) v += Math.sin(x / w * 6.283 * f + p) * a; top[x] = v; mn = Math.min(mn, v); mx = Math.max(mx, v); }
-    for (let x = 0; x < w; x++) top[x] = o.lo + (o.hi - o.lo) * ((top[x] - mn) / (mx - mn)) ** 1.3;
-    const T = (x) => top[((x % w) + w) % w];
-    for (let x = 0; x < w; x++) {
-      const sl = T(x + 2) - T(x - 2);
-      for (let y = Math.ceil(h - T(x)); y < h; y++) {
-        const alt = h - y, under = T(x) - alt;
-        const lit = sl > 0.25, shade = sl < -0.25;
-        let col = lit ? o.pal[0] : shade ? o.pal[2] : o.pal[1];
-        if (hash(x * 7 + y * 131 + o.seed) < 0.18 && under > 1) col = o.pal[3];
-        if (under < 1) col = o.pal[0];
-        if (alt < o.haze && dith(x, y, (o.haze - alt) / (o.haze + 2))) col = o.pal[4];
-        px(g, col, x, y);
-      }
-    }
-    return c;
-  }
-  const alps = range(512, 112, { seed: 4, lo: 34, slope: 1.05, jag: 5, fork: 0.05, snow: 58, tongue: 22, bare: 0.3, haze: 12,
-    massifs: [{ x: 70, n: 3, span: 70, h: 96, main: 1 }, { x: 250, n: 4, span: 110, h: 84, main: 2 }, { x: 410, n: 2, span: 40, h: 74, main: 0 }],
-    pal: ['#b9c8de', '#9fb1cc', '#7b8db0', '#65779c', '#b3c8de'] });
-  const range2 = hills(512, 62, { seed: 9, lo: 10, hi: 40, haze: 10, pal: ['#7fa0ac', '#6a8b9c', '#58778c', '#4d6a80', '#9fb7c9'] });
+  const alps = mountains(512, 112, 9, 3, 40, 94, ['#b9c8de', '#9fb1cc', '#7b8db0', '#65779c', '#b3c8de'], 0.27);
+  const range2 = mountains(512, 62, 11, 8, 16, 44, ['#86a0b4', '#7690a6', '#5d7690', '#4d647e', '#9fb7c9'], 0.12);
   const forest = (() => {
     const [c, g] = canvas(512, 30); const r = rng(5);
     const pine = (cx, base, hgt, l, d, dd) => {
@@ -731,14 +648,6 @@ export function mountHyperProp(root) {
     }
     return outline(c, C.ink);
   })();
-  // the banners are only 6px across, so their words are in a 4x5 hand of their own
-  const AD_WORDS = ['SALE', 'OPEN'];
-  const AD_FONT = {
-    S: ['.###', '#...', '.##.', '...#', '###.'], A: ['.##.', '#..#', '####', '#..#', '#..#'],
-    L: ['#...', '#...', '#...', '#...', '####'], E: ['####', '#...', '###.', '#...', '####'],
-    O: ['.##.', '#..#', '#..#', '#..#', '.##.'], P: ['###.', '#..#', '###.', '#...', '#...'],
-    N: ['#..#', '##.#', '#.##', '#..#', '#..#'],
-  };
   // across the street, at street level: shopfronts glowing between the pillars
   const shopsCity = (() => {
     const [c, g] = canvas(512, 16); const r = rng(13);
@@ -1623,13 +1532,10 @@ export function mountHyperProp(root) {
     const cx = sx(x), top = sy(y) - (adBall.height >> 1), foot = sy(y) + S.AD.r, n = S.adBanner(b), w = S.AD.w;
     // a high one's tether, thin and dim, running down and back to a roof behind the street
     if (!loose && b.bot > CFG.lakeY) { ctx.globalAlpha = 0.45; const gy = sy(CFG.lakeY); for (let yy = foot + n; yy < gy; yy += 1) px(ctx, '#8f8cb0', cx - Math.round((yy - foot - n) * 0.35), yy); ctx.globalAlpha = 1; }
-    // the banner: cream cloth edged dark, its word spelt down it in red, again while it fits
+    // the banner: cream cloth edged dark, a column of bold red characters down it
     if (n > 1) {
       px(ctx, C.ink, cx - w - 1, foot, 2 * w + 2, n + 1); px(ctx, '#f1e6cc', cx - w, foot, 2 * w, n);
-      const word = AD_WORDS[Math.round(b.p / 1.7) % AD_WORDS.length], len = word.length * 6 + 3;
-      for (let w0 = 3; w0 + len - 3 <= n; w0 += len) [...word].forEach((ch, k) => {
-        AD_FONT[ch].forEach((row, ry) => [...row].forEach((on, rx) => { if (on === '#') px(ctx, '#c8321f', cx - 2 + rx, foot + w0 + k * 6 + ry); }));
-      });
+      for (let i = 2; i + 4 < n; i += 6) { px(ctx, '#c8321f', cx - 2, i + foot, 4, 1); px(ctx, '#c8321f', cx - 1, i + foot + 1, 1, 3); px(ctx, '#c8321f', cx + 1, i + foot + 2, 1, 2); px(ctx, '#c8321f', cx - 2, i + foot + 4, 4, 1); }
     }
     ctx.drawImage(adBall, cx - (adBall.width >> 1), top);
   }
