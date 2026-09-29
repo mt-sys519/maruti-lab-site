@@ -147,7 +147,7 @@ body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-ali
 /* sheet */
 .sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center}
 .sheet[hidden]{display:none}
-.scrim{position:absolute;inset:0;background:rgba(70,55,48,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:fade .2s both}
+.scrim{position:absolute;inset:0;background:rgba(56,42,36,.4);animation:fade .2s both} /* no backdrop blur: it samples past the screen edge and lights up the corners */
 @keyframes fade{from{opacity:0}}
 .panel{position:relative;width:min(460px,94vw);border-radius:30px;padding:14px 14px 16px;animation:pop .28s cubic-bezier(.2,.9,.3,1.1) both}
 @keyframes pop{from{opacity:0;transform:translateY(24px) scale(.97)}}
