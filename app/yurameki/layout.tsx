@@ -1,7 +1,20 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./yurameki.css";
 import { LabMark } from "../icons";
+
+// YURAMEKI's own tab icon (the rose disc with its two ripples, from the tool's own site)
+// instead of the lab's bottle; the header keeps the lab's mark.
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      { url: "/yurameki/icon.svg", type: "image/svg+xml" },
+      { url: "/yurameki/icon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/yurameki/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
 
 /**
  * Everything under /yurameki, with the lab's own header above it and

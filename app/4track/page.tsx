@@ -25,6 +25,15 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/4track" },
+  // Its own tab icon: the cassette from the tool's toolbar, minus the hub dots that
+  // vanish at sixteen pixels, on the page's cream.
+  icons: {
+    icon: [
+      { url: "/tools/4track/icons/favicon.svg", type: "image/svg+xml" },
+      { url: "/tools/4track/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/tools/4track/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     type: "website",
     url: "/4track",
