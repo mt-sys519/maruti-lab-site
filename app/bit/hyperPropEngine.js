@@ -1291,7 +1291,26 @@ export function mountHyperProp(root) {
   const held = new Map();
   const known = new Set();
   const lastTap = { L: -Infinity, R: -Infinity };
-  const buttonOf = (t) => { const b = t.target instanceof Element ? t.target.closest('[data-k]') : null; return b && root.contains(b) ? b : null; };
+  // A fingertip drumming without looking lands a few millimetres off, often on the rim
+  // round a pedal or in the gap between the two, and a press there used to be lost. Any
+  // touch within 1.3 radii of a pedal's centre - the gap, the well and a few px past it -
+  // is that pedal, the nearer one. Either pedal counts the same, so nothing is lost by
+  // it. A touch right on another button is still that button.
+  const pedalEls = [...root.querySelectorAll('[data-k="L"], [data-k="R"]')];
+  function pedalNear(x, y) {
+    let best = null, bd = Infinity;
+    for (const p of pedalEls) {
+      const r = p.getBoundingClientRect(), rad = p.offsetWidth / 2;
+      const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)) / rad;
+      if (d < 1.3 && d < bd) { bd = d; best = p; }
+    }
+    return best;
+  }
+  const buttonOf = (t) => {
+    const b = t.target instanceof Element ? t.target.closest('[data-k]') : null;
+    if (b && root.contains(b)) return b;
+    return pedalNear(t.clientX, t.clientY);
+  };
   function adopt(t, fresh) {
     known.add(t.identifier);
     const b = buttonOf(t);
