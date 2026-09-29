@@ -263,8 +263,6 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .sprevs.many img{max-width:78%}
 .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(75,63,58,.12);flex:none}
 .ic svg{width:19px;height:19px}
-.ctas{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px}
-.ctas .pill[hidden]{display:none}
 .wtabs{margin:4px 0 12px}
 .wcard .tag{position:absolute;left:5px;top:5px;font:500 9.5px Jost,var(--ui);background:rgba(255,252,249,.88);border-radius:6px;padding:2px 6px}
 .mythumb{width:40px;height:50px;object-fit:cover;border-radius:6px;flex:none;box-shadow:0 1px 4px rgba(110,84,70,.18)}
@@ -436,7 +434,6 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <button class="pill dark big" data-pick>写真をえらぶ</button>
   <p class="privacy">写真はこの端末の中だけで使われます</p>
   <p class="privacy note">写真は何枚でもまとめて選べます（1枚ずつページになります）</p>
-  <div class="ctas"><button class="pill ghost" id="tplCta" hidden>型から作る</button><button class="pill ghost" id="worksCta" hidden>つくったもの</button></div>
 </section>
 
 <div class="pick"><!-- the finder sticks only while the list is on screen -->
@@ -863,9 +860,8 @@ async function openWorks(){
   $('#whome').hidden=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   $('#wsheet').hidden=false;
 }
-async function refreshWorksCta(){const n=(await app.listWorks().catch(()=>[])).length;$('#worksCta').hidden=$('#worksTop').hidden=!n;$('#worksCta').textContent=`つくったもの（${n}）`}
-async function refreshTplCta(){const n=(await app.listDesigns().catch(()=>[])).length;$('#tplCta').hidden=!n;$('#tplCta').textContent=`型から作る（${n}）`}
-$('#worksTop').onclick=openWorks;$('#worksCta').onclick=openWorks;$('#tplCta').onclick=openTpl;
+async function refreshWorksCta(){$('#worksTop').hidden=!(await app.listWorks().catch(()=>[])).length}
+$('#worksTop').onclick=openWorks;
 /* header menu (phones) and the 特長 link: glide down to the section instead of jumping */
 $('#menuBtn').onclick=()=>{$('#msheet').hidden=false};
 $('#msheet').addEventListener('click',e=>{
@@ -878,7 +874,7 @@ document.addEventListener('click',e=>{
   e.preventDefault();$('#msheet').hidden=true;$('.why').scrollIntoView({behavior:'smooth'});
 });
 app.on('saved',refreshWorksCta);
-app.on('designs',()=>{refreshTplCta();if(!$('#wtpl').hidden)renderTpl()});
+app.on('designs',()=>{if(!$('#wtpl').hidden)renderTpl()});
 // A 型 card opens the photo picker right away (it has to happen inside the tap), then fills the frames.
 let pickTpl=null;
 $('#tfile').addEventListener('change',async e=>{
@@ -923,7 +919,7 @@ $('#wfile').addEventListener('change',async e=>{
     $('#wsheet').hidden=true;refreshWorksCta();app.openEditor();
   }catch{app.toast('piclea のバックアップとして読めませんでした')}
 });
-refreshWorksCta();refreshTplCta();
+refreshWorksCta();
 app.on('closed',()=>{renderGrid();changed()});
 
 /* ---------- sheet: one font large; drag a text to move it, swipe for the next font ---------- */
