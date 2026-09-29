@@ -29,7 +29,8 @@ const on=(n,f)=>(listeners[n]??=[]).push(f);
 
 const clone=o=>JSON.parse(JSON.stringify(o,(k,v)=>k.startsWith('_')?undefined:v));
 const sel=()=>D.layers.find(l=>l.id===D.sel);
-const isText=L=>L&&L.type!=='image';
+const isText=L=>!!L&&!L.type,isImg=L=>!!L&&L.type==='image',isShape=L=>!!L&&L.type==='shape';
+const bgOf=pg=>pg.bg||{type:'photo'},photoBg=pg=>bgOf(pg).type==='photo';
 function syncCur(){P.pages[P.cur]=clone(D)}
 function loadInto(pg){for(const k of Object.keys(D))delete D[k];Object.assign(D,clone(pg))}
 function withPage(pg,fn){const keep=clone(D);loadInto(pg);try{return fn()}finally{loadInto(keep)}}
@@ -221,13 +222,30 @@ function drawImageLayer(c,L,thumb){
   c.restore();
   return {W:f.w,H:f.h};
 }
+// A shape: rectangle, rounded or ellipse, of any width and height, to lay under words.
+function shapePath(c,L){
+  c.beginPath();
+  if(L.kind==='ellipse')c.ellipse(0,0,L.w/2,L.h/2,0,0,Math.PI*2);
+  else c.roundRect(-L.w/2,-L.h/2,L.w,L.h,L.kind==='round'?Math.min(L.w,L.h)/2*L.r/100:0);
+}
+function drawShape(c,L){
+  c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
+  const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
+  if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,()=>{shapePath(c,L);c.fillStyle=rgba(L.color,Math.max(L.a,.01));c.fill()});
+  shapePath(c,L);c.fillStyle=rgba(L.color,L.a);c.fill();
+  if(L.line.on){c.lineWidth=L.line.w;c.strokeStyle=L.line.color;c.stroke()}
+  c.restore();
+  return {W:L.w,H:L.h};
+}
 // o: {ov:{id,font}, grad:index, thumb:bool, ui:'edit'|'mark', kk: output px per screen px}. Returns metrics per layer id.
 function draw(c,o={}){
   c.clearRect(0,0,D.W,D.H);
-  const ph=cur(),src=ph&&(o.thumb?ph.small:ph.img);
-  if(src)drawPhoto(c,src);
-  else{const [a,b]=GRADS[(o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
-  const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(c,L,o.ov):drawImageLayer(c,L,o.thumb));
+  // The background is the photo, one colour, or a soft gradient. The photo stays kept while it is not shown.
+  const bg=bgOf(D),ph=cur(),src=ph&&(o.thumb?ph.small:ph.img);
+  if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H)}
+  else if(bg.type==='photo'&&src)drawPhoto(c,src);
+  else{const [a,b]=GRADS[(bg.type==='grad'?bg.grad:o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
+  const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
   const L=sel(),kk=o.kk||1;
   if(o.ui==='edit'&&G.guides){
     c.save();c.strokeStyle='#c49a90';c.lineWidth=1.5*kk;
@@ -245,6 +263,7 @@ function draw(c,o={}){
       const h=handles(L,M,kk),dot=(x,y,r)=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();c.stroke()};
       c.save();c.fillStyle='#fff';c.strokeStyle='rgba(40,25,15,.3)';c.lineWidth=kk;c.shadowColor='rgba(40,25,15,.3)';c.shadowBlur=4;
       for(const q of h.corners)dot(q.x,q.y,6.5*kk);
+      for(const q of Object.values(h.edges)){c.beginPath();c.roundRect(q.x-4.5*kk,q.y-4.5*kk,9*kk,9*kk,2.5*kk);c.fill();c.stroke()}
       dot(h.rot.x,h.rot.y,13*kk);c.restore();
       rotIcon(c,h.rot.x,h.rot.y,kk);
     }
@@ -263,8 +282,10 @@ function box(L,M,kk){const m=M.get(L.id),f=isText(L)&&L.band.on?frameSize(L,m):{
 function handles(L,M,kk){
   const b=box(L,M,kk),cs=Math.cos(L.rot),sn=Math.sin(L.rot),m=12*kk;
   const at=(lx,ly)=>({x:Math.max(m,Math.min(D.W-m,L.x+lx*cs-ly*sn)),y:Math.max(m,Math.min(D.H-m,L.y+lx*sn+ly*cs))});
-  const below=b.h/2+30*kk,room=L.y+below*cs+18*kk<D.H;
-  return {corners:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),rot:at(0,room?below:-below)};
+  const below=b.h/2+34*kk,room=L.y+below*cs+18*kk<D.H;
+  // a shape also stretches one way from the middle of each side
+  const edges=isShape(L)?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
+  return {corners:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
 function hitLayer(M,p,kk,only){
@@ -284,9 +305,11 @@ async function makePhoto(url,id=newId('p')){
   photos.set(id,{url,img:im,small:sm});return id;
 }
 const anyPhoto=()=>!!D.photoId||P.pages.some(pg=>pg&&pg.photoId);
+// worth keeping: it has a photo, or a plain or gradient background someone chose
+const worthSaving=()=>anyPhoto()||!photoBg(D)||P.pages.some(pg=>pg&&!photoBg(pg));
 async function setPhoto(url){
   const first=!anyPhoto();
-  D.photoId=await makePhoto(url);D.photo={s:1,ox:0,oy:0};
+  D.photoId=await makePhoto(url);D.photo={s:1,ox:0,oy:0};D.bg={type:'photo'};
   if(D.ratio==='元の比率')applyRatio('元の比率');
   // text written for the plain backdrop turns white with a soft shadow once a photo is behind it
   if(first)for(const L of D.layers)if(L.color===INK&&!L.stroke.on&&!L.band.on){L.color='#ffffff';L.shadow={...SHADOW}}
@@ -295,7 +318,7 @@ async function setPhoto(url){
 // New pages start with the current page's design: a carousel usually carries the same look.
 async function addPhotos(urls){
   syncCur();const design=clone(D);
-  for(const url of urls){const id=await makePhoto(url);P.pages.push({...clone(design),layers:design.layers.filter(isText),photoId:id,photo:{s:1,ox:0,oy:0}})}
+  for(const url of urls){const id=await makePhoto(url);P.pages.push({...clone(design),layers:design.layers.filter(L=>!isImg(L)),photoId:id,photo:{s:1,ox:0,oy:0}})}
   commit();emit('pages');
 }
 
@@ -338,11 +361,22 @@ function pt(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r
 function hitHandle(L,p){
   if(!L||!G.M.has(L.id))return null;
   const h=handles(L,G.M,kE()),near=q=>Math.hypot(p.x-q.x,p.y-q.y)<22*kE();
-  return near(h.rot)?'rot':h.corners.some(near)?'scale':null;
+  if(near(h.rot))return 'rot';if(h.corners.some(near))return 'scale';
+  const e=Object.entries(h.edges).find(([,q])=>Math.hypot(p.x-q.x,p.y-q.y)<18*kE());return e?'edge:'+e[0]:null;
+}
+// Dragging a side of a shape: the opposite side stays put.
+function stretch(L,g,p){
+  const dx=p.x-g.x0,dy=p.y-g.y0,cs=Math.cos(g.rot),sn=Math.sin(g.rot),q={x:dx*cs+dy*sn,y:-dx*sn+dy*cs};
+  const horiz=g.e==='r'||g.e==='l',s=g.e==='r'||g.e==='b'?1:-1,old=horiz?g.w0:g.h0;
+  const size=Math.max(6,s*(horiz?q.x:q.y)-g.pad+old/2),shift=s*(size-old)/2,sx=horiz?shift:0,sy=horiz?0:shift;
+  if(horiz)L.w=size;else L.h=size;
+  L.x=g.x0+sx*cs-sy*sn;L.y=g.y0+sx*sn+sy*cs;
 }
 const two=()=>{const [a,b]=[...G.ptrs.values()];return {d:Math.hypot(a.x-b.x,a.y-b.y),a:Math.atan2(b.y-a.y,b.x-a.x)}};
 const SZ=L=>isText(L)?'size':'w';
-const clampSz=(L,v)=>isText(L)?Math.max(12,Math.min(900,v)):Math.max(40,Math.min(3000,v));
+const clampSz=(L,v)=>isText(L)?Math.max(12,Math.min(900,v)):Math.max(isShape(L)?6:40,Math.min(3000,v));
+// Grow or shrink by a ratio from where the gesture began; a shape keeps its proportions.
+function scaleBy(L,g,r){L[SZ(L)]=clampSz(L,g.size*r);if(isShape(L))L.h=Math.max(6,g.h*L.w/g.size)}
 function snapAngle(a){const d=Math.round(a/(Math.PI/2))*(Math.PI/2);return Math.abs(a-d)<.05?d:a}
 function deselect(){D.sel=null;tool=null;panel();paint()}
 
@@ -352,12 +386,13 @@ cv.addEventListener('pointerdown',e=>{
   if(G.ptrs.size===2){
     const t=two();
     if(tool==='bg')G.g={mode:'pzoom',t,s:D.photo.s};
-    else if(L)G.g={mode:'pinch',t,size:L[SZ(L)],rot:L.rot};
+    else if(L)G.g={mode:'pinch',t,size:L[SZ(L)],h:L.h,rot:L.rot};
     return;
   }
-  if(tool==='bg'){G.g={mode:'pan',p,ox:D.photo.ox,oy:D.photo.oy};return}
+  if(tool==='bg'){if(photoBg(D))G.g={mode:'pan',p,ox:D.photo.ox,oy:D.photo.oy};return}
   const h=hitHandle(L,p);
-  if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)]};return}
+  if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h};return}
+  if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:10*kE()};return}
   if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
   const H=hitLayer(G.M,p,kE());
   if(H){const was=D.sel===H.id;D.sel=H.id;G.g={mode:'move',p,x:H.x,y:H.y,was,moved:false};if(!was)panel()}
@@ -368,8 +403,9 @@ cv.addEventListener('pointermove',e=>{
   const g=G.g;if(!G.ptrs.has(e.pointerId)||!g)return;const p=pt(e);G.ptrs.set(e.pointerId,p);const L=sel();
   if(g.mode==='pan'){D.photo.ox=g.ox+p.x-g.p.x;D.photo.oy=g.oy+p.y-g.p.y}
   else if(g.mode==='pzoom'&&G.ptrs.size===2){D.photo.s=Math.max(1,Math.min(4,g.s*two().d/g.t.d))}
-  else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();L[SZ(L)]=clampSz(L,g.size*t.d/g.t.d);L.rot=g.rot+t.a-g.t.a}
-  else if(g.mode==='scale'&&L){L[SZ(L)]=clampSz(L,g.size*Math.hypot(p.x-L.x,p.y-L.y)/g.d)}
+  else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=g.rot+t.a-g.t.a}
+  else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d)}
+  else if(g.mode==='edge'&&L){stretch(L,g,p)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
   else if(g.mode==='move'&&L){
     if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;g.moved=true;
@@ -389,13 +425,13 @@ function endPtr(e){
   if(G.ptrs.size)return;
   const tap=G.g&&G.g.mode==='move'&&!G.g.moved,was=tap&&G.g.was,L=sel();
   G.g=null;G.guides=null;commit();paint();
-  if(tap&&L&&!isText(L)&&!L.photoId)$('#eimgswap').click(); // an empty frame: one tap to fill it
+  if(tap&&isImg(L)&&!L.photoId)$('#eimgswap').click(); // an empty frame: one tap to fill it
   else if(was&&isText(L))openText();                          // a second tap on a text: type
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{
   e.preventDefault();const L=sel(),f=Math.exp(-e.deltaY/400);
-  if(tool==='bg')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(L)L[SZ(L)]=clampSz(L,L[SZ(L)]*f);else return;
+  if(tool==='bg')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(L)scaleBy(L,{size:L[SZ(L)],h:L.h},f);else return;
   paint();clearTimeout(textTimer);textTimer=setTimeout(commit,300);
 },{passive:false});
 // Off the picture (the grey around it): let go of the selection, or close the open tool.
@@ -423,11 +459,12 @@ const I={
 };
 const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
-  none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['bg','背景',I.bg],['pages','ページ',I.pages],['design','型',I.tpl]],
+  none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','その他',I.more]],
+  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco','線・影',I.deco],['more','その他',I.more]],
   image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['deco','フチ・影',I.deco],['more','その他',I.more]],
 };
-const ACT=new Set(['done','addtext','addimg','design','edit','swap']);
+const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap']);
 
 const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
@@ -443,10 +480,22 @@ const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const btns=list=>`<div class="ebtns">${list.map(([a,l,dark])=>`<button class="eb${dark?' dark':''}" data-act="${a}">${l}</button>`).join('')}</div>`;
 
 const DRAW={
-  bg:()=>`<div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>
-    <label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
-    <div class="ebtns"><button class="eb${D.photoId?'':' dark'}" id="ephoto">${D.photoId?'背景の写真を変える':'背景の写真をはめる'}</button></div>
-    <p class="enote">写真をドラッグで位置、2本指（パソコンはホイール）で拡大。比率は全ページ共通です。</p>`,
+  bg:()=>{
+    const bg=bgOf(D);
+    const body=bg.type==='color'?`<div class="pal" data-bgc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===bg.color?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(bg.color)?'':' on'}" aria-label="ほかの色"><input type="color" data-bgcolor value="${bg.color}"></label></div>`
+      :bg.type==='grad'?`<div class="pal grads" data-bgg>${GRADS.map(([a,b],i)=>`<button style="--c:linear-gradient(160deg,${a},${b})" data-g="${i}" class="${i===bg.grad?'on':''}" aria-label="グラデーション${i+1}"></button>`).join('')}</div>`
+      :`<label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
+        <div class="ebtns"><button class="eb${D.photoId?'':' dark'}" id="ephoto">${D.photoId?'背景の写真を変える':'背景の写真をはめる'}</button></div>
+        <p class="enote">写真をドラッグで位置、2本指（パソコンはホイール）で拡大。</p>`;
+    return `<div class="eseg wide" data-bgtype>${[['photo','写真'],['color','単色'],['grad','グラデーション']].map(([k,l])=>`<button data-v="${k}" class="${bg.type===k?'on':''}">${l}</button>`).join('')}</div>${body}
+      <h5 class="esub">比率（全ページ共通）</h5><div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>`;
+  },
+  scolor:()=>`${pal('color')}${slider('濃さ','a',0,1,.01)}`,
+  sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['ellipse','丸・だ円']])}
+    ${slider('幅','w',6,3000,1)}${slider('高さ','h',6,3000,1)}${L.kind==='round'?slider('角丸','r',0,100,1):''}
+    ${btns([['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
+  sdeco:L=>`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>
+    <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,.5)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`,
   pages:()=>`<div class="pstrip" id="pstrip"></div>
     ${btns([['pleft','← 前へ'],['pright','後ろへ →'],['pdel','このページを外す']])}`,
   font:L=>{
@@ -477,18 +526,24 @@ const DRAW={
 function addImage(photoId,i=0){
   const L={id:uid++,type:'image',photoId,x:D.W*(.5+.05*i),y:D.H*(.42+.05*i),w:D.W*.46,rot:0,shape:'round',r:5,ar:0,zs:1,zx:0,zy:0,opacity:1,
     border:{on:true,color:'#ffffff',w:2.5},shadow:{on:true,color:'#28190f',a:.28,x:0,y:1.5,blur:6}};
-  D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // above other photos, under the texts
+  D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // above other photos and shapes, under the texts
+  D.sel=L.id;return L;
+}
+function addShape(){
+  const L={id:uid++,type:'shape',kind:'rect',x:D.W/2,y:D.H/2,w:D.W,h:D.H*.2,rot:0,r:40,color:'#ffffff',a:.85,opacity:1,
+    line:{on:false,color:INK,w:4},shadow:{on:false,color:'#28190f',a:.3,x:0,y:2,blur:8}};
+  D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // under the texts, so words can sit on it
   D.sel=L.id;return L;
 }
 async function removeSelected(){
   const L=sel();if(!L)return;
-  if(!await ask(isText(L)?'この文字を消しますか？':'この写真を消しますか？',{ok:'消す'}))return;
+  if(!await ask(isText(L)?'この文字を消しますか？':isShape(L)?'この図形を消しますか？':'この写真を消しますか？',{ok:'消す'}))return;
   removeLayer(L);tool=null;commit();panel();paint();
 }
 let fontIO;
 const bodyEl=$('#ebody');
 function panel(){
-  const L=sel(),items=BAR[!L?'none':isText(L)?'text':'image'](L);
+  const L=sel(),items=BAR[!L?'none':isText(L)?'text':isShape(L)?'shape':'image'](L);
   if(L&&isText(L)){L.band.shape??='rect';L.band.line??={on:false,color:INK,w:3}}
   if(tool&&(ACT.has(tool)||!items.some(x=>x[0]===tool)))tool=null;
   $('#ebar').innerHTML=items.map(([k,l,svg])=>`<button data-tool="${k}" class="${tool===k?'on':''}${k==='done'?' done':''}">${svg}<span>${l}</span></button>`).join('');
@@ -512,6 +567,7 @@ $('#ebar').addEventListener('click',e=>{
     case 'done':deselect();return;
     case 'addtext':addLayer(null);commit();panel();refresh();openText(true);return;
     case 'addimg':$('#eimg').click();return;
+    case 'addshape':addShape();tool='sform';commit();panel();paint();return;
     case 'design':openDesign();return;
     case 'edit':openText();return;
     case 'swap':$('#eimgswap').click();return;
@@ -528,6 +584,7 @@ function removeLayer(L){D.layers=D.layers.filter(x=>x!==L);if(D.sel===L.id)D.sel
 bodyEl.addEventListener('input',e=>{
   const L=sel(),t=e.target;
   if(t.dataset.photo!=null){D.photo.s=+t.value;paint();return}
+  if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};t.parentElement.classList.add('on');paint();return}
   if(!L||!t.dataset.k)return;
   put(L,t.dataset.k,t.type==='color'?t.value:+t.value);
   const v=bodyEl.querySelector(`[data-v="${t.dataset.k}"]`);if(v)v.textContent=fmt(t.dataset.k)(+t.value);
@@ -546,6 +603,13 @@ bodyEl.addEventListener('click',e=>{
   if(act==='del'&&L){removeSelected();return}
   if(act==='front'&&L){const i=D.layers.indexOf(L);if(i<D.layers.length-1){D.layers.splice(i,1);D.layers.splice(i+1,0,L);commit();paint()}return}
   if(act==='back'&&L){const i=D.layers.indexOf(L);if(i>0){D.layers.splice(i,1);D.layers.splice(i-1,0,L);commit();paint()}return}
+  if(t.closest('[data-bgtype]')){const v=t.dataset.v,old=bgOf(D);D.bg=v==='color'?{type:v,color:old.color||'#f3e9dc'}:v==='grad'?{type:v,grad:old.grad||0}:{type:'photo'};commit();panel();paint();return}
+  if(t.closest('[data-bgc]')&&t.dataset.c){D.bg={type:'color',color:t.dataset.c};commit();panel();paint();return}
+  if(t.closest('[data-bgg]')){D.bg={type:'grad',grad:+t.dataset.g};commit();panel();paint();return}
+  if(L&&isShape(L)&&(act==='fullw'||act==='fullh'||act==='center')){
+    if(act==='fullw')Object.assign(L,{w:D.W,x:D.W/2,rot:0});else if(act==='fullh')Object.assign(L,{h:D.H,y:D.H/2,rot:0});else Object.assign(L,{x:D.W/2,y:D.H/2});
+    commit();panel();paint();return;
+  }
   if(t.closest('[data-ratio]')){applyRatio(t.dataset.v);sizeCanvas();commit();panel();refresh();return}
   if(t.closest('[data-lang]')){fontLang=t.dataset.v;panel();return}
   if(t.closest('[data-deco]')){decoSub=t.dataset.v;panel();return}
@@ -565,10 +629,10 @@ const flo=$('#efloat');
 function placeFloat(){
   const L=sel(),busy=G.g&&(G.g.mode!=='move'||G.g.moved);
   if(!L||tool==='bg'||!tedit.hidden||busy||!G.M.has(L.id)){flo.hidden=true;return}
-  const key=isText(L)?'t':L.photoId?'i':'e';
+  const key=isText(L)?'t':isShape(L)?'s':L.photoId?'i':'e';
   if(flo.dataset.key!==key){
     flo.dataset.key=key;
-    flo.innerHTML=(key==='t'?'<button data-fl="edit">編集</button>':`<button data-fl="swap">${key==='i'?'差し替え':'はめる'}</button>`)+'<button data-fl="dup">複製</button><button data-fl="del">削除</button>';
+    flo.innerHTML=(key==='t'?'<button data-fl="edit">編集</button>':key==='s'?'':`<button data-fl="swap">${key==='i'?'差し替え':'はめる'}</button>`)+'<button data-fl="dup">複製</button><button data-fl="del">削除</button>';
   }
   flo.hidden=false;
   const h=handles(L,G.M,kE()),xs=h.corners.map(q=>q.x),ys=h.corners.map(q=>q.y);
@@ -632,7 +696,7 @@ $('#eimg').addEventListener('change',async e=>{
   catch{toast('読み込めない画像がありました')}
 });
 $('#eimgswap').addEventListener('change',async e=>{
-  const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!L||isText(L))return;
+  const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!isImg(L))return;
   try{L.photoId=await makePhoto(await loadPhoto(f));Object.assign(L,{zs:1,zx:0,zy:0});commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
 });
 $('#eadd').addEventListener('change',async e=>{
@@ -644,11 +708,22 @@ $('#eadd').addEventListener('change',async e=>{
 /* ---------- design: everything but the photo ---------- */
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}}};
 // Stored relative to the picture size so a design fits any ratio.
-const normDesign=()=>({v:1,layers:clone(D.layers).filter(isText).map(L=>({...L,x:L.x/D.W,y:L.y/D.H,size:L.size/D.W}))});
-function applyDesign(d){const texts=clone(d.layers).map(L=>({...L,id:uid++,x:L.x*D.W,y:L.y*D.H,size:L.size*D.W}));D.layers=[...D.layers.filter(L=>!isText(L)),...texts];D.sel=texts[0]?.id??null}
+// Positions relative to the picture; sizes relative to its width (a shape's height too, so it keeps its look).
+function normL(L,W,H){
+  const o={...clone(L),x:L.x/W,y:L.y/H};
+  if(isText(L))o.size=L.size/W;else{o.w=L.w/W;if(isShape(L))o.h=L.h/W}
+  return o;
+}
+function denormL(L,W,H){
+  const o={...L,id:uid++,x:L.x*W,y:L.y*H};
+  if(isText(L))o.size=L.size*W;else{o.w=L.w*W;if(isShape(L))o.h=L.h*W}
+  return o;
+}
+const normDesign=()=>({v:1,layers:D.layers.filter(L=>!isImg(L)).map(L=>normL(L,D.W,D.H))});
+function applyDesign(d){const ls=clone(d.layers).map(L=>denormL(L,D.W,D.H));D.layers=[...D.layers.filter(isImg),...ls];D.sel=null}
 let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 function openDesign(){renderDesign();$('#dsheet').hidden=false}
-const tplMeta=t=>`${t.pages.length>1?t.pages.length+'枚組・':''}写真${t.slots}枚`;
+const tplMeta=t=>`${t.pages.length>1?t.pages.length+'枚組・':''}${t.slots?`写真${t.slots}枚`:'写真なし'}`;
 async function renderDesign(){
   const clip=store.get('piclea.clip',null);
   $('#dpaste').disabled=!clip;$('#dall').disabled=P.pages.length<2;
@@ -698,15 +773,15 @@ $('#dsheet').addEventListener('click',async e=>{
 // frames that keep their shape; each page's background is a frame too. A 型 of several pages is a cover
 // plus inside pages: when more photos come than it has pages, its last page repeats.
 function normPage(pg){
-  return {layers:pg.layers.map(L=>isText(L)?{...clone(L),x:L.x/pg.W,y:L.y/pg.H,size:L.size/pg.W}
-    :(f=>({...clone(L),photoId:null,ar:f.w/f.h,x:L.x/pg.W,y:L.y/pg.H,w:L.w/pg.W,zs:1,zx:0,zy:0}))(imgFrame(L)))};
+  return {bg:clone(bgOf(pg)),layers:pg.layers.map(L=>!isImg(L)?normL(L,pg.W,pg.H)
+    :(f=>({...normL(L,pg.W,pg.H),photoId:null,ar:f.w/f.h,zs:1,zx:0,zy:0}))(imgFrame(L)))};
 }
 function tplPage(tp,W,H,ratio){
-  return {ratio,W,H,photo:{s:1,ox:0,oy:0},sel:null,photoId:null,
-    layers:clone(tp.layers).map(L=>isText(L)?{...L,id:uid++,x:L.x*W,y:L.y*H,size:L.size*W}:{...L,id:uid++,x:L.x*W,y:L.y*H,w:L.w*W,photoId:null})};
+  return {ratio,W,H,photo:{s:1,ox:0,oy:0},sel:null,photoId:null,bg:clone(tp.bg||{type:'photo'}),
+    layers:clone(tp.layers).map(L=>isImg(L)?{...denormL(L,W,H),photoId:null}:denormL(L,W,H))};
 }
-const slotCount=pages=>pages.reduce((n,p)=>n+1+p.layers.filter(L=>!isText(L)).length,0);
-const emptySlots=()=>{syncCur();return P.pages.reduce((n,pg)=>n+(pg.photoId?0:1)+pg.layers.filter(L=>!isText(L)&&!L.photoId).length,0)};
+const slotCount=pages=>pages.reduce((n,p)=>n+(photoBg(p)?1:0)+p.layers.filter(isImg).length,0);
+const emptySlots=()=>{syncCur();return P.pages.reduce((n,pg)=>n+(pg.photoId||!photoBg(pg)?0:1)+pg.layers.filter(L=>isImg(L)&&!L.photoId).length,0)};
 function pageThumb(pg,grad){
   const c=document.createElement('canvas'),h=260,w=Math.round(h*pg.W/pg.H);c.width=w;c.height=h;
   const x=c.getContext('2d');x.setTransform(w/pg.W,0,0,h/pg.H,0,0);withPage(pg,()=>draw(x,{thumb:true,grad}));return c.toDataURL('image/jpeg',.75);
@@ -745,7 +820,7 @@ async function fromTemplate(id,urls){
   const W=OUT_W,H=Math.round(W/(r[1]||(first?first.img.width/first.img.height:.8))),q=[...ids],pages=[];
   for(let i=0;i<t.pages.length||q.length;i++){
     const pg=tplPage(t.pages[Math.min(i,t.pages.length-1)],W,H,r[0]);
-    pg.photoId=q.shift()??null;for(const L of pg.layers)if(!isText(L))L.photoId=q.shift()??null;
+    if(photoBg(pg))pg.photoId=q.shift()??null;for(const L of pg.layers)if(isImg(L))L.photoId=q.shift()??null;
     pages.push(pg);
   }
   clearTimeout(saveT);savedPhotos=new Set();
@@ -756,9 +831,9 @@ async function fromTemplate(id,urls){
 // fill the frames in order, and the background stays.
 function applyTemplate(t){
   const pg=tplPage(t.pages[Math.min(P.cur,t.pages.length-1)],D.W,D.H,D.ratio);
-  const old=D.layers.filter(L=>!isText(L)&&L.photoId);
-  for(const L of pg.layers)if(!isText(L)){const o=old.shift();if(o)Object.assign(L,{photoId:o.photoId})}
-  D.layers=[...old,...pg.layers];D.sel=pg.layers.find(isText)?.id??null;
+  const old=D.layers.filter(L=>isImg(L)&&L.photoId);
+  for(const L of pg.layers)if(isImg(L)){const o=old.shift();if(o)Object.assign(L,{photoId:o.photoId})}
+  D.layers=[...old,...pg.layers];D.bg=pg.bg;D.sel=null;
 }
 
 /* ---------- works kept on this device (IndexedDB), plus a backup file ---------- */
@@ -772,8 +847,8 @@ const DB={
   async run(store,mode,fn){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(store,mode),req=fn(t.objectStore(store));t.oncomplete=()=>res(req?.result);t.onerror=t.onabort=()=>rej(t.error)})},
 };
 let workId=null,savedPhotos=new Set(),saveT=0,asked=false;
-const usedPhotos=()=>[...new Set(P.pages.flatMap(pg=>[pg.photoId,...pg.layers.filter(L=>!isText(L)).map(L=>L.photoId)]).filter(Boolean))];
-function autosave(){if(!anyPhoto())return;clearTimeout(saveT);saveT=setTimeout(()=>saveWork().catch(err=>{console.warn(err);toast('端末に保存できませんでした')}),1200)}
+const usedPhotos=()=>[...new Set(P.pages.flatMap(pg=>[pg.photoId,...pg.layers.filter(isImg).map(L=>L.photoId)]).filter(Boolean))];
+function autosave(){if(!worthSaving())return;clearTimeout(saveT);saveT=setTimeout(()=>saveWork().catch(err=>{console.warn(err);toast('端末に保存できませんでした')}),1200)}
 const workThumb=()=>pageThumb(P.pages[0]);
 async function saveWork(){
   syncCur();if(!P.pages.length)return;
@@ -850,7 +925,7 @@ async function importWork(data){
   if(data.app!=='piclea'||!data.doc?.pages)throw new Error('not piclea');
   const map={};
   for(const [old,url] of Object.entries(data.photos||{})){const blob=await (await fetch(url)).blob();map[old]=await makePhoto(URL.createObjectURL(blob))}
-  for(const pg of data.doc.pages){pg.photoId=map[pg.photoId]??null;for(const L of pg.layers)if(!isText(L))L.photoId=map[L.photoId]??null}
+  for(const pg of data.doc.pages){pg.photoId=map[pg.photoId]??null;for(const L of pg.layers)if(isImg(L))L.photoId=map[L.photoId]??null}
   savedPhotos=new Set();adopt(data.doc,null);await saveWork();
 }
 // The first tap makes the file; the second, a fresh gesture, hands it over (iOS only opens the share sheet then).
@@ -921,5 +996,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
+  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
 })();

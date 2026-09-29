@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- UI -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@300;400&family=Marcellus&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap&text=%E5%86%99%E7%9C%9F%E3%81%AB%E3%80%81%E4%BC%BC%E5%90%88%E3%81%86%E6%96%87%E5%AD%97%E3%82%92%E3%80%82" rel="stylesheet">
 <style>
 @font-face{font-family:"Piclea Blank";src:url(fonts/AdobeBlank2.otf.woff) format("woff")}
@@ -34,7 +34,7 @@
 @font-face{font-family:"Motoya L Cedar";src:url(fonts/MTLc3m.woff2) format("woff2")}
 
 :root{
-  --milk:#f3ede7;--ui:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;--stage:#e7e1db;--ink:#4b3f3a;--mocha:#8b7a6f;--rose:#c49a90;--line:rgba(75,63,58,.12);
+  --milk:#f3ede7;--ui:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;--stage:#e7e1db;--brand:linear-gradient(118deg,#cda59a 0%,#a98078 50%,#7a605a 100%);--ink:#4b3f3a;--mocha:#8b7a6f;--rose:#c49a90;--line:rgba(75,63,58,.12);
   --glass:rgba(255,252,249,.52);--glass-edge:rgba(255,255,255,.7);
   --shadow:0 10px 30px rgba(110,84,70,.12),0 2px 6px rgba(110,84,70,.06);
   --tc:#4b3f3a;--ts:none;--fsv:30;--tx:50%;--ty:50%;
@@ -58,9 +58,10 @@ button{cursor:pointer;background:none;border:0;padding:0}
 
 /* header */
 .bar{display:flex;align-items:center;justify-content:space-between;max-width:1120px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 20px 6px}
-.logo{display:flex;align-items:baseline;gap:9px;text-decoration:none;color:inherit}
-.logo b{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;font-size:30px;letter-spacing:.01em;line-height:1}
-.logo small{font-family:Jost,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mocha)}
+/* logo: Marcellus capitals, the credit line in the same face so the two never argue */
+.logo{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-decoration:none;color:inherit}
+.logo b{font:400 21px/1 Marcellus,serif;letter-spacing:.3em;margin-right:-.3em;text-transform:uppercase}
+.logo small{font:400 9px/1 Marcellus,serif;letter-spacing:.3em;text-transform:uppercase;color:var(--mocha)}
 .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;font-size:13px;letter-spacing:.06em;transition:transform .15s,box-shadow .15s}
 .pill.dark{background:var(--ink);color:#fbf7f3;box-shadow:0 8px 20px rgba(75,63,58,.25)}
 .pill.dark:active{transform:scale(.97)}
@@ -149,7 +150,7 @@ body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-ali
 
 footer{max-width:1120px;margin:30px auto 0;padding:0 20px;font-size:11px;line-height:2;color:var(--mocha);text-align:center;letter-spacing:.04em}
 footer a{color:inherit;text-underline-offset:3px}
-footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15px;color:var(--ink)}
+footer .by{font:400 14px Marcellus,serif;letter-spacing:.3em;text-transform:uppercase;color:var(--ink)}
 
 @media (max-width:640px){
   .grid{grid-template-columns:repeat(2,1fr);gap:9px;padding:12px 12px 16px}
@@ -276,8 +277,8 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 /* editor: the picture first, one bar under it */
 .editor{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--stage)}
 .etop{flex:none;display:flex;align-items:center;gap:4px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 4px}
-.etitle{flex:1;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:21px;padding-left:4px;white-space:nowrap}
-.etitle small{font:400 11px var(--ui);font-style:normal;color:var(--mocha);opacity:0;transition:opacity .3s;margin-left:6px}
+.etitle{flex:1;font:400 16px Marcellus,serif;letter-spacing:.3em;text-transform:uppercase;padding-left:6px;white-space:nowrap}
+.etitle small{font:400 11px var(--ui);font-style:normal;letter-spacing:.04em;color:var(--mocha);opacity:0;transition:opacity .3s;margin-left:6px}
 .etitle small.on{opacity:1}
 .ebtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink)}
 .ebtn:active{background:rgba(75,63,58,.08)}
@@ -344,6 +345,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:rgba(75,63,58,.16)}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 .5px rgba(40,25,15,.18),0 2px 5px rgba(40,25,15,.22)}
 @media (min-width:900px){.ebar button{flex-basis:64px;font-size:11px}}
+/* the brand band: the one place with colour, like Canva's header */
+.bar{max-width:none;background:var(--brand);color:#fff;padding:calc(12px + env(safe-area-inset-top,0px)) max(20px,calc((100% - 1080px)/2)) 12px;box-shadow:0 8px 24px rgba(110,74,62,.18)}
+.bar .logo small{color:rgba(255,255,255,.78)}
+.bar .ic{background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);color:#fff}
+.bar .pill.ghost{background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.34);color:#fff}
+.bar .pill.dark{background:#fff;color:var(--ink);box-shadow:0 4px 12px rgba(60,35,28,.18)}
+.etop{background:var(--brand);color:#fff;padding-bottom:8px;box-shadow:0 6px 18px rgba(110,74,62,.2);position:relative;z-index:1}
+.etop .ebtn{color:#fff}
+.etop .ebtn:active{background:rgba(255,255,255,.16)}
+.etop .etitle small{color:rgba(255,255,255,.85)}
+.etop .pill.dark{background:#fff;color:var(--ink);box-shadow:0 4px 12px rgba(60,35,28,.18)}
+.esub{margin:4px 2px 8px;font-size:11px;font-weight:600;color:var(--mocha);letter-spacing:.04em}
+.pal.grads button{width:40px;height:40px;border-radius:12px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -728,8 +742,8 @@ function wtab(w){$$('#wtabs button').forEach(b=>b.classList.toggle('on',b.datase
 async function renderTpl(){
   const ts=await app.listDesigns().catch(()=>[]);
   $('#tgrid').innerHTML=ts.length?ts.map(t=>`
-    <div class="wcard" data-tpl="${t.id}" role="button" tabindex="0">
-      <img src="${t.thumb}" alt="">${t.pages.length>1?`<span class="tag">${t.pages.length}枚組</span>`:''}<b>${t.name.replace(/</g,'&lt;')}</b><small>写真${t.slots}枚</small>
+    <div class="wcard" data-tpl="${t.id}" data-slots="${t.slots}" role="button" tabindex="0">
+      <img src="${t.thumb}" alt="">${t.pages.length>1?`<span class="tag">${t.pages.length}枚組</span>`:''}<b>${t.name.replace(/</g,'&lt;')}</b><small>${t.slots?`写真${t.slots}枚`:'写真なし'}</small>
       <button class="wx" data-tdel="${t.id}" aria-label="消す">×</button>
     </div>`).join('')
     :'<p class="enote" style="grid-column:1/-1">まだ型がありません。編集画面の「デザイン」→「このページを型にする」で作れます。</p>';
@@ -767,7 +781,12 @@ $('#wsheet').addEventListener('click',async e=>{
   if(e.target.closest('[data-wimport]')){$('#wfile').click();return}
   const tdel=e.target.closest('[data-tdel]');
   if(tdel){const t=await app.getDesign(tdel.dataset.tdel);if(t&&await app.ask(`型「${t.name}」を消しますか？（元に戻せません）`,{ok:'消す'}))await app.deleteDesign(t.id);return}
-  const tc=e.target.closest('[data-tpl]');if(tc){pickTpl=tc.dataset.tpl;$('#tfile').click();return}
+  const tc=e.target.closest('[data-tpl]');
+  if(tc){
+    if(+tc.dataset.slots){pickTpl=tc.dataset.tpl;$('#tfile').click();return}
+    try{await app.fromTemplate(tc.dataset.tpl,[]);$('#wsheet').hidden=true;closeSheet();app.openEditor()}catch{app.toast('この型で作れませんでした')} // nothing to fill: open it as it is
+    return;
+  }
   const del=e.target.closest('[data-wdel]');
   if(del){
     const open=!!del.closest('.wcard.on');
