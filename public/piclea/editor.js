@@ -29,6 +29,7 @@ const on=(n,f)=>(listeners[n]??=[]).push(f);
 
 const clone=o=>JSON.parse(JSON.stringify(o,(k,v)=>k.startsWith('_')?undefined:v));
 const sel=()=>D.layers.find(l=>l.id===D.sel);
+const isText=L=>L&&L.type!=='image';
 function syncCur(){P.pages[P.cur]=clone(D)}
 function loadInto(pg){for(const k of Object.keys(D))delete D[k];Object.assign(D,clone(pg))}
 function withPage(pg,fn){const keep=clone(D);loadInto(pg);try{return fn()}finally{loadInto(keep)}}
@@ -154,7 +155,7 @@ function drawLayer(c,L,ov){
   }
   c.globalAlpha=L.opacity;
   // shadowBlur and offsets ignore the canvas transform, so scale them by hand for small previews
-  const k=c.getTransform().a;
+  const T=c.getTransform(),k=Math.hypot(T.a,T.b);
   const shadow=on=>{
     if(on&&L.shadow.on){c.shadowColor=rgba(L.shadow.color,L.shadow.a);c.shadowBlur=s*L.shadow.blur/100*k;c.shadowOffsetX=s*L.shadow.x/100*k;c.shadowOffsetY=s*L.shadow.y/100*k}
     else{c.shadowColor='transparent';c.shadowBlur=c.shadowOffsetX=c.shadowOffsetY=0}
@@ -172,13 +173,36 @@ function drawPhoto(c,src){
   D.photo.oy=Math.max(-(h-D.H)/2,Math.min((h-D.H)/2,D.photo.oy));
   c.drawImage(src,(D.W-w)/2+D.photo.ox,(D.H-h)/2+D.photo.oy,w,h);
 }
+// Overlaid photo: cropped to its frame (square, rounded, circle, ellipse), with an optional rim and shadow.
+function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:(L.ar||(ph?ph.img.width/ph.img.height:1));return {w:L.w,h:L.w/ar}}
+function imgPath(c,L,f){
+  c.beginPath();
+  if(L.shape==='circle'||L.shape==='ellipse')c.ellipse(0,0,f.w/2,f.h/2,0,0,Math.PI*2);
+  else c.roundRect(-f.w/2,-f.h/2,f.w,f.h,L.shape==='round'?Math.min(f.w,f.h)*L.r/100:0);
+}
+function drawImageLayer(c,L,thumb){
+  const ph=photos.get(L.photoId),f=imgFrame(L);
+  c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
+  const T=c.getTransform(),k=Math.hypot(T.a,T.b);
+  if(L.shadow.on){
+    c.save();c.shadowColor=rgba(L.shadow.color,L.shadow.a);c.shadowBlur=L.w*L.shadow.blur/100*k;c.shadowOffsetX=L.w*L.shadow.x/100*k;c.shadowOffsetY=L.w*L.shadow.y/100*k;
+    imgPath(c,L,f);c.fillStyle=L.border.on?L.border.color:'#fff';c.fill();c.restore();
+  }
+  c.save();imgPath(c,L,f);c.clip();
+  if(ph){const src=thumb?ph.small:ph.img,sc=Math.max(f.w/src.width,f.h/src.height)*L.zs,dw=src.width*sc,dh=src.height*sc;c.drawImage(src,-dw/2+L.zx*(dw-f.w)/2,-dh/2+L.zy*(dh-f.h)/2,dw,dh)}
+  else{c.fillStyle='#d8cfc4';c.fillRect(-f.w/2,-f.h/2,f.w,f.h)}
+  c.restore();
+  if(L.border.on){imgPath(c,L,f);c.lineWidth=L.w*L.border.w/100*2;c.strokeStyle=L.border.color;c.stroke()}
+  c.restore();
+  return {W:f.w,H:f.h};
+}
 // o: {ov:{id,font}, grad:index, thumb:bool, ui:'edit'|'mark', kk: output px per screen px}. Returns metrics per layer id.
 function draw(c,o={}){
   c.clearRect(0,0,D.W,D.H);
   const ph=cur(),src=ph&&(o.thumb?ph.small:ph.img);
   if(src)drawPhoto(c,src);
   else{const [a,b]=GRADS[(o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
-  const M=new Map();for(const L of D.layers)M.set(L.id,drawLayer(c,L,o.ov));
+  const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(c,L,o.ov):drawImageLayer(c,L,o.thumb));
   const L=sel(),kk=o.kk||1;
   if(o.ui==='edit'&&G.guides){
     c.save();c.strokeStyle='#c49a90';c.lineWidth=1.5*kk;
@@ -199,7 +223,7 @@ function draw(c,o={}){
   }
   return M;
 }
-function box(L,M,kk){const m=M.get(L.id),f=L.band.on?frameSize(L,m):{w:m.W,h:m.H},p=10*kk;return {w:f.w+2*p,h:f.h+2*p}}
+function box(L,M,kk){const m=M.get(L.id),f=isText(L)&&L.band.on?frameSize(L,m):{w:m.W,h:m.H},p=10*kk;return {w:f.w+2*p,h:f.h+2*p}}
 // The scale/rotate handle sits on the bottom-right corner, pulled back inside the picture if the corner is off it.
 function handlePos(L,M,kk){
   const b=box(L,M,kk),cs=Math.cos(L.rot),sn=Math.sin(L.rot),m=18*kk;
@@ -207,13 +231,13 @@ function handlePos(L,M,kk){
   return {x:Math.max(m,Math.min(D.W-m,x)),y:Math.max(m,Math.min(D.H-m,y))};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
-function hitLayer(M,p,kk){
-  for(let i=D.layers.length-1;i>=0;i--){const L=D.layers[i];if(!M.has(L.id))continue;const b=box(L,M,kk),q=local(L,p),tol=8*kk;if(Math.abs(q.x)<=b.w/2+tol&&Math.abs(q.y)<=b.h/2+tol)return L}
+function hitLayer(M,p,kk,only){
+  for(let i=D.layers.length-1;i>=0;i--){const L=D.layers[i];if(!M.has(L.id)||(only&&!only(L)))continue;const b=box(L,M,kk),q=local(L,p),tol=8*kk;if(Math.abs(q.x)<=b.w/2+tol&&Math.abs(q.y)<=b.h/2+tol)return L}
   return null;
 }
 const loadText=L=>L.text+(L.vertical?Object.values(VFORM).join(''):'')||'あ';
 function ensureFonts(ov){
-  return Promise.all(D.layers.map(L=>document.fonts.load(fontStr(face(L,ov),32),loadText(L)).catch(()=>[])));
+  return Promise.all(D.layers.filter(isText).map(L=>document.fonts.load(fontStr(face(L,ov),32),loadText(L)).catch(()=>[])));
 }
 
 /* ---------- photos and pages ---------- */
@@ -235,7 +259,7 @@ async function setPhoto(url){
 // New pages start with the current page's design: a carousel usually carries the same look.
 async function addPhotos(urls){
   syncCur();const design=clone(D);
-  for(const url of urls){const id=await makePhoto(url);P.pages.push({...clone(design),photoId:id,photo:{s:1,ox:0,oy:0}})}
+  for(const url of urls){const id=await makePhoto(url);P.pages.push({...clone(design),layers:design.layers.filter(isText),photoId:id,photo:{s:1,ox:0,oy:0}})}
   commit();emit('pages');
 }
 
@@ -257,7 +281,7 @@ function applyRatio(name){
   for(const pg of P.pages){const sx=W/pg.W,sy=H/pg.H;for(const L of pg.layers){L.x*=sx;L.y*=sy}Object.assign(pg,{ratio:name,W,H});pg.photo.ox=pg.photo.oy=0}
   loadInto(P.pages[P.cur]);wrapCache.clear();
 }
-function ensureAll(){syncCur();return Promise.all(P.pages.flatMap(pg=>pg.layers.map(L=>document.fonts.load(fontStr(face(L),32),loadText(L)).catch(()=>[]))))}
+function ensureAll(){syncCur();return Promise.all(P.pages.flatMap(pg=>pg.layers.filter(isText).map(L=>document.fonts.load(fontStr(face(L),32),loadText(L)).catch(()=>[]))))}
 
 /* =================== editor view =================== */
 const cv=$('#ecanvas'),ctx=cv.getContext('2d');
@@ -273,7 +297,8 @@ on('fonts',()=>paint());
 function pt(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*D.W,y:(e.clientY-r.top)/r.height*D.H}}
 function hitHandle(L,p){if(!L||!G.M.has(L.id))return false;const h=handlePos(L,G.M,kE());return Math.hypot(p.x-h.x,p.y-h.y)<24*kE()}
 const two=()=>{const [a,b]=[...G.ptrs.values()];return {d:Math.hypot(a.x-b.x,a.y-b.y),a:Math.atan2(b.y-a.y,b.x-a.x)}};
-const clampSize=v=>Math.max(12,Math.min(900,v));
+const SZ=L=>isText(L)?'size':'w';
+const clampSz=(L,v)=>isText(L)?Math.max(12,Math.min(900,v)):Math.max(40,Math.min(3000,v));
 function snapAngle(a){const d=Math.round(a/(Math.PI/2))*(Math.PI/2);return Math.abs(a-d)<.05?d:a}
 
 cv.addEventListener('pointerdown',e=>{
@@ -282,11 +307,11 @@ cv.addEventListener('pointerdown',e=>{
   if(G.ptrs.size===2){
     const t=two();
     if(tab==='写真')G.g={mode:'pzoom',t,s:D.photo.s};
-    else if(L)G.g={mode:'pinch',t,size:L.size,rot:L.rot};
+    else if(L)G.g={mode:'pinch',t,size:L[SZ(L)],rot:L.rot};
     return;
   }
   if(tab==='写真'){G.g={mode:'pan',p,ox:D.photo.ox,oy:D.photo.oy};return}
-  if(hitHandle(L,p)){const h=Math.hypot(p.x-L.x,p.y-L.y);G.g={mode:'handle',d:h,a:Math.atan2(p.y-L.y,p.x-L.x),size:L.size,rot:L.rot};return}
+  if(hitHandle(L,p)){const h=Math.hypot(p.x-L.x,p.y-L.y);G.g={mode:'handle',d:h,a:Math.atan2(p.y-L.y,p.x-L.x),size:L[SZ(L)],rot:L.rot};return}
   const H=hitLayer(G.M,p,kE());
   if(H){const was=D.sel===H.id;D.sel=H.id;G.g={mode:'move',p,x:H.x,y:H.y,was,moved:false};if(!was)panel()}
   else{G.g=null;if(D.sel){D.sel=null;panel()}}
@@ -296,8 +321,8 @@ cv.addEventListener('pointermove',e=>{
   const g=G.g;if(!G.ptrs.has(e.pointerId)||!g)return;const p=pt(e);G.ptrs.set(e.pointerId,p);const L=sel();
   if(g.mode==='pan'){D.photo.ox=g.ox+p.x-g.p.x;D.photo.oy=g.oy+p.y-g.p.y}
   else if(g.mode==='pzoom'&&G.ptrs.size===2){D.photo.s=Math.max(1,Math.min(4,g.s*two().d/g.t.d))}
-  else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();L.size=clampSize(g.size*t.d/g.t.d);L.rot=g.rot+t.a-g.t.a}
-  else if(g.mode==='handle'&&L){L.size=clampSize(g.size*Math.hypot(p.x-L.x,p.y-L.y)/g.d);L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
+  else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();L[SZ(L)]=clampSz(L,g.size*t.d/g.t.d);L.rot=g.rot+t.a-g.t.a}
+  else if(g.mode==='handle'&&L){L[SZ(L)]=clampSz(L,g.size*Math.hypot(p.x-L.x,p.y-L.y)/g.d);L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
   else if(g.mode==='move'&&L){
     if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;g.moved=true;
     const r=snapMove(L,g.x+p.x-g.p.x,g.y+p.y-g.p.y,8*kE());L.x=r.x;L.y=r.y;G.guides=r.guides;
@@ -316,12 +341,12 @@ function endPtr(e){
   if(G.ptrs.size)return;
   const tap=G.g&&G.g.mode==='move'&&!G.g.moved&&G.g.was;
   G.g=null;G.guides=null;commit();paint();
-  if(tap){setTab('文字');setTimeout(()=>$('#etxt')?.focus(),50)}
+  if(tap&&isText(sel())){setTab('文字');setTimeout(()=>$('#etxt')?.focus(),50)}
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{
   e.preventDefault();const L=sel(),f=Math.exp(-e.deltaY/400);
-  if(tab==='写真')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(L)L.size=clampSize(L.size*f);else return;
+  if(tab==='写真')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(L)L[SZ(L)]=clampSz(L,L[SZ(L)]*f);else return;
   paint();clearTimeout(textTimer);textTimer=setTimeout(commit,300);
 },{passive:false});
 
@@ -334,7 +359,8 @@ function setTab(t){tab=t;[...$('#etabs').children].forEach(b=>b.classList.toggle
 const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
 const pct=v=>Math.round(v*100)+'%';
-const FMT={lh:v=>(+v).toFixed(2),opacity:pct,'shadow.a':pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
+const f2=v=>(+v).toFixed(2);
+const FMT={zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
 const fmt=k=>FMT[k]||(v=>Math.round(v));
 const slider=(label,key,min,max,step)=>{const v=get(sel(),key);return `<label class="erow"><span class="el">${label}</span><input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${v}"><span class="ev" data-v="${key}">${fmt(key)(v)}</span></label>`};
 const pal=key=>{const v=get(sel(),key);return `<div class="pal" data-k="${key}">${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(v)?'':' on'}" aria-label="ほかの色"><input type="color" data-k="${key}" value="${v}"></label></div>`};
@@ -342,21 +368,45 @@ const toggle=(key,label)=>`<h4>${label}<button class="tg${get(sel(),key)?' on':'
 const segs=(key,opts)=>`<div class="eseg" data-set="${key}">${opts.map(([v,l])=>`<button data-v="${v}" class="${get(sel(),key)===v?'on':''}">${l}</button>`).join('')}</div>`;
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
+function imgPanel(L,b){
+  b.innerHTML=`<div class="ihead"><b>重ねた写真</b><button class="eb dark" data-act="done">完了</button></div>
+    <div class="ebtns"><button class="eb" data-act="dup">複製</button><button class="eb" data-act="front">前へ</button><button class="eb" data-act="back">後ろへ</button><button class="eb" data-act="swapimg">差し替え</button><button class="eb" data-act="del">削除</button></div>
+    ${segs('shape',[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']])}
+    ${L.shape!=='circle'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
+    ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}
+    ${slider('中の拡大','zs',1,3,.01)}${slider('中の横','zx',-1,1,.01)}${slider('中の縦','zy',-1,1,.01)}
+    <div class="sec">${toggle('border.on','フチ')}${L.border.on?pal('border.color')+slider('太さ','border.w',.5,10,.5):''}</div>
+    <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?slider('濃さ','shadow.a',.05,1,.01)+slider('ぼかし','shadow.blur',0,30,1)+slider('ずれ','shadow.y',-10,10,.5):''}</div>
+    ${slider('透明度','opacity',.1,1,.01)}`;
+}
+function addImage(photoId,i=0){
+  const L={id:uid++,type:'image',photoId,x:D.W*(.5+.05*i),y:D.H*(.42+.05*i),w:D.W*.46,rot:0,shape:'round',r:5,ar:0,zs:1,zx:0,zy:0,opacity:1,
+    border:{on:true,color:'#ffffff',w:2.5},shadow:{on:true,color:'#28190f',a:.28,x:0,y:1.5,blur:6}};
+  D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // above other photos, under the texts
+  D.sel=L.id;return L;
+}
+function removeSelected(){
+  const L=sel();if(!L)return;
+  if(!confirm(isText(L)?'この文字を消しますか？':'この写真を消しますか？'))return;
+  removeLayer(L);commit();panel();paint();
+}
 let fontIO;
 function panel(){
   const L=sel(),b=$('#ebody');
+  $('#etabs').hidden=!!L&&!isText(L);
+  if(L&&!isText(L)){imgPanel(L,b);return}
   if(L){L.band.shape??='rect';L.band.line??={on:false,color:INK,w:3}}
   if(tab==='写真'){
     b.innerHTML=`<div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>
       <p class="enote">写真をドラッグで位置、2本指（パソコンはホイール）で拡大できます。</p>
       <label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
-      <div class="ebtns"><button class="eb" id="ephoto">写真を変える</button></div>`;
+      <div class="ebtns"><button class="eb" id="ephoto">背景の写真を変える</button><button class="eb dark" data-act="addimg">＋ 写真を重ねる</button></div>`;
     return;
   }
-  if(!L){b.innerHTML=`<p class="enote">文字をタップすると、ここで調整できます。</p><div class="ebtns"><button class="eb dark" data-act="add">＋ 文字を追加</button></div>`;return}
+  if(!L){b.innerHTML=`<p class="enote">文字や重ねた写真をタップすると、ここで調整できます。</p><div class="ebtns"><button class="eb dark" data-act="add">＋ 文字を追加</button><button class="eb dark" data-act="addimg">＋ 写真を重ねる</button></div>`;return}
   if(tab==='文字'){
     b.innerHTML=`<textarea class="etext" id="etxt" rows="2" aria-label="文字">${esc(L.text)}</textarea>
-      <div class="ebtns"><button class="eb" data-act="add">＋ 追加</button><button class="eb" data-act="dup">複製</button><button class="eb" data-act="front">前へ</button><button class="eb" data-act="back">後ろへ</button><button class="eb" data-act="del">削除</button></div>
+      <div class="ebtns"><button class="eb" data-act="add">＋ 追加</button><button class="eb" data-act="dup">複製</button><button class="eb" data-act="front">前へ</button><button class="eb" data-act="back">後ろへ</button><button class="eb" data-act="del">削除</button><button class="eb" data-act="addimg">＋ 写真を重ねる</button></div>
       <div class="erow">${segs('align',[['left','左'],['center','中'],['right','右']])}${segs('vertical',[[false,'横書き'],[true,'縦書き']])}</div>
       ${slider('大きさ','size',12,600,1)}${slider('折り返し','wrap',0,1,.01)}${slider('文字間','ls',-10,80,1)}${slider('行間','lh',.8,2.6,.01)}`;
   }else if(tab==='書体'){
@@ -375,7 +425,7 @@ function panel(){
   }
 }
 function addLayer(from){
-  const base=from||D.layers.at(-1)||{};
+  const base=isText(from)?from:(D.layers.filter(isText).at(-1)||{});
   const n=newLayer({text:'テキスト',fam:base.fam||'"Zen Maru Gothic"',w:base.w||500,name:base.name||'Zen Maru Gothic',color:base.color||INK,
     shadow:clone(base.shadow||{...SHADOW,on:false}),size:(base.size||96)*.6,vertical:!!base.vertical,y:D.H*[.5,.8,.2,.65,.35][D.layers.length%5]});
   D.layers.push(n);D.sel=n.id;return n;
@@ -397,16 +447,19 @@ bodyEl.addEventListener('click',e=>{
   const L=sel(),t=e.target.closest('button');if(!t)return;
   if(t.id==='ephoto'){$('#efile').click();return}
   const act=t.dataset.act;
+  if(act==='addimg'){$('#eimg').click();return}
+  if(act==='done'){D.sel=null;panel();paint();return}
+  if(act==='swapimg'){$('#eimgswap').click();return}
   if(act==='add'){addLayer(L);setTab('文字');commit();refresh();setTimeout(()=>{const a=$('#etxt');a?.focus();a?.select()},50);return}
   if(act==='dup'&&L){const n=Object.assign(clone(L),{id:uid++,x:L.x+D.W*.04,y:L.y+D.W*.04});D.layers.push(n);D.sel=n.id;commit();panel();refresh();return}
-  if(act==='del'&&L){removeLayer(L);commit();panel();paint();return}
+  if(act==='del'&&L){removeSelected();return}
   if(act==='front'&&L){const i=D.layers.indexOf(L);if(i<D.layers.length-1){D.layers.splice(i,1);D.layers.splice(i+1,0,L);commit();paint()}return}
   if(act==='back'&&L){const i=D.layers.indexOf(L);if(i>0){D.layers.splice(i,1);D.layers.splice(i-1,0,L);commit();paint()}return}
   if(t.closest('[data-ratio]')){applyRatio(t.dataset.v);sizeCanvas();commit();panel();refresh();return}
   if(t.closest('[data-lang]')){fontLang=t.dataset.v;panel();return}
   if(!L)return;
   if(t.dataset.tg){const k=t.dataset.tg,top=bodyEl.scrollTop;put(L,k,!get(L,k));commit();panel();bodyEl.scrollTop=top;refresh();return}
-  const sg=t.closest('[data-set]');if(sg){const top=bodyEl.scrollTop;put(L,sg.dataset.set,t.dataset.v==='true'?true:t.dataset.v==='false'?false:t.dataset.v);commit();panel();bodyEl.scrollTop=top;refresh();return}
+  const sg=t.closest('[data-set]');if(sg){const top=bodyEl.scrollTop,v=t.dataset.v;put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();bodyEl.scrollTop=top;refresh();return}
   const p=t.closest('.pal');if(p&&t.dataset.c){const top=bodyEl.scrollTop;put(L,p.dataset.k,t.dataset.c);commit();panel();bodyEl.scrollTop=top;paint();return}
   if(t.dataset.f!=null){setFont(L,(fontLang==='ja'?JA:EN)[+t.dataset.f]);bodyEl.querySelectorAll('.fbtn').forEach(x=>x.classList.toggle('on',x===t));commit();refresh()}
 });
@@ -416,7 +469,7 @@ function setFont(L,f){Object.assign(L,{fam:f[1],w:f[4],name:f[0]})}
 const dprS=Math.min(2,devicePixelRatio||1);
 function renderStrip(){
   syncCur();
-  $('#pstrip').innerHTML=P.pages.map((pg,i)=>`<button class="pg${i===P.cur?' on':''}" data-pg="${i}" aria-label="${i+1}枚目"><canvas></canvas><b>${i+1}</b></button>`).join('')+
+  $('#pstrip').innerHTML=P.pages.map((pg,i)=>`<button class="pg${i===P.cur?' on':''}" data-pg="${i}" aria-label="${i+1}枚目"><canvas></canvas><b>${i+1}</b>${i===P.cur&&P.pages.length>1?'<i class="pgx" data-pgdel aria-label="このページを消す">×</i>':''}</button>`).join('')+
     `<button class="pg add" id="padd" aria-label="写真を足す">＋</button><button class="eb dark dbtn" id="dopen">デザイン</button>`;
   paintStrip();ensureAll().then(paintStrip);
 }
@@ -431,10 +484,20 @@ function paintStrip(){
 let stripT=0;function stripSoon(){if($('#editor').hidden)return;clearTimeout(stripT);stripT=setTimeout(paintStrip,250)}
 function switchPage(i){if(i===P.cur)return;goPage(i);sizeCanvas();panel();refresh();renderStrip()}
 $('#pstrip').addEventListener('click',e=>{
+  if(e.target.closest('[data-pgdel]')){removePage();return}
   const b=e.target.closest('button');if(!b)return;
   if(b.id==='padd'){$('#eadd').click();return}
   if(b.id==='dopen'){openDesign();return}
   if(b.dataset.pg!=null)switchPage(+b.dataset.pg);
+});
+$('#eimg').addEventListener('change',async e=>{
+  const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
+  try{const urls=await Promise.all(fs.map(loadPhoto));for(const [i,u] of urls.entries())addImage(await makePhoto(u),i);setTab('文字');commit();refresh()}
+  catch{alert('読み込めない画像がありました')}
+});
+$('#eimgswap').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!L||isText(L))return;
+  try{L.photoId=await makePhoto(await loadPhoto(f));Object.assign(L,{zs:1,zx:0,zy:0});commit();panel();refresh()}catch{alert('この画像は読み込めませんでした')}
 });
 $('#eadd').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
@@ -445,8 +508,8 @@ $('#eadd').addEventListener('change',async e=>{
 /* ---------- design: everything but the photo ---------- */
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}}};
 // Stored relative to the picture size so a design fits any ratio.
-const normDesign=()=>({v:1,layers:clone(D.layers).map(L=>({...L,x:L.x/D.W,y:L.y/D.H,size:L.size/D.W}))});
-function applyDesign(d){D.layers=clone(d.layers).map(L=>({...L,id:uid++,x:L.x*D.W,y:L.y*D.H,size:L.size*D.W}));D.sel=D.layers[0]?.id??null}
+const normDesign=()=>({v:1,layers:clone(D.layers).filter(isText).map(L=>({...L,x:L.x/D.W,y:L.y/D.H,size:L.size/D.W}))});
+function applyDesign(d){const texts=clone(d.layers).map(L=>({...L,id:uid++,x:L.x*D.W,y:L.y*D.H,size:L.size*D.W}));D.layers=[...D.layers.filter(L=>!isText(L)),...texts];D.sel=texts[0]?.id??null}
 let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 function openDesign(){renderDesign();$('#dsheet').hidden=false}
 function renderDesign(){
@@ -457,6 +520,11 @@ function renderDesign(){
   $('#mylist').innerHTML=mine.length?mine.map(m=>{const L=m.d.layers[0]||{};return `<div class="myrow"><div class="mytxt"><b>${esc(m.name)}</b><span style='font-family:${L.fam||'inherit'},sans-serif;font-weight:${L.w||400}'>${esc((L.text||'').split('\n')[0].slice(0,14))}</span></div><button class="eb" data-myapply="${m.id}">使う</button><button class="myx" data-mydel="${m.id}" aria-label="消す">×</button></div>`}).join('')
     :'<p class="enote">よく使う文字の並びや飾りを名前を付けて取っておけます。写真は含みません。</p>';
   for(const m of mine){const L=m.d.layers[0];if(L)document.fonts.load(fontStr(L,16),L.text||'あ').catch(()=>{})}
+}
+function removePage(){
+  if(P.pages.length<2)return;
+  if(!confirm(`${P.cur+1}枚目のページを消しますか？（元に戻すで戻せます）`))return;
+  syncCur();P.pages.splice(P.cur,1);P.cur=Math.min(P.cur,P.pages.length-1);loadInto(P.pages[P.cur]);designChanged();
 }
 function designChanged(msg){commit();sizeCanvas();panel();refresh();renderStrip();emit('change');if(msg)toast(msg)}
 $('#dsheet').addEventListener('click',e=>{
@@ -482,10 +550,7 @@ $('#dsheet').addEventListener('click',e=>{
       syncCur();const j=P.cur+(b.id==='pleft'?-1:1);[P.pages[P.cur],P.pages[j]]=[P.pages[j],P.pages[P.cur]];P.cur=j;loadInto(P.pages[j]);
       designChanged();renderDesign();return;
     }
-    case 'pdel':{
-      if(!confirm('この写真を作品から外しますか？（元に戻すで戻せます）'))return;
-      syncCur();P.pages.splice(P.cur,1);P.cur=Math.min(P.cur,P.pages.length-1);loadInto(P.pages[P.cur]);designChanged();renderDesign();return;
-    }
+    case 'pdel':removePage();renderDesign();return;
   }
   if(b.dataset.myapply){const m=mine.find(x=>x.id===+b.dataset.myapply);if(m){applyDesign(m.d);designChanged(`「${m.name}」を当てました`)}return}
   if(b.dataset.mydel){const m=mine.find(x=>x.id===+b.dataset.mydel);if(m&&confirm(`「${m.name}」を消しますか？`)){store.set('piclea.designs',mine.filter(x=>x!==m));renderDesign()}}
@@ -498,6 +563,7 @@ const DB={
   async run(store,mode,fn){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(store,mode),req=fn(t.objectStore(store));t.oncomplete=()=>res(req?.result);t.onerror=t.onabort=()=>rej(t.error)})},
 };
 let workId=null,savedPhotos=new Set(),saveT=0,asked=false;
+const usedPhotos=()=>[...new Set(P.pages.flatMap(pg=>[pg.photoId,...pg.layers.filter(L=>!isText(L)).map(L=>L.photoId)]).filter(Boolean))];
 function autosave(){if(!anyPhoto())return;clearTimeout(saveT);saveT=setTimeout(()=>saveWork().catch(err=>{console.warn(err);toast('端末に保存できませんでした')}),1200)}
 function workThumb(){
   const pg=P.pages[0],c=document.createElement('canvas'),h=260,w=Math.round(h*pg.W/pg.H);c.width=w;c.height=h;
@@ -506,14 +572,14 @@ function workThumb(){
 async function saveWork(){
   syncCur();if(!P.pages.length)return;
   workId??=newId('w');
-  const ids=[...new Set(P.pages.map(pg=>pg.photoId).filter(Boolean))];
+  const ids=usedPhotos();
   for(const id of ids){
     if(savedPhotos.has(id)||!photos.has(id))continue;
     const blob=await (await fetch(photos.get(id).url)).blob();
     await DB.run('photos','readwrite',st=>st.put(blob,id));savedPhotos.add(id);
   }
   const prev=await DB.run('works','readonly',st=>st.get(workId));
-  const title=(P.pages[0].layers[0]?.text||'').split('\n')[0].slice(0,24)||'無題';
+  const title=(P.pages[0].layers.find(isText)?.text||'').split('\n')[0].slice(0,24)||'無題';
   await DB.run('works','readwrite',st=>st.put({id:workId,title,updated:Date.now(),thumb:workThumb(),doc:clone(P),photos:ids}));
   for(const id of prev?.photos||[])if(!ids.includes(id)){await DB.run('photos','readwrite',st=>st.delete(id));savedPhotos.delete(id)}
   if(!asked){asked=true;navigator.storage?.persist?.().catch(()=>{})}
@@ -553,7 +619,7 @@ const toDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.res
 async function backupFile(){
   syncCur();
   const data={app:'piclea',v:1,doc:clone(P),photos:{}};
-  for(const id of new Set(P.pages.map(pg=>pg.photoId).filter(Boolean)))data.photos[id]=await toDataURL(await (await fetch(photos.get(id).url)).blob());
+  for(const id of usedPhotos())data.photos[id]=await toDataURL(await (await fetch(photos.get(id).url)).blob());
   const title=(P.pages[0]?.layers[0]?.text||'').split('\n')[0].slice(0,12).replace(/[\\/:*?"<>|\s]/g,'')||'piclea';
   return new File([JSON.stringify(data)],`piclea-${title}-${new Date().toISOString().slice(0,10)}.json`,{type:'application/json'});
 }
@@ -561,7 +627,7 @@ async function importWork(file){
   const data=JSON.parse(await file.text());if(data.app!=='piclea'||!data.doc?.pages)throw new Error('not piclea');
   const map={};
   for(const [old,url] of Object.entries(data.photos||{})){const blob=await (await fetch(url)).blob();map[old]=await makePhoto(URL.createObjectURL(blob))}
-  for(const pg of data.doc.pages)pg.photoId=map[pg.photoId]??null;
+  for(const pg of data.doc.pages){pg.photoId=map[pg.photoId]??null;for(const L of pg.layers)if(!isText(L))L.photoId=map[L.photoId]??null}
   savedPhotos=new Set();adopt(data.doc,null);await saveWork();
 }
 let backup=null;
@@ -592,7 +658,7 @@ document.addEventListener('keydown',e=>{
   const typing=/TEXTAREA|INPUT/.test(document.activeElement?.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();e.shiftKey?redoIt():undo()}
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'&&!typing){e.preventDefault();redoIt()}
-  else if((e.key==='Delete'||e.key==='Backspace')&&!typing&&sel()){removeLayer(sel());commit();panel();paint()}
+  else if((e.key==='Delete'||e.key==='Backspace')&&!typing&&sel()){e.preventDefault();removeSelected()}
 });
 $('#efile').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
@@ -627,5 +693,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),addPhotos,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
+  hasPhoto:()=>!!cur(),addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
 })();

@@ -161,7 +161,7 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
   .bar-r{gap:6px}
   body.has-photo .logo small{display:none}
   .dock{gap:9px;padding-right:12px}
-  .size{width:78px}
+  .size{width:64px}
   .panel{width:100vw;border-radius:30px 30px 0 0;align-self:flex-end;padding-bottom:calc(18px + var(--safe-b))}
   .close{right:12px;top:-48px}
 }
@@ -282,6 +282,28 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .wcard.new{aspect-ratio:4/5;justify-content:center;align-items:center;border-radius:10px;border:1px dashed rgba(75,63,58,.3);font-size:11.5px;color:var(--mocha)}
 .wcard.new span{font-size:24px}
 .wx{position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:rgba(255,252,249,.85);font-size:13px;color:var(--mocha)}
+.etabs[hidden]{display:none}
+.ihead{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px}
+.ihead b{font-size:14px}
+.pg{overflow:visible}
+.pg canvas{border-radius:9px}
+.pgx{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fbf7f3;font:500 12px/20px system-ui;font-style:normal;text-align:center}
+.privacy.note{margin-top:6px}
+.privacy.note::before{display:none}
+.pgrow{display:flex;align-items:center;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none}
+.pgrow span{font-size:11px;color:var(--mocha);flex:none;margin-right:2px}
+.pgrow button{flex:none;min-width:30px;height:28px;border-radius:999px;font:500 12px Jost,sans-serif;background:rgba(255,255,255,.45);color:var(--mocha)}
+.pgrow button.on{background:var(--ink);color:#fbf7f3}
+.lt em{font-style:normal;font-size:10px;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:6em}
+.lt{max-width:62%}
+.cbtn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.55);flex:none}
+.cbtn i{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(75,63,58,.25),0 0 0 2px #fff}
+.mini-b{flex:none;padding:7px 11px;border-radius:999px;background:var(--ink);color:#fbf7f3;font-size:12px}
+.cpop{position:fixed;z-index:25;left:50%;transform:translateX(-50%);bottom:calc(76px + var(--safe-b));border-radius:20px;padding:12px 12px 2px;width:max-content;max-width:94vw}
+.cpop[hidden]{display:none}
+.xcard{padding-top:14px}
+.xph{width:min(100%,calc(38vh * var(--ar,.8)));margin:0 auto;border-radius:16px}
+.xph canvas{touch-action:none;cursor:grab}
 .toast{position:fixed;z-index:95;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%);border-radius:999px;padding:10px 18px;font-size:12.5px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 .toast[hidden]{display:none}
 
@@ -307,10 +329,12 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
   <p class="lead">日本語<b id="nJa"></b>書体と、English<b id="nEn"></b>書体。<br>自分の写真の上に、ぜんぶ並べて選べます。<br>大きく開くと、文字を指で動かせます。</p>
   <button class="pill dark big" data-pick>写真をえらぶ</button>
   <p class="privacy">写真はこの端末の中だけで使われます</p>
+  <p class="privacy note">写真は何枚でもまとめて選べます（1枚ずつページになります）</p>
   <button class="pill ghost works-cta" id="worksCta" hidden>つくったもの</button>
 </section>
 
 <section class="finder glass">
+  <div class="pgrow" id="pgrow" hidden></div>
   <div class="ltabs" id="ltabs"></div>
   <textarea class="text" id="text" rows="1" aria-label="入れたい文字" placeholder="入れたい文字"></textarea>
   <div class="row">
@@ -330,11 +354,12 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 
 <nav class="dock glass" aria-label="表示の調整">
   <button class="dk" data-pick aria-label="写真をえらぶ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg></button>
-  <div class="sw" id="tc"><button data-v="dark" class="on" style="--c:#4b3f3a" aria-label="濃い文字"></button><button data-v="light" style="--c:#fff" aria-label="白い文字"></button></div>
+  <button class="cbtn" id="cbtn" aria-label="文字の色"><i id="cdot"></i></button>
   <span class="sep"></span>
   <div class="mini" id="dir"><button data-v="h" class="on">横</button><button data-v="v">縦</button></div>
   <span class="sep"></span>
   <input class="size" type="range" id="size" min="16" max="60" value="30" aria-label="文字の大きさ">
+  <button class="mini-b" id="detailBtn">詳細</button>
 </nav>
 
 <div class="sheet" id="sheet" hidden>
@@ -351,7 +376,7 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
       </div>
     </div>
     <p class="shint">文字はドラッグで動かせます。左右にスワイプで次の書体。</p>
-    <div class="sgo"><button class="pill soft" id="keep">この書体に決める</button><button class="pill dark" id="go">この書体で編集する</button></div>
+    <div class="sgo"><button class="pill dark" id="go">この書体で編集する</button></div>
     <button class="close" data-close aria-label="閉じる">×</button>
   </div>
 </div>
@@ -378,6 +403,8 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
   </div>
   <input type="file" id="efile" accept="image/*" hidden>
   <input type="file" id="eadd" accept="image/*" multiple hidden>
+  <input type="file" id="eimg" accept="image/*" multiple hidden>
+  <input type="file" id="eimgswap" accept="image/*" hidden>
 </section>
 
 <div class="ssheet" id="ssheet" hidden>
@@ -425,6 +452,16 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
   </div>
 </div>
 <input type="file" id="wfile" accept="application/json,.json" hidden>
+<div class="cpop glass" id="cpop" hidden><div class="pal" id="cpal"></div></div>
+<div class="ssheet" id="xsheet" hidden>
+  <div class="scrim" data-xclose></div>
+  <div class="scard glass dcard xcard">
+    <div class="ph xph" id="xph"><canvas></canvas></div>
+    <p class="snote">文字を指で動かせます</p>
+    <div id="xctl"></div>
+    <button class="stext" data-xclose>閉じる</button>
+  </div>
+</div>
 <div class="toast glass" id="toast" hidden></div>
 
 <script src="catalog.js"></script>
@@ -439,7 +476,6 @@ const CATS={ja:['すべて','明朝','丸ゴ','ゴシック','手書き','ポッ
 const SAMPLE={ja:'今日のごほうび、\nひとくち。',en:'good day,\ngood coffee.'};
 const today=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replaceAll('/','.');
 const SAMPLE2={ja:['ひとこと',today],en:['with love',today]};
-const MAX_TEXTS=3;
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const root=document.documentElement;
@@ -452,32 +488,45 @@ const dpr=Math.min(2,devicePixelRatio||1);
 
 $('#nJa').textContent=JA.length;$('#nEn').textContent=EN.length;
 
-/* ---------- texts (up to three) ---------- */
+/* ---------- texts ---------- */
+// The picker always works on a text; if an overlaid photo was selected in the editor, fall back to the first text.
+function tsel(){let L=app.sel();if(!app.isText(L)){L=D.layers.find(app.isText);if(L)D.sel=L.id}return L}
+const texts=()=>D.layers.filter(app.isText);
 function renderTexts(){
-  $('#ltabs').innerHTML=D.layers.map((L,i)=>`<button class="lt${L.id===D.sel?' on':''}" data-id="${L.id}"><b>${i+1}</b><span>${(L.text.split('\n')[0]||'（空）').slice(0,8)}</span>${D.layers.length>1?`<i data-del="${L.id}" aria-label="この文章を消す">×</i>`:''}</button>`).join('')+
-    (D.layers.length<MAX_TEXTS?'<button class="lt add" data-add>＋ 文章</button>':'');
+  const ts=texts(),cur=tsel();
+  $('#ltabs').innerHTML=ts.map((L,i)=>`<button class="lt${L===cur?' on':''}" data-id="${L.id}"><b>${i+1}</b><span>${(L.text.split('\n')[0]||'（空）').slice(0,8).replace(/</g,'&lt;')}</span><em>${L.name}</em>${ts.length>1?`<i data-del="${L.id}" aria-label="この文章を消す">×</i>`:''}</button>`).join('')+
+    '<button class="lt add" data-add>＋ 文章</button>';
 }
+function renderPages(){
+  const n=app.pageCount(),c=app.pageIndex();
+  $('#pgrow').hidden=n<2;
+  $('#pgrow').innerHTML=n<2?'':'<span>ページ</span>'+Array.from({length:n},(_,i)=>`<button class="${i===c?'on':''}" data-p="${i}">${i+1}</button>`).join('');
+}
+$('#pgrow').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;app.switchPage(+b.dataset.p);tsel();renderGrid();changed()});
 function syncControls(){
-  const L=app.sel();if(!L)return;
+  const L=tsel();if(!L)return;
   if(document.activeElement!==$('#text'))$('#text').value=L.text;
   fitInput();
-  const light=L.color.toLowerCase()==='#ffffff';
-  $$('#tc button').forEach(x=>x.classList.toggle('on',(x.dataset.v==='light')===light));
+  $('#cdot').style.background=L.color;
   $$('#dir button').forEach(x=>x.classList.toggle('on',(x.dataset.v==='v')===L.vertical));
   $('#size').value=sliderOf(L);
 }
 $('#ltabs').addEventListener('click',e=>{
   const del=e.target.closest('[data-del]');
-  if(del){const L=D.layers.find(l=>l.id===+del.dataset.del);app.removeLayer(L);app.commit();changed();return}
+  if(del){
+    const L=D.layers.find(l=>l.id===+del.dataset.del);
+    if(L&&confirm(`「${(L.text.split('\n')[0]||'この文章').slice(0,12)}」を消しますか？`)){app.removeLayer(L);app.commit();changed()}
+    return;
+  }
   if(e.target.closest('[data-add]')){
-    const n=app.addLayer(app.sel());n.text=SAMPLE2[S.lang][(D.layers.length-2)%2];n.wrap=.86;app.commit();changed();
+    const n=app.addLayer(tsel());n.text=SAMPLE2[S.lang][(texts().length-2)%2];n.wrap=.86;app.commit();changed();
     setTimeout(()=>{$('#text').focus();$('#text').select()},30);return;
   }
   const b=e.target.closest('.lt');if(b){D.sel=+b.dataset.id;changed()}
 });
 let textTimer;
 $('#text').addEventListener('input',e=>{
-  const L=app.sel();if(!L)return;L.text=e.target.value;fitInput();renderTexts();redrawSoon();
+  const L=tsel();if(!L)return;L.text=e.target.value;fitInput();renderTexts();redrawSoon();
   clearTimeout(textTimer);textTimer=setTimeout(app.commit,600);
 });
 function fitInput(){const a=$('#text');a.style.height='auto';a.style.height=a.scrollHeight+'px'}
@@ -504,7 +553,7 @@ function renderGrid(){
 // Draw one preview canvas at its on-screen size. Fonts load first; the tile shimmers until then.
 async function paintCanvas(cv,f,grad,ui){
   const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return null;
-  const ov={id:D.sel,font:f},tok=(cv._tok=(cv._tok||0)+1);
+  const ov={id:tsel()?.id,font:f},tok=(cv._tok=(cv._tok||0)+1);
   await app.ensureFonts(ov);if(tok!==cv._tok)return null;
   const W=Math.round(w*dpr),H=Math.round(h*dpr);if(cv.width!==W)cv.width=W;if(cv.height!==H)cv.height=H;
   const c=cv.getContext('2d');c.setTransform(W/D.W,0,0,H/D.H,0,0);
@@ -521,7 +570,7 @@ const vis=new IntersectionObserver(es=>es.forEach(e=>{
 function redrawAll(){$$('.tile').forEach(t=>{if(t._vis)paintTile(t);else t._dirty=true});if(!$('#sheet').hidden)paintSheet()}
 let redrawT=0;
 function redrawSoon(){if(redrawT)return;redrawT=setTimeout(()=>{redrawT=0;redrawAll()},90)}
-function changed(){renderTexts();syncControls();redrawAll()}
+function changed(){renderPages();renderTexts();syncControls();redrawAll()}
 app.on('fonts',redrawSoon);
 
 $('#lang').addEventListener('click',e=>{
@@ -543,9 +592,54 @@ $('#grid').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList
 
 /* ---------- dock: acts on the selected text ---------- */
 function seg(sel,fn){$(sel).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fn(b.dataset.v);app.commit();changed()})}
-seg('#tc',v=>{const L=app.sel();if(!L)return;if(v==='light'){L.color='#ffffff';L.shadow={...app.SHADOW}}else{L.color=app.INK;L.shadow.on=false}});
-seg('#dir',v=>{const L=app.sel();if(L)L.vertical=v==='v'});
-$('#size').addEventListener('input',e=>{const L=app.sel();if(!L)return;L.size=sizeOf(+e.target.value);redrawSoon()});
+seg('#dir',v=>{const L=tsel();if(L)L.vertical=v==='v'});
+$('#size').addEventListener('input',e=>{const L=tsel();if(!L)return;L.size=sizeOf(+e.target.value);redrawSoon()});
+
+/* colour: one swatch that opens the palette */
+function renderPalette(){
+  const L=tsel(),v=L?.color;
+  $('#cpal').innerHTML=app.PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')+
+    `<label class="custom${app.PALETTE.includes(v)?'':' on'}" aria-label="ほかの色"><input type="color" value="${v||'#ffffff'}"></label>`;
+}
+function setColor(c){
+  const L=tsel();if(!L)return;L.color=c;
+  if(c.toLowerCase()==='#ffffff'&&!L.shadow.on&&!L.stroke.on)L.shadow={...app.SHADOW}; // white needs a little lift off a bright photo
+  syncControls();redrawSoon();
+}
+$('#cbtn').onclick=e=>{e.stopPropagation();const pop=$('#cpop');if(!pop.hidden){pop.hidden=true;return}renderPalette();pop.hidden=false};
+$('#cpal').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;setColor(b.dataset.c);app.commit();renderPalette()});
+$('#cpal').addEventListener('input',e=>{if(e.target.type==='color')setColor(e.target.value)});
+$('#cpal').addEventListener('change',()=>{app.commit();renderPalette()});
+document.addEventListener('pointerdown',e=>{if(!$('#cpop').hidden&&!e.target.closest('#cpop,#cbtn'))$('#cpop').hidden=true});
+
+/* detail: a small preview to drag the text on, plus the settings people reach for while comparing */
+const xcv=$('#xph canvas');let xM=new Map();
+const xfont=()=>{const L=tsel();return [L.name,L.fam,'','',L.w]};
+async function paintX(){const M=await paintCanvas(xcv,xfont(),0,'mark');if(M)xM=M}
+let tilesT=0;function tilesSoon(){clearTimeout(tilesT);tilesT=setTimeout(redrawAll,300)}
+const xg=(o,k)=>k.split('.').reduce((a,x)=>a[x],o),xs=(o,k,v)=>{const ks=k.split('.'),l=ks.pop();ks.reduce((a,x)=>a[x],o)[l]=v};
+function renderX(){
+  const L=tsel();if(!L)return;
+  const seg=(k,opts)=>`<div class="eseg" data-xset="${k}">${opts.map(([v,l])=>`<button data-v="${v}" class="${xg(L,k)===v?'on':''}">${l}</button>`).join('')}</div>`;
+  const rng=(label,k,min,max,step)=>`<label class="erow"><span class="el">${label}</span><input type="range" data-xk="${k}" min="${min}" max="${max}" step="${step}" value="${xg(L,k)}"></label>`;
+  const tg=(k,label)=>`<h4>${label}<button class="tg${xg(L,k)?' on':''}" data-xtg="${k}" aria-label="${label}"></button></h4>`;
+  $('#xctl').innerHTML=`${rng('大きさ','size',12,600,1)}
+    <div class="erow">${seg('vertical',[[false,'横書き'],[true,'縦書き']])}${seg('align',[['left','左'],['center','中'],['right','右']])}</div>
+    <div class="sec">${tg('stroke.on','縁取り')}${L.stroke.on?`<div class="pal" data-xpal="stroke.color">${app.PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===L.stroke.color?'on':''}"></button>`).join('')}</div>`+rng('太さ','stroke.w',1,30,.5):''}</div>
+    <div class="sec">${tg('shadow.on','影')}${L.shadow.on?rng('濃さ','shadow.a',.05,1,.01)+rng('ぼかし','shadow.blur',0,100,1):''}</div>`;
+}
+$('#detailBtn').onclick=()=>{if(!tsel())return;$('#xsheet').hidden=false;renderX();$('#xph').classList.add('loading');paintX()};
+$('#xsheet').addEventListener('click',e=>{
+  if(e.target.closest('[data-xclose]')){$('#xsheet').hidden=true;changed();return}
+  const L=tsel(),b=e.target.closest('button');if(!b||!L)return;
+  if(b.dataset.xtg){xs(L,b.dataset.xtg,!xg(L,b.dataset.xtg))}
+  else if(b.closest('[data-xset]')){const v=b.dataset.v;xs(L,b.closest('[data-xset]').dataset.xset,v==='true'?true:v==='false'?false:v)}
+  else if(b.closest('[data-xpal]')&&b.dataset.c){xs(L,b.closest('[data-xpal]').dataset.xpal,b.dataset.c)}
+  else return;
+  app.commit();renderX();paintX();tilesSoon();
+});
+$('#xctl').addEventListener('input',e=>{const k=e.target.dataset.xk,L=tsel();if(!k||!L)return;xs(L,k,+e.target.value);paintX();tilesSoon()});
+$('#xctl').addEventListener('change',()=>app.commit());
 $('#size').addEventListener('change',()=>app.commit());
 
 /* ---------- photo (shrunk in catalog.js; nothing leaves the browser) ---------- */
@@ -571,6 +665,7 @@ function photoUI(on){
 function firstLayer(){const L=app.newLayer({text:SAMPLE[S.lang],fam:JA[0][1],w:JA[0][4],name:JA[0][0],size:sizeOf(30),x:D.W/2,y:D.H/2});D.layers.push(L);D.sel=L.id;app.commit()}
 app.on('reset',()=>{firstLayer();photoUI(false);renderGrid();changed();scrollTo({top:0})});
 app.on('loaded',()=>{photoUI(app.hasPhoto());renderGrid();changed()});
+app.on('pages',changed);
 
 /* ---------- works kept on this device ---------- */
 const fmtDate=t=>new Date(t).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
@@ -621,33 +716,37 @@ $('#sfav').onclick=()=>{const on=toggleFav(S.items[S.idx]);$('#sfav').classList.
 $$('[data-close]').forEach(b=>b.onclick=closeSheet);
 document.addEventListener('keydown',e=>{if($('#sheet').hidden)return;if(e.key==='Escape')closeSheet();if(e.key==='ArrowRight')step(1);if(e.key==='ArrowLeft')step(-1)});
 // Choosing: the selected text takes this font. "決める" stays in the list, the main button goes on to edit.
-function choose(){const L=app.sel();if(L){app.setFont(L,S.items[S.idx]);app.commit()}}
+// Editing from here gives the selected text this font.
+function choose(){const L=tsel();if(L){app.setFont(L,S.items[S.idx]);app.commit()}}
 $('#go').onclick=()=>{choose();if(!app.hasPhoto()){pendingEdit=true;$('#file').click();return}closeSheet();app.openEditor()};
-$('#keep').onclick=()=>{choose();closeSheet();changed()};
 
-let sp=null;
-const spt=e=>{const r=scv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*D.W,y:(e.clientY-r.top)/r.height*D.H,k:D.W/r.width}};
-scv.addEventListener('pointerdown',e=>{
-  try{scv.setPointerCapture(e.pointerId)}catch{}const p=spt(e);
-  const L=app.hitLayer(sheetM,p,p.k);
-  if(L){if(D.sel!==L.id){D.sel=L.id;renderTexts();syncControls()}sp={mode:'move',p,x:L.x,y:L.y,moved:false,cx:e.clientX,cy:e.clientY}}
-  else sp={mode:'swipe',cx:e.clientX,cy:e.clientY,p};
-  paintSheet();
-});
-scv.addEventListener('pointermove',e=>{
-  if(!sp||sp.mode!=='move')return;const p=spt(e),L=app.sel();
-  if(!sp.moved&&Math.hypot(e.clientX-sp.cx,e.clientY-sp.cy)<4)return;sp.moved=true;
-  const r=app.snapMove(L,sp.x+p.x-sp.p.x,sp.y+p.y-sp.p.y,8*p.k);L.x=r.x;L.y=r.y;
-  if(!sp.raf)sp.raf=requestAnimationFrame(()=>{sp&&(sp.raf=0);paintSheet()});
-});
-scv.addEventListener('pointerup',e=>{
-  if(!sp)return;const s=sp;sp=null;
-  if(s.mode==='move'){if(s.moved){app.commit();redrawAll()}return}
-  const dx=e.clientX-s.cx,dy=e.clientY-s.cy;
-  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){step(dx<0?1:-1);return}
-  if(Math.hypot(dx,dy)<12){const L=app.sel(),p=spt(e);if(L){L.x=p.x;L.y=p.y;app.commit();redrawAll()}}
-});
-scv.addEventListener('pointercancel',()=>sp=null);
+function dragText(cv,getM,repaint,onSwipe){
+  let sp=null;
+  const at=e=>{const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*D.W,y:(e.clientY-r.top)/r.height*D.H,k:D.W/r.width}};
+  cv.addEventListener('pointerdown',e=>{
+    try{cv.setPointerCapture(e.pointerId)}catch{}const p=at(e);
+    const L=app.hitLayer(getM(),p,p.k,app.isText);
+    if(L){if(D.sel!==L.id){D.sel=L.id;renderTexts();syncControls()}sp={mode:'move',p,x:L.x,y:L.y,moved:false,cx:e.clientX,cy:e.clientY}}
+    else sp={mode:'swipe',cx:e.clientX,cy:e.clientY};
+    repaint();
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(!sp||sp.mode!=='move')return;const p=at(e),L=tsel();
+    if(!sp.moved&&Math.hypot(e.clientX-sp.cx,e.clientY-sp.cy)<4)return;sp.moved=true;
+    const r=app.snapMove(L,sp.x+p.x-sp.p.x,sp.y+p.y-sp.p.y,8*p.k);L.x=r.x;L.y=r.y;
+    if(!sp.raf)sp.raf=requestAnimationFrame(()=>{sp&&(sp.raf=0);repaint()});
+  });
+  cv.addEventListener('pointerup',e=>{
+    if(!sp)return;const s=sp;sp=null;
+    if(s.mode==='move'){if(s.moved){app.commit();tilesSoon()}return}
+    const dx=e.clientX-s.cx,dy=e.clientY-s.cy;
+    if(onSwipe&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){onSwipe(dx<0?1:-1);return}
+    if(Math.hypot(dx,dy)<12){const L=tsel(),p=at(e);if(L){L.x=p.x;L.y=p.y;app.commit();repaint();tilesSoon()}}
+  });
+  cv.addEventListener('pointercancel',()=>sp=null);
+}
+dragText(scv,()=>sheetM,paintSheet,step);
+dragText(xcv,()=>xM,paintX);
 addEventListener('resize',redrawSoon);
 
 firstLayer();
