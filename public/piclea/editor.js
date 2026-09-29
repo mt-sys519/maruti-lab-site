@@ -15,14 +15,23 @@ const ROTATE=/[ー－‐\-~〜～＝=｜|<>＜＞→←A-Za-z0-9]/, PUNCT=/[、�
 // Line breaking: never start a line with closing marks or small kana, never end one with an opening mark.
 const NOSTART=/^[、。，．,.)）」』】〕〉》！？!?ー〜～…‥・ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ]/, NOEND=/[（(「『【〔〈《]$/;
 
-const D={ratio:'4:5',W:OUT_W,H:Math.round(OUT_W*5/4),photo:{s:1,ox:0,oy:0},layers:[],sel:null};
-let img=null,small=null,uid=1;
+// A work is several pages (one photo each, same ratio for an Instagram carousel). The page being
+// worked on lives in D; P.pages keeps plain copies and is brought up to date by syncCur().
+const D={ratio:'4:5',W:OUT_W,H:Math.round(OUT_W*5/4),photo:{s:1,ox:0,oy:0},layers:[],sel:null,photoId:null};
+const P={pages:[],cur:0};
+const photos=new Map();
+let uid=1,pid=1;
+const cur=()=>photos.get(D.photoId);
 const listeners={};
 const emit=(n,d)=>(listeners[n]||[]).forEach(f=>f(d));
 const on=(n,f)=>(listeners[n]??=[]).push(f);
 
 const clone=o=>JSON.parse(JSON.stringify(o,(k,v)=>k.startsWith('_')?undefined:v));
 const sel=()=>D.layers.find(l=>l.id===D.sel);
+function syncCur(){P.pages[P.cur]=clone(D)}
+function loadInto(pg){for(const k of Object.keys(D))delete D[k];Object.assign(D,clone(pg))}
+function withPage(pg,fn){const keep=clone(D);loadInto(pg);try{return fn()}finally{loadInto(keep)}}
+function goPage(i){syncCur();P.cur=i;loadInto(P.pages[i])}
 const face=(L,ov)=>ov&&ov.id===L.id?{fam:ov.font[1],w:ov.font[4]}:{fam:L.fam,w:L.w};
 const fontStr=(f,size)=>`${f.w} ${size}px ${f.fam}, sans-serif`;
 const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`};
@@ -152,7 +161,7 @@ function drawPhoto(c,src){
 // o: {ov:{id,font}, grad:index, thumb:bool, ui:'edit'|'mark', kk: output px per screen px}. Returns metrics per layer id.
 function draw(c,o={}){
   c.clearRect(0,0,D.W,D.H);
-  const src=o.thumb?small:img;
+  const ph=cur(),src=ph&&(o.thumb?ph.small:ph.img);
   if(src)drawPhoto(c,src);
   else{const [a,b]=GRADS[(o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
   const M=new Map();for(const L of D.layers)M.set(L.id,drawLayer(c,L,o.ov));
@@ -193,34 +202,48 @@ function ensureFonts(ov){
   return Promise.all(D.layers.map(L=>document.fonts.load(fontStr(face(L,ov),32),loadText(L)).catch(()=>[])));
 }
 
-/* ---------- photo ---------- */
-async function setPhoto(url){
+/* ---------- photos and pages ---------- */
+async function makePhoto(url){
   const im=new Image();im.src=url;await im.decode();
-  const first=!img;img=im;
-  const k=Math.min(1,720/Math.max(im.width,im.height));small=document.createElement('canvas');
-  small.width=Math.round(im.width*k);small.height=Math.round(im.height*k);small.getContext('2d').drawImage(im,0,0,small.width,small.height);
-  D.photo={s:1,ox:0,oy:0};
+  const k=Math.min(1,720/Math.max(im.width,im.height)),sm=document.createElement('canvas');
+  sm.width=Math.round(im.width*k);sm.height=Math.round(im.height*k);sm.getContext('2d').drawImage(im,0,0,sm.width,sm.height);
+  const id=pid++;photos.set(id,{url,img:im,small:sm});return id;
+}
+const anyPhoto=()=>!!D.photoId||P.pages.some(pg=>pg&&pg.photoId);
+async function setPhoto(url){
+  const first=!anyPhoto();
+  D.photoId=await makePhoto(url);D.photo={s:1,ox:0,oy:0};
   if(D.ratio==='元の比率')applyRatio('元の比率');
   // text written for the plain backdrop turns white with a soft shadow once a photo is behind it
   if(first)for(const L of D.layers)if(L.color===INK&&!L.stroke.on&&!L.band.on){L.color='#ffffff';L.shadow={...SHADOW}}
   commit();emit('photo',url);
 }
+// New pages start with the current page's design: a carousel usually carries the same look.
+async function addPhotos(urls){
+  syncCur();const design=clone(D);
+  for(const url of urls){const id=await makePhoto(url);P.pages.push({...clone(design),photoId:id,photo:{s:1,ox:0,oy:0}})}
+  commit();emit('pages');
+}
 
-/* ---------- history ---------- */
+/* ---------- history (the whole work, so page changes undo too) ---------- */
 let hist=[],redo=[];
-const snap=()=>JSON.stringify(clone({ratio:D.ratio,W:D.W,H:D.H,photo:D.photo,layers:D.layers,sel:D.sel}));
-function commit(){const s=snap();if(hist.at(-1)===s)return;hist.push(s);if(hist.length>80)hist.shift();redo=[];syncUndo()}
-function restore(s){const o=JSON.parse(s);Object.assign(D,o);sizeCanvas();panel();refresh();syncUndo();emit('change')}
+const snap=()=>{syncCur();return JSON.stringify(clone(P))};
+function commit(){const s=snap();if(hist.at(-1)===s)return;hist.push(s);if(hist.length>80)hist.shift();redo=[];syncUndo();stripSoon()}
+function restore(s){const o=JSON.parse(s);P.pages=o.pages;P.cur=o.cur;loadInto(P.pages[P.cur]);sizeCanvas();panel();refresh();syncUndo();renderStrip();emit('change')}
 function undo(){if(hist.length<2)return;redo.push(hist.pop());restore(hist.at(-1))}
 function redoIt(){if(!redo.length)return;const s=redo.pop();hist.push(s);restore(s)}
 function syncUndo(){$('#eundo').disabled=hist.length<2;$('#eredo').disabled=!redo.length}
 
+// The ratio belongs to the whole work: Instagram crops every image of a carousel to the first one's.
 function applyRatio(name){
-  const r=RATIOS.find(x=>x[0]===name)[1]||(img?img.width/img.height:.8);
-  const W=OUT_W,H=Math.round(W/r),sx=W/D.W,sy=H/D.H;
-  for(const L of D.layers){L.x*=sx;L.y*=sy}
-  Object.assign(D,{ratio:name,W,H});D.photo.ox=D.photo.oy=0;wrapCache.clear();
+  syncCur();
+  const first=photos.get(P.pages[0]?.photoId)||cur();
+  const r=RATIOS.find(x=>x[0]===name)[1]||(first?first.img.width/first.img.height:.8);
+  const W=OUT_W,H=Math.round(W/r);
+  for(const pg of P.pages){const sx=W/pg.W,sy=H/pg.H;for(const L of pg.layers){L.x*=sx;L.y*=sy}Object.assign(pg,{ratio:name,W,H});pg.photo.ox=pg.photo.oy=0}
+  loadInto(P.pages[P.cur]);wrapCache.clear();
 }
+function ensureAll(){syncCur();return Promise.all(P.pages.flatMap(pg=>pg.layers.map(L=>document.fonts.load(fontStr(face(L),32),loadText(L)).catch(()=>[]))))}
 
 /* =================== editor view =================== */
 const cv=$('#ecanvas'),ctx=cv.getContext('2d');
@@ -373,10 +396,89 @@ bodyEl.addEventListener('click',e=>{
 });
 function setFont(L,f){Object.assign(L,{fam:f[1],w:f[4],name:f[0]})}
 
+/* ---------- page strip ---------- */
+const dprS=Math.min(2,devicePixelRatio||1);
+function renderStrip(){
+  syncCur();
+  $('#pstrip').innerHTML=P.pages.map((pg,i)=>`<button class="pg${i===P.cur?' on':''}" data-pg="${i}" aria-label="${i+1}枚目"><canvas></canvas><b>${i+1}</b></button>`).join('')+
+    `<button class="pg add" id="padd" aria-label="写真を足す">＋</button><button class="eb dark dbtn" id="dopen">デザイン</button>`;
+  paintStrip();ensureAll().then(paintStrip);
+}
+function paintStrip(){
+  syncCur();
+  document.querySelectorAll('#pstrip .pg canvas').forEach((c,i)=>{
+    const pg=P.pages[i];if(!pg)return;const h=Math.round(54*dprS),w=Math.round(h*pg.W/pg.H);
+    c.width=w;c.height=h;c.style.width=w/dprS+'px';c.style.height=h/dprS+'px';
+    const x=c.getContext('2d');x.setTransform(w/pg.W,0,0,h/pg.H,0,0);withPage(pg,()=>draw(x,{thumb:true,grad:i}));
+  });
+}
+let stripT=0;function stripSoon(){if($('#editor').hidden)return;clearTimeout(stripT);stripT=setTimeout(paintStrip,250)}
+function switchPage(i){if(i===P.cur)return;goPage(i);sizeCanvas();panel();refresh();renderStrip()}
+$('#pstrip').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.id==='padd'){$('#eadd').click();return}
+  if(b.id==='dopen'){openDesign();return}
+  if(b.dataset.pg!=null)switchPage(+b.dataset.pg);
+});
+$('#eadd').addEventListener('change',async e=>{
+  const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
+  try{await addPhotos(await Promise.all(fs.map(loadPhoto)));renderStrip();toast(`${fs.length}枚足しました。今のページのデザインが入っています`)}
+  catch{alert('読み込めない画像がありました')}
+});
+
+/* ---------- design: everything but the photo ---------- */
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}}};
+// Stored relative to the picture size so a design fits any ratio.
+const normDesign=()=>({v:1,layers:clone(D.layers).map(L=>({...L,x:L.x/D.W,y:L.y/D.H,size:L.size/D.W}))});
+function applyDesign(d){D.layers=clone(d.layers).map(L=>({...L,id:uid++,x:L.x*D.W,y:L.y*D.H,size:L.size*D.W}));D.sel=D.layers[0]?.id??null}
+let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
+function openDesign(){renderDesign();$('#dsheet').hidden=false}
+function renderDesign(){
+  const clip=store.get('piclea.clip',null),mine=store.get('piclea.designs',[]);
+  $('#dpaste').disabled=!clip;$('#dall').disabled=P.pages.length<2;
+  $('#pleft').disabled=P.cur===0;$('#pright').disabled=P.cur>=P.pages.length-1;$('#pdel').disabled=P.pages.length<2;
+  $('#dpage').textContent=`この写真（${P.cur+1} / ${P.pages.length}枚目）`;
+  $('#mylist').innerHTML=mine.length?mine.map(m=>{const L=m.d.layers[0]||{};return `<div class="myrow"><div class="mytxt"><b>${esc(m.name)}</b><span style='font-family:${L.fam||'inherit'},sans-serif;font-weight:${L.w||400}'>${esc((L.text||'').split('\n')[0].slice(0,14))}</span></div><button class="eb" data-myapply="${m.id}">使う</button><button class="myx" data-mydel="${m.id}" aria-label="消す">×</button></div>`}).join('')
+    :'<p class="enote">よく使う文字の並びや飾りを名前を付けて取っておけます。写真は含みません。</p>';
+  for(const m of mine){const L=m.d.layers[0];if(L)document.fonts.load(fontStr(L,16),L.text||'あ').catch(()=>{})}
+}
+function designChanged(msg){commit();sizeCanvas();panel();refresh();renderStrip();emit('change');if(msg)toast(msg)}
+$('#dsheet').addEventListener('click',e=>{
+  if(e.target.closest('[data-dclose]')){$('#dsheet').hidden=true;return}
+  const b=e.target.closest('button');if(!b)return;
+  const mine=store.get('piclea.designs',[]);
+  switch(b.id){
+    case 'dcopy':store.set('piclea.clip',normDesign());renderDesign();toast('デザインをコピーしました（写真以外）');return;
+    case 'dpaste':{const c=store.get('piclea.clip',null);if(!c)return;applyDesign(c);designChanged('貼り付けました');renderDesign();return}
+    case 'dall':{
+      if(!confirm('ほかの写真の文字と飾りを、全部このページと同じにしますか？'))return;
+      syncCur();const d=normDesign();
+      P.pages.forEach((pg,i)=>{if(i!==P.cur)withPage(pg,()=>{applyDesign(d);P.pages[i]=clone(D)})});
+      loadInto(P.pages[P.cur]);designChanged(`${P.pages.length}枚ぜんぶ同じデザインにしました`);return;
+    }
+    case 'mysave':{
+      const name=prompt('マイデザインの名前',`マイデザイン ${mine.length+1}`);if(!name)return;
+      mine.unshift({id:Date.now(),name:name.slice(0,30),d:normDesign()});
+      if(!store.set('piclea.designs',mine))alert('保存できませんでした');else{renderDesign();toast('マイデザインに保存しました')}
+      return;
+    }
+    case 'pleft':case 'pright':{
+      syncCur();const j=P.cur+(b.id==='pleft'?-1:1);[P.pages[P.cur],P.pages[j]]=[P.pages[j],P.pages[P.cur]];P.cur=j;loadInto(P.pages[j]);
+      designChanged();renderDesign();return;
+    }
+    case 'pdel':{
+      if(!confirm('この写真を作品から外しますか？（元に戻すで戻せます）'))return;
+      syncCur();P.pages.splice(P.cur,1);P.cur=Math.min(P.cur,P.pages.length-1);loadInto(P.pages[P.cur]);designChanged();renderDesign();return;
+    }
+  }
+  if(b.dataset.myapply){const m=mine.find(x=>x.id===+b.dataset.myapply);if(m){applyDesign(m.d);designChanged(`「${m.name}」を当てました`)}return}
+  if(b.dataset.mydel){const m=mine.find(x=>x.id===+b.dataset.mydel);if(m&&confirm(`「${m.name}」を消しますか？`)){store.set('piclea.designs',mine.filter(x=>x!==m));renderDesign()}}
+});
+
 /* ---------- open / close / save ---------- */
 function openEditor(){
   if(!D.sel)D.sel=D.layers.at(-1)?.id??null;
-  sizeCanvas();$('#editor').hidden=false;document.body.style.overflow='hidden';setTab('文字');refresh();
+  sizeCanvas();$('#editor').hidden=false;document.body.style.overflow='hidden';setTab('文字');refresh();renderStrip();
 }
 function closeEditor(){$('#editor').hidden=true;document.body.style.overflow='';emit('closed')}
 $('#eback').onclick=closeEditor;
@@ -399,25 +501,27 @@ let saved=null;
 $('#esave').onclick=async()=>{
   const btn=$('#esave');btn.disabled=true;
   try{
-    await ensureFonts();
-    const off=document.createElement('canvas');off.width=D.W;off.height=D.H;draw(off.getContext('2d'));
-    const blob=await new Promise(r=>off.toBlob(r,'image/jpeg',.92));
-    const name=`piclea-${new Date().toISOString().slice(0,19).replace(/\D/g,'')}.jpg`;
-    if(saved)URL.revokeObjectURL(saved.url);
-    saved={file:new File([blob],name,{type:'image/jpeg'}),url:URL.createObjectURL(blob)};
-    $('#sprev').src=saved.url;$('#ssize').textContent=`${D.W} × ${D.H}`;
-    $('#sshare').textContent=navigator.canShare?.({files:[saved.file]})?'写真に保存・共有':'画像をダウンロード';
+    await ensureAll();syncCur();
+    const stamp=new Date().toISOString().slice(0,19).replace(/\D/g,''),many=P.pages.length>1;
+    const canvases=P.pages.map(pg=>withPage(pg,()=>{const off=document.createElement('canvas');off.width=D.W;off.height=D.H;draw(off.getContext('2d'));return off}));
+    const blobs=await Promise.all(canvases.map(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))));
+    saved?.urls.forEach(u=>URL.revokeObjectURL(u));
+    saved={files:blobs.map((b,i)=>new File([b],`piclea-${stamp}${many?'-'+String(i+1).padStart(2,'0'):''}.jpg`,{type:'image/jpeg'})),urls:blobs.map(b=>URL.createObjectURL(b))};
+    $('#sprevs').innerHTML=saved.urls.map((u,i)=>`<img src="${u}" alt="${i+1}枚目">`).join('');
+    $('#sprevs').classList.toggle('many',many);
+    $('#ssize').textContent=`${many?P.pages.length+'枚・':''}${D.W} × ${D.H}`;
+    $('#sshare').textContent=navigator.canShare?.({files:saved.files})?(many?`${P.pages.length}枚まとめて保存・共有`:'写真に保存・共有'):'画像をダウンロード';
     $('#ssheet').hidden=false;
   }finally{btn.disabled=false}
 };
 $('#sshare').onclick=()=>{
   if(!saved)return;
-  if(navigator.canShare?.({files:[saved.file]}))navigator.share({files:[saved.file]}).catch(()=>{});
-  else{const a=document.createElement('a');a.href=saved.url;a.download=saved.file.name;a.click()}
+  if(navigator.canShare?.({files:saved.files}))navigator.share({files:saved.files}).catch(()=>{});
+  else saved.files.forEach((f,i)=>{const a=document.createElement('a');a.href=saved.urls[i];a.download=f.name;a.click()});
 };
 document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet').hidden=true);
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!img,sel,GRADS}});
+  hasPhoto:()=>!!cur(),addPhotos,sel,GRADS}});
 })();
