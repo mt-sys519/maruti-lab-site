@@ -20,7 +20,8 @@ const NOSTART=/^[、。，．,.)）」』】〕〉》！？!?ー〜～…‥・�
 const D={ratio:'4:5',W:OUT_W,H:Math.round(OUT_W*5/4),photo:{s:1,ox:0,oy:0},layers:[],sel:null,photoId:null};
 const P={pages:[],cur:0};
 const photos=new Map();
-let uid=1,pid=1;
+let uid=1;
+const newId=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const cur=()=>photos.get(D.photoId);
 const listeners={};
 const emit=(n,d)=>(listeners[n]||[]).forEach(f=>f(d));
@@ -203,11 +204,11 @@ function ensureFonts(ov){
 }
 
 /* ---------- photos and pages ---------- */
-async function makePhoto(url){
+async function makePhoto(url,id=newId('p')){
   const im=new Image();im.src=url;await im.decode();
   const k=Math.min(1,720/Math.max(im.width,im.height)),sm=document.createElement('canvas');
   sm.width=Math.round(im.width*k);sm.height=Math.round(im.height*k);sm.getContext('2d').drawImage(im,0,0,sm.width,sm.height);
-  const id=pid++;photos.set(id,{url,img:im,small:sm});return id;
+  photos.set(id,{url,img:im,small:sm});return id;
 }
 const anyPhoto=()=>!!D.photoId||P.pages.some(pg=>pg&&pg.photoId);
 async function setPhoto(url){
@@ -228,7 +229,7 @@ async function addPhotos(urls){
 /* ---------- history (the whole work, so page changes undo too) ---------- */
 let hist=[],redo=[];
 const snap=()=>{syncCur();return JSON.stringify(clone(P))};
-function commit(){const s=snap();if(hist.at(-1)===s)return;hist.push(s);if(hist.length>80)hist.shift();redo=[];syncUndo();stripSoon()}
+function commit(){const s=snap();if(hist.at(-1)===s)return;hist.push(s);if(hist.length>80)hist.shift();redo=[];syncUndo();stripSoon();autosave()}
 function restore(s){const o=JSON.parse(s);P.pages=o.pages;P.cur=o.cur;loadInto(P.pages[P.cur]);sizeCanvas();panel();refresh();syncUndo();renderStrip();emit('change')}
 function undo(){if(hist.length<2)return;redo.push(hist.pop());restore(hist.at(-1))}
 function redoIt(){if(!redo.length)return;const s=redo.pop();hist.push(s);restore(s)}
@@ -475,6 +476,94 @@ $('#dsheet').addEventListener('click',e=>{
   if(b.dataset.mydel){const m=mine.find(x=>x.id===+b.dataset.mydel);if(m&&confirm(`「${m.name}」を消しますか？`)){store.set('piclea.designs',mine.filter(x=>x!==m));renderDesign()}}
 });
 
+/* ---------- works kept on this device (IndexedDB), plus a backup file ---------- */
+const DB={
+  db:null,
+  open(){return this.db??=new Promise((res,rej)=>{const r=indexedDB.open('piclea',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('works',{keyPath:'id'});d.createObjectStore('photos')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async run(store,mode,fn){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(store,mode),req=fn(t.objectStore(store));t.oncomplete=()=>res(req?.result);t.onerror=t.onabort=()=>rej(t.error)})},
+};
+let workId=null,savedPhotos=new Set(),saveT=0,asked=false;
+function autosave(){if(!anyPhoto())return;clearTimeout(saveT);saveT=setTimeout(()=>saveWork().catch(err=>{console.warn(err);toast('端末に保存できませんでした')}),1200)}
+function workThumb(){
+  const pg=P.pages[0],c=document.createElement('canvas'),h=260,w=Math.round(h*pg.W/pg.H);c.width=w;c.height=h;
+  const x=c.getContext('2d');x.setTransform(w/pg.W,0,0,h/pg.H,0,0);withPage(pg,()=>draw(x,{thumb:true}));return c.toDataURL('image/jpeg',.75);
+}
+async function saveWork(){
+  syncCur();if(!P.pages.length)return;
+  workId??=newId('w');
+  const ids=[...new Set(P.pages.map(pg=>pg.photoId).filter(Boolean))];
+  for(const id of ids){
+    if(savedPhotos.has(id)||!photos.has(id))continue;
+    const blob=await (await fetch(photos.get(id).url)).blob();
+    await DB.run('photos','readwrite',st=>st.put(blob,id));savedPhotos.add(id);
+  }
+  const prev=await DB.run('works','readonly',st=>st.get(workId));
+  const title=(P.pages[0].layers[0]?.text||'').split('\n')[0].slice(0,24)||'無題';
+  await DB.run('works','readwrite',st=>st.put({id:workId,title,updated:Date.now(),thumb:workThumb(),doc:clone(P),photos:ids}));
+  for(const id of prev?.photos||[])if(!ids.includes(id)){await DB.run('photos','readwrite',st=>st.delete(id));savedPhotos.delete(id)}
+  if(!asked){asked=true;navigator.storage?.persist?.().catch(()=>{})}
+  emit('saved');
+}
+async function listWorks(){
+  const all=await DB.run('works','readonly',st=>st.getAll());
+  return (all||[]).sort((a,b)=>b.updated-a.updated).map(w=>({id:w.id,title:w.title,updated:w.updated,thumb:w.thumb,pages:w.doc.pages.length,current:w.id===workId}));
+}
+function adopt(doc,id){
+  workId=id;P.pages=doc.pages;P.cur=Math.min(doc.cur||0,P.pages.length-1);loadInto(P.pages[P.cur]);
+  uid=Math.max(uid,...P.pages.flatMap(pg=>pg.layers.map(L=>L.id+1)));
+  wrapCache.clear();hist=[snap()];redo=[];syncUndo();emit('loaded');
+}
+async function openWork(id){
+  clearTimeout(saveT);
+  const w=await DB.run('works','readonly',st=>st.get(id));if(!w)throw new Error('missing');
+  for(const pid of w.photos){
+    if(!photos.has(pid)){const blob=await DB.run('photos','readonly',st=>st.get(pid));if(blob)await makePhoto(URL.createObjectURL(blob),pid)}
+    savedPhotos.add(pid);
+  }
+  adopt(w.doc,id);
+}
+async function deleteWork(id){
+  const w=await DB.run('works','readonly',st=>st.get(id));
+  await DB.run('works','readwrite',st=>st.delete(id));
+  for(const pid of w?.photos||[]){await DB.run('photos','readwrite',st=>st.delete(pid));savedPhotos.delete(pid)}
+  if(workId===id)workId=null;
+}
+function newWork(){
+  clearTimeout(saveT);workId=null;savedPhotos=new Set();
+  P.pages=[];P.cur=0;loadInto({ratio:'4:5',W:OUT_W,H:Math.round(OUT_W*5/4),photo:{s:1,ox:0,oy:0},layers:[],sel:null,photoId:null});
+  hist=[];redo=[];syncUndo();emit('reset');
+}
+const toDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+// A backup is one JSON file holding the work and its photos; it goes to the Files app through the share sheet.
+async function backupFile(){
+  syncCur();
+  const data={app:'piclea',v:1,doc:clone(P),photos:{}};
+  for(const id of new Set(P.pages.map(pg=>pg.photoId).filter(Boolean)))data.photos[id]=await toDataURL(await (await fetch(photos.get(id).url)).blob());
+  const title=(P.pages[0]?.layers[0]?.text||'').split('\n')[0].slice(0,12).replace(/[\\/:*?"<>|\s]/g,'')||'piclea';
+  return new File([JSON.stringify(data)],`piclea-${title}-${new Date().toISOString().slice(0,10)}.json`,{type:'application/json'});
+}
+async function importWork(file){
+  const data=JSON.parse(await file.text());if(data.app!=='piclea'||!data.doc?.pages)throw new Error('not piclea');
+  const map={};
+  for(const [old,url] of Object.entries(data.photos||{})){const blob=await (await fetch(url)).blob();map[old]=await makePhoto(URL.createObjectURL(blob))}
+  for(const pg of data.doc.pages)pg.photoId=map[pg.photoId]??null;
+  savedPhotos=new Set();adopt(data.doc,null);await saveWork();
+}
+let backup=null;
+$('#wexport').onclick=async()=>{
+  const b=$('#wexport');
+  if(backup){ // second tap: a fresh gesture, so iOS lets the share sheet open
+    if(navigator.canShare?.({files:[backup]}))navigator.share({files:[backup]}).catch(()=>{});
+    else{const a=document.createElement('a');a.href=URL.createObjectURL(backup);a.download=backup.name;a.click()}
+    backup=null;b.textContent='バックアップをファイルに書き出す';return;
+  }
+  b.disabled=true;b.textContent='準備しています…';
+  try{backup=await backupFile();b.textContent='「ファイル」に保存する（もう一度タップ）'}
+  catch{b.textContent='バックアップをファイルに書き出す';alert('書き出せませんでした')}
+  finally{b.disabled=false}
+};
+on('saved',()=>{const t=$('#esaved');if(!t)return;t.textContent='保存しました';t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600)});
+
 /* ---------- open / close / save ---------- */
 function openEditor(){
   if(!D.sel)D.sel=D.layers.at(-1)?.id??null;
@@ -523,5 +612,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),addPhotos,sel,GRADS}});
+  hasPhoto:()=>!!cur(),addPhotos,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
 })();
