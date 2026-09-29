@@ -114,5 +114,6 @@
 s.textContent=JSON.stringify({'@context':'https://schema.org','@type':'FAQPage',mainEntity:[...document.querySelectorAll('dl>div')].map(d=>({'@type':'Question',name:d.querySelector('dt').textContent.trim(),acceptedAnswer:{'@type':'Answer',text:d.querySelector('dd').textContent.replace(/\s+/g,' ').trim()}}))});
 document.head.appendChild(s)})();
 </script>
+<script src="../pages.js"></script>
 </body>
 </html>
