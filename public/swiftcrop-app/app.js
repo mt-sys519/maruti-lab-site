@@ -1,9 +1,15 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'swiftcrop.settings.v2';
+  // AI学習用の入口（?preset=ai-dataset と英語版）は 1024px・連番のファイル名で始まるので、
+  // 通常ページと設定の保存先を分け、その値が通常ページに持ち越されないようにする。
+  const AI_ENTRY = (() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('preset') === 'ai-dataset' || params.get('lang') === 'en';
+  })();
+  const STORAGE_KEY = AI_ENTRY ? 'swiftcrop.settings.ai.v2' : 'swiftcrop.settings.v2';
   const RECENT_KEY = 'swiftcrop.recentSizes.v2';
-  const FORMAT_KEY = 'swiftcrop.outputFormat.v2.3';
+  const FORMAT_KEY = AI_ENTRY ? 'swiftcrop.outputFormat.ai.v2.3' : 'swiftcrop.outputFormat.v2.3';
   const SUPPORTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
   const MAX_DIMENSION = 12000;
   const MAX_RECENT = 6;
@@ -2029,6 +2035,16 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
     localStorage.setItem(FORMAT_KEY, dom.format.value);
   }
 
+  // 通常ページではAIオプションが毎回閉じた状態で始まる。以前AIの入口やデータセット名から
+  // 自動で入った名前が残っていたら、元の既定値（画像名は空欄、ZIPは swiftcrop_images）に戻す。
+  // 自分で入力した名前はそのまま。
+  function clearDatasetNames(settings) {
+    const bases = new Set(['swiftcrop']);
+    if (typeof settings.datasetName === 'string' && settings.datasetName.trim()) bases.add(sanitizeFileName(settings.datasetName.trim()));
+    if ([...bases].some((base) => dom.rename.value === `${base}_####`) || dom.rename.value === 'swiftcrop_dataset_####') dom.rename.value = '';
+    if ([...bases].some((base) => dom.zipName.value === `${base}_dataset`)) dom.zipName.value = 'swiftcrop_images';
+  }
+
   function restoreSettings() {
     try {
       const settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -2047,6 +2063,7 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
       if (settings.quality) dom.quality.value = clamp(Number(settings.quality), 10, 100);
       if (typeof settings.rename === 'string') dom.rename.value = settings.rename;
       if (typeof settings.zipName === 'string') dom.zipName.value = settings.zipName;
+      if (!AI_ENTRY) clearDatasetNames(settings);
       if (dom.datasetName && typeof settings.datasetName === 'string') dom.datasetName.value = settings.datasetName;
       if (dom.triggerWord && typeof settings.triggerWord === 'string') dom.triggerWord.value = settings.triggerWord;
       if (dom.captionTemplate && typeof settings.captionTemplate === 'string') dom.captionTemplate.value = settings.captionTemplate || '{{dataset}}';

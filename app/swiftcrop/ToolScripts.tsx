@@ -14,7 +14,7 @@ import { useEffect } from "react";
 const sources = [
   "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
   "/swiftcrop-app/i18n.js?v=4.0.3-ratio-sizes-support",
-  "/swiftcrop-app/app.js?v=4.0.3-export-time",
+  "/swiftcrop-app/app.js?v=4.0.4-ai-settings-apart",
 ];
 
 export function ToolScripts() {
