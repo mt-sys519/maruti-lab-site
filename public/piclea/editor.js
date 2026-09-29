@@ -193,7 +193,7 @@ const sameShadow=(c,x,y,blur,col,a,draw)=>{ // for shapes: stack passes the same
 /* ---------- photo adjustments ---------- */
 // Worked out on the pixels (Safari's canvas has no filter), cached per photo. While a slider moves,
 // the small copy stands in for the full photo so it keeps up; letting go brings the full one back.
-const ADJ=[['temp','色温度'],['tint','色合い'],['bright','明るさ'],['contrast','コントラスト'],['sat','彩度'],['fade','フェード']];
+const ADJ=[['bright','明るさ'],['contrast','コントラスト'],['temp','色温度'],['tint','色合い'],['sat','彩度'],['fade','フェード']];
 const plainAdj=a=>!a||ADJ.every(([k])=>!a[k]);
 let adjLive=false;
 function adjust(src,a){
