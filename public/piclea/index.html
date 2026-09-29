@@ -12,12 +12,21 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="piclea">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>piclea — 写真に、似合う文字を。</title>
+<title>piclea — 写真に、似合う文字を。無料の文字入れツール</title>
+<meta name="description" content="自分の写真の上で、日本語70・英語138の書体を仕上がりのまま見比べて選べる、無料の文字入れツール。登録なし・透かしなし、写真はどこにも送られません。インスタのカルーセルや「型」にも対応。">
+<link rel="canonical" href="https://marutilab.com/piclea/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="piclea — 写真に、似合う文字を。">
+<meta property="og:description" content="自分の写真の上で208書体を見比べて選べる、無料の文字入れツール。写真はどこにも送られません。">
+<meta property="og:url" content="https://marutilab.com/piclea/">
+<meta property="og:image" content="https://marutilab.com/piclea/icon-512.png">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"piclea","url":"https://marutilab.com/piclea/","description":"自分の写真の上で日本語70・英語138の書体を見比べて選べる、無料の文字入れツール。写真はブラウザの中だけで処理されます。","applicationCategory":"DesignApplication","operatingSystem":"iOS, Android, Windows, macOS","inLanguage":"ja","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"publisher":{"@type":"Organization","name":"Maruti Lab","url":"https://marutilab.com/"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- UI -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@300;400&family=Marcellus&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap&text=%E5%86%99%E7%9C%9F%E3%81%AB%E3%80%81%E4%BC%BC%E5%90%88%E3%81%86%E6%96%87%E5%AD%97%E3%82%92%E3%80%82" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap" rel="stylesheet">
 <style>
 @font-face{font-family:"Piclea Blank";src:url(fonts/AdobeBlank2.otf.woff) format("woff")}
 @font-face{font-family:"GenEi Koburi Mincho";src:url(fonts/GenEiKoburiMin6-R.woff2) format("woff2")}
@@ -151,6 +160,26 @@ body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-ali
 footer{max-width:1120px;margin:30px auto 0;padding:0 20px;font-size:11px;line-height:2;color:var(--mocha);text-align:center;letter-spacing:.04em}
 footer a{color:inherit;text-underline-offset:3px}
 footer .by{font:400 14px Marcellus,serif;letter-spacing:.3em;text-transform:uppercase;color:var(--ink)}
+footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;margin:4px 0 10px;font-size:12px}
+/* why piclea: what it is good at, for people and for search */
+.why{max-width:1000px;margin:40px auto 0;padding:0 20px}
+.why-k{font:400 11px Marcellus,serif;letter-spacing:.3em;color:var(--mocha);text-align:center;margin:0 0 12px}
+.why h2{font-family:"Shippori Mincho",serif;font-weight:500;font-size:clamp(22px,5.6vw,30px);line-height:1.6;letter-spacing:.1em;text-align:center;margin:0 0 16px}
+.why-lead{max-width:600px;margin:0 auto 26px;font-size:14px;line-height:2;color:var(--mocha);text-align:center}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.why article{background:rgba(255,253,251,.72);border-radius:20px;padding:18px 18px 14px;box-shadow:0 1px 2px rgba(60,40,30,.05)}
+.why article i{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:var(--brand);color:#fff;margin-bottom:12px}
+.why article svg{width:22px;height:22px}
+.why h3{font-size:15px;line-height:1.6;margin:0 0 6px;letter-spacing:.03em}
+.why article p{font-size:13px;line-height:1.9;color:#6b5d56;margin:0}
+.why-links{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.why-links a{flex:1 1 200px;text-decoration:none;color:var(--ink);background:#fff;border-radius:16px;padding:14px 16px;font-size:14px;box-shadow:0 1px 2px rgba(60,40,30,.06)}
+.why-links a small{display:block;font-size:11.5px;color:var(--mocha)}
+@media (max-width:640px){
+  .why-grid{grid-template-columns:1fr;gap:10px}.why{padding:0 14px}
+  .why article{display:grid;grid-template-columns:40px 1fr;column-gap:14px;padding:16px 16px 14px}
+  .why article i{grid-row:span 2;margin:2px 0 0}
+}
 
 @media (max-width:640px){
   .grid{grid-template-columns:repeat(2,1fr);gap:9px;padding:12px 12px 16px}
@@ -379,6 +408,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <div class="ctas"><button class="pill ghost" id="tplCta" hidden>型から作る</button><button class="pill ghost" id="worksCta" hidden>つくったもの</button></div>
 </section>
 
+<div class="pick"><!-- the finder sticks only while the list is on screen -->
 <section class="finder glass">
   <div class="pgrow" id="pgrow" hidden></div>
   <div class="ltabs" id="ltabs"></div>
@@ -390,9 +420,36 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 </section>
 
 <main class="grid" id="grid"></main>
+</div>
+
+<section class="why" aria-labelledby="why-title">
+  <p class="why-k">WHY PICLEA</p>
+  <h2 id="why-title">仕上がりを見ながら、<br>書体を選べる文字入れ。</h2>
+  <p class="why-lead">文字入れアプリで迷うのは、たいてい書体選びです。見本の画像ではよく見えても、自分の写真に乗せると印象が変わる。piclea は、あなたの写真とあなたの言葉のまま全部の書体を並べるところから始まります。</p>
+  <div class="why-grid">
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="9" rx="1.8"/><rect x="13" y="3.5" width="7.5" height="9" rx="1.8"/><rect x="3.5" y="14.5" width="7.5" height="6" rx="1.8"/><rect x="13" y="14.5" width="7.5" height="6" rx="1.8"/></svg></i>
+      <h3>自分の写真で、208書体を見比べる</h3><p>日本語70・英語138の書体を、選んだ写真の上に仕上がりのまま一覧で並べます。気になる書体は大きく開いて、指で文字を動かしながら確かめられます。</p></article>
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 018 0v2.5"/><circle cx="12" cy="15.5" r="1.3"/></svg></i>
+      <h3>写真は、どこにも送られない</h3><p>写真の読み込みから文字入れ、保存まで、すべてスマホのブラウザの中で完結します。写真を受け取るサーバーがそもそもないので、家族や自宅の写真でも安心して使えます。</p></article>
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.2 5 5.3.5-4 3.6 1.2 5.2L12 15.1l-4.7 2.7 1.2-5.2-4-3.6 5.3-.5z"/></svg></i>
+      <h3>無料・登録なし・透かしなし</h3><p>アカウント登録もアプリのインストールもいりません。ページを開けばすぐ使えて、保存した画像にロゴや透かしは入りません。</p></article>
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="3.5" width="12" height="14" rx="2.2"/><path d="M5 7.5v10.2A2.8 2.8 0 007.8 20.5h8.7"/></svg></i>
+      <h3>インスタのカルーセルもそのまま</h3><p>4:5・1:1・9:16 に対応し、写真をまとめて選べば1枚ずつページになります。全ページのデザインを一度にそろえて、番号付きでまとめて保存できます。</p></article>
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 10.5h17M10.5 10.5v10"/></svg></i>
+      <h3>「型」で、いつもの投稿が数秒</h3><p>気に入ったデザインを型として取っておけば、次からは写真を選ぶだけ。写真は順番に枠へはまり、毎週のお知らせや連載の見た目を簡単にそろえられます。</p></article>
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4.5 15.5v2.8a2.2 2.2 0 002.2 2.2h10.6a2.2 2.2 0 002.2-2.2v-2.8"/></svg></i>
+      <h3>作りかけも、端末に自動で残る</h3><p>編集するたびにスマホの中へ自動保存され、「つくったもの」から続きを編集できます。写真ごとバックアップを書き出せば、機種変更のときも安心です。</p></article>
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18.5L10.5 5.5h3L18 18.5M8 13.5h8"/></svg></i>
+      <h3>お店の告知にも使える書体だけ</h3><p>収録した書体は、すべて商用利用が認められた無料のライセンスのものです。作った画像は、個人の投稿にもお店や仕事の宣伝にも使えます。</p></article>
+    <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.2"/><rect x="11" y="11" width="9.5" height="9.5" rx="2"/></svg></i>
+      <h3>文字、写真、図形を重ねて仕上げる</h3><p>縁取り・影・枠つきの文字、丸や角丸に切り抜いて重ねる写真、帯や余白をつくる図形。背景は写真のほか、単色やグラデーションにもできます。</p></article>
+  </div>
+  <div class="why-links"><a href="guide/"><small>はじめから順に</small>使い方</a><a href="faq/"><small>料金・安全性・保存のこと</small>よくある質問</a><a href="licenses.html"><small>70＋138書体の一覧</small>フォントとライセンス</a></div>
+</section>
 
 <footer>
   <div class="by">piclea</div>
+  <nav class="fnav" aria-label="piclea と Maruti Lab"><a href="guide/">使い方</a><a href="faq/">よくある質問</a><a href="licenses.html">フォントとライセンス</a><a href="/">Maruti Lab</a><a href="/about">運営者について</a><a href="/privacy">プライバシーポリシー</a><a href="/terms">利用規約</a><a href="/contact">お問い合わせ</a></nav>
   写真はブラウザの中だけで処理され、サーバーには送信されません。<br>
   フォントは Google Fonts・源暎フォント（おたもん）・自家製フォント工房・モトヤ から、各ライセンスに従って使用しています。<a href="licenses.html">フォントとライセンスの一覧</a><br>
   （<a href="https://openfontlicense.org/" rel="noopener">SIL Open Font License 1.1</a>／モトヤLシーダ・マルベリは <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener">Apache License 2.0</a>。著作権表示は各フォントファイルに含まれています）
