@@ -2,7 +2,7 @@
 // used for the picker tiles, the large preview, the editor and the saved file alike, so all of them
 // match. Coordinates are output pixels of the finished image.
 (() => {
-const {JA,EN,loadPhoto,loadFace}=window.PICLEA;
+const {JA,EN,loadPhoto,loadFace,faceReady}=window.PICLEA;
 const $=s=>document.querySelector(s);
 const OUT_W=1080;
 // iPhone and iPad save through the share sheet; Android and computers download (a computer's share
@@ -101,10 +101,10 @@ function wrapLines(c,L,f){
 
 /* ---------- in-page dialog ---------- */
 // ask('text',{ok}) resolves true/false; with {input:'default'} it resolves the typed text or null.
-function ask(msg,{ok='OK',input=null}={}){
+function ask(msg,{ok='OK',input=null,cancel=true}={}){
   return new Promise(res=>{
     const d=$('#askd'),inp=$('#askin');
-    $('#askmsg').textContent=msg;$('#askok').textContent=ok;
+    $('#askmsg').textContent=msg;$('#askok').textContent=ok;d.querySelector('button[data-askno]').style.display=cancel?'':'none';
     inp.hidden=input==null;if(input!=null)inp.value=input;
     d.hidden=false;if(input!=null)setTimeout(()=>{inp.focus();inp.select()},30);
     const done=v=>{d.hidden=true;d.onclick=null;inp.onkeydown=null;res(v)};
@@ -377,6 +377,12 @@ function applyRatio(name){
   loadInto(P.pages[P.cur]);wrapCache.clear();
 }
 function ensureAll(){syncCur();return Promise.all(P.pages.flatMap(pg=>pg.layers.filter(isText).map(L=>loadFace(L.fam,L.w,loadText(L)).catch(()=>[]))))}
+// Names of the typefaces that could not be fetched (Google down, no signal); empty when all are here.
+async function missingFaces(){
+  syncCur();const ts=P.pages.flatMap(pg=>pg.layers.filter(isText));
+  const ok=await Promise.all(ts.map(L=>faceReady(L.fam,L.w,loadText(L))));
+  return [...new Set(ts.filter((L,i)=>!ok[i]).map(L=>L.name||L.fam.replace(/"/g,'')))];
+}
 
 /* =================== editor view =================== */
 // The picture fills the screen. One bar at the bottom holds what can be done to the current selection
@@ -1108,8 +1114,11 @@ $('#efile').addEventListener('change',async e=>{
 let saved=null;
 $('#esave').onclick=async()=>{
   const btn=$('#esave');btn.disabled=true;
+  const slow=setTimeout(()=>toast('書体を読み込んでいます…'),800);
   try{
-    await ensureAll();syncCur();
+    const miss=await missingFaces();clearTimeout(slow);
+    if(miss.length){await ask(`書体「${miss.join('」「')}」を読み込めませんでした。違う書体のまま保存しないよう、止めています。電波のよいところで、もう一度「保存」を押してください。`,{ok:'閉じる',cancel:false});return}
+    syncCur();
     const stamp=new Date().toISOString().slice(0,19).replace(/\D/g,''),many=P.pages.length>1;
     const canvases=P.pages.map(pg=>withPage(pg,()=>{const off=document.createElement('canvas');off.width=D.W;off.height=D.H;draw(off.getContext('2d'));return off}));
     const blobs=await Promise.all(canvases.map(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))));
@@ -1123,7 +1132,7 @@ $('#esave').onclick=async()=>{
     $('#sshare2').hidden=!(OS==='android'&&share); // Android: saving and sending to Instagram are two different wishes
     $('#ssheet').hidden=false;
     const empty=emptySlots();if(empty)toast(`写真がはまっていない枠が${empty}つあります`);
-  }finally{btn.disabled=false}
+  }finally{clearTimeout(slow);btn.disabled=false}
 };
 $('#sshare').onclick=()=>{
   if(!saved)return;

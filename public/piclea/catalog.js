@@ -221,18 +221,25 @@ const DEFAULT_JA=JA.find(f=>f[0]==='しっぽり明朝 B1')||JA[0];
 
 // Google Fonts CSS is fetched per family when it is first needed; a Japanese family alone
 // declares ~120 @font-face ranges, so loading the whole catalog up front would be heavy.
-const cssDone=new Map();
+// Google can refuse or never answer (a bad signal, an outage); neither may hang the app, and a failed
+// family is dropped from the cache so the next try asks again.
+const cssDone=new Map(),FONT_WAIT=8000;
+const inTime=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
 function ensureCSS(fam){
-  const f=BYFAM.get(fam);if(!f||f[3]!==GF)return Promise.resolve();
+  const f=BYFAM.get(fam);if(!f||f[3]!==GF)return Promise.resolve(true);
   if(cssDone.has(fam))return cssDone.get(fam);
-  const p=new Promise(res=>{
-    const l=document.createElement('link');l.rel='stylesheet';
-    l.href=`https://fonts.googleapis.com/css2?family=${encodeURIComponent(fam.replace(/"/g,'')).replace(/%20/g,'+')}:wght@${f[4]}&display=swap`;
-    l.onload=l.onerror=()=>res();document.head.appendChild(l);
-  });
-  cssDone.set(fam,p);return p;
+  const l=document.createElement('link');l.rel='stylesheet';
+  l.href=`https://fonts.googleapis.com/css2?family=${encodeURIComponent(fam.replace(/"/g,'')).replace(/%20/g,'+')}:wght@${f[4]}&display=swap`;
+  const p=inTime(new Promise((res,rej)=>{l.onload=res;l.onerror=rej}),FONT_WAIT).then(()=>true,()=>{l.remove();cssDone.delete(fam);return false});
+  document.head.appendChild(l);cssDone.set(fam,p);return p;
 }
-async function loadFace(fam,w,text){await ensureCSS(fam);return document.fonts.load(`${w} 32px ${fam}`,text||'あ')}
+async function loadFace(fam,w,text){await ensureCSS(fam);return inTime(document.fonts.load(`${w} 32px ${fam}`,text||'あ'),FONT_WAIT)}
+// For saving: true only when the family really arrived, so a fallback face is never baked into the file.
+async function faceReady(fam,w,text){
+  if(!await ensureCSS(fam))return false;
+  try{await loadFace(fam,w,text)}catch{return false}
+  return document.fonts.check(`${w} 32px ${fam}`,text||'あ');
+}
 
 // Shrink once so dozens of tiles and the editor never repaint a 12MP original. Nothing leaves the browser.
 async function loadPhoto(file){
@@ -245,5 +252,5 @@ async function loadPhoto(file){
   return URL.createObjectURL(blob);
 }
 
-window.PICLEA={JA,EN,DEFAULT_JA,loadFace,loadPhoto};
+window.PICLEA={JA,EN,DEFAULT_JA,loadFace,faceReady,loadPhoto};
 })();
