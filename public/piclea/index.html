@@ -105,11 +105,16 @@ body.has-photo .hero{display:none}
 .chips.fr{mask-image:linear-gradient(90deg,#000 86%,transparent)}
 .chips.fl{mask-image:linear-gradient(90deg,transparent,#000 14%)}
 .chips.fl.fr{mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
-/* with a mouse there is no swipe, and a wide screen has the room: let the chips wrap so every one is in sight */
-@media (hover:hover) and (pointer:fine),(min-width:600px){.row:has(.chips){align-items:flex-start}.chips{flex-wrap:wrap;overflow:visible;mask-image:none}}
+.chipwrap{position:relative;flex:1;min-width:0}
+/* a mouse cannot swipe: arrows on the side that still has chips */
+.chipnav{display:none;position:absolute;top:50%;z-index:1;width:28px;height:28px;margin-top:-14px;border-radius:50%;background:#fff;color:var(--ink);font-size:17px;line-height:1;box-shadow:0 2px 8px rgba(110,84,70,.18);place-items:center;padding:0 0 2px}
+.chipnav.l{left:-2px}.chipnav.r{right:-2px}
+@media (hover:hover){.chipwrap:has(.chips.fl) .chipnav.l,.chipwrap:has(.chips.fr) .chipnav.r{display:grid}}
+/* a wide screen has the room: wrap (two lines at most) so every chip is in sight */
+@media (min-width:600px){.row:has(.chips){align-items:flex-start}.chips{flex-wrap:wrap;overflow:visible;mask-image:none}.chipnav{display:none!important}}
 .chip{flex:none;border-radius:999px;padding:7px 13px;font-size:12px;color:var(--mocha);border:1px solid rgba(75,63,58,.1);white-space:nowrap}
 .chip.on{background:#fff;color:var(--ink);border-color:#fff;box-shadow:0 2px 8px rgba(110,84,70,.12)}
-.chip.fav{color:var(--rose)}
+.chip.cfav{color:var(--rose)}
 
 /* grid */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;max-width:1120px;margin:0 auto;padding:16px 20px 20px}
@@ -452,7 +457,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <textarea class="text" id="text" rows="1" aria-label="入れたい文字" placeholder="入れたい文字"></textarea>
   <div class="row">
     <div class="lang" id="lang"><button data-l="ja" class="on">日本語</button><button data-l="en">English</button></div>
-    <div class="chips" id="chips"></div>
+    <div class="chipwrap"><button class="chipnav l" data-cn="-1" aria-label="前のカテゴリ">‹</button><div class="chips" id="chips"></div><button class="chipnav r" data-cn="1" aria-label="次のカテゴリ">›</button></div>
   </div>
 </section>
 
@@ -711,12 +716,15 @@ function fitInput(){const a=$('#text');a.style.height='auto';a.style.height=a.sc
 /* ---------- catalog ---------- */
 function renderChips(){
   const cur=S.cat[S.lang];
-  $('#chips').innerHTML=`<button class="chip fav${cur==='fav'?' on':''}" data-c="fav">★</button>`+
+  $('#chips').innerHTML=`<button class="chip cfav${cur==='fav'?' on':''}" data-c="fav">★</button>`+
     CATS[S.lang].map(c=>`<button class="chip${c===cur?' on':''}" data-c="${c}">${c}</button>`).join('');
   chipFade();
 }
 function chipFade(){const c=$('#chips'),max=c.scrollWidth-c.clientWidth;c.classList.toggle('fl',c.scrollLeft>2);c.classList.toggle('fr',c.scrollLeft<max-2)}
 $('#chips').addEventListener('scroll',chipFade,{passive:true});addEventListener('resize',chipFade);
+$('.chipwrap').addEventListener('click',e=>{const b=e.target.closest('[data-cn]');if(!b)return;const c=$('#chips');c.scrollBy({left:+b.dataset.cn*c.clientWidth*.7,behavior:'smooth'})});
+// a mouse wheel turns the row sideways when it overflows
+$('#chips').addEventListener('wheel',e=>{const c=e.currentTarget;if(c.scrollWidth<=c.clientWidth||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;e.preventDefault();c.scrollLeft+=e.deltaY},{passive:false});
 function renderGrid(){
   const src=S.lang==='ja'?JA:EN,cur=S.cat[S.lang];
   S.items=src.filter(f=>cur==='fav'?S.favs.has(key(f)):(cur===CATS[S.lang][0]||f[2]===cur));
