@@ -126,7 +126,13 @@ body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-ali
 .empty{grid-column:1/-1;text-align:center;color:var(--mocha);font-size:13px;line-height:2;padding:50px 0}
 
 /* dock */
-.dock{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--safe-b));display:flex;align-items:center;gap:12px;border-radius:999px;padding:8px 16px 8px 8px;white-space:nowrap}
+.dock{position:fixed;z-index:20;left:8px;right:8px;bottom:calc(8px + var(--safe-b));max-width:600px;margin:0 auto;display:flex;align-items:center;gap:1px;background:#fffdfb;border-radius:22px;padding:4px;box-shadow:0 1px 2px rgba(60,40,30,.08),0 8px 24px rgba(60,40,30,.12)}
+.dbt{flex:0 0 54px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;border-radius:16px;color:var(--mocha);font-size:10.5px;letter-spacing:.04em;white-space:nowrap}
+.dbt svg{width:22px;height:22px}
+.dbt:active{background:rgba(75,63,58,.07)}
+.dbt .cdot{width:20px;height:20px;margin:1px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(75,63,58,.25),0 0 0 2px #fff,0 0 0 3px rgba(75,63,58,.14)}
+.dsize{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:4px 10px 3px;font-size:10.5px;color:var(--mocha);letter-spacing:.04em;text-align:center}
+.dsize input{width:100%}
 .dk{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fbf7f3}
 .dk svg{width:20px;height:20px}
 .sep{width:1px;height:22px;background:rgba(75,63,58,.14)}
@@ -190,8 +196,6 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
   .bar .pill{padding:8px 13px;font-size:12px}
   .bar-r{gap:6px}
   body.has-photo .logo small{display:none}
-  .dock{gap:9px;padding-right:12px}
-  .size{width:64px}
   .panel{width:100vw;border-radius:30px 30px 0 0;align-self:flex-end;padding-bottom:calc(18px + var(--safe-b))}
   .close{right:12px;top:-48px}
 }
@@ -471,14 +475,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   （<a href="https://openfontlicense.org/" rel="noopener">SIL Open Font License 1.1</a>／モトヤLシーダ・マルベリは <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener">Apache License 2.0</a>。著作権表示は各フォントファイルに含まれています）
 </footer>
 
-<nav class="dock glass" aria-label="表示の調整">
-  <button class="dk" data-pick aria-label="写真をえらぶ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg></button>
-  <button class="cbtn" id="cbtn" aria-label="文字の色"><i id="cdot"></i></button>
-  <span class="sep"></span>
-  <div class="mini" id="dir"><button data-v="h" class="on">横</button><button data-v="v">縦</button></div>
-  <span class="sep"></span>
-  <input class="size" type="range" id="size" min="16" max="60" value="30" aria-label="文字の大きさ">
-  <button class="mini-b" id="detailBtn">詳細</button>
+<nav class="dock" aria-label="表示の調整"><!-- the same bar as the editor's -->
+  <button class="dbt" data-pick><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg><span>写真</span></button>
+  <button class="dbt" id="cbtn" aria-label="文字の色"><i class="cdot" id="cdot"></i><span>色</span></button>
+  <button class="dbt" id="dirBtn" aria-label="横書きと縦書き"><svg id="dirIc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></svg><span id="dirLb">横書き</span></button>
+  <label class="dsize"><span>大きさ</span><input type="range" id="size" min="16" max="60" value="30" aria-label="文字の大きさ"></label>
+  <button class="dbt" id="detailBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>詳細</span></button>
 </nav>
 
 <div class="sheet" id="sheet" hidden>
@@ -660,7 +662,8 @@ function syncControls(){
   if(document.activeElement!==$('#text'))$('#text').value=L.text;
   fitInput();
   $('#cdot').style.background=L.color;
-  $$('#dir button').forEach(x=>x.classList.toggle('on',(x.dataset.v==='v')===L.vertical));
+  $('#dirLb').textContent=L.vertical?'縦書き':'横書き';
+  $('#dirIc').innerHTML=L.vertical?'<path d="M16 4.5v15M11 4.5v10M6 4.5v13"/>':'<path d="M4.5 7h15M4.5 12h10M4.5 17h13"/>';
   $('#size').value=sliderOf(L);
 }
 $('#ltabs').addEventListener('click',async e=>{
@@ -747,8 +750,7 @@ $('#grid').addEventListener('click',e=>{
 $('#grid').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('tile'))openSheet(+e.target.dataset.i)});
 
 /* ---------- dock: acts on the selected text ---------- */
-function seg(sel,fn){$(sel).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fn(b.dataset.v);app.commit();changed()})}
-seg('#dir',v=>{const L=tsel();if(L)L.vertical=v==='v'});
+$('#dirBtn').onclick=()=>{const L=tsel();if(!L)return;L.vertical=!L.vertical;app.commit();changed()};
 $('#size').addEventListener('input',e=>{const L=tsel();if(!L)return;L.size=sizeOf(+e.target.value);redrawSoon()});
 
 /* colour: one swatch that opens the palette */
