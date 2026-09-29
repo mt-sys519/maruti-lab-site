@@ -421,7 +421,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 
 <header class="bar">
   <div class="bar-l"><button class="ic" id="menuBtn" aria-label="メニュー" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
-    <nav class="hnav" aria-label="piclea について"><a href="#why-title" data-why>特長</a><a href="guide/">使い方</a><a href="faq/">よくある質問</a></nav></div>
+    <nav class="hnav" aria-label="piclea について"><a href="#why-title" data-why>特長</a><a href="guide/" target="piclea-info">使い方</a><a href="faq/" target="piclea-info">よくある質問</a></nav></div>
   <a class="logo" href="./"><b>piclea</b><small>by Maruti Lab</small></a>
   <div class="bar-r"><!-- what comes next: back to your works, or on to the editor once a photo is in -->
     <button class="ic" id="worksTop" aria-label="つくったもの" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></button><button class="pill dark" id="toEdit">編集へ</button></div>
@@ -472,14 +472,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <article><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.2"/><rect x="11" y="11" width="9.5" height="9.5" rx="2"/></svg></i>
       <h3>文字、写真、図形を重ねて仕上げる</h3><p>縁取り・影・枠つきの文字、丸や角丸に切り抜いて重ねる写真、帯や余白をつくる図形。背景は写真のほか、単色やグラデーションにもできます。</p></article>
   </div>
-  <div class="why-links"><a href="guide/"><small>はじめから順に</small>使い方</a><a href="faq/"><small>料金・安全性・保存のこと</small>よくある質問</a><a href="licenses.html"><small>70＋138書体の一覧</small>フォントとライセンス</a></div>
+  <div class="why-links"><a href="guide/" target="piclea-info"><small>はじめから順に</small>使い方</a><a href="faq/" target="piclea-info"><small>料金・安全性・保存のこと</small>よくある質問</a><a href="licenses.html" target="piclea-info"><small>70＋138書体の一覧</small>フォントとライセンス</a></div>
 </section>
 
 <footer>
   <div class="by">piclea</div>
-  <nav class="fnav" aria-label="piclea と Maruti Lab"><a href="guide/">使い方</a><a href="faq/">よくある質問</a><a href="licenses.html">フォントとライセンス</a><a href="/">Maruti Lab</a><a href="/about">運営者について</a><a href="/privacy">プライバシーポリシー</a><a href="/terms">利用規約</a><a href="/contact">お問い合わせ</a></nav>
+  <nav class="fnav" aria-label="piclea と Maruti Lab"><a href="guide/" target="piclea-info">使い方</a><a href="faq/" target="piclea-info">よくある質問</a><a href="licenses.html" target="piclea-info">フォントとライセンス</a><a href="/" target="piclea-info">Maruti Lab</a><a href="/about" target="piclea-info">運営者について</a><a href="/privacy" target="piclea-info">プライバシーポリシー</a><a href="/terms" target="piclea-info">利用規約</a><a href="/contact" target="piclea-info">お問い合わせ</a></nav>
   写真はブラウザの中だけで処理され、サーバーには送信されません。<br>
-  フォントは Google Fonts・源暎フォント（おたもん）・自家製フォント工房・モトヤ から、各ライセンスに従って使用しています。<a href="licenses.html">フォントとライセンスの一覧</a><br>
+  フォントは Google Fonts・源暎フォント（おたもん）・自家製フォント工房・モトヤ から、各ライセンスに従って使用しています。<a href="licenses.html" target="piclea-info">フォントとライセンスの一覧</a><br>
   （<a href="https://openfontlicense.org/" rel="noopener">SIL Open Font License 1.1</a>／モトヤLシーダ・マルベリは <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener">Apache License 2.0</a>。著作権表示は各フォントファイルに含まれています）
 </footer>
 
@@ -601,11 +601,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
       <button data-mworks><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></i><span><b>つくったもの</b><small>作りかけの続き・バックアップ</small></span></button>
       <p class="mhead">piclea について</p>
       <a href="#why-title" data-why><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.2 5 5.3.5-4 3.6 1.2 5.2L12 15.1l-4.7 2.7 1.2-5.2-4-3.6 5.3-.5z"/></svg></i><span><b>piclea の特長</b><small>できること・安心して使える理由</small></span></a>
-      <a href="guide/"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></svg></i><span><b>使い方</b><small>写真を選んでから保存するまで</small></span></a>
-      <a href="faq/"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 014.8.9c0 1.7-2.4 2-2.4 3.6M12 17h.01"/></svg></i><span><b>よくある質問</b><small>料金・安全性・保存のこと</small></span></a>
-      <a href="licenses.html"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18.5L10.5 5.5h3L18 18.5M8 13.5h8"/></svg></i><span><b>フォントとライセンス</b><small>70＋138書体の一覧・すべて商用利用可</small></span></a>
+      <a href="guide/" target="piclea-info"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></svg></i><span><b>使い方</b><small>写真を選んでから保存するまで</small></span></a>
+      <a href="faq/" target="piclea-info"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 014.8.9c0 1.7-2.4 2-2.4 3.6M12 17h.01"/></svg></i><span><b>よくある質問</b><small>料金・安全性・保存のこと</small></span></a>
+      <a href="licenses.html" target="piclea-info"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18.5L10.5 5.5h3L18 18.5M8 13.5h8"/></svg></i><span><b>フォントとライセンス</b><small>70＋138書体の一覧・すべて商用利用可</small></span></a>
     </nav>
-    <div class="mfoot"><a href="/contact">お問い合わせ</a><a href="/privacy">プライバシーポリシー</a></div>
+    <div class="mfoot"><a href="/contact" target="piclea-info">お問い合わせ</a><a href="/privacy" target="piclea-info">プライバシーポリシー</a></div>
     <button class="stext" data-mclose>閉じる</button>
   </div>
 </div>
