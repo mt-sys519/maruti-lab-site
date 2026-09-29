@@ -553,8 +553,9 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <div class="scrim" data-sclose></div>
   <div class="scard glass">
     <div class="sprevs" id="sprevs"></div>
-    <p class="snote"><span id="ssize"></span>　iPhoneは画像の長押しでも写真に保存できます</p>
+    <p class="snote"><span id="ssize"></span>　<span data-os="snote"></span></p>
     <button class="pill dark big" id="sshare">写真に保存・共有</button>
+    <button class="pill soft" id="sshare2" hidden style="margin-top:10px">共有する（インスタなどへ）</button>
     <button class="stext" data-sclose>編集に戻る</button>
   </div>
 </div>
@@ -593,14 +594,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <div id="wworks">
       <div class="wgrid" id="wgrid"></div>
       <div class="dgrid" style="margin-top:12px"><button class="eb dark wide" id="wall">全部まとめてバックアップ</button><button class="eb wide" data-wimport>バックアップのファイルから戻す</button></div>
-      <p class="enote">作品と型を写真ごと1つのファイルにします。「"ファイル"に保存」で iCloud Drive に置いておけば、機種変更しても戻せます。同じファイルを何度読み込んでも、作品が重なることはありません。</p>
+      <p class="enote" data-os="wall"></p>
     </div>
     <div id="wtpl" hidden>
       <p class="enote">型をえらんで写真を選ぶと、1枚目から順に写真枠にはまります（ページごとに背景→重ねた枠の順）。型より写真が多いときは、最後のページの型で続きます。</p>
       <div class="wgrid" id="tgrid"></div>
       <div class="dgrid" style="margin-top:12px"><button class="eb wide" id="texport">型だけをファイルに書き出す</button><button class="eb wide" data-wimport>型のファイルを読み込む</button></div>
     </div>
-    <p class="enote" id="whome">ホーム画面に追加して使うと、作品が消えにくくなります（共有ボタン →「ホーム画面に追加」）。</p>
+    <p class="enote" id="whome" data-os="home"></p>
     <button class="stext" data-wclose>閉じる</button>
   </div>
 </div>
@@ -650,6 +651,18 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 // Picker. Every tile is the whole design drawn by the shared draw(), with only the selected text
 // swapped to that tile's font, so comparing here is comparing the finished picture.
 const {JA,EN,DEFAULT_JA,loadPhoto,app}=window.PICLEA;
+const OS_TEXT={
+  ios:{snote:'iPhoneは画像の長押しでも写真に保存できます',
+    wall:'作品と型を写真ごと1つのファイルにします。「"ファイル"に保存」で iCloud Drive に置いておけば、機種変更しても戻せます。同じファイルを何度読み込んでも、作品が重なることはありません。',
+    home:'ホーム画面に追加して使うと、作品が消えにくくなります（共有ボタン →「ホーム画面に追加」）。'},
+  android:{snote:'画像は「ダウンロード」に保存されます',
+    wall:'作品と型を写真ごと1つのファイルにして「ダウンロード」に保存します。Google ドライブに移しておけば、機種変更しても戻せます。同じファイルを何度読み込んでも、作品が重なることはありません。',
+    home:'ホーム画面に追加して使うと、作品が消えにくくなります（Chrome のメニュー︙ →「ホーム画面に追加」または「アプリをインストール」）。'},
+  pc:{snote:'画像はパソコンの「ダウンロード」フォルダに保存されます',
+    wall:'作品と型を写真ごと1つのファイルにして「ダウンロード」フォルダに保存します。OneDrive や Google ドライブなどに置いておけば、パソコンを替えても戻せます。同じファイルを何度読み込んでも、作品が重なることはありません。',
+    home:'アドレスバーのインストールのボタンからアプリとして入れておくと、作品が消えにくくなります。'},
+}[app.os];
+document.querySelectorAll('[data-os]').forEach(el=>el.textContent=OS_TEXT[el.dataset.os]);
 const D=app.D;
 
 const CATS={ja:['すべて','明朝','丸ゴ','ゴシック','手書き','ポップ','見出し','レトロ','筆','漫画'],en:['All','Serif','Sans','Script','Hand','Display','Typewriter']};

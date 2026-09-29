@@ -5,6 +5,10 @@
 const {JA,EN,loadPhoto,loadFace}=window.PICLEA;
 const $=s=>document.querySelector(s);
 const OUT_W=1080;
+// iPhone and iPad save through the share sheet; Android and computers download (a computer's share
+// dialog sends things to people, it does not save them). iPadOS reports itself as a Mac with touch.
+const OS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)?'ios':/Android/.test(navigator.userAgent)?'android':'pc';
+function download(files,urls){files.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=urls?.[i]||URL.createObjectURL(f);a.download=f.name;a.click()},i*350))}
 const RATIOS=[['4:5',4/5],['1:1',1],['9:16',9/16],['元の比率',0]];
 const PALETTE=['#ffffff','#4b3f3a','#1f1d1b','#f3e9dc','#e8c9c1','#b76e5a','#8f9e7e','#3c4f6b','#d4a94f','#a898b8'];
 const GRADS=[['#eadfd6','#d6c2b3'],['#efdcd8','#d5b5ae'],['#e3e4d9','#c3c8b3'],['#e8e2dc','#c9c0b7'],['#e6e0e8','#c7bdcb'],['#f0e6da','#dcc7ae']];
@@ -1053,9 +1057,17 @@ async function importWork(data){
   savedPhotos=new Set();adopt(data.doc,data.id||null);await saveWork();
 }
 // The first tap makes the file; the second, a fresh gesture, hands it over (iOS only opens the share sheet then).
+// Elsewhere one tap makes it and downloads it.
 function exportButton(b,make){
   const label=b.textContent;let file=null;
   b.onclick=async()=>{
+    if(OS!=='ios'){
+      b.disabled=true;b.textContent='準備しています…';
+      try{download([await make()]);toast(OS==='android'?'「ダウンロード」に保存しました':'ダウンロードフォルダに保存しました')}
+      catch{toast('書き出せませんでした')}
+      finally{b.disabled=false;b.textContent=label}
+      return;
+    }
     if(file){
       if(navigator.canShare?.({files:[file]}))navigator.share({files:[file]}).catch(()=>{});
       else{const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.click()}
@@ -1106,19 +1118,22 @@ $('#esave').onclick=async()=>{
     $('#sprevs').innerHTML=saved.urls.map((u,i)=>`<img src="${u}" alt="${i+1}枚目">`).join('');
     $('#sprevs').classList.toggle('many',many);
     $('#ssize').textContent=`${many?P.pages.length+'枚・':''}${D.W} × ${D.H}`;
-    $('#sshare').textContent=navigator.canShare?.({files:saved.files})?(many?`${P.pages.length}枚まとめて保存・共有`:'写真に保存・共有'):'画像をダウンロード';
+    const share=OS!=='pc'&&navigator.canShare?.({files:saved.files});
+    $('#sshare').textContent=OS==='ios'&&share?(many?`${P.pages.length}枚まとめて保存・共有`:'写真に保存・共有'):many?`${P.pages.length}枚まとめて保存`:'画像を保存';
+    $('#sshare2').hidden=!(OS==='android'&&share); // Android: saving and sending to Instagram are two different wishes
     $('#ssheet').hidden=false;
     const empty=emptySlots();if(empty)toast(`写真がはまっていない枠が${empty}つあります`);
   }finally{btn.disabled=false}
 };
 $('#sshare').onclick=()=>{
   if(!saved)return;
-  if(navigator.canShare?.({files:saved.files}))navigator.share({files:saved.files}).catch(()=>{});
-  else saved.files.forEach((f,i)=>{const a=document.createElement('a');a.href=saved.urls[i];a.download=f.name;a.click()});
+  if(OS==='ios'&&navigator.canShare?.({files:saved.files}))navigator.share({files:saved.files}).catch(()=>{});
+  else{download(saved.files,saved.urls);toast(OS==='android'?'「ダウンロード」に保存しました':'ダウンロードフォルダに保存しました')}
 };
+$('#sshare2').onclick=()=>{if(saved&&navigator.canShare?.({files:saved.files}))navigator.share({files:saved.files}).catch(()=>{})};
 document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet').hidden=true);
 addEventListener('resize',()=>paint());
 
-Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
+Object.assign(window.PICLEA,{app:{os:OS,D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
   hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,backupAll,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
 })();
