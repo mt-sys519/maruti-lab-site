@@ -394,7 +394,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 .hnav a{color:rgba(255,255,255,.88);text-decoration:none;font-size:13px;letter-spacing:.08em;padding:6px 0;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
 .hnav a:hover{color:#fff;border-color:rgba(255,255,255,.6)}
 @media (min-width:760px){.hnav{display:flex}#menuBtn{display:none}}
-#worksTop[hidden],body.has-photo #worksTop{display:none}
+#worksTop[hidden]{display:none}
 .mhead{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mocha);margin:12px 4px 2px}
 .mhead:first-child{margin-top:4px}
 .mfoot{display:flex;justify-content:center;gap:18px;margin:12px 0 2px;font-size:12px}
@@ -426,7 +426,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <nav class="hnav" aria-label="piclea について"><a href="#why-title" data-why>特長</a><a href="guide/">使い方</a><a href="faq/">よくある質問</a></nav></div>
   <a class="logo" href="./"><b>piclea</b><small>by Maruti Lab</small></a>
   <div class="bar-r"><!-- what comes next: back to your works, or on to the editor once a photo is in -->
-    <button class="pill ghost" id="worksTop" hidden>つくったもの</button><button class="pill dark" id="toEdit">編集へ</button></div>
+    <button class="ic" id="worksTop" aria-label="つくったもの" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></button><button class="pill dark" id="toEdit">編集へ</button></div>
 </header>
 
 <section class="hero">
