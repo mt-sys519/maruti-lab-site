@@ -93,8 +93,8 @@ body.has-photo .hero{display:none}
 .tile{position:relative;border-radius:20px;cursor:pointer;outline:none;animation:rise .5s both;animation-delay:calc(var(--d,0) * 18ms)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}}
 .tile:focus-visible .ph{box-shadow:0 0 0 2px var(--rose)}
-.ph{position:relative;aspect-ratio:4/5;border-radius:20px;overflow:hidden;background:var(--g);container-type:inline-size;box-shadow:0 6px 18px rgba(110,84,70,.1)}
-body.has-photo .ph{background:#d8cfc4 var(--photo) center/cover no-repeat}
+.ph{position:relative;aspect-ratio:var(--ar,.8);border-radius:20px;overflow:hidden;background:#e6ddd4;box-shadow:0 6px 18px rgba(110,84,70,.1)}
+.ph canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .tile:active .ph{transform:scale(.985)}
 .t{position:absolute;left:var(--tx);top:var(--ty);transform:translate(-50%,-50%);width:max-content;max-width:86%;text-align:center;text-wrap:balance;word-break:auto-phrase;white-space:pre-wrap;font-size:calc(var(--fsv) * .3cqw);line-height:1.45;color:var(--tc);text-shadow:var(--ts);transition:opacity .25s}
 body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-align:start}
@@ -128,7 +128,8 @@ body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-ali
 @keyframes fade{from{opacity:0}}
 .panel{position:relative;width:min(460px,94vw);border-radius:30px;padding:14px 14px 16px;animation:pop .28s cubic-bezier(.2,.9,.3,1.1) both}
 @keyframes pop{from{opacity:0;transform:translateY(24px) scale(.97)}}
-.panel .ph{width:min(100%,calc((100dvh - 210px) * .8));margin:0 auto;border-radius:22px;touch-action:none;cursor:crosshair}
+.panel .ph{width:min(100%,calc((100dvh - 250px) * var(--ar,.8)));margin:0 auto;border-radius:22px}
+.panel .ph canvas{touch-action:none;cursor:grab}
 .sinfo{display:flex;align-items:center;gap:10px;padding:14px 6px 0}
 .sname{font-size:16px;font-weight:700;letter-spacing:.04em}
 .ssrc{font-size:11px;color:var(--mocha);margin-top:3px;font-family:Jost,"Zen Kaku Gothic New",sans-serif}
@@ -149,15 +150,30 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
   .nm{font-size:10px;padding:4px 8px;left:6px;bottom:6px;max-width:calc(100% - 12px)}
   .fav{width:26px;height:26px;font-size:12px;right:6px;top:6px}
   .bar{padding-left:16px;padding-right:16px}
-  .bar .pill{padding:8px 14px;font-size:12px}
+  .bar .pill{padding:8px 13px;font-size:12px}
+  .bar-r{gap:6px}
+  body.has-photo .logo small{display:none}
   .dock{gap:9px;padding-right:12px}
   .size{width:78px}
   .panel{width:100vw;border-radius:30px 30px 0 0;align-self:flex-end;padding-bottom:calc(18px + var(--safe-b))}
   .close{right:12px;top:-48px}
 }
-/* drag the words while comparing */
-.t{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
-.go{width:100%;justify-content:center;margin-top:12px;padding:14px}
+.bar-r{display:flex;gap:8px}
+.bar-r .pill{white-space:nowrap}
+.pill.ghost{background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(75,63,58,.12)}
+#toEdit{display:none}body.has-photo #toEdit{display:inline-flex}
+.sgo{display:flex;gap:8px;margin-top:12px}
+.sgo .pill{flex:1;justify-content:center;padding:13px 8px}
+.pill.soft{background:rgba(255,255,255,.7);box-shadow:inset 0 0 0 1px rgba(75,63,58,.12)}
+.ltabs{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none}
+.ltabs::-webkit-scrollbar{display:none}
+.lt{flex:none;display:flex;align-items:center;gap:6px;max-width:44%;border-radius:999px;padding:6px 8px 6px 7px;font-size:12px;color:var(--mocha);background:rgba(255,255,255,.4)}
+.lt b{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font:500 10px Jost,sans-serif;background:rgba(75,63,58,.12);color:var(--ink);flex:none}
+.lt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt i{font-style:normal;opacity:.5;padding:0 3px}
+.lt.on{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(110,84,70,.12)}
+.lt.on b{background:var(--ink);color:#fbf7f3}
+.lt.add{padding:6px 12px;border:1px dashed rgba(75,63,58,.25);background:none}
 
 /* editor */
 .editor{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:
@@ -228,18 +244,19 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 
 <header class="bar">
   <a class="logo" href="./"><b>piclea</b><small>by Maruti Lab</small></a>
-  <button class="pill dark" data-pick>写真をえらぶ</button>
+  <div class="bar-r"><button class="pill ghost" data-pick>写真をえらぶ</button><button class="pill dark" id="toEdit">編集へ</button></div>
 </header>
 
 <section class="hero">
   <p class="kicker">free fonts for your photos</p>
   <h1>写真に、<br>似合う文字を。</h1>
-  <p class="lead">日本語<b id="nJa"></b>書体と、English<b id="nEn"></b>書体。<br>自分の写真の上に、ぜんぶ並べて選べます。<br>文字は指で好きな位置へ。</p>
+  <p class="lead">日本語<b id="nJa"></b>書体と、English<b id="nEn"></b>書体。<br>自分の写真の上に、ぜんぶ並べて選べます。<br>大きく開くと、文字を指で動かせます。</p>
   <button class="pill dark big" data-pick>写真をえらぶ</button>
   <p class="privacy">写真はこの端末の中だけで使われます</p>
 </section>
 
 <section class="finder glass">
+  <div class="ltabs" id="ltabs"></div>
   <textarea class="text" id="text" rows="1" aria-label="入れたい文字" placeholder="入れたい文字"></textarea>
   <div class="row">
     <div class="lang" id="lang"><button data-l="ja" class="on">日本語</button><button data-l="en">English</button></div>
@@ -268,7 +285,7 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 <div class="sheet" id="sheet" hidden>
   <div class="scrim" data-close></div>
   <div class="panel glass" role="dialog" aria-modal="true" aria-labelledby="sname">
-    <div class="ph" id="sph"><span class="t"></span></div>
+    <div class="ph" id="sph"><canvas></canvas></div>
     <div class="sinfo">
       <div><div class="sname" id="sname"></div><div class="ssrc" id="ssrc"></div></div>
       <div class="sbtns">
@@ -279,7 +296,7 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
       </div>
     </div>
     <p class="shint">文字はドラッグで動かせます。左右にスワイプで次の書体。</p>
-    <button class="pill dark go" id="go">写真をえらんで作る</button>
+    <div class="sgo"><button class="pill soft" id="keep">この書体に決める</button><button class="pill dark" id="go">この書体で編集する</button></div>
     <button class="close" data-close aria-label="閉じる">×</button>
   </div>
 </div>
@@ -315,22 +332,63 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 </div>
 
 <script src="catalog.js"></script>
+<script src="editor.js"></script>
 <script>
-const {JA,EN,loadPhoto}=window.PICLEA;
+// Picker. Every tile is the whole design drawn by the shared draw(), with only the selected text
+// swapped to that tile's font, so comparing here is comparing the finished picture.
+const {JA,EN,loadPhoto,app}=window.PICLEA;
+const D=app.D;
 
 const CATS={ja:['すべて','明朝','丸ゴ','ゴシック','手書き','ポップ','見出し','漫画'],en:['All','Serif','Sans','Script','Hand','Display','Typewriter']};
 const SAMPLE={ja:'今日のごほうび、\nひとくち。',en:'good day,\ngood coffee.'};
-const GRADS=['#eadfd6,#d6c2b3','#efdcd8,#d5b5ae','#e3e4d9,#c3c8b3','#e8e2dc,#c9c0b7','#e6e0e8,#c7bdcb','#f0e6da,#dcc7ae'];
+const today=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replaceAll('/','.');
+const SAMPLE2={ja:['ひとこと',today],en:['with love',today]};
+const MAX_TEXTS=3;
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const root=document.documentElement;
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
-const S={lang:'ja',cat:{ja:'すべて',en:'All'},text:{ja:'',en:''},favs:new Set(store.get('piclea.favs',[])),items:[],idx:0,photo:null};
+const S={lang:'ja',cat:{ja:'すべて',en:'All'},favs:new Set(store.get('piclea.favs',[])),items:[],idx:0,photo:null};
 const key=f=>S.lang+':'+f[0];
-const txt=()=>S.text[S.lang]||SAMPLE[S.lang];
+const sizeOf=v=>v*.003*D.W, sliderOf=L=>Math.round(Math.max(16,Math.min(60,L.size/(.003*D.W))));
+const dpr=Math.min(2,devicePixelRatio||1);
+
+// the first text, as the picker used to show it
+{const L=app.newLayer({text:SAMPLE.ja,fam:JA[0][1],w:JA[0][4],name:JA[0][0],size:sizeOf(30),x:D.W/2,y:D.H/2});D.layers.push(L);D.sel=L.id;app.commit()}
 
 $('#nJa').textContent=JA.length;$('#nEn').textContent=EN.length;
 
+/* ---------- texts (up to three) ---------- */
+function renderTexts(){
+  $('#ltabs').innerHTML=D.layers.map((L,i)=>`<button class="lt${L.id===D.sel?' on':''}" data-id="${L.id}"><b>${i+1}</b><span>${(L.text.split('\n')[0]||'（空）').slice(0,8)}</span>${D.layers.length>1?`<i data-del="${L.id}" aria-label="この文章を消す">×</i>`:''}</button>`).join('')+
+    (D.layers.length<MAX_TEXTS?'<button class="lt add" data-add>＋ 文章</button>':'');
+}
+function syncControls(){
+  const L=app.sel();if(!L)return;
+  if(document.activeElement!==$('#text'))$('#text').value=L.text;
+  fitInput();
+  const light=L.color.toLowerCase()==='#ffffff';
+  $$('#tc button').forEach(x=>x.classList.toggle('on',(x.dataset.v==='light')===light));
+  $$('#dir button').forEach(x=>x.classList.toggle('on',(x.dataset.v==='v')===L.vertical));
+  $('#size').value=sliderOf(L);
+}
+$('#ltabs').addEventListener('click',e=>{
+  const del=e.target.closest('[data-del]');
+  if(del){const L=D.layers.find(l=>l.id===+del.dataset.del);app.removeLayer(L);app.commit();changed();return}
+  if(e.target.closest('[data-add]')){
+    const n=app.addLayer(app.sel());n.text=SAMPLE2[S.lang][(D.layers.length-2)%2];n.wrap=.86;app.commit();changed();
+    setTimeout(()=>{$('#text').focus();$('#text').select()},30);return;
+  }
+  const b=e.target.closest('.lt');if(b){D.sel=+b.dataset.id;changed()}
+});
+let textTimer;
+$('#text').addEventListener('input',e=>{
+  const L=app.sel();if(!L)return;L.text=e.target.value;fitInput();renderTexts();redrawSoon();
+  clearTimeout(textTimer);textTimer=setTimeout(app.commit,600);
+});
+function fitInput(){const a=$('#text');a.style.height='auto';a.style.height=a.scrollHeight+'px'}
+
+/* ---------- catalog ---------- */
 function renderChips(){
   const cur=S.cat[S.lang];
   $('#chips').innerHTML=`<button class="chip fav${cur==='fav'?' on':''}" data-c="fav">★</button>`+
@@ -339,56 +397,49 @@ function renderChips(){
 function renderGrid(){
   const src=S.lang==='ja'?JA:EN,cur=S.cat[S.lang];
   S.items=src.filter(f=>cur==='fav'?S.favs.has(key(f)):(cur===CATS[S.lang][0]||f[2]===cur));
+  root.style.setProperty('--ar',D.W/D.H);
   if(!S.items.length){$('#grid').innerHTML='<p class="empty">★ をつけた書体がここに並びます。<br>気になる書体の右上をタップしてください。</p>';return}
   $('#grid').innerHTML=S.items.map((f,i)=>`
    <div class="tile" data-i="${i}" role="button" tabindex="0" aria-label="${f[0]}を大きく見る" style="--d:${Math.min(i,16)}">
-    <div class="ph loading" style="--g:linear-gradient(160deg,${GRADS[i%GRADS.length]})"><span class="t"></span></div>
+    <div class="ph loading"><canvas></canvas></div>
     <span class="nm">${f[0]}</span>
     <button class="fav${S.favs.has(key(f))?' on':''}" aria-label="お気に入り">★</button>
    </div>`).join('');
-  $$('.tile .t').forEach(t=>t.textContent=txt());
-  $$('.tile .ph').forEach(el=>io.observe(el));
+  $$('.tile').forEach(t=>{vis.observe(t)});
 }
-// Fonts load only when a tile scrolls near the screen; the text stays hidden until its real face is ready.
-function applyFont(ph,f){
-  const t=ph.querySelector('.t');
-  t.style.fontFamily=`${f[1]},sans-serif`;t.style.fontWeight=f[4];
-  document.fonts.load(`${f[4]} 24px ${f[1]}`,txt()).then(faces=>{
-    ph.classList.remove('loading');ph.classList.toggle('failed',!faces.length);
-  },()=>{ph.classList.remove('loading');ph.classList.add('failed')});
+// Draw one preview canvas at its on-screen size. Fonts load first; the tile shimmers until then.
+async function paintCanvas(cv,f,grad,ui){
+  const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return null;
+  const ov={id:D.sel,font:f},tok=(cv._tok=(cv._tok||0)+1);
+  await app.ensureFonts(ov);if(tok!==cv._tok)return null;
+  const W=Math.round(w*dpr),H=Math.round(h*dpr);if(cv.width!==W)cv.width=W;if(cv.height!==H)cv.height=H;
+  const c=cv.getContext('2d');c.setTransform(W/D.W,0,0,H/D.H,0,0);
+  const M=app.draw(c,{ov,grad,thumb:!ui,ui,kk:D.W/w});
+  cv.parentElement.classList.remove('loading');
+  return M;
 }
-const io=new IntersectionObserver(es=>es.forEach(e=>{
-  if(!e.isIntersecting)return;io.unobserve(e.target);
-  applyFont(e.target,S.items[+e.target.closest('.tile').dataset.i]);
-}),{rootMargin:'300px 0px'});
-
-let reloadTimer;
-function setText(v){
-  S.text[S.lang]=v;
-  $$('.t').forEach(t=>t.textContent=txt());
-  clearTimeout(reloadTimer);
-  reloadTimer=setTimeout(()=>{ // new characters may live in font subsets not fetched yet
-    $$('.tile').forEach(el=>{const t=el.querySelector('.t');if(t.style.fontFamily)document.fonts.load(`${t.style.fontWeight} 24px ${S.items[+el.dataset.i][1]}`,txt())});
-  },250);
-}
-function fitInput(){const a=$('#text');a.style.height='auto';a.style.height=a.scrollHeight+'px'}
-$('#text').addEventListener('input',e=>{fitInput();setText(e.target.value)});
+function paintTile(t){t._dirty=false;paintCanvas(t.querySelector('canvas'),S.items[+t.dataset.i],+t.dataset.i,null)}
+// Tiles near the screen are drawn; the rest are marked and drawn when they come back into view.
+const vis=new IntersectionObserver(es=>es.forEach(e=>{
+  const t=e.target;t._vis=e.isIntersecting;
+  if(e.isIntersecting&&(t._dirty||!t._drawn)){t._drawn=true;paintTile(t)}
+}),{rootMargin:'250px 0px'});
+function redrawAll(){$$('.tile').forEach(t=>{if(t._vis)paintTile(t);else t._dirty=true});if(!$('#sheet').hidden)paintSheet()}
+let redrawT=0;
+function redrawSoon(){if(redrawT)return;redrawT=setTimeout(()=>{redrawT=0;redrawAll()},90)}
+function changed(){renderTexts();syncControls();redrawAll()}
+app.on('fonts',redrawSoon);
 
 $('#lang').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.dataset.l===S.lang)return;
-  S.lang=b.dataset.l;$$('#lang button').forEach(x=>x.classList.toggle('on',x===b));
-  $('#text').value=S.text[S.lang];$('#text').placeholder=S.lang==='ja'?'入れたい文字':'type your words';fitInput();
-  renderChips();renderGrid();
+  const from=S.lang;S.lang=b.dataset.l;$$('#lang button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#text').placeholder=S.lang==='ja'?'入れたい文字':'type your words';
+  for(const L of D.layers){if(L.text===SAMPLE[from])L.text=SAMPLE[S.lang];SAMPLE2[from].forEach((s,i)=>{if(L.text===s)L.text=SAMPLE2[S.lang][i]})}
+  renderChips();renderGrid();renderTexts();syncControls();
 });
-$('#chips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip');if(!b)return;
-  S.cat[S.lang]=b.dataset.c;renderChips();renderGrid();
-});
-function toggleFav(f){
-  const k=key(f);S.favs.has(k)?S.favs.delete(k):S.favs.add(k);store.set('piclea.favs',[...S.favs]);return S.favs.has(k);
-}
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.cat[S.lang]=b.dataset.c;renderChips();renderGrid()});
+function toggleFav(f){const k=key(f);S.favs.has(k)?S.favs.delete(k):S.favs.add(k);store.set('piclea.favs',[...S.favs]);return S.favs.has(k)}
 $('#grid').addEventListener('click',e=>{
-  if(suppressClick)return;
   const tile=e.target.closest('.tile');if(!tile)return;
   const f=S.items[+tile.dataset.i];
   if(e.target.closest('.fav')){e.target.closest('.fav').classList.toggle('on',toggleFav(f));return}
@@ -396,69 +447,40 @@ $('#grid').addEventListener('click',e=>{
 });
 $('#grid').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('tile'))openSheet(+e.target.dataset.i)});
 
-/* dock */
-function seg(sel,fn){$(sel).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$(sel+' button').forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset.v)})}
-function setTone(v){root.style.setProperty('--tc',v==='light'?'#fff':'#4b3f3a');root.style.setProperty('--ts',v==='light'?'0 1px 14px rgba(40,25,15,.35)':'none');$$('#tc button').forEach(x=>x.classList.toggle('on',x.dataset.v===v))}
-seg('#tc',setTone);
-seg('#dir',v=>document.body.classList.toggle('vertical',v==='v'));
-$('#size').addEventListener('input',e=>root.style.setProperty('--fsv',e.target.value));
+/* ---------- dock: acts on the selected text ---------- */
+function seg(sel,fn){$(sel).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fn(b.dataset.v);app.commit();changed()})}
+seg('#tc',v=>{const L=app.sel();if(!L)return;if(v==='light'){L.color='#ffffff';L.shadow={...app.SHADOW}}else{L.color=app.INK;L.shadow.on=false}});
+seg('#dir',v=>{const L=app.sel();if(L)L.vertical=v==='v'});
+$('#size').addEventListener('input',e=>{const L=app.sel();if(!L)return;L.size=sizeOf(+e.target.value);redrawSoon()});
+$('#size').addEventListener('change',()=>app.commit());
 
-/* photo (shrunk in catalog.js; nothing leaves the browser) */
+/* ---------- photo (shrunk in catalog.js; nothing leaves the browser) ---------- */
 let pendingEdit=false;
 document.addEventListener('click',e=>{if(e.target.closest('[data-pick]'))$('#file').click()});
-function usePhoto(url){
-  if(S.photo&&S.photo!==url)URL.revokeObjectURL(S.photo);S.photo=url;
-  root.style.setProperty('--photo',`url(${url})`);
-  if(!document.body.classList.contains('has-photo'))setTone('light');
-  document.body.classList.add('has-photo');
-  $$('.bar [data-pick]').forEach(b=>b.textContent='写真を変える');
-  $('#go').textContent='この書体で作る';
-}
 $('#file').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f){pendingEdit=false;return}
-  let url;try{url=await loadPhoto(f)}catch{pendingEdit=false;alert('この画像は読み込めませんでした');return}
-  usePhoto(url);
-  if(pendingEdit){pendingEdit=false;startEdit();return}
+  try{await app.setPhoto(await loadPhoto(f))}catch{pendingEdit=false;alert('この画像は読み込めませんでした');return}
+  if(pendingEdit){pendingEdit=false;closeSheet();app.openEditor();return}
   scrollTo({top:0,behavior:'smooth'});
 });
-addEventListener('piclea:photo',e=>usePhoto(e.detail));
-
-/* text position: drag the words on any tile or in the sheet; every tile follows */
-let drag=null,suppressClick=false;
-function startDrag(e,ph){
-  const cs=getComputedStyle(root);
-  drag={id:e.pointerId,x:e.clientX,y:e.clientY,r:ph.getBoundingClientRect(),tx:parseFloat(cs.getPropertyValue('--tx')),ty:parseFloat(cs.getPropertyValue('--ty')),moved:false};
-  e.target.setPointerCapture(e.pointerId);
-}
-addEventListener('pointermove',e=>{
-  if(!drag||e.pointerId!==drag.id)return;
-  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
-  if(!drag.moved&&Math.hypot(dx,dy)<5)return;drag.moved=true;
-  const cl=v=>Math.max(4,Math.min(96,v)).toFixed(1)+'%';
-  root.style.setProperty('--tx',cl(drag.tx+dx/drag.r.width*100));root.style.setProperty('--ty',cl(drag.ty+dy/drag.r.height*100));
+app.on('photo',url=>{
+  if(S.photo&&S.photo!==url)URL.revokeObjectURL(S.photo);S.photo=url;
+  document.body.classList.add('has-photo');
+  $$('.bar [data-pick]').forEach(b=>b.textContent='写真を変える');
+  $('#go').textContent='この書体で編集する';
+  root.style.setProperty('--ar',D.W/D.H);changed();
 });
-function endDrag(e){if(!drag||e.pointerId!==drag.id)return;if(drag.moved)suppressClick=true;drag=null;setTimeout(()=>suppressClick=false,0)}
-addEventListener('pointerup',endDrag);addEventListener('pointercancel',endDrag);
-$('#grid').addEventListener('pointerdown',e=>{const t=e.target.closest('.tile .t');if(t)startDrag(e,t.parentElement)});
+$('#toEdit').onclick=()=>app.openEditor();
+app.on('closed',()=>{renderGrid();changed()});
 
-/* editor hand-off: position, size, tone and direction carry over */
-function startEdit(){
-  if(!S.photo){pendingEdit=true;$('#file').click();return}
-  const cs=getComputedStyle(root);
-  closeSheet();
-  openEditor({photo:S.photo,font:S.items[S.idx],text:txt(),tx:parseFloat(cs.getPropertyValue('--tx'))/100,ty:parseFloat(cs.getPropertyValue('--ty'))/100,
-    fsv:+$('#size').value,light:$('#tc .on')?.dataset.v==='light',vertical:document.body.classList.contains('vertical')});
-}
-$('#go').onclick=startEdit;
-
-/* sheet: one font large; tap moves the text for every tile, swipe steps through fonts */
-const sph=$('#sph');
+/* ---------- sheet: one font large; drag a text to move it, swipe for the next font ---------- */
+const scv=$('#sph canvas');let sheetM=new Map();
 function openSheet(i){S.idx=i;$('#sheet').hidden=false;document.body.style.overflow='hidden';showSheet()}
 function closeSheet(){$('#sheet').hidden=true;document.body.style.overflow=''}
+async function paintSheet(){const M=await paintCanvas(scv,S.items[S.idx],S.idx,'mark');if(M)sheetM=M}
 function showSheet(){
   const f=S.items[S.idx];
-  sph.style.setProperty('--g',`linear-gradient(160deg,${GRADS[S.idx%GRADS.length]})`);
-  sph.classList.add('loading');applyFont(sph,f);sph.querySelector('.t').textContent=txt();
+  $('#sph').classList.add('loading');paintSheet();
   $('#sname').textContent=f[0];$('#ssrc').textContent=`${f[2]} · ${f[3]}`;
   $('#scount').textContent=`${S.idx+1} / ${S.items.length}`;
   $('#sfav').classList.toggle('on',S.favs.has(key(f)));
@@ -468,23 +490,37 @@ $('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
 $('#sfav').onclick=()=>{const on=toggleFav(S.items[S.idx]);$('#sfav').classList.toggle('on',on);const tf=$(`.tile[data-i="${S.idx}"] .fav`);if(tf)tf.classList.toggle('on',on)};
 $$('[data-close]').forEach(b=>b.onclick=closeSheet);
 document.addEventListener('keydown',e=>{if($('#sheet').hidden)return;if(e.key==='Escape')closeSheet();if(e.key==='ArrowRight')step(1);if(e.key==='ArrowLeft')step(-1)});
-let down=null;
-sph.addEventListener('pointerdown',e=>{
-  if(e.target.closest('.t')){startDrag(e,sph);return}
-  down={x:e.clientX,y:e.clientY};sph.setPointerCapture(e.pointerId);
-});
-sph.addEventListener('pointerup',e=>{
-  if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;down=null;
-  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){step(dx<0?1:-1);return}
-  if(Math.hypot(dx,dy)<12){
-    const r=sph.getBoundingClientRect();
-    root.style.setProperty('--tx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
-    root.style.setProperty('--ty',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
-  }
-});
+// Choosing: the selected text takes this font. "決める" stays in the list, the main button goes on to edit.
+function choose(){const L=app.sel();if(L){app.setFont(L,S.items[S.idx]);app.commit()}}
+$('#go').onclick=()=>{choose();if(!app.hasPhoto()){pendingEdit=true;$('#file').click();return}closeSheet();app.openEditor()};
+$('#keep').onclick=()=>{choose();closeSheet();changed()};
 
-renderChips();renderGrid();
+let sp=null;
+const spt=e=>{const r=scv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*D.W,y:(e.clientY-r.top)/r.height*D.H,k:D.W/r.width}};
+scv.addEventListener('pointerdown',e=>{
+  try{scv.setPointerCapture(e.pointerId)}catch{}const p=spt(e);
+  const L=app.hitLayer(sheetM,p,p.k);
+  if(L){if(D.sel!==L.id){D.sel=L.id;renderTexts();syncControls()}sp={mode:'move',p,x:L.x,y:L.y,moved:false,cx:e.clientX,cy:e.clientY}}
+  else sp={mode:'swipe',cx:e.clientX,cy:e.clientY,p};
+  paintSheet();
+});
+scv.addEventListener('pointermove',e=>{
+  if(!sp||sp.mode!=='move')return;const p=spt(e),L=app.sel();
+  if(!sp.moved&&Math.hypot(e.clientX-sp.cx,e.clientY-sp.cy)<4)return;sp.moved=true;
+  const r=app.snapMove(L,sp.x+p.x-sp.p.x,sp.y+p.y-sp.p.y,8*p.k);L.x=r.x;L.y=r.y;
+  if(!sp.raf)sp.raf=requestAnimationFrame(()=>{sp&&(sp.raf=0);paintSheet()});
+});
+scv.addEventListener('pointerup',e=>{
+  if(!sp)return;const s=sp;sp=null;
+  if(s.mode==='move'){if(s.moved){app.commit();redrawAll()}return}
+  const dx=e.clientX-s.cx,dy=e.clientY-s.cy;
+  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){step(dx<0?1:-1);return}
+  if(Math.hypot(dx,dy)<12){const L=app.sel(),p=spt(e);if(L){L.x=p.x;L.y=p.y;app.commit();redrawAll()}}
+});
+scv.addEventListener('pointercancel',()=>sp=null);
+addEventListener('resize',redrawSoon);
+
+renderChips();renderTexts();syncControls();renderGrid();
 </script>
-<script src="editor.js"></script>
 </body>
 </html>
