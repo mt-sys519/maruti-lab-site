@@ -40,6 +40,7 @@ export default function AboutPage() {
             <li><a href="/yurameki">YURAMEKI</a> — イラストや写真を動かしてGIFやMP4にする（<a href="/yurameki/about">できること</a>）</li>
             <li><a href="/clock">PromptTerm CLOCK</a> — Windowsデスクトップ時計</li>
             <li><a href="/4track">4TRACK CASSETTE SAMPLER</a> — ブラウザのサンプラー</li>
+            <li><a href="/hallo-terra">HALLO TERRA</a> — 世界地図から、その土地の挨拶を現地の文字と読みで</li>
             <li><a href="/bit">MarutiBit</a> — 短時間で遊べる小さなゲーム集</li>
           </ul>
           <p>
