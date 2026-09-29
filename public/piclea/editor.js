@@ -92,6 +92,20 @@ function wrapLines(c,L,f){
   wrapCache.set(key,out);return out;
 }
 
+/* ---------- in-page dialog ---------- */
+// ask('text',{ok}) resolves true/false; with {input:'default'} it resolves the typed text or null.
+function ask(msg,{ok='OK',input=null}={}){
+  return new Promise(res=>{
+    const d=$('#askd'),inp=$('#askin');
+    $('#askmsg').textContent=msg;$('#askok').textContent=ok;
+    inp.hidden=input==null;if(input!=null)inp.value=input;
+    d.hidden=false;if(input!=null)setTimeout(()=>{inp.focus();inp.select()},30);
+    const done=v=>{d.hidden=true;d.onclick=null;inp.onkeydown=null;res(v)};
+    d.onclick=e=>{if(e.target.closest('#askok'))done(input!=null?(inp.value.trim()||null):true);else if(e.target.closest('[data-askno]'))done(input!=null?null:false)};
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();done(inp.value.trim()||null)}};
+  });
+}
+
 /* ---------- drawing ---------- */
 function layout(c,L,f){
   c.font=fontStr(f,L.size);
@@ -385,9 +399,9 @@ function addImage(photoId,i=0){
   D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // above other photos, under the texts
   D.sel=L.id;return L;
 }
-function removeSelected(){
+async function removeSelected(){
   const L=sel();if(!L)return;
-  if(!confirm(isText(L)?'この文字を消しますか？':'この写真を消しますか？'))return;
+  if(!await ask(isText(L)?'この文字を消しますか？':'この写真を消しますか？',{ok:'消す'}))return;
   removeLayer(L);commit();panel();paint();
 }
 let fontIO;
@@ -493,16 +507,16 @@ $('#pstrip').addEventListener('click',e=>{
 $('#eimg').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
   try{const urls=await Promise.all(fs.map(loadPhoto));for(const [i,u] of urls.entries())addImage(await makePhoto(u),i);setTab('文字');commit();refresh()}
-  catch{alert('読み込めない画像がありました')}
+  catch{toast('読み込めない画像がありました')}
 });
 $('#eimgswap').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!L||isText(L))return;
-  try{L.photoId=await makePhoto(await loadPhoto(f));Object.assign(L,{zs:1,zx:0,zy:0});commit();panel();refresh()}catch{alert('この画像は読み込めませんでした')}
+  try{L.photoId=await makePhoto(await loadPhoto(f));Object.assign(L,{zs:1,zx:0,zy:0});commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
 });
 $('#eadd').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
   try{await addPhotos(await Promise.all(fs.map(loadPhoto)));renderStrip();toast(`${fs.length}枚足しました。今のページのデザインが入っています`)}
-  catch{alert('読み込めない画像がありました')}
+  catch{toast('読み込めない画像がありました')}
 });
 
 /* ---------- design: everything but the photo ---------- */
@@ -521,13 +535,13 @@ function renderDesign(){
     :'<p class="enote">よく使う文字の並びや飾りを名前を付けて取っておけます。写真は含みません。</p>';
   for(const m of mine){const L=m.d.layers[0];if(L)document.fonts.load(fontStr(L,16),L.text||'あ').catch(()=>{})}
 }
-function removePage(){
+async function removePage(){
   if(P.pages.length<2)return;
-  if(!confirm(`${P.cur+1}枚目のページを消しますか？（元に戻すで戻せます）`))return;
+  if(!await ask(`${P.cur+1}枚目のページを消しますか？（元に戻すで戻せます）`,{ok:'消す'}))return;
   syncCur();P.pages.splice(P.cur,1);P.cur=Math.min(P.cur,P.pages.length-1);loadInto(P.pages[P.cur]);designChanged();
 }
 function designChanged(msg){commit();sizeCanvas();panel();refresh();renderStrip();emit('change');if(msg)toast(msg)}
-$('#dsheet').addEventListener('click',e=>{
+$('#dsheet').addEventListener('click',async e=>{
   if(e.target.closest('[data-dclose]')){$('#dsheet').hidden=true;return}
   const b=e.target.closest('button');if(!b)return;
   const mine=store.get('piclea.designs',[]);
@@ -535,25 +549,25 @@ $('#dsheet').addEventListener('click',e=>{
     case 'dcopy':store.set('piclea.clip',normDesign());renderDesign();toast('デザインをコピーしました（写真以外）');return;
     case 'dpaste':{const c=store.get('piclea.clip',null);if(!c)return;applyDesign(c);designChanged('貼り付けました');renderDesign();return}
     case 'dall':{
-      if(!confirm('ほかの写真の文字と飾りを、全部このページと同じにしますか？'))return;
+      if(!await ask('ほかの写真の文字と飾りを、全部このページと同じにしますか？',{ok:'そろえる'}))return;
       syncCur();const d=normDesign();
       P.pages.forEach((pg,i)=>{if(i!==P.cur)withPage(pg,()=>{applyDesign(d);P.pages[i]=clone(D)})});
       loadInto(P.pages[P.cur]);designChanged(`${P.pages.length}枚ぜんぶ同じデザインにしました`);return;
     }
     case 'mysave':{
-      const name=prompt('マイデザインの名前',`マイデザイン ${mine.length+1}`);if(!name)return;
+      const name=await ask('マイデザインの名前',{ok:'取っておく',input:`マイデザイン ${mine.length+1}`});if(!name)return;
       mine.unshift({id:Date.now(),name:name.slice(0,30),d:normDesign()});
-      if(!store.set('piclea.designs',mine))alert('保存できませんでした');else{renderDesign();toast('マイデザインに保存しました')}
+      if(!store.set('piclea.designs',mine))toast('保存できませんでした');else{renderDesign();toast('マイデザインに保存しました')}
       return;
     }
     case 'pleft':case 'pright':{
       syncCur();const j=P.cur+(b.id==='pleft'?-1:1);[P.pages[P.cur],P.pages[j]]=[P.pages[j],P.pages[P.cur]];P.cur=j;loadInto(P.pages[j]);
       designChanged();renderDesign();return;
     }
-    case 'pdel':removePage();renderDesign();return;
+    case 'pdel':await removePage();renderDesign();return;
   }
   if(b.dataset.myapply){const m=mine.find(x=>x.id===+b.dataset.myapply);if(m){applyDesign(m.d);designChanged(`「${m.name}」を当てました`)}return}
-  if(b.dataset.mydel){const m=mine.find(x=>x.id===+b.dataset.mydel);if(m&&confirm(`「${m.name}」を消しますか？`)){store.set('piclea.designs',mine.filter(x=>x!==m));renderDesign()}}
+  if(b.dataset.mydel){const m=mine.find(x=>x.id===+b.dataset.mydel);if(m&&await ask(`「${m.name}」を消しますか？`,{ok:'消す'})){store.set('piclea.designs',mine.filter(x=>x!==m));renderDesign()}}
 });
 
 /* ---------- works kept on this device (IndexedDB), plus a backup file ---------- */
@@ -604,6 +618,7 @@ async function openWork(id){
   adopt(w.doc,id);
 }
 async function deleteWork(id){
+  if(workId===id){clearTimeout(saveT);workId=null} // no pending autosave may bring it back
   const w=await DB.run('works','readonly',st=>st.get(id));
   await DB.run('works','readwrite',st=>st.delete(id));
   for(const pid of w?.photos||[]){await DB.run('photos','readwrite',st=>st.delete(pid));savedPhotos.delete(pid)}
@@ -640,7 +655,7 @@ $('#wexport').onclick=async()=>{
   }
   b.disabled=true;b.textContent='準備しています…';
   try{backup=await backupFile();b.textContent='「ファイル」に保存する（もう一度タップ）'}
-  catch{b.textContent='バックアップをファイルに書き出す';alert('書き出せませんでした')}
+  catch{b.textContent='バックアップをファイルに書き出す';toast('書き出せませんでした')}
   finally{b.disabled=false}
 };
 on('saved',()=>{const t=$('#esaved');if(!t)return;t.textContent='保存しました';t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600)});
@@ -662,7 +677,7 @@ document.addEventListener('keydown',e=>{
 });
 $('#efile').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{await setPhoto(await loadPhoto(f));sizeCanvas();panel();refresh()}catch{alert('この画像は読み込めませんでした')}
+  try{await setPhoto(await loadPhoto(f));sizeCanvas();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
 });
 
 // Saving: render off screen with no selection marks, show the result, then hand the file to the share
@@ -693,5 +708,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
+  hasPhoto:()=>!!cur(),ask,toast,addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
 })();

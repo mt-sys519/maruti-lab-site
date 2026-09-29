@@ -281,7 +281,8 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .wcard.on img{box-shadow:0 0 0 2px var(--milk),0 0 0 3.5px var(--ink)}
 .wcard.new{aspect-ratio:4/5;justify-content:center;align-items:center;border-radius:10px;border:1px dashed rgba(75,63,58,.3);font-size:11.5px;color:var(--mocha)}
 .wcard.new span{font-size:24px}
-.wx{position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:rgba(255,252,249,.85);font-size:13px;color:var(--mocha)}
+.wx::before{content:"";position:absolute;inset:-8px}
+.wx{position:absolute;right:3px;top:3px;width:30px;height:30px;border-radius:50%;background:rgba(255,252,249,.85);font-size:13px;color:var(--mocha)}
 .etabs[hidden]{display:none}
 .ihead{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px}
 .ihead b{font-size:14px}
@@ -304,6 +305,13 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .xcard{padding-top:14px}
 .xph{width:min(100%,calc(38vh * var(--ar,.8)));margin:0 auto;border-radius:16px}
 .xph canvas{touch-action:none;cursor:grab}
+.askd{z-index:90}
+.askcard{width:min(340px,88vw);padding:22px 18px 16px}
+.askcard p{margin:0 0 16px;font-size:14px;line-height:1.8;white-space:pre-line}
+.askcard .etext{min-height:0;margin-bottom:14px}
+.askcard .etext[hidden]{display:none}
+.askbtns{display:flex;gap:8px}
+.askbtns .pill{flex:1;justify-content:center;padding:12px}
 .toast{position:fixed;z-index:95;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%);border-radius:999px;padding:10px 18px;font-size:12.5px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 .toast[hidden]{display:none}
 
@@ -462,6 +470,14 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
     <button class="stext" data-xclose>閉じる</button>
   </div>
 </div>
+<div class="ssheet askd" id="askd" hidden>
+  <div class="scrim" data-askno></div>
+  <div class="scard glass askcard" role="alertdialog" aria-labelledby="askmsg">
+    <p id="askmsg"></p>
+    <input class="etext" id="askin" hidden maxlength="30">
+    <div class="askbtns"><button class="pill soft" data-askno>やめる</button><button class="pill dark" id="askok">OK</button></div>
+  </div>
+</div>
 <div class="toast glass" id="toast" hidden></div>
 
 <script src="catalog.js"></script>
@@ -511,11 +527,11 @@ function syncControls(){
   $$('#dir button').forEach(x=>x.classList.toggle('on',(x.dataset.v==='v')===L.vertical));
   $('#size').value=sliderOf(L);
 }
-$('#ltabs').addEventListener('click',e=>{
+$('#ltabs').addEventListener('click',async e=>{
   const del=e.target.closest('[data-del]');
   if(del){
     const L=D.layers.find(l=>l.id===+del.dataset.del);
-    if(L&&confirm(`「${(L.text.split('\n')[0]||'この文章').slice(0,12)}」を消しますか？`)){app.removeLayer(L);app.commit();changed()}
+    if(L&&await app.ask(`「${(L.text.split('\n')[0]||'この文章').slice(0,12)}」を消しますか？`,{ok:'消す'})){app.removeLayer(L);app.commit();changed()}
     return;
   }
   if(e.target.closest('[data-add]')){
@@ -648,7 +664,7 @@ document.addEventListener('click',e=>{if(e.target.closest('[data-pick]'))$('#fil
 $('#file').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length){pendingEdit=false;return}
   try{const urls=await Promise.all(fs.map(loadPhoto));await app.setPhoto(urls[0]);if(urls.length>1)await app.addPhotos(urls.slice(1))}
-  catch{pendingEdit=false;alert('読み込めない画像がありました');return}
+  catch{pendingEdit=false;app.toast('読み込めない画像がありました');return}
   if(pendingEdit){pendingEdit=false;closeSheet();app.openEditor();return}
   scrollTo({top:0,behavior:'smooth'});
 });
@@ -685,15 +701,23 @@ app.on('saved',refreshWorksCta);
 $('#wsheet').addEventListener('click',async e=>{
   if(e.target.closest('[data-wclose]')){$('#wsheet').hidden=true;return}
   const del=e.target.closest('[data-wdel]');
-  if(del){if(confirm('この作品を消しますか？（元に戻せません）')){await app.deleteWork(del.dataset.wdel);openWorks();refreshWorksCta()}return}
+  if(del){
+    const open=!!del.closest('.wcard.on');
+    if(await app.ask(open?'今開いている作品です。消しますか？（元に戻せません）':'この作品を消しますか？（元に戻せません）',{ok:'消す'})){
+      await app.deleteWork(del.dataset.wdel);
+      if(open)app.newWork(); // otherwise the still-open work would save itself again on the next change
+      openWorks();refreshWorksCta();
+    }
+    return;
+  }
   if(e.target.closest('[data-new]')){$('#wsheet').hidden=true;app.newWork();return}
   const card=e.target.closest('[data-open]');
-  if(card){try{await app.openWork(card.dataset.open);$('#wsheet').hidden=true;app.openEditor()}catch{alert('この作品を開けませんでした')}}
+  if(card){try{await app.openWork(card.dataset.open);$('#wsheet').hidden=true;app.openEditor()}catch{app.toast('この作品を開けませんでした')}}
 });
 $('#wimport').onclick=()=>$('#wfile').click();
 $('#wfile').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{await app.importWork(f);$('#wsheet').hidden=true;refreshWorksCta();app.openEditor()}catch{alert('piclea のバックアップとして読めませんでした')}
+  try{await app.importWork(f);$('#wsheet').hidden=true;refreshWorksCta();app.openEditor()}catch{app.toast('piclea のバックアップとして読めませんでした')}
 });
 refreshWorksCta();
 app.on('closed',()=>{renderGrid();changed()});
