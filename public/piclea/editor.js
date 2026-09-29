@@ -943,7 +943,7 @@ const toDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.res
 // A backup is one JSON file holding the work and its photos; it goes to the Files app through the share sheet.
 async function backupFile(){
   syncCur();
-  const data={app:'piclea',v:1,doc:clone(P),photos:{}};
+  const data={app:'piclea',v:1,id:workId,updated:Date.now(),doc:clone(P),photos:{}};
   for(const id of usedPhotos())data.photos[id]=await toDataURL(await (await fetch(photos.get(id).url)).blob());
   const title=(P.pages[0]?.layers[0]?.text||'').split('\n')[0].slice(0,12).replace(/[\\/:*?"<>|\s]/g,'')||'piclea';
   return new File([JSON.stringify(data)],`piclea-${title}-${new Date().toLocaleDateString('sv')}.json`,{type:'application/json'});
@@ -954,8 +954,87 @@ async function designsFile(){
   const designs=await DB.run('designs','readonly',st=>st.getAll());
   return new File([JSON.stringify({app:'piclea',kind:'designs',v:2,designs})],`piclea-kata-${new Date().toLocaleDateString('sv')}.json`,{type:'application/json'});
 }
-// One file picker reads both kinds of backup. Returns 'designs' with a count, or 'work'.
+/* ---------- everything in one ZIP ---------- */
+// Photos go in as they are, one at a time, so dozens of works never sit in memory together; reading back
+// takes only the table at the end and then slices out the photos that are actually needed.
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(buf){let c=~0;const b=new Uint8Array(buf);for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return ~c>>>0}
+async function zipFile(entries,name){
+  const enc=new TextEncoder(),parts=[],cd=[];let off=0;
+  for(const e of entries){
+    const nm=enc.encode(e.name),blob=e.blob,crc=crc32(await blob.arrayBuffer()),size=blob.size;
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x800,true);h.setUint16(8,0,true); // stored, UTF-8 names
+    h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,size,true);h.setUint32(22,size,true);h.setUint16(26,nm.length,true);
+    parts.push(h.buffer,nm,blob);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x800,true);c.setUint16(14,0x21,true);
+    c.setUint32(16,crc,true);c.setUint32(20,size,true);c.setUint32(24,size,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    cd.push(c.buffer,nm);off+=30+nm.length+size;
+  }
+  const cdSize=cd.reduce((s,p)=>s+p.byteLength,0),end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true);end.setUint16(8,entries.length,true);end.setUint16(10,entries.length,true);end.setUint32(12,cdSize,true);end.setUint32(16,off,true);
+  return new File([...parts,...cd,end.buffer],name,{type:'application/zip'});
+}
+async function readZip(file){
+  const u16=(v,i)=>v.getUint16(i,true),u32=(v,i)=>v.getUint32(i,true),dec=new TextDecoder();
+  const tailAt=Math.max(0,file.size-65557),tail=new DataView(await file.slice(tailAt).arrayBuffer());
+  let e=tail.byteLength-22;while(e>=0&&u32(tail,e)!==0x06054b50)e--;
+  if(e<0)throw new Error('not a zip');
+  const n=u16(tail,e+10),cdSize=u32(tail,e+12),cdOff=u32(tail,e+16),cd=new DataView(await file.slice(cdOff,cdOff+cdSize).arrayBuffer()),out=new Map();
+  for(let i=0,p=0;i<n;i++){
+    if(u32(cd,p)!==0x02014b50||u16(cd,p+10)!==0)throw new Error('unsupported zip'); // only what piclea writes: stored, not compressed
+    const nl=u16(cd,p+28),name=dec.decode(new Uint8Array(cd.buffer,p+46,nl));
+    out.set(name,{local:u32(cd,p+42),size:u32(cd,p+24)});p+=46+nl+u16(cd,p+30)+u16(cd,p+32);
+  }
+  const blob=async(name,type='')=>{
+    const f=out.get(name);if(!f)return null;
+    const h=new DataView(await file.slice(f.local,f.local+30).arrayBuffer()),at=f.local+30+u16(h,26)+u16(h,28);
+    return file.slice(at,at+f.size,type);
+  };
+  return {blob};
+}
+const EXT={'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/heic':'.heic','image/gif':'.gif'};
+async function backupAll(){
+  if(worthSaving())await saveWork(); // the open work goes in as it is now
+  await migrateDesigns();
+  const works=await DB.run('works','readonly',st=>st.getAll())||[],designs=await DB.run('designs','readonly',st=>st.getAll())||[];
+  const entries=[],photoFiles={};
+  for(const id of new Set(works.flatMap(w=>w.photos))){
+    const b=await DB.run('photos','readonly',st=>st.get(id));if(!b)continue;
+    photoFiles[id]={file:`photos/${id}${EXT[b.type]||''}`,type:b.type};entries.push({name:photoFiles[id].file,blob:b});
+  }
+  const manifest={app:'piclea',kind:'all',v:1,created:Date.now(),works,designs,photos:photoFiles};
+  entries.unshift({name:'piclea.json',blob:new Blob([JSON.stringify(manifest)],{type:'application/json'})});
+  return zipFile(entries,'piclea-backup.zip');
+}
+// A work or 型 already here and at least as new is left alone, so the same file can be read any number of times.
+async function importAll(file){
+  const z=await readZip(file),m=JSON.parse(await (await z.blob('piclea.json')).text());
+  if(m.app!=='piclea'||m.kind!=='all')throw new Error('not piclea');
+  const r={kind:'all',added:0,updated:0,same:0,designs:0};let reopen=false;
+  for(const w of m.works||[]){
+    const have=await DB.run('works','readonly',st=>st.get(w.id));
+    if(have&&have.updated>=w.updated){r.same++;continue}
+    for(const pid of w.photos){
+      if(await DB.run('photos','readonly',st=>st.getKey(pid)))continue;
+      const p=m.photos[pid],b=p&&await z.blob(p.file,p.type);
+      if(b)await DB.run('photos','readwrite',st=>st.put(b,pid));
+    }
+    await DB.run('works','readwrite',st=>st.put(w));r[have?'updated':'added']++;
+    if(w.id===workId)reopen=true;
+  }
+  for(const t of m.designs||[]){
+    const have=await DB.run('designs','readonly',st=>st.get(t.id));
+    if(!have||(have.updated||0)<(t.updated||0)){await DB.run('designs','readwrite',st=>st.put(t));r.designs++}
+  }
+  if(reopen){savedPhotos=new Set();await openWork(workId)} // the open work was older than the file's
+  emit('designs');emit('saved');return r;
+}
+// One file picker reads every kind of backup. Returns 'all' with counts, 'designs' with a count, or 'work'.
 async function importFile(file){
+  const sig=new Uint8Array(await file.slice(0,4).arrayBuffer());
+  if(sig[0]===0x50&&sig[1]===0x4b)return importAll(file); // "PK": the everything-backup
   const data=JSON.parse(await file.text());
   if(data.app==='piclea'&&data.kind==='designs'&&Array.isArray(data.designs)){
     const ok=data.designs.filter(t=>t&&t.id&&Array.isArray(t.pages)&&t.pages.length);
@@ -966,10 +1045,12 @@ async function importFile(file){
 }
 async function importWork(data){
   if(data.app!=='piclea'||!data.doc?.pages)throw new Error('not piclea');
+  const have=data.id&&await DB.run('works','readonly',st=>st.get(data.id));
+  if(have&&have.updated>=data.updated){await openWork(data.id);return} // this device already has it, as new or newer
   const map={};
   for(const [old,url] of Object.entries(data.photos||{})){const blob=await (await fetch(url)).blob();map[old]=await makePhoto(URL.createObjectURL(blob))}
   for(const pg of data.doc.pages){pg.photoId=map[pg.photoId]??null;for(const L of pg.layers)if(isImg(L))L.photoId=map[L.photoId]??null}
-  savedPhotos=new Set();adopt(data.doc,null);await saveWork();
+  savedPhotos=new Set();adopt(data.doc,data.id||null);await saveWork();
 }
 // The first tap makes the file; the second, a fresh gesture, hands it over (iOS only opens the share sheet then).
 function exportButton(b,make){
@@ -986,7 +1067,7 @@ function exportButton(b,make){
     finally{b.disabled=false}
   };
 }
-exportButton($('#wexport'),backupFile);exportButton($('#texport'),designsFile);
+exportButton($('#wexport'),backupFile);exportButton($('#texport'),designsFile);exportButton($('#wall'),backupAll);
 on('saved',()=>{const t=$('#esaved');if(!t)return;t.textContent='保存しました';t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600)});
 
 /* ---------- open / close / save ---------- */
@@ -1039,5 +1120,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
+  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,backupAll,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
 })();
