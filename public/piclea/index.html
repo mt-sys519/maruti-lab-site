@@ -16,7 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- UI -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@300;400&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap&text=%E5%86%99%E7%9C%9F%E3%81%AB%E3%80%81%E4%BC%BC%E5%90%88%E3%81%86%E6%96%87%E5%AD%97%E3%82%92%E3%80%82" rel="stylesheet">
 <style>
 @font-face{font-family:"Piclea Blank";src:url(fonts/AdobeBlank2.otf.woff) format("woff")}
 @font-face{font-family:"GenEi Koburi Mincho";src:url(fonts/GenEiKoburiMin6-R.woff2) format("woff2")}
@@ -33,7 +34,7 @@
 @font-face{font-family:"Motoya L Cedar";src:url(fonts/MTLc3m.woff2) format("woff2")}
 
 :root{
-  --milk:#f3ede7;--ink:#4b3f3a;--mocha:#8b7a6f;--rose:#c49a90;--line:rgba(75,63,58,.12);
+  --milk:#f3ede7;--ui:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;--stage:#e7e1db;--ink:#4b3f3a;--mocha:#8b7a6f;--rose:#c49a90;--line:rgba(75,63,58,.12);
   --glass:rgba(255,252,249,.52);--glass-edge:rgba(255,255,255,.7);
   --shadow:0 10px 30px rgba(110,84,70,.12),0 2px 6px rgba(110,84,70,.06);
   --tc:#4b3f3a;--ts:none;--fsv:30;--tx:50%;--ty:50%;
@@ -41,7 +42,7 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;min-height:100vh;background:var(--milk);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;font-weight:500;padding-bottom:calc(110px + var(--safe-b))}
+body{margin:0;min-height:100vh;background:var(--milk);color:var(--ink);font-family:var(--ui);font-weight:400;-webkit-font-smoothing:antialiased;padding-bottom:calc(110px + var(--safe-b))}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0;padding:0}
 
@@ -68,7 +69,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 /* hero */
 .hero{text-align:center;padding:44px 24px 34px;max-width:640px;margin:0 auto}
 .kicker{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:17px;color:var(--mocha);margin:0 0 14px;letter-spacing:.04em}
-.hero h1{margin:0;font-weight:500;font-size:clamp(30px,8vw,46px);line-height:1.55;letter-spacing:.14em}
+.hero h1{margin:0;font-family:"Shippori Mincho",serif;font-weight:500;font-size:clamp(30px,8vw,46px);line-height:1.55;letter-spacing:.14em}
 .lead{font-size:13.5px;line-height:2.1;color:var(--mocha);margin:18px 0 28px;letter-spacing:.06em}
 .lead b{color:var(--ink);font-weight:700}
 .privacy{font-size:11px;color:var(--mocha);margin:16px 0 0;letter-spacing:.04em;opacity:.85}
@@ -138,7 +139,7 @@ body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-ali
 .panel .ph canvas{touch-action:none;cursor:grab}
 .sinfo{display:flex;align-items:center;gap:10px;padding:14px 6px 0}
 .sname{font-size:16px;font-weight:700;letter-spacing:.04em}
-.ssrc{font-size:11px;color:var(--mocha);margin-top:3px;font-family:Jost,"Zen Kaku Gothic New",sans-serif}
+.ssrc{font-size:11px;color:var(--mocha);margin-top:3px;font-family:Jost,var(--ui)}
 .sbtns{margin-left:auto;display:flex;align-items:center;gap:4px}
 .nav{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:rgba(255,255,255,.6)}
 .count{font-family:Jost,sans-serif;font-size:12px;color:var(--mocha);min-width:42px;text-align:center}
@@ -182,35 +183,10 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .lt.add{padding:6px 12px;border:1px dashed rgba(75,63,58,.25);background:none}
 
 /* editor */
-.editor{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:
-  radial-gradient(60% 40% at 15% 10%,#ecdcd5 0%,transparent 70%),radial-gradient(50% 40% at 90% 90%,#e2dccf 0%,transparent 70%),var(--milk)}
 .editor[hidden]{display:none}
-.etop{display:flex;align-items:center;gap:6px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 6px}
-.etitle{flex:1;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;padding-left:6px}
-.ebtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.6);font-size:24px;line-height:1}
-.ebtn svg{width:20px;height:20px}
-.ebtn:disabled{opacity:.3}
-.emain{flex:1;min-height:0;display:flex;flex-direction:column}
-.estage{position:relative;flex:1;min-height:0}
-.efit{position:absolute;inset:6px 14px;display:flex;align-items:center;justify-content:center}
-#ecanvas{max-width:100%;max-height:100%;border-radius:4px;box-shadow:0 14px 34px rgba(110,84,70,.2);touch-action:none;background:#d8cfc4}
-.epanel{flex:none;margin:6px 8px calc(8px + var(--safe-b));border-radius:24px;padding:8px}
-.etabs{display:flex;gap:2px;background:rgba(255,255,255,.45);border-radius:999px;padding:3px}
-.etabs button{flex:1;padding:8px 0;border-radius:999px;font-size:12.5px;color:var(--mocha);letter-spacing:.06em}
-.etabs button.on{background:var(--ink);color:#fbf7f3}
-.ebody{height:212px;overflow-y:auto;padding:12px 6px 4px;overscroll-behavior:contain}
-.erow{display:flex;align-items:center;gap:10px;margin:0 0 10px}
-.el{width:56px;flex:none;font-size:12px;color:var(--mocha)}
-.erow input[type=range]{flex:1;min-width:0;accent-color:var(--ink)}
-.ev{width:40px;flex:none;text-align:right;font:11px Jost,sans-serif;color:var(--mocha)}
 .etext{display:block;width:100%;min-height:60px;resize:none;border:0;border-radius:14px;padding:10px 12px;font-size:16px;line-height:1.5;background:rgba(255,255,255,.72);outline:none;margin-bottom:10px}
 .etext:focus{box-shadow:inset 0 0 0 1.5px var(--rose)}
 .ebtns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.eb{padding:8px 13px;border-radius:999px;background:rgba(255,255,255,.62);font-size:12px}
-.eb.dark{background:var(--ink);color:#fbf7f3;padding:11px 18px}
-.eseg{display:inline-flex;background:rgba(255,255,255,.5);border-radius:999px;padding:2px;margin-bottom:10px}
-.eseg button{padding:6px 12px;border-radius:999px;font-size:12px;color:var(--mocha)}
-.eseg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(110,84,70,.15)}
 .eseg.wide{display:flex}.eseg.wide button{flex:1}
 .erow .eseg{margin:0}
 .enote{font-size:12px;color:var(--mocha);line-height:1.8;margin:2px 2px 12px}
@@ -219,18 +195,11 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .subsec{margin:4px 0 0 10px;padding-left:10px;border-left:2px solid rgba(75,63,58,.1)}
 .subsec h4{font-size:12px}
 .sec .eseg{margin-bottom:12px}
-.tg{width:42px;height:25px;border-radius:13px;background:#d9d0c7;position:relative;transition:background .2s}
-.tg::after{content:"";position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
-.tg.on{background:var(--ink)}.tg.on::after{transform:translateX(17px)}
 .pal{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .pal button,.pal .custom{width:28px;height:28px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px rgba(75,63,58,.22);position:relative}
 .pal .custom{background:conic-gradient(#e8a0a0,#e8d6a0,#a8d8a8,#a0c8e8,#c8a8e0,#e8a0a0);overflow:hidden}
 .pal .custom input{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;padding:0;cursor:pointer}
 .pal .on{box-shadow:0 0 0 2px var(--milk),0 0 0 3.5px var(--ink)}
-.fontgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
-.fbtn{padding:11px 8px;border-radius:12px;background:rgba(255,255,255,.55);font-size:15px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.fbtn span{opacity:0;transition:opacity .2s}.fbtn.ready span{opacity:1}
-.fbtn.on{background:#fff;box-shadow:inset 0 0 0 1.5px var(--rose)}
 
 .ssheet{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center}
 .ssheet[hidden]{display:none}
@@ -240,19 +209,10 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .scard .pill{width:100%;justify-content:center}
 .stext{margin-top:10px;font-size:13px;color:var(--mocha);padding:8px}
 
-.ecol{flex:1;min-height:0;display:flex;flex-direction:column}
-.pstrip{flex:none;display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:6px 14px 2px}
-.pstrip::-webkit-scrollbar{display:none}
-.pg{position:relative;flex:none;height:58px;min-width:40px;border-radius:9px;padding:0;overflow:hidden;box-shadow:0 0 0 1px rgba(75,63,58,.12)}
-.pg canvas{display:block}
-.pg b{position:absolute;left:3px;top:3px;font:500 9px Jost,sans-serif;background:rgba(255,252,249,.85);border-radius:6px;padding:1px 5px}
-.pg.on{box-shadow:0 0 0 2px var(--milk),0 0 0 3.5px var(--ink)}
-.pg.add{width:44px;background:rgba(255,255,255,.55);font-size:20px;color:var(--mocha);box-shadow:inset 0 0 0 1px rgba(75,63,58,.18)}
-.dbtn{margin-left:auto;flex:none;white-space:nowrap}
 .dcard{text-align:left;max-height:86vh;overflow-y:auto}
 .dcard h3{font-size:14px;margin:14px 2px 10px;display:flex;align-items:baseline;gap:8px}
 .dcard h3:first-child{margin-top:4px}
-.dcard h3 small{font-size:11px;color:var(--mocha);font-weight:500}
+.dcard h3 small{font-size:11px;color:var(--mocha);font-weight:400}
 .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dgrid .eb,.eb.wide{padding:11px 10px;font-size:13px}
 .eb.wide{grid-column:1/-1;width:100%}
@@ -272,11 +232,9 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .ctas{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px}
 .ctas .pill[hidden]{display:none}
 .wtabs{margin:4px 0 12px}
-.wcard .tag{position:absolute;left:5px;top:5px;font:500 9.5px Jost,"Zen Kaku Gothic New",sans-serif;background:rgba(255,252,249,.88);border-radius:6px;padding:2px 6px}
+.wcard .tag{position:absolute;left:5px;top:5px;font:500 9.5px Jost,var(--ui);background:rgba(255,252,249,.88);border-radius:6px;padding:2px 6px}
 .mythumb{width:40px;height:50px;object-fit:cover;border-radius:6px;flex:none;box-shadow:0 1px 4px rgba(110,84,70,.18)}
 .mytxt small{font-size:11px;color:var(--mocha)}
-.etitle small{font:400 11px "Zen Kaku Gothic New",sans-serif;font-style:normal;color:var(--mocha);opacity:0;transition:opacity .3s;margin-left:6px}
-.etitle small.on{opacity:1}
 .wgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .wcard{position:relative;display:flex;flex-direction:column;gap:3px;text-align:left;cursor:pointer;min-width:0}
 .wcard img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:10px;box-shadow:0 3px 10px rgba(110,84,70,.14)}
@@ -287,12 +245,8 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .wcard.new span{font-size:24px}
 .wx::before{content:"";position:absolute;inset:-8px}
 .wx{position:absolute;right:3px;top:3px;width:30px;height:30px;border-radius:50%;background:rgba(255,252,249,.85);font-size:13px;color:var(--mocha)}
-.etabs[hidden]{display:none}
 .ihead{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px}
 .ihead b{font-size:14px}
-.pg{overflow:visible}
-.pg canvas{border-radius:9px}
-.pgx{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fbf7f3;font:500 12px/20px system-ui;font-style:normal;text-align:center}
 .privacy.note{margin-top:6px}
 .privacy.note::before{display:none}
 .pgrow{display:flex;align-items:center;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none}
@@ -319,11 +273,77 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .toast{position:fixed;z-index:95;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%);border-radius:999px;padding:10px 18px;font-size:12.5px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 .toast[hidden]{display:none}
 
-@media (min-width:900px){
-  .emain{flex-direction:row}
-  .epanel{width:380px;display:flex;flex-direction:column;margin:0 14px 14px 0}
-  .ebody{height:auto;flex:1}
-}
+/* editor: the picture first, one bar under it */
+.editor{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--stage)}
+.etop{flex:none;display:flex;align-items:center;gap:4px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 4px}
+.etitle{flex:1;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:21px;padding-left:4px;white-space:nowrap}
+.etitle small{font:400 11px var(--ui);font-style:normal;color:var(--mocha);opacity:0;transition:opacity .3s;margin-left:6px}
+.etitle small.on{opacity:1}
+.ebtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink)}
+.ebtn:active{background:rgba(75,63,58,.08)}
+.ebtn svg{width:22px;height:22px}
+.ebtn:disabled{opacity:.28}
+.etop .pill{padding:9px 18px;margin-left:4px}
+.estage{position:relative;flex:1;min-height:0;touch-action:none}
+.efit{position:absolute;inset:8px 12px 10px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#ecanvas{max-width:100%;max-height:100%;border-radius:2px;box-shadow:0 1px 2px rgba(60,40,30,.12),0 12px 32px rgba(60,40,30,.16);touch-action:none;background:#d8cfc4;pointer-events:auto}
+.epill{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);padding:5px 12px;border-radius:999px;background:rgba(40,28,22,.62);color:#fff;font:500 11.5px Jost,var(--ui);letter-spacing:.08em;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.epill[hidden]{display:none}
+.efloat{position:absolute;left:0;top:0;z-index:2;display:flex;background:#fffdfb;border-radius:12px;padding:3px;box-shadow:0 1px 2px rgba(60,40,30,.12),0 6px 18px rgba(60,40,30,.18);white-space:nowrap}
+.efloat[hidden]{display:none}
+.efloat button{padding:7px 12px;border-radius:9px;font-size:12.5px;color:var(--ink)}
+.efloat button+button{box-shadow:-1px 0 0 rgba(75,63,58,.1)}
+.efloat button:active{background:rgba(75,63,58,.08)}
+.edock{flex:none;display:flex;flex-direction:column;gap:6px;padding:0 8px calc(8px + var(--safe-b));width:100%;max-width:600px;margin:0 auto}
+.edrawer{background:rgba(255,253,251,.94);border-radius:20px;box-shadow:0 1px 2px rgba(60,40,30,.08),0 8px 24px rgba(60,40,30,.1);animation:rise .22s cubic-bezier(.2,.9,.3,1) both}
+.edrawer[hidden]{display:none}
+.ebody{max-height:min(38vh,300px);overflow-y:auto;padding:14px 14px 4px;overscroll-behavior:contain}
+.ebar{display:flex;gap:1px;overflow-x:auto;scrollbar-width:none;background:#fffdfb;border-radius:22px;padding:4px;box-shadow:0 1px 2px rgba(60,40,30,.08),0 8px 24px rgba(60,40,30,.1)}
+.ebar::-webkit-scrollbar{display:none}
+.ebar button{flex:1 0 44px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;border-radius:16px;color:var(--mocha);font-size:10.5px;letter-spacing:.04em;white-space:nowrap;transition:background .15s,color .15s}
+.ebar button svg{width:22px;height:22px}
+.ebar button.on{background:rgba(75,63,58,.09);color:var(--ink)}
+.ebar button.done{color:var(--ink)}
+.ebar button:active{background:rgba(75,63,58,.07)}
+.cdot{width:20px;height:20px;margin:1px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(75,63,58,.25),0 0 0 2px #fff,0 0 0 3px rgba(75,63,58,.14)}
+.etedit{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:rgba(36,26,20,.34);padding:calc(10px + env(safe-area-inset-top,0px)) 18px 18px;animation:fade .15s both}
+.etedit[hidden]{display:none}
+.etedit-top{display:flex;justify-content:flex-end}
+.etedit textarea{margin-top:18px;width:100%;min-height:30vh;resize:none;border:0;outline:none;background:none;color:#fff;font:500 24px/1.55 var(--ui);text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.25);caret-color:#fff}
+.erow{display:flex;align-items:center;gap:12px;margin:0 0 8px}
+.el{width:52px;flex:none;font-size:12px;color:var(--mocha)}
+.erow input[type=range]{flex:1;min-width:0}
+.ev{width:38px;flex:none;text-align:right;font:11px Jost,var(--ui);color:var(--mocha);font-variant-numeric:tabular-nums}
+.eb{padding:8px 14px;border-radius:999px;background:rgba(75,63,58,.06);font-size:12.5px}
+.eb.dark{background:var(--ink);color:#fbf7f3;padding:10px 18px}
+.eb:active{transform:scale(.97)}
+.eseg{display:inline-flex;background:rgba(75,63,58,.06);border-radius:999px;padding:2px;margin-bottom:12px}
+.eseg button{padding:6px 12px;border-radius:999px;font-size:12px;color:var(--mocha);white-space:nowrap}
+.eseg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(60,40,30,.16)}
+.eseg .lit{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--rose);vertical-align:2px;margin-left:2px}
+.tg{width:42px;height:25px;border-radius:13px;background:#dcd4cc;position:relative;transition:background .2s;flex:none}
+.tg::after{content:"";position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.tg.on{background:var(--ink)}.tg.on::after{transform:translateX(17px)}
+.fontrow{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,46px);grid-auto-columns:max-content;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -14px 10px;padding:0 14px;scroll-padding:0 14px}
+.fontrow::-webkit-scrollbar{display:none}
+.fbtn{padding:0 16px;border-radius:12px;background:rgba(75,63,58,.05);font-size:17px;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.fbtn span{opacity:0;transition:opacity .2s}.fbtn.ready span{opacity:1}
+.fbtn.on{background:#fff;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pstrip{display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -14px 12px;padding:8px 14px 4px}
+.pstrip::-webkit-scrollbar{display:none}
+.pg{position:relative;flex:none;height:64px;min-width:40px;border-radius:6px;padding:0;box-shadow:0 0 0 1px rgba(75,63,58,.12)}
+.pg canvas{display:block;border-radius:6px}
+.pg b{position:absolute;left:3px;top:3px;font:500 9px Jost,sans-serif;background:rgba(255,252,249,.88);border-radius:5px;padding:1px 5px}
+.pg.on{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--ink)}
+.pg.add{width:48px;background:rgba(75,63,58,.05);font-size:20px;color:var(--mocha);box-shadow:inset 0 0 0 1px rgba(75,63,58,.16)}
+.pgx{position:absolute;right:-7px;top:-7px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fbf7f3;font:500 12px/20px system-ui;font-style:normal;text-align:center}
+/* sliders: a hairline track and a white knob, like the system ones */
+input[type=range]{-webkit-appearance:none;appearance:none;height:28px;background:none;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:rgba(75,63,58,.16)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-9.5px;border-radius:50%;background:#fff;box-shadow:0 0 0 .5px rgba(40,25,15,.18),0 2px 5px rgba(40,25,15,.22)}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:rgba(75,63,58,.16)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 .5px rgba(40,25,15,.18),0 2px 5px rgba(40,25,15,.22)}
+@media (min-width:900px){.ebar button{flex-basis:64px;font-size:11px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -397,21 +417,20 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 
 <section class="editor" id="editor" hidden>
   <div class="etop">
-    <button class="ebtn" id="eback" aria-label="書体の一覧に戻る">‹</button>
+    <button class="ebtn" id="eback" aria-label="書体の一覧に戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
     <span class="etitle">piclea <small id="esaved"></small></span>
-    <button class="ebtn" id="eundo" aria-label="元に戻す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4.5 11.5 9 16"/><path d="M5 11.5h9.5a5 5 0 010 10H12"/></svg></button>
-    <button class="ebtn" id="eredo" aria-label="やり直す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7l4.5 4.5L15 16"/><path d="M19 11.5H9.5a5 5 0 000 10H12"/></svg></button>
+    <button class="ebtn" id="eundo" aria-label="元に戻す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 13.5L4 9l4.5-4.5"/><path d="M4.5 9h10a5.5 5.5 0 010 11H11"/></svg></button>
+    <button class="ebtn" id="eredo" aria-label="やり直す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 13.5L20 9l-4.5-4.5"/><path d="M19.5 9h-10a5.5 5.5 0 000 11H13"/></svg></button>
     <button class="pill dark" id="esave">保存</button>
   </div>
-  <div class="emain">
-    <div class="ecol">
-      <div class="estage"><div class="efit"><canvas id="ecanvas"></canvas></div></div>
-      <div class="pstrip" id="pstrip"></div>
-    </div>
-    <div class="epanel glass">
-      <div class="etabs" id="etabs"></div>
-      <div class="ebody" id="ebody"></div>
-    </div>
+  <div class="estage" id="estage"><div class="efit"><canvas id="ecanvas"></canvas></div><button class="epill" id="epill" hidden></button><div class="efloat" id="efloat" hidden></div></div>
+  <div class="edock">
+    <div class="edrawer" id="edrawer" hidden><div class="ebody" id="ebody"></div></div>
+    <nav class="ebar" id="ebar" aria-label="編集の道具"></nav>
+  </div>
+  <div class="etedit" id="etedit" hidden>
+    <div class="etedit-top"><button class="pill dark" id="etdone">完了</button></div>
+    <textarea id="etxt" rows="3" aria-label="文字" enterkeyhint="enter"></textarea>
   </div>
   <input type="file" id="efile" accept="image/*" hidden>
   <input type="file" id="eadd" accept="image/*" multiple hidden>
@@ -521,7 +540,8 @@ $('#nJa').textContent=JA.length;$('#nEn').textContent=EN.length;
 
 /* ---------- texts ---------- */
 // The picker always works on a text; if an overlaid photo was selected in the editor, fall back to the first text.
-function tsel(){let L=app.sel();if(!app.isText(L)){L=D.layers.find(app.isText);if(L)D.sel=L.id}return L}
+// While the editor is open, nothing selected is a real state there, so the list must not pick for it.
+function tsel(){let L=app.sel();if(!app.isText(L)){L=D.layers.find(app.isText);if(L&&$('#editor').hidden)D.sel=L.id}return L}
 const texts=()=>D.layers.filter(app.isText);
 function renderTexts(){
   const ts=texts(),cur=tsel();
@@ -661,7 +681,7 @@ function renderX(){
   $('#xctl').innerHTML=`${rng('大きさ','size',12,600,1)}
     <div class="erow">${seg('vertical',[[false,'横書き'],[true,'縦書き']])}${seg('align',[['left','左'],['center','中'],['right','右']])}</div>
     <div class="sec">${tg('stroke.on','縁取り')}${L.stroke.on?`<div class="pal" data-xpal="stroke.color">${app.PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===L.stroke.color?'on':''}"></button>`).join('')}</div>`+rng('太さ','stroke.w',1,30,.5):''}</div>
-    <div class="sec">${tg('shadow.on','影')}${L.shadow.on?rng('濃さ','shadow.a',.05,1,.01)+rng('ぼかし','shadow.blur',0,100,1):''}</div>`;
+    <div class="sec">${tg('shadow.on','影')}${L.shadow.on?rng('濃さ','shadow.a',.05,3,.01)+rng('ぼかし','shadow.blur',0,100,1):''}</div>`;
 }
 $('#detailBtn').onclick=()=>{if(!tsel())return;$('#xsheet').hidden=false;renderX();$('#xph').classList.add('loading');paintX()};
 $('#xsheet').addEventListener('click',e=>{
