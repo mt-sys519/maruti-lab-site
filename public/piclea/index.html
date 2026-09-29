@@ -394,7 +394,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 .hnav a{color:rgba(255,255,255,.88);text-decoration:none;font-size:13px;letter-spacing:.08em;padding:6px 0;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
 .hnav a:hover{color:#fff;border-color:rgba(255,255,255,.6)}
 @media (min-width:760px){.hnav{display:flex}#menuBtn{display:none}}
-@media (max-width:759px){#worksBtn{display:none}body.has-photo .bar [data-pick]{display:none}}
+#worksTop[hidden],body.has-photo #worksTop{display:none}
+.mhead{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mocha);margin:12px 4px 2px}
+.mhead:first-child{margin-top:4px}
+.mfoot{display:flex;justify-content:center;gap:18px;margin:12px 0 2px;font-size:12px}
+.mfoot a{color:var(--mocha);text-underline-offset:3px}
 .mcard{padding:10px 14px 8px;text-align:left;background:#fffdfb;backdrop-filter:none;-webkit-backdrop-filter:none}
 @media (max-width:759px){#msheet{align-items:flex-end}#msheet .mcard{width:100%;border-radius:26px 26px 0 0;padding-bottom:calc(8px + var(--safe-b));animation:up .26s cubic-bezier(.2,.9,.3,1) both}}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
@@ -421,7 +425,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <div class="bar-l"><button class="ic" id="menuBtn" aria-label="メニュー" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
     <nav class="hnav" aria-label="piclea について"><a href="#why-title" data-why>特長</a><a href="guide/">使い方</a><a href="faq/">よくある質問</a></nav></div>
   <a class="logo" href="./"><b>piclea</b><small>by Maruti Lab</small></a>
-  <div class="bar-r"><button class="ic" id="worksBtn" aria-label="つくったもの"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></button><button class="pill ghost" data-pick>写真をえらぶ</button><button class="pill dark" id="toEdit">編集へ</button></div>
+  <div class="bar-r"><!-- what comes next: back to your works, or on to the editor once a photo is in -->
+    <button class="pill ghost" id="worksTop" hidden>つくったもの</button><button class="pill dark" id="toEdit">編集へ</button></div>
 </header>
 
 <section class="hero">
@@ -593,13 +598,17 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <div class="scrim" data-mclose></div>
   <div class="scard glass mcard" role="dialog" aria-label="メニュー">
     <nav class="mlist">
+      <p class="mhead">つくる</p>
+      <button data-pick data-mgo><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg></i><span><b>写真をえらぶ</b><small>新しく作る・何枚でもまとめて</small></span></button>
+      <button data-mtpl><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 10.5h17M10.5 10.5v10"/></svg></i><span><b>型から作る</b><small>取っておいたデザインに写真をはめる</small></span></button>
+      <button data-mworks><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></i><span><b>つくったもの</b><small>作りかけの続き・バックアップ</small></span></button>
+      <p class="mhead">piclea について</p>
       <a href="#why-title" data-why><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.2 5 5.3.5-4 3.6 1.2 5.2L12 15.1l-4.7 2.7 1.2-5.2-4-3.6 5.3-.5z"/></svg></i><span><b>piclea の特長</b><small>できること・安心して使える理由</small></span></a>
       <a href="guide/"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></svg></i><span><b>使い方</b><small>写真を選んでから保存するまで</small></span></a>
       <a href="faq/"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 014.8.9c0 1.7-2.4 2-2.4 3.6M12 17h.01"/></svg></i><span><b>よくある質問</b><small>料金・安全性・保存のこと</small></span></a>
-      <button data-mtpl><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 10.5h17M10.5 10.5v10"/></svg></i><span><b>型から作る</b><small>取っておいたデザインに写真をはめる</small></span></button>
-      <button data-mworks><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></i><span><b>つくったもの</b><small>作りかけの続き・バックアップ</small></span></button>
       <a href="licenses.html"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18.5L10.5 5.5h3L18 18.5M8 13.5h8"/></svg></i><span><b>フォントとライセンス</b><small>70＋138書体の一覧・すべて商用利用可</small></span></a>
     </nav>
+    <div class="mfoot"><a href="/contact">お問い合わせ</a><a href="/privacy">プライバシーポリシー</a></div>
     <button class="stext" data-mclose>閉じる</button>
   </div>
 </div>
@@ -823,7 +832,6 @@ app.on('photo',url=>{
 $('#toEdit').onclick=()=>app.openEditor();
 function photoUI(on){
   document.body.classList.toggle('has-photo',on);
-  $$('.bar [data-pick]').forEach(b=>b.textContent=on?'写真を変える':'写真をえらぶ');
   $('#go').textContent=on?'この書体で編集する':'写真をえらんで編集する';
 }
 function firstLayer(){const F=DEFAULT_JA,L=app.newLayer({text:SAMPLE[S.lang],fam:F[1],w:F[4],name:F[0],size:sizeOf(30),x:D.W/2,y:D.H/2});D.layers.push(L);D.sel=L.id;app.commit()}
@@ -855,13 +863,13 @@ async function openWorks(){
   $('#whome').hidden=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   $('#wsheet').hidden=false;
 }
-async function refreshWorksCta(){const n=(await app.listWorks().catch(()=>[])).length;$('#worksCta').hidden=!n;$('#worksCta').textContent=`つくったもの（${n}）`}
+async function refreshWorksCta(){const n=(await app.listWorks().catch(()=>[])).length;$('#worksCta').hidden=$('#worksTop').hidden=!n;$('#worksCta').textContent=`つくったもの（${n}）`}
 async function refreshTplCta(){const n=(await app.listDesigns().catch(()=>[])).length;$('#tplCta').hidden=!n;$('#tplCta').textContent=`型から作る（${n}）`}
-$('#worksBtn').onclick=openWorks;$('#worksCta').onclick=openWorks;$('#tplCta').onclick=openTpl;
+$('#worksTop').onclick=openWorks;$('#worksCta').onclick=openWorks;$('#tplCta').onclick=openTpl;
 /* header menu (phones) and the 特長 link: glide down to the section instead of jumping */
 $('#menuBtn').onclick=()=>{$('#msheet').hidden=false};
 $('#msheet').addEventListener('click',e=>{
-  if(e.target.closest('[data-mclose]')){$('#msheet').hidden=true;return}
+  if(e.target.closest('[data-mclose],[data-mgo]')){$('#msheet').hidden=true;return}
   if(e.target.closest('[data-mtpl]')){$('#msheet').hidden=true;openTpl();return}
   if(e.target.closest('[data-mworks]')){$('#msheet').hidden=true;openWorks()}
 });
