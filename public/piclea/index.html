@@ -269,7 +269,12 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 .sprevs.many img{max-width:78%}
 .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(75,63,58,.12);flex:none}
 .ic svg{width:19px;height:19px}
-.works-cta{margin-top:14px}
+.ctas{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.ctas .pill[hidden]{display:none}
+.wtabs{margin:4px 0 12px}
+.wcard .tag{position:absolute;left:5px;top:5px;font:500 9.5px Jost,"Zen Kaku Gothic New",sans-serif;background:rgba(255,252,249,.88);border-radius:6px;padding:2px 6px}
+.mythumb{width:40px;height:50px;object-fit:cover;border-radius:6px;flex:none;box-shadow:0 1px 4px rgba(110,84,70,.18)}
+.mytxt small{font-size:11px;color:var(--mocha)}
 .etitle small{font:400 11px "Zen Kaku Gothic New",sans-serif;font-style:normal;color:var(--mocha);opacity:0;transition:opacity .3s;margin-left:6px}
 .etitle small.on{opacity:1}
 .wgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -337,7 +342,7 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
   <button class="pill dark big" data-pick>写真をえらぶ</button>
   <p class="privacy">写真はこの端末の中だけで使われます</p>
   <p class="privacy note">写真は何枚でもまとめて選べます（1枚ずつページになります）</p>
-  <button class="pill ghost works-cta" id="worksCta" hidden>つくったもの</button>
+  <div class="ctas"><button class="pill ghost" id="tplCta" hidden>型から作る</button><button class="pill ghost" id="worksCta" hidden>つくったもの</button></div>
 </section>
 
 <section class="finder glass">
@@ -433,8 +438,11 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
       <button class="eb" id="dpaste">貼り付け</button>
       <button class="eb wide" id="dall">ほかの写真も全部このデザインにする</button>
     </div>
-    <h3>マイデザイン</h3>
-    <button class="eb dark wide" id="mysave">今のデザインを名前を付けて取っておく</button>
+    <h3>型 <small>写真を抜いたデザイン。当てると今のページが型どおりに</small></h3>
+    <div class="dgrid">
+      <button class="eb dark wide" id="mysave">このページを型にする</button>
+      <button class="eb wide" id="mysaveall" hidden></button>
+    </div>
     <div id="mylist"></div>
     <h3>この作品</h3>
     <button class="eb wide" id="wexport">バックアップをファイルに書き出す</button>
@@ -451,14 +459,22 @@ footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15
 <div class="ssheet" id="wsheet" hidden>
   <div class="scrim" data-wclose></div>
   <div class="scard glass dcard">
-    <h3>つくったもの</h3>
-    <div class="wgrid" id="wgrid"></div>
-    <div class="dgrid" style="margin-top:12px"><button class="eb wide" id="wimport">バックアップのファイルから開く</button></div>
+    <div class="eseg wide wtabs" id="wtabs"><button data-w="works" class="on">つくったもの</button><button data-w="tpl">型から作る</button></div>
+    <div id="wworks">
+      <div class="wgrid" id="wgrid"></div>
+      <div class="dgrid" style="margin-top:12px"><button class="eb wide" data-wimport>バックアップのファイルから開く</button></div>
+    </div>
+    <div id="wtpl" hidden>
+      <p class="enote">型をえらんで写真を選ぶと、1枚目から順に写真枠にはまります（ページごとに背景→重ねた枠の順）。型より写真が多いときは、最後のページの型で続きます。</p>
+      <div class="wgrid" id="tgrid"></div>
+      <div class="dgrid" style="margin-top:12px"><button class="eb wide" id="texport">型だけをファイルに書き出す</button><button class="eb wide" data-wimport>型のファイルを読み込む</button></div>
+    </div>
     <p class="enote" id="whome">ホーム画面に追加して使うと、作品が消えにくくなります（共有ボタン →「ホーム画面に追加」）。</p>
     <button class="stext" data-wclose>閉じる</button>
   </div>
 </div>
 <input type="file" id="wfile" accept="application/json,.json" hidden>
+<input type="file" id="tfile" accept="image/*" multiple hidden>
 <div class="cpop glass" id="cpop" hidden><div class="pal" id="cpal"></div></div>
 <div class="ssheet" id="xsheet" hidden>
   <div class="scrim" data-xclose></div>
@@ -688,7 +704,19 @@ app.on('pages',changed);
 
 /* ---------- works kept on this device ---------- */
 const fmtDate=t=>new Date(t).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
+function wtab(w){$$('#wtabs button').forEach(b=>b.classList.toggle('on',b.dataset.w===w));$('#wworks').hidden=w!=='works';$('#wtpl').hidden=w!=='tpl'}
+async function renderTpl(){
+  const ts=await app.listDesigns().catch(()=>[]);
+  $('#tgrid').innerHTML=ts.length?ts.map(t=>`
+    <div class="wcard" data-tpl="${t.id}" role="button" tabindex="0">
+      <img src="${t.thumb}" alt="">${t.pages.length>1?`<span class="tag">${t.pages.length}枚組</span>`:''}<b>${t.name.replace(/</g,'&lt;')}</b><small>写真${t.slots}枚</small>
+      <button class="wx" data-tdel="${t.id}" aria-label="消す">×</button>
+    </div>`).join('')
+    :'<p class="enote" style="grid-column:1/-1">まだ型がありません。編集画面の「デザイン」→「このページを型にする」で作れます。</p>';
+}
+async function openTpl(){wtab('tpl');await renderTpl();$('#whome').hidden=true;$('#wsheet').hidden=false}
 async function openWorks(){
+  wtab('works');
   const ws=await app.listWorks().catch(()=>[]);
   $('#wgrid').innerHTML=`<button class="wcard new" data-new><span>＋</span>新しく作る</button>`+ws.map(w=>`
     <div class="wcard${w.current?' on':''}" data-open="${w.id}" role="button" tabindex="0">
@@ -699,10 +727,27 @@ async function openWorks(){
   $('#wsheet').hidden=false;
 }
 async function refreshWorksCta(){const n=(await app.listWorks().catch(()=>[])).length;$('#worksCta').hidden=!n;$('#worksCta').textContent=`つくったもの（${n}）`}
-$('#worksBtn').onclick=openWorks;$('#worksCta').onclick=openWorks;
+async function refreshTplCta(){const n=(await app.listDesigns().catch(()=>[])).length;$('#tplCta').hidden=!n;$('#tplCta').textContent=`型から作る（${n}）`}
+$('#worksBtn').onclick=openWorks;$('#worksCta').onclick=openWorks;$('#tplCta').onclick=openTpl;
 app.on('saved',refreshWorksCta);
+app.on('designs',()=>{refreshTplCta();if(!$('#wtpl').hidden)renderTpl()});
+// A 型 card opens the photo picker right away (it has to happen inside the tap), then fills the frames.
+let pickTpl=null;
+$('#tfile').addEventListener('change',async e=>{
+  const fs=[...e.target.files],id=pickTpl;e.target.value='';pickTpl=null;if(!fs.length||!id)return;
+  try{
+    const empty=await app.fromTemplate(id,await Promise.all(fs.map(loadPhoto)));
+    $('#wsheet').hidden=true;closeSheet();app.openEditor();
+    if(empty)app.toast(`空いている写真枠が${empty}つあります。枠をタップで写真をはめられます`);
+  }catch{app.toast('この型で作れませんでした')}
+});
 $('#wsheet').addEventListener('click',async e=>{
   if(e.target.closest('[data-wclose]')){$('#wsheet').hidden=true;return}
+  const tb=e.target.closest('#wtabs button');if(tb){tb.dataset.w==='tpl'?openTpl():openWorks();return}
+  if(e.target.closest('[data-wimport]')){$('#wfile').click();return}
+  const tdel=e.target.closest('[data-tdel]');
+  if(tdel){const t=await app.getDesign(tdel.dataset.tdel);if(t&&await app.ask(`型「${t.name}」を消しますか？（元に戻せません）`,{ok:'消す'}))await app.deleteDesign(t.id);return}
+  const tc=e.target.closest('[data-tpl]');if(tc){pickTpl=tc.dataset.tpl;$('#tfile').click();return}
   const del=e.target.closest('[data-wdel]');
   if(del){
     const open=!!del.closest('.wcard.on');
@@ -717,12 +762,15 @@ $('#wsheet').addEventListener('click',async e=>{
   const card=e.target.closest('[data-open]');
   if(card){try{await app.openWork(card.dataset.open);$('#wsheet').hidden=true;app.openEditor()}catch{app.toast('この作品を開けませんでした')}}
 });
-$('#wimport').onclick=()=>$('#wfile').click();
 $('#wfile').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{await app.importWork(f);$('#wsheet').hidden=true;refreshWorksCta();app.openEditor()}catch{app.toast('piclea のバックアップとして読めませんでした')}
+  try{
+    const r=await app.importFile(f);
+    if(r.kind==='designs'){openTpl();app.toast(`型を${r.n}つ読み込みました`);return}
+    $('#wsheet').hidden=true;refreshWorksCta();app.openEditor();
+  }catch{app.toast('piclea のバックアップとして読めませんでした')}
 });
-refreshWorksCta();
+refreshWorksCta();refreshTplCta();
 app.on('closed',()=>{renderGrid();changed()});
 
 /* ---------- sheet: one font large; drag a text to move it, swipe for the next font ---------- */

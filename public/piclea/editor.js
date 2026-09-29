@@ -206,7 +206,13 @@ function drawImageLayer(c,L,thumb){
   }
   c.save();imgPath(c,L,f);c.clip();
   if(ph){const src=thumb?ph.small:ph.img,sc=Math.max(f.w/src.width,f.h/src.height)*L.zs,dw=src.width*sc,dh=src.height*sc;c.drawImage(src,-dw/2+L.zx*(dw-f.w)/2,-dh/2+L.zy*(dh-f.h)/2,dw,dh)}
-  else{c.fillStyle='#d8cfc4';c.fillRect(-f.w/2,-f.h/2,f.w,f.h)}
+  else{ // an empty photo frame (from a 型): a plain card with a small picture mark
+    c.fillStyle='#d8cfc4';c.fillRect(-f.w/2,-f.h/2,f.w,f.h);
+    const s=Math.min(f.w,f.h)*.18;c.strokeStyle='rgba(255,255,255,.92)';c.lineWidth=s*.09;c.lineJoin=c.lineCap='round';
+    c.beginPath();c.roundRect(-s,-s*.75,s*2,s*1.5,s*.25);c.stroke();
+    c.beginPath();c.arc(-s*.4,-s*.25,s*.18,0,7);c.stroke();
+    c.beginPath();c.moveTo(-s*.75,s*.5);c.lineTo(-s*.15,-s*.02);c.lineTo(s*.3,s*.38);c.lineTo(s*.52,s*.18);c.lineTo(s*.75,s*.5);c.stroke();
+  }
   c.restore();
   if(L.border.on){imgPath(c,L,f);c.lineWidth=L.w*L.border.w/100*2;c.strokeStyle=L.border.color;c.stroke()}
   c.restore();
@@ -355,9 +361,10 @@ function snapMove(L,x,y,thr){
 function endPtr(e){
   if(!G.ptrs.has(e.pointerId))return;G.ptrs.delete(e.pointerId);
   if(G.ptrs.size)return;
-  const tap=G.g&&G.g.mode==='move'&&!G.g.moved&&G.g.was;
+  const tap=G.g&&G.g.mode==='move'&&!G.g.moved,was=tap&&G.g.was,L=sel();
   G.g=null;G.guides=null;commit();paint();
-  if(tap&&isText(sel())){setTab('文字');setTimeout(()=>$('#etxt')?.focus(),50)}
+  if(tap&&L&&!isText(L)&&!L.photoId)$('#eimgswap').click(); // an empty frame: one tap to fill it
+  else if(was&&isText(L)){setTab('文字');setTimeout(()=>$('#etxt')?.focus(),50)}
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{
@@ -385,8 +392,10 @@ const segs=(key,opts)=>`<div class="eseg" data-set="${key}">${opts.map(([v,l])=>
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
 function imgPanel(L,b){
-  b.innerHTML=`<div class="ihead"><b>重ねた写真</b><button class="eb dark" data-act="done">完了</button></div>
-    <div class="ebtns"><button class="eb" data-act="dup">複製</button><button class="eb" data-act="front">前へ</button><button class="eb" data-act="back">後ろへ</button><button class="eb" data-act="swapimg">差し替え</button><button class="eb" data-act="del">削除</button></div>
+  const empty=!L.photoId;
+  b.innerHTML=`<div class="ihead"><b>${empty?'写真枠（空き）':'重ねた写真'}</b><button class="eb dark" data-act="done">完了</button></div>
+    ${empty?'<div class="ebtns"><button class="eb dark" data-act="swapimg">写真をはめる</button></div>':''}
+    <div class="ebtns"><button class="eb" data-act="dup">複製</button><button class="eb" data-act="front">前へ</button><button class="eb" data-act="back">後ろへ</button>${empty?'':'<button class="eb" data-act="swapimg">差し替え</button>'}<button class="eb" data-act="del">削除</button></div>
     ${segs('shape',[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']])}
     ${L.shape!=='circle'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
     ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}
@@ -416,7 +425,7 @@ function panel(){
     b.innerHTML=`<div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>
       <p class="enote">写真をドラッグで位置、2本指（パソコンはホイール）で拡大できます。</p>
       <label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
-      <div class="ebtns"><button class="eb" id="ephoto">背景の写真を変える</button><button class="eb dark" data-act="addimg">＋ 写真を重ねる</button></div>`;
+      <div class="ebtns"><button class="eb${D.photoId?'':' dark'}" id="ephoto">${D.photoId?'背景の写真を変える':'背景の写真をはめる'}</button><button class="eb dark" data-act="addimg">＋ 写真を重ねる</button></div>`;
     return;
   }
   if(!L){b.innerHTML=`<p class="enote">文字や重ねた写真をタップすると、ここで調整できます。</p><div class="ebtns"><button class="eb dark" data-act="add">＋ 文字を追加</button><button class="eb dark" data-act="addimg">＋ 写真を重ねる</button></div>`;return}
@@ -528,14 +537,16 @@ const normDesign=()=>({v:1,layers:clone(D.layers).filter(isText).map(L=>({...L,x
 function applyDesign(d){const texts=clone(d.layers).map(L=>({...L,id:uid++,x:L.x*D.W,y:L.y*D.H,size:L.size*D.W}));D.layers=[...D.layers.filter(L=>!isText(L)),...texts];D.sel=texts[0]?.id??null}
 let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 function openDesign(){renderDesign();$('#dsheet').hidden=false}
-function renderDesign(){
-  const clip=store.get('piclea.clip',null),mine=store.get('piclea.designs',[]);
+const tplMeta=t=>`${t.pages.length>1?t.pages.length+'枚組・':''}写真${t.slots}枚`;
+async function renderDesign(){
+  const clip=store.get('piclea.clip',null);
   $('#dpaste').disabled=!clip;$('#dall').disabled=P.pages.length<2;
   $('#pleft').disabled=P.cur===0;$('#pright').disabled=P.cur>=P.pages.length-1;$('#pdel').disabled=P.pages.length<2;
   $('#dpage').textContent=`この写真（${P.cur+1} / ${P.pages.length}枚目）`;
-  $('#mylist').innerHTML=mine.length?mine.map(m=>{const L=m.d.layers[0]||{};return `<div class="myrow"><div class="mytxt"><b>${esc(m.name)}</b><span style='font-family:${L.fam||'inherit'},sans-serif;font-weight:${L.w||400}'>${esc((L.text||'').split('\n')[0].slice(0,14))}</span></div><button class="eb" data-myapply="${m.id}">使う</button><button class="myx" data-mydel="${m.id}" aria-label="消す">×</button></div>`}).join('')
-    :'<p class="enote">よく使う文字の並びや飾りを名前を付けて取っておけます。写真は含みません。</p>';
-  for(const m of mine){const L=m.d.layers[0];if(L)loadFace(L.fam,L.w,L.text).catch(()=>{})}
+  $('#mysaveall').hidden=P.pages.length<2;$('#mysaveall').textContent=`${P.pages.length}枚組の型にする（表紙＋中ページ）`;
+  const mine=await listDesigns().catch(()=>[]);
+  $('#mylist').innerHTML=mine.length?mine.map(t=>`<div class="myrow"><img class="mythumb" src="${t.thumb}" alt=""><div class="mytxt"><b>${esc(t.name)}</b><small>${tplMeta(t)}</small></div><button class="eb" data-myapply="${t.id}">当てる</button><button class="myx" data-mydel="${t.id}" aria-label="消す">×</button></div>`).join('')
+    :'<p class="enote">文字・飾り・重ねた写真の位置を、写真を抜いた「型」として取っておけます。重ねた写真は空の写真枠になり、使うときに写真をはめます。</p>';
 }
 async function removePage(){
   if(P.pages.length<2)return;
@@ -546,7 +557,6 @@ function designChanged(msg){commit();sizeCanvas();panel();refresh();renderStrip(
 $('#dsheet').addEventListener('click',async e=>{
   if(e.target.closest('[data-dclose]')){$('#dsheet').hidden=true;return}
   const b=e.target.closest('button');if(!b)return;
-  const mine=store.get('piclea.designs',[]);
   switch(b.id){
     case 'dcopy':store.set('piclea.clip',normDesign());renderDesign();toast('デザインをコピーしました（写真以外）');return;
     case 'dpaste':{const c=store.get('piclea.clip',null);if(!c)return;applyDesign(c);designChanged('貼り付けました');renderDesign();return}
@@ -556,10 +566,11 @@ $('#dsheet').addEventListener('click',async e=>{
       P.pages.forEach((pg,i)=>{if(i!==P.cur)withPage(pg,()=>{applyDesign(d);P.pages[i]=clone(D)})});
       loadInto(P.pages[P.cur]);designChanged(`${P.pages.length}枚ぜんぶ同じデザインにしました`);return;
     }
-    case 'mysave':{
-      const name=await ask('マイデザインの名前',{ok:'取っておく',input:`マイデザイン ${mine.length+1}`});if(!name)return;
-      mine.unshift({id:Date.now(),name:name.slice(0,30),d:normDesign()});
-      if(!store.set('piclea.designs',mine))toast('保存できませんでした');else{renderDesign();toast('マイデザインに保存しました')}
+    case 'mysave':case 'mysaveall':{
+      const n=(await listDesigns().catch(()=>[])).length;
+      const name=await ask('型の名前',{ok:'型にする',input:`型 ${n+1}`});if(!name)return;
+      try{await saveDesign(name.slice(0,30),b.id==='mysaveall');renderDesign();toast('型にしました。トップの「型から作る」で使えます')}
+      catch(err){console.warn(err);toast('保存できませんでした')}
       return;
     }
     case 'pleft':case 'pright':{
@@ -568,23 +579,92 @@ $('#dsheet').addEventListener('click',async e=>{
     }
     case 'pdel':await removePage();renderDesign();return;
   }
-  if(b.dataset.myapply){const m=mine.find(x=>x.id===+b.dataset.myapply);if(m){applyDesign(m.d);designChanged(`「${m.name}」を当てました`)}return}
-  if(b.dataset.mydel){const m=mine.find(x=>x.id===+b.dataset.mydel);if(m&&await ask(`「${m.name}」を消しますか？`,{ok:'消す'})){store.set('piclea.designs',mine.filter(x=>x!==m));renderDesign()}}
+  if(b.dataset.myapply){const t=await getDesign(b.dataset.myapply);if(t){applyTemplate(t);designChanged(`「${t.name}」を当てました`)}return}
+  if(b.dataset.mydel){const t=await getDesign(b.dataset.mydel);if(t&&await ask(`型「${t.name}」を消しますか？`,{ok:'消す'})){await deleteDesign(t.id);renderDesign()}}
 });
+
+/* ---------- 型: a whole work without its photos, kept in IndexedDB ---------- */
+// Positions and sizes are relative to the picture so a 型 fits any ratio. Overlaid photos become empty
+// frames that keep their shape; each page's background is a frame too. A 型 of several pages is a cover
+// plus inside pages: when more photos come than it has pages, its last page repeats.
+function normPage(pg){
+  return {layers:pg.layers.map(L=>isText(L)?{...clone(L),x:L.x/pg.W,y:L.y/pg.H,size:L.size/pg.W}
+    :(f=>({...clone(L),photoId:null,ar:f.w/f.h,x:L.x/pg.W,y:L.y/pg.H,w:L.w/pg.W,zs:1,zx:0,zy:0}))(imgFrame(L)))};
+}
+function tplPage(tp,W,H,ratio){
+  return {ratio,W,H,photo:{s:1,ox:0,oy:0},sel:null,photoId:null,
+    layers:clone(tp.layers).map(L=>isText(L)?{...L,id:uid++,x:L.x*W,y:L.y*H,size:L.size*W}:{...L,id:uid++,x:L.x*W,y:L.y*H,w:L.w*W,photoId:null})};
+}
+const slotCount=pages=>pages.reduce((n,p)=>n+1+p.layers.filter(L=>!isText(L)).length,0);
+const emptySlots=()=>{syncCur();return P.pages.reduce((n,pg)=>n+(pg.photoId?0:1)+pg.layers.filter(L=>!isText(L)&&!L.photoId).length,0)};
+function pageThumb(pg,grad){
+  const c=document.createElement('canvas'),h=260,w=Math.round(h*pg.W/pg.H);c.width=w;c.height=h;
+  const x=c.getContext('2d');x.setTransform(w/pg.W,0,0,h/pg.H,0,0);withPage(pg,()=>draw(x,{thumb:true,grad}));return c.toDataURL('image/jpeg',.75);
+}
+async function saveDesign(name,all){
+  await ensureAll();const pgs=all?P.pages:[P.pages[P.cur]];
+  await DB.run('designs','readwrite',st=>st.put({id:newId('d'),name,updated:Date.now(),ratio:D.ratio,pages:pgs.map(normPage),thumb:pageThumb(pgs[0])}));
+  emit('designs');
+}
+// マイデザイン used to live in localStorage (texts only); move them over once, drawing a sample for each.
+let migrated=null;
+function migrateDesigns(){
+  return migrated??=(async()=>{
+    let old=null;try{old=JSON.parse(localStorage.getItem('piclea.designs'))}catch{}
+    if(!Array.isArray(old)||!old.length)return;
+    for(const m of old){
+      const pages=[{layers:m.d.layers}],pg=tplPage(pages[0],OUT_W,Math.round(OUT_W*5/4),'4:5');
+      await Promise.all(pg.layers.filter(isText).map(L=>loadFace(L.fam,L.w,loadText(L)).catch(()=>[])));
+      await DB.run('designs','readwrite',st=>st.put({id:'d'+m.id,name:m.name,updated:m.id,ratio:null,pages,thumb:pageThumb(pg)}));
+    }
+    localStorage.removeItem('piclea.designs');
+  })().catch(err=>{console.warn(err);migrated=null});
+}
+async function listDesigns(){
+  await migrateDesigns();
+  const all=await DB.run('designs','readonly',st=>st.getAll());
+  return (all||[]).sort((a,b)=>b.updated-a.updated).map(t=>({id:t.id,name:t.name,thumb:t.thumb,pages:t.pages,slots:slotCount(t.pages)}));
+}
+const getDesign=id=>DB.run('designs','readonly',st=>st.get(id));
+async function deleteDesign(id){await DB.run('designs','readwrite',st=>st.delete(id));emit('designs')}
+// A new work from a 型: the photos go in order, page by page, background first and then its frames.
+async function fromTemplate(id,urls){
+  const t=await getDesign(id);if(!t)throw new Error('missing');
+  const ids=[];for(const u of urls)ids.push(await makePhoto(u));
+  const r=RATIOS.find(x=>x[0]===t.ratio)||RATIOS[0],first=photos.get(ids[0]);
+  const W=OUT_W,H=Math.round(W/(r[1]||(first?first.img.width/first.img.height:.8))),q=[...ids],pages=[];
+  for(let i=0;i<t.pages.length||q.length;i++){
+    const pg=tplPage(t.pages[Math.min(i,t.pages.length-1)],W,H,r[0]);
+    pg.photoId=q.shift()??null;for(const L of pg.layers)if(!isText(L))L.photoId=q.shift()??null;
+    pages.push(pg);
+  }
+  clearTimeout(saveT);savedPhotos=new Set();
+  adopt({pages,cur:0},null);autosave();
+  return emptySlots();
+}
+// On the page being edited: the 型's texts and frames replace the page's, the page's own overlaid photos
+// fill the frames in order, and the background stays.
+function applyTemplate(t){
+  const pg=tplPage(t.pages[Math.min(P.cur,t.pages.length-1)],D.W,D.H,D.ratio);
+  const old=D.layers.filter(L=>!isText(L)&&L.photoId);
+  for(const L of pg.layers)if(!isText(L)){const o=old.shift();if(o)Object.assign(L,{photoId:o.photoId})}
+  D.layers=[...old,...pg.layers];D.sel=pg.layers.find(isText)?.id??null;
+}
 
 /* ---------- works kept on this device (IndexedDB), plus a backup file ---------- */
 const DB={
   db:null,
-  open(){return this.db??=new Promise((res,rej)=>{const r=indexedDB.open('piclea',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('works',{keyPath:'id'});d.createObjectStore('photos')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  open(){return this.db??=new Promise((res,rej)=>{
+    const r=indexedDB.open('piclea',2);
+    r.onupgradeneeded=()=>{const d=r.result;for(const [n,o] of [['works',{keyPath:'id'}],['photos'],['designs',{keyPath:'id'}]])if(!d.objectStoreNames.contains(n))d.createObjectStore(n,o)};
+    r.onsuccess=()=>{const d=r.result;d.onversionchange=()=>d.close();res(d)};r.onerror=()=>rej(r.error);
+  })},
   async run(store,mode,fn){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(store,mode),req=fn(t.objectStore(store));t.oncomplete=()=>res(req?.result);t.onerror=t.onabort=()=>rej(t.error)})},
 };
 let workId=null,savedPhotos=new Set(),saveT=0,asked=false;
 const usedPhotos=()=>[...new Set(P.pages.flatMap(pg=>[pg.photoId,...pg.layers.filter(L=>!isText(L)).map(L=>L.photoId)]).filter(Boolean))];
 function autosave(){if(!anyPhoto())return;clearTimeout(saveT);saveT=setTimeout(()=>saveWork().catch(err=>{console.warn(err);toast('端末に保存できませんでした')}),1200)}
-function workThumb(){
-  const pg=P.pages[0],c=document.createElement('canvas'),h=260,w=Math.round(h*pg.W/pg.H);c.width=w;c.height=h;
-  const x=c.getContext('2d');x.setTransform(w/pg.W,0,0,h/pg.H,0,0);withPage(pg,()=>draw(x,{thumb:true}));return c.toDataURL('image/jpeg',.75);
-}
+const workThumb=()=>pageThumb(P.pages[0]);
 async function saveWork(){
   syncCur();if(!P.pages.length)return;
   workId??=newId('w');
@@ -638,28 +718,47 @@ async function backupFile(){
   const data={app:'piclea',v:1,doc:clone(P),photos:{}};
   for(const id of usedPhotos())data.photos[id]=await toDataURL(await (await fetch(photos.get(id).url)).blob());
   const title=(P.pages[0]?.layers[0]?.text||'').split('\n')[0].slice(0,12).replace(/[\\/:*?"<>|\s]/g,'')||'piclea';
-  return new File([JSON.stringify(data)],`piclea-${title}-${new Date().toISOString().slice(0,10)}.json`,{type:'application/json'});
+  return new File([JSON.stringify(data)],`piclea-${title}-${new Date().toLocaleDateString('sv')}.json`,{type:'application/json'});
 }
-async function importWork(file){
-  const data=JSON.parse(await file.text());if(data.app!=='piclea'||!data.doc?.pages)throw new Error('not piclea');
+// The 型 alone: small, since there are no photos, only a sample picture each.
+async function designsFile(){
+  await migrateDesigns();
+  const designs=await DB.run('designs','readonly',st=>st.getAll());
+  return new File([JSON.stringify({app:'piclea',kind:'designs',v:2,designs})],`piclea-kata-${new Date().toLocaleDateString('sv')}.json`,{type:'application/json'});
+}
+// One file picker reads both kinds of backup. Returns 'designs' with a count, or 'work'.
+async function importFile(file){
+  const data=JSON.parse(await file.text());
+  if(data.app==='piclea'&&data.kind==='designs'&&Array.isArray(data.designs)){
+    const ok=data.designs.filter(t=>t&&t.id&&Array.isArray(t.pages)&&t.pages.length);
+    for(const t of ok)await DB.run('designs','readwrite',st=>st.put(t)); // same id = the same 型, so it is replaced, not doubled
+    emit('designs');return {kind:'designs',n:ok.length};
+  }
+  await importWork(data);return {kind:'work'};
+}
+async function importWork(data){
+  if(data.app!=='piclea'||!data.doc?.pages)throw new Error('not piclea');
   const map={};
   for(const [old,url] of Object.entries(data.photos||{})){const blob=await (await fetch(url)).blob();map[old]=await makePhoto(URL.createObjectURL(blob))}
   for(const pg of data.doc.pages){pg.photoId=map[pg.photoId]??null;for(const L of pg.layers)if(!isText(L))L.photoId=map[L.photoId]??null}
   savedPhotos=new Set();adopt(data.doc,null);await saveWork();
 }
-let backup=null;
-$('#wexport').onclick=async()=>{
-  const b=$('#wexport');
-  if(backup){ // second tap: a fresh gesture, so iOS lets the share sheet open
-    if(navigator.canShare?.({files:[backup]}))navigator.share({files:[backup]}).catch(()=>{});
-    else{const a=document.createElement('a');a.href=URL.createObjectURL(backup);a.download=backup.name;a.click()}
-    backup=null;b.textContent='バックアップをファイルに書き出す';return;
-  }
-  b.disabled=true;b.textContent='準備しています…';
-  try{backup=await backupFile();b.textContent='「ファイル」に保存する（もう一度タップ）'}
-  catch{b.textContent='バックアップをファイルに書き出す';toast('書き出せませんでした')}
-  finally{b.disabled=false}
-};
+// The first tap makes the file; the second, a fresh gesture, hands it over (iOS only opens the share sheet then).
+function exportButton(b,make){
+  const label=b.textContent;let file=null;
+  b.onclick=async()=>{
+    if(file){
+      if(navigator.canShare?.({files:[file]}))navigator.share({files:[file]}).catch(()=>{});
+      else{const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.click()}
+      file=null;b.textContent=label;return;
+    }
+    b.disabled=true;b.textContent='準備しています…';
+    try{file=await make();b.textContent='「ファイル」に保存する（もう一度タップ）'}
+    catch{b.textContent=label;toast('書き出せませんでした')}
+    finally{b.disabled=false}
+  };
+}
+exportButton($('#wexport'),backupFile);exportButton($('#texport'),designsFile);
 on('saved',()=>{const t=$('#esaved');if(!t)return;t.textContent='保存しました';t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600)});
 
 /* ---------- open / close / save ---------- */
@@ -699,6 +798,7 @@ $('#esave').onclick=async()=>{
     $('#ssize').textContent=`${many?P.pages.length+'枚・':''}${D.W} × ${D.H}`;
     $('#sshare').textContent=navigator.canShare?.({files:saved.files})?(many?`${P.pages.length}枚まとめて保存・共有`:'写真に保存・共有'):'画像をダウンロード';
     $('#ssheet').hidden=false;
+    const empty=emptySlots();if(empty)toast(`写真がはまっていない枠が${empty}つあります`);
   }finally{btn.disabled=false}
 };
 $('#sshare').onclick=()=>{
@@ -710,5 +810,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
+  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
 })();
