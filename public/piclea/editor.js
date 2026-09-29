@@ -40,7 +40,7 @@ const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n
 function newLayer(o){
   return Object.assign({id:uid++,text:'テキスト',fam:'"Zen Maru Gothic"',w:500,name:'Zen Maru Gothic',size:96,x:D.W/2,y:D.H/2,rot:0,
     color:INK,align:'center',ls:0,lh:1.45,vertical:false,opacity:1,wrap:.86,
-    stroke:{on:false,color:INK,w:8},shadow:{...SHADOW,on:false},band:{on:false,color:'#ffffff',a:.75,pad:30,r:0}},o);
+    stroke:{on:false,color:INK,w:8},shadow:{...SHADOW,on:false},band:{on:false,shape:'rect',color:'#ffffff',a:.75,pad:30,r:0,line:{on:false,color:INK,w:3}}},o);
 }
 
 /* ---------- glyph support (for vertical forms) ---------- */
@@ -130,14 +130,27 @@ function glyphs(c,L,f,m,stroke){
     }
   });
 }
+// Frame around the text. Round shapes are sized so the text's box fits inside them.
+function frameSize(L,m){
+  const B=L.band,p=L.size*B.pad/100,sh=B.shape||'rect';
+  if(sh==='circle'){const d=Math.hypot(m.W,m.H)+2*p;return {w:d,h:d}}
+  if(sh==='ellipse')return {w:m.W*Math.SQRT2+2*p,h:m.H*Math.SQRT2+2*p};
+  return {w:m.W+2*p,h:m.H+2*p};
+}
+function framePath(c,L,m){
+  const sh=L.band.shape||'rect',f=frameSize(L,m);c.beginPath();
+  if(sh==='circle'||sh==='ellipse')c.ellipse(0,0,f.w/2,f.h/2,0,0,Math.PI*2);
+  else c.roundRect(-f.w/2,-f.h/2,f.w,f.h,sh==='pill'?Math.min(f.w,f.h)/2:Math.min(L.size*L.band.r/100,Math.min(f.w,f.h)/2));
+}
 function drawLayer(c,L,ov){
   const f=face(L,ov),s=L.size;
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);
   const m=layout(c,L,f);
   if(L.band.on){
-    const p=s*L.band.pad/100;
-    c.save();c.globalAlpha=L.opacity*L.band.a;c.fillStyle=L.band.color;
-    c.beginPath();c.roundRect(-m.W/2-p,-m.H/2-p,m.W+2*p,m.H+2*p,s*L.band.r/100);c.fill();c.restore();
+    c.save();framePath(c,L,m);
+    c.globalAlpha=L.opacity*L.band.a;c.fillStyle=L.band.color;c.fill();
+    const ln=L.band.line;if(ln?.on){c.globalAlpha=L.opacity;c.lineWidth=s*ln.w/100;c.strokeStyle=ln.color;c.stroke()}
+    c.restore();
   }
   c.globalAlpha=L.opacity;
   // shadowBlur and offsets ignore the canvas transform, so scale them by hand for small previews
@@ -186,7 +199,7 @@ function draw(c,o={}){
   }
   return M;
 }
-function box(L,M,kk){const m=M.get(L.id),p=(L.band.on?L.size*L.band.pad/100:0)+10*kk;return {w:m.W+2*p,h:m.H+2*p}}
+function box(L,M,kk){const m=M.get(L.id),f=L.band.on?frameSize(L,m):{w:m.W,h:m.H},p=10*kk;return {w:f.w+2*p,h:f.h+2*p}}
 // The scale/rotate handle sits on the bottom-right corner, pulled back inside the picture if the corner is off it.
 function handlePos(L,M,kk){
   const b=box(L,M,kk),cs=Math.cos(L.rot),sn=Math.sin(L.rot),m=18*kk;
@@ -321,7 +334,7 @@ function setTab(t){tab=t;[...$('#etabs').children].forEach(b=>b.classList.toggle
 const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
 const pct=v=>Math.round(v*100)+'%';
-const FMT={lh:v=>(+v).toFixed(2),opacity:pct,'shadow.a':pct,'band.a':pct,wrap:v=>+v?pct(v):'なし'};
+const FMT={lh:v=>(+v).toFixed(2),opacity:pct,'shadow.a':pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
 const fmt=k=>FMT[k]||(v=>Math.round(v));
 const slider=(label,key,min,max,step)=>{const v=get(sel(),key);return `<label class="erow"><span class="el">${label}</span><input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${v}"><span class="ev" data-v="${key}">${fmt(key)(v)}</span></label>`};
 const pal=key=>{const v=get(sel(),key);return `<div class="pal" data-k="${key}">${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(v)?'':' on'}" aria-label="ほかの色"><input type="color" data-k="${key}" value="${v}"></label></div>`};
@@ -332,6 +345,7 @@ const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 let fontIO;
 function panel(){
   const L=sel(),b=$('#ebody');
+  if(L){L.band.shape??='rect';L.band.line??={on:false,color:INK,w:3}}
   if(tab==='写真'){
     b.innerHTML=`<div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>
       <p class="enote">写真をドラッグで位置、2本指（パソコンはホイール）で拡大できます。</p>
@@ -356,7 +370,8 @@ function panel(){
   }else if(tab==='飾り'){
     b.innerHTML=`<div class="sec">${toggle('stroke.on','縁取り')}${L.stroke.on?pal('stroke.color')+slider('太さ','stroke.w',1,30,.5):''}</div>
       <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,1,.01)+slider('ぼかし','shadow.blur',0,100,1)+slider('横','shadow.x',-30,30,1)+slider('縦','shadow.y',-30,30,1):''}</div>
-      <div class="sec">${toggle('band.on','文字の後ろの帯')}${L.band.on?pal('band.color')+slider('濃さ','band.a',.05,1,.01)+slider('余白','band.pad',0,120,1)+slider('角丸','band.r',0,100,1):''}</div>`;
+      <div class="sec">${toggle('band.on','枠（四角・丸）')}${L.band.on?segs('band.shape',[['rect','四角'],['pill','カプセル'],['circle','丸'],['ellipse','だ円']])+pal('band.color')+slider('濃さ','band.a',0,1,.01)+slider('余白','band.pad',0,120,1)+(L.band.shape==='rect'?slider('角丸','band.r',0,100,1):'')+
+        `<div class="subsec">${toggle('band.line.on','枠の線')}${L.band.line.on?pal('band.line.color')+slider('太さ','band.line.w',.5,15,.5):''}</div>`:''}</div>`;
   }
 }
 function addLayer(from){
@@ -390,9 +405,9 @@ bodyEl.addEventListener('click',e=>{
   if(t.closest('[data-ratio]')){applyRatio(t.dataset.v);sizeCanvas();commit();panel();refresh();return}
   if(t.closest('[data-lang]')){fontLang=t.dataset.v;panel();return}
   if(!L)return;
-  if(t.dataset.tg){put(L,t.dataset.tg,!get(L,t.dataset.tg));commit();panel();refresh();return}
-  const sg=t.closest('[data-set]');if(sg){put(L,sg.dataset.set,t.dataset.v==='true'?true:t.dataset.v==='false'?false:t.dataset.v);commit();panel();refresh();return}
-  const p=t.closest('.pal');if(p&&t.dataset.c){put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
+  if(t.dataset.tg){const k=t.dataset.tg,top=bodyEl.scrollTop;put(L,k,!get(L,k));commit();panel();bodyEl.scrollTop=top;refresh();return}
+  const sg=t.closest('[data-set]');if(sg){const top=bodyEl.scrollTop;put(L,sg.dataset.set,t.dataset.v==='true'?true:t.dataset.v==='false'?false:t.dataset.v);commit();panel();bodyEl.scrollTop=top;refresh();return}
+  const p=t.closest('.pal');if(p&&t.dataset.c){const top=bodyEl.scrollTop;put(L,p.dataset.k,t.dataset.c);commit();panel();bodyEl.scrollTop=top;paint();return}
   if(t.dataset.f!=null){setFont(L,(fontLang==='ja'?JA:EN)[+t.dataset.f]);bodyEl.querySelectorAll('.fbtn').forEach(x=>x.classList.toggle('on',x===t));commit();refresh()}
 });
 function setFont(L,f){Object.assign(L,{fam:f[1],w:f[4],name:f[0]})}
