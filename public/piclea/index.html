@@ -99,8 +99,14 @@ body.has-photo .hero{display:none}
 .lang button{border-radius:999px;padding:7px 13px;font-size:12px;letter-spacing:.06em;color:var(--mocha)}
 .lang button.on{background:var(--ink);color:#fbf7f3}
 .lang button[data-l=en]{font-family:Jost,sans-serif;letter-spacing:.08em}
-.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px;margin:-2px;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px;margin:-2px}
 .chips::-webkit-scrollbar{display:none}
+/* on a phone the row swipes; only the side that still has chips fades, so the last one is never left pale */
+.chips.fr{mask-image:linear-gradient(90deg,#000 86%,transparent)}
+.chips.fl{mask-image:linear-gradient(90deg,transparent,#000 14%)}
+.chips.fl.fr{mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+/* with a mouse there is no swipe, and a wide screen has the room: let the chips wrap so every one is in sight */
+@media (hover:hover) and (pointer:fine),(min-width:600px){.row:has(.chips){align-items:flex-start}.chips{flex-wrap:wrap;overflow:visible;mask-image:none}}
 .chip{flex:none;border-radius:999px;padding:7px 13px;font-size:12px;color:var(--mocha);border:1px solid rgba(75,63,58,.1);white-space:nowrap}
 .chip.on{background:#fff;color:var(--ink);border-color:#fff;box-shadow:0 2px 8px rgba(110,84,70,.12)}
 .chip.fav{color:var(--rose)}
@@ -707,7 +713,10 @@ function renderChips(){
   const cur=S.cat[S.lang];
   $('#chips').innerHTML=`<button class="chip fav${cur==='fav'?' on':''}" data-c="fav">★</button>`+
     CATS[S.lang].map(c=>`<button class="chip${c===cur?' on':''}" data-c="${c}">${c}</button>`).join('');
+  chipFade();
 }
+function chipFade(){const c=$('#chips'),max=c.scrollWidth-c.clientWidth;c.classList.toggle('fl',c.scrollLeft>2);c.classList.toggle('fr',c.scrollLeft<max-2)}
+$('#chips').addEventListener('scroll',chipFade,{passive:true});addEventListener('resize',chipFade);
 function renderGrid(){
   const src=S.lang==='ja'?JA:EN,cur=S.cat[S.lang];
   S.items=src.filter(f=>cur==='fav'?S.favs.has(key(f)):(cur===CATS[S.lang][0]||f[2]===cur));
