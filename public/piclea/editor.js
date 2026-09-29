@@ -2,7 +2,7 @@
 // used for the picker tiles, the large preview, the editor and the saved file alike, so all of them
 // match. Coordinates are output pixels of the finished image.
 (() => {
-const {JA,EN,loadPhoto}=window.PICLEA;
+const {JA,EN,loadPhoto,loadFace}=window.PICLEA;
 const $=s=>document.querySelector(s);
 const OUT_W=1080;
 const RATIOS=[['4:5',4/5],['1:1',1],['9:16',9/16],['元の比率',0]];
@@ -47,11 +47,13 @@ function newLayer(o){
 /* ---------- glyph support (for vertical forms) ---------- */
 const probe=document.createElement('canvas');probe.width=probe.height=40;const pc=probe.getContext('2d',{willReadFrequently:true});
 let glyphCache=new Map();
+// A font has a character if drawing it with Adobe Blank (every glyph empty) as the only fallback leaves ink.
+const blankReady=document.fonts.load('30px "Piclea Blank"').then(()=>{glyphCache=new Map()}).catch(()=>{});
 function hasGlyph(f,ch){
   const key=f.fam+f.w+ch;if(glyphCache.has(key))return glyphCache.get(key);
-  const ink=font=>{pc.clearRect(0,0,40,40);pc.font=font;pc.textBaseline='middle';pc.textAlign='center';pc.fillText(ch,20,20);const d=pc.getImageData(0,0,40,40).data;let h=0;for(let i=3;i<d.length;i+=4)h=(h*31+d[i])|0;return h};
-  const r=ink(`${f.w} 30px ${f.fam}, sans-serif`)!==ink(`${f.w} 30px sans-serif`);
-  glyphCache.set(key,r);return r;
+  pc.clearRect(0,0,40,40);pc.font=`${f.w} 30px ${f.fam}, "Piclea Blank"`;pc.textBaseline='alphabetic';pc.textAlign='left';pc.fillText(ch,4,31);
+  const d=pc.getImageData(0,0,40,40).data;let ink=false;for(let i=3;i<d.length;i+=4)if(d[i]>40){ink=true;break}
+  glyphCache.set(key,ink);return ink;
 }
 document.fonts.addEventListener('loadingdone',()=>{glyphCache=new Map();wrapCache.clear();emit('fonts')});
 
@@ -251,7 +253,7 @@ function hitLayer(M,p,kk,only){
 }
 const loadText=L=>L.text+(L.vertical?Object.values(VFORM).join(''):'')||'あ';
 function ensureFonts(ov){
-  return Promise.all(D.layers.filter(isText).map(L=>document.fonts.load(fontStr(face(L,ov),32),loadText(L)).catch(()=>[])));
+  return Promise.all(D.layers.filter(isText).map(L=>{const f=face(L,ov);return loadFace(f.fam,f.w,loadText(L)).catch(()=>[])}));
 }
 
 /* ---------- photos and pages ---------- */
@@ -295,7 +297,7 @@ function applyRatio(name){
   for(const pg of P.pages){const sx=W/pg.W,sy=H/pg.H;for(const L of pg.layers){L.x*=sx;L.y*=sy}Object.assign(pg,{ratio:name,W,H});pg.photo.ox=pg.photo.oy=0}
   loadInto(P.pages[P.cur]);wrapCache.clear();
 }
-function ensureAll(){syncCur();return Promise.all(P.pages.flatMap(pg=>pg.layers.filter(isText).map(L=>document.fonts.load(fontStr(face(L),32),loadText(L)).catch(()=>[]))))}
+function ensureAll(){syncCur();return Promise.all(P.pages.flatMap(pg=>pg.layers.filter(isText).map(L=>loadFace(L.fam,L.w,loadText(L)).catch(()=>[]))))}
 
 /* =================== editor view =================== */
 const cv=$('#ecanvas'),ctx=cv.getContext('2d');
@@ -427,7 +429,7 @@ function panel(){
     const list=fontLang==='ja'?JA:EN;
     b.innerHTML=`<div class="eseg" data-lang><button data-v="ja" class="${fontLang==='ja'?'on':''}">日本語</button><button data-v="en" class="${fontLang==='en'?'on':''}">English</button></div>
       <div class="fontgrid">${list.map((f,i)=>`<button class="fbtn${f[1]===L.fam?' on':''}" data-f="${i}"><span style='font-family:${f[1]},sans-serif;font-weight:${f[4]}'>${f[0]}</span></button>`).join('')}</div>`;
-    fontIO?.disconnect();fontIO=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){fontIO.unobserve(x.target);const f=list[+x.target.dataset.f];document.fonts.load(`${f[4]} 16px ${f[1]}`,f[0]).then(()=>x.target.classList.add('ready'))}}),{root:b});
+    fontIO?.disconnect();fontIO=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){fontIO.unobserve(x.target);const f=list[+x.target.dataset.f];loadFace(f[1],f[4],f[0]).then(()=>x.target.classList.add('ready'))}}),{root:b});
     b.querySelectorAll('.fbtn').forEach(x=>fontIO.observe(x));
   }else if(tab==='色'){
     b.innerHTML=`<div class="sec"><h4>文字の色</h4>${pal('color')}</div>${slider('透明度','opacity',.1,1,.01)}`;
@@ -533,7 +535,7 @@ function renderDesign(){
   $('#dpage').textContent=`この写真（${P.cur+1} / ${P.pages.length}枚目）`;
   $('#mylist').innerHTML=mine.length?mine.map(m=>{const L=m.d.layers[0]||{};return `<div class="myrow"><div class="mytxt"><b>${esc(m.name)}</b><span style='font-family:${L.fam||'inherit'},sans-serif;font-weight:${L.w||400}'>${esc((L.text||'').split('\n')[0].slice(0,14))}</span></div><button class="eb" data-myapply="${m.id}">使う</button><button class="myx" data-mydel="${m.id}" aria-label="消す">×</button></div>`}).join('')
     :'<p class="enote">よく使う文字の並びや飾りを名前を付けて取っておけます。写真は含みません。</p>';
-  for(const m of mine){const L=m.d.layers[0];if(L)document.fonts.load(fontStr(L,16),L.text||'あ').catch(()=>{})}
+  for(const m of mine){const L=m.d.layers[0];if(L)loadFace(L.fam,L.w,L.text).catch(()=>{})}
 }
 async function removePage(){
   if(P.pages.length<2)return;
@@ -708,5 +710,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),ask,toast,addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
+  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importWork,backupFile,sel,GRADS}});
 })();
