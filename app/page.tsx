@@ -11,6 +11,15 @@ const yuramekiUrl = "/yurameki";
 
 const works = [
   {
+    name: "PICLEA",
+    label: "PHOTO LETTERING",
+    copy: "自分の写真の上で、208書体を仕上がりのまま見比べて選べる文字入れツール。写真は端末の外へ出ません。",
+    image: "/piclea/og.png",
+    href: "/piclea/",
+    action: "使ってみる",
+    external: false,
+  },
+  {
     name: "HALLO TERRA",
     label: "WORLD GREETINGS",
     copy: "世界地図から場所を選ぶと、その土地の挨拶・お礼・お詫びが、現地の文字とカタカナの読みで出てきます。",

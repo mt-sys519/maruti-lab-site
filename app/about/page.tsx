@@ -36,6 +36,7 @@ export default function AboutPage() {
           <ul>
             <li><a href="/swiftcrop">SwiftCrop</a> — 画像のトリミングとリサイズ</li>
             <li><a href="/color-refine">COLOR RE:FINE</a> — 白黒写真のカラー化</li>
+            <li><a href="/piclea/">piclea</a> — 写真に文字を入れる、書体を見比べて選べるツール</li>
             <li><a href="/yurameki">YURAMEKI</a> — イラストや写真を動かしてGIFやMP4にする（<a href="/yurameki/about">できること</a>）</li>
             <li><a href="/clock">PromptTerm CLOCK</a> — Windowsデスクトップ時計</li>
             <li><a href="/4track">4TRACK CASSETTE SAMPLER</a> — ブラウザのサンプラー</li>

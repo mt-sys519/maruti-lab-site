@@ -16,6 +16,7 @@ export default function TermsPage() {
           <h2>3. 音源・画像等の利用</h2>
           <p>ブラウザツールへ読み込む音源、録音、画像その他の素材について、Maruti Labが権利を取得することはありません。利用者は、自ら作成した素材、または利用に必要な許諾を得た素材を使用してください。</p>
           <p>ツールから書き出した成果物の公開、配布、販売等は、元の素材に適用される著作権、著作隣接権、利用規約その他の条件に従い、利用者自身の責任で行ってください。</p>
+          <p>picleaで書き出した画像に使われる書体は、各書体のライセンス（SIL Open Font License 1.1またはApache License 2.0）に基づき、商用を含めて画像として利用できます。書体のファイルそのものを再配布する場合は、各ライセンスの条件に従ってください。書体ごとのライセンスは<a href="/piclea/licenses.html">フォントとライセンス</a>に掲載しています。</p>
         </section>
         <section>
           <h2>4. 禁止事項</h2>
@@ -34,7 +35,7 @@ export default function TermsPage() {
         <section><h2>6. 免責</h2><p>利用にあたっての免責事項については、<a href="/disclaimer">免責事項</a>のページをご確認ください。</p></section>
         <section><h2>7. 規約の変更</h2><p>必要に応じて本規約を変更する場合があります。変更後の規約は、当サイトに掲載した時点から適用します。</p></section>
         <section><h2>8. お問い合わせ</h2><p>本規約に関する連絡は、<a href="/contact">お問い合わせフォーム</a>からお願いします。</p></section>
-        <p className="legalUpdated">制定日：2026年8月28日<br />最終改定日：2026年9月1日</p>
+        <p className="legalUpdated">制定日：2026年8月28日<br />最終改定日：2026年9月30日</p>
       </article>
     </main>
   );

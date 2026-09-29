@@ -3,51 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#f3ede7">
-<title>piclea フォントとライセンス</title>
+<meta name="theme-color" content="#a98078">
+<title>フォントとライセンス — piclea（写真に文字を入れる無料ツール）</title>
+<meta name="description" content="piclea で使える日本語70・英語138の書体の一覧と、作者・配布元・ライセンス。すべて SIL Open Font License 1.1 か Apache License 2.0 で、作った画像は商用にも使えます。">
+<link rel="canonical" href="https://marutilab.com/piclea/licenses.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="フォントとライセンス — piclea（写真に文字を入れる無料ツール）">
+<meta property="og:description" content="piclea で使える日本語70・英語138の書体の一覧と、作者・配布元・ライセンス。">
+<meta property="og:url" content="https://marutilab.com/piclea/licenses.html">
+<meta property="og:image" content="https://marutilab.com/piclea/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@500&family=Shippori+Mincho:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pages.css">
 <style>
-:root{--milk:#f3ede7;--ink:#4b3f3a;--mocha:#8b7a6f;--rose:#c49a90;--line:rgba(75,63,58,.12)}
-*{box-sizing:border-box}
-body{margin:0;background:var(--milk);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;line-height:1.8;-webkit-text-size-adjust:100%}
-a{color:inherit;text-underline-offset:3px}
-main{max-width:860px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) 18px 60px}
-.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:26px}
-.logo{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:30px;text-decoration:none}
-.back{font-size:13px;color:var(--mocha)}
-h1{font-size:22px;font-weight:500;letter-spacing:.08em;margin:0 0 10px}
-h2{font-size:17px;margin:40px 0 6px;letter-spacing:.04em}
-h2 small{font-size:12px;color:var(--mocha);font-weight:500;margin-left:6px}
-p{font-size:13.5px;margin:0 0 10px}
-.note{font-size:12.5px;color:var(--mocha)}
-.sum{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
-.sum span{background:rgba(255,255,255,.6);border-radius:999px;padding:5px 12px;font-size:12px}
-ul{list-style:none;margin:10px 0 0;padding:0;border-top:1px solid var(--line)}
-li{padding:11px 2px;border-bottom:1px solid var(--line)}
+/* the font list: one row per typeface, the licence texts folded away */
+.sum{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 6px}
+.sum span{background:rgba(255,255,255,.62);border-radius:999px;padding:5px 12px;font-size:12px}
+h2 small{font:500 12px var(--ui);letter-spacing:0;color:var(--mocha)}
+ul.fl{list-style:none;margin:4px 0 8px;padding:0}
+ul.fl li{padding:11px 2px;border-top:1px solid var(--line)}
+ul.fl li:first-child{border-top:0}
 .n{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
-.n b{font-size:14.5px}
-.c{font-size:11px;color:var(--mocha);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+.n b{font-size:14.5px;font-weight:600}
+.c{font-size:11px;color:var(--mocha);box-shadow:inset 0 0 0 1px var(--line);border-radius:999px;padding:0 8px}
 .l{font-size:11px;margin-left:auto;color:var(--mocha)}
-.m{font-size:11.5px;color:var(--mocha)}
-.cr{font-size:11px;color:var(--mocha);opacity:.85;word-break:break-word;white-space:pre-line}
-details{margin-top:12px;background:rgba(255,255,255,.55);border-radius:16px;padding:12px 16px}
-summary{cursor:pointer;font-weight:700;font-size:14px}
+.m{font-size:12px;color:var(--mocha);line-height:1.7}
+.cr{font-size:11px;color:var(--mocha);opacity:.85;line-height:1.7;word-break:break-word;white-space:pre-line}
+details{background:#fff;border-radius:14px;padding:12px 16px;margin-bottom:12px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
 pre{white-space:pre-wrap;word-break:break-word;font:11.5px/1.7 ui-monospace,Menlo,Consolas,monospace;margin:12px 0 0}
 </style>
 </head>
 <body>
-<main>
-<div class="top"><a class="logo" href="./">piclea</a><a class="back" href="./">← もどる</a></div>
-<h1>フォントとライセンス</h1>
-<p>piclea で使っているフォントは、すべて無料で使える利用許諾（ライセンス）のもとで公開されているものです。作った画像は、個人・商用を問わず自由に使えます。</p>
-<p class="note">Google Fonts の書体は Google のサーバーから配信しています。「源暎フォント」「源柔ゴシック」「モトヤL」は piclea から配信しており、読み込みを軽くするため形式だけを WOFF2 に変換しています（字形や収録文字は元のまま変えていません）。各フォントの著作権表示とライセンスはフォントファイル自体にも含まれています。</p>
-<div class="sum"><span>日本語 70書体</span><span>English 138書体</span><span>SIL Open Font License 1.1</span><span>Apache License 2.0</span></div>
+<header class="band"><div class="band-in">
+  <a class="logo" href="./"><b>PICLEA</b><small>BY MARUTI LAB</small></a>
+  <a class="use" href="./">piclea を使う</a>
+</div></header>
+<nav class="tabs" aria-label="piclea のページ"><a href="./">つくる</a><a href="guide/">使い方</a><a href="faq/">よくある質問</a><a href="licenses.html" aria-current="page">フォントとライセンス</a></nav>
 
-<h2>日本語<small>Google Fonts・58書体</small></h2>
-<ul><li><div class="n"><b>しっぽり明朝 B1</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
+<main>
+<div class="head">
+  <p class="kicker">FONTS &amp; LICENSES</p>
+  <h1>フォントとライセンス</h1>
+  <p class="lead">piclea で使っているフォントは、すべて無料で使える利用許諾（ライセンス）のもとで公開されているものです。作った画像は、個人・商用を問わず自由に使えます。</p>
+  <div class="sum"><span>日本語 70書体</span><span>English 138書体</span><span>SIL Open Font License 1.1</span><span>Apache License 2.0</span></div>
+  <nav class="toc" aria-label="目次"><a href="#ja">日本語（Google Fonts）</a><a href="#local">日本語（piclea から配信）</a><a href="#en">English</a><a href="#ofl">ライセンス全文</a></nav>
+</div>
+
+<section id="ja">
+  <h2>日本語<small>Google Fonts・58書体</small></h2>
+  <p class="note">Google Fonts の書体は Google のサーバーから配信しています。</p>
+  <ul class="fl"><li><div class="n"><b>しっぽり明朝 B1</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">FONTDASU ・ <a href="https://github.com/google/fonts/tree/main/ofl/shipporiminchob1" rel="noopener">配布元</a></div><div class="cr">Copyright 2021 The Shippori Mincho Project Authors (https://github.com/fontdasu/ShipporiMincho)</div></li><li><div class="n"><b>Shippori Mincho</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">FONTDASU ・ <a href="https://github.com/google/fonts/tree/main/ofl/shipporimincho" rel="noopener">配布元</a></div><div class="cr">Copyright 2021 The Shippori Mincho Project Authors (https://github.com/fontdasu/ShipporiMincho)</div></li><li><div class="n"><b>Zen Old Mincho</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Yoshimichi Ohira ・ <a href="https://github.com/google/fonts/tree/main/ofl/zenoldmincho" rel="noopener">配布元</a></div><div class="cr">Copyright 2021 The Zen Old Mincho Project Authors (https://github.com/googlefonts/zen-oldmincho)</div></li><li><div class="n"><b>Noto Serif JP</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
@@ -106,10 +119,12 @@ pre{white-space:pre-wrap;word-break:break-word;font:11.5px/1.7 ui-monospace,Menl
 <div class="m">Kinuta Font Factory ・ <a href="https://github.com/google/fonts/tree/main/ofl/yujisyuku" rel="noopener">配布元</a></div><div class="cr">Copyright 2021 The Yuji Project Authors (https://github.com/Kinutafontfactory/Yuji)</div></li><li><div class="n"><b>Yuji Mai</b><span class="c">筆</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Kinuta Font Factory ・ <a href="https://github.com/google/fonts/tree/main/ofl/yujimai" rel="noopener">配布元</a></div><div class="cr">Copyright 2021 The Yuji Project Authors (https://github.com/Kinutafontfactory/Yuji)</div></li><li><div class="n"><b>Yuji Boku</b><span class="c">筆</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Kinuta Font Factory ・ <a href="https://github.com/google/fonts/tree/main/ofl/yujiboku" rel="noopener">配布元</a></div><div class="cr">Copyright 2021 The Yuji Project Authors (https://github.com/Kinutafontfactory/Yuji)</div></li></ul>
+</section>
 
-<h2>日本語<small>piclea から配信・12書体</small></h2>
-<p class="note">源暎フォントは「源暎／GenEi」を予約フォント名としているため、改変（文字の絞り込みなど）は行っていません。</p>
-<ul><li><div class="n"><b>源暎こぶり明朝</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
+<section id="local">
+  <h2>日本語<small>piclea から配信・12書体</small></h2>
+  <p class="note">「源暎フォント」「源柔ゴシック」「モトヤL」は piclea から配信しています。読み込みを軽くするため形式だけを WOFF2 に変換しており、字形や収録文字は元のまま変えていません。源暎フォントは「源暎／GenEi」を予約フォント名としているため、文字の絞り込みなどの改変も行っていません。各フォントの著作権表示とライセンスは、フォントファイル自体にも含まれています。</p>
+  <ul class="fl"><li><div class="n"><b>源暎こぶり明朝</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">おたもん ・ <a href="https://okoneya.jp/font/" rel="noopener">配布元</a></div><div class="cr">Copyright (c) 2017-2019, o_tamon, with Reserved Font Name &#x27;GenEi&#x27;. | Copyright (c) 2017 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name &#x27;Source&#x27;. | Linux Libertine by Philipp H. Poll | Gutenberg Labo | Google Inc. | Fonticons, Inc.</div></li><li><div class="n"><b>さつき源代明朝</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">おたもん ・ <a href="https://okoneya.jp/font/" rel="noopener">配布元</a></div><div class="cr">Copyright (c) 2018, o_tamon. | Copyright  (c) 2014, 2015 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name &#x27;Source&#x27;. | Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)</div></li><li><div class="n"><b>源暎ちくご明朝</b><span class="c">明朝</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">おたもん ・ <a href="https://okoneya.jp/font/" rel="noopener">配布元</a></div><div class="cr">Copyright (c) 2018-2022, o_tamon, with Reserved Font Name &#x27;GenEi&#x27;. | Copyright (c) 2017 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name &#x27;Source&#x27;. | Linux Libertine by Philipp H. Poll | Copyright (c) 2015, Google Inc. | Copyright (c) Font Awesome.</div></li><li><div class="n"><b>源柔ゴシック</b><span class="c">丸ゴ</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
@@ -126,11 +141,13 @@ Copyright(c) 2015 M+ FONTS PROJECT</div></li><li><div class="n"><b>モトヤLマ
 <div class="m">おたもん ・ <a href="https://okoneya.jp/font/" rel="noopener">配布元</a></div><div class="cr">Copyright (c) 2020-2021, o_tamon, with Reserved Font Name &#x27;GenEi&#x27;. | Copyright(c) 2017 M+ FONTS PROJECT. | Copyright (c) 2017 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name &#x27;Source&#x27;. |Copyright (c) 2014, Indian Type Foundry (info@indiantypefoundry.com). Copyright (c) 2015, Google Inc.</div></li><li><div class="n"><b>源暎アンチック</b><span class="c">漫画</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">おたもん ・ <a href="https://okoneya.jp/font/" rel="noopener">配布元</a></div><div class="cr">Copyright (c) 2014-2025, o_tamon, with Reserved Font Name &#x27;GenEi&#x27;. | Copyright © 2014, 2015 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name &#x27;Source&#x27;. | Copyright (C) FONT 910 | Copyright (c) 2003-2012, Philipp H. Poll | Copyright (c) 2008-2014, Classical Letter Project | Copyright 2013 Google Inc. | Font Awesome</div></li><li><div class="n"><b>びぜんアンチック</b><span class="c">漫画</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">おたもん ・ <a href="https://okoneya.jp/font/" rel="noopener">配布元</a></div><div class="cr">Copyright (c) 2022, o_tamon, with Reserved Font Name &#x27;GenEi&#x27; and &#x27;源暎&#x27;. | Copyright(c) 2019 Morisawa Inc. All rights reserved. | Copyright (c) 2021 The Zen Antique Project Authors (https://github.com/googlefonts/zen-antique)</div></li></ul>
-<p class="note" style="margin-top:10px">このほか、文字がその書体に入っているかを調べるために、画面には出ない Adobe Blank 2（Copyright 2015 Adobe Systems Incorporated、SIL Open Font License 1.1）を内部で使っています。</p>
+  <p class="note">このほか、文字がその書体に入っているかを調べるために、画面には出ない Adobe Blank 2（Copyright 2015 Adobe Systems Incorporated、SIL Open Font License 1.1）を内部で使っています。</p>
+</section>
 
-<h2>English<small>Google Fonts・138書体</small></h2>
-<p class="note">Google Fonts の人気順位を参考に、インスタの文字入れに合う雰囲気のものを選んでいます。</p>
-<ul><li><div class="n"><b>Inter</b><span class="c">Sans</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
+<section id="en">
+  <h2>English<small>Google Fonts・138書体</small></h2>
+  <p class="note">Google Fonts の人気順位を参考に、インスタの文字入れに合う雰囲気のものを選んでいます。</p>
+  <ul class="fl"><li><div class="n"><b>Inter</b><span class="c">Sans</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Rasmus Andersson ・ <a href="https://github.com/google/fonts/tree/main/ofl/inter" rel="noopener">配布元</a></div><div class="cr">Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)</div></li><li><div class="n"><b>Montserrat</b><span class="c">Sans</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Julieta Ulanovsky, Sol Matas, Juan Pablo del Peral, Jacques Le Bailly ・ <a href="https://github.com/google/fonts/tree/main/ofl/montserrat" rel="noopener">配布元</a></div><div class="cr">Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)</div></li><li><div class="n"><b>Poppins</b><span class="c">Sans</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Indian Type Foundry, Jonny Pinhorn, Ninad Kale ・ <a href="https://github.com/google/fonts/tree/main/ofl/poppins" rel="noopener">配布元</a></div><div class="cr">Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)</div></li><li><div class="n"><b>Jost</b><span class="c">Sans</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
@@ -269,9 +286,11 @@ Copyright(c) 2015 M+ FONTS PROJECT</div></li><li><div class="n"><b>モトヤLマ
 <div class="m">Vernon Adams ・ <a href="https://github.com/google/fonts/tree/main/ofl/cutivemono" rel="noopener">配布元</a></div><div class="cr">Copyright 2012 The Cutive Project Authors (https://github.com/googlefonts/cutivemono)</div></li><li><div class="n"><b>VT323</b><span class="c">Typewriter</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Peter Hull ・ <a href="https://github.com/google/fonts/tree/main/ofl/vt323" rel="noopener">配布元</a></div><div class="cr">Copyright 2011, The VT323 Project Authors (peter.hull@oikoi.com)</div></li><li><div class="n"><b>Major Mono Display</b><span class="c">Typewriter</span><a class="l" href="#ofl">SIL Open Font License 1.1</a></div>
 <div class="m">Emre Parlak ・ <a href="https://github.com/google/fonts/tree/main/ofl/majormonodisplay" rel="noopener">配布元</a></div><div class="cr">Copyright 2018 The Major Mono Project Authors (https://github.com/googlefonts/majormono)</div></li></ul>
+</section>
 
-<h2 id="ofl">SIL Open Font License 1.1</h2>
-<details><summary>全文を読む</summary><pre>-----------------------------------------------------------
+<section>
+  <h2 id="ofl">SIL Open Font License 1.1</h2>
+  <details><summary>全文を読む</summary><pre>-----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 -----------------------------------------------------------
 
@@ -358,8 +377,8 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 </pre></details>
-<h2 id="apache">Apache License 2.0</h2>
-<details><summary>全文を読む</summary><pre>
+  <h2 id="apache">Apache License 2.0</h2>
+  <details><summary>全文を読む</summary><pre>
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -562,7 +581,20 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
    See the License for the specific language governing permissions and
    limitations under the License.
 </pre></details>
+</section>
+
+<div class="next">
+  <a href="guide/"><small>はじめから順に</small>使い方</a>
+  <a href="faq/"><small>料金・安全性・保存のこと</small>よくある質問</a>
+  <a href="./"><small>さっそく</small>piclea を使う</a>
+</div>
 </main>
+
+<footer>
+  <div class="by">PICLEA</div>
+  <nav aria-label="Maruti Lab"><a href="/">Maruti Lab</a><a href="/about">運営者について</a><a href="/privacy">プライバシーポリシー</a><a href="/terms">利用規約</a><a href="/contact">お問い合わせ</a></nav>
+  © 2026 Maruti Lab
+</footer>
 <script src="pages.js"></script>
 </body>
 </html>

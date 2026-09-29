@@ -3,9 +3,6 @@
 /color-refine-app/models/*
   Cache-Control: public, max-age=31536000, immutable
 
-# PICLEA is a work in progress shared by URL only. Keep every file out of
-# search, fonts included, and let phones keep the multi-MB fonts for a week.
-/piclea/*
-  X-Robots-Tag: noindex, nofollow
+# PICLEA: let phones keep the multi-MB fonts for a week.
 /piclea/fonts/*
   Cache-Control: public, max-age=604800
