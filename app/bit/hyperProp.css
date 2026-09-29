@@ -31,14 +31,26 @@
 @supports (height: 100dvh) {
   .hpStage { --devH: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc(100dvh - 24px)); }
 }
+/* On a phone short for its width (iPhone SE and the like) squeezing the whole handheld
+   into the window shrank the screen to 70% and the pedals below a fingertip. There it
+   is only held to what play needs in view: from the top of the bezel (34px down) to
+   the START caption (91% of the way down, plus ~38px), and the page scrolls to that
+   when a run starts. The buttons keep their full size. Big phones and computers never
+   reach this cap, so they are as they were. */
+@media (max-width: 500px) {
+  .hpStage { --u: 46px;
+    --devH: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc((100vh - 8px) / 0.91)); }
+  @supports (height: 100dvh) {
+    .hpStage { --devH: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc((100dvh - 8px) / 0.91)); }
+  }
+}
 .hpStage *, .hpStage *::before, .hpStage *::after { box-sizing: border-box; }
 .hpDevice { position: relative; display: flex; flex-direction: column;
   /* Tall enough for the 4:3 screen and no taller. The top 61.8% holds the seam (34px),
      the bezel's padding (50px), the sub display (75px) and the screen, which is 3/4 of
      the bezel's inner width (device width - 56px), plus ~10px to sit it high in its frame.
      Filling the phone's height instead left grey bands above and below the screen. */
-  width: var(--dw); height: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc(100vh - 24px));
-  height: min(calc((0.75 * (var(--dw) - 56px) + 170px) / 0.618), calc(100dvh - 24px));
+  width: var(--dw); height: var(--devH);
   padding: 0 16px; border-radius: var(--r) var(--r) calc(var(--r) * 2.618) var(--r);
   background: linear-gradient(160deg, var(--shellL), var(--shell) 30%, #eadcbc);
   box-shadow: inset 3px 3px 0 #fffdf4, inset -4px -5px 0 var(--shellD), inset -6px -8px 10px #0000001a,

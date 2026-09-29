@@ -1100,6 +1100,17 @@ export function mountHyperProp(root) {
     tut.seatedWait = false; tut.lastFootT = ui; tut.k = 1;
     intro = card ? INTRO : 0;
     if (card) { au.music(null); au.play('intro'); } else { au.music(stageMusic(), 0); au.play('start'); }
+    inView();
+  }
+  // On a short phone the handheld is taller than the window (see the phone rule in
+  // hyperProp.css), so a run brings the part play needs - bezel to START - into view.
+  // Where the handheld fits, it is only scrolled if some of it is off the window.
+  function inView() {
+    if (!matchMedia('(max-width: 500px)').matches) return;
+    const dev = root.querySelector('.hpDevice').getBoundingClientRect(), vh = innerHeight;
+    if (dev.top >= 0 && dev.bottom <= vh) return;
+    const dy = dev.height <= vh ? dev.top - (vh - dev.height) / 2 : $('bezel').getBoundingClientRect().top - 3;
+    window.scrollBy(0, dy);
   }
 
   const playing = () => s.phase === 'run' || s.phase === 'board' || s.phase === 'roll' || s.phase === 'fly';
