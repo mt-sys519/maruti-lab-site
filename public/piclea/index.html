@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3ede7">
+<meta name="robots" content="noindex,nofollow">
+<title>piclea — 写真に、似合う文字を。</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- UI -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@300;400&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- catalog: Japanese -->
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho&family=Dela+Gothic+One&family=Hachi+Maru+Pop&family=Kiwi+Maru&family=Klee+One:wght@600&family=LINE+Seed+JP:wght@400&family=M+PLUS+Rounded+1c:wght@500&family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@500&family=Noto+Serif+JP:wght@500&family=RocknRoll+One&family=Shippori+Mincho+B1:wght@500&family=Yomogi&family=Yusei+Magic&family=Zen+Kurenaido&family=Zen+Maru+Gothic:wght@500&family=Zen+Old+Mincho:wght@500&display=swap" rel="stylesheet">
+<!-- catalog: English -->
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Allura&family=Bebas+Neue&family=Bodoni+Moda:wght@500&family=Caveat:wght@500&family=Cinzel:wght@500&family=Courier+Prime&family=DM+Serif+Display&family=Great+Vibes&family=Homemade+Apple&family=Italiana&family=Josefin+Sans:wght@300&family=Monoton&family=Montserrat:wght@500&family=Parisienne&family=Pinyon+Script&family=Playfair+Display:wght@500&family=Poppins:wght@500&family=Sacramento&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"GenEi Koburi Mincho";src:url(fonts/GenEiKoburiMin6-R.woff2) format("woff2")}
+@font-face{font-family:"GenEi Chikugo Mincho";src:url(fonts/GenEiChikugoMin3-R.woff2) format("woff2")}
+@font-face{font-family:"Satsuki Gendai Mincho";src:url(fonts/SatsukiGendaiMincho-M.woff2) format("woff2")}
+@font-face{font-family:"GenEi Antique";src:url(fonts/GenEiAntiquePv6-M.woff2) format("woff2")}
+@font-face{font-family:"BIZen Antique";src:url(fonts/BIZenAntique-Bold.woff2) format("woff2")}
+@font-face{font-family:"GenEi POPle";src:url(fonts/GenEiPOPle-Bk.woff2) format("woff2")}
+@font-face{font-family:"GenEi Kiwami Go";src:url(fonts/GenEiKiwamiGo.woff2) format("woff2")}
+@font-face{font-family:"GenEi M Gothic";src:url(fonts/GenEiMGothic2-Medium.woff2) format("woff2")}
+@font-face{font-family:"Toge Maru Gothic";src:url(fonts/TogeMaruGothic-400-Regular.woff2) format("woff2")}
+@font-face{font-family:"GenJyuu Gothic";src:url(fonts/GenJyuuGothic-P-Regular.woff2) format("woff2")}
+@font-face{font-family:"Motoya L Maruberi";src:url(fonts/MTLmr3m.woff2) format("woff2")}
+@font-face{font-family:"Motoya L Cedar";src:url(fonts/MTLc3m.woff2) format("woff2")}
+
+:root{
+  --milk:#f3ede7;--ink:#4b3f3a;--mocha:#8b7a6f;--rose:#c49a90;--line:rgba(75,63,58,.12);
+  --glass:rgba(255,252,249,.52);--glass-edge:rgba(255,255,255,.7);
+  --shadow:0 10px 30px rgba(110,84,70,.12),0 2px 6px rgba(110,84,70,.06);
+  --tc:#4b3f3a;--ts:none;--fsv:30;--tx:50%;--ty:50%;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;background:var(--milk);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;font-weight:500;padding-bottom:calc(110px + var(--safe-b))}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+
+/* soft powder backdrop + film grain */
+.bg{position:fixed;inset:-20%;z-index:-2;background:
+  radial-gradient(40% 35% at 18% 22%,#ecd9d2 0%,transparent 70%),
+  radial-gradient(38% 32% at 85% 12%,#e4ddd0 0%,transparent 70%),
+  radial-gradient(45% 40% at 70% 78%,#e9dcd6 0%,transparent 70%),
+  radial-gradient(35% 30% at 12% 85%,#dfdcd2 0%,transparent 70%),var(--milk);filter:blur(10px)}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.09;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .22 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.glass{background:var(--glass);border:1px solid var(--glass-edge);box-shadow:var(--shadow);backdrop-filter:blur(22px) saturate(1.25);-webkit-backdrop-filter:blur(22px) saturate(1.25)}
+
+/* header */
+.bar{display:flex;align-items:center;justify-content:space-between;max-width:1120px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 20px 6px}
+.logo{display:flex;align-items:baseline;gap:9px;text-decoration:none;color:inherit}
+.logo b{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;font-size:30px;letter-spacing:.01em;line-height:1}
+.logo small{font-family:Jost,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mocha)}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;font-size:13px;letter-spacing:.06em;transition:transform .15s,box-shadow .15s}
+.pill.dark{background:var(--ink);color:#fbf7f3;box-shadow:0 8px 20px rgba(75,63,58,.25)}
+.pill.dark:active{transform:scale(.97)}
+.pill.big{padding:16px 34px;font-size:15px}
+
+/* hero */
+.hero{text-align:center;padding:44px 24px 34px;max-width:640px;margin:0 auto}
+.kicker{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:17px;color:var(--mocha);margin:0 0 14px;letter-spacing:.04em}
+.hero h1{margin:0;font-weight:500;font-size:clamp(30px,8vw,46px);line-height:1.55;letter-spacing:.14em}
+.lead{font-size:13.5px;line-height:2.1;color:var(--mocha);margin:18px 0 28px;letter-spacing:.06em}
+.lead b{color:var(--ink);font-weight:700}
+.privacy{font-size:11px;color:var(--mocha);margin:16px 0 0;letter-spacing:.04em;opacity:.85}
+.privacy::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#a9b89c;margin-right:7px;vertical-align:1px}
+body.has-photo .hero{display:none}
+
+/* finder */
+.finder{position:sticky;top:calc(8px + env(safe-area-inset-top,0px));z-index:10;max-width:1096px;margin:8px 12px 0;border-radius:24px;padding:10px}
+@media (min-width:1120px){.finder{margin:8px auto 0}}
+.text{display:block;width:100%;height:46px;min-height:46px;resize:none;overflow:hidden;border:0;border-radius:16px;background:rgba(255,255,255,.66);padding:12px 16px;font-size:16px;line-height:1.4;letter-spacing:.04em;outline:none;box-shadow:inset 0 0 0 1px rgba(75,63,58,.06)}
+.text:focus{box-shadow:inset 0 0 0 1.5px var(--rose)}
+.text::placeholder{color:#b1a39a}
+.row{display:flex;align-items:center;gap:8px;margin-top:9px}
+.lang{display:flex;flex:none;background:rgba(255,255,255,.5);border-radius:999px;padding:3px}
+.lang button{border-radius:999px;padding:7px 13px;font-size:12px;letter-spacing:.06em;color:var(--mocha)}
+.lang button.on{background:var(--ink);color:#fbf7f3}
+.lang button[data-l=en]{font-family:Jost,sans-serif;letter-spacing:.08em}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px;margin:-2px;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border-radius:999px;padding:7px 13px;font-size:12px;color:var(--mocha);border:1px solid rgba(75,63,58,.1);white-space:nowrap}
+.chip.on{background:#fff;color:var(--ink);border-color:#fff;box-shadow:0 2px 8px rgba(110,84,70,.12)}
+.chip.fav{color:var(--rose)}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;max-width:1120px;margin:0 auto;padding:16px 20px 20px}
+.tile{position:relative;border-radius:20px;cursor:pointer;outline:none;animation:rise .5s both;animation-delay:calc(var(--d,0) * 18ms)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+.tile:focus-visible .ph{box-shadow:0 0 0 2px var(--rose)}
+.ph{position:relative;aspect-ratio:4/5;border-radius:20px;overflow:hidden;background:var(--g);container-type:inline-size;box-shadow:0 6px 18px rgba(110,84,70,.1)}
+body.has-photo .ph{background:#d8cfc4 var(--photo) center/cover no-repeat}
+.tile:active .ph{transform:scale(.985)}
+.t{position:absolute;left:var(--tx);top:var(--ty);transform:translate(-50%,-50%);width:max-content;max-width:86%;text-align:center;text-wrap:balance;word-break:auto-phrase;white-space:pre-wrap;font-size:calc(var(--fsv) * .3cqw);line-height:1.45;color:var(--tc);text-shadow:var(--ts);transition:opacity .25s}
+body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-align:start}
+.ph.loading .t{opacity:0}
+.ph.loading::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%) 0 0/200% 100%;animation:sheen 1.2s linear infinite}
+@keyframes sheen{to{background-position:-200% 0}}
+.ph.failed::after{content:"読み込めませんでした";position:absolute;inset:auto 0 44%;text-align:center;font-size:11px;color:var(--mocha)}
+.nm{position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;letter-spacing:.04em;background:rgba(255,252,249,.78);border-radius:999px;padding:5px 10px 5px}
+.fav{position:absolute;right:8px;top:8px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;color:rgba(75,63,58,.28);background:rgba(255,252,249,.7);transition:transform .15s,color .15s}
+.fav.on{color:var(--rose);background:#fff}
+.fav:active{transform:scale(.85)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mocha);font-size:13px;line-height:2;padding:50px 0}
+
+/* dock */
+.dock{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--safe-b));display:flex;align-items:center;gap:12px;border-radius:999px;padding:8px 16px 8px 8px;white-space:nowrap}
+.dk{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fbf7f3}
+.dk svg{width:20px;height:20px}
+.sep{width:1px;height:22px;background:rgba(75,63,58,.14)}
+.sw{display:flex;gap:7px}
+.sw button{width:24px;height:24px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px rgba(75,63,58,.2)}
+.sw button.on{box-shadow:0 0 0 2px var(--milk),0 0 0 3.5px var(--ink)}
+.mini{display:flex;background:rgba(255,255,255,.5);border-radius:999px;padding:2px}
+.mini button{padding:5px 10px;border-radius:999px;font-size:12px;color:var(--mocha)}
+.mini button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(110,84,70,.15)}
+.size{width:96px;accent-color:var(--ink)}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center}
+.sheet[hidden]{display:none}
+.scrim{position:absolute;inset:0;background:rgba(70,55,48,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:fade .2s both}
+@keyframes fade{from{opacity:0}}
+.panel{position:relative;width:min(460px,94vw);border-radius:30px;padding:14px 14px 16px;animation:pop .28s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes pop{from{opacity:0;transform:translateY(24px) scale(.97)}}
+.panel .ph{width:min(100%,calc((100dvh - 210px) * .8));margin:0 auto;border-radius:22px;touch-action:none;cursor:crosshair}
+.sinfo{display:flex;align-items:center;gap:10px;padding:14px 6px 0}
+.sname{font-size:16px;font-weight:700;letter-spacing:.04em}
+.ssrc{font-size:11px;color:var(--mocha);margin-top:3px;font-family:Jost,"Zen Kaku Gothic New",sans-serif}
+.sbtns{margin-left:auto;display:flex;align-items:center;gap:4px}
+.nav{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:rgba(255,255,255,.6)}
+.count{font-family:Jost,sans-serif;font-size:12px;color:var(--mocha);min-width:42px;text-align:center}
+.panel .fav{position:static;width:38px;height:38px;font-size:16px;margin-left:4px}
+.shint{margin:12px 6px 0;font-size:11px;color:var(--mocha);line-height:1.7}
+.close{position:absolute;right:-6px;top:-6px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fbf7f3;font-size:18px;display:grid;place-items:center;box-shadow:var(--shadow)}
+
+footer{max-width:1120px;margin:30px auto 0;padding:0 20px;font-size:11px;line-height:2;color:var(--mocha);text-align:center;letter-spacing:.04em}
+footer a{color:inherit;text-underline-offset:3px}
+footer .by{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15px;color:var(--ink)}
+
+@media (max-width:640px){
+  .grid{grid-template-columns:repeat(2,1fr);gap:9px;padding:12px 12px 16px}
+  .tile,.ph{border-radius:16px}
+  .nm{font-size:10px;padding:4px 8px;left:6px;bottom:6px;max-width:calc(100% - 12px)}
+  .fav{width:26px;height:26px;font-size:12px;right:6px;top:6px}
+  .bar{padding-left:16px;padding-right:16px}
+  .bar .pill{padding:8px 14px;font-size:12px}
+  .dock{gap:9px;padding-right:12px}
+  .size{width:78px}
+  .panel{width:100vw;border-radius:30px 30px 0 0;align-self:flex-end;padding-bottom:calc(18px + var(--safe-b))}
+  .close{right:12px;top:-48px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div>
+
+<header class="bar">
+  <a class="logo" href="./"><b>piclea</b><small>by Maruti Lab</small></a>
+  <button class="pill dark" data-pick>写真をえらぶ</button>
+</header>
+
+<section class="hero">
+  <p class="kicker">free fonts for your photos</p>
+  <h1>写真に、<br>似合う文字を。</h1>
+  <p class="lead">日本語<b id="nJa"></b>書体と、English<b id="nEn"></b>書体。<br>自分の写真の上に、ぜんぶ並べて選べます。</p>
+  <button class="pill dark big" data-pick>写真をえらぶ</button>
+  <p class="privacy">写真はこの端末の中だけで使われます</p>
+</section>
+
+<section class="finder glass">
+  <textarea class="text" id="text" rows="1" aria-label="入れたい文字" placeholder="入れたい文字"></textarea>
+  <div class="row">
+    <div class="lang" id="lang"><button data-l="ja" class="on">日本語</button><button data-l="en">English</button></div>
+    <div class="chips" id="chips"></div>
+  </div>
+</section>
+
+<main class="grid" id="grid"></main>
+
+<footer>
+  <div class="by">piclea</div>
+  写真はブラウザの中だけで処理され、サーバーには送信されません。<br>
+  フォントは Google Fonts・源暎フォント（おたもん）・自家製フォント工房・モトヤ から、各ライセンスに従って使用しています。<br>
+  （<a href="https://openfontlicense.org/" rel="noopener">SIL Open Font License 1.1</a>／モトヤLシーダ・マルベリは <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener">Apache License 2.0</a>。著作権表示は各フォントファイルに含まれています）
+</footer>
+
+<nav class="dock glass" aria-label="表示の調整">
+  <button class="dk" data-pick aria-label="写真をえらぶ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg></button>
+  <div class="sw" id="tc"><button data-v="dark" class="on" style="--c:#4b3f3a" aria-label="濃い文字"></button><button data-v="light" style="--c:#fff" aria-label="白い文字"></button></div>
+  <span class="sep"></span>
+  <div class="mini" id="dir"><button data-v="h" class="on">横</button><button data-v="v">縦</button></div>
+  <span class="sep"></span>
+  <input class="size" type="range" id="size" min="16" max="60" value="30" aria-label="文字の大きさ">
+</nav>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="scrim" data-close></div>
+  <div class="panel glass" role="dialog" aria-modal="true" aria-labelledby="sname">
+    <div class="ph" id="sph"><span class="t"></span></div>
+    <div class="sinfo">
+      <div><div class="sname" id="sname"></div><div class="ssrc" id="ssrc"></div></div>
+      <div class="sbtns">
+        <button class="nav" id="prev" aria-label="前の書体">‹</button>
+        <span class="count" id="scount"></span>
+        <button class="nav" id="next" aria-label="次の書体">›</button>
+        <button class="fav" id="sfav" aria-label="お気に入り">★</button>
+      </div>
+    </div>
+    <p class="shint">写真をタップすると文字がそこへ移ります。左右にスワイプで次の書体。</p>
+    <button class="close" data-close aria-label="閉じる">×</button>
+  </div>
+</div>
+
+<input type="file" id="file" accept="image/*" hidden>
+
+<script>
+const GF='Google Fonts',GE='源暎フォント／おたもん',JK='自家製フォント工房',MT='モトヤ';
+// [name, family, category, source, weight]
+const JA=[
+ ['しっぽり明朝 B1','"Shippori Mincho B1"','明朝',GF],
+ ['源暎こぶり明朝','"GenEi Koburi Mincho"','明朝',GE],
+ ['さつき源代明朝','"Satsuki Gendai Mincho"','明朝',GE],
+ ['Zen Old Mincho','"Zen Old Mincho"','明朝',GF],
+ ['Noto Serif JP','"Noto Serif JP"','明朝',GF],
+ ['源暎ちくご明朝','"GenEi Chikugo Mincho"','明朝',GE],
+ ['BIZ UDP明朝','"BIZ UDPMincho"','明朝',GF],
+ ['Zen Maru Gothic','"Zen Maru Gothic"','丸ゴ',GF],
+ ['M PLUS Rounded 1c','"M PLUS Rounded 1c"','丸ゴ',GF],
+ ['源柔ゴシック','"GenJyuu Gothic"','丸ゴ',JK],
+ ['モトヤLマルベリ','"Motoya L Maruberi"','丸ゴ',MT],
+ ['棘丸ゴシック','"Toge Maru Gothic"','丸ゴ',GE],
+ ['キウイ丸','"Kiwi Maru"','丸ゴ',GF],
+ ['Noto Sans JP','"Noto Sans JP"','ゴシック',GF],
+ ['Zen Kaku Gothic New','"Zen Kaku Gothic New"','ゴシック',GF],
+ ['LINE Seed JP','"LINE Seed JP"','ゴシック',GF],
+ ['モトヤLシーダ','"Motoya L Cedar"','ゴシック',MT],
+ ['Klee One','"Klee One"','手書き',GF,600],
+ ['Zen Kurenaido','"Zen Kurenaido"','手書き',GF],
+ ['よもぎ','"Yomogi"','手書き',GF],
+ ['Yusei Magic','"Yusei Magic"','手書き',GF],
+ ['はちまるポップ','"Hachi Maru Pop"','ポップ',GF],
+ ['もちいポップ','"Mochiy Pop One"','ポップ',GF],
+ ['源暎ぽっぷる','"GenEi POPle"','ポップ',GE],
+ ['Dela Gothic One','"Dela Gothic One"','見出し',GF],
+ ['源暎きわみゴ','"GenEi Kiwami Go"','見出し',GE],
+ ['源暎エムゴ','"GenEi M Gothic"','見出し',GE],
+ ['RocknRoll One','"RocknRoll One"','見出し',GF],
+ ['源暎アンチック','"GenEi Antique"','漫画',GE],
+ ['びぜんアンチック','"BIZen Antique"','漫画',GE],
+];
+const EN=[
+ ['Cormorant Garamond','"Cormorant Garamond"','Serif',GF,500],
+ ['Playfair Display','"Playfair Display"','Serif',GF,500],
+ ['Bodoni Moda','"Bodoni Moda"','Serif',GF,500],
+ ['DM Serif Display','"DM Serif Display"','Serif',GF],
+ ['Italiana','"Italiana"','Serif',GF],
+ ['Cinzel','"Cinzel"','Serif',GF,500],
+ ['Jost','"Jost"','Sans',GF,300],
+ ['Josefin Sans','"Josefin Sans"','Sans',GF,300],
+ ['Montserrat','"Montserrat"','Sans',GF,500],
+ ['Poppins','"Poppins"','Sans',GF,500],
+ ['Great Vibes','"Great Vibes"','Script',GF],
+ ['Pinyon Script','"Pinyon Script"','Script',GF],
+ ['Allura','"Allura"','Script',GF],
+ ['Sacramento','"Sacramento"','Script',GF],
+ ['Parisienne','"Parisienne"','Script',GF],
+ ['Caveat','"Caveat"','Hand',GF,500],
+ ['Homemade Apple','"Homemade Apple"','Hand',GF],
+ ['Abril Fatface','"Abril Fatface"','Display',GF],
+ ['Bebas Neue','"Bebas Neue"','Display',GF],
+ ['Monoton','"Monoton"','Display',GF],
+ ['Special Elite','"Special Elite"','Typewriter',GF],
+ ['Courier Prime','"Courier Prime"','Typewriter',GF],
+].map(f=>(f[4]??=400,f));
+JA.forEach(f=>f[4]??=400);
+
+const CATS={ja:['すべて','明朝','丸ゴ','ゴシック','手書き','ポップ','見出し','漫画'],en:['All','Serif','Sans','Script','Hand','Display','Typewriter']};
+const SAMPLE={ja:'今日のごほうび、\nひとくち。',en:'good day,\ngood coffee.'};
+const GRADS=['#eadfd6,#d6c2b3','#efdcd8,#d5b5ae','#e3e4d9,#c3c8b3','#e8e2dc,#c9c0b7','#e6e0e8,#c7bdcb','#f0e6da,#dcc7ae'];
+
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const root=document.documentElement;
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const S={lang:'ja',cat:{ja:'すべて',en:'All'},text:{ja:'',en:''},favs:new Set(store.get('piclea.favs',[])),items:[],idx:0,photo:null};
+const key=f=>S.lang+':'+f[0];
+const txt=()=>S.text[S.lang]||SAMPLE[S.lang];
+
+$('#nJa').textContent=JA.length;$('#nEn').textContent=EN.length;
+
+function renderChips(){
+  const cur=S.cat[S.lang];
+  $('#chips').innerHTML=`<button class="chip fav${cur==='fav'?' on':''}" data-c="fav">★</button>`+
+    CATS[S.lang].map(c=>`<button class="chip${c===cur?' on':''}" data-c="${c}">${c}</button>`).join('');
+}
+function renderGrid(){
+  const src=S.lang==='ja'?JA:EN,cur=S.cat[S.lang];
+  S.items=src.filter(f=>cur==='fav'?S.favs.has(key(f)):(cur===CATS[S.lang][0]||f[2]===cur));
+  if(!S.items.length){$('#grid').innerHTML='<p class="empty">★ をつけた書体がここに並びます。<br>気になる書体の右上をタップしてください。</p>';return}
+  $('#grid').innerHTML=S.items.map((f,i)=>`
+   <div class="tile" data-i="${i}" role="button" tabindex="0" aria-label="${f[0]}を大きく見る" style="--d:${Math.min(i,16)}">
+    <div class="ph loading" style="--g:linear-gradient(160deg,${GRADS[i%GRADS.length]})"><span class="t"></span></div>
+    <span class="nm">${f[0]}</span>
+    <button class="fav${S.favs.has(key(f))?' on':''}" aria-label="お気に入り">★</button>
+   </div>`).join('');
+  $$('.tile .t').forEach(t=>t.textContent=txt());
+  $$('.tile .ph').forEach(el=>io.observe(el));
+}
+// Fonts load only when a tile scrolls near the screen; the text stays hidden until its real face is ready.
+function applyFont(ph,f){
+  const t=ph.querySelector('.t');
+  t.style.fontFamily=`${f[1]},sans-serif`;t.style.fontWeight=f[4];
+  document.fonts.load(`${f[4]} 24px ${f[1]}`,txt()).then(faces=>{
+    ph.classList.remove('loading');ph.classList.toggle('failed',!faces.length);
+  },()=>{ph.classList.remove('loading');ph.classList.add('failed')});
+}
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;io.unobserve(e.target);
+  applyFont(e.target,S.items[+e.target.closest('.tile').dataset.i]);
+}),{rootMargin:'300px 0px'});
+
+let reloadTimer;
+function setText(v){
+  S.text[S.lang]=v;
+  $$('.t').forEach(t=>t.textContent=txt());
+  clearTimeout(reloadTimer);
+  reloadTimer=setTimeout(()=>{ // new characters may live in font subsets not fetched yet
+    $$('.tile').forEach(el=>{const t=el.querySelector('.t');if(t.style.fontFamily)document.fonts.load(`${t.style.fontWeight} 24px ${S.items[+el.dataset.i][1]}`,txt())});
+  },250);
+}
+function fitInput(){const a=$('#text');a.style.height='auto';a.style.height=a.scrollHeight+'px'}
+$('#text').addEventListener('input',e=>{fitInput();setText(e.target.value)});
+
+$('#lang').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.dataset.l===S.lang)return;
+  S.lang=b.dataset.l;$$('#lang button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#text').value=S.text[S.lang];$('#text').placeholder=S.lang==='ja'?'入れたい文字':'type your words';fitInput();
+  renderChips();renderGrid();
+});
+$('#chips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip');if(!b)return;
+  S.cat[S.lang]=b.dataset.c;renderChips();renderGrid();
+});
+function toggleFav(f){
+  const k=key(f);S.favs.has(k)?S.favs.delete(k):S.favs.add(k);store.set('piclea.favs',[...S.favs]);return S.favs.has(k);
+}
+$('#grid').addEventListener('click',e=>{
+  const tile=e.target.closest('.tile');if(!tile)return;
+  const f=S.items[+tile.dataset.i];
+  if(e.target.closest('.fav')){e.target.closest('.fav').classList.toggle('on',toggleFav(f));return}
+  openSheet(+tile.dataset.i);
+});
+$('#grid').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('tile'))openSheet(+e.target.dataset.i)});
+
+/* dock */
+function seg(sel,fn){$(sel).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$(sel+' button').forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset.v)})}
+function setTone(v){root.style.setProperty('--tc',v==='light'?'#fff':'#4b3f3a');root.style.setProperty('--ts',v==='light'?'0 1px 14px rgba(40,25,15,.35)':'none');$$('#tc button').forEach(x=>x.classList.toggle('on',x.dataset.v===v))}
+seg('#tc',setTone);
+seg('#dir',v=>document.body.classList.toggle('vertical',v==='v'));
+$('#size').addEventListener('input',e=>root.style.setProperty('--fsv',e.target.value));
+
+/* photo: shrink once so dozens of tiles don't each repaint a 12MP original; nothing leaves the browser */
+document.addEventListener('click',e=>{if(e.target.closest('[data-pick]'))$('#file').click()});
+$('#file').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const img=new Image(),src=URL.createObjectURL(f);img.src=src;
+  try{await img.decode()}catch{URL.revokeObjectURL(src);alert('この画像は読み込めませんでした');return}
+  const k=Math.min(1,1440/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+  c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(src);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));
+  if(S.photo)URL.revokeObjectURL(S.photo);S.photo=URL.createObjectURL(blob);
+  root.style.setProperty('--photo',`url(${S.photo})`);
+  if(!document.body.classList.contains('has-photo'))setTone('light');
+  document.body.classList.add('has-photo');
+  $$('.bar [data-pick]').forEach(b=>b.textContent='写真を変える');
+  scrollTo({top:0,behavior:'smooth'});
+});
+
+/* sheet: one font large; tap moves the text for every tile, swipe steps through fonts */
+const sph=$('#sph');
+function openSheet(i){S.idx=i;$('#sheet').hidden=false;document.body.style.overflow='hidden';showSheet()}
+function closeSheet(){$('#sheet').hidden=true;document.body.style.overflow=''}
+function showSheet(){
+  const f=S.items[S.idx];
+  sph.style.setProperty('--g',`linear-gradient(160deg,${GRADS[S.idx%GRADS.length]})`);
+  sph.classList.add('loading');applyFont(sph,f);sph.querySelector('.t').textContent=txt();
+  $('#sname').textContent=f[0];$('#ssrc').textContent=`${f[2]} · ${f[3]}`;
+  $('#scount').textContent=`${S.idx+1} / ${S.items.length}`;
+  $('#sfav').classList.toggle('on',S.favs.has(key(f)));
+}
+function step(d){S.idx=(S.idx+d+S.items.length)%S.items.length;showSheet()}
+$('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
+$('#sfav').onclick=()=>{const on=toggleFav(S.items[S.idx]);$('#sfav').classList.toggle('on',on);const tf=$(`.tile[data-i="${S.idx}"] .fav`);if(tf)tf.classList.toggle('on',on)};
+$$('[data-close]').forEach(b=>b.onclick=closeSheet);
+document.addEventListener('keydown',e=>{if($('#sheet').hidden)return;if(e.key==='Escape')closeSheet();if(e.key==='ArrowRight')step(1);if(e.key==='ArrowLeft')step(-1)});
+let down=null;
+sph.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};sph.setPointerCapture(e.pointerId)});
+sph.addEventListener('pointerup',e=>{
+  if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;down=null;
+  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){step(dx<0?1:-1);return}
+  if(Math.hypot(dx,dy)<12){
+    const r=sph.getBoundingClientRect();
+    root.style.setProperty('--tx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+    root.style.setProperty('--ty',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+  }
+});
+
+renderChips();renderGrid();
+</script>
+</body>
+</html>
