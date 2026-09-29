@@ -190,6 +190,38 @@ function drawLayer(c,L,ov){
 const sameShadow=(c,x,y,blur,col,a,draw)=>{ // for shapes: stack passes the same way
   const n=Math.ceil(a);c.save();c.shadowColor=rgba(col,Math.min(1,a/n));c.shadowBlur=blur;c.shadowOffsetX=x;c.shadowOffsetY=y;for(let i=0;i<n;i++)draw();c.restore();
 };
+/* ---------- photo adjustments ---------- */
+// Worked out on the pixels (Safari's canvas has no filter), cached per photo. While a slider moves,
+// the small copy stands in for the full photo so it keeps up; letting go brings the full one back.
+const ADJ=[['temp','色温度'],['tint','色合い'],['bright','明るさ'],['contrast','コントラスト'],['sat','彩度'],['fade','フェード']];
+const plainAdj=a=>!a||ADJ.every(([k])=>!a[k]);
+let adjLive=false;
+function adjust(src,a){
+  const k=Math.min(1,Math.sqrt(12e6/(src.width*src.height))),out=document.createElement('canvas');
+  out.width=Math.round(src.width*k);out.height=Math.round(src.height*k);
+  const c=out.getContext('2d',{willReadFrequently:true});c.drawImage(src,0,0,out.width,out.height);
+  const im=c.getImageData(0,0,out.width,out.height),d=im.data;
+  const t=(a.temp||0)/100,n=(a.tint||0)/100,b=(a.bright||0)/100,ct=(a.contrast||0)/100,f=(a.fade||0)/100,m=1+(a.sat||0)/100;
+  // warm = more red, less blue; tint + = magenta (less green)
+  const gain=[1+.16*t+.05*n,1+.03*t-.14*n,1-.2*t+.05*n],p=Math.pow(2,-.8*b),kc=1+.6*ct,lo=.22*f,hi=.06*f;
+  const lut=gain.map(g=>{const u=new Float32Array(256);for(let v=0;v<256;v++){let x=Math.min(1,v/255*g);x=Math.pow(x,p);x=Math.max(0,Math.min(1,.5+(x-.5)*kc));u[v]=(lo+x*(1-lo-hi))*255}return u});
+  const [R,Gc,B]=lut;
+  for(let i=0;i<d.length;i+=4){
+    let r=R[d[i]],g=Gc[d[i+1]],bl=B[d[i+2]];
+    if(m!==1){const l=.299*r+.587*g+.114*bl;r=l+(r-l)*m;g=l+(g-l)*m;bl=l+(bl-l)*m}
+    d[i]=r;d[i+1]=g;d[i+2]=bl;
+  }
+  c.putImageData(im,0,0);return out;
+}
+function adjusted(ph,src,a){
+  if(plainAdj(a))return src;
+  if(adjLive&&src===ph.img)src=ph.small;
+  const key=(src===ph.img?'f':'s')+ADJ.map(([k])=>a[k]||0).join(','),m=ph._adj||(ph._adj=new Map());
+  let out=m.get(key);
+  if(out)m.delete(key);else out=adjust(src,a);
+  m.set(key,out);while(m.size>6)m.delete(m.keys().next().value);
+  return out;
+}
 function drawPhoto(c,src){
   const cover=Math.max(D.W/src.width,D.H/src.height)*D.photo.s,w=src.width*cover,h=src.height*cover;
   D.photo.ox=Math.max(-(w-D.W)/2,Math.min((w-D.W)/2,D.photo.ox));
@@ -209,7 +241,7 @@ function drawImageLayer(c,L,thumb){
   const T=c.getTransform(),k=Math.hypot(T.a,T.b);
   if(L.shadow.on)sameShadow(c,L.w*L.shadow.x/100*k,L.w*L.shadow.y/100*k,L.w*L.shadow.blur/100*k,L.shadow.color,L.shadow.a,()=>{imgPath(c,L,f);c.fillStyle=L.border.on?L.border.color:'#fff';c.fill()});
   c.save();imgPath(c,L,f);c.clip();
-  if(ph){const src=thumb?ph.small:ph.img,sc=Math.max(f.w/src.width,f.h/src.height)*L.zs,dw=src.width*sc,dh=src.height*sc;c.drawImage(src,-dw/2+L.zx*(dw-f.w)/2,-dh/2+L.zy*(dh-f.h)/2,dw,dh)}
+  if(ph){const src=adjusted(ph,thumb?ph.small:ph.img,L.adj),sc=Math.max(f.w/src.width,f.h/src.height)*L.zs,dw=src.width*sc,dh=src.height*sc;c.drawImage(src,-dw/2+L.zx*(dw-f.w)/2,-dh/2+L.zy*(dh-f.h)/2,dw,dh)}
   else{ // an empty photo frame (from a 型): a plain card with a small picture mark
     c.fillStyle='#d8cfc4';c.fillRect(-f.w/2,-f.h/2,f.w,f.h);
     const s=Math.min(f.w,f.h)*.18;c.strokeStyle='rgba(255,255,255,.92)';c.lineWidth=s*.09;c.lineJoin=c.lineCap='round';
@@ -243,7 +275,7 @@ function draw(c,o={}){
   // The background is the photo, one colour, or a soft gradient. The photo stays kept while it is not shown.
   const bg=bgOf(D),ph=cur(),src=ph&&(o.thumb?ph.small:ph.img);
   if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H)}
-  else if(bg.type==='photo'&&src)drawPhoto(c,src);
+  else if(bg.type==='photo'&&src)drawPhoto(c,adjusted(ph,src,D.adj));
   else{const [a,b]=GRADS[(bg.type==='grad'?bg.grad:o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
   const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
   const L=sel(),kk=o.kk||1;
@@ -455,14 +487,15 @@ const I={
   layout:ic('<path d="M4 6h16M7 10h10M4 14h16M7 18h10"/>'),
   more:ic('<circle cx="6" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="18" cy="12" r=".9" fill="currentColor"/>'),
   shape:ic('<circle cx="9" cy="9" r="5.2"/><rect x="11" y="11" width="9.5" height="9.5" rx="2"/>'),
+  adj:ic('<path d="M4 7h9M17.5 7h2.5M4 17h2.5M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/>'),
   crop:ic('<path d="M12 3.5v17M3.5 12h17M9.3 6.2L12 3.5l2.7 2.7M9.3 17.8l2.7 2.7 2.7-2.7M6.2 9.3L3.5 12l2.7 2.7M17.8 9.3l2.7 2.7-2.7 2.7"/>'),
 };
 const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
-  none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['pages','ページ',I.pages],['design','型',I.tpl]],
+  none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','その他',I.more]],
   shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco','線・影',I.deco],['more','その他',I.more]],
-  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['deco','フチ・影',I.deco],['more','その他',I.more]],
+  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','その他',I.more]],
 };
 const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap']);
 
@@ -520,6 +553,13 @@ const DRAW={
   shape:L=>`${segs('shape',[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']])}
     ${L.shape!=='circle'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
     ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}`,
+  // with nothing selected it works on the background photo
+  adj:L=>{
+    if(!L&&!(photoBg(D)&&D.photoId))return `<p class="enote">背景が写真のときに使えます。重ねた写真は、写真をタップしてから「調整」で。</p>`;
+    const a=(L||D).adj||{};
+    return ADJ.map(([k,l])=>`<label class="erow wl"><span class="el">${l}</span><input type="range" data-adj="${k}" min="${k==='fade'?0:-100}" max="100" step="1" value="${a[k]||0}"><span class="ev" data-av="${k}">${a[k]||0}</span></label>`).join('')
+      +btns([['adjreset','元に戻す'],...(!L&&P.pages.length>1?[['adjall','全ページの背景に当てる']]:[])]);
+  },
   crop:()=>`${slider('拡大','zs',1,3,.01)}${slider('横','zx',-1,1,.01)}${slider('縦','zy',-1,1,.01)}`,
 };
 
@@ -585,13 +625,14 @@ bodyEl.addEventListener('input',e=>{
   const L=sel(),t=e.target;
   if(t.dataset.photo!=null){D.photo.s=+t.value;paint();return}
   if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};t.parentElement.classList.add('on');paint();return}
+  if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
   put(L,t.dataset.k,t.type==='color'?t.value:+t.value);
   const v=bodyEl.querySelector(`[data-v="${t.dataset.k}"]`);if(v)v.textContent=fmt(t.dataset.k)(+t.value);
   if(t.type==='color'){t.closest('.pal').querySelectorAll('button').forEach(x=>x.classList.remove('on'));t.parentElement.classList.add('on');if(t.dataset.k==='color')$('#ebar .cdot')?.style.setProperty('background',t.value)}
   paint();
 });
-bodyEl.addEventListener('change',()=>commit());
+bodyEl.addEventListener('change',()=>{if(adjLive){adjLive=false;paint()}commit()});
 bodyEl.addEventListener('click',e=>{
   const L=sel(),t=e.target.closest('button');if(!t)return;
   if(t.id==='ephoto'){$('#efile').click();return}
@@ -599,6 +640,8 @@ bodyEl.addEventListener('click',e=>{
   const act=t.dataset.act;
   if(act==='pleft'||act==='pright'){movePage(act==='pleft'?-1:1);return}
   if(act==='pdel'){removePage();return}
+  if(act==='adjreset'){delete (L||D).adj;commit();panel();paint();return}
+  if(act==='adjall'){syncCur();for(const pg of P.pages)pg.adj=clone(D.adj||{});commit();toast(`${P.pages.length}ページの背景を同じ調整にしました`);return}
   if(act==='dup'&&L){dupSel();return}
   if(act==='del'&&L){removeSelected();return}
   if(act==='front'&&L){const i=D.layers.indexOf(L);if(i<D.layers.length-1){D.layers.splice(i,1);D.layers.splice(i+1,0,L);commit();paint()}return}

@@ -58,9 +58,9 @@
   <h2><span class="no">03</span>編集画面の見かた</h2>
   <p>編集画面は、写真が画面いっぱいに大きく出て、操作はいちばん下のバーにまとまっています。バーの中身は、いま選んでいるものに合わせて入れ替わります。</p>
   <div class="tools">
-    <div class="tool"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7V5.5h12V7M12 5.5v13M9.5 18.5h5"/></svg></i><div><b>何も選んでいないとき</b><span>文字・写真・図形を足す、背景、ページ、型。作品全体に関わる操作が並びます。</span></div></div>
+    <div class="tool"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7V5.5h12V7M12 5.5v13M9.5 18.5h5"/></svg></i><div><b>何も選んでいないとき</b><span>文字・写真・図形を足す、背景、調整、ページ、型。作品全体に関わる操作が並びます。</span></div></div>
     <div class="tool"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5h4l10-10-4-4-10 10z"/><path d="M13 7l4 4"/></svg></i><div><b>文字を選んだとき</b><span>編集・書体・色・飾り・配置・その他。選んだ文字だけが変わります。</span></div></div>
-    <div class="tool"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg></i><div><b>重ねた写真を選んだとき</b><span>差し替え（空の枠なら、はめる）・形・中の位置・フチ・影・その他。</span></div></div>
+    <div class="tool"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg></i><div><b>重ねた写真を選んだとき</b><span>差し替え（空の枠なら、はめる）・形・中の位置・調整・フチ・影・その他。</span></div></div>
     <div class="tool"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.2"/><rect x="11" y="11" width="9.5" height="9.5" rx="2"/></svg></i><div><b>図形を選んだとき</b><span>色・形・線・影・その他。</span></div></div>
   </div>
   <p>バーの項目を押すと、そのすぐ上に調整用の引き出しが開きます。もう一度押すと閉じます。引き出しが開いているあいだも写真は小さくなるだけで隠れないので、全体を見ながら調整できます。</p>
@@ -91,6 +91,7 @@
   <ul class="dots">
     <li><b>形</b> … 切り抜きの形、縦横の比率（元の形・1:1・4:5・3:2）、大きさ、角の丸み。</li>
     <li><b>中の位置</b> … 枠の中で写真を拡大したり、見せる場所をずらしたりします。</li>
+    <li><b>調整</b> … 重ねた写真だけの色温度や明るさを変えます。くわしくは「背景と比率」の調整をご覧ください。</li>
     <li><b>フチ・影</b> … フチの色と太さ、影の濃さ・ぼかし・ずれ。</li>
     <li><b>差し替え</b> … 位置や形はそのままで、中の写真だけを入れ替えます。</li>
   </ul>
@@ -112,6 +113,7 @@
   <h2><span class="no">07</span>背景と比率</h2>
   <p>何も選んでいないときのバーの「背景」では、背景を「写真」「単色」「グラデーション」から選べます。単色やグラデーションに切り替えても写真は消えずに残っているので、「写真」に戻せば元どおりです。写真のときは、写真をドラッグして見せる場所を決め、2本指で拡大できます。</p>
   <p>同じ引き出しの下で、画像の比率を 4:5・1:1・9:16・元の比率 から選べます。インスタのフィード投稿なら縦長の 4:5、ストーリーズやリールなら 9:16 がおすすめです。比率はカルーセルの全ページで共通です（インスタは1回の投稿の写真をすべて同じ比率にそろえるため）。</p>
+  <p>背景の写真の色は、何も選んでいないときのバーの「調整」で変えられます。並んでいるのは 色温度・色合い・明るさ・コントラスト・彩度・フェード の6つです。色温度を右へ動かすと黄みの暖かい色に、左へ動かすと青みの涼しい色になり、色合いは右でピンク寄り、左で緑寄りになります。フェードは暗いところを白っぽく持ち上げて、くすんだやわらかい雰囲気にします。「元に戻す」で全部0に戻り、カルーセルのときは「全ページの背景に当てる」で同じ調整を全ページにそろえられます。写真そのものは変わらないので、あとから何度でも変えられます。</p>
 </section>
 
 <section id="pages">
