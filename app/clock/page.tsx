@@ -1,17 +1,19 @@
-/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
 import { SiteFooter } from "../SiteFooter";
-import { LabMark } from "../icons";
+import { ClockMark } from "../icons";
+import { ToolBrand } from "../SiteHeader";
 
 export const metadata: Metadata = {
-  title: "PromptTerm CLOCK",
+  // A search result is read by someone who has never heard the name, so the
+  // title says what the tool does first, as YURAMEKI's does.
+  title: { absolute: "Windowsのデスクトップ時計｜PromptTerm CLOCK" },
   description: "秒まで刻み続ける6管のWindowsデスクトップ時計。無料、登録不要、オフライン動作。",
   alternates: { canonical: "/clock" },
 };
 
 export default function ClockPage() {
   return <main className="clockPage">
-    <header className="siteHeader clockHeader"><a className="brand" href="/"><span className="brandMark" aria-hidden="true"><LabMark /></span><span>Maruti Lab</span></a><a href="/">Worksへ戻る</a></header>
+    <header className="siteHeader clockHeader"><ToolBrand name="PromptTerm CLOCK" href="/clock" mark={<ClockMark />} /><nav aria-label="ページナビゲーション"><a href="#clock-guide-title">使い方</a><a href="#download">ダウンロード</a></nav></header>
     <section className="clockHero">
       <div className="clockHeroCopy"><p className="eyebrow">WINDOWS DESKTOP APP · FREE</p><h1>PromptTerm<br />CLOCK</h1><p className="clockLead">秒まで刻み続ける、<br />6管の端末時計。</p><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>Windows版を無料ダウンロード <small>v1.0.0 · 1.8MB</small></a><p className="downloadNote">Windows 10 / 11・64bit · 登録不要 · オフライン動作</p></div>
       <div className="clockHeroLive">
@@ -72,7 +74,7 @@ export default function ClockPage() {
         <p>アカウント登録、通信、アクセス解析、自動更新のいずれもありません。インストール後はオフラインのまま動きます。新しい版が出ても勝手に入れ替わらないので、更新はこのページから改めてダウンロードしてください。</p>
       </div>
     </section>
-    <section className="downloadSection"><div><p className="eyebrow">DOWNLOAD</p><h2>PromptTerm CLOCK 1.0.0</h2><p>未署名の個人制作アプリのため、Windows SmartScreenの青い警告画面が表示される場合があります。その場合は「詳細情報」を開き、「実行」を選択してください。ファイルの同一性はSHA-256で確認できます。</p></div><div className="downloadActions"><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>セットアップをダウンロード</a><a href="/downloads/SHA256SUMS.txt" download>SHA-256を確認</a><code>E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E</code></div></section>
+    <section className="downloadSection" id="download"><div><p className="eyebrow">DOWNLOAD</p><h2>PromptTerm CLOCK 1.0.0</h2><p>未署名の個人制作アプリのため、Windows SmartScreenの青い警告画面が表示される場合があります。その場合は「詳細情報」を開き、「実行」を選択してください。ファイルの同一性はSHA-256で確認できます。</p></div><div className="downloadActions"><a className="downloadButton" href="/downloads/PromptTerm_CLOCK_1.0.0_setup.exe" download>セットアップをダウンロード</a><a href="/downloads/SHA256SUMS.txt" download>SHA-256を確認</a><code>E8DF275BE2505690474CF663FC1E876F0B9600691DD1F8BF83D599E9219EC34E</code></div></section>
     <SiteFooter />
   </main>;
 }

@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 /* eslint-disable no-irregular-whitespace -- the wide spaces are ideographic
    spaces inside YURAMEKI's own Japanese copy, set deliberately. */
 
@@ -243,4 +244,4 @@ export default function Home(){
       light added - which is the other kind of tool, so it is gone, and ゆらぎ
       with it. 雨 and うつろい take their places; 陽炎 and 霞 were already
       distortions of what is there and stay. */}
-     {([["︙","雨","AME","水面に次々と輪が生まれる"],["◐","うつろい","UTSUROI","光と色がゆるやかに巡る"],["⌇","陽炎","KAGERO","熱の向こうで揺れる"],["◌","霞","KASUMI","淡く流れてほどける"]] as const).map(([icon,name,latin,copy])=><button type="button" disabled className="pending" key={name}><span aria-hidden="true">{icon}</span><b>{name}<em>{latin}</em></b><small>{copy}</small><i aria-hidden="true">準備中</i></button>)}</div></section><footer><span>YURAMEKI — A MARUTI LAB PROJECT</span><nav aria-label="サイト情報"><a href="/yurameki/faq">FAQ</a><a href="/terms">利用規約</a><a href="/privacy">プライバシー</a><a href="/yurameki/credits">Credits</a><a href="/contact">お問い合わせ</a></nav><span>制作画像はブラウザ内で処理されます</span></footer></main>}
+     {([["︙","雨","AME","水面に次々と輪が生まれる"],["◐","うつろい","UTSUROI","光と色がゆるやかに巡る"],["⌇","陽炎","KAGERO","熱の向こうで揺れる"],["◌","霞","KASUMI","淡く流れてほどける"]] as const).map(([icon,name,latin,copy])=><button type="button" disabled className="pending" key={name}><span aria-hidden="true">{icon}</span><b>{name}<em>{latin}</em></b><small>{copy}</small><i aria-hidden="true">準備中</i></button>)}</div></section><footer><span>YURAMEKI — A MARUTI LAB PROJECT</span><nav aria-label="サイト情報"><a href="/yurameki/faq">FAQ</a><a href="/terms">利用規約</a><a href="/privacy">プライバシー</a><a href="/yurameki/credits">Credits</a><a href="/contact">お問い合わせ</a><a href="/">Maruti Lab</a></nav><span>制作画像はブラウザ内で処理されます</span></footer></main>}

@@ -411,11 +411,10 @@
      for a map that had 484 - and the map then takes everything that is left
      exactly, ending at the bottom of the window with nothing pushed off it.
      This stylesheet only loads on these routes, so the shorter bar is
-     HALLO TERRA's and not the lab's. */
+     HALLO TERRA's and not the lab's. The name used to be a second band under
+     the bar; it lives in the bar now, so the bar is all there is to take. */
   .siteHeader { height: 56px; }
-  /* .terraSkin, because the plain rule for this is written further down. */
-  .terraSkin .terraTitle { padding-top: 8px; padding-bottom: 8px; }
-  .terra { height: min(860px, calc(100dvh - 112px)); }
+  .terra { height: min(860px, calc(100dvh - 56px)); }
 }
 
 @media (max-width: 860px) {
@@ -430,7 +429,7 @@
     height: auto;
     overflow: visible;
   }
-  .terraStage { height: min(740px, max(52dvh, 100dvh - 252px)); }
+  .terraStage { height: min(740px, max(52dvh, 100dvh - 193px)); }
   .terraCard {
     position: static;
     transform: none;
@@ -525,6 +524,7 @@
   .terraShapeLine { opacity: 0.26; }
 }
 
+.terraAbout h1,
 .terraAbout h2 {
   margin: 0 0 18px;
   font-family: var(--terra-hand);
@@ -602,27 +602,16 @@
 .terraLogo-sm .terraLogoMark { width: 26px; stroke-width: 1.8px; }
 .terraLogo-sm .terraLogoName { width: 112px; stroke-width: 1.4px; }
 
-/* The strip that gives the map screen its name. */
-.terraTitle {
-  display: flex;
-  /* Centred, not on a baseline. The name is a drawing, not type, so there is
-     no baseline in it to sit on - the line was taking the bottom edge of the
-     picture and putting the words below that, which left them lower than the
-     letters they belong to and lower even than the globe. */
-  align-items: center;
-  gap: clamp(14px, 3vw, 30px);
-  padding: 20px clamp(22px, 5vw, 60px) 18px;
-  flex-wrap: wrap;
-}
-/* The drawn name is the page's heading; the h1 is only there to say so, so it
-   adds no margin or line box of its own. */
-.terraTitle h1 { display: flex; margin: 0; font-size: inherit; }
-.terraTitle p {
-  margin: 0;
-  font-family: var(--terra-hand);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  color: var(--muted);
+/* The drawn name in the bar, with the lab signing beside it. Centred, not on
+   a baseline: the name is a drawing, not type, so there is no baseline in it
+   to sit on. */
+.terraBrand { display: flex; align-items: center; gap: 14px; }
+.terraBrand small {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  opacity: 0.62;
+  white-space: nowrap;
 }
 
 @media (max-width: 860px) {
@@ -636,8 +625,10 @@
   .terraLogo-md { gap: 10px; }
   .terraLogo-md .terraLogoMark { width: 32px; stroke-width: 2.4px; }
   .terraLogo-md .terraLogoName { width: 136px; stroke-width: 1.8px; }
-  .terraTitle { padding: 16px 22px 14px; gap: 10px; }
-  .terraTitle p { font-size: 11px; }
+  /* Too narrow to sit beside the name, so the signature goes under it,
+     lined up with the letters rather than the globe. */
+  .terraBrand { flex-direction: column; align-items: flex-start; gap: 3px; }
+  .terraBrand small { margin-left: 42px; }
 }
 
 /* ---- the opening ---------------------------------------------------- */

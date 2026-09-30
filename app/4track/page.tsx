@@ -1,8 +1,8 @@
-/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
 import styles from "./FourTrackPage.module.css";
 import { SiteFooter } from "../SiteFooter";
-import { LabMark } from "../icons";
+import { FourTrackMark } from "../icons";
+import { ToolBrand } from "../SiteHeader";
 
 const title = "4TRACK CASSETTE SAMPLER";
 const description = "音を切る、並べる、録る。ブラウザだけで使える4トラック・カセットサンプラー。";
@@ -22,7 +22,9 @@ const features = [
 ];
 
 export const metadata: Metadata = {
-  title,
+  // A search result is read by someone who has never heard the name, so the
+  // title says what the tool does first, as YURAMEKI's does.
+  title: { absolute: "ブラウザで音を切って並べる｜4TRACK CASSETTE SAMPLER" },
   description,
   alternates: { canonical: "/4track" },
   // Its own tab icon: the cassette from the tool's toolbar, minus the hub dots that
@@ -65,12 +67,13 @@ export default function FourTrackPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <a className={styles.brand} href="/" aria-label="Maruti Lab トップ">
-          <span className={styles.brandMark} aria-hidden="true">
-            <LabMark />
-          </span>
-          <span>Maruti Lab</span>
-        </a>
+        <ToolBrand
+          name="4TRACK"
+          href="/4track"
+          mark={<FourTrackMark />}
+          className={styles.brand}
+          markClassName={styles.brandMark}
+        />
         <nav aria-label="ページナビゲーション">
           <a href="#guide">使い方</a>
           <a href="/privacy">Privacy</a>

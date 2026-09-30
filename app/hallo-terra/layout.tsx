@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import "./hallo-terra.css";
-import { SiteHeader } from "../SiteHeader";
+import TerraLogo from "./TerraLogo";
 
 /**
- * Everything under /hallo-terra, under the lab's own header with the lab's own
- * links - the map is a room in this house, and a room you cannot leave by the
- * usual doors does not feel like one.
+ * Everything under /hallo-terra, under its own name the way every tool is now.
+ * The drawn name is the bar itself - it used to sit in a band of its own
+ * under a bar that said the same thing in type. The lab is one step away, in
+ * the footer.
  */
 export default function HalloTerraLayout({ children }: { children: ReactNode }) {
   return (
@@ -17,7 +18,16 @@ export default function HalloTerraLayout({ children }: { children: ReactNode }) 
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap"
       />
-      <SiteHeader />
+      <header className="siteHeader terraHeader">
+        <a className="terraBrand" href="/hallo-terra" aria-label="HALLO TERRA トップ">
+          <TerraLogo size="md" />
+          <small>by Maruti Lab</small>
+        </a>
+        <nav aria-label="ページナビゲーション">
+          <a href="/hallo-terra#how">使い方</a>
+          <a href="/hallo-terra/credits">クレジット</a>
+        </nav>
+      </header>
       <div className="terraSkin">{children}</div>
     </>
   );

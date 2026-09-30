@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "../../SiteFooter";
-import TerraLogo, { TerraShapes } from "../TerraLogo";
+import { TerraShapes } from "../TerraLogo";
 import credits from "../credits.generated.json";
 import { audio } from "../content";
 
@@ -62,17 +62,12 @@ function Row({ voice, credit }: { voice: string; credit: Credit }) {
 export default function CreditsPage() {
   return (
     <>
-      <div className="terraTitle">
-        <TerraLogo size="md" />
-        <p>クレジットと利用条件</p>
-      </div>
-
       <section className="terraNotes">
         <article className="terraAbout">
           <section>
             <TerraShapes tone="greeting" at={0} />
             <p className="terraEyebrow">CREDITS</p>
-            <h2>お借りしているもの</h2>
+            <h1>お借りしているもの</h1>
             <p className="terraLede">
               HALLO TERRA の音声と地図は、他の方が作って公開してくださったものを使わせてもらっています。そのうちいくつかは、名前を書くことや、同じ条件で公開することを条件にしています。ここはその条件を果たすためのページです。
             </p>

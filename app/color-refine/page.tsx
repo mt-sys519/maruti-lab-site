@@ -2,7 +2,8 @@
 import type { Metadata } from "next";
 import styles from "../swiftcrop/SwiftCropPage.module.css";
 import { SiteFooter } from "../SiteFooter";
-import { LabMark } from "../icons";
+import { ColorRefineMark } from "../icons";
+import { ToolBrand } from "../SiteHeader";
 
 const title = "COLOR RE:FINE";
 const description =
@@ -28,7 +29,9 @@ const features = [
 ];
 
 export const metadata: Metadata = {
-  title,
+  // A search result is read by someone who has never heard the name, so the
+  // title says what the tool does first, as YURAMEKI's does.
+  title: { absolute: "白黒写真をカラーに｜COLOR RE:FINE" },
   description,
   alternates: { canonical: "https://marutilab.com/color-refine" },
   openGraph: {
@@ -59,12 +62,7 @@ export default function ColorRefinePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="siteHeader">
-        <a className="brand" href="/" aria-label="Maruti Lab トップ">
-          <span className="brandMark" aria-hidden="true">
-            <LabMark />
-          </span>
-          <span>Maruti Lab</span>
-        </a>
+        <ToolBrand name="COLOR RE:FINE" href="/color-refine" mark={<ColorRefineMark />} />
         <nav aria-label="ページナビゲーション">
           <a href="#guide">使い方</a>
           <a href="/color-refine/help">よくある質問</a>

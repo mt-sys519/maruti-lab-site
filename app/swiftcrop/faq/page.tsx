@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import content from "../faqContent.json";
 import styles from "../SwiftCropPage.module.css";
 import { SiteFooter } from "../../SiteFooter";
-import { LabMark } from "../../icons";
+import { SwiftCropMark } from "../../icons";
+import { ToolBrand } from "../../SiteHeader";
 
 const title = "SwiftCropのよくある質問";
 const description =
@@ -38,16 +39,10 @@ export default function SwiftCropFaqPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="siteHeader">
-        <a className="brand" href="/" aria-label="Maruti Lab トップ">
-          <span className="brandMark" aria-hidden="true">
-            <LabMark />
-          </span>
-          <span>Maruti Lab</span>
-        </a>
+        <ToolBrand name="SwiftCrop" href="/swiftcrop" mark={<SwiftCropMark />} />
         <nav aria-label="ページナビゲーション">
           <a href="/swiftcrop">SwiftCropを使う</a>
           <a href="/blog/browser-only">なぜ送らないのか</a>
-          <a href="/">Works</a>
         </nav>
       </header>
 

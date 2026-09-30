@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
 import content from "../crContent.json";
 import { SiteFooter } from "../../SiteFooter";
@@ -19,8 +18,8 @@ export default function ColorRefineLicensesPage() {
   return (
     <main className="legalPage">
       <header className="legalHeader">
-        <a href="/">Maruti Lab</a>
-        <a href="/color-refine">COLOR RE:FINEへ戻る</a>
+        <a href="/color-refine">COLOR RE:FINE</a>
+        <a href="/color-refine">カラー化を使う</a>
       </header>
       <article className="legalDocument">
         <p className="eyebrow">THIRD-PARTY NOTICES</p>

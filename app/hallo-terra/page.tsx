@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "../SiteFooter";
-import TerraLogo, { TerraShapes } from "./TerraLogo";
+import { TerraShapes } from "./TerraLogo";
 import { audio, places } from "./content";
 import TerraMap from "./TerraMap";
 
@@ -41,13 +41,6 @@ export default function HalloTerraPage() {
   const gestured = Object.values(places).filter((p) => p.gesture).length;
   return (
     <>
-      <div className="terraTitle">
-        <h1>
-          <TerraLogo size="md" />
-        </h1>
-        <p>世界の挨拶を、地図から。</p>
-      </div>
-
       <TerraMap />
 
       <section className="terraNotes">
@@ -55,13 +48,13 @@ export default function HalloTerraPage() {
         <section>
           <TerraShapes tone="greeting" at={0} />
           <p className="terraEyebrow">ABOUT HALLO TERRA</p>
-          <h2>世界の挨拶を、地図から。</h2>
+          <h1>世界の挨拶を、地図から。</h1>
           <p className="terraLede">
             HALLO TERRA は、世界地図から場所を選ぶと、その土地の挨拶・お礼・お詫びが、現地の文字と、カタカナの読みと、日本語の意味で出てくる地図です。無料で、登録は要りません。
           </p>
         </section>
 
-        <section>
+        <section id="how">
           <TerraShapes tone="thanks" at={1} />
           <h2>使い方</h2>
           <ol className="terraSteps">

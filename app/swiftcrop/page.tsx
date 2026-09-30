@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import styles from "./SwiftCropPage.module.css";
 import { SiteFooter } from "../SiteFooter";
 import { ToolScripts } from "./ToolScripts";
-import { LabMark } from "../icons";
+import { SwiftCropMark } from "../icons";
+import { ToolBrand } from "../SiteHeader";
 import appHtml from "../../public/swiftcrop-app/index.html?raw";
 
 const title = "SwiftCrop";
@@ -52,7 +53,9 @@ const features = [
 ];
 
 export const metadata: Metadata = {
-  title,
+  // A search result is read by someone who has never heard the name, so the
+  // title says what the tool does first, as YURAMEKI's does.
+  title: { absolute: "画像をまとめて切り抜き・リサイズ｜SwiftCrop" },
   description,
   alternates: { canonical: "https://marutilab.com/swiftcrop" },
   openGraph: {
@@ -101,17 +104,11 @@ export default function SwiftCropPage() {
       <link rel="stylesheet" href="/swiftcrop-app/style.css?v=4.0.3-export-time" />
 
       <header className="siteHeader">
-        <a className="brand" href="/" aria-label="Maruti Lab トップ">
-          <span className="brandMark" aria-hidden="true">
-            <LabMark />
-          </span>
-          <span>Maruti Lab</span>
-        </a>
+        <ToolBrand name="SwiftCrop" href="/swiftcrop" mark={<SwiftCropMark />} />
         <nav aria-label="ページナビゲーション">
           <a href="#guide">使い方</a>
           <a href="/swiftcrop/faq">よくある質問</a>
           <a href="/blog/browser-only">なぜ送らないのか</a>
-          <a href="/">Works</a>
         </nav>
       </header>
 

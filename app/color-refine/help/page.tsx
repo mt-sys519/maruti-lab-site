@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires document navigation for local routes */
 import type { Metadata } from "next";
 import content from "../crContent.json";
 import styles from "../../swiftcrop/SwiftCropPage.module.css";
 import { SiteFooter } from "../../SiteFooter";
-import { LabMark } from "../../icons";
+import { ColorRefineMark } from "../../icons";
+import { ToolBrand } from "../../SiteHeader";
 
 const title = "COLOR RE:FINEのよくある質問";
 const description =
@@ -38,16 +38,10 @@ export default function ColorRefineHelpPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="siteHeader">
-        <a className="brand" href="/" aria-label="Maruti Lab トップ">
-          <span className="brandMark" aria-hidden="true">
-            <LabMark />
-          </span>
-          <span>Maruti Lab</span>
-        </a>
+        <ToolBrand name="COLOR RE:FINE" href="/color-refine" mark={<ColorRefineMark />} />
         <nav aria-label="ページナビゲーション">
           <a href="/color-refine">カラー化を使う</a>
           <a href="/color-refine/licenses">第三者ライセンス</a>
-          <a href="/">Works</a>
         </nav>
       </header>
 

@@ -1,8 +1,8 @@
-/* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./yurameki.css";
-import { LabMark } from "../icons";
+import { YuramekiMark } from "../icons";
+import { ToolBrand } from "../SiteHeader";
 
 // YURAMEKI's own tab icon (the rose disc with its two ripples, from the tool's own site)
 // instead of the lab's bottle; the header keeps the lab's mark.
@@ -28,17 +28,11 @@ export default function YuramekiLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <header className="siteHeader">
-        <a className="brand" href="/" aria-label="Maruti Lab トップ">
-          <span className="brandMark" aria-hidden="true">
-            <LabMark />
-          </span>
-          <span>Maruti Lab</span>
-        </a>
+        <ToolBrand name="YURAMEKI" href="/yurameki" mark={<YuramekiMark />} />
         <nav aria-label="ページナビゲーション">
           <a href="/yurameki/about">YURAMEKIについて</a>
           <a href="/yurameki/gallery">動きのサンプル</a>
           <a href="/yurameki/faq">よくある質問</a>
-          <a href="/">Works</a>
         </nav>
       </header>
       <div className="yuramekiPage">{children}</div>

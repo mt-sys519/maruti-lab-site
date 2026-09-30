@@ -39,7 +39,7 @@ export function SiteFooter({
 }) {
   return (
     <footer className={className}>
-      <div className="footerBrand">Maruti Lab</div>
+      <a className="footerBrand" href="/">Maruti Lab</a>
       <div className="footerLinks">
         {[...sections, ...extra].map((link) => (
           <a key={link.href} href={link.href}>{link.label}</a>

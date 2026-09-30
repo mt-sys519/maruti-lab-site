@@ -24,6 +24,40 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
   );
 }
 
+/**
+ * The name at the top left of a tool's own pages. A tool is its own front
+ * door, the way PICLEA is: the name leads back to the tool, not to the lab,
+ * and the lab signs underneath and is reached from the footer.
+ *
+ * Only the link is shared - each tool keeps its own bar and its own links, so
+ * the classes can be swapped for a page that styles its header itself.
+ */
+export function ToolBrand({
+  name,
+  href,
+  mark,
+  className = "brand",
+  markClassName = "brandMark",
+}: {
+  name: string;
+  href: string;
+  mark: ReactNode;
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <a className={className} href={href} aria-label={`${name} トップ`}>
+      <span className={markClassName} aria-hidden="true">
+        {mark}
+      </span>
+      <span className="toolBrandName">
+        {name}
+        <small>by Maruti Lab</small>
+      </span>
+    </a>
+  );
+}
+
 function SiteNav() {
   return (
     <>
