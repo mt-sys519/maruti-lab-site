@@ -954,6 +954,7 @@ async function openWorks(){
     </div>`).join('');
   $('#whome').hidden=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   backupLine(ws);
+  if(ws.length)app.prepareBackup(); // on iPhone the file is made now, so the button needs one tap
   $('#wsheet').hidden=false;
 }
 // When the everything-backup last went out, and how many works were made or changed since.

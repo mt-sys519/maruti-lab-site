@@ -1108,10 +1108,14 @@ async function designsFile(){
 // takes only the table at the end and then slices out the photos that are actually needed.
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 function crc32(buf){let c=~0;const b=new Uint8Array(buf);for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return ~c>>>0}
+// A stored photo never changes under its id, so its checksum is worked out once per session.
+const crcOf=new Map();
 async function zipFile(entries,name){
   const enc=new TextEncoder(),parts=[],cd=[];let off=0;
   for(const e of entries){
-    const nm=enc.encode(e.name),blob=e.blob,crc=crc32(await blob.arrayBuffer()),size=blob.size;
+    const nm=enc.encode(e.name),blob=e.blob,size=blob.size;
+    let crc=e.key&&crcOf.get(e.key);
+    if(crc==null){crc=crc32(await blob.arrayBuffer());if(e.key)crcOf.set(e.key,crc)}
     const h=new DataView(new ArrayBuffer(30));
     h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x800,true);h.setUint16(8,0,true); // stored, UTF-8 names
     h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,size,true);h.setUint32(22,size,true);h.setUint16(26,nm.length,true);
@@ -1151,7 +1155,7 @@ async function backupAll(){
   const entries=[],photoFiles={};
   for(const id of new Set(works.flatMap(w=>w.photos))){
     const b=await DB.run('photos','readonly',st=>st.get(id));if(!b)continue;
-    photoFiles[id]={file:`photos/${id}${EXT[b.type]||''}`,type:b.type};entries.push({name:photoFiles[id].file,blob:b});
+    photoFiles[id]={file:`photos/${id}${EXT[b.type]||''}`,type:b.type};entries.push({name:photoFiles[id].file,blob:b,key:id});
   }
   const manifest={app:'piclea',kind:'all',v:1,created:Date.now(),works,designs,photos:photoFiles};
   entries.unshift({name:'piclea.json',blob:new Blob([JSON.stringify(manifest)],{type:'application/json'})});
@@ -1204,8 +1208,16 @@ async function importWork(data){
 // The first tap makes the file; the second, a fresh gesture, hands it over (iOS only opens the share sheet then).
 // Elsewhere one tap makes it and downloads it.
 // done(madeAt) runs once the file has really gone out (on iOS, only when the share sheet was not cancelled).
+// iOS opens the share sheet only straight from a tap, so a file made after the tap needs a second one.
+// prepare() makes it ahead (when 「つくったもの」 opens), so that one tap is enough.
 function exportButton(b,make,done){
-  const label=b.textContent;let file=null,madeAt=0;
+  const label=b.textContent;let file=null,madeAt=0,job=null,gen=0;
+  const build=async()=>{
+    const g=++gen;b.disabled=true;b.textContent='準備しています…';
+    try{const f=await make();if(g!==gen)return false;file=f;madeAt=Date.now();return true}
+    finally{if(g===gen){b.disabled=false;job=null}}
+  };
+  b.prepare=()=>{if(OS!=='ios')return;file=null;job=build().then(ok=>{if(ok)b.textContent=label},()=>{b.textContent=label})};
   b.onclick=async()=>{
     if(OS!=='ios'){
       b.disabled=true;b.textContent='準備しています…';
@@ -1220,16 +1232,14 @@ function exportButton(b,make,done){
       else{const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.click();done?.(at)}
       file=null;b.textContent=label;return;
     }
-    b.disabled=true;b.textContent='準備しています…';
-    try{file=await make();madeAt=Date.now();b.textContent='「ファイル」に保存する（もう一度タップ）'}
-    catch{b.textContent=label;toast('書き出せませんでした')}
-    finally{b.disabled=false}
+    if(job)return;
+    job=build().then(ok=>{if(ok)b.textContent='「ファイル」に保存する（もう一度タップ）'},()=>{b.textContent=label;toast('書き出せませんでした')});
   };
 }
 exportButton($('#wexport'),backupFile);exportButton($('#texport'),designsFile);
 // The everything-backup remembers when it last went out, so 「つくったもの」 can say what has changed since.
 exportButton($('#wall'),backupAll,at=>{store.set('piclea.lastBackup',{at});emit('backedup')});
-const lastBackup=()=>store.get('piclea.lastBackup',null);
+const lastBackup=()=>store.get('piclea.lastBackup',null),prepareBackup=()=>$('#wall').prepare();
 on('saved',()=>{const t=$('#esaved');if(!t)return;t.textContent='保存しました';t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600)});
 
 /* ---------- open / close / save ---------- */
@@ -1288,5 +1298,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{os:OS,D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,backupAll,lastBackup,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
+  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,backupAll,lastBackup,prepareBackup,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
 })();
