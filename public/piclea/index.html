@@ -159,6 +159,7 @@ body.vertical .t{writing-mode:vertical-rl;max-width:none;max-height:86%;text-ali
 
 /* sheet */
 .sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center}
+[hidden]{display:none!important} /* a class that sets display (.pill, .pgrow) must not bring a hidden element back */
 .sheet[hidden]{display:none}
 .scrim{position:absolute;inset:0;background:rgba(56,42,36,.4);animation:fade .2s both} /* no backdrop blur: it samples past the screen edge and lights up the corners */
 @keyframes fade{from{opacity:0}}

@@ -157,6 +157,10 @@ function frameSize(L,m){
   const B=L.band,p=L.size*B.pad/100,sh=B.shape||'rect';
   if(sh==='circle'){const d=Math.hypot(m.W,m.H)+2*p;return {w:d,h:d}}
   if(sh==='ellipse')return {w:m.W*Math.SQRT2+2*p,h:m.H*Math.SQRT2+2*p};
+  if(sh==='pill'){ // the round ends grow outward until the text box's corners sit inside them (two lines made them cut in)
+    const hz=m.W>=m.H,lg=hz?m.W:m.H,sm=hz?m.H:m.W,r=sm/2+p,long=Math.max(lg+2*p,lg+2*r-2*Math.sqrt(r*r-sm*sm/4)+p/2);
+    return hz?{w:long,h:sm+2*p}:{w:sm+2*p,h:long};
+  }
   return {w:m.W+2*p,h:m.H+2*p};
 }
 function framePath(c,L,m){
