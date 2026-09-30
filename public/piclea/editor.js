@@ -34,8 +34,11 @@ const on=(n,f)=>(listeners[n]??=[]).push(f);
 const clone=o=>JSON.parse(JSON.stringify(o,(k,v)=>k.startsWith('_')?undefined:v));
 const sel=()=>D.layers.find(l=>l.id===D.sel);
 const isText=L=>!!L&&!L.type,isImg=L=>!!L&&L.type==='image',isShape=L=>!!L&&L.type==='shape';
-// A line is a shape too: w is its length and h its thickness. 点線 is a row of round dots.
-const isLine=L=>isShape(L)&&(L.kind==='line'||L.kind==='dots');
+// A line is a shape too: w is its length and h its thickness. 点線 is a row of round dots; the arrows and
+// 吹き出しの下 (a line with a V in the middle) are drawn with a pen of width h. 囲み are pen loops of width lw.
+const LINEISH=new Set(['line','dots','notch','arrow','arrowc','arrowl']),PENNED=new Set(['notch','arrow','arrowc','arrowl','scribble','scribble2']);
+const NOGLASS=new Set(['notch','arrow','arrowc','arrowl','bubble','bubbler','cloud','spiky','scribble','scribble2']);
+const isLine=L=>isShape(L)&&LINEISH.has(L.kind);
 const bgOf=pg=>pg.bg||{type:'photo'},photoBg=pg=>bgOf(pg).type==='photo';
 function syncCur(){P.pages[P.cur]=clone(D)}
 function loadInto(pg){for(const k of Object.keys(D))delete D[k];Object.assign(D,clone(pg))}
@@ -451,8 +454,119 @@ function drawImageLayer(c,L,thumb){
   return {W:f.w,H:f.h};
 }
 // A shape: rectangle, rounded or ellipse, of any width and height, to lay under words; or a line.
+// Hand-drawn wobble that stays put: the same layer always shakes the same way.
+function rng(seed){let a=seed>>>0||1;return ()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function wobbly(pts,amp,seed){ // soft low-frequency shake across a polyline
+  const r=rng(seed),f=[r()*6,r()*6,1.3+r(),2.1+r()];
+  return pts.map(([x,y],i)=>{const t=i/(pts.length-1||1);return [x,y+amp*(Math.sin(f[2]*t*Math.PI*2+f[0])*.6+Math.sin(f[3]*t*Math.PI*2+f[1])*.4)]});
+}
+function polyTo(c,pts){c.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)c.lineTo(pts[i][0],pts[i][1])}
+const notchSize=L=>{const nw=Math.min(L.w*.3,Math.max(L.h*6,L.w*.07));return [nw,nw*.55]};
+const arrowHead=L=>Math.max(L.h*4.5,L.w*.1);
+// How far a penned shape reaches round its middle (for its box, hit area and jelly).
+function shapeExt(L){
+  const w=L.w,h=L.h;
+  if(L.kind==='notch')return {w:w+h,h:notchSize(L)[1]*1.9+h};
+  if(L.kind==='arrow')return {w:w+h,h:arrowHead(L)*1.05+h*2};
+  if(L.kind==='arrowc')return {w:w+h,h:w*.3+arrowHead(L)*.6+h*2};
+  if(L.kind==='arrowl')return {w:w+h,h:w*.3+arrowHead(L)+h*2};
+  if(L.kind==='scribble'||L.kind==='scribble2')return {w:w+(L.lw||8)*2,h:h+(L.lw||8)*2};
+  return {w,h};
+}
+// The pen paths. Arrows point right; turn the layer to aim them.
+function penPath(c,L){
+  const w=L.w,h=L.h,sd=L.seed||L.id||1;
+  if(L.kind==='notch'){ // drawn by hand too: the run and the V shake a little, the V a touch lopsided
+    const [nw,nd]=notchSize(L),y=-nd/2,r=rng(sd),vx=(r()-.5)*nw*.12,key=[[-w/2,y],[-nw/2,y],[vx,y+nd*(.95+r()*.1)],[nw/2,y],[w/2,y]],pts=[];
+    for(let i=0;i<4;i++){const [ax,ay]=key[i],[bx,by]=key[i+1],n=Math.max(2,Math.round(Math.hypot(bx-ax,by-ay)/(w/60)));for(let j=i?1:0;j<=n;j++)pts.push([ax+(bx-ax)*j/n,ay+(by-ay)*j/n])}
+    const lift=nd*.45,half=w/2; // both ends turn up a little, like a smile
+    polyTo(c,wobbly(pts.map(([x,y])=>{const u=Math.max(0,(Math.abs(x)-nw/2)/(half-nw/2));return [x,y-lift*u*u]}),h*.15+w*.005,sd));return;
+  }
+  if(L.kind==='scribble'||L.kind==='scribble2'){polyTo(c,scribblePts(L));return}
+  let pts=[];
+  if(L.kind==='arrow'){for(let i=0;i<=24;i++)pts.push([-w/2+w*i/24,0]);pts=wobbly(pts,h*.12+w*.006,sd)}
+  else if(L.kind==='arrowc'){ // an arc rising and coming down onto its point
+    const lift=w*.3;for(let i=0;i<=40;i++){const t=i/40;pts.push([-w/2+w*t,lift*.5-lift*Math.sin(Math.PI*t*.85)])}pts=wobbly(pts,w*.01,sd);
+  }
+  else{ // arrowl: a straight run that curls once over itself in the middle, the loop crossing its own line
+    const R=w*.14;for(let i=0;i<=320;i++){const t=i/320,u=Math.min(1,Math.max(0,(t-.42)/.16)),th=Math.PI*2*u*u*(3-2*u);pts.push([-w/2+w*t+R*Math.sin(th),R*Math.cos(th)-R+R])}
+    pts=wobbly(pts,w*.006,sd);
+  }
+  polyTo(c,pts);
+  const end=pts.at(-1),pv=pts[pts.length-4],ang=Math.atan2(end[1]-pv[1],end[0]-pv[0]),hl=arrowHead(L);
+  for(const sg of [-1,1]){const a=ang+Math.PI+sg*.5;c.moveTo(end[0],end[1]);c.lineTo(end[0]+Math.cos(a)*hl,end[1]+Math.sin(a)*hl*(1+.1*sg))}
+}
+// A loop as a hand draws it: a little egg-shaped and tilted, starting inside and running out past where it
+// began (丸囲み), or going round and round with the middle wandering (ぐりぐり).
+function scribblePts(L){
+  const w=L.w,h=L.h,r=rng(L.seed||L.id||1),two=L.kind==='scribble2',turns=two?2.55+r()*.2:1.14+r()*.06,n=Math.round(120*turns);
+  const tilt=(r()-.5)*.22,a0=-Math.PI*.6+(r()-.5)*.4,p1=r()*6,p2=r()*6,p3=r()*6,ct=Math.cos(tilt),st=Math.sin(tilt),pts=[];
+  for(let i=0;i<=n;i++){
+    const t=i/n,a=a0+t*turns*Math.PI*2;
+    let k=1+.055*Math.sin(a+p1)+.035*Math.sin(2*a+p2); // egg-shaped, not an oval
+    let cx=0,cy=0;
+    if(two){k*=1+.07*Math.sin(t*turns*1.1+p3)-.05*t;cx=w*.035*Math.sin(t*Math.PI*2*.8+p1);cy=h*.04*Math.cos(t*Math.PI*2*.6+p2)}
+    else k*=.94+.14*t*t*t; // starts inside, ends a little outside
+    const x=Math.cos(a)*w/2*k+cx,y=Math.sin(a)*h/2*k+cy;pts.push([x*ct-y*st,x*st+y*ct]);
+  }
+  return pts;
+}
+// The pen presses in and lifts off: thin at both ends, a touch uneven on the way. Drawn as one filled ribbon.
+function ribbon(c,pts,lw,seed){
+  const n=pts.length,r=rng(seed),f=r()*6,L=[],R=[];
+  for(let i=0;i<n;i++){
+    const [px,py]=pts[Math.max(0,i-2)],[nx,ny]=pts[Math.min(n-1,i+2)],dx=nx-px,dy=ny-py,l=Math.hypot(dx,dy)||1,t=i/(n-1);
+    const m=Math.max(.3,Math.min(1,t/.07)**.6*Math.min(1,(1-t)/.12)**.7)*(1+.12*Math.sin(t*9+f)),hw=lw*m/2;
+    L.push([pts[i][0]-dy/l*hw,pts[i][1]+dx/l*hw]);R.push([pts[i][0]+dy/l*hw,pts[i][1]-dx/l*hw]);
+  }
+  polyTo(c,L.concat(R.reverse()));c.closePath();
+  for(const i of [0,n-1]){const [x,y]=pts[i],rr=lw*.3/2;c.moveTo(x+rr,y);c.arc(x,y,rr,0,Math.PI*2)}
+}
+// Fill or pen, whichever the shape is: used for the shape itself, its shadow and its jelly mask.
+function paintShape(c,L){
+  if(L.kind==='scribble'||L.kind==='scribble2'){c.beginPath();ribbon(c,scribblePts(L),L.lw||8,(L.seed||L.id||1)+1);c.fill();return}
+  if(PENNED.has(L.kind)){c.beginPath();penPath(c,L);c.lineWidth=L.kind.startsWith('scribble')?(L.lw||8):L.h;c.lineCap=c.lineJoin='round';c.strokeStyle=c.fillStyle;c.stroke()}
+  else{shapePath(c,L);c.fill()}
+}
+// 吹き出し are drawn by hand like the arrows: the outline is sampled, then pushed in and out a little along
+// its normal by a slow wave, so a word inside still reads cleanly. The same layer always keeps its wobble.
+const segPts=(o,[ax,ay],[bx,by],n)=>{for(let i=1;i<=n;i++)o.push([ax+(bx-ax)*i/n,ay+(by-ay)*i/n])};
+const arcPts=(o,cx,cy,rx,ry,a0,a1,n)=>{for(let i=1;i<=n;i++){const a=a0+(a1-a0)*i/n;o.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry])}};
+const quadPts=(o,[ax,ay],[qx,qy],[bx,by],n)=>{for(let i=1;i<=n;i++){const t=i/n,u=1-t;o.push([u*u*ax+2*u*t*qx+t*t*bx,u*u*ay+2*u*t*qy+t*t*by])}};
+function handDrawn(c,pts,amp,seed){
+  const r=rng(seed),f=[3+r()*1.5,5+r()*2,r()*6,r()*6],n=pts.length;
+  const out=pts.map(([x,y],i)=>{const [px,py]=pts[(i-4+n)%n],[nx,ny]=pts[(i+4)%n],dx=nx-px,dy=ny-py,l=Math.hypot(dx,dy)||1,t=i/n*Math.PI*2,d=amp*(Math.sin(f[0]*t+f[2])*.6+Math.sin(f[1]*t+f[3])*.4);return [x+dy/l*d,y-dx/l*d]});
+  polyTo(c,out);c.closePath();
+}
+function bubblePath(c,L){
+  const w=L.w,h=L.h,sd=L.seed||L.id||1,o=[],amp=Math.min(w,h)*.014;
+  if(L.kind==='bubble'){ // an oval with a tail from its lower left, the tail's sides a little bowed
+    const ry=h*.41,cy=-h*.09,rx=w/2,a1=Math.PI*.58,a2=Math.PI*.72,tip=[-w*.3,h/2];
+    const p1=[Math.cos(a1)*rx,cy+Math.sin(a1)*ry],p2=[Math.cos(a2)*rx,cy+Math.sin(a2)*ry];
+    o.push(p2);arcPts(o,0,cy,rx,ry,a2,a1+Math.PI*2,110);
+    quadPts(o,p1,[(p1[0]+tip[0])/2+w*.02,(p1[1]+tip[1])/2],tip,10);quadPts(o,tip,[(tip[0]+p2[0])/2+w*.015,(tip[1]+p2[1])/2-h*.02],p2,10);o.pop();
+  }
+  else if(L.kind==='bubbler'){ // a rounded box with a tail from its lower edge
+    const bh=h*.8,t=-h/2,b=t+bh,r=Math.min(w,bh)*.22,l=-w/2,rr=w/2,x1=-w*.26,x2=-w*.1,tip=[-w*.3,h/2],P=Math.PI;
+    o.push([l+r,t]);segPts(o,[l+r,t],[rr-r,t],30);arcPts(o,rr-r,t+r,r,r,-P/2,0,8);segPts(o,[rr,t+r],[rr,b-r],16);arcPts(o,rr-r,b-r,r,r,0,P/2,8);
+    segPts(o,[rr-r,b],[x2,b],22);quadPts(o,[x2,b],[(x2+tip[0])/2+w*.015,(b+tip[1])/2],tip,8);quadPts(o,tip,[(tip[0]+x1)/2,(b+tip[1])/2-h*.015],[x1,b],8);
+    segPts(o,[x1,b],[l+r,b],10);arcPts(o,l+r,b-r,r,r,P/2,P,8);segPts(o,[l,b-r],[l,t+r],16);arcPts(o,l+r,t+r,r,r,P,P*1.5,8);o.pop();
+  }
+  else if(L.kind==='cloud'){ // puffs round an oval, one outline so a rim or jelly follows the bumps only
+    const n=10,r=rng(sd),rx=w/2*.8,ry=h/2*.78,at=(a,k)=>[Math.cos(a)*rx*k,Math.sin(a)*ry*k],a0=r()*.6;
+    o.push(at(a0,1));for(let i=1;i<=n;i++){const a=a0+i/n*Math.PI*2;quadPts(o,at(a-2*Math.PI/n,1),at(a-Math.PI/n,1.5+.12*r()),at(a,1),14)}o.pop();
+  }
+  else{ // spiky: a burst, points a little uneven
+    const n=16,r=rng(sd),v=[];
+    for(let i=0;i<n*2;i++){const a=i/(n*2)*Math.PI*2-Math.PI/2+(i%2?0:(r()-.5)*.06),k=i%2?.74+.06*r():1-.07*r();v.push([Math.cos(a)*w/2*k,Math.sin(a)*h/2*k])}
+    o.push(v[0]);for(let i=0;i<v.length;i++)segPts(o,v[i],v[(i+1)%v.length],5);o.pop();
+  }
+  handDrawn(c,o,amp,sd);
+}
 function shapePath(c,L){
   c.beginPath();
+  if(L.kind==='bubble'||L.kind==='bubbler'||L.kind==='cloud'||L.kind==='spiky'){bubblePath(c,L);return}
+  if(PENNED.has(L.kind)){penPath(c,L);return}
   if(L.kind==='dots'&&L.dstyle==='dash'){ // dashes about 3× the thickness, stretched a little so both ends are a dash
     const gs=L.h*((L.gap||250)/100-1),n=Math.max(1,Math.round((L.w+gs)/(L.h*3+gs))),d=Math.max(1,(L.w-(n-1)*gs)/n);
     for(let i=0;i<n;i++)c.rect(-L.w/2+i*(d+gs),-L.h/2,d,L.h);
@@ -469,15 +583,15 @@ function drawShape(c,L){
   if(L.kind==='circle')L.h=L.w; // a circle keeps one size, whatever handle or slider moved
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
   const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
-  const mat=isLine(L)?(L.mat==='jelly'?'jelly':'color'):L.mat||(L.glass?'glass':'color'),gl=mat==='glass',jl=mat==='jelly',hx=L.w/2,hy=L.h/2;
-  const A=gl?glassRead(c,hx,hy):jl?glassArea(c,hx+70,hy+70):null;if(jl&&A)A.bg=c.getImageData(A.x0,A.y0,A.w,A.h);
-  if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,()=>{shapePath(c,L);c.fillStyle=gl||jl?'#fff':rgba(L.color,Math.max(L.a,.01));c.fill()});
+  const nf=L.nofill&&FILLABLE(L),mat=nf?'color':isLine(L)||NOGLASS.has(L.kind)?(L.mat==='jelly'?'jelly':'color'):L.mat||(L.glass?'glass':'color'),gl=mat==='glass',jl=mat==='jelly',hx=L.w/2,hy=L.h/2,ex=shapeExt(L);
+  const A=gl?glassRead(c,hx,hy):jl?glassArea(c,ex.w/2+70,ex.h/2+70):null;if(jl&&A)A.bg=c.getImageData(A.x0,A.y0,A.w,A.h);
+  if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,nf?()=>{shapePath(c,L);c.lineWidth=L.line.w;c.lineJoin='round';c.strokeStyle='#000';c.stroke()}:()=>{c.fillStyle=gl||jl?'#fff':rgba(L.color,Math.max(L.a,.01));paintShape(c,L)});
   if(gl)glassPaint(c,A,L.kind==='ellipse'||L.kind==='circle'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]);
-  else if(jl)maskPaint(c,L,A,'jelly',mc=>{shapePath(mc,L);mc.fill()});
-  else{shapePath(c,L);c.fillStyle=rgba(L.color,L.a);c.fill()}
-  if(L.line.on&&!isLine(L)){c.lineWidth=L.line.w;c.strokeStyle=L.line.color;c.stroke()}
+  else if(jl)maskPaint(c,L,A,'jelly',mc=>paintShape(mc,L));
+  else if(!nf){c.fillStyle=rgba(L.color,L.a);paintShape(c,L)}
+  if(L.line.on&&!isLine(L)&&!PENNED.has(L.kind)){shapePath(c,L);c.lineWidth=L.line.w;c.lineJoin='round';c.strokeStyle=L.line.color;c.stroke()}
   c.restore();
-  return {W:L.w,H:L.h};
+  return {W:ex.w,H:ex.h};
 }
 // o: {ov:{id,font}, grad:index, thumb:bool, ui:'edit'|'mark', kk: output px per screen px}. Returns metrics per layer id.
 function draw(c,o={}){
@@ -756,7 +870,7 @@ const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
-  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
+  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
   image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
 };
 const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap']);
@@ -817,19 +931,23 @@ const DRAW={
   },
   scolor:L=>{
     // lines and dots are too thin for glass to show; jelly turns them into a gummy strip or a row of beads
-    if(isLine(L)&&L.mat!=='jelly')L.mat='color';
+    if((isLine(L)||NOGLASS.has(L.kind))&&L.mat!=='jelly')L.mat='color';
+    // 中を塗らない: an outline only, drawn by 線 (turned on with it)
+    const nfRow=FILLABLE(L)?`<div class="sec">${toggle('nofill','中を塗らない')}</div>`:'';
+    if(L.nofill&&FILLABLE(L))return nfRow+'<p class="enote">枠の線だけになります。線の色と太さは「線・影」で変えられます。</p>';
     L.mat??=L.glass?'glass':'color';
     const body=L.mat==='glass'?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+'<p class="enote">下の写真が縁で曲がって見えるガラス。色の濃さ0%で透明、上げると色つきのガラスに。</p>')
       :L.mat==='jelly'?(L.gd??=1,pal('color')+slider('厚み','gd',.3,3,.05)+'<p class="enote">ぷるんとしたゼリー。真ん中ほど色が濃く、縁は透けて下の写真が大きく曲がって見えます。</p>')
       :pal('color')+slider('濃さ','a',0,1,.01);
-    return `<div class="eseg wide" data-set="mat">${(isLine(L)?[['color','色'],['jelly','ゼリー']]:[['color','色'],['glass','ガラス'],['jelly','ゼリー']]).map(([v,l])=>`<button data-v="${v}" class="${L.mat===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
+    return `${nfRow}<div class="eseg wide" data-set="mat">${(isLine(L)||NOGLASS.has(L.kind)?[['color','色'],['jelly','ゼリー']]:[['color','色'],['glass','ガラス'],['jelly','ゼリー']]).map(([v,l])=>`<button data-v="${v}" class="${L.mat===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
   },
-  sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円'],['line','線'],['dots','点線']])}
+  sform:L=>`${groupOf(L.kind).length>1?segs('kind',groupOf(L.kind)):''}
     ${L.kind==='dots'?(L.dstyle??='dot',`<div class="erow"><span class="el">種類</span>${segs('dstyle',[['dot','点'],['dash','線']])}</div>`):''}
     ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
+      :L.kind.startsWith('scribble')?slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.lw??=8,slider('太さ','lw',1,80,.5))
       :L.kind==='circle'?slider('大きさ','w',6,3000,1):slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.kind==='round'?slider('角丸','r',0,100,1):'')}
     ${btns(isLine(L)||L.kind==='circle'?[['fullw','横幅いっぱい'],['center','真ん中へ']]:[['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
-  sdeco:L=>`${isLine(L)?'':`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>`}
+  sdeco:L=>`${isLine(L)||PENNED.has(L.kind)?'':`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>`}
     <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,.5)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`,
   pages:()=>`<div class="pstrip" id="pstrip"></div>
     ${btns([['pleft','← 前へ'],['pright','後ろへ →'],['pdel','このページを外す']])}`,
@@ -884,11 +1002,49 @@ function addImage(photoId,i=0){
   D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // above other photos and shapes, under the texts
   D.sel=L.id;return L;
 }
-function addShape(){
-  const L={id:uid++,type:'shape',kind:'rect',x:D.W/2,y:D.H/2,w:D.W,h:D.H*.2,rot:0,r:40,color:'#ffffff',a:.85,opacity:1,
-    line:{on:false,color:INK,w:4},shadow:{on:false,color:'#28190f',a:.3,x:0,y:2,blur:8}};
+// A shape only changes 形 within its own group, so w and h keep their meaning (a box's height, a pen's width).
+const SHAPES=[[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']],[['line','線'],['dots','点線']],[['notch','吹き出しの下']],
+  [['bubble','丸'],['bubbler','角丸'],['cloud','もくもく'],['spiky','ギザギザ']],[['arrow','まっすぐ'],['arrowc','カーブ'],['arrowl','くるっと']],[['scribble','丸囲み'],['scribble2','ぐりぐり']]];
+const groupOf=k=>SHAPES.find(ks=>ks.some(([v])=>v===k))||SHAPES[0];
+// The 図形 sheet is laid out by look instead: clean ones for bands and backings, hand-drawn ones for decoration.
+const SHEET=[['基本',[['',SHAPES[0].concat(SHAPES[1])]]],['手書き',[['吹き出し',SHAPES[3].concat(SHAPES[2])],['矢印',SHAPES[4]],['囲み',SHAPES[5]]]]];
+const FILLABLE=L=>isShape(L)&&!isLine(L)&&!PENNED.has(L.kind);
+function shapeDefaults(kind){
+  const W=D.W,rim={on:true,color:INK,w:5};
+  return ({rect:{w:W,h:D.H*.2,a:.85},round:{w:W*.8,h:D.H*.2,a:.85},circle:{w:W*.4,h:W*.4,a:.85},ellipse:{w:W*.52,h:W*.35,a:.85},
+    line:{w:W*.7,h:Math.max(2,Math.round(W/120)),a:1},dots:{w:W*.7,h:14,gap:250,dstyle:'dot',a:1},notch:{w:W*.7,h:6,a:1},
+    arrow:{w:W*.4,h:10,a:1},arrowc:{w:W*.42,h:10,a:1},arrowl:{w:W*.46,h:10,a:1},
+    bubble:{w:W*.52,h:W*.4,a:1,line:rim},bubbler:{w:W*.56,h:W*.37,a:1,line:rim},cloud:{w:W*.56,h:W*.39,a:1,line:rim},spiky:{w:W*.54,h:W*.41,a:1,line:rim},
+    scribble:{w:W*.42,h:W*.3,lw:10,a:1},scribble2:{w:W*.4,h:W*.28,lw:8,a:1}})[kind]||{};
+}
+function addShape(kind='rect'){
+  const L={id:uid++,type:'shape',kind,x:D.W/2,y:D.H/2,w:D.W,h:D.H*.2,rot:0,r:40,color:'#ffffff',a:.85,opacity:1,seed:1+Math.floor(Math.random()*1e9),
+    line:{on:false,color:INK,w:4},shadow:{on:false,color:'#28190f',a:.3,x:0,y:2,blur:8},...clone(shapeDefaults(kind))};
   D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // under the texts, so words can sit on it
   D.sel=L.id;return L;
+}
+// 図形 opens a sheet of everything that can be laid on, drawn by the same code that draws them in the picture.
+let shSheet=null;
+function openShapes(){
+  if(!shSheet){
+    shSheet=document.createElement('div');shSheet.className='ssheet shsheet';shSheet.hidden=true;
+    shSheet.innerHTML=`<div class="scrim" data-shclose></div><div class="scard glass shcard"><div class="shhead"><b>図形を置く</b><button class="pill soft" data-shclose>閉じる</button></div>${SHEET.map(([g,subs])=>`<h4 class="shsec">${g}</h4>${subs.map(([sub,ks])=>`${sub?`<h5 class="esub">${sub}</h5>`:''}<div class="shgrid">${ks.map(([k,l])=>`<button data-shk="${k}"><canvas width="112" height="112"></canvas><span>${l}</span></button>`).join('')}</div>`).join('')}`).join('')}</div>`;
+    document.body.appendChild(shSheet);
+    shSheet.addEventListener('click',e=>{
+      if(e.target.closest('[data-shclose]')){shSheet.hidden=true;return}
+      const b=e.target.closest('[data-shk]');if(!b)return;
+      shSheet.hidden=true;addShape(b.dataset.shk);tool='sform';commit();panel();paint();
+    });
+    shSheet.querySelectorAll('[data-shk]').forEach(b=>{
+      const cv2=b.querySelector('canvas'),x=cv2.getContext('2d'),kind=b.dataset.shk;
+      const L={id:7,seed:7,type:'shape',kind,x:0,y:0,rot:0,r:40,opacity:1,color:'#fbf7f2',line:{on:false,color:INK,w:4},shadow:{on:false},...clone(shapeDefaults(kind))};
+      if(PENNED.has(kind)||LINEISH.has(kind))L.color=INK;else{L.line={on:true,color:INK,w:0};L.a=1}
+      L.h=kind==='line'||kind==='dots'?Math.max(L.h,L.w*.05):L.h;if(PENNED.has(kind)&&!kind.startsWith('scribble'))L.h=L.w*.035;if(kind.startsWith('scribble'))L.lw=L.w*.04;
+      const ex=shapeExt(L),k=Math.min(88/ex.w,88/ex.h);if(L.line.on)L.line.w=2.4/k;
+      x.setTransform(k,0,0,k,56,56);drawShape(x,L);
+    });
+  }
+  shSheet.hidden=false;
 }
 async function removeSelected(){
   const L=sel();if(!L)return;
@@ -935,7 +1091,7 @@ $('#ebar').addEventListener('click',e=>{
     case 'done':deselect();return;
     case 'addtext':addLayer(null);commit();panel();refresh();openText(true);return;
     case 'addimg':$('#eimg').click();return;
-    case 'addshape':addShape();tool='sform';commit();panel();paint();return;
+    case 'addshape':openShapes();return;
     case 'design':openDesign();return;
     case 'edit':openText();return;
     case 'swap':$('#eimgswap').click();return;
@@ -1015,10 +1171,11 @@ bodyEl.addEventListener('click',e=>{
   if(t.closest('[data-deco]')){decoSub=t.dataset.v;panel();return}
   if(!L)return;
   if(t.dataset.tg){const k=t.dataset.tg;put(L,k,!get(L,k));
+    if(k==='nofill'&&L.nofill)L.line.on=true;
     if(isText(L)){if((k==='band.glass'||k==='band.line.on')&&get(L,k))L.band.on=true;if(k==='band.on'&&!L.band.on)L.band.glass=L.band.line.on=false}commit();panel();refresh();return}
   const sg=t.closest('[data-set]');if(sg){const v=t.dataset.v;
     // turning a box into a line (or back) gives it a sensible thickness (or height) instead of the old one
-    if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=v==='line'||v==='dots';if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots'){L.gap??=250;L.dstyle??='dot'}if(v==='circle')L.w=L.h=Math.round(Math.min(L.w,L.h))}
+    if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=LINEISH.has(v);if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots'){L.gap??=250;L.dstyle??='dot'}if(v==='circle')L.w=L.h=Math.round(Math.min(L.w,L.h))}
     put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();refresh();return}
   const p=t.closest('.pal');if(p&&t.dataset.c){put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
   if(t.dataset.f!=null){
