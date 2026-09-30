@@ -200,7 +200,7 @@ function drawLayer(c,L,ov){
   }
   if(L.stroke.on){c.strokeStyle=L.stroke.color;glyphs(c,L,f,m,true)}
   if(gm==='glass')glyphPaint(c,L,f,m,GA,'glass');
-  else if(gm==='carve')glyphPaint(c,L,f,m,glyphRead(c,L,m),gm);
+  else if(gm==='carve'||gm==='jelly')glyphPaint(c,L,f,m,glyphRead(c,L,m),gm);
   else{c.fillStyle=rgba(L.color,L.ca??1);glyphs(c,L,f,m,false)}
   c.restore();
   return m;
@@ -273,6 +273,22 @@ function glassPaint(c,A,sd,hx,hy,alpha,tint){
 // and lights the rim: raised glass takes in the outside and shines top-left; a cut takes in the floor and
 // is shaded on its top-left wall.
 let MC=null;
+// For jelly: the distance in from the edge (two-pass chamfer), turned into a round profile across each stroke
+// whose radius is the thickest stroke's half width, then softened. Leaves the height in px in H; returns the radius.
+// Rmax caps it: a shape running past the picture's edge has no edge in view, and its distances would never end.
+function jellyDome(M,H,T,w,h,Rmax){
+  const INF=1e9,D2=Math.SQRT2;
+  for(let i=0;i<w*h;i++)T[i]=M[i]>.5?INF:0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!T[i])continue;let d=T[i];
+    if(x>0)d=Math.min(d,T[i-1]+1);if(y>0){d=Math.min(d,T[i-w]+1);if(x>0)d=Math.min(d,T[i-w-1]+D2);if(x<w-1)d=Math.min(d,T[i-w+1]+D2)}T[i]=d}
+  let R=1;
+  for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){const i=y*w+x;if(!T[i])continue;let d=T[i];
+    if(x<w-1)d=Math.min(d,T[i+1]+1);if(y<h-1){d=Math.min(d,T[i+w]+1);if(x<w-1)d=Math.min(d,T[i+w+1]+D2);if(x>0)d=Math.min(d,T[i+w-1]+D2)}T[i]=d;if(d>R)R=d}
+  R=Math.max(1,Math.min(R,Rmax));
+  for(let i=0;i<w*h;i++){const u=1-Math.min(T[i],R)/R;H[i]=T[i]?R*Math.sqrt(1-u*u):0}
+  boxBlur(H,T,w,h,Math.max(1,Math.round(R*.28))); // wide enough to melt the creases where strokes meet
+  return R;
+}
 function boxBlur(a,t,w,h,r){ // three passes each way; a is the input and result, t scratch
   const n=2*r+1;
   for(let pass=0;pass<3;pass++){
@@ -288,32 +304,61 @@ function glyphRead(c,L,m){
 }
 // Foil in a cut: the same slope lights a metal ramp (dark, mid, light) instead of the picture, with a slow sheen across.
 const FOIL={gold:[[122,88,30],[201,162,74],[250,236,186]],silver:[[88,94,99],[182,188,192],[247,249,250]],rose:[[125,74,68],[210,156,142],[250,224,214]]};
-function glyphPaint(c,L,f,m,A,mode){
+function glyphPaint(c,L,f,m,A,mode){return maskPaint(c,L,A,mode,mc=>{mc.font=fontStr(f,L.size);glyphs(mc,L,f,m,false)})}
+// mask(mc) draws the layer's shape in white on a context already set to the layer's transform
+function maskPaint(c,L,A,mode,mask){
   if(!A)return;
-  const {T,x0,y0,w,h}=A,k=Math.hypot(T.a,T.b),N=w*h;
+  // While something is being dragged the work is done on a half-size grid (st=2) and written in 2×2 blocks.
+  const {T,x0,y0}=A,W=A.w,Hh=A.h,st=glassFast?2:1,w=Math.ceil(W/st),h=Math.ceil(Hh/st),k=Math.hypot(T.a,T.b)/st,N=w*h;
   MC??=document.createElement('canvas');MC.width=w;MC.height=h;
   const mc=MC.getContext('2d',{willReadFrequently:true});
-  mc.setTransform(T.a,T.b,T.c,T.d,T.e-x0,T.f-y0);mc.font=fontStr(f,L.size);mc.fillStyle='#fff';glyphs(mc,L,f,m,false);
+  mc.setTransform(T.a/st,T.b/st,T.c/st,T.d/st,(T.e-x0)/st,(T.f-y0)/st);mc.fillStyle='#fff';mask(mc);
   const md=mc.getImageData(0,0,w,h).data,M=new Float32Array(N),H=new Float32Array(N),tmp=new Float32Array(N);
   for(let i=0;i<N;i++)M[i]=H[i]=md[i*4+3]/255;
+  let R=1;if(mode==='jelly')R=jellyDome(M,H,tmp,w,h,Math.max(2,(isShape(L)?Math.min(L.w,L.h)/2:L.size*.5)*k));
+  const JD=Math.min(R,40*k)*.55; // how far jelly reaches for the picture, held back on big shapes
   const carve=mode==='carve',FC=carve&&FOIL[L.cfoil],foil=!!FC; // the cut's top-left wall is the dark one
+  const JL=[-.45,-.55,.7].map((v,_,A)=>v/Math.hypot(...A)),JH=(()=>{const h=[JL[0],JL[1],JL[2]+1],l=Math.hypot(...h);return h.map(v=>v/l)})();
   const ta=mode==='glass'?L.gta||0:0,n0=parseInt(L.color.slice(1),16),TC=[n0>>16,n0>>8&255,n0&255],TV=[0,0,0];
-  const dp=L.gd??1,r=Math.max(1,Math.round(L.size*k*(carve?.022:.04))); // 深さ steepens the slope (widening the bevel flattened thin strokes)
-  boxBlur(H,tmp,w,h,r);
-  const out=c.getImageData(x0,y0,w,h),o=out.data,b=A.bg.data,sl=2.2*r,shift=carve?-.9*r:2.2*r;
-  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  const jelly=mode==='jelly',dp=L.gd??1,r=Math.max(1,Math.round((L.size||0)*k*(carve?.022:.04))); // 深さ steepens the slope (widening the bevel flattened thin strokes)
+  if(mode!=='jelly')boxBlur(H,tmp,w,h,r);
+  const out=c.getImageData(x0,y0,W,Hh),o=out.data,b=A.bg.data,VV=[0,0,0],sl=2.2*r,shift=carve?-.9*r:2.2*r;
+  const put=(x,y,a)=>{ // one grid cell onto its st×st block of the picture
+    for(let Y=y*st,ye=Math.min(Hh,Y+st);Y<ye;Y++)for(let X=x*st,xe=Math.min(W,X+st);X<xe;X++){const n=(Y*W+X)*4;o[n]+=(VV[0]-o[n])*a;o[n+1]+=(VV[1]-o[n+1])*a;o[n+2]+=(VV[2]-o[n+2])*a}
+  };
+  const toF=v=>(v+.5)*st-.5; // grid position to picture pixel
+  // every cell, the outermost too (a shape running off the picture reaches its edge); neighbours are held inside
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
     const i=y*w+x,cov=M[i];if(!cov)continue;
-    const sx=-(H[i+1]-H[i-1])*sl*dp,sy=-(H[i+w]-H[i-w])*sl*dp; // about -1..1, pointing out of the letter
-    const px=Math.max(0,Math.min(w-1.001,x+sx*shift)),py=Math.max(0,Math.min(h-1.001,y+sy*shift));
-    const ix=px|0,iy=py|0,fx=px-ix,fy=py-iy,p=(iy*w+ix)*4,q=p+w*4;
+    const iL=x?i-1:i,iR=x<w-1?i+1:i,iU=y?i-w:i,iD=y<h-1?i+w:i;
+    const sx=-(H[iR]-H[iL])*sl*dp,sy=-(H[iD]-H[iU])*sl*dp; // about -1..1, pointing out of the letter
+    const px=Math.max(0,Math.min(W-1.001,toF(x+sx*shift))),py=Math.max(0,Math.min(Hh-1.001,toF(y+sy*shift)));
+    const ix=px|0,iy=py|0,fx=px-ix,fy=py-iy,p=(iy*W+ix)*4,q=p+W*4;
     const w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
     const dot=-(sx+sy)*Math.SQRT1_2,d2=Math.min(1,dot*dot); // > 0 where the rim faces the light
+    if(jelly){ // a pillow on every stroke: deeper colour where thick, clear at the rim, a wet highlight, light through bottom-right
+      const gx=Math.max(-3,Math.min(3,(H[iR]-H[iL])/2*dp)),gy=Math.max(-3,Math.min(3,(H[iD]-H[iU])/2*dp));
+      const nl=Math.sqrt(gx*gx+gy*gy+1),Nx=-gx/nl,Ny=-gy/nl,Nz=1/nl,nh=Nx*JH[0]+Ny*JH[1]+Nz*JH[2];
+      const hh=H[i]/R,spec=Math.pow(Math.max(0,nh),26),sheen=Math.pow(Math.max(0,nh),6);
+      const dif=Nx*JL[0]+Ny*JL[1]+Nz*JL[2],gl=Math.sqrt(gx*gx+gy*gy)||1,cst=Math.max(0,-(gx+gy)/gl*Math.SQRT1_2)*Math.pow(1-hh,1.5);
+      const ab=1-Math.exp(-2.6*hh*(.5+.5*dp)),a=cov*L.opacity;
+      const jx=Math.max(0,Math.min(W-1.001,toF(x-gx*JD))),jy=Math.max(0,Math.min(Hh-1.001,toF(y-gy*JD))),jx0=jx|0,jy0=jy|0,fx2=jx-jx0,fy2=jy-jy0,jp=(jy0*W+jx0)*4,jq=jp+W*4;
+      for(let ch=0;ch<3;ch++){
+        let v=(b[jp+ch]*(1-fx2)+b[jp+4+ch]*fx2)*(1-fy2)+(b[jq+ch]*(1-fx2)+b[jq+4+ch]*fx2)*fy2;
+        const tc=TC[ch];
+        v=v*(1-ab+ab*tc/255)+tc*ab*.25;            // colour soaks in with thickness, plus light scattered inside
+        v*=.8+.3*dif;                              // rounded body
+        v+=((tc+(255-tc)*.65)-v)*Math.min(1,cst);  // light through the far side
+        v+=(255-v)*Math.min(1,spec*.95+sheen*.14); // wet highlight
+        VV[ch]=v;
+      }
+      put(x,y,a);continue;
+    }
     if(foil){ // tone 0..1 along the ramp, with a faint grain so it reads as metal rather than paint
       const sh=Math.cos((x+y)/(w+h)*7.2),g=((x*73856093^y*19349663)>>>0)%97/97-.5;
       const t=Math.max(0,Math.min(1,.46+.34*sh-.55*dot+.03*g)),[lo,hi]=t<.5?[FC[0],FC[1]]:[FC[1],FC[2]],u=t<.5?t*2:t*2-1;
-      const a=cov*L.opacity,n=i*4;
-      for(let ch=0;ch<3;ch++){const v=lo[ch]+(hi[ch]-lo[ch])*u;o[n+ch]+=(v-o[n+ch])*a}
-      continue;
+      for(let ch=0;ch<3;ch++)VV[ch]=lo[ch]+(hi[ch]-lo[ch])*u;
+      put(x,y,cov*L.opacity);continue;
     }
     let lit,dark;
     if(ta){ // tinted glass works as a filter: the picture through it takes the colour, the light on the rim stays white
@@ -321,11 +366,11 @@ function glyphPaint(c,L,f,m,A,mode){
     }
     if(carve){lit=dot<0?.6*d2:0;dark=.16+(dot>0?.65*d2:0)}
     else{lit=Math.min(.9,(dot>0?.8:.3)*d2+.05);dark=0}
-    const a=cov*L.opacity,n=i*4;
     for(let ch=0;ch<3;ch++){
       let v=ta?TV[ch]:b[p+ch]*w00+b[p+4+ch]*w10+b[q+ch]*w01+b[q+4+ch]*w11;
-      v=v*(1-dark);v+=(255-v)*lit;o[n+ch]+=(v-o[n+ch])*a;
+      v=v*(1-dark);v+=(255-v)*lit;VV[ch]=v;
     }
+    put(x,y,cov*L.opacity);
   }
   c.putImageData(out,x0,y0);
 }
@@ -421,9 +466,11 @@ function shapePath(c,L){
 function drawShape(c,L){
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
   const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
-  const gl=L.glass&&!isLine(L),hx=L.w/2,hy=L.h/2,A=gl&&glassRead(c,hx,hy);
-  if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,()=>{shapePath(c,L);c.fillStyle=gl?'#fff':rgba(L.color,Math.max(L.a,.01));c.fill()});
+  const mat=isLine(L)?(L.mat==='jelly'?'jelly':'color'):L.mat||(L.glass?'glass':'color'),gl=mat==='glass',jl=mat==='jelly',hx=L.w/2,hy=L.h/2;
+  const A=gl?glassRead(c,hx,hy):jl?glassArea(c,hx+70,hy+70):null;if(jl&&A)A.bg=c.getImageData(A.x0,A.y0,A.w,A.h);
+  if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,()=>{shapePath(c,L);c.fillStyle=gl||jl?'#fff':rgba(L.color,Math.max(L.a,.01));c.fill()});
   if(gl)glassPaint(c,A,L.kind==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]);
+  else if(jl)maskPaint(c,L,A,'jelly',mc=>{shapePath(mc,L);mc.fill()});
   else{shapePath(c,L);c.fillStyle=rgba(L.color,L.a);c.fill()}
   if(L.line.on&&!isLine(L)){c.lineWidth=L.line.w;c.strokeStyle=L.line.color;c.stroke()}
   c.restore();
@@ -764,7 +811,15 @@ const DRAW={
     return `<div class="eseg wide" data-bgtype>${[['photo','写真'],['color','単色'],['grad','グラデーション']].map(([k,l])=>`<button data-v="${k}" class="${bg.type===k?'on':''}">${l}</button>`).join('')}</div>${body}
       <h5 class="esub">比率（全ページ共通）</h5><div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>`;
   },
-  scolor:L=>`${isLine(L)?'':toggle('glass','ガラス')}${L.glass&&!isLine(L)?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+'<p class="enote">下の写真が縁で曲がって見えるガラス。色の濃さ0%で透明、上げると色つきのガラスに。</p>'):pal('color')+slider('濃さ','a',0,1,.01)}`,
+  scolor:L=>{
+    // lines and dots are too thin for glass to show; jelly turns them into a gummy strip or a row of beads
+    if(isLine(L)&&L.mat!=='jelly')L.mat='color';
+    L.mat??=L.glass?'glass':'color';
+    const body=L.mat==='glass'?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+'<p class="enote">下の写真が縁で曲がって見えるガラス。色の濃さ0%で透明、上げると色つきのガラスに。</p>')
+      :L.mat==='jelly'?(L.gd??=1,pal('color')+slider('厚み','gd',.3,3,.05)+'<p class="enote">ぷるんとしたゼリー。真ん中ほど色が濃く、縁は透けて下の写真が大きく曲がって見えます。</p>')
+      :pal('color')+slider('濃さ','a',0,1,.01);
+    return `<div class="eseg wide" data-set="mat">${(isLine(L)?[['color','色'],['jelly','ゼリー']]:[['color','色'],['glass','ガラス'],['jelly','ゼリー']]).map(([v,l])=>`<button data-v="${v}" class="${L.mat===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
+  },
   sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['ellipse','丸・だ円'],['line','線'],['dots','点線']])}
     ${L.kind==='dots'?(L.dstyle??='dot',`<div class="erow"><span class="el">種類</span>${segs('dstyle',[['dot','点'],['dash','線']])}</div>`):''}
     ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
@@ -784,10 +839,11 @@ const DRAW={
   // How the letters are filled: a colour (濃さ is the fill alone; レイヤー's 透明度 fades everything), glass, or a cut
   color:L=>{
     L.ca??=1;L.glyph??='none';
-    const body=L.glyph==='glass'?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+(L.gd??=1,slider('深さ','gd',.3,3,.05))+'<p class="enote">文字そのものがガラスになり、下の写真が曲がって見えます。色の濃さ0%で透明、上げると色つきのガラスに。</p>')
+    const body=L.glyph==='jelly'?(L.gd??=1,pal('color')+slider('厚み','gd',.3,3,.05)+'<p class="enote">ぷるんとしたゼリーの文字。真ん中ほど色が濃く、縁は透けて下の写真が大きく曲がって見えます。</p>')
+      :L.glyph==='glass'?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+(L.gd??=1,slider('深さ','gd',.3,3,.05))+'<p class="enote">文字そのものがガラスになり、下の写真が曲がって見えます。色の濃さ0%で透明、上げると色つきのガラスに。</p>')
       :L.glyph==='carve'?(L.cfoil??='none',`<div class="erow"><span class="el">箔</span>${segs('cfoil',[['none','なし'],['gold','金'],['silver','銀'],['rose','ローズ']])}</div>${(L.gd??=1,slider('深さ','gd',.3,3,.05))}<p class="enote">文字の形に彫ったように見せます。ガラスの枠と合わせるとガラスに彫った文字に、箔を選ぶと溝に箔を押したように。</p>`)
       :pal('color')+slider('濃さ','ca',0,1,.01);
-    return `<div class="eseg wide" data-set="glyph">${[['none','色'],['glass','ガラス'],['carve','彫り込み']].map(([v,l])=>`<button data-v="${v}" class="${L.glyph===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
+    return `<div class="eseg wide" data-set="glyph">${[['none','色'],['glass','ガラス'],['carve','彫り込み'],['jelly','ゼリー']].map(([v,l])=>`<button data-v="${v}" class="${L.glyph===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
   },
   deco:L=>{
     if(!isText(L))return `<div class="sec">${toggle('border.on','フチ')}${L.border.on?pal('border.color')+slider('太さ','border.w',.5,10,.5):''}</div>
