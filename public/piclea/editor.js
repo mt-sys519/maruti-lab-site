@@ -298,7 +298,8 @@ function glyphPaint(c,L,f,m,A,mode){
   for(let i=0;i<N;i++)M[i]=H[i]=md[i*4+3]/255;
   const carve=mode==='carve',FC=carve&&FOIL[L.cfoil],foil=!!FC; // the cut's top-left wall is the dark one
   const ta=mode==='glass'?L.gta||0:0,n0=parseInt(L.color.slice(1),16),TC=[n0>>16,n0>>8&255,n0&255],TV=[0,0,0];
-  const dp=L.gd??1,r=Math.max(1,Math.round(L.size*k*(carve?.022:.04))); // 深さ steepens the slope (widening the bevel flattened thin strokes)boxBlur(H,tmp,w,h,r);
+  const dp=L.gd??1,r=Math.max(1,Math.round(L.size*k*(carve?.022:.04))); // 深さ steepens the slope (widening the bevel flattened thin strokes)
+  boxBlur(H,tmp,w,h,r);
   const out=c.getImageData(x0,y0,w,h),o=out.data,b=A.bg.data,sl=2.2*r,shift=carve?-.9*r:2.2*r;
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
     const i=y*w+x,cov=M[i];if(!cov)continue;
