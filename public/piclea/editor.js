@@ -178,7 +178,7 @@ function drawLayer(c,L,ov){
     c.save();
     if(L.band.glass){
       const sh=L.band.shape||'rect',f=frameSize(L,m),hx=f.w/2,hy=f.h/2;
-      glassPaint(c,glassRead(c,hx,hy),sh==='circle'||sh==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,sh==='pill'?Math.min(hx,hy):Math.min(L.size*L.band.r/100,hx,hy)),hx,hy,L.opacity);
+      glassPaint(c,glassRead(c,hx,hy),sh==='circle'||sh==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,sh==='pill'?Math.min(hx,hy):Math.min(L.size*L.band.r/100,hx,hy)),hx,hy,L.opacity,[L.band.color,L.band.gta]);
       framePath(c,L,m);
     }
     else{framePath(c,L,m);c.globalAlpha=L.opacity*L.band.a;c.fillStyle=L.band.color;c.fill()}
@@ -199,8 +199,8 @@ function drawLayer(c,L,ov){
     c.restore();
   }
   if(L.stroke.on){c.strokeStyle=L.stroke.color;glyphs(c,L,f,m,true)}
-  if(gm==='glass')glyphPaint(c,L,f,m,GA,false);
-  else if(gm==='carve')glyphPaint(c,L,f,m,glyphRead(c,L,m),true);
+  if(gm==='glass')glyphPaint(c,L,f,m,GA,'glass');
+  else if(gm==='carve')glyphPaint(c,L,f,m,glyphRead(c,L,m),gm);
   else{c.fillStyle=rgba(L.color,L.ca??1);glyphs(c,L,f,m,false)}
   c.restore();
   return m;
@@ -241,8 +241,10 @@ function glassRead(c,hx,hy){ // the picture under the glass, before its shadow f
   A.src={x:sx,y:sy,w:Math.min(cw,A.x0+A.w+m)-sx,h:Math.min(ch,A.y0+A.h+m)-sy};
   A.bg=c.getImageData(sx,sy,A.src.w,A.src.h);return A;
 }
-function glassPaint(c,A,sd,hx,hy,alpha){
+// tint: [hex, amount] — the picture through the glass takes the colour like a filter; the light stays white.
+function glassPaint(c,A,sd,hx,hy,alpha,tint){
   if(!A)return;
+  const ta=tint?.[1]||0,tn=ta&&parseInt(tint[0].slice(1),16),f0=1-ta,fr=f0+ta*(tn>>16)/255,fg=f0+ta*(tn>>8&255)/255,fb=f0+ta*(tn&255)/255;
   const {T,x0,y0,w,h,src}=A,k=Math.hypot(T.a,T.b),I=T.inverse(),
     Ta=T.a,Tb=T.b,Tc=T.c,Td=T.d,Te=T.e,Tf=T.f,Ia=I.a,Ib=I.b,Ic=I.c,Id=I.d,Ie=I.e,If=I.f,sx0=src.x+.5,sy0=src.y+.5,bev=Math.min(hx,hy)*.5,mag=.035;
   const out=c.getImageData(x0,y0,w,h),o=out.data,b=A.bg.data,bw=src.w,bh=src.h;
@@ -261,7 +263,7 @@ function glassPaint(c,A,sd,hx,hy,alpha){
     const lit=Math.min(.9,(dot>0?.75*dot*dot:.3*dot*dot)*e2*e+rim*(dot>0?.55:.28)+.04);
     const a=cov*alpha,w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
     const r=b[p]*w00+b[p+4]*w10+b[q]*w01+b[q+4]*w11,g=b[p+1]*w00+b[p+5]*w10+b[q+1]*w01+b[q+5]*w11,bl=b[p+2]*w00+b[p+6]*w10+b[q+2]*w01+b[q+6]*w11;
-    const R=r+(255-r)*lit,Gn=g+(255-g)*lit,B=bl+(255-bl)*lit;
+    const rt=ta?r*fr:r,gt=ta?g*fg:g,bt=ta?bl*fb:bl,R=rt+(255-rt)*lit,Gn=gt+(255-gt)*lit,B=bt+(255-bt)*lit;
     for(let jj=j,je=Math.min(h,j+st);jj<je;jj++)for(let ii=i,ie=Math.min(w,i+st);ii<ie;ii++){const n=(jj*w+ii)*4;o[n]+=(R-o[n])*a;o[n+1]+=(Gn-o[n+1])*a;o[n+2]+=(B-o[n+2])*a}
   }
   c.putImageData(out,x0,y0);
@@ -284,7 +286,9 @@ function glyphRead(c,L,m){
   const pad=L.size*.2,A=glassArea(c,m.W/2+pad,m.H/2+pad);if(!A)return null;
   A.bg=c.getImageData(A.x0,A.y0,A.w,A.h);return A;
 }
-function glyphPaint(c,L,f,m,A,carve){
+// Foil in a cut: the same slope lights a metal ramp (dark, mid, light) instead of the picture, with a slow sheen across.
+const FOIL={gold:[[122,88,30],[201,162,74],[250,236,186]],silver:[[88,94,99],[182,188,192],[247,249,250]],rose:[[125,74,68],[210,156,142],[250,224,214]]};
+function glyphPaint(c,L,f,m,A,mode){
   if(!A)return;
   const {T,x0,y0,w,h}=A,k=Math.hypot(T.a,T.b),N=w*h;
   MC??=document.createElement('canvas');MC.width=w;MC.height=h;
@@ -292,21 +296,33 @@ function glyphPaint(c,L,f,m,A,carve){
   mc.setTransform(T.a,T.b,T.c,T.d,T.e-x0,T.f-y0);mc.font=fontStr(f,L.size);mc.fillStyle='#fff';glyphs(mc,L,f,m,false);
   const md=mc.getImageData(0,0,w,h).data,M=new Float32Array(N),H=new Float32Array(N),tmp=new Float32Array(N);
   for(let i=0;i<N;i++)M[i]=H[i]=md[i*4+3]/255;
-  const r=Math.max(1,Math.round(L.size*k*(carve?.022:.04)));boxBlur(H,tmp,w,h,r);
+  const carve=mode==='carve',FC=carve&&FOIL[L.cfoil],foil=!!FC; // the cut's top-left wall is the dark one
+  const ta=mode==='glass'?L.gta||0:0,n0=parseInt(L.color.slice(1),16),TC=[n0>>16,n0>>8&255,n0&255],TV=[0,0,0];
+  const dp=L.gd??1,r=Math.max(1,Math.round(L.size*k*(carve?.022:.04))); // 深さ steepens the slope (widening the bevel flattened thin strokes)boxBlur(H,tmp,w,h,r);
   const out=c.getImageData(x0,y0,w,h),o=out.data,b=A.bg.data,sl=2.2*r,shift=carve?-.9*r:2.2*r;
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
     const i=y*w+x,cov=M[i];if(!cov)continue;
-    const sx=-(H[i+1]-H[i-1])*sl,sy=-(H[i+w]-H[i-w])*sl; // about -1..1, pointing out of the letter
+    const sx=-(H[i+1]-H[i-1])*sl*dp,sy=-(H[i+w]-H[i-w])*sl*dp; // about -1..1, pointing out of the letter
     const px=Math.max(0,Math.min(w-1.001,x+sx*shift)),py=Math.max(0,Math.min(h-1.001,y+sy*shift));
     const ix=px|0,iy=py|0,fx=px-ix,fy=py-iy,p=(iy*w+ix)*4,q=p+w*4;
     const w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
     const dot=-(sx+sy)*Math.SQRT1_2,d2=Math.min(1,dot*dot); // > 0 where the rim faces the light
+    if(foil){ // tone 0..1 along the ramp, with a faint grain so it reads as metal rather than paint
+      const sh=Math.cos((x+y)/(w+h)*7.2),g=((x*73856093^y*19349663)>>>0)%97/97-.5;
+      const t=Math.max(0,Math.min(1,.46+.34*sh-.55*dot+.03*g)),[lo,hi]=t<.5?[FC[0],FC[1]]:[FC[1],FC[2]],u=t<.5?t*2:t*2-1;
+      const a=cov*L.opacity,n=i*4;
+      for(let ch=0;ch<3;ch++){const v=lo[ch]+(hi[ch]-lo[ch])*u;o[n+ch]+=(v-o[n+ch])*a}
+      continue;
+    }
     let lit,dark;
+    if(ta){ // tinted glass works as a filter: the picture through it takes the colour, the light on the rim stays white
+      for(let ch=0;ch<3;ch++){const v=b[p+ch]*w00+b[p+4+ch]*w10+b[q+ch]*w01+b[q+4+ch]*w11;TV[ch]=v*(1-ta+ta*TC[ch]/255)}
+    }
     if(carve){lit=dot<0?.6*d2:0;dark=.16+(dot>0?.65*d2:0)}
     else{lit=Math.min(.9,(dot>0?.8:.3)*d2+.05);dark=0}
     const a=cov*L.opacity,n=i*4;
     for(let ch=0;ch<3;ch++){
-      let v=b[p+ch]*w00+b[p+4+ch]*w10+b[q+ch]*w01+b[q+4+ch]*w11;
+      let v=ta?TV[ch]:b[p+ch]*w00+b[p+4+ch]*w10+b[q+ch]*w01+b[q+4+ch]*w11;
       v=v*(1-dark);v+=(255-v)*lit;o[n+ch]+=(v-o[n+ch])*a;
     }
   }
@@ -406,7 +422,7 @@ function drawShape(c,L){
   const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
   const gl=L.glass&&!isLine(L),hx=L.w/2,hy=L.h/2,A=gl&&glassRead(c,hx,hy);
   if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,()=>{shapePath(c,L);c.fillStyle=gl?'#fff':rgba(L.color,Math.max(L.a,.01));c.fill()});
-  if(gl)glassPaint(c,A,L.kind==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity);
+  if(gl)glassPaint(c,A,L.kind==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]);
   else{shapePath(c,L);c.fillStyle=rgba(L.color,L.a);c.fill()}
   if(L.line.on&&!isLine(L)){c.lineWidth=L.line.w;c.strokeStyle=L.line.color;c.stroke()}
   c.restore();
@@ -697,7 +713,7 @@ const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
 const pct=v=>Math.round(v*100)+'%';
 const f2=v=>(+v).toFixed(2);
-const FMT={gap:v=>Math.round(v)+'%',zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,ca:pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
+const FMT={gap:v=>Math.round(v)+'%',zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,ca:pct,gta:pct,'band.gta':pct,gd:pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
 const fmt=k=>FMT[k]||(v=>Math.round(v));
 // Sizes and spacing can also be typed: the number beside the slider is a field (tap it, type, done).
 const NUM=new Set(['size','ls','lh','w','h']);
@@ -747,7 +763,7 @@ const DRAW={
     return `<div class="eseg wide" data-bgtype>${[['photo','写真'],['color','単色'],['grad','グラデーション']].map(([k,l])=>`<button data-v="${k}" class="${bg.type===k?'on':''}">${l}</button>`).join('')}</div>${body}
       <h5 class="esub">比率（全ページ共通）</h5><div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>`;
   },
-  scolor:L=>`${isLine(L)?'':toggle('glass','ガラス')}${L.glass&&!isLine(L)?'<p class="enote">色をつけない透明なガラス。下の写真が縁で曲がって見えます。</p>':pal('color')+slider('濃さ','a',0,1,.01)}`,
+  scolor:L=>`${isLine(L)?'':toggle('glass','ガラス')}${L.glass&&!isLine(L)?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+'<p class="enote">下の写真が縁で曲がって見えるガラス。色の濃さ0%で透明、上げると色つきのガラスに。</p>'):pal('color')+slider('濃さ','a',0,1,.01)}`,
   sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['ellipse','丸・だ円'],['line','線'],['dots','点線']])}
     ${L.kind==='dots'?(L.dstyle??='dot',`<div class="erow"><span class="el">種類</span>${segs('dstyle',[['dot','点'],['dash','線']])}</div>`):''}
     ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
@@ -764,17 +780,24 @@ const DRAW={
       <p class="enote fnone" hidden>見つかりませんでした</p>
       <div class="fontrow">${list.map((f,i)=>`<button class="fbtn${f[1]===L.fam?' on':''}" data-f="${i}"><span style='font-family:${f[1]},sans-serif;font-weight:${f[4]}'>${f[0]}</span></button>`).join('')}</div>${weightRow(L)}`;
   },
-  color:L=>(L.ca??=1,pal('color')+slider('濃さ','ca',0,1,.01)), // 濃さ is the letters' fill alone; レイヤー's 透明度 fades everything
+  // How the letters are filled: a colour (濃さ is the fill alone; レイヤー's 透明度 fades everything), glass, or a cut
+  color:L=>{
+    L.ca??=1;L.glyph??='none';
+    const body=L.glyph==='glass'?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+(L.gd??=1,slider('深さ','gd',.3,3,.05))+'<p class="enote">文字そのものがガラスになり、下の写真が曲がって見えます。色の濃さ0%で透明、上げると色つきのガラスに。</p>')
+      :L.glyph==='carve'?(L.cfoil??='none',`<div class="erow"><span class="el">箔</span>${segs('cfoil',[['none','なし'],['gold','金'],['silver','銀'],['rose','ローズ']])}</div>${(L.gd??=1,slider('深さ','gd',.3,3,.05))}<p class="enote">文字の形に彫ったように見せます。ガラスの枠と合わせるとガラスに彫った文字に、箔を選ぶと溝に箔を押したように。</p>`)
+      :pal('color')+slider('濃さ','ca',0,1,.01);
+    return `<div class="eseg wide" data-set="glyph">${[['none','色'],['glass','ガラス'],['carve','彫り込み']].map(([v,l])=>`<button data-v="${v}" class="${L.glyph===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
+  },
   deco:L=>{
     if(!isText(L))return `<div class="sec">${toggle('border.on','フチ')}${L.border.on?pal('border.color')+slider('太さ','border.w',.5,10,.5):''}</div>
       <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,1)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`;
     const sub={stroke:`<div class="sec">${toggle('stroke.on','縁取り')}${L.stroke.on?pal('stroke.color')+slider('太さ','stroke.w',1,30,.5):''}</div>`,
       shadow:`<div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,100,1)+slider('横','shadow.x',-30,30,1)+slider('縦','shadow.y',-30,30,1):''}</div>`,
-      band:`<div class="sec">${toggle('band.on','枠')}${L.band.on?segs('band.shape',[['rect','四角'],['pill','カプセル'],['circle','丸'],['ellipse','だ円']])+`<div class="subsec">${toggle('band.glass','ガラス')}</div>`+(L.band.glass?'':pal('band.color')+slider('濃さ','band.a',0,1,.01))+slider('余白','band.pad',0,120,1)+(L.band.shape==='rect'?slider('角丸','band.r',0,100,1):'')+
-        `<div class="subsec">${toggle('band.line.on','枠の線')}${L.band.line.on?pal('band.line.color')+slider('太さ','band.line.w',.5,15,.5):''}</div>`:''}</div>`,
-      glyph:`<div class="sec">${segs('glyph',[['none','なし'],['carve','彫り込み'],['glass','文字がガラス']])}<p class="enote">${L.glyph==='carve'?'文字の形に掘ったように見せます。ガラスの枠と合わせると、ガラスに彫った文字に。':L.glyph==='glass'?'文字そのものが透明なガラスになり、下の写真が曲がって見えます。':'文字をガラスにしたり、写真やガラスの枠に彫り込んだりできます。'}</p></div>`};
-    L.glyph??='none';const on=k=>({stroke:L.stroke.on,shadow:L.shadow.on,band:L.band.on,glyph:L.glyph!=='none'})[k];
-    return `<div class="eseg wide" data-deco>${[['stroke','縁取り'],['shadow','影'],['band','枠'],['glyph','ガラス']].map(([k,l])=>`<button data-v="${k}" class="${decoSub===k?'on':''}">${l}${on(k)?' <i class="lit"></i>':''}</button>`).join('')}</div>${sub[decoSub]}`;
+      // 枠, its glass and its line are all in sight from the start; any of them turns the frame on
+      band:`<div class="sec"><div class="tgrow">${toggle('band.on','枠')}${toggle('band.glass','ガラス')}${toggle('band.line.on','枠の線')}</div>${L.band.on?segs('band.shape',[['rect','四角'],['pill','カプセル'],['circle','丸'],['ellipse','だ円']])+(L.band.glass?(L.band.gta??=0,pal('band.color')+slider('色の濃さ','band.gta',0,1,.01)):pal('band.color')+slider('濃さ','band.a',0,1,.01))+slider('余白','band.pad',0,120,1)+(L.band.shape==='rect'?slider('角丸','band.r',0,100,1):'')+
+        (L.band.line.on?`<h5 class="esub">枠の線</h5>${pal('band.line.color')+slider('太さ','band.line.w',.5,15,.5)}`:''):''}</div>`};
+    const on=k=>({stroke:L.stroke.on,shadow:L.shadow.on,band:L.band.on})[k];
+    return `<div class="eseg wide" data-deco>${[['stroke','縁取り'],['shadow','影'],['band','枠']].map(([k,l])=>`<button data-v="${k}" class="${decoSub===k?'on':''}">${l}${on(k)?' <i class="lit"></i>':''}</button>`).join('')}</div>${sub[decoSub]}`;
   },
   layout:L=>`<div class="erow">${segs('align',[['left','左'],['center','中'],['right','右']])}${segs('vertical',[[false,'横書き'],[true,'縦書き']])}</div>
     ${slider('大きさ','size',12,600,1)}${slider('折り返し','wrap',0,1,.01)}${slider('文字間','ls',-10,80,1)}${slider('行間','lh',.8,2.6,.01)}${posBlock(L)}`,
@@ -930,7 +953,8 @@ bodyEl.addEventListener('click',e=>{
   if(t.closest('[data-lang]')){fontLang=t.dataset.v;panel();return}
   if(t.closest('[data-deco]')){decoSub=t.dataset.v;panel();return}
   if(!L)return;
-  if(t.dataset.tg){const k=t.dataset.tg;put(L,k,!get(L,k));commit();panel();refresh();return}
+  if(t.dataset.tg){const k=t.dataset.tg;put(L,k,!get(L,k));
+    if(isText(L)){if((k==='band.glass'||k==='band.line.on')&&get(L,k))L.band.on=true;if(k==='band.on'&&!L.band.on)L.band.glass=L.band.line.on=false}commit();panel();refresh();return}
   const sg=t.closest('[data-set]');if(sg){const v=t.dataset.v;
     // turning a box into a line (or back) gives it a sensible thickness (or height) instead of the old one
     if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=v==='line'||v==='dots';if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots'){L.gap??=250;L.dstyle??='dot'}}
