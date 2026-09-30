@@ -285,6 +285,11 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .mythumb{width:40px;height:50px;object-fit:cover;border-radius:6px;flex:none;box-shadow:0 1px 4px rgba(110,84,70,.18)}
 .mytxt small{font-size:11px;color:var(--mocha)}
 .wgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wlast{margin:12px 2px 0;font-size:12.5px;line-height:1.7}
+.wlast.due{color:#9a5f52}
+.bguide{background:rgba(255,255,255,.6);border-radius:14px;padding:10px 12px 4px;margin:0 0 12px;font-size:12px;line-height:1.7;color:var(--mocha)}
+.bguide p{margin:0 0 8px}.bguide b{color:var(--ink);margin-right:4px}
+.bguide svg{display:block;width:100%;height:auto;margin:0 0 8px}
 .wcard{position:relative;display:flex;flex-direction:column;gap:3px;text-align:left;cursor:pointer;min-width:0}
 .wcard img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:10px;box-shadow:0 3px 10px rgba(110,84,70,.14)}
 .wcard b{font-size:11.5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -622,8 +627,27 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <div class="eseg wide wtabs" id="wtabs"><button data-w="works" class="on">つくったもの</button><button data-w="tpl">型から作る</button></div>
     <div id="wworks">
       <div class="wgrid" id="wgrid"></div>
+      <p class="wlast" id="wlast" hidden></p>
       <div class="dgrid" style="margin-top:12px"><button class="eb dark wide" id="wall">全部まとめてバックアップ</button><button class="eb wide" data-wimport>バックアップのファイルから戻す</button></div>
       <p class="enote" data-os="wall"></p>
+      <div class="bguide" id="bguide" hidden>
+        <p><b>はじめてのときは</b>「全部まとめてバックアップ」を2回押すと出る画面で、この順に選びます。</p>
+        <svg viewBox="0 0 348 150" role="img" aria-label="1「ファイルに保存」、2「iCloud Drive」、3 右上の「保存」">
+          <g font-size="9" font-family="-apple-system,'Hiragino Sans',sans-serif" fill="#4b3f3a">
+            <g><rect x="4" y="4" width="104" height="118" rx="12" fill="#fff"/><rect x="12" y="16" width="88" height="20" rx="6" fill="#f1ebe6"/><text x="20" y="29.5">コピー</text>
+              <rect x="12" y="42" width="88" height="24" rx="6" fill="#c49a90"/><text x="56" y="57.5" fill="#fff" font-weight="600" text-anchor="middle">“ファイル”に保存</text>
+              <rect x="12" y="72" width="88" height="20" rx="6" fill="#f1ebe6"/><rect x="12" y="98" width="88" height="16" rx="6" fill="#f1ebe6"/></g>
+            <g transform="translate(118 0)"><rect x="4" y="4" width="104" height="118" rx="12" fill="#fff"/><text x="12" y="22" fill="#8b7a6f">場所</text>
+              <rect x="12" y="30" width="88" height="24" rx="6" fill="#c49a90"/><path d="M18 38h6l1.5 1.5h6.5v7.5H18z" fill="#fff"/><text x="36" y="45.5" fill="#fff" font-weight="600">iCloud Drive</text>
+              <rect x="12" y="60" width="88" height="20" rx="6" fill="#f1ebe6"/><text x="20" y="73.5">このiPhone内</text></g>
+            <g transform="translate(236 0)"><rect x="4" y="4" width="104" height="118" rx="12" fill="#fff"/><text x="12" y="22" fill="#8b7a6f">キャンセル</text>
+              <rect x="68" y="10" width="34" height="18" rx="9" fill="#c49a90"/><text x="85" y="22.5" fill="#fff" font-weight="600" text-anchor="middle">保存</text>
+              <rect x="12" y="36" width="88" height="20" rx="6" fill="#f1ebe6"/><rect x="12" y="62" width="88" height="20" rx="6" fill="#f1ebe6"/><rect x="12" y="88" width="88" height="20" rx="6" fill="#f1ebe6"/></g>
+            <g font-size="10.5" font-weight="600" text-anchor="middle"><text x="56" y="142">①「ファイル」に保存</text><text x="174" y="142">② iCloud Drive</text><text x="292" y="142">③ 右上の「保存」</text></g>
+          </g>
+        </svg>
+        <p>戻すときは「バックアップのファイルから戻す」→「ブラウズ」→ iCloud Drive で、保存したファイルを選びます。</p>
+      </div>
     </div>
     <div id="wtpl" hidden>
       <p class="enote">型をえらんで写真を選ぶと、1枚目から順に写真枠にはまります（ページごとに背景→重ねた枠の順）。型より写真が多いときは、最後のページの型で続きます。</p>
@@ -929,8 +953,19 @@ async function openWorks(){
       <button class="wx" data-wdel="${w.id}" aria-label="消す">×</button>
     </div>`).join('');
   $('#whome').hidden=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  backupLine(ws);
   $('#wsheet').hidden=false;
 }
+// When the everything-backup last went out, and how many works were made or changed since.
+function backupLine(ws){
+  const lb=app.lastBackup(),el=$('#wlast');
+  $('#bguide').hidden=app.os!=='ios'||!!lb;
+  el.hidden=!ws.length;if(!ws.length)return;
+  const n=lb?ws.filter(w=>w.updated>lb.at).length:ws.length,cnt=n<10?`${n}つ`:`${n}個`;
+  el.textContent=!lb?'まだバックアップしていません。':`前回のバックアップ：${new Date(lb.at).toLocaleDateString('ja-JP',{month:'long',day:'numeric'})}`+(n?`　そのあと作った・直した作品が${cnt}あります`:'　そのあと変わった作品はありません');
+  el.classList.toggle('due',n>0);
+}
+app.on('backedup',async()=>backupLine(await app.listWorks().catch(()=>[])));
 async function refreshWorksCta(){$('#worksTop').hidden=!(await app.listWorks().catch(()=>[])).length}
 $('#worksTop').onclick=openWorks;
 /* header menu (phones) and the 特長 link: glide down to the section instead of jumping */

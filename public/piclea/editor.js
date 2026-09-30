@@ -1203,28 +1203,33 @@ async function importWork(data){
 }
 // The first tap makes the file; the second, a fresh gesture, hands it over (iOS only opens the share sheet then).
 // Elsewhere one tap makes it and downloads it.
-function exportButton(b,make){
-  const label=b.textContent;let file=null;
+// done(madeAt) runs once the file has really gone out (on iOS, only when the share sheet was not cancelled).
+function exportButton(b,make,done){
+  const label=b.textContent;let file=null,madeAt=0;
   b.onclick=async()=>{
     if(OS!=='ios'){
       b.disabled=true;b.textContent='準備しています…';
-      try{download([await make()]);toast(OS==='android'?'「ダウンロード」に保存しました':'ダウンロードフォルダに保存しました')}
+      try{const f=await make();madeAt=Date.now();download([f]);done?.(madeAt);toast(OS==='android'?'「ダウンロード」に保存しました':'ダウンロードフォルダに保存しました')}
       catch{toast('書き出せませんでした')}
       finally{b.disabled=false;b.textContent=label}
       return;
     }
     if(file){
-      if(navigator.canShare?.({files:[file]}))navigator.share({files:[file]}).catch(()=>{});
-      else{const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.click()}
+      const at=madeAt;
+      if(navigator.canShare?.({files:[file]}))navigator.share({files:[file]}).then(()=>done?.(at)).catch(()=>{});
+      else{const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.click();done?.(at)}
       file=null;b.textContent=label;return;
     }
     b.disabled=true;b.textContent='準備しています…';
-    try{file=await make();b.textContent='「ファイル」に保存する（もう一度タップ）'}
+    try{file=await make();madeAt=Date.now();b.textContent='「ファイル」に保存する（もう一度タップ）'}
     catch{b.textContent=label;toast('書き出せませんでした')}
     finally{b.disabled=false}
   };
 }
-exportButton($('#wexport'),backupFile);exportButton($('#texport'),designsFile);exportButton($('#wall'),backupAll);
+exportButton($('#wexport'),backupFile);exportButton($('#texport'),designsFile);
+// The everything-backup remembers when it last went out, so 「つくったもの」 can say what has changed since.
+exportButton($('#wall'),backupAll,at=>{store.set('piclea.lastBackup',{at});emit('backedup')});
+const lastBackup=()=>store.get('piclea.lastBackup',null);
 on('saved',()=>{const t=$('#esaved');if(!t)return;t.textContent='保存しました';t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1600)});
 
 /* ---------- open / close / save ---------- */
@@ -1283,5 +1288,5 @@ document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet')
 addEventListener('resize',()=>paint());
 
 Object.assign(window.PICLEA,{app:{os:OS,D,INK,SHADOW,newLayer,addLayer,removeLayer,setFont,draw,ensureFonts,hitLayer,snapMove,setPhoto,commit,openEditor,on,
-  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,backupAll,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
+  hasPhoto:()=>!!cur(),hasGlyph,ask,toast,addPhotos,isText,isImg,PALETTE,switchPage,pageCount:()=>P.pages.length,pageIndex:()=>P.cur,listWorks,openWork,deleteWork,newWork,importFile,backupFile,backupAll,lastBackup,sel,GRADS,listDesigns,getDesign,deleteDesign,fromTemplate,tplMeta}});
 })();
