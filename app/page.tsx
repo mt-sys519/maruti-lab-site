@@ -13,7 +13,7 @@ const works = [
   {
     name: "PICLEA",
     label: "PHOTO LETTERING",
-    copy: "自分の写真の上で、208書体を仕上がりのまま見比べて選べる文字入れツール。写真は端末の外へ出ません。",
+    copy: "自分の写真の上で、200以上の書体を仕上がりのまま見比べて選べる文字入れツール。写真は端末の外へ出ません。",
     image: "/piclea/og.png",
     href: "/piclea/",
     action: "使ってみる",
