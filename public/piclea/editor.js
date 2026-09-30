@@ -39,7 +39,9 @@ const isLine=L=>isShape(L)&&(L.kind==='line'||L.kind==='dots');
 const bgOf=pg=>pg.bg||{type:'photo'},photoBg=pg=>bgOf(pg).type==='photo';
 function syncCur(){P.pages[P.cur]=clone(D)}
 function loadInto(pg){for(const k of Object.keys(D))delete D[k];Object.assign(D,clone(pg))}
-function withPage(pg,fn){const keep=clone(D);loadInto(pg);try{return fn()}finally{loadInto(keep)}}
+// Another page drawn in D's place for a moment. D gets its own objects back, not copies: anything still holding a
+// layer (a delete waiting on its confirm, a photo being picked) must find the same object afterwards.
+function withPage(pg,fn){const keep={...D};loadInto(pg);try{return fn()}finally{for(const k of Object.keys(D))delete D[k];Object.assign(D,keep)}}
 function goPage(i){syncCur();P.cur=i;loadInto(P.pages[i])}
 const face=(L,ov)=>ov&&ov.id===L.id?{fam:ov.font[1],w:ov.font[4]}:{fam:L.fam,w:L.w};
 const fontStr=(f,size)=>`${f.w} ${size}px ${f.fam}, sans-serif`;
@@ -633,7 +635,8 @@ const SZ=L=>isText(L)?'size':'w';
 const clampSz=(L,v)=>isText(L)?Math.max(12,Math.min(900,v)):Math.max(isShape(L)?6:40,Math.min(3000,v));
 // Grow or shrink by a ratio from where the gesture began; a shape keeps its proportions.
 function scaleBy(L,g,r){L[SZ(L)]=clampSz(L,g.size*r);if(isShape(L))L.h=Math.max(6,g.h*L.w/g.size)}
-function snapAngle(a){const d=Math.round(a/(Math.PI/2))*(Math.PI/2);return Math.abs(a-d)<.05?d:a}
+// Level and upright pull the angle in; two fingers wobble more than the rotate handle, so they get a wider catch.
+function snapAngle(a,tol=.05){const d=Math.round(a/(Math.PI/2))*(Math.PI/2);return Math.abs(a-d)<tol?d:a}
 function deselect(){D.sel=null;tool=null;panel();paint()}
 
 cv.addEventListener('pointerdown',e=>{
@@ -659,7 +662,7 @@ cv.addEventListener('pointermove',e=>{
   const g=G.g;if(!G.ptrs.has(e.pointerId)||!g)return;const p=pt(e);G.ptrs.set(e.pointerId,p);const L=sel();
   if(g.mode==='pan'){D.photo.ox=g.ox+p.x-g.p.x;D.photo.oy=g.oy+p.y-g.p.y}
   else if(g.mode==='pzoom'&&G.ptrs.size===2){D.photo.s=Math.max(1,Math.min(4,g.s*two().d/g.t.d))}
-  else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=g.rot+t.a-g.t.a}
+  else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=snapAngle(g.rot+t.a-g.t.a,.1)}
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
@@ -945,7 +948,7 @@ function addLayer(from){
     shadow:clone(base.shadow||{...SHADOW,on:false}),size:(base.size||96)*.6,vertical:!!base.vertical,y:D.H*[.5,.8,.2,.65,.35][D.layers.length%5]});
   D.layers.push(n);D.sel=n.id;return n;
 }
-function removeLayer(L){D.layers=D.layers.filter(x=>x!==L);if(D.sel===L.id)D.sel=null}
+function removeLayer(L){D.layers=D.layers.filter(x=>x.id!==L.id);if(D.sel===L.id)D.sel=null}
 bodyEl.addEventListener('input',e=>{
   const L=sel(),t=e.target;
   if(t.classList.contains('fsearch')){fontQ=t.value;filterFonts();bodyEl.querySelector('.fontrow').scrollLeft=0;return}
