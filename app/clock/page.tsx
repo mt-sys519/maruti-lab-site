@@ -6,6 +6,7 @@ import { LabMark } from "../icons";
 export const metadata: Metadata = {
   title: "PromptTerm CLOCK",
   description: "秒まで刻み続ける6管のWindowsデスクトップ時計。無料、登録不要、オフライン動作。",
+  alternates: { canonical: "/clock" },
 };
 
 export default function ClockPage() {

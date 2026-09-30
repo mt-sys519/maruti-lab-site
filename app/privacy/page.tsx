@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "プライバシーポリシー" };
+export const metadata: Metadata = { title: "プライバシーポリシー", alternates: { canonical: "/privacy" } };
 
 export default function PrivacyPage() {
   return (

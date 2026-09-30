@@ -42,7 +42,9 @@ export default function HalloTerraPage() {
   return (
     <>
       <div className="terraTitle">
-        <TerraLogo size="md" />
+        <h1>
+          <TerraLogo size="md" />
+        </h1>
         <p>世界の挨拶を、地図から。</p>
       </div>
 

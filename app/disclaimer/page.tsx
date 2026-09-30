@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "免責事項" };
+export const metadata: Metadata = { title: "免責事項", alternates: { canonical: "/disclaimer" } };
 
 export default function DisclaimerPage() {
   return (

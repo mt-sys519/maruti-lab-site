@@ -614,6 +614,9 @@
   padding: 20px clamp(22px, 5vw, 60px) 18px;
   flex-wrap: wrap;
 }
+/* The drawn name is the page's heading; the h1 is only there to say so, so it
+   adds no margin or line box of its own. */
+.terraTitle h1 { display: flex; margin: 0; font-size: inherit; }
 .terraTitle p {
   margin: 0;
   font-family: var(--terra-hand);

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- vinext requires a document navigation for local routes */
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "利用規約" };
+export const metadata: Metadata = { title: "利用規約", alternates: { canonical: "/terms" } };
 
 export default function TermsPage() {
   return (

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { LabHero } from "./LabHero";
 import { BitRetro } from "./bit/BitRetro";
@@ -6,6 +7,10 @@ import { ClockPreview } from "./ClockPreview";
 import { formatDate, posts } from "./blog/posts";
 import { SiteFooter } from "./SiteFooter";
 import { AboutMark, BitMark, CoffeeMark, LabMark, NoteMark, ToolsMark } from "./icons";
+
+// Only the canonical is set here; the title and description are the root
+// layout's defaults, which are written for this page.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const yuramekiUrl = "/yurameki";
 

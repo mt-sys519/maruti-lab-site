@@ -5,6 +5,7 @@ import { ContactForm } from "./ContactForm";
 export const metadata: Metadata = {
   title: "お問い合わせ",
   description: "Maruti Labへのご質問・ご要望・不具合のご報告は、こちらのフォームからお送りください。",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {
