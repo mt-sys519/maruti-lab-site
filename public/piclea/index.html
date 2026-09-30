@@ -322,14 +322,16 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 /* editor: the picture first, one bar under it */
 .editor{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--stage)}
 .etop{flex:none;display:flex;align-items:center;gap:4px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 4px}
-.etitle{flex:1;font:400 16px Marcellus,serif;letter-spacing:.3em;text-transform:uppercase;padding-left:6px;white-space:nowrap}
+.etitle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font:400 16px Marcellus,serif;letter-spacing:.3em;text-transform:uppercase;padding-left:6px;white-space:nowrap}
 .etitle small{font:400 11px var(--ui);font-style:normal;letter-spacing:.04em;color:var(--mocha);opacity:0;transition:opacity .3s;margin-left:6px}
 .etitle small.on{opacity:1}
+/* a phone has no room for both side by side: 保存しました takes the logo's place for a moment */
+@media (max-width:479px){.etitle{display:grid;align-items:center}.etitle>*{grid-area:1/1}.etitle small{margin-left:0;font-size:12px}.elogo{transition:opacity .3s}.etitle:has(small.on) .elogo{opacity:0}}
 .ebtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink)}
 .ebtn:active{background:rgba(75,63,58,.08)}
 .ebtn svg{width:22px;height:22px}
 .ebtn:disabled{opacity:.28}
-.etop .pill{padding:9px 18px;margin-left:4px}
+.etop .pill{padding:9px 18px;margin-left:4px;flex:none;white-space:nowrap} /* on a 390px phone the title used to squeeze 保存 onto two lines */
 .estage{position:relative;flex:1;min-height:0;touch-action:none}
 .efit{position:absolute;inset:8px 12px 10px;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #ecanvas{max-width:100%;max-height:100%;border-radius:2px;box-shadow:0 1px 2px rgba(60,40,30,.12),0 12px 32px rgba(60,40,30,.16);touch-action:none;background:#d8cfc4;pointer-events:auto}
@@ -530,7 +532,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 <section class="editor" id="editor" hidden>
   <div class="etop">
     <button class="ebtn" id="eback" aria-label="書体の一覧に戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
-    <span class="etitle">piclea <small id="esaved"></small></span>
+    <span class="etitle"><span class="elogo">piclea</span> <small id="esaved"></small></span>
     <button class="ebtn" id="eundo" aria-label="元に戻す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 13.5L4 9l4.5-4.5"/><path d="M4.5 9h10a5.5 5.5 0 010 11H11"/></svg></button>
     <button class="ebtn" id="eredo" aria-label="やり直す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 13.5L20 9l-4.5-4.5"/><path d="M19.5 9h-10a5.5 5.5 0 000 11H13"/></svg></button>
     <button class="pill dark" id="esave">保存</button>
