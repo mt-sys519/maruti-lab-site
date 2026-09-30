@@ -2,7 +2,7 @@
 // used for the picker tiles, the large preview, the editor and the saved file alike, so all of them
 // match. Coordinates are output pixels of the finished image.
 (() => {
-const {JA,EN,loadPhoto,loadFace,faceReady}=window.PICLEA;
+const {JA,EN,BYFAM,weightsOf,loadPhoto,loadFace,faceReady}=window.PICLEA;
 const $=s=>document.querySelector(s);
 const OUT_W=1080;
 // iPhone and iPad save through the share sheet; Android and computers download (a computer's share
@@ -317,7 +317,9 @@ function rotIcon(c,x,y,kk){
   c.beginPath();c.moveTo(px+Math.cos(t)*s,py+Math.sin(t)*s);c.lineTo(px+Math.cos(t+2.2)*s,py+Math.sin(t+2.2)*s);c.lineTo(px+Math.cos(t-2.2)*s,py+Math.sin(t-2.2)*s);c.closePath();c.fill();
   c.restore();
 }
-function box(L,M,kk){const m=M.get(L.id),f=isText(L)&&L.band.on?frameSize(L,m):{w:m.W,h:m.H},p=10*kk;return {w:f.w+2*p,h:f.h+2*p}}
+// Shapes and photos carry their handles on their own edges (as in Canva), so a handle laid on a line puts
+// the edge there; words keep a little air around them.
+function box(L,M,kk){const m=M.get(L.id),f=isText(L)&&L.band.on?frameSize(L,m):{w:m.W,h:m.H},p=isText(L)?10*kk:0;return {w:f.w+2*p,h:f.h+2*p}}
 // Any corner scales; the round handle under the frame rotates. All are pulled back inside the picture.
 function handles(L,M,kk){
   const b=box(L,M,kk),cs=Math.cos(L.rot),sn=Math.sin(L.rot),m=12*kk;
@@ -398,7 +400,7 @@ let tool=null,fontLang='ja',decoSub='stroke',textTimer;
 const kE=()=>D.W/(cv.clientWidth||D.W); // output px per screen px
 function sizeCanvas(){if(cv.width!==D.W)cv.width=D.W;if(cv.height!==D.H)cv.height=D.H}
 let raf=0;
-function paint(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;if(!$('#editor').hidden){G.M=draw(ctx,{ui:tool==='bg'?null:'edit',kk:kE()});placeFloat()}})}
+function paint(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;if(!$('#editor').hidden){G.M=draw(ctx,{ui:tool==='bg'?null:'edit',kk:kE()});placeFloat();syncPos()}})}
 function refresh(){paint();ensureFonts().then(paint)}
 on('fonts',()=>paint());
 new ResizeObserver(()=>paint()).observe($('#estage'));
@@ -417,6 +419,12 @@ function stretch(L,g,p){
   const size=Math.max(6,s*(horiz?q.x:q.y)-g.pad+old/2),shift=s*(size-old)/2,sx=horiz?shift:0,sy=horiz?0:shift;
   if(horiz)L.w=size;else L.h=size;
   L.x=g.x0+sx*cs-sy*sn;L.y=g.y0+sx*sn+sy*cs;
+  // the side being pulled stops on an edge or middle nearby (so a bar can butt up against a square)
+  G.guides=null;if(Math.abs(g.rot)>1e-3)return;
+  const T=targets(L),edge=horiz?L.x+s*L.w/2:L.y+s*L.h/2,hit=nearSide(edge,0,horiz?T.xs:T.ys,SNAP*kE());
+  if(!hit||(horiz?L.w:L.h)+s*hit.d<6)return;
+  if(horiz){L.w+=s*hit.d;L.x+=hit.d/2}else{L.h+=s*hit.d;L.y+=hit.d/2}
+  G.guides=horiz?{x:hit.t,y:null}:{x:null,y:hit.t};
 }
 const two=()=>{const [a,b]=[...G.ptrs.values()];return {d:Math.hypot(a.x-b.x,a.y-b.y),a:Math.atan2(b.y-a.y,b.x-a.x)}};
 const SZ=L=>isText(L)?'size':'w';
@@ -437,8 +445,8 @@ cv.addEventListener('pointerdown',e=>{
   }
   if(tool==='bg'){if(photoBg(D))G.g={mode:'pan',p,ox:D.photo.ox,oy:D.photo.oy};return}
   const h=hitHandle(L,p);
-  if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h};return}
-  if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:10*kE()};return}
+  if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h,box:layerBox(L)};return}
+  if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
   if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
   const H=hitLayer(G.M,p,kE());
   if(H){const was=D.sel===H.id;D.sel=H.id;G.g={mode:'move',p,x:H.x,y:H.y,was,moved:false};if(!was)panel()}
@@ -450,16 +458,51 @@ cv.addEventListener('pointermove',e=>{
   if(g.mode==='pan'){D.photo.ox=g.ox+p.x-g.p.x;D.photo.oy=g.oy+p.y-g.p.y}
   else if(g.mode==='pzoom'&&G.ptrs.size===2){D.photo.s=Math.max(1,Math.min(4,g.s*two().d/g.t.d))}
   else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=g.rot+t.a-g.t.a}
-  else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d)}
+  else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
   else if(g.mode==='move'&&L){
     if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;g.moved=true;
-    const r=snapMove(L,g.x+p.x-g.p.x,g.y+p.y-g.p.y,8*kE());L.x=r.x;L.y=r.y;G.guides=r.guides;
+    const r=snapBox(L,g.x+p.x-g.p.x,g.y+p.y-g.p.y,SNAP*kE());L.x=r.x;L.y=r.y;G.guides=r.guides;
   }
   paint();
 });
 // Snap the centre to the picture's centre lines and to other texts' centres; the pull is in screen pixels.
+// Smart guides, as in Canva: the edges and the middle of what you drag stick to the picture's edges and
+// middle and to every other layer's edges and middle, moving or stretching a side. A tilted layer only
+// offers its middle.
+const straight=L=>Math.abs(Math.sin(2*L.rot))<1e-3;
+function lines(L,x=L.x,y=L.y){
+  const b=layerBox(L),sw=Math.abs(Math.sin(L.rot))>.5,w=sw?b.h:b.w,h=sw?b.w:b.h;
+  return straight(L)?{xs:[x-w/2,x,x+w/2],ys:[y-h/2,y,y+h/2]}:{xs:[x],ys:[y]};
+}
+function targets(L){
+  const xs=[0,D.W/2,D.W],ys=[0,D.H/2,D.H];
+  for(const o of D.layers)if(o!==L&&G.M.has(o.id)){const l=lines(o);xs.push(...l.xs);ys.push(...l.ys)}
+  return {xs,ys};
+}
+const SNAP=8; // screen px, as in tldraw, Excalidraw and GIMP
+// a side at `edge` whose handle is `out` further: how far the side must move to sit on the nearest line
+function nearSide(edge,out,ts,thr){let best=null;for(const t of ts){const dist=Math.min(Math.abs(t-edge),Math.abs(t-edge-out));if(dist<thr&&(!best||dist<best.dist))best={dist,d:t-edge,t}}return best}
+function nearest(vals,ts,thr){let best=null;for(const v of vals)for(const t of ts){const d=t-v;if(Math.abs(d)<thr&&(!best||Math.abs(d)<Math.abs(best.d)))best={d,t}}return best}
+function snapBox(L,x,y,thr){
+  const l=lines(L,x,y),T=targets(L),gx=nearest(l.xs,T.xs,thr),gy=nearest(l.ys,T.ys,thr);
+  return {x:x+(gx?gx.d:0),y:y+(gy?gy.d:0),guides:{x:gx?.t??null,y:gy?.t??null}};
+}
+// Growing from a corner keeps the middle where it is; when a side comes near an edge or a middle, the
+// size is set so that side lands on it exactly.
+function snapScale(L,g){
+  G.guides=null;if(!straight(L))return;
+  const r=L[SZ(L)]/g.size,sw=Math.abs(Math.sin(L.rot))>.5,w=(sw?g.box.h:g.box.w)*r,h=(sw?g.box.w:g.box.h)*r,T=targets(L),thr=SNAP*kE(),pad=0;
+  let best=null;
+  for(const [c,half,ts,ax] of [[L.x,w/2,T.xs,'x'],[L.y,h/2,T.ys,'y']])for(const s of [-1,1]){
+    const hit=nearSide(c+s*half,s*pad,ts,thr);if(!hit)continue;
+    const k=Math.abs(hit.t-c)/half;if(k>.05&&(!best||hit.dist<best.d))best={d:hit.dist,k,t:hit.t,ax};
+  }
+  if(!best)return;
+  const v=clampSz(L,L[SZ(L)]*best.k),k=v/L[SZ(L)];L[SZ(L)]=v;if(isShape(L))L.h=Math.max(6,L.h*k);
+  G.guides=best.ax==='x'?{x:best.t,y:null}:{x:null,y:best.t};
+}
 function snapMove(L,x,y,thr){
   const guides={x:null,y:null},others=D.layers.filter(o=>o!==L);
   for(const c of [D.W/2,...others.map(o=>o.x)])if(Math.abs(x-c)<thr){x=c;guides.x=c;break}
@@ -499,7 +542,7 @@ const I={
   font:ic('<path d="M3.5 18.5L8.5 5.5l5 13M5.4 14h6.2"/><circle cx="17.7" cy="15.6" r="2.9"/><path d="M20.6 12.2v6.3"/>'),
   deco:ic('<path d="M12 3.5l1.9 5.2 5.2 1.9-5.2 1.9-1.9 5.2-1.9-5.2-5.2-1.9 5.2-1.9z"/><path d="M18.5 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>'),
   layout:ic('<path d="M4 6h16M7 10h10M4 14h16M7 18h10"/>'),
-  more:ic('<circle cx="6" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="18" cy="12" r=".9" fill="currentColor"/>'),
+  more:ic('<path d="M12 4.5l8 4-8 4-8-4z"/><path d="M4 12.5l8 4 8-4"/><path d="M4 16.5l8 4 8-4"/>'),
   shape:ic('<circle cx="9" cy="9" r="5.2"/><rect x="11" y="11" width="9.5" height="9.5" rx="2"/>'),
   adj:ic('<path d="M4 7h9M17.5 7h2.5M4 17h2.5M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/>'),
   crop:ic('<path d="M12 3.5v17M3.5 12h17M9.3 6.2L12 3.5l2.7 2.7M9.3 17.8l2.7 2.7 2.7-2.7M6.2 9.3L3.5 12l2.7 2.7M17.8 9.3l2.7 2.7-2.7 2.7"/>'),
@@ -507,9 +550,9 @@ const I={
 const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
-  text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','その他',I.more]],
-  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco','線・影',I.deco],['more','その他',I.more]],
-  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','その他',I.more]],
+  text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
+  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco','線・影',I.deco],['more','レイヤー',I.more]],
+  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
 };
 const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap']);
 
@@ -519,13 +562,42 @@ const pct=v=>Math.round(v*100)+'%';
 const f2=v=>(+v).toFixed(2);
 const FMT={zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
 const fmt=k=>FMT[k]||(v=>Math.round(v));
-const slider=(label,key,min,max,step)=>{const v=get(sel(),key);return `<label class="erow"><span class="el">${label}</span><input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${v}"><span class="ev" data-v="${key}">${fmt(key)(v)}</span></label>`};
+// Sizes and spacing can also be typed: the number beside the slider is a field (tap it, type, done).
+const NUM=new Set(['size','ls','lh','w','h']);
+const slider=(label,key,min,max,step)=>{const v=get(sel(),key);return `<label class="erow"><span class="el">${label}</span><input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${v}">${NUM.has(key)
+  ?`<input class="ev num" data-v="${key}" data-num="${key}" data-min="${min}" data-max="${max}" inputmode="decimal" enterkeyhint="done" value="${fmt(key)(v)}" aria-label="${label}の数値">`
+  :`<span class="ev" data-v="${key}">${fmt(key)(v)}</span>`}</label>`};
+// Where it sits, to the pixel: X/Y are the top-left of its box on the finished image, 角度 in degrees,
+// and the arrows move it 1px a tap (held, it keeps going and speeds up).
+function layerBox(L){
+  if(isShape(L))return {w:L.w,h:L.h};if(isImg(L))return imgFrame(L);
+  const m=G.M.get(L.id);if(!m)return {w:0,h:0};return L.band.on?frameSize(L,m):{w:m.W,h:m.H};
+}
+const posVals=L=>{const b=layerBox(L);return {x:Math.round(L.x-b.w/2),y:Math.round(L.y-b.h/2),rot:Math.round(((L.rot*180/Math.PI)%360+540)%360-180)}};
+function posBlock(L){
+  const v=posVals(L),f=(k,l,u='')=>`<label class="pf"><span>${l}</span><input class="num" data-pos="${k}" inputmode="decimal" enterkeyhint="done" value="${v[k]}" aria-label="${l}">${u}</label>`;
+  return `<h5 class="esub">位置</h5><div class="epos"><div class="nudge">${[['u','↑',0,-1],['l','←',-1,0],['d','↓',0,1],['r','→',1,0]].map(([k,a,dx,dy])=>`<button class="nb nb-${k}" data-nudge="${dx},${dy}" aria-label="${a}">${a}</button>`).join('')}</div>
+    <div class="pfs">${f('x','X')}${f('y','Y')}${f('rot','角度','°')}</div></div>`;
+}
+function syncPos(){
+  const L=sel();if(!L)return;const v=posVals(L);
+  bodyEl.querySelectorAll('[data-pos]').forEach(i=>{if(document.activeElement!==i)i.value=v[i.dataset.pos]});
+}
 const pal=key=>{const v=get(sel(),key);return `<div class="pal" data-k="${key}">${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(v)?'':' on'}" aria-label="ほかの色"><input type="color" data-k="${key}" value="${v}"></label></div>`};
 const toggle=(key,label)=>`<h4>${label}<button class="tg${get(sel(),key)?' on':''}" data-tg="${key}" aria-label="${label}"></button></h4>`;
 const segs=(key,opts)=>`<div class="eseg" data-set="${key}">${opts.map(([v,l])=>`<button data-v="${v}" class="${get(sel(),key)===v?'on':''}">${l}</button>`).join('')}</div>`;
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const btns=list=>`<div class="ebtns">${list.map(([a,l,dark])=>`<button class="eb${dark?' dark':''}" data-act="${a}">${l}</button>`).join('')}</div>`;
 
+// Only the weights the family really has; a family with one weight shows no row at all.
+const WNAME={100:'Thin',200:'ExLight',300:'Light',400:'Regular',500:'Medium',600:'SemiBold',700:'Bold',800:'ExBold',900:'Black'};
+// keep the chosen weight in view (Noto has nine; Black would sit off the right edge)
+const showWeight=()=>{const r=bodyEl.querySelector('.wrow'),on=r?.querySelector('.on');if(on)r.scrollLeft=on.offsetLeft-r.clientWidth/2+on.clientWidth/2};
+function weightRow(L){
+  const f=BYFAM.get(L.fam),ws=f?weightsOf(f):[];if(ws.length<2)return '';
+  const a=JA.includes(f)?'あ':'Aa';
+  return `<h5 class="esub">太さ</h5><div class="wrow">${ws.map(w=>`<button class="wbtn${w===L.w?' on':''}" data-wt="${w}" aria-label="${WNAME[w]||w}"><span style='font-family:${L.fam},sans-serif;font-weight:${w}'>${a}</span><small>${WNAME[w]||w}</small></button>`).join('')}</div>`;
+}
 const DRAW={
   bg:()=>{
     const bg=bgOf(D);
@@ -547,10 +619,12 @@ const DRAW={
     ${btns([['pleft','← 前へ'],['pright','後ろへ →'],['pdel','このページを外す']])}`,
   font:L=>{
     const list=fontLang==='ja'?JA:EN;
-    return `<div class="eseg" data-lang><button data-v="ja" class="${fontLang==='ja'?'on':''}">日本語</button><button data-v="en" class="${fontLang==='en'?'on':''}">English</button></div>
-      <div class="fontrow">${list.map((f,i)=>`<button class="fbtn${f[1]===L.fam?' on':''}" data-f="${i}"><span style='font-family:${f[1]},sans-serif;font-weight:${f[4]}'>${f[0]}</span></button>`).join('')}</div>`;
+    return `<div class="fhead"><div class="eseg" data-lang><button data-v="ja" class="${fontLang==='ja'?'on':''}">日本語</button><button data-v="en" class="${fontLang==='en'?'on':''}">English</button></div>
+      <input class="fsearch" type="search" placeholder="書体名で探す" value="${esc(fontQ)}" enterkeyhint="search" aria-label="書体名で探す"></div>
+      <p class="enote fnone" hidden>見つかりませんでした</p>
+      <div class="fontrow">${list.map((f,i)=>`<button class="fbtn${f[1]===L.fam?' on':''}" data-f="${i}"><span style='font-family:${f[1]},sans-serif;font-weight:${f[4]}'>${f[0]}</span></button>`).join('')}</div>${weightRow(L)}`;
   },
-  color:()=>`${pal('color')}${slider('透明度','opacity',.1,1,.01)}`,
+  color:()=>pal('color'),
   deco:L=>{
     if(!isText(L))return `<div class="sec">${toggle('border.on','フチ')}${L.border.on?pal('border.color')+slider('太さ','border.w',.5,10,.5):''}</div>
       <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,1)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`;
@@ -561,9 +635,11 @@ const DRAW={
     const on=k=>({stroke:L.stroke.on,shadow:L.shadow.on,band:L.band.on})[k];
     return `<div class="eseg wide" data-deco>${[['stroke','縁取り'],['shadow','影'],['band','枠']].map(([k,l])=>`<button data-v="${k}" class="${decoSub===k?'on':''}">${l}${on(k)?' <i class="lit"></i>':''}</button>`).join('')}</div>${sub[decoSub]}`;
   },
-  layout:()=>`<div class="erow">${segs('align',[['left','左'],['center','中'],['right','右']])}${segs('vertical',[[false,'横書き'],[true,'縦書き']])}</div>
-    ${slider('大きさ','size',12,600,1)}${slider('折り返し','wrap',0,1,.01)}${slider('文字間','ls',-10,80,1)}${slider('行間','lh',.8,2.6,.01)}`,
-  more:L=>btns([['dup','複製'],['front','前へ'],['back','後ろへ'],['del','削除']])+(isText(L)?'':slider('透明度','opacity',.1,1,.01)),
+  layout:L=>`<div class="erow">${segs('align',[['left','左'],['center','中'],['right','右']])}${segs('vertical',[[false,'横書き'],[true,'縦書き']])}</div>
+    ${slider('大きさ','size',12,600,1)}${slider('折り返し','wrap',0,1,.01)}${slider('文字間','ls',-10,80,1)}${slider('行間','lh',.8,2.6,.01)}${posBlock(L)}`,
+  // レイヤー: what the whole layer does (copy, stacking order, delete, see-through), the same for words,
+  // shapes and photos. A shape's 濃さ under 色 is its fill alone; 透明度 here fades fill, line and shadow together.
+  more:L=>btns([['dup','複製'],['front','前へ'],['back','後ろへ'],['del','削除']])+slider('透明度','opacity',.1,1,.01)+(isText(L)?'':posBlock(L)),
   shape:L=>`${segs('shape',[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']])}
     ${L.shape!=='circle'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
     ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}`,
@@ -594,7 +670,18 @@ async function removeSelected(){
   if(!await ask(isText(L)?'この文字を消しますか？':isShape(L)?'この図形を消しますか？':'この写真を消しますか？',{ok:'消す'}))return;
   removeLayer(L);tool=null;commit();panel();paint();
 }
-let fontIO;
+let fontIO,fontQ='';
+// Narrow the font row by name (display name or family, so よもぎ and Yomogi both work) or category.
+function filterFonts(){
+  const list=fontLang==='ja'?JA:EN,q=fontQ.trim().toLowerCase().replace(/\s+/g,'');let n=0;
+  const hit=f=>!q||[f[0],f[1],f[2]].some(x=>x.toLowerCase().replace(/[\s"]/g,'').includes(q));
+  bodyEl.querySelectorAll('.fbtn').forEach(b=>{const h=hit(list[+b.dataset.f]);b.hidden=!h;n+=h});
+  const none=bodyEl.querySelector('.fnone'),row=bodyEl.querySelector('.fontrow');if(!none)return;
+  none.hidden=n>0;row.hidden=!n;
+  // it may be on the other tab
+  const other=(fontLang==='ja'?EN:JA).filter(hit).length;
+  none.textContent=other?`${fontLang==='ja'?'English':'日本語'}のほうに${other}件あります`:'見つかりませんでした';
+}
 const bodyEl=$('#ebody');
 function panel(){
   const L=sel(),items=BAR[!L?'none':isText(L)?'text':isShape(L)?'shape':'image'](L);
@@ -610,6 +697,8 @@ function panel(){
     row.querySelectorAll('.fbtn').forEach(x=>fontIO.observe(x));
     const on=row.querySelector('.fbtn.on');if(on)row.scrollLeft=on.offsetLeft-row.clientWidth/2+on.clientWidth/2;
   }
+  if(tool==='font'){showWeight();filterFonts()}
+  if(tool==='font')bodyEl.querySelectorAll('.wbtn').forEach(b=>loadFace(L.fam,+b.dataset.wt,b.firstChild.textContent).then(()=>b.classList.add('ready'),()=>{}));
   if(tool==='pages')renderStrip();
   renderPill();
 }
@@ -637,16 +726,43 @@ function addLayer(from){
 function removeLayer(L){D.layers=D.layers.filter(x=>x!==L);if(D.sel===L.id)D.sel=null}
 bodyEl.addEventListener('input',e=>{
   const L=sel(),t=e.target;
+  if(t.classList.contains('fsearch')){fontQ=t.value;filterFonts();bodyEl.querySelector('.fontrow').scrollLeft=0;return}
   if(t.dataset.photo!=null){D.photo.s=+t.value;paint();return}
   if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};t.parentElement.classList.add('on');paint();return}
   if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
   put(L,t.dataset.k,t.type==='color'?t.value:+t.value);
-  const v=bodyEl.querySelector(`[data-v="${t.dataset.k}"]`);if(v)v.textContent=fmt(t.dataset.k)(+t.value);
+  const v=bodyEl.querySelector(`[data-v="${t.dataset.k}"]`);if(v)v[v.tagName==='INPUT'?'value':'textContent']=fmt(t.dataset.k)(+t.value);
   if(t.type==='color'){t.closest('.pal').querySelectorAll('button').forEach(x=>x.classList.remove('on'));t.parentElement.classList.add('on');if(t.dataset.k==='color')$('#ebar .cdot')?.style.setProperty('background',t.value)}
   paint();
 });
-bodyEl.addEventListener('change',()=>{if(adjLive){adjLive=false;paint()}commit()});
+bodyEl.addEventListener('change',e=>{
+  const t=e.target,L=sel();
+  if(L&&t.dataset.num){ // a typed size or spacing: held to the slider's range
+    let v=parseFloat(t.value.replace(/[^\d.\-]/g,''));const k=t.dataset.num;
+    if(isNaN(v))v=get(L,k);v=Math.max(+t.dataset.min,Math.min(+t.dataset.max,v));put(L,k,v);
+    t.value=fmt(k)(v);const r=bodyEl.querySelector(`input[type=range][data-k="${k}"]`);if(r)r.value=v;
+    commit();refresh();return;
+  }
+  if(L&&t.dataset.pos){
+    const v=parseFloat(t.value.replace(/[^\d.\-]/g,'')),b=layerBox(L);
+    if(!isNaN(v)){if(t.dataset.pos==='x')L.x=v+b.w/2;else if(t.dataset.pos==='y')L.y=v+b.h/2;else L.rot=v*Math.PI/180}
+    commit();paint();syncPos();return;
+  }
+  if(adjLive){adjLive=false;paint()}commit();
+});
+bodyEl.addEventListener('focusin',e=>{if(e.target.classList.contains('num'))setTimeout(()=>e.target.select(),0)});
+bodyEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('num')){e.preventDefault();e.target.blur()}});
+let nudgeT=0;
+bodyEl.addEventListener('pointerdown',e=>{
+  const b=e.target.closest('[data-nudge]'),L=sel();if(!b||!L)return;e.preventDefault();
+  const [dx,dy]=b.dataset.nudge.split(',').map(Number);let n=0;
+  const step=()=>{const k=n++<20?1:5;L.x+=dx*k;L.y+=dy*k;paint()};
+  step();clearTimeout(nudgeT);
+  const go=()=>{step();nudgeT=setTimeout(go,50)};nudgeT=setTimeout(go,400);
+  const stop=()=>{clearTimeout(nudgeT);commit();removeEventListener('pointerup',stop);removeEventListener('pointercancel',stop)};
+  addEventListener('pointerup',stop);addEventListener('pointercancel',stop);
+});
 bodyEl.addEventListener('click',e=>{
   const L=sel(),t=e.target.closest('button');if(!t)return;
   if(t.id==='ephoto'){$('#efile').click();return}
@@ -674,9 +790,18 @@ bodyEl.addEventListener('click',e=>{
   if(t.dataset.tg){const k=t.dataset.tg;put(L,k,!get(L,k));commit();panel();refresh();return}
   const sg=t.closest('[data-set]');if(sg){const v=t.dataset.v;put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();refresh();return}
   const p=t.closest('.pal');if(p&&t.dataset.c){put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
-  if(t.dataset.f!=null){setFont(L,(fontLang==='ja'?JA:EN)[+t.dataset.f]);bodyEl.querySelectorAll('.fbtn').forEach(x=>x.classList.toggle('on',x===t));commit();refresh()}
+  if(t.dataset.f!=null){
+    setFont(L,(fontLang==='ja'?JA:EN)[+t.dataset.f]);bodyEl.querySelectorAll('.fbtn').forEach(x=>x.classList.toggle('on',x===t));
+    // swap only the weight row (a full redraw would blink the font buttons)
+    bodyEl.querySelectorAll('.wrow,h5.esub').forEach(x=>x.remove());
+    bodyEl.querySelector('.fontrow').insertAdjacentHTML('afterend',weightRow(L));showWeight();
+    bodyEl.querySelectorAll('.wbtn').forEach(b=>loadFace(L.fam,+b.dataset.wt,b.firstChild.textContent).then(()=>b.classList.add('ready'),()=>{}));
+    commit();refresh();return;
+  }
+  if(t.dataset.wt!=null){L.w=+t.dataset.wt;L.wPick=true;bodyEl.querySelectorAll('.wbtn').forEach(x=>x.classList.toggle('on',x===t));commit();refresh()}
 });
-function setFont(L,f){Object.assign(L,{fam:f[1],w:f[4],name:f[0]})}
+// A weight picked by hand carries over to the next font when that font has it; otherwise its own default.
+function setFont(L,f){Object.assign(L,{fam:f[1],w:L.wPick&&weightsOf(f).includes(L.w)?L.w:f[4],name:f[0]})}
 
 /* ---------- typing: the words over the dimmed picture, which follows as you type ---------- */
 function dupSel(){const L=sel();if(!L)return;const n=Object.assign(clone(L),{id:uid++,x:L.x+D.W*.04,y:L.y+D.W*.04});D.layers.push(n);D.sel=n.id;commit();panel();refresh()}
