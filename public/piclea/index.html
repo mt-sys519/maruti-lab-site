@@ -632,18 +632,18 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
       <p class="enote" data-os="wall"></p>
       <div class="bguide" id="bguide" hidden>
         <p><b>はじめてのときは</b>「全部まとめてバックアップ」を押すと出る画面で、この順に選びます。</p>
-        <svg viewBox="0 0 348 150" role="img" aria-label="1「ファイルに保存」、2「iCloud Drive」、3 右上の「保存」">
+        <svg viewBox="0 0 348 150" role="img" aria-label="1「ファイルに保存」、2 保存先が iCloud Drive、3 右上の「保存」">
           <g font-size="9" font-family="-apple-system,'Hiragino Sans',sans-serif" fill="#4b3f3a">
             <g><rect x="4" y="4" width="104" height="118" rx="12" fill="#fff"/><rect x="12" y="16" width="88" height="20" rx="6" fill="#f1ebe6"/><text x="20" y="29.5">コピー</text>
               <rect x="12" y="42" width="88" height="24" rx="6" fill="#c49a90"/><text x="56" y="57.5" fill="#fff" font-weight="600" text-anchor="middle">“ファイル”に保存</text>
               <rect x="12" y="72" width="88" height="20" rx="6" fill="#f1ebe6"/><rect x="12" y="98" width="88" height="16" rx="6" fill="#f1ebe6"/></g>
-            <g transform="translate(118 0)"><rect x="4" y="4" width="104" height="118" rx="12" fill="#fff"/><text x="12" y="22" fill="#8b7a6f">場所</text>
+            <g transform="translate(118 0)"><rect x="4" y="4" width="104" height="118" rx="12" fill="#fff"/><text x="12" y="22" fill="#8b7a6f">保存先</text>
               <rect x="12" y="30" width="88" height="24" rx="6" fill="#c49a90"/><path d="M18 38h6l1.5 1.5h6.5v7.5H18z" fill="#fff"/><text x="36" y="45.5" fill="#fff" font-weight="600">iCloud Drive</text>
-              <rect x="12" y="60" width="88" height="20" rx="6" fill="#f1ebe6"/><text x="20" y="73.5">このiPhone内</text></g>
+              <rect x="12" y="60" width="88" height="20" rx="6" fill="#f1ebe6"/><rect x="12" y="86" width="88" height="20" rx="6" fill="#f1ebe6"/></g>
             <g transform="translate(236 0)"><rect x="4" y="4" width="104" height="118" rx="12" fill="#fff"/><text x="12" y="22" fill="#8b7a6f">キャンセル</text>
               <rect x="68" y="10" width="34" height="18" rx="9" fill="#c49a90"/><text x="85" y="22.5" fill="#fff" font-weight="600" text-anchor="middle">保存</text>
               <rect x="12" y="36" width="88" height="20" rx="6" fill="#f1ebe6"/><rect x="12" y="62" width="88" height="20" rx="6" fill="#f1ebe6"/><rect x="12" y="88" width="88" height="20" rx="6" fill="#f1ebe6"/></g>
-            <g font-size="10.5" font-weight="600" text-anchor="middle"><text x="56" y="142">①「ファイル」に保存</text><text x="174" y="142">② iCloud Drive</text><text x="292" y="142">③ 右上の「保存」</text></g>
+            <g font-size="10.5" font-weight="600" text-anchor="middle"><text x="56" y="142">①「ファイル」に保存</text><text x="174" y="142">② 保存先が iCloud Drive</text><text x="292" y="142">③ 右上の「保存」</text></g>
           </g>
         </svg>
         <p>戻すときは「バックアップのファイルから戻す」→「ブラウズ」→ iCloud Drive で、保存したファイルを選びます。</p>
@@ -706,7 +706,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 const {JA,EN,DEFAULT_JA,loadPhoto,app}=window.PICLEA;
 const OS_TEXT={
   ios:{snote:'iPhoneは画像の長押しでも写真に保存できます',
-    wall:'作品と型を写真ごと1つのファイルにします。「"ファイル"に保存」で iCloud Drive に置いておけば、機種変更しても戻せます。同じファイルを何度読み込んでも、作品が重なることはありません。',
+    wall:'作品と型を写真ごと1つのファイルにします。「"ファイル"に保存」で iCloud Drive に置いておけば、機種変更しても戻せます。2回目からは「置き換え」を選ぶと、最新の控えだけが残ります。',
     home:'ホーム画面に追加して使うと、作品が消えにくくなります（共有ボタン →「ホーム画面に追加」）。'},
   android:{snote:'画像は「ダウンロード」に保存されます',
     wall:'作品と型を写真ごと1つのファイルにして「ダウンロード」に保存します。Google ドライブに移しておけば、機種変更しても戻せます。同じファイルを何度読み込んでも、作品が重なることはありません。',
