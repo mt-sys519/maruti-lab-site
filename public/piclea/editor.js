@@ -230,11 +230,18 @@ function adjusted(ph,src,a){
   m.set(key,out);while(m.size>6)m.delete(m.keys().next().value);
   return out;
 }
+// The background photo turns by quarter turns (r) plus a tilt (a, degrees). It is always scaled up just
+// enough that no corner shows a gap, and the drag is held to what the turned photo can still cover.
 function drawPhoto(c,src){
-  const cover=Math.max(D.W/src.width,D.H/src.height)*D.photo.s,w=src.width*cover,h=src.height*cover;
-  D.photo.ox=Math.max(-(w-D.W)/2,Math.min((w-D.W)/2,D.photo.ox));
-  D.photo.oy=Math.max(-(h-D.H)/2,Math.min((h-D.H)/2,D.photo.oy));
-  c.drawImage(src,(D.W-w)/2+D.photo.ox,(D.H-h)/2+D.photo.oy,w,h);
+  const P=D.photo,q=(P.r||0)&1,iw=q?src.height:src.width,ih=q?src.width:src.height;
+  const t=(P.a||0)*Math.PI/180,cs=Math.abs(Math.cos(t)),sn=Math.abs(Math.sin(t));
+  const bw=D.W*cs+D.H*sn,bh=D.W*sn+D.H*cs,k=Math.max(bw/iw,bh/ih)*P.s;
+  const co=Math.cos(t),si=Math.sin(t),mx=(iw*k-bw)/2,my=(ih*k-bh)/2;
+  let dx=P.ox*co+P.oy*si,dy=-P.ox*si+P.oy*co;
+  dx=Math.max(-mx,Math.min(mx,dx));dy=Math.max(-my,Math.min(my,dy));
+  P.ox=dx*co-dy*si;P.oy=dx*si+dy*co;
+  c.save();c.translate(D.W/2+P.ox,D.H/2+P.oy);c.rotate(((P.r||0)*90+(P.a||0))*Math.PI/180);
+  c.drawImage(src,-src.width*k/2,-src.height*k/2,src.width*k,src.height*k);c.restore();
 }
 // Overlaid photo: cropped to its frame (square, rounded, circle, ellipse), with an optional rim and shadow.
 function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:(L.ar||(ph?ph.img.width/ph.img.height:1));return {w:L.w,h:L.w/ar}}
@@ -604,7 +611,8 @@ const DRAW={
     const body=bg.type==='color'?`<div class="pal" data-bgc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===bg.color?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(bg.color)?'':' on'}" aria-label="ほかの色"><input type="color" data-bgcolor value="${bg.color}"></label></div>`
       :bg.type==='grad'?`<div class="pal grads" data-bgg>${GRADS.map(([a,b],i)=>`<button style="--c:linear-gradient(160deg,${a},${b})" data-g="${i}" class="${i===bg.grad?'on':''}" aria-label="グラデーション${i+1}"></button>`).join('')}</div>`
       :`<label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
-        <div class="ebtns"><button class="eb${D.photoId?'':' dark'}" id="ephoto">${D.photoId?'背景の写真を変える':'背景の写真をはめる'}</button></div>
+        <label class="erow"><span class="el">傾き</span><input type="range" data-ptilt min="-45" max="45" step=".5" value="${D.photo.a||0}"><span class="ev" data-v="ptilt">${D.photo.a||0}°</span></label>
+        <div class="ebtns"><button class="eb" data-act="prot">90°回す</button><button class="eb${D.photoId?'':' dark'}" id="ephoto">${D.photoId?'背景の写真を変える':'背景の写真をはめる'}</button></div>
         <p class="enote">写真をドラッグで位置、2本指（パソコンはホイール）で拡大。</p>`;
     return `<div class="eseg wide" data-bgtype>${[['photo','写真'],['color','単色'],['grad','グラデーション']].map(([k,l])=>`<button data-v="${k}" class="${bg.type===k?'on':''}">${l}</button>`).join('')}</div>${body}
       <h5 class="esub">比率（全ページ共通）</h5><div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>`;
@@ -728,6 +736,7 @@ bodyEl.addEventListener('input',e=>{
   const L=sel(),t=e.target;
   if(t.classList.contains('fsearch')){fontQ=t.value;filterFonts();bodyEl.querySelector('.fontrow').scrollLeft=0;return}
   if(t.dataset.photo!=null){D.photo.s=+t.value;paint();return}
+  if(t.dataset.ptilt!=null){D.photo.a=+t.value;bodyEl.querySelector('[data-v="ptilt"]').textContent=t.value+'°';paint();return}
   if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};t.parentElement.classList.add('on');paint();return}
   if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
@@ -770,6 +779,7 @@ bodyEl.addEventListener('click',e=>{
   const act=t.dataset.act;
   if(act==='pleft'||act==='pright'){movePage(act==='pleft'?-1:1);return}
   if(act==='pdel'){removePage();return}
+  if(act==='prot'){D.photo.r=((D.photo.r||0)+1)%4;commit();paint();return}
   if(act==='adjreset'){delete (L||D).adj;commit();panel();paint();return}
   if(act==='adjall'){syncCur();for(const pg of P.pages)pg.adj=clone(D.adj||{});commit();toast(`${P.pages.length}ページの背景を同じ調整にしました`);return}
   if(act==='dup'&&L){dupSel();return}
