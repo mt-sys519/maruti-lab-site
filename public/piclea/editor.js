@@ -274,7 +274,11 @@ function drawImageLayer(c,L,thumb){
 // A shape: rectangle, rounded or ellipse, of any width and height, to lay under words; or a line.
 function shapePath(c,L){
   c.beginPath();
-  if(L.kind==='dots'){ // evenly spaced so that both ends land on a dot
+  if(L.kind==='dots'&&L.dstyle==='dash'){ // dashes about 3× the thickness, stretched a little so both ends are a dash
+    const gs=L.h*((L.gap||250)/100-1),n=Math.max(1,Math.round((L.w+gs)/(L.h*3+gs))),d=Math.max(1,(L.w-(n-1)*gs)/n);
+    for(let i=0;i<n;i++)c.rect(-L.w/2+i*(d+gs),-L.h/2,d,L.h);
+  }
+  else if(L.kind==='dots'){ // evenly spaced so that both ends land on a dot
     const r=L.h/2,len=Math.max(0,L.w-L.h),n=Math.max(1,Math.round(len/(L.h*(L.gap||250)/100)));
     for(let i=0;i<=n;i++){const x=-len/2+len*i/n;c.moveTo(x+r,0);c.arc(x,0,r,0,Math.PI*2)}
   }
@@ -627,6 +631,7 @@ const DRAW={
   },
   scolor:()=>`${pal('color')}${slider('濃さ','a',0,1,.01)}`,
   sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['ellipse','丸・だ円'],['line','線'],['dots','点線']])}
+    ${L.kind==='dots'?(L.dstyle??='dot',`<div class="erow"><span class="el">種類</span>${segs('dstyle',[['dot','点'],['dash','線']])}</div>`):''}
     ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
       :slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.kind==='round'?slider('角丸','r',0,100,1):'')}
     ${btns(isLine(L)?[['fullw','横幅いっぱい'],['center','真ん中へ']]:[['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
@@ -809,7 +814,7 @@ bodyEl.addEventListener('click',e=>{
   if(t.dataset.tg){const k=t.dataset.tg;put(L,k,!get(L,k));commit();panel();refresh();return}
   const sg=t.closest('[data-set]');if(sg){const v=t.dataset.v;
     // turning a box into a line (or back) gives it a sensible thickness (or height) instead of the old one
-    if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=v==='line'||v==='dots';if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots')L.gap??=250}
+    if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=v==='line'||v==='dots';if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots'){L.gap??=250;L.dstyle??='dot'}}
     put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();refresh();return}
   const p=t.closest('.pal');if(p&&t.dataset.c){put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
   if(t.dataset.f!=null){
