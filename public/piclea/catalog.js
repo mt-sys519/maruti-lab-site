@@ -1,8 +1,8 @@
 // Font catalog, lazy font loading and photo loading, shared by the picker (index.html) and editor.js.
 // Google Fonts rows come from Google's own metadata (popularity, weights) and google/fonts METADATA.pb
-// (license); see licenses.html. Local rows are OFL / Apache fonts (and 851 Tegaki Zatsu under its own free licence) served from fonts/.
+// (license); see licenses.html. Local rows are OFL / Apache fonts (and 851 Tegaki Zatsu and HuiFont under their authors' own free terms) served from fonts/.
 (() => {
-const GF='Google Fonts',GE='源暎フォント／おたもん',JK='自家製フォント工房',MT='モトヤ',SETO='瀬戸のぞみ',PM851='851フォント／8:51:22 pm';
+const GF='Google Fonts',GE='源暎フォント／おたもん',JK='自家製フォント工房',MT='モトヤ',SETO='瀬戸のぞみ',PM851='851フォント／8:51:22 pm',HUI='ふい字置き場／ふい';
 // [name, CSS family, category, source, weight, weights the family has (only when more than one)]
 const JA=[
  ['Noto Serif JP','"Noto Serif JP"','明朝',GF,500,[200,300,400,500,600,700,800,900]],
@@ -47,6 +47,7 @@ const JA=[
  ['Slackside One','"Slackside One"','手書き',GF,400],
  ['瀬戸フォント','"SetoFont"','手書き',SETO,400],
  ['851手書き雑フォント','"851 Tegaki Zatsu"','手書き',PM851,400],
+ ['ふい字','"HuiFontP"','手書き',HUI,400],
  ['Cherry Bomb One','"Cherry Bomb One"','ポップ',GF,400],
  ['源暎ぽっぷる','"GenEi POPle"','ポップ',GE,400],
  ['はちまるポップ','"Hachi Maru Pop"','ポップ',GF,400],
