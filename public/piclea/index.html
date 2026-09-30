@@ -444,6 +444,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 .mhead{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mocha);margin:12px 4px 2px}
 .mhead:first-child{margin-top:4px}
 .hcard .hsteps{display:block;width:100%;height:auto;margin:4px 0 10px}
+#winstall{width:100%;margin:6px 0 4px}
 .mfoot{display:flex;justify-content:center;gap:18px;margin:12px 0 2px;font-size:12px}
 .mfoot a{color:var(--mocha);text-underline-offset:3px}
 .mcard{padding:10px 14px 8px;text-align:left;background:#fffdfb;backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -655,6 +656,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
       <div class="wgrid" id="tgrid"></div>
       <div class="dgrid" style="margin-top:12px"><button class="eb wide" id="texport">型だけをファイルに書き出す</button><button class="eb wide" data-wimport>型のファイルを読み込む</button></div>
     </div>
+    <button class="eb wide" id="winstall" hidden>アプリとして入れる</button>
     <p class="enote" id="whome" data-os="home"></p>
     <button class="stext" data-wclose>閉じる</button>
   </div>
@@ -669,7 +671,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
       <button data-pick data-mgo><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M20.5 15.5l-4.8-4.6-8.7 8.6"/></svg></i><span><b>写真をえらぶ</b><small>新しく作る・何枚でもまとめて</small></span></button>
       <button data-mtpl><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 10.5h17M10.5 10.5v10"/></svg></i><span><b>型から作る</b><small>取っておいたデザインに写真をはめる</small></span></button>
       <button data-mworks><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></i><span><b>つくったもの</b><small>作りかけの続き・バックアップ</small></span></button>
-      <button data-mhome hidden><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></i><span><b>ホーム画面に追加する</b><small>アプリのように開ける・作品が消えにくい</small></span></button>
+      <button data-mhome hidden><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></i><span><b id="mhomeT">ホーム画面に追加する</b><small>アプリのように開ける・作品が消えにくい</small></span></button>
       <p class="mhead">piclea について</p>
       <a href="#why-title" data-why><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.2 5 5.3.5-4 3.6 1.2 5.2L12 15.1l-4.7 2.7 1.2-5.2-4-3.6 5.3-.5z"/></svg></i><span><b>piclea の特長</b><small>できること・安心して使える理由</small></span></a>
       <a href="guide/" target="piclea-info"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></svg></i><span><b>使い方</b><small>写真を選んでから保存するまで</small></span></a>
@@ -975,7 +977,8 @@ async function openWorks(){
       <img src="${w.thumb}" alt=""><b>${w.title.replace(/</g,'&lt;')}</b><small>${fmtDate(w.updated)}・${w.pages}枚</small>
       <button class="wx" data-wdel="${w.id}" aria-label="消す">×</button>
     </div>`).join('');
-  $('#whome').hidden=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  $('#whome').hidden=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true||!!installEvt;
+  $('#winstall').hidden=!installEvt;
   backupLine(ws);
   if(ws.length)app.prepareBackup(); // on iPhone the file is made now, so the button needs one tap
   $('#wsheet').hidden=false;
@@ -998,12 +1001,27 @@ $('#msheet').addEventListener('click',e=>{
   if(e.target.closest('[data-mclose],[data-mgo]')){$('#msheet').hidden=true;return}
   if(e.target.closest('[data-mtpl]')){$('#msheet').hidden=true;openTpl();return}
   if(e.target.closest('[data-mworks]')){$('#msheet').hidden=true;openWorks()}
-  if(e.target.closest('[data-mhome]')){$('#msheet').hidden=true;$('#hsheet').hidden=false}
+  if(e.target.closest('[data-mhome]')){$('#msheet').hidden=true;if(inSafari)$('#hsheet').hidden=false;else install()}
 });
 // iPhone has no way for a page to offer itself for the home screen, so the steps are shown instead:
 // once, the first time a work exists and the editor is left, and any time from the menu.
 const inSafari=app.os==='ios'&&!(matchMedia('(display-mode: standalone)').matches||navigator.standalone===true);
-$('[data-mhome]').hidden=!inSafari;
+// Chrome (Android and computers) can offer the page for installing, and says so with beforeinstallprompt;
+// only then is the button shown, and it goes once PICLEA is installed or opened as the app.
+let installEvt=null;
+function syncInstall(){
+  $('[data-mhome]').hidden=!(inSafari||installEvt);
+  $('#mhomeT').textContent=inSafari?'ホーム画面に追加する':'アプリとして入れる';
+  $('#winstall').hidden=!installEvt;if(installEvt)$('#whome').hidden=true;
+}
+function install(){
+  const e=installEvt;if(!e)return;
+  e.prompt();e.userChoice.then(r=>{if(r.outcome==='accepted'){installEvt=null;syncInstall()}}).catch(()=>{});
+}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;syncInstall()});
+addEventListener('appinstalled',()=>{installEvt=null;syncInstall();app.toast('アプリとして入れました。ホーム画面やアプリの一覧から開けます')});
+$('#winstall').onclick=install;
+syncInstall();
 $('#hsheet').addEventListener('click',e=>{if(e.target.closest('[data-hclose]'))$('#hsheet').hidden=true});
 app.on('closed',async()=>{
   if(!inSafari||store.get('piclea.homeHint',false))return;
