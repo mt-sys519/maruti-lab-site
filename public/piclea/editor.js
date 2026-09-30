@@ -34,6 +34,8 @@ const on=(n,f)=>(listeners[n]??=[]).push(f);
 const clone=o=>JSON.parse(JSON.stringify(o,(k,v)=>k.startsWith('_')?undefined:v));
 const sel=()=>D.layers.find(l=>l.id===D.sel);
 const isText=L=>!!L&&!L.type,isImg=L=>!!L&&L.type==='image',isShape=L=>!!L&&L.type==='shape';
+// A line is a shape too: w is its length and h its thickness. 点線 is a row of round dots.
+const isLine=L=>isShape(L)&&(L.kind==='line'||L.kind==='dots');
 const bgOf=pg=>pg.bg||{type:'photo'},photoBg=pg=>bgOf(pg).type==='photo';
 function syncCur(){P.pages[P.cur]=clone(D)}
 function loadInto(pg){for(const k of Object.keys(D))delete D[k];Object.assign(D,clone(pg))}
@@ -269,10 +271,15 @@ function drawImageLayer(c,L,thumb){
   c.restore();
   return {W:f.w,H:f.h};
 }
-// A shape: rectangle, rounded or ellipse, of any width and height, to lay under words.
+// A shape: rectangle, rounded or ellipse, of any width and height, to lay under words; or a line.
 function shapePath(c,L){
   c.beginPath();
-  if(L.kind==='ellipse')c.ellipse(0,0,L.w/2,L.h/2,0,0,Math.PI*2);
+  if(L.kind==='dots'){ // evenly spaced so that both ends land on a dot
+    const r=L.h/2,len=Math.max(0,L.w-L.h),n=Math.max(1,Math.round(len/(L.h*(L.gap||250)/100)));
+    for(let i=0;i<=n;i++){const x=-len/2+len*i/n;c.moveTo(x+r,0);c.arc(x,0,r,0,Math.PI*2)}
+  }
+  else if(L.kind==='line')c.rect(-L.w/2,-L.h/2,L.w,L.h);
+  else if(L.kind==='ellipse')c.ellipse(0,0,L.w/2,L.h/2,0,0,Math.PI*2);
   else c.roundRect(-L.w/2,-L.h/2,L.w,L.h,L.kind==='round'?Math.min(L.w,L.h)/2*L.r/100:0);
 }
 function drawShape(c,L){
@@ -280,7 +287,7 @@ function drawShape(c,L){
   const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
   if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,()=>{shapePath(c,L);c.fillStyle=rgba(L.color,Math.max(L.a,.01));c.fill()});
   shapePath(c,L);c.fillStyle=rgba(L.color,L.a);c.fill();
-  if(L.line.on){c.lineWidth=L.line.w;c.strokeStyle=L.line.color;c.stroke()}
+  if(L.line.on&&!isLine(L)){c.lineWidth=L.line.w;c.strokeStyle=L.line.color;c.stroke()}
   c.restore();
   return {W:L.w,H:L.h};
 }
@@ -333,8 +340,9 @@ function handles(L,M,kk){
   const at=(lx,ly)=>({x:Math.max(m,Math.min(D.W-m,L.x+lx*cs-ly*sn)),y:Math.max(m,Math.min(D.H-m,L.y+lx*sn+ly*cs))});
   const below=b.h/2+34*kk,room=L.y+below*cs+18*kk<D.H;
   // a shape also stretches one way from the middle of each side
-  const edges=isShape(L)?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
-  return {corners:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
+  // a line only lengthens from its ends; its thickness is set in the panel
+  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isShape(L)?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
+  return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
 function hitLayer(M,p,kk,only){
@@ -558,7 +566,7 @@ const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
-  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco','線・影',I.deco],['more','レイヤー',I.more]],
+  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
   image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
 };
 const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap']);
@@ -567,7 +575,7 @@ const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
 const pct=v=>Math.round(v*100)+'%';
 const f2=v=>(+v).toFixed(2);
-const FMT={zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
+const FMT={gap:v=>Math.round(v)+'%',zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
 const fmt=k=>FMT[k]||(v=>Math.round(v));
 // Sizes and spacing can also be typed: the number beside the slider is a field (tap it, type, done).
 const NUM=new Set(['size','ls','lh','w','h']);
@@ -618,10 +626,11 @@ const DRAW={
       <h5 class="esub">比率（全ページ共通）</h5><div class="eseg wide" data-ratio>${RATIOS.map(([n])=>`<button data-v="${n}" class="${D.ratio===n?'on':''}">${n}</button>`).join('')}</div>`;
   },
   scolor:()=>`${pal('color')}${slider('濃さ','a',0,1,.01)}`,
-  sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['ellipse','丸・だ円']])}
-    ${slider('幅','w',6,3000,1)}${slider('高さ','h',6,3000,1)}${L.kind==='round'?slider('角丸','r',0,100,1):''}
-    ${btns([['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
-  sdeco:L=>`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>
+  sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['ellipse','丸・だ円'],['line','線'],['dots','点線']])}
+    ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
+      :slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.kind==='round'?slider('角丸','r',0,100,1):'')}
+    ${btns(isLine(L)?[['fullw','横幅いっぱい'],['center','真ん中へ']]:[['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
+  sdeco:L=>`${isLine(L)?'':`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>`}
     <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,.5)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`,
   pages:()=>`<div class="pstrip" id="pstrip"></div>
     ${btns([['pleft','← 前へ'],['pright','後ろへ →'],['pdel','このページを外す']])}`,
@@ -798,7 +807,10 @@ bodyEl.addEventListener('click',e=>{
   if(t.closest('[data-deco]')){decoSub=t.dataset.v;panel();return}
   if(!L)return;
   if(t.dataset.tg){const k=t.dataset.tg;put(L,k,!get(L,k));commit();panel();refresh();return}
-  const sg=t.closest('[data-set]');if(sg){const v=t.dataset.v;put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();refresh();return}
+  const sg=t.closest('[data-set]');if(sg){const v=t.dataset.v;
+    // turning a box into a line (or back) gives it a sensible thickness (or height) instead of the old one
+    if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=v==='line'||v==='dots';if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots')L.gap??=250}
+    put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();refresh();return}
   const p=t.closest('.pal');if(p&&t.dataset.c){put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
   if(t.dataset.f!=null){
     setFont(L,(fontLang==='ja'?JA:EN)[+t.dataset.f]);bodyEl.querySelectorAll('.fbtn').forEach(x=>x.classList.toggle('on',x===t));
