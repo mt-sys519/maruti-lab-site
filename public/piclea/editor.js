@@ -460,16 +460,17 @@ function shapePath(c,L){
     for(let i=0;i<=n;i++){const x=-len/2+len*i/n;c.moveTo(x+r,0);c.arc(x,0,r,0,Math.PI*2)}
   }
   else if(L.kind==='line')c.rect(-L.w/2,-L.h/2,L.w,L.h);
-  else if(L.kind==='ellipse')c.ellipse(0,0,L.w/2,L.h/2,0,0,Math.PI*2);
+  else if(L.kind==='ellipse'||L.kind==='circle')c.ellipse(0,0,L.w/2,L.h/2,0,0,Math.PI*2);
   else c.roundRect(-L.w/2,-L.h/2,L.w,L.h,L.kind==='round'?Math.min(L.w,L.h)/2*L.r/100:0);
 }
 function drawShape(c,L){
+  if(L.kind==='circle')L.h=L.w; // a circle keeps one size, whatever handle or slider moved
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
   const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
   const mat=isLine(L)?(L.mat==='jelly'?'jelly':'color'):L.mat||(L.glass?'glass':'color'),gl=mat==='glass',jl=mat==='jelly',hx=L.w/2,hy=L.h/2;
   const A=gl?glassRead(c,hx,hy):jl?glassArea(c,hx+70,hy+70):null;if(jl&&A)A.bg=c.getImageData(A.x0,A.y0,A.w,A.h);
   if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,()=>{shapePath(c,L);c.fillStyle=gl||jl?'#fff':rgba(L.color,Math.max(L.a,.01));c.fill()});
-  if(gl)glassPaint(c,A,L.kind==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]);
+  if(gl)glassPaint(c,A,L.kind==='ellipse'||L.kind==='circle'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]);
   else if(jl)maskPaint(c,L,A,'jelly',mc=>{shapePath(mc,L);mc.fill()});
   else{shapePath(c,L);c.fillStyle=rgba(L.color,L.a);c.fill()}
   if(L.line.on&&!isLine(L)){c.lineWidth=L.line.w;c.strokeStyle=L.line.color;c.stroke()}
@@ -527,7 +528,7 @@ function handles(L,M,kk){
   const below=b.h/2+34*kk,room=L.y+below*cs+18*kk<D.H;
   // a shape also stretches one way from the middle of each side
   // a line only lengthens from its ends; its thickness is set in the panel
-  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isShape(L)?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
+  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isShape(L)&&L.kind!=='circle'?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
   return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
@@ -820,11 +821,11 @@ const DRAW={
       :pal('color')+slider('濃さ','a',0,1,.01);
     return `<div class="eseg wide" data-set="mat">${(isLine(L)?[['color','色'],['jelly','ゼリー']]:[['color','色'],['glass','ガラス'],['jelly','ゼリー']]).map(([v,l])=>`<button data-v="${v}" class="${L.mat===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
   },
-  sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['ellipse','丸・だ円'],['line','線'],['dots','点線']])}
+  sform:L=>`${segs('kind',[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円'],['line','線'],['dots','点線']])}
     ${L.kind==='dots'?(L.dstyle??='dot',`<div class="erow"><span class="el">種類</span>${segs('dstyle',[['dot','点'],['dash','線']])}</div>`):''}
     ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
-      :slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.kind==='round'?slider('角丸','r',0,100,1):'')}
-    ${btns(isLine(L)?[['fullw','横幅いっぱい'],['center','真ん中へ']]:[['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
+      :L.kind==='circle'?slider('大きさ','w',6,3000,1):slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.kind==='round'?slider('角丸','r',0,100,1):'')}
+    ${btns(isLine(L)||L.kind==='circle'?[['fullw','横幅いっぱい'],['center','真ん中へ']]:[['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
   sdeco:L=>`${isLine(L)?'':`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>`}
     <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,.5)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`,
   pages:()=>`<div class="pstrip" id="pstrip"></div>
@@ -1014,7 +1015,7 @@ bodyEl.addEventListener('click',e=>{
     if(isText(L)){if((k==='band.glass'||k==='band.line.on')&&get(L,k))L.band.on=true;if(k==='band.on'&&!L.band.on)L.band.glass=L.band.line.on=false}commit();panel();refresh();return}
   const sg=t.closest('[data-set]');if(sg){const v=t.dataset.v;
     // turning a box into a line (or back) gives it a sensible thickness (or height) instead of the old one
-    if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=v==='line'||v==='dots';if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots'){L.gap??=250;L.dstyle??='dot'}}
+    if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=v==='line'||v==='dots';if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots'){L.gap??=250;L.dstyle??='dot'}if(v==='circle')L.w=L.h=Math.round(Math.min(L.w,L.h))}
     put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();refresh();return}
   const p=t.closest('.pal');if(p&&t.dataset.c){put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
   if(t.dataset.f!=null){
