@@ -6,6 +6,7 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { RainChimeGame } from "../RainChimeGame";
+import { PrAds } from "../../PrAds";
 
 const title = "MarutiBit — AVENUE（ピクセルアート・アンビエント）";
 const description = "1996年のニューヨーク。雨、ウインドチャイム、Steel Tongue Drumを眺めて聴くピクセルアート・アンビエント。";
@@ -56,6 +57,8 @@ export default function AvenuePage() {
         rulesLead={<>音は<strong>毎回変化</strong>する生成アンビエント。</>}
         rulesSub="決まったループはありません。"
       />
+      <PrAds kind="a8" />
+
       <BitCartridgeNav current="avenue" />
       <BitFooter label="MARUTIBIT / GAME 007" />
     </main>

@@ -4,6 +4,7 @@ import styles from "../swiftcrop/SwiftCropPage.module.css";
 import { SiteFooter } from "../SiteFooter";
 import { ColorRefineMark } from "../icons";
 import { ToolBrand } from "../SiteHeader";
+import { PrAds } from "../PrAds";
 
 const title = "COLOR RE:FINE";
 const description =
@@ -132,6 +133,7 @@ export default function ColorRefinePage() {
         </p>
       </section>
 
+      <PrAds kind="amazon" />
       <SiteFooter extra={[{ href: "/color-refine/licenses", label: "Licenses" }]} />
     </main>
   );

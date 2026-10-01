@@ -3,6 +3,7 @@ import styles from "./FourTrackPage.module.css";
 import { SiteFooter } from "../SiteFooter";
 import { FourTrackMark } from "../icons";
 import { ToolBrand } from "../SiteHeader";
+import { PrAds } from "../PrAds";
 
 const title = "4TRACK CASSETTE SAMPLER";
 const description = "音を切る、並べる、録る。ブラウザだけで使える4トラック・カセットサンプラー。";
@@ -147,6 +148,7 @@ export default function FourTrackPage() {
         <div><span>FORMAT</span><p>書き出しは16bit・端末のオーディオ設定に準じたサンプリングレート(多くの場合44.1kHzか48kHz)のWAVです。カセットは見た目のモチーフで、LO-FIエフェクトをONにしない限り音質は変わりません。</p></div>
       </aside>
 
+      <PrAds kind="amazon" />
       <SiteFooter className={styles.footer} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />

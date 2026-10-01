@@ -7,6 +7,7 @@ import { ClockPreview } from "./ClockPreview";
 import { formatDate, posts } from "./blog/posts";
 import { SiteFooter } from "./SiteFooter";
 import { AboutMark, BitMark, CoffeeMark, LabMark, NoteMark, ToolsMark } from "./icons";
+import { PrAds } from "./PrAds";
 
 // Only the canonical is set here; the title and description are the root
 // layout's defaults, which are written for this page.
@@ -212,6 +213,7 @@ export default function Home() {
         <a className="refinedLink" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer"><span>コーヒーをおごる</span></a>
       </section>
 
+      <PrAds kind="amazon" />
       <SiteFooter />
     </main>
   );

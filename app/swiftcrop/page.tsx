@@ -6,6 +6,7 @@ import { ToolScripts } from "./ToolScripts";
 import { SwiftCropMark } from "../icons";
 import { ToolBrand } from "../SiteHeader";
 import appHtml from "../../public/swiftcrop-app/index.html?raw";
+import { PrAds } from "../PrAds";
 
 const title = "SwiftCrop";
 const description =
@@ -167,6 +168,7 @@ export default function SwiftCropPage() {
         </p>
       </section>
 
+      <PrAds kind="amazon" />
       <SiteFooter />
     </main>
   );

@@ -5,6 +5,7 @@ import { formatDate, lastChanged, postBySlug, posts } from "../posts";
 import { SiteHeader } from "../../SiteHeader";
 import { NoteWork } from "../NoteWork";
 import "../../bit/retro/retro.css";
+import { PrAds } from "../../PrAds";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -81,6 +82,7 @@ export default async function BlogPost({ params }: Props) {
             build time, so there is no third-party HTML in here. */}
         <div className="postBody" dangerouslySetInnerHTML={{ __html: post.html }} />
       </article>
+      <PrAds kind="amazon" />
       {others.length > 0 && (
         <nav className="postFooter" aria-label="ほかの記事">
           <p className="eyebrow">OTHER LABNOTES</p>

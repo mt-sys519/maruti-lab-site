@@ -8,6 +8,7 @@ import { BitHowToPlay } from "../BitHowToPlay";
 import { BitNotes } from "../BitNotes";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { WorkNotes } from "../../blog/NoteWork";
+import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
   title: "MarutiBit — PAKU（エサやりゲーム）",
@@ -86,6 +87,8 @@ export default function PakuPage() {
       />
 
       <WorkNotes href="/bit/paku" />
+
+      <PrAds kind="a8" />
 
       <BitCartridgeNav current="paku" />
       <BitFooter label="MARUTIBIT / GAME 005" />

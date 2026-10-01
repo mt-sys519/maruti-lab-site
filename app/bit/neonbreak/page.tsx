@@ -6,6 +6,7 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { NeonBreakGame } from "../NeonBreakGame";
+import { PrAds } from "../../PrAds";
 
 const title = "MarutiBit — NEON BREAK（ナインボール）";
 const description = "ネオンの台で9番を狙うナインボール。ひとりで詰めるSOLO、AIKAと撞くVS CPU、一打勝負のSTAGE。";
@@ -62,6 +63,8 @@ export default function NeonBreakPage() {
           "STAGE：一打で9番を落とす",
         ]}
       />
+      <PrAds kind="a8" />
+
       <BitCartridgeNav current="neonbreak" />
       <BitFooter label="MARUTIBIT / GAME 008" />
     </main>

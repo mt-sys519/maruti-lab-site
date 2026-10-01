@@ -6,6 +6,7 @@ import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
+import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
   title: "MarutiBit — BLANK（空欄補完ゲーム）",
@@ -58,6 +59,8 @@ export default function BlankPage() {
         rulesSub="時間制限なし。答えはすべて正の整数。"
         chips={["初級：四則演算", "中級：計算順序", "上級：括弧あり"]}
       />
+      <PrAds kind="a8" />
+
       <BitCartridgeNav current="blank" />
       <BitFooter label="MARUTIBIT / GAME 002" />
     </main>

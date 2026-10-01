@@ -6,6 +6,7 @@ import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
+import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
   title: "MarutiBit — SEQUENCE（順番推理ゲーム）",
@@ -47,6 +48,8 @@ export default function SequencePage() {
         rulesSub="時間制限なし。答えはすべて正の整数。"
         chips={["初級：等間隔", "中級：交互", "上級：2系列"]}
       />
+      <PrAds kind="a8" />
+
       <BitCartridgeNav current="sequence" />
       <BitFooter label="MARUTIBIT / GAME 003" />
     </main>

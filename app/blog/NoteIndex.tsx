@@ -4,6 +4,7 @@ import { SiteFooter } from "../SiteFooter";
 import { SiteHeader } from "../SiteHeader";
 import { NoteMark } from "../icons";
 import { NoteTitle } from "./NoteTitle";
+import { PrAds } from "../PrAds";
 
 // One component behind both /blog and /blog/page/2, so the two can never drift
 // into looking like different sections of the site.
@@ -79,6 +80,7 @@ export function NoteIndex({ page }: { page: number }) {
           )}
         </div>
       </div>
+      <PrAds kind="amazon" />
       <SiteFooter />
     </main>
   );

@@ -7,6 +7,7 @@ import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { MixPopGame } from "../MixPopGame";
 import "../mixPop.css";
+import { PrAds } from "../../PrAds";
 
 const title = "MarutiBit — MIX POP（ドリンク調合トイ）";
 const description =
@@ -88,6 +89,8 @@ export default function MixPopPage() {
         rulesSub="できた一杯には名前がつき、カードにしてシェアできます。"
       />
 
+
+      <PrAds kind="a8" />
 
       <BitCartridgeNav current="mixpop" />
       <BitFooter />

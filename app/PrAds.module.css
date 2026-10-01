@@ -1,0 +1,67 @@
+/* Neutral on purpose: the label takes the page's own text colour, so the block sits as well
+   on CLOCK's black as on MarutiBit's cream. */
+.pr {
+  width: min(100% - 32px, 640px);
+  margin: 48px auto;
+  text-align: center;
+}
+
+.label {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  opacity: 0.55;
+}
+
+.amazon {
+  display: block;
+}
+
+.amazon img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.a8 {
+  display: grid;
+  grid-template-columns: repeat(4, 120px);
+  gap: 12px;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.a8 li {
+  position: relative;
+  width: 120px;
+  height: 60px;
+}
+
+.a8 a,
+.a8 a img {
+  display: block;
+}
+
+.pixel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 559px) {
+  .amazon {
+    width: min(100%, 360px);
+    margin: 0 auto;
+  }
+
+  .a8 {
+    grid-template-columns: repeat(2, 120px);
+  }
+}

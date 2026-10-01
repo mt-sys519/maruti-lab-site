@@ -7,6 +7,7 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitNotes } from "../BitNotes";
 import { BitSeriesNav } from "../BitSeriesNav";
+import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
   title: "MarutiBit — LILT ORB（粒子操作トイ）",
@@ -84,6 +85,8 @@ export default function LiltOrbPage() {
         ]}
         footnote="音はMarutiBit共通の設定です。ほかのゲームでオフにしていれば、ここでもオフのままになります。"
       />
+
+      <PrAds kind="a8" />
 
       <BitCartridgeNav current="liltorb" />
       <BitFooter label="MARUTIBIT / GAME 006" />

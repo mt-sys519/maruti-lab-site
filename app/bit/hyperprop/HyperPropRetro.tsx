@@ -8,6 +8,7 @@ import { RetroCart } from "../retro/RetroCart";
 import { useRetroLang } from "../retro/retroLang";
 import { ShareButton } from "../shared/ShareButton";
 import { XShareButton } from "../shared/XShareButton";
+import { PrAds } from "../../PrAds";
 
 const LABEL = "/bit/retro/hyperprop-label.jpg";
 
@@ -130,6 +131,7 @@ export function HyperPropRetro() {
 
       <WorkNotes href="/bit/hyperprop" className="rtNotes" />
 
+      <PrAds kind="a8" />
       <RetroFooter />
     </main>
   );

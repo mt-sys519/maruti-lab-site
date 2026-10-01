@@ -6,6 +6,7 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { InputRainGame } from "../InputRainGame";
+import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
   title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
@@ -51,6 +52,8 @@ export default function InputRainPage() {
         rulesSub="入力方式は端末に記憶されます。"
         chips={["初級：20秒", "中級：40秒", "上級：60秒", "PRO：180秒"]}
       />
+      <PrAds kind="a8" />
+
       <BitCartridgeNav current="input-rain" />
       <BitFooter label="MARUTIBIT / GAME 004" />
     </main>

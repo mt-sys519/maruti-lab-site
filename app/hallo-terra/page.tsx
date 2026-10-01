@@ -3,6 +3,7 @@ import { SiteFooter } from "../SiteFooter";
 import { TerraShapes } from "./TerraLogo";
 import { audio, places } from "./content";
 import TerraMap from "./TerraMap";
+import { PrAds } from "../PrAds";
 
 /* The map is the page, and the map is a client component, so the metadata
    lives out here. */
@@ -131,6 +132,7 @@ export default function HalloTerraPage() {
           </p>
         </aside>
       </article>
+        <PrAds kind="amazon" />
         <SiteFooter />
       </section>
     </>
