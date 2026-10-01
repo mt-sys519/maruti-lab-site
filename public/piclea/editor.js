@@ -190,7 +190,7 @@ function drawLayer(c,L,ov){
     const ln=L.band.line;if(ln?.on){c.globalAlpha=L.opacity;c.lineWidth=s*ln.w/100;c.strokeStyle=ln.color;c.stroke()}
     c.restore();
   }
-  const gm=L.glyph,GA=gm==='glass'&&glyphRead(c,L,m); // glass letters bend the picture as it was before their shadow
+  const gm=L.glyph,GA=(gm==='glass'||gm==='jelly')&&glyphRead(c,L,m); // glass and jelly bend the picture as it was before their shadow
   c.globalAlpha=L.opacity;c.lineJoin='round';c.miterLimit=2;c.lineWidth=s*L.stroke.w/100*2;
   if(L.shadow.on){
     // Only the shadow: the letters go far off to the side and the offset brings their shadow back.
@@ -205,7 +205,8 @@ function drawLayer(c,L,ov){
   }
   if(L.stroke.on){c.strokeStyle=L.stroke.color;glyphs(c,L,f,m,true)}
   if(gm==='glass')glyphPaint(c,L,f,m,GA,'glass');
-  else if(gm==='carve'||gm==='jelly')glyphPaint(c,L,f,m,glyphRead(c,L,m),gm);
+  else if(gm==='jelly')glyphPaint(c,L,f,m,GA,'jelly');
+  else if(gm==='carve')glyphPaint(c,L,f,m,glyphRead(c,L,m),'carve');
   else{c.fillStyle=rgba(L.color,L.ca??1);glyphs(c,L,f,m,false)}
   c.restore();
   return m;
@@ -325,6 +326,8 @@ function maskPaint(c,L,A,mode,mask){
   const carve=mode==='carve',FC=carve&&FOIL[L.cfoil],foil=!!FC; // the cut's top-left wall is the dark one
   const JL=[-.45,-.55,.7].map((v,_,A)=>v/Math.hypot(...A)),JH=(()=>{const h=[JL[0],JL[1],JL[2]+1],l=Math.hypot(...h);return h.map(v=>v/l)})();
   const ta=mode==='glass'?L.gta||0:0,n0=parseInt(L.color.slice(1),16),TC=[n0>>16,n0>>8&255,n0&255],TV=[0,0,0];
+  // jelly: how much each channel survives one unit of the way through (log), and the colour at full strength
+  const LT=TC.map(v=>Math.log(Math.max(.03,v/255))),tm=Math.max(...TC,1),VIV=TC.map(v=>v*255/tm);
   const jelly=mode==='jelly',dp=L.gd??1,r=Math.max(1,Math.round((L.size||0)*k*(carve?.022:.04))); // 深さ steepens the slope (widening the bevel flattened thin strokes)
   if(mode!=='jelly')boxBlur(H,tmp,w,h,r);
   const out=c.getImageData(x0,y0,W,Hh),o=out.data,b=A.bg.data,VV=[0,0,0],sl=2.2*r,shift=carve?-.9*r:2.2*r;
@@ -341,20 +344,21 @@ function maskPaint(c,L,A,mode,mask){
     const ix=px|0,iy=py|0,fx=px-ix,fy=py-iy,p=(iy*W+ix)*4,q=p+W*4;
     const w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
     const dot=-(sx+sy)*Math.SQRT1_2,d2=Math.min(1,dot*dot); // > 0 where the rim faces the light
-    if(jelly){ // a pillow on every stroke: deeper colour where thick, clear at the rim, a wet highlight, light through bottom-right
+    if(jelly){ // a pillow on every stroke: the picture through it dyed deeper the longer the way, a sharp wet highlight, a white lip, light gathering low inside
       const gx=Math.max(-3,Math.min(3,(H[iR]-H[iL])/2*dp)),gy=Math.max(-3,Math.min(3,(H[iD]-H[iU])/2*dp));
       const nl=Math.sqrt(gx*gx+gy*gy+1),Nx=-gx/nl,Ny=-gy/nl,Nz=1/nl,nh=Nx*JH[0]+Ny*JH[1]+Nz*JH[2];
-      const hh=H[i]/R,spec=Math.pow(Math.max(0,nh),26),sheen=Math.pow(Math.max(0,nh),6);
-      const dif=Nx*JL[0]+Ny*JL[1]+Nz*JL[2],gl=Math.sqrt(gx*gx+gy*gy)||1,cst=Math.max(0,-(gx+gy)/gl*Math.SQRT1_2)*Math.pow(1-hh,1.5);
-      const ab=1-Math.exp(-2.6*hh*(.5+.5*dp)),a=cov*L.opacity;
+      const hh=H[i]/R,ss=Math.max(0,Math.min(1,(nh-.94)/.035)),spec=ss*ss*(3-2*ss),sheen=Math.pow(Math.max(0,nh),12);
+      const dif=Nx*JL[0]+Ny*JL[1]+Nz*JL[2],gl=Math.sqrt(gx*gx+gy*gy)||1,away=-(gx+gy)/gl*Math.SQRT1_2;
+      const glow=Math.max(0,away)*4*hh*(1-hh)*(1-Nz*.35),rim=Math.pow(1-Nz,3)*(away<0?.75:.3);
+      const path=(.3+2*hh+.8*(1-Nz))*(.4+.6*dp),fill=1-Math.exp(-2.2*hh),a=cov*L.opacity;
       const jx=Math.max(0,Math.min(W-1.001,toF(x-gx*JD))),jy=Math.max(0,Math.min(Hh-1.001,toF(y-gy*JD))),jx0=jx|0,jy0=jy|0,fx2=jx-jx0,fy2=jy-jy0,jp=(jy0*W+jx0)*4,jq=jp+W*4;
+      for(let ch=0;ch<3;ch++)VV[ch]=(b[jp+ch]*(1-fx2)+b[jp+4+ch]*fx2)*(1-fy2)+(b[jq+ch]*(1-fx2)+b[jq+4+ch]*fx2)*fy2;
+      const dim=.25*fill*(1-(VV[0]*.3+VV[1]*.59+VV[2]*.11)/255); // over a dark picture some light still scatters inside
       for(let ch=0;ch<3;ch++){
-        let v=(b[jp+ch]*(1-fx2)+b[jp+4+ch]*fx2)*(1-fy2)+(b[jq+ch]*(1-fx2)+b[jq+4+ch]*fx2)*fy2;
-        const tc=TC[ch];
-        v=v*(1-ab+ab*tc/255)+tc*ab*.25;            // colour soaks in with thickness, plus light scattered inside
-        v*=.8+.3*dif;                              // rounded body
-        v+=((tc+(255-tc)*.65)-v)*Math.min(1,cst);  // light through the far side
-        v+=(255-v)*Math.min(1,spec*.95+sheen*.14); // wet highlight
+        let v=VV[ch]*Math.exp(path*LT[ch])+VIV[ch]*dim; // dyed by the way through (Beer–Lambert)
+        v*=.9+.16*dif;                              // rounded body
+        v+=(VIV[ch]+(255-VIV[ch])*.12-v)*Math.min(1,glow*1.3); // light gathering low in each stroke, in the full colour
+        v+=(255-v)*Math.min(1,spec*.97+sheen*.16+rim); // wet highlight and the lip catching the light
         VV[ch]=v;
       }
       put(x,y,a);continue;
