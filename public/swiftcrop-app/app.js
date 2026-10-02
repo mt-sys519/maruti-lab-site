@@ -2045,6 +2045,18 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
     if ([...bases].some((base) => dom.zipName.value === `${base}_dataset`)) dom.zipName.value = 'swiftcrop_images';
   }
 
+  // 以前の通常ページで保存されたファイル名設定を、スマートフォンでは一度だけ空欄へ戻す。
+  // 移行後に利用者が入力したカスタム名は、以降も通常どおり保存・復元する。
+  const MOBILE_RENAME_MIGRATION_KEY = 'swiftcrop.rename.mobile-blank.v1';
+
+  function migrateMobileRenameSetting(settings) {
+    if (AI_ENTRY || !isMobileDevice() || localStorage.getItem(MOBILE_RENAME_MIGRATION_KEY) === '1') return;
+    dom.rename.value = '';
+    settings.rename = '';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    localStorage.setItem(MOBILE_RENAME_MIGRATION_KEY, '1');
+  }
+
   function restoreSettings() {
     try {
       const settings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -2064,6 +2076,7 @@ if (logo) logo.href = isEnglish ? '/?lang=en' : '/';
       if (typeof settings.rename === 'string') dom.rename.value = settings.rename;
       if (typeof settings.zipName === 'string') dom.zipName.value = settings.zipName;
       if (!AI_ENTRY) clearDatasetNames(settings);
+      migrateMobileRenameSetting(settings);
       if (dom.datasetName && typeof settings.datasetName === 'string') dom.datasetName.value = settings.datasetName;
       if (dom.triggerWord && typeof settings.triggerWord === 'string') dom.triggerWord.value = settings.triggerWord;
       if (dom.captionTemplate && typeof settings.captionTemplate === 'string') dom.captionTemplate.value = settings.captionTemplate || '{{dataset}}';
