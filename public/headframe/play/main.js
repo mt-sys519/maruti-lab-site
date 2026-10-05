@@ -12,8 +12,8 @@ addEventListener('resize',resize);resize();
 // v31 sound design: full replacement of the v21-v30 synth layer.
 // One musical clock owns the soundtrack bed and the tonal tails of reward voices
 // (hit notes, HMD designations, frame breaks). Rez is a visual reference only:
-// nothing on screen pulses, sweeps or steps with the music, and footfalls follow
-// the walk cycle. Physical feedback (gun report, impacts, damage, footfalls) is
+// nothing on screen pulses, sweeps or steps with the music; the frame rolls on its
+// wheels with no stride. Physical feedback (gun report, impacts, damage, landings) is
 // immediate so the frame never feels late.
 const BPM=126,BEAT=60/BPM,STEP=BEAT/4,BAR=BEAT*4;
 // D minor colour: Dm9 / Bbmaj9 / Gm9 / Asus(b7). Every tonal SFX picks from the active chord.
@@ -133,7 +133,7 @@ function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0,rolli
   const sf=150+turn*170+gim*140;for(const o of bed.servoO)o.frequency.setTargetAtTime(sf,t,.07);bed.servoF.frequency.setTargetAtTime(sf*4.2,t,.07);
   bed.wind.gain.setTargetAtTime(on*Math.min(.085,v*v*.05+(boosting?.05:0)),t,.10);
   bed.windF.frequency.setTargetAtTime(700+speed*32+(boosting?1100:0),t,.12);
-  if(bed.motor){bed.motor.gain.setTargetAtTime(on*(rolling?(boosting?.05:.032):0),t,rolling?.03:.22);
+  if(bed.motor){bed.motor.gain.setTargetAtTime(on*(rolling?(boosting?.05:.008+Math.min(1,v)*.024):0),t,rolling?.05:.22);
     const mf=rolling?240+speed*15:140;for(const o of bed.motorO)o.frequency.setTargetAtTime(mf,t,rolling?.06:.35);bed.motorF.frequency.setTargetAtTime(mf*2.6,t,.08)}
 }
 // Music clock ------------------------------------------------------------------
@@ -217,10 +217,6 @@ const sfx={
     burst({bp:2600,bp2:1500,fd:.14,q:7,d:.18,g:.10,pri:3});
     burst({bp:520,bp2:2900,fd:.22,q:.8,d:.42,g:.24,pri:3});burst({pink:true,lp:5200,lp2:700,fd:.5,d:.6,g:.12,rev:.12});
     tone({f:110,f2:262,glide:.2,type:'sawtooth',d:.28,g:.03,lp:1500})},
-  // Heavy footfall: sub thud, armour clank, hydraulic hiss. Fired by the walk cycle.
-  step(side=1,weight=1,t=null){if(!ac)return;const r=.95+Math.random()*.1,now=t??ac.currentTime;
-    tone({t:now,f:82*r,f2:42,glide:.09,d:.22,g:.24*weight,crush:true});burst({t:now,bp:2300*r,q:3,d:.045,g:.03*weight,pan:side*.18});
-    tone({t:now,f:330*r,type:'square',d:.022,g:.008*weight,lp:1400,pan:side*.18});burst({t:now+.06,hp:4200,d:.14,g:.010*weight,pan:side*.25})},
   damage(){if(!ac)return;const now=ac.currentTime;tone({f:110,f2:48,glide:.25,d:.3,g:.48,crush:true,pri:3});burst({pink:true,lp:2600,lp2:380,d:.28,g:.36,crush:true,pri:3});
     tone({f:880,type:'square',d:.09,g:.020,lp:2400,pri:2});tone({t:now+.11,f:660,type:'square',d:.10,g:.018,lp:2200,pri:2});tone({f:2350,d:.45,g:.006});duckMusic(.38,.6)},
   impact(){if(!ac)return;tone({f:96,f2:44,glide:.28,d:.38,g:.46,crush:true,pri:3});burst({pink:true,lp:800,d:.24,g:.2});for(const [f,g] of [[182,.022],[497,.016],[973,.010]])tone({f,d:.45,g,rev:.2})},
@@ -281,7 +277,7 @@ musicVol.addEventListener('input',()=>{if(musicBus)musicBus.gain.setTargetAtTime
 // CAMERA_Y is the eye height: standing EYE_Y plus the jump height, refreshed every update, so drawing,
 // hit volumes, enemy aim and lines of sight all follow the frame into the air.
 const EYE_Y=3.25, WORLD=155;let CAMERA_Y=EYE_Y;
-const player={x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,walk:0,stepClock:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,stepSide:1,jy:0,jvy:0,jumpCd:0};
+const player={x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0};
 const buildings=[],enemies=[],playerBolts=[],enemyBolts=[],missiles=[],rockets=[],particles=[],shards=[],waves=[],debris=[],lights=[],keys=new Set(),mouseButtons=new Set();
 let playing=false,last=performance.now(),gameTime=0,lastFire=-Infinity,boostLatch=false,missionClear=false,lastLockedId=0,lastSightLinkId=0,lastDesignatedId=0,visualContact=null,hitStop=0,inboundCooldown=0,missionTime=0;
 const stats={shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0};
@@ -338,7 +334,7 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,walk:0,stepClock:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,stepSide:1,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':'-Sector: Vector Foundry 07.')}
+function reset(){Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':'-Sector: Vector Foundry 07.')}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
@@ -1710,7 +1706,7 @@ function cockpitPose(){
   const neck=.12,eye=[Math.sin(h)*neck,0,(Math.cos(h)-1)*neck];
   const twist=clamp(player.yawVelocity*.035,-.03,.03),load=clamp(speed/62+boost*.4,0,1);
   const jx=C.jolt*C.joltX,jy=C.jolt*C.joltY;
-  const frame={p:[-eye[0]+jx*.03+Math.sin(player.walk)*.004*clamp(speed/20,0,1),-eye[1]+C.heave*.22+boost*.012+jy*.02,-eye[2]-boost*.02],r:[C.heave*.1+player.inertiaPitch*.4-boost*.01,twist,player.inertiaRoll*.3+jx*.02+C.stepRoll]};
+  const road=player.jy<=0?Math.sin(gameTime*31)*Math.sin(gameTime*17.3)*.0012*clamp(speed/20,0,1.4):0,frame={p:[-eye[0]+jx*.03,-eye[1]+C.heave*.22+boost*.012+jy*.02+road,-eye[2]-boost*.02],r:[C.heave*.1+player.inertiaPitch*.4-boost*.01,twist,player.inertiaRoll*.3+jx*.02+C.stepRoll]};
   // Weapon acting: the arm swings up into view at sortie and drops when the frame is lost; venting tips the
   // receiver down and outboard (louvers open), each shot kicks the whole arm, not just the barrel.
   const vent=C.ventK,rs=Math.max(1-C.raise,C.swapK*.8),ease=rs*rs*(3-2*rs),kick=player.gunKick,mk=C.maulKick;
@@ -1733,7 +1729,7 @@ function updateCockpit(dt){
   const C=cockpit;{const up=playing&&player.alive;C.raise=up?Math.min(1,C.raise+dt/.55):playing?Math.max(0,C.raise-dt/.9):0}C.podKick=Math.max(0,C.podKick-dt*5);C.maulKick=Math.max(0,C.maulKick-dt*3.2);
   // Weapon swap: the arm drops, the weapon changes at the bottom of the arc, then it comes back up.
   if(C.swapT>0){C.swapT=Math.max(0,C.swapT-dt);if(C.swapT<=.25)C.shown=player.weapon;C.swapK=Math.sin(Math.PI*(1-C.swapT/.5))}else{C.swapK=0;C.shown=player.weapon}C.ventK+=((player.vent?1:0)-C.ventK)*(1-Math.exp(-dt*7));C.flashW=Math.max(0,C.flashW-dt*3.2);C.bob=Math.max(0,C.bob-dt*5);C.jolt=Math.max(0,C.jolt-dt*4.5);C.rimHit=Math.max(0,C.rimHit-dt*2.2);
-  // Footfall weight: the capsule drops onto a damped spring and settles, leaning toward the planted foot.
+  // Capsule weight: landings and nearby ATLAS steps drop it onto a damped spring and it settles.
   // Strength and stride spacing vary per step so the motion never reads as a beat (user rejected beat-sync).
   C.heaveV+=(-140*C.heave-15*C.heaveV)*dt;C.heave+=C.heaveV*dt;C.stepRoll*=Math.exp(-dt*5);
   C.coreSpin+=dt*(1.2+player.flow*.06+(player.syncTime>0?9:0));
@@ -2210,7 +2206,8 @@ function update(dt){
   const ax=(player.vx-player.prevVx)/Math.max(dt,.001),az=(player.vz-player.prevVz)/Math.max(dt,.001),rf=right(player.yaw),ff=forward(player.yaw);
   const latA=ax*rf.x+az*rf.z,fwdA=ax*ff.x+az*ff.z;
   player.inertiaRoll=lerp(player.inertiaRoll,clamp(-latA*.00135,-.045,.045),1-Math.exp(-9*dt));
-  player.inertiaPitch=lerp(player.inertiaPitch,clamp(-fwdA*.00055,-.020,.020),1-Math.exp(-8*dt));player.prevVx=player.vx;player.prevVz=player.vz;
+  // Suspension: the nose dips when braking and squats back on throttle, on a spring with a little rebound.
+  {const target=clamp(-fwdA*.0008,-.03,.03);player.suspV+=(90*(target-player.inertiaPitch)-11*player.suspV)*dt;player.inertiaPitch+=player.suspV*dt}player.prevVx=player.vx;player.prevVz=player.vz;
   // Mouse commands the weapon gimbal. Chassis catches up slowly; camera does not snap to the mouse.
   player.aimYawTarget=clamp(player.aimYawTarget,-.62,.62);player.aimPitchTarget=clamp(player.aimPitchTarget,-.46,.36);
   const yawStep=(player.syncTime>0?3.10:2.65)*dt,yd=player.aimYawTarget-player.torso;player.torso+=clamp(yd,-yawStep,yawStep);
@@ -2219,8 +2216,9 @@ function update(dt){
   const angularAccel=Math.abs(desiredTurn)>Math.abs(player.yawVelocity)?2.6:4.2;player.yawVelocity+=clamp(desiredTurn-player.yawVelocity,-angularAccel*dt,angularAccel*dt);
   const turn=player.yawVelocity*dt;player.yaw+=turn;player.aimYawTarget-=turn;player.torso-=turn;
   player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.36);player.camPitch=lerp(player.camPitch,player.pitch*.34,1-Math.exp(-5.5*dt));
-  if(speed>.55){player.walk+=dt*(2.6+speed*.088);if(!(player.nextStep>0))player.nextStep=player.walk+Math.PI;if(player.walk>=player.nextStep&&player.boostTime<=0&&player.alive&&player.jy<=0){player.nextStep=player.walk+Math.PI*(.9+Math.random()*.2);player.stepSide*=-1;const w=clamp(speed/19,.55,1.1)*(.82+Math.random()*.36);cockpit.heaveV-=1.9*w;cockpit.stepRoll=player.stepSide*.012*w;player.shake=Math.max(player.shake,.045*w);puff(player.x+right(player.yaw).x*player.stepSide*1.1,.05,player.z+right(player.yaw).z*player.stepSide*1.1,4,'#3fae92',2.2);sfx.step(player.stepSide,clamp(speed/19,.55,1.1))}}
-  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,(player.boostTime>0||player.glideTime>0)&&player.jy<=0);
+  // The frame rolls on the wheels at its feet (key art): no footfalls, no stride. Its weight is in the
+  // suspension instead (the spring pitch below, the lean in turns) and in the landing after a jump.
+  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,player.jy<=0&&(speed>.55||player.boostTime>0||player.glideTime>0));
   {let awakeN=0,committed=false;for(const e of enemies)if(e.alive&&e.awake){awakeN++;if(e.firePending||e.lungeWindup>0)committed=true}music.target=!player.alive?0:missionClear?.1:clamp(.2+awakeN*.16+(committed?.12:0)+(player.syncTime>0?.6:0),0,1)}
   updateCockpit(dt);
   updateVisualDesignation(dt);
