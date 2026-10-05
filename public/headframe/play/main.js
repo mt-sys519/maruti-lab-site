@@ -213,6 +213,10 @@ const sfx={
   debrisBurn(pan=0,g=1){if(!ac)return;const now=ac.currentTime;burst({hp:3800,lp:9000,d:.16,g:.035*g,pan,rev:.2});for(let i=0;i<3;i++)burst({t:now+Math.random()*.12,bp:1800+Math.random()*3000,q:9,d:.02,g:.04*g,pan})},
   explode(pan=0,gain=1){if(!ac)return;tone({f:120,f2:46,glide:.3,d:.5,g:.42*gain,crush:true,pri:2});burst({pink:true,lp:2200,lp2:200,fd:.4,d:.5,g:.26*gain,crush:true,pan});
     for(let i=0;i<3;i++)burst({t:ac.currentTime+Math.random()*.08,bp:3000+Math.random()*3000,q:6,d:.08,g:.03*gain,pan,rev:.15})},
+  snipe(){if(!ac)return;const r=.97+Math.random()*.06;
+    burst({hp:4200,d:.012,g:.26,pri:3});burst({bp:1900*r,bp2:600,q:.8,d:.12,g:.32,pri:3});
+    tone({f:120*r,f2:38,glide:.16,d:.32,g:.5,crush:true,pri:3});burst({pink:true,lp:1600,lp2:200,fd:.9,d:1.1,g:.09,rev:.35,dly:.12});
+    burst({t:ac.currentTime+.28,bp:3200,q:5,d:.035,g:.05});burst({t:ac.currentTime+.5,bp:2400,q:4,d:.05,g:.05})},
   boost(){if(!ac)return;tone({f:92,f2:50,glide:.2,d:.34,g:.38,crush:true,pri:3});
     // the wheels bite: a short tyre chirp on top of the thrust
     burst({bp:2600,bp2:1500,fd:.14,q:7,d:.18,g:.10,pri:3});
@@ -356,7 +360,7 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.')}
+function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,scope:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.');if(secondArm())plog('System',`-Second arm: ${secondArm()}${secondArm()==='ARBALEST'?' [scope]':''}.`)}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
@@ -477,8 +481,19 @@ function doBoost(){const d=inputDir();if(!playing||missionClear||(Math.abs(d.sx)
 // splash damage and a big stagger. Four rounds, one regrows every 7 s; an ATLAS break returns two.
 // Switch with the mouse wheel, 1 / 2 or X; the arm drops, swaps and comes back up (no firing meanwhile).
 const MAUL={mag:4,regen:7,cd:.9,speed:64,direct:150,splash:95,radius:8,stagger:70};
+// ARBALEST: a bolt-action rifle for SKYDECK's long sky. Armed means scoped: the view narrows 2.6x onto the
+// gun's line and the head stops steering it. One click, one round, ~1 s to cycle the bolt.
+const ARBALEST={cycle:1.05,speed:430,damage:120,zoom:2.6};
+// Each sector issues one second arm next to HALBERD: none in SECTOR 01, ARBALEST in SKYDECK, MAUL later
+// (ENDURANCE keeps MAUL: ATLAS comes there).
+function secondArm(){return mode==='endurance'?'MAUL':stage===2?'ARBALEST':stage>=3?'MAUL':null}
 let wheelT=0;
-function switchWeapon(w){if(!playing||!player.alive||w===player.weapon||cockpit.swapT>0)return;player.weapon=w;cockpit.swapT=.5;sfx.swap();plog('System',w==='MAUL'?`-MAUL armed [rocket x${player.rockets}].`:'-HALBERD armed [30mm].')}
+function switchWeapon(w){if(w==='second')w=secondArm();if(w==='other')w=player.weapon==='HALBERD'?secondArm():'HALBERD';if(!w||w!=='HALBERD'&&w!==secondArm())return;if(!playing||!player.alive||w===player.weapon||cockpit.swapT>0)return;player.weapon=w;cockpit.swapT=.5;sfx.swap();plog('System',w==='MAUL'?`-MAUL armed [rocket x${player.rockets}].`:w==='ARBALEST'?'-ARBALEST armed [scope].':'-HALBERD armed [30mm].')}
+function fireArbalest(){if(gameTime-(player.snipeT??-9)<ARBALEST.cycle)return;player.snipeT=gameTime;stats.shots++;
+  const a=aimVector(),M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<6?cockpit.muzzle:null,r=right(player.yaw+player.torso),
+    x=M?M[0]:player.x+r.x*.72+a.x*.6,y=M?M[1]:CAMERA_Y-.28,z=M?M[2]:player.z+r.z*.72+a.z*.6,sp=ARBALEST.speed;
+  playerBolts.push({x,y,z,px:x-a.x*6,py:y-a.y*6,pz:z-a.z*6,vx:a.x*sp,vy:a.y*sp,vz:a.z*sp,life:.9,damage:ARBALEST.damage,syncId:0,snipe:true});
+  player.shake=Math.max(player.shake,.55);player.gunKick=1.6;player.fovKick=Math.max(player.fovKick,.25);flash('muzzleFlash',80);sfx.snipe()}
 function fireMaul(){if(player.rocketCd>0)return;if(player.rockets<=0){if(gameTime-(fireMaul.warnT??-9)>.8){fireMaul.warnT=gameTime;plog('Caution','MAUL empty. Reloading.',3)}return}
   player.rockets--;player.rocketCd=MAUL.cd;stats.shots++;const a=aimVector(),M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<5?cockpit.muzzle:[player.x+a.x*1.5,CAMERA_Y-.3,player.z+a.z*1.5];
   rockets.push({x:M[0],y:M[1],z:M[2],vx:a.x*MAUL.speed,vy:a.y*MAUL.speed,vz:a.z*MAUL.speed,life:3,trail:0,hist:[]});
@@ -502,7 +517,7 @@ function updateRockets(dt){
       particles.push({x:r.x,y:r.y,z:r.z,px:r.x,py:r.y,pz:r.z,vx:(Math.random()-.5)*.8,vy:.6+Math.random()*.6,vz:(Math.random()-.5)*.8,life:.7,max:.7,color:'#6f7f7b',size:.7,g:0})}}
   for(let i=rockets.length-1;i>=0;i--)if(rockets[i].life<=0)rockets.splice(i,1)}
 function aimVector(){const y=player.yaw+player.torso,p=player.pitch,cp=Math.cos(p);return{x:Math.sin(y)*cp,y:Math.sin(p),z:-Math.cos(y)*cp}}
-function fire(fresh=false){if(!playing||!player.alive||missionClear||cockpit.swapT>0)return;if(player.weapon==='MAUL'){if(fresh)fireMaul();return}const now=gameTime;if(now-lastFire<.092)return;if(player.vent){if(now-(fire.warnT??-9)>.6){fire.warnT=now;plog('Caution','HALBERD venting.',3)}return}lastFire=now;stats.shots++;const linked=getSightLink();player.heat=Math.min(100,player.heat+(linked?(player.syncTime>0?5.5:7.6):(player.syncTime>0?8.2:9.5)));const a=aimVector(),r=right(player.yaw+player.torso),M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<5?cockpit.muzzle:null,muzzleX=M?M[0]:player.x+r.x*.72+a.x*.35,muzzleZ=M?M[2]:player.z+r.z*.72+a.z*.35,muzzleY=M?M[1]:CAMERA_Y-.28;const spread=(Math.random()-.5)*(linked?.0022:.0045),rs=right(player.yaw+player.torso);const speed=linked?(player.syncTime>0?112:102):(player.syncTime>0?98:92);playerBolts.push({x:muzzleX,y:muzzleY,z:muzzleZ,px:muzzleX-a.x*1.8,py:muzzleY-a.y*1.8,pz:muzzleZ-a.z*1.8,vx:(a.x+rs.x*spread)*speed,vy:a.y*speed,vz:(a.z+rs.z*spread)*speed,life:1.9,damage:linked?(player.syncTime>0?29:25):20,syncId:linked?.e.id||0});player.shake=Math.max(player.shake,linked?.34:.30);player.gunKick=1;flash('muzzleFlash',55);sfx.fire(!!linked);if(player.heat>=100){player.vent=true;sfx.overheat();plog('Warning','HALBERD overheat. Venting.');pilotReact('grit',.8,1);say('OVERHEAT')}}
+function fire(fresh=false){if(!playing||!player.alive||missionClear||cockpit.swapT>0)return;if(player.weapon==='MAUL'){if(fresh)fireMaul();return}if(player.weapon==='ARBALEST'){if(fresh)fireArbalest();return}const now=gameTime;if(now-lastFire<.092)return;if(player.vent){if(now-(fire.warnT??-9)>.6){fire.warnT=now;plog('Caution','HALBERD venting.',3)}return}lastFire=now;stats.shots++;const linked=getSightLink();player.heat=Math.min(100,player.heat+(linked?(player.syncTime>0?5.5:7.6):(player.syncTime>0?8.2:9.5)));const a=aimVector(),r=right(player.yaw+player.torso),M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<5?cockpit.muzzle:null,muzzleX=M?M[0]:player.x+r.x*.72+a.x*.35,muzzleZ=M?M[2]:player.z+r.z*.72+a.z*.35,muzzleY=M?M[1]:CAMERA_Y-.28;const spread=(Math.random()-.5)*(linked?.0022:.0045),rs=right(player.yaw+player.torso);const speed=linked?(player.syncTime>0?112:102):(player.syncTime>0?98:92);playerBolts.push({x:muzzleX,y:muzzleY,z:muzzleZ,px:muzzleX-a.x*1.8,py:muzzleY-a.y*1.8,pz:muzzleZ-a.z*1.8,vx:(a.x+rs.x*spread)*speed,vy:a.y*speed,vz:(a.z+rs.z*spread)*speed,life:1.9,damage:linked?(player.syncTime>0?29:25):20,syncId:linked?.e.id||0});player.shake=Math.max(player.shake,linked?.34:.30);player.gunKick=1;flash('muzzleFlash',55);sfx.fire(!!linked);if(player.heat>=100){player.vent=true;sfx.overheat();plog('Warning','HALBERD overheat. Venting.');pilotReact('grit',.8,1);say('OVERHEAT')}}
 function getLock(maxAngle=.18){const ay=player.yaw+player.torso,ap=player.pitch;let best=null,bestScore=maxAngle;for(const e of enemies){if(!e.alive)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>130||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)+.2-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);if(score<bestScore){bestScore=score;best={e,dist,score}}}return best}
 function getHmdLock(){const e=enemies.find(x=>x.id===lastDesignatedId&&x.alive&&x.designated>0);if(!e)return null;const dist=Math.hypot(e.x-player.x,e.z-player.z);if(dist>135||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))return null;return{e,dist,score:0,hmd:true}}
 function getSightLink(maxAngle=.105){const h=getHmdLock();if(!h)return null;const e=h.e,ay=player.yaw+player.torso,ap=player.pitch,dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz)||1,ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);return score<maxAngle?{e,dist,score}:null}
@@ -1758,6 +1773,18 @@ const COCKPIT=(()=>{
   B('barrel',box(0,0,2.82,.22,.2,.26,{mat:'dark',name:'brake'}),GUN_STYLE);
   B('barrel',box(0,0,2.82,.24,.03,.08,{mat:'armor'}),GUN_STYLE);
   for(const q of P)if(q.style===GUN_STYLE)q.weapon='HALBERD';
+  // ARBALEST: a long slim barrel with a fluted shroud, a big top scope, a box magazine and a heavy brake.
+  {const A=(bone,q)=>{B(bone,q,GUN_STYLE).weapon='ARBALEST'};
+    A('gun',hexa([[-.11,-.12,-.3],[.11,-.12,-.3],[.11,-.12,.7],[-.11,-.12,.7],[-.1,.09,-.28],[.1,.09,-.28],[.09,.08,.68],[-.09,.08,.68]],{lines:2,lineArea:.03,name:'receiver'}));
+    A('gun',cyl(0,.0,1.45,.075,1.6,'z',8,{mat:'armor',name:'shroud',lines:1,lineArea:.01}));
+    A('gun',cyl(0,.0,2.9,.045,1.4,'z',8,{mat:'metal',name:'barrel'}));
+    A('gun',box(0,0,3.62,.16,.13,.22,{mat:'dark',name:'brake'}));A('gun',box(0,0,3.62,.18,.03,.06,{mat:'accent'}));
+    A('gun',cyl(0,.24,.35,.085,.95,'z',10,{mat:'dark',name:'scope'}));A('gun',cyl(0,.24,.84,.1,.08,'z',10,{mat:'metal'}));A('gun',cyl(0,.24,-.13,.095,.07,'z',10,{mat:'metal'}));
+    A('gun',cyl(0,.24,.89,.06,.02,'z',10,{mat:'glow',glow:'hmd'}));
+    for(const z of [.1,.55])A('gun',box(0,.14,z,.05,.1,.06,{mat:'metal'}));
+    A('gun',box(0,-.26,.32,.1,.26,.2,{mat:'dark',name:'mag'}));
+    A('gun',beam([-.12,-.12,-.18],[-.24,-.4,-.48],.08,.06,{mat:'metal',name:'grip'},[1,0,0]));
+    A('gun',box(.13,.02,.18,.06,.05,.16,{mat:'accent',name:'bolt'}))}
   // MAUL rocket launcher: one fat tube over the same fist, flared muzzle, rear venturi, side optic.
   // Held on the gun bone so the arm IK, raise / drop acting and aim gimbal all carry over.
   {const M=(bone,q)=>{B(bone,q,GUN_STYLE).weapon='MAUL'};
@@ -1891,6 +1918,7 @@ function drawCockpit(speed,viewYaw,viewPitch){
   const P3=(bone,v)=>{const w=xfPoint(X[bone],v);return project(w[0],w[1],w[2],viewYaw,viewPitch)};
   // Stencilled weapon names on the receiver side and the pod flank (affine-mapped bitmap text).
   if(C.shown==='MAUL')stencil(P3,'gun','MAUL',[-.17,.17,2.3],[-.17,.17,1.6],[-.17,.04,2.3],'#c9d0da');
+  else if(C.shown==='ARBALEST')stencil(P3,'gun','ARBALEST',[-.08,.05,2.15],[-.08,.05,.85],[-.08,-.03,2.15],'#c9d0da');
   else stencil(P3,'barrel','HALBERD',[-.05,.103,1.32],[-.05,.103,.7],[-.1,.052,1.32],'#c9d0da');
   ctx.save();ctx.lineCap='round';ctx.shadowBlur=0;ctx.globalCompositeOperation='lighter';
   // Gun: heat bar along the receiver, glowing barrel, vent steam.
@@ -1904,7 +1932,7 @@ function drawCockpit(speed,viewYaw,viewPitch){
   drawVisor(viewYaw);
   // Gun muzzle in world space for the cannon (bolts leave the real barrel).
   {const f=C.foreW,q=f&&project(f[0],f[1],f[2],viewYaw,viewPitch);visorFX.armPt=q&&q.x>-60&&q.x<W+60&&q.y>-60&&q.y<H+60?{x:clamp(q.x/W,.04,.94),y:clamp(q.y/H,.05,.86)}:{x:.88,y:.86}}
-  C.muzzle=C.shown==='MAUL'?xfPoint(X.gun,[0,.1,3.2]):xfPoint(X.barrel,[0,0,2.95]);
+  C.muzzle=C.shown==='MAUL'?xfPoint(X.gun,[0,.1,3.2]):C.shown==='ARBALEST'?xfPoint(X.gun,[0,0,3.75]):xfPoint(X.barrel,[0,0,2.95]);
 }
 // Yellow/ink hazard stripes laid along a strip of the capsule (a->b length, a->c width).
 function hazard(P3,a,b,c,n){ctx.save();for(let i=0;i<n;i++){const t0=i/n,t1=(i+.5)/n,k=.5/n,q=[[t0,0],[t1,0],[t1+k,1],[t0+k,1]].map(([t,w])=>P3('frame',[lerp(a[0],b[0],t)+(c[0]-a[0])*w,lerp(a[1],b[1],t)+(c[1]-a[1])*w,lerp(a[2],b[2],t)+(c[2]-a[2])*w]));if(q.some(v=>!v))continue;ctx.globalAlpha=.9;ctx.fillStyle='#e8c34a';ctx.beginPath();q.forEach((p,j)=>j?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fill()}ctx.restore()}
@@ -1938,6 +1966,23 @@ function drawVisor(viewYaw){
   ctx.restore();
 }
 
+// ARBALEST scope: everything outside one round field goes dark, hairline crosshair with stadia ticks,
+// the range under the crosshair and the bolt cycling along the rim. HMD type, warm off-white.
+function drawScope(viewYaw,viewPitch){const k=player.scope||0;if(k<.02)return;
+  const cx=W/2,cy=H*.49,R=Math.min(W,H)*.44*(1.25-.25*k),ink='rgba(232,228,212,';
+  ctx.save();ctx.globalAlpha=Math.min(1,k*1.4);ctx.fillStyle='rgba(2,4,5,.97)';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(cx,cy,R,0,TAU,true);ctx.fill('evenodd');
+  const g=ctx.createRadialGradient(cx,cy,R*.82,cx,cy,R);g.addColorStop(0,'rgba(2,4,5,0)');g.addColorStop(1,'rgba(2,4,5,.85)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fill();
+  ctx.strokeStyle=ink+'.55)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,R-1,0,TAU);ctx.stroke();
+  ctx.strokeStyle=ink+'.8)';ctx.beginPath();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ctx.moveTo(cx+dx*R*.06,cy+dy*R*.06);ctx.lineTo(cx+dx*R*.98,cy+dy*R*.98)}ctx.stroke();
+  ctx.lineWidth=2;ctx.beginPath();for(const [dx,dy] of [[1,0],[-1,0],[0,1]]){ctx.moveTo(cx+dx*R*.55,cy+dy*R*.55);ctx.lineTo(cx+dx*R*.98,cy+dy*R*.98)}ctx.stroke();
+  ctx.lineWidth=1;ctx.beginPath();for(let i=1;i<=4;i++){const t=R*.1*i;ctx.moveTo(cx-5,cy+t);ctx.lineTo(cx+5,cy+t);ctx.moveTo(cx+t,cy-4);ctx.lineTo(cx+t,cy+4);ctx.moveTo(cx-t,cy-4);ctx.lineTo(cx-t,cy+4)}ctx.stroke();
+  ctx.fillStyle=ink+'.9)';ctx.fillRect(cx-1,cy-1,2,2);
+  const s=Math.max(1.2,H/720*1.5),lock=getLock(.04),cyc=clamp((gameTime-(player.snipeT??-9))/ARBALEST.cycle,0,1);
+  hudText(lock?`RANGE ${Math.round(lock.dist)} M  //  ${etag(lock.e)}`:'RANGE ---',cx+R*.08,cy+R*.62,6*s,lock?'#e2dfcc':'rgba(226,223,204,.55)',0,.28);
+  hudText(`ARBALEST  x${ARBALEST.zoom.toFixed(1)}`,cx-R*.08,cy+R*.62,6*s,'rgba(226,223,204,.55)',1,.28);
+  ctx.strokeStyle=cyc<1?'rgba(216,180,108,.8)':ink+'.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,R-6,Math.PI*.62,Math.PI*.62+Math.PI*.76*cyc);ctx.stroke();
+  hudText(cyc<1?'CYCLING':'READY',cx,cy+R*.86,5.4*s,cyc<1?'#d8b46c':'#e2dfcc',.5,.3);
+  ctx.restore()}
 function drawGunSight(viewYaw,viewPitch){
   const a=aimVector(),p=project(player.x+a.x*85,CAMERA_Y+a.y*85,player.z+a.z*85,viewYaw,viewPitch);
   const linked=getSightLink(),lock=getLock(.24),heat=player.heat/100;
@@ -2124,7 +2169,7 @@ function drawSightLinkCue(viewYaw,viewPitch){
   ctx.shadowBlur=3;ctx.font='7px Consolas';ctx.textAlign='left';ctx.fillText('LINK',x1+g+l+4,cy+3);ctx.restore();
 }
 function drawKillPulse(){if(player.killPulse<=0)return;const k=1-player.killPulse,rr=Math.min(W,H)*(.08+k*.36),a=player.killPulse;ctx.save();ctx.strokeStyle=`rgba(255,220,135,${.48*a})`;ctx.shadowBlur=18;ctx.shadowColor='#ffd16f';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W/2,H*.49,rr,0,TAU);ctx.stroke();ctx.globalAlpha=.16*a;ctx.fillStyle='#fff0b5';ctx.fillRect(0,H*.49-1,W,2);ctx.restore()}
-function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);if(stage===2)drawSkydeck(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage!==2){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch);drawHmdBoresight()}
+function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);if(stage===2)drawSkydeck(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage!==2){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
 
 // One primary attack and one light pressure attack may commit at a time.
 function updateCombatDirector(){
@@ -2149,7 +2194,8 @@ function updateCombatDirector(){
 // ~13 m and fires two rounds when it is inside ~65 m with a clear line. CLIMB: it carries on over the
 // frame and climbs away, then rejoins the circle. It steers like an aircraft: a capped turn rate, banking.
 function updateKite(e,dt){
-  const F=e.fly,dx=player.x-e.x,dz=player.z-e.z,hd=Math.hypot(dx,dz)||1,quiet=!player.alive||missionClear;
+  if(e.alt==null)e.alt=Math.max(8,eY(e));if(!e.orbitDir)e.orbitDir=1;
+  const F=e.fly||(e.fly={mode:'orbit',ang:Math.atan2(e.x-player.x,-(e.z-player.z)),t:0,fired:0,second:0}),dx=player.x-e.x,dz=player.z-e.z,hd=Math.hypot(dx,dz)||1,quiet=!player.alive||missionClear;
   let tx,ty,tz;
   if(F.mode==='orbit'){
     F.ang+=e.orbitDir*(e.speed/e.desired)*dt;const R=e.desired+Math.sin(gameTime*.3+e.phase)*12;tx=player.x+Math.sin(F.ang)*R;tz=player.z-Math.cos(F.ang)*R;ty=e.alt;
@@ -2169,7 +2215,7 @@ function updateKite(e,dt){
   const want=Math.atan2(tx-e.x,-(tz-e.z)),rate=F.mode==='dive'?1.15:.85,turn=clamp(angleDiff(want,e.yaw),-rate*dt,rate*dt);
   e.yaw+=turn;e.turn=lerp(e.turn||0,clamp(turn/Math.max(dt,1e-4)/rate,-1,1),1-Math.exp(-4*dt));
   const sp=e.speed*(F.mode==='dive'?1.3:1),f=forward(e.yaw),vy=clamp((ty-e.y)*.9,-15,10);
-  e.x+=f.x*sp*dt;e.z+=f.z*sp*dt;e.y=Math.max(8,e.y+vy*dt);e.climbK=vy/sp;e.vx=f.x*sp;e.vz=f.z*sp;
+  e.x+=f.x*sp*dt;e.z+=f.z*sp*dt;e.y=Math.max(8,e.y+vy*dt);e.climbK=vy/Math.max(sp,1);e.vx=f.x*sp;e.vz=f.z*sp;
   updateEnemyAnim(e,dt);
   if((e.marked>0||e.designated>0)&&e.trailTick<=0){e.trailTick=.075;e.trail.push({x:e.x,y:2.7+eY(e),z:e.z,life:.65});if(e.trail.length>9)e.trail.shift()}
 }
@@ -2330,6 +2376,7 @@ function update(dt){
   const angularAccel=Math.abs(desiredTurn)>Math.abs(player.yawVelocity)?2.6:4.2;player.yawVelocity+=clamp(desiredTurn-player.yawVelocity,-angularAccel*dt,angularAccel*dt);
   const turn=player.yawVelocity*dt;player.yaw+=turn;player.aimYawTarget-=turn;player.torso-=turn;
   player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.56);
+  {const want=player.alive&&!missionClear&&cockpit.shown==='ARBALEST'&&cockpit.swapT<=0?1:0;player.scope=(player.scope||0)+(want-(player.scope||0))*(1-Math.exp(-(want?10:14)*dt));if(player.scope<.002)player.scope=0}
   // The view follows a third of the gun's pitch, and more once the gun is raised past ~10 deg, so a KITE
   // high in the sky stays on screen while the gun is on it. Height is the mouse's job, not the head's.
   player.camPitch=lerp(player.camPitch,player.pitch*.34+Math.max(0,player.pitch-.18)*.55,1-Math.exp(-5.5*dt));
@@ -2619,9 +2666,10 @@ function drawPilotLink(){
   {const fl=player.syncTime>0?1:clamp(player.flow/100,0,1);ctx.fillStyle=player.syncTime>0?HUD.sync:'rgba(230,208,142,.7)';ctx.fillRect(lx,ly-2*s,logW*fl,1.5*s)}
   // ARM: weapon name, barrel heat (or MAUL rounds), VENT / RELOAD.
   const ax=lx+logW+gap,heat=clamp(player.heat/100,0,1);hudPanel(ax,sy,sideW,sideH,'ARM',s);
-  {const x0=ax+pad,x1=ax+sideW-pad,maul=cockpit.shown==='MAUL';hudText(maul?'MAUL':'HALBERD',x0,sy+pad,fs,HUD.caution,0,.16);
+  {const x0=ax+pad,x1=ax+sideW-pad,maul=cockpit.shown==='MAUL',arb=cockpit.shown==='ARBALEST';hudText(maul?'MAUL':arb?'ARBALEST':'HALBERD',x0,sy+pad,fs,HUD.caution,0,.16);
     const gy=sy+sideH-pad-4*s;
-    if(maul){const n=MAUL.mag,cw=(x1-x0-2*s*(n-1))/n;for(let i=0;i<n;i++){const x=x0+i*(cw+2*s),f=i<player.rockets?1:i===player.rockets?player.rocketRegen/MAUL.regen:0;ctx.fillStyle=HUD.faint;ctx.fillRect(x,gy,cw,2*s);if(f>0){ctx.fillStyle=f<1?'rgba(216,180,108,.5)':HUD.caution;ctx.fillRect(x,gy,cw*f,2*s)}}
+    if(arb){const cyc=clamp((gameTime-(player.snipeT??-9))/ARBALEST.cycle,0,1);ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=cyc<1?'rgba(216,180,108,.6)':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*cyc,2*s);hudText(cyc<1?'CYCLING':'READY',x0,gy-cap-5*s,cap,cyc<1?HUD.caution:HUD.dim,0,.2)}
+    else if(maul){const n=MAUL.mag,cw=(x1-x0-2*s*(n-1))/n;for(let i=0;i<n;i++){const x=x0+i*(cw+2*s),f=i<player.rockets?1:i===player.rockets?player.rocketRegen/MAUL.regen:0;ctx.fillStyle=HUD.faint;ctx.fillRect(x,gy,cw,2*s);if(f>0){ctx.fillStyle=f<1?'rgba(216,180,108,.5)':HUD.caution;ctx.fillRect(x,gy,cw*f,2*s)}}
       hudText(player.rockets?'ROUNDS '+player.rockets:'RELOAD',x0,gy-cap-5*s,cap,player.rockets?HUD.dim:HUD.warn,0,.2)}
     else{const hot=player.vent;ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=hot?(blink?HUD.warn:'rgba(228,124,98,.4)'):heat>.7?'#e09a62':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*heat,2*s);
       hudText(hot?'VENT':'HEAT',x0,gy-cap-5*s,cap,hot?HUD.warn:HUD.dim,0,.2);hudText(String(Math.round(heat*100)),x1,gy-cap-5*s,cap,hot?HUD.warn:HUD.dim,1,.1)}}
@@ -2818,7 +2866,7 @@ function applyBloom(){
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'GLOW : HIGH':'GLOW : LOW'}
-function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,viewYaw=player.yaw+head,viewPitch=player.camPitch+player.inertiaPitch+headPitch*Math.PI/180;renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
+function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
 // canvas state reset, and the error goes to the console, window.__hfErrors and once per message to the LOG.
@@ -2847,11 +2895,11 @@ if(endure.best)$('status').textContent=`READY / ENDURANCE BEST ${endure.best.kil
 function clearInput(){keys.clear();mouseButtons.clear();boostLatch=false}
 function pause(){playing=false;clearInput();boot.classList.remove('hidden');hud.classList.add('hidden');updateEngine(0,false)}
 document.addEventListener('pointerlockchange',()=>{if(playing&&document.pointerLockElement!==canvas&&!new URLSearchParams(location.search).has('demo'))pause()});
-document.addEventListener('mousemove',e=>{if(!playing||(!new URLSearchParams(location.search).has('demo')&&document.pointerLockElement!==canvas)||!player.alive)return;const ms=+mouseSens.value;player.aimYawTarget+=e.movementX*.00135*ms;player.aimPitchTarget-=e.movementY*.00125*ms});
+document.addEventListener('mousemove',e=>{if(!playing||(!new URLSearchParams(location.search).has('demo')&&document.pointerLockElement!==canvas)||!player.alive)return;const ms=+mouseSens.value/(1+(ARBALEST.zoom-1)*(player.scope||0));player.aimYawTarget+=e.movementX*.00135*ms;player.aimPitchTarget-=e.movementY*.00125*ms});
 document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===2)fireMissile()});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
-document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon(player.weapon==='MAUL'?'HALBERD':'MAUL')},{passive:true});
-document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'))switchWeapon(e.code==='Digit1'?'HALBERD':'MAUL');if(e.code==='KeyX'&&!e.repeat)switchWeapon(player.weapon==='MAUL'?'HALBERD':'MAUL');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
+document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
+document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'))switchWeapon(e.code==='Digit1'?'HALBERD':'second');if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='MISSION RESET'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='FULLSCREEN ERROR'}});
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind(gain,$('gainout'),'×',1);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);
