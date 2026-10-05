@@ -21,11 +21,19 @@
 .hfHeader nav a{padding:6px 0;text-decoration:none;border-bottom:1px solid transparent}
 .hfHeader nav a:hover{border-color:var(--hf-ink)}
 
-.hfMain{max-width:880px;margin:0 auto;padding:0 clamp(16px,5vw,48px) 96px}
+.hfMain{max-width:1080px;margin:0 auto;padding:0 clamp(16px,5vw,48px) 96px}
+.hfSection{max-width:880px}
 
-.hfHero{padding:clamp(64px,12vh,128px) 0 clamp(48px,8vh,88px);border-bottom:1px solid var(--hf-line)}
+.hfHero{padding:clamp(56px,10vh,112px) 0 clamp(48px,8vh,88px);border-bottom:1px solid var(--hf-line);display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,400px);column-gap:clamp(32px,5vw,64px);align-content:center}
+.hfHero>*{grid-column:1}
+/* The key art: beside the name, sinking into the page at its foot, with the HMD's hairline round it. */
+.hfKey{grid-column:2;grid-row:1 / span 6;align-self:center;margin:0;position:relative}
+.hfKey img{display:block;width:100%;height:auto;-webkit-mask-image:linear-gradient(to bottom,#000 78%,transparent);mask-image:linear-gradient(to bottom,#000 78%,transparent)}
+.hfKey:before,.hfKey:after{content:"";position:absolute;width:18px;height:18px;border-color:rgba(230,236,233,.5);border-style:solid;pointer-events:none}
+.hfKey:before{left:-8px;top:-8px;border-width:1px 0 0 1px}
+.hfKey:after{right:-8px;top:-8px;border-width:1px 1px 0 0}
 .hfEyebrow{margin:0;font-size:11px;letter-spacing:.3em;color:var(--hf-muted)}
-.hfHero h1{margin:14px 0 0;font-size:clamp(44px,9vw,96px);font-weight:300;letter-spacing:.18em;line-height:1}
+.hfHero h1{margin:14px 0 0;font-size:clamp(44px,6.4vw,76px);font-weight:300;letter-spacing:.18em;line-height:1}
 .hfLead{margin:28px 0 0;max-width:640px;font-size:15px;line-height:2;color:#d0d9d6;letter-spacing:.04em}
 .hfActions{margin-top:40px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px}
 .hfPlay{display:inline-grid;place-items:center;min-width:200px;height:48px;padding:0 24px;background:var(--hf-amber);color:#0b1112 !important;font-size:13px;font-weight:700;letter-spacing:.16em;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
@@ -46,6 +54,12 @@
 .hfKeys dt{font-weight:700;letter-spacing:.1em}
 .hfKeys dd{margin:0;color:#d0d9d6}
 
+@media (max-width:860px){
+  .hfHero{grid-template-columns:1fr}
+  .hfHero>*{order:3}
+  .hfEyebrow{order:0}.hfHero h1{order:1;font-size:clamp(40px,11vw,76px)}
+  .hfKey{order:2;grid-column:1;grid-row:auto;width:min(100%,460px);margin:32px auto 0}
+}
 @media (max-width:640px){
   .hfHeader{height:64px}
   .hfHeader nav a:first-child{display:none}

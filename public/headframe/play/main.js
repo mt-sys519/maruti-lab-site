@@ -118,8 +118,12 @@ function buildBed(){
   // Airflow: rises with the square of speed and opens during BURST.
   bed.wind=ac.createGain();bed.wind.gain.value=0;bed.windF=ac.createBiquadFilter();bed.windF.type='bandpass';bed.windF.Q.value=.55;bed.windF.frequency.value=900;
   loop(noiseWhite).connect(bed.windF).connect(bed.wind).connect(sfxBus);
+  // Wheel motors (the frame's feet roll, after the key art): a hub-motor whine that rises with ground speed
+  // while BURST and its glide are on the wheels, and spins down when the frame is back on its feet.
+  bed.motor=ac.createGain();bed.motor.gain.value=0;bed.motorF=ac.createBiquadFilter();bed.motorF.type='bandpass';bed.motorF.Q.value=3.2;bed.motorF.frequency.value=900;bed.motorF.connect(bed.motor).connect(sfxBus);
+  bed.motorO=[['square',0,.35],['sawtooth',-1200,.5]].map(([type,cents,g0])=>{const o=ac.createOscillator();o.type=type;o.frequency.value=220;o.detune.value=cents;const g=ac.createGain();g.gain.value=g0;o.connect(g).connect(bed.motorF);o.start();return o});
 }
-function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0){
+function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0,rolling=false){
   if(!ac||!bed.hum)return;
   const t=ac.currentTime,on=playing&&player.alive?1:0,v=clamp(speed/62,0,1.2),turn=clamp(Math.abs(turnRate)/.92,0,1),gim=clamp(Math.abs(gimbalLoad)/.55,0,1);
   bed.hum.gain.setTargetAtTime(on*(.022+v*.010+(boosting?.014:0)+(syncing?.008:0)),t,.15);
@@ -129,6 +133,8 @@ function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0){
   const sf=150+turn*170+gim*140;for(const o of bed.servoO)o.frequency.setTargetAtTime(sf,t,.07);bed.servoF.frequency.setTargetAtTime(sf*4.2,t,.07);
   bed.wind.gain.setTargetAtTime(on*Math.min(.085,v*v*.05+(boosting?.05:0)),t,.10);
   bed.windF.frequency.setTargetAtTime(700+speed*32+(boosting?1100:0),t,.12);
+  if(bed.motor){bed.motor.gain.setTargetAtTime(on*(rolling?(boosting?.05:.032):0),t,rolling?.03:.22);
+    const mf=rolling?240+speed*15:140;for(const o of bed.motorO)o.frequency.setTargetAtTime(mf,t,rolling?.06:.35);bed.motorF.frequency.setTargetAtTime(mf*2.6,t,.08)}
 }
 // Music clock ------------------------------------------------------------------
 function chordAt(step){return CHORDS[Math.floor(step/32)%CHORDS.length]}
@@ -207,6 +213,8 @@ const sfx={
   explode(pan=0,gain=1){if(!ac)return;tone({f:120,f2:46,glide:.3,d:.5,g:.42*gain,crush:true,pri:2});burst({pink:true,lp:2200,lp2:200,fd:.4,d:.5,g:.26*gain,crush:true,pan});
     for(let i=0;i<3;i++)burst({t:ac.currentTime+Math.random()*.08,bp:3000+Math.random()*3000,q:6,d:.08,g:.03*gain,pan,rev:.15})},
   boost(){if(!ac)return;tone({f:92,f2:50,glide:.2,d:.34,g:.38,crush:true,pri:3});
+    // the wheels bite: a short tyre chirp on top of the thrust
+    burst({bp:2600,bp2:1500,fd:.14,q:7,d:.18,g:.10,pri:3});
     burst({bp:520,bp2:2900,fd:.22,q:.8,d:.42,g:.24,pri:3});burst({pink:true,lp:5200,lp2:700,fd:.5,d:.6,g:.12,rev:.12});
     tone({f:110,f2:262,glide:.2,type:'sawtooth',d:.28,g:.03,lp:1500})},
   // Heavy footfall: sub thud, armour clank, hydraulic hiss. Fired by the walk cycle.
@@ -1604,7 +1612,9 @@ const CP_STYLE={edge:'#46d2ae',core:'#c8fff0',accent:'#ffd16f',glow:'#8fffe0',ar
 const GUN_STYLE={edge:'#ffb347',core:'#fff0c8',accent:'#ffd16f',glow:'#ffcf7a',armor:[34,25,13],dark:[11,8,4],metal:[28,24,18]};
 // Weapons are drawn like characters, not instruments: flat two-tone cel fill, heavy ink contour, ink creases
 // and a thin role-coloured trace (amber = mouse gun, cyan = head pod). [lit, shadow] per material.
-GUN_STYLE.toon={tone:true,ink:'#0b0704',trace:'#ffc75a',armor:[[222,196,146],[112,86,50]],dark:[[132,110,78],[54,42,26]],metal:[[190,176,150],[92,82,64]],accent:[[255,214,128],[150,104,40]]};
+// The guns follow the key art (AOI beside her frame): a gunmetal body, steel parts, blue light, so they
+// belong to the white / black / blue arm that holds them. The amber trace still says "mouse".
+GUN_STYLE.toon={tone:true,ink:'#05070a',trace:'#ffc75a',armor:[[104,110,122],[40,43,52]],dark:[[54,57,66],[20,21,26]],metal:[[170,176,186],[76,80,92]],accent:[[120,170,255],[44,76,170]]};
 const POD_STYLE={...CP_STYLE,toon:{tone:true,ink:'#040a09',trace:'#8fffe0',armor:[[190,232,218],[78,118,108]],dark:[[108,140,132],[40,58,54]],metal:[[160,190,182],[70,92,88]],accent:[[150,255,226],[60,130,110]]}};
 // The capsule itself: darker slate cel than the world so it frames the view, teal trace on the big members.
 CP_STYLE.toon={ink:'#050807',trace:'#46d2ae',tone:true,armor:[[158,174,166],[78,92,88]],dark:[[74,84,82],[36,42,42]],metal:[[186,192,184],[96,104,100]],accent:[[236,196,84],[140,104,30]]};
@@ -1801,8 +1811,8 @@ function drawCockpit(speed,viewYaw,viewPitch){
   else renderMeshInstances(insts,viewYaw,viewPitch,{style:CP_STYLE,alpha:1,silW:1.6,crW:.85,halo:.05,detail:true,creases:true,glow:{hmd:.7},cockpit:true,inkW:clamp(H/720*5.5,3.5,10)});
   const P3=(bone,v)=>{const w=xfPoint(X[bone],v);return project(w[0],w[1],w[2],viewYaw,viewPitch)};
   // Stencilled weapon names on the receiver side and the pod flank (affine-mapped bitmap text).
-  if(C.shown==='MAUL')stencil(P3,'gun','MAUL',[-.17,.17,2.3],[-.17,.17,1.6],[-.17,.04,2.3],'#0b0704');
-  else stencil(P3,'barrel','HALBERD',[-.05,.103,1.32],[-.05,.103,.7],[-.1,.052,1.32],'#0b0704');
+  if(C.shown==='MAUL')stencil(P3,'gun','MAUL',[-.17,.17,2.3],[-.17,.17,1.6],[-.17,.04,2.3],'#c9d0da');
+  else stencil(P3,'barrel','HALBERD',[-.05,.103,1.32],[-.05,.103,.7],[-.1,.052,1.32],'#c9d0da');
   ctx.save();ctx.lineCap='round';ctx.shadowBlur=0;ctx.globalCompositeOperation='lighter';
   // Gun: heat bar along the receiver, glowing barrel, vent steam.
   if(C.shown==='MAUL'){if(C.maulKick>.3){const m=P3('gun',[0,.1,3.25]),b=P3('gun',[0,.1,.1]);for(const [q,k] of [[m,1],[b,.7]]){if(!q)continue;const r=clamp(q.f*.32,8,90)*C.maulKick*k;ctx.globalAlpha=.6*C.maulKick;ctx.fillStyle='#ffb35c';ctx.beginPath();ctx.arc(q.x,q.y,r,0,TAU);ctx.fill();ctx.globalAlpha=C.maulKick;ctx.fillStyle='#fffbe8';ctx.beginPath();ctx.arc(q.x,q.y,r*.35,0,TAU);ctx.fill()}}}
@@ -2210,7 +2220,7 @@ function update(dt){
   const turn=player.yawVelocity*dt;player.yaw+=turn;player.aimYawTarget-=turn;player.torso-=turn;
   player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.36);player.camPitch=lerp(player.camPitch,player.pitch*.34,1-Math.exp(-5.5*dt));
   if(speed>.55){player.walk+=dt*(2.6+speed*.088);if(!(player.nextStep>0))player.nextStep=player.walk+Math.PI;if(player.walk>=player.nextStep&&player.boostTime<=0&&player.alive&&player.jy<=0){player.nextStep=player.walk+Math.PI*(.9+Math.random()*.2);player.stepSide*=-1;const w=clamp(speed/19,.55,1.1)*(.82+Math.random()*.36);cockpit.heaveV-=1.9*w;cockpit.stepRoll=player.stepSide*.012*w;player.shake=Math.max(player.shake,.045*w);puff(player.x+right(player.yaw).x*player.stepSide*1.1,.05,player.z+right(player.yaw).z*player.stepSide*1.1,4,'#3fae92',2.2);sfx.step(player.stepSide,clamp(speed/19,.55,1.1))}}
-  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso);
+  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,(player.boostTime>0||player.glideTime>0)&&player.jy<=0);
   {let awakeN=0,committed=false;for(const e of enemies)if(e.alive&&e.awake){awakeN++;if(e.firePending||e.lungeWindup>0)committed=true}music.target=!player.alive?0:missionClear?.1:clamp(.2+awakeN*.16+(committed?.12:0)+(player.syncTime>0?.6:0),0,1)}
   updateCockpit(dt);
   updateVisualDesignation(dt);

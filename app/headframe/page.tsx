@@ -33,6 +33,19 @@ export default function HeadframePage() {
     <>
       <main className="hfMain">
         <section className="hfHero">
+          {/* Key art: AOI beside her frame. It is the first thing to catch the eye, so it sits beside the
+              name on a wide screen and under it on a phone. The art may still change. */}
+          <figure className="hfKey">
+            {/* eslint-disable-next-line @next/next/no-img-element -- two fixed WebP sizes, served as is */}
+            <img
+              src="/headframe/key-900.webp"
+              srcSet="/headframe/key-560.webp 560w, /headframe/key-900.webp 900w"
+              sizes="(max-width: 860px) 100vw, 420px"
+              width={900}
+              height={1125}
+              alt="パイロットのAOIと、白と黒の装甲に青い光のラインが走る機体。格納庫に並んで立っている"
+            />
+          </figure>
           <p className="hfEyebrow">TACTICAL POWER FRAME / IN DEVELOPMENT</p>
           <h1>HEADFRAME</h1>
           <p className="hfLead">
