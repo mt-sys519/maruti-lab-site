@@ -244,10 +244,10 @@ function syncWorld(W, o) {
       const m = poolMesh(boxPool, bi++, boxGeo); m.position.set(b.cx, b.y0, b.cz); m.scale.set(b.w, Math.max(0.01, b.y1 - b.y0), b.d); m.updateMatrix(); m.updateMatrixWorld(true);
       // which faces carry windows: the same hash as the Canvas renderer, on the CPU (GPU sin drifts on big arguments)
       const seed = Math.floor(b.cx * 7.13 + b.cz * 3.71 + b.y0 * 11), hs = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
-      Object.assign(m.userData, { box: 1, fade: b.alpha ?? 1, seed, win: [0, 1, 2, 3].map(i => hs(seed + i) > 0.4 ? 1 : 0), y0: b.y0, hgt: b.y1 - b.y0, cx: b.cx, cz: b.cz, w: b.w, d: b.d }); m.visible = true;
+      Object.assign(m.userData, { box: 1, fade: b.alpha ?? 1, seed, win: [0, 1, 2, 3].map(i => !b.plain && hs(seed + i) > 0.4 ? 1 : 0), y0: b.y0, hgt: b.y1 - b.y0, cx: b.cx, cz: b.cz, w: b.w, d: b.d }); m.visible = true;
       // roof rail on camera-facing faces that are large on screen, when looking up at the roof
       const hgt = b.y1 - b.y0;
-      if (hgt > 4 && o.camY < b.y1 && b.w * b.d > 6) { const xa = b.cx - b.w / 2, xb = b.cx + b.w / 2, za = b.cz - b.d / 2, zb = b.cz + b.d / 2,
+      if (hgt > 4 && o.camY < b.y1 && b.w * b.d > 6 && !b.plain) { const xa = b.cx - b.w / 2, xb = b.cx + b.w / 2, za = b.cz - b.d / 2, zb = b.cz + b.d / 2,
           faces = [[[xa, za], [xb, za], o.pz < za], [[xb, za], [xb, zb], o.px > xb], [[xb, zb], [xa, zb], o.pz > zb], [[xa, zb], [xa, za], o.px < xa]], ink = [1, 4, 4], a = 0.8 * (b.alpha ?? 1);
         for (const [A, B, vis] of faces) { if (!vis) continue; const Wm = Math.hypot(B[0] - A[0], B[1] - A[1]), dist = Math.max(1, Math.hypot((A[0] + B[0]) / 2 - o.px, (A[1] + B[1]) / 2 - o.pz)); if (Wm < 1.5 || Wm * o.focal / dist < 70) continue;
           for (const dy of [1.1, 0.55]) W.lines.push(A[0], b.y1 + dy, A[1], B[0], b.y1 + dy, B[1], ...ink, a, 1.2, 1);

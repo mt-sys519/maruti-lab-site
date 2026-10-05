@@ -306,8 +306,19 @@ const SKY_BLOCKS=[
 [-33,-10,8,6,5,3],[36,66,10,6,6,3],[31,-32,8,8,5,3],[-30,104,10,6,6,3],[-36,-118,12,8,7,3],
 [-112,-24,30,40,16,2],[112,-112,30,36,14,2],[-108,92,34,30,12,3],[110,102,30,30,15,2]
 ];
-const SECTORS={1:{tag:'SECTOR 01',name:'TRANSFER DISTRICT',blocks},2:{tag:'SECTOR 02',name:'SKYDECK',blocks:SKY_BLOCKS}};
-const LAST_SECTOR=2;
+// SECTOR 03, FREIGHT TUNNEL: an underground freight line, closed at both ends. A 22 m ceiling (room
+// for ATLAS), concrete walls 84 m apart, two rows of pillars for cover off the centre lane, a few
+// containers and barriers on it, ceiling lamps every 20 m. Walls, ends and pillars are solid (type 4,
+// plain concrete); the ceiling and its beams are drawn by drawTunnel and stop shots at TUNNEL.ceil.
+const TUNNEL={hw:42,len:150,ceil:22};
+const TUNNEL_BLOCKS=(()=>{const out=[],{hw,len,ceil}=TUNNEL;
+  for(let z=-len;z<len;z+=30)for(const s of [-1,1])out.push([s*(hw+4),z+15,8,30,ceil,4]);
+  for(const s of [-1,1])out.push([0,s*(len+4),2*hw+16,8,ceil,4]);
+  for(let z=-128;z<=128;z+=32)for(const s of [-1,1])out.push([s*28,z,3.6,3.6,ceil,4]);
+  out.push([-12,44,5.6,12,5.2,4],[13,-8,12,5.6,5.2,4],[-14,-52,5.6,12,5.2,4],[8,-92,12,5.6,5.2,4],[0,14,10,1.4,1.8,4],[-4,-122,10,1.4,1.8,4]);
+  return out})();
+const SECTORS={1:{tag:'SECTOR 01',name:'TRANSFER DISTRICT',blocks},2:{tag:'SECTOR 02',name:'SKYDECK',blocks:SKY_BLOCKS},3:{tag:'SECTOR 03',name:'FREIGHT TUNNEL',blocks:TUNNEL_BLOCKS}};
+const LAST_SECTOR=3;
 let stage=1,builtStage=0;
 function buildSector(n){if(builtStage===n)return;builtStage=n;buildings.length=0;lights.length=0;seed=17;for(const b of SECTORS[n].blocks)addBuilding(...b);
   if(n===1)for(let z=-120;z<=120;z+=30)for(const x of [-23,23])lights.push({x,z,y:5.2})}
@@ -332,6 +343,9 @@ function spawn(){
     // SKYDECK: a few machines on the deck, and the KITE flights circling high over it.
     const deck=[[0,-24,'HEAVY'],[-34,18,'SCOUT'],[36,-56,'SCOUT']];deck.forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));
     for(let i=0;i<5;i++)enemies.push(makeKite(i,deck.length+i+1));return}
+  if(mode!=='endurance'&&stage===3){
+    // FREIGHT TUNNEL: walkers only. PIKEs and BASTIONs between the pillars, ATLAS at the far end.
+    [[14,24,'LANCER'],[-18,-20,'HEAVY'],[20,-62,'HEAVY'],[-16,-84,'LANCER'],[0,-112,'TITAN']].forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));return}
   (mode==='endurance'?layout.slice(0,3):layout).forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));
 }
 // A KITE starts on its orbit, already flying: the sky over SKYDECK is never empty. Attack runs begin a
@@ -360,7 +374,7 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,scope:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.');if(secondArm())plog('System',`-Second arm: ${secondArm()}${secondArm()==='ARBALEST'?' [scope]':''}.`)}
+function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,scope:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':stage===3?'-Sector 03: Freight tunnel. Walkers inbound.':'-Sector: Vector Foundry 07.');if(secondArm())plog('System',`-Second arm: ${secondArm()}${secondArm()==='ARBALEST'?' [scope]':''}.`)}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
@@ -390,8 +404,11 @@ function segmentAABBTime(x0,y0,z0,x1,y1,z1,b){
   return t0;
 }
 function segmentAABB(...args){return segmentAABBTime(...args)!==null}
+const TUNNEL_ROOF={x:0,z:0,w:2*TUNNEL.hw,d:2*TUNNEL.len,h:TUNNEL.ceil+3,type:4,roof:true};
 function worldImpact(x0,y0,z0,x1,y1,z1){
   let result=null;for(const b of buildings){const t=segmentAABBTime(x0,y0,z0,x1,y1,z1,b);if(t!==null&&(!result||t<result.t))result={t,b}}
+  // FREIGHT TUNNEL: the ceiling stops whatever climbs through it.
+  if(stage===3&&y1>TUNNEL.ceil&&y0<=TUNNEL.ceil){const t=(TUNNEL.ceil-y0)/(y1-y0);if(!result||t<result.t)result={t,b:TUNNEL_ROOF}}
   return result;
 }
 function segmentHitsWorld(...args){return worldImpact(...args)?.b||null}
@@ -700,7 +717,9 @@ const WORLD_CEL={top:[60,88,90],lit:[40,63,66],shade:[24,39,43],ink:'#010404'};
 const NIGHT={sky:['#071015','#0b171b','#111f20','#142321'],ground:'#0b1514'};
 // SKYDECK flies under a pre-dawn sky: deep blue, lighter toward the horizon, so a KITE reads against it.
 const SKYDECK_SKY=['#0a1424','#122036','#1c2c44','#27364a'];
-function skyStops(){return stage===2?SKYDECK_SKY:NIGHT.sky}
+// FREIGHT TUNNEL has no sky: this is only what far concrete fades into, a dark haze down the tube.
+const TUNNEL_SKY=['#06090a','#080c0d','#0b1011','#0e1415'];
+function skyStops(){return stage===2?SKYDECK_SKY:stage===3?TUNNEL_SKY:NIGHT.sky}
 function celRGB(c){const t=syncMix,L=(c[0]+c[1]+c[2])/3;return`rgb(${lerp(c[0],L*2.1+10,t)|0},${lerp(c[1],L*1.45+4,t)|0},${lerp(c[2],L*.45,t)|0})`}
 const worldInk=()=>clamp(H/720*2.4,1.6,4.5);
 function celFaces(faces,edgeAlpha,edgeColor){
@@ -708,8 +727,11 @@ function celFaces(faces,edgeAlpha,edgeColor){
   for(const [q] of faces){ctx.moveTo(q[0].x,q[0].y);for(let k=1;k<q.length;k++)ctx.lineTo(q[k].x,q[k].y);ctx.closePath()}ctx.fill();ctx.stroke();
   for(const [q,tone] of faces){ctx.fillStyle=celRGB(WORLD_CEL[tone]);ctx.beginPath();ctx.moveTo(q[0].x,q[0].y);for(let k=1;k<q.length;k++)ctx.lineTo(q[k].x,q[k].y);ctx.closePath();ctx.fill()}
   if(edgeAlpha>0){ctx.strokeStyle=`rgba(${wc(edgeColor)},${edgeAlpha})`;ctx.lineWidth=.72;ctx.beginPath();for(const [q] of faces){ctx.moveTo(q[0].x,q[0].y);for(let k=1;k<q.length;k++)ctx.lineTo(q[k].x,q[k].y);ctx.closePath()}ctx.stroke()}}
+// boxPlain: bare concrete (tunnel walls, pillars, ceiling): panel seams and the hazard skirt, no windows
+// and no roof rail.
+let boxPlain=false;
 function worldBox3D(cx,cz,w,d,y0,y1,viewYaw,viewPitch,fill='rgba(1,8,9,.96)',edgeAlpha=.12,edgeColor='91,240,204'){
-  if(worldRec){worldRec.boxes.push({cx,cz,w,d,y0,y1,edgeAlpha,edge:rgbOf(wc(edgeColor)),alpha:ctx.globalAlpha});return}
+  if(worldRec){worldRec.boxes.push({cx,cz,w,d,y0,y1,edgeAlpha,edge:rgbOf(wc(edgeColor)),alpha:ctx.globalAlpha,plain:boxPlain});return}
   const xa=cx-w/2,xb=cx+w/2,za=cz-d/2,zb=cz+d/2;
   const lo=[project(xa,y0,za,viewYaw,viewPitch),project(xb,y0,za,viewYaw,viewPitch),project(xb,y0,zb,viewYaw,viewPitch),project(xa,y0,zb,viewYaw,viewPitch)];
   const hi=[project(xa,y1,za,viewYaw,viewPitch),project(xb,y1,za,viewYaw,viewPitch),project(xb,y1,zb,viewYaw,viewPitch),project(xa,y1,zb,viewYaw,viewPitch)];
@@ -735,9 +757,9 @@ function worldBox3D(cx,cz,w,d,y0,y1,viewYaw,viewPitch,fill='rgba(1,8,9,.96)',edg
         fillQuads=()=>{for(const [col,L] of qs){ctx.fillStyle=col;ctx.beginPath();for(let i=0;i<L.length;i+=8){ctx.moveTo(L[i],L[i+1]);ctx.lineTo(L[i+2],L[i+3]);ctx.lineTo(L[i+4],L[i+5]);ctx.lineTo(L[i+6],L[i+7]);ctx.closePath()}ctx.fill()}qs.clear()};
       ctx.globalAlpha=.55;ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=.9;ctx.beginPath();
       for(let k=1;k*3.2<Hm;k++)seg(P(0,k*3.2/Hm),P(1,k*3.2/Hm));for(let k=1;k*6<Wm;k++)seg(P(k*6/Wm,0),P(k*6/Wm,1));ctx.stroke();
-      if(Hm>5&&hash(seed+i)>.4){let n=0;ctx.globalAlpha=.8;for(let v=1.6;v<Hm-1&&n<48;v+=3.2)for(let u=1.4;u<Wm-1&&n<48;u+=2.4,n++){const lit=hash(seed+i*31+n*7)>.62;quad((u-.45)/Wm,(u+.45)/Wm,(v-.5)/Hm,(v+.5)/Hm,lit?'rgba(150,240,226,.55)':'rgba(2,8,10,.85)')}fillQuads()}
+      if(Hm>5&&hash(seed+i)>.4&&!boxPlain){let n=0;ctx.globalAlpha=.8;for(let v=1.6;v<Hm-1&&n<48;v+=3.2)for(let u=1.4;u<Wm-1&&n<48;u+=2.4,n++){const lit=hash(seed+i*31+n*7)>.62;quad((u-.45)/Wm,(u+.45)/Wm,(v-.5)/Hm,(v+.5)/Hm,lit?'rgba(150,240,226,.55)':'rgba(2,8,10,.85)')}fillQuads()}
       if(y0<.1&&Hm>2){const n=Math.max(2,Math.round(Wm/1.1)),hb=Math.min(1,.9/Hm);ctx.globalAlpha=.85;for(let k=0;k<n;k+=2)quad(k/n,(k+1)/n,0,hb,'#d9b443');fillQuads();ctx.globalAlpha=.9;ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=1;ctx.beginPath();seg(P(0,hb),P(1,hb));ctx.stroke()}
-      if(Hm>4&&CAMERA_Y<y1){const R2=(u,dy)=>project(lerp(A[0],B[0],u),y1+dy,lerp(A[1],B[1],u),viewYaw,viewPitch);ctx.globalAlpha=.8;ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=1.2;ctx.beginPath();seg(R2(0,1.1),R2(1,1.1));seg(R2(0,.55),R2(1,.55));for(let k=0;k<=Math.ceil(Wm/2);k++){const u=Math.min(1,k*2/Wm);seg(R2(u,0),R2(u,1.1))}ctx.stroke()}}}
+      if(Hm>4&&CAMERA_Y<y1&&!boxPlain){const R2=(u,dy)=>project(lerp(A[0],B[0],u),y1+dy,lerp(A[1],B[1],u),viewYaw,viewPitch);ctx.globalAlpha=.8;ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=1.2;ctx.beginPath();seg(R2(0,1.1),R2(1,1.1));seg(R2(0,.55),R2(1,.55));for(let k=0;k<=Math.ceil(Wm/2);k++){const u=Math.min(1,k*2/Wm);seg(R2(u,0),R2(u,1.1))}ctx.stroke()}}}
   ctx.restore();
 }
 function worldRingXY(cx,cy,cz,rx,ry,viewYaw,viewPitch,alpha=.20,color='103,255,209',width=1,phase=0,segments=42){
@@ -962,7 +984,8 @@ function drawBuilding(b,viewYaw,viewPitch){
   const motion=clamp(Math.hypot(player.vx,player.vz)/48+Math.abs(player.yawVelocity)*.58,0,1),alpha=clamp(1-(depth-60)/220,.22,1)*(1-.15*motion);
   const o={alpha,glow:plantGlow(b.x,b.z,depth),edge:.16};
   ctx.save();ctx.globalAlpha=alpha;ctx.shadowBlur=0;ctx.lineCap='round';
-  if(b.type===0)drawCoolingTower(b,viewYaw,viewPitch,o);else if(b.type===1)drawProcessStacks(b,viewYaw,viewPitch,o);else if(b.type===2)drawSubstation(b,viewYaw,viewPitch,o);else drawFoundryBlock(b,viewYaw,viewPitch,o);
+  if(b.type===4){boxPlain=true;worldBox3D(b.x,b.z,b.w,b.d,0,b.h,viewYaw,viewPitch,'rgba(1,8,9,.97)',.07);boxPlain=false}
+  else if(b.type===0)drawCoolingTower(b,viewYaw,viewPitch,o);else if(b.type===1)drawProcessStacks(b,viewYaw,viewPitch,o);else if(b.type===2)drawSubstation(b,viewYaw,viewPitch,o);else drawFoundryBlock(b,viewYaw,viewPitch,o);
   ctx.restore();
 }
 // SKYDECK: runway edge lights (white, amber along the far third of the strip),
@@ -985,6 +1008,32 @@ function drawSkydeck(viewYaw,viewPitch){
   for(const [cx,cz] of [[-40,8],[42,-130]]){const n=36;for(let i=0;i<n;i++){const a0=i/n*TAU,a1=(i+1)/n*TAU;worldLine3D(cx+Math.cos(a0)*8,.07,cz+Math.sin(a0)*8,cx+Math.cos(a1)*8,.07,cz+Math.sin(a1)*8,viewYaw,viewPitch,'236,214,140',.42,1.2)}
     worldLine3D(cx-2.4,.07,cz-3,cx-2.4,.07,cz+3,viewYaw,viewPitch,'236,214,140',.5,1.4);worldLine3D(cx+2.4,.07,cz-3,cx+2.4,.07,cz+3,viewYaw,viewPitch,'236,214,140',.5,1.4);worldLine3D(cx-2.4,.07,cz,cx+2.4,.07,cz,viewYaw,viewPitch,'236,214,140',.5,1.4)}
   if(Math.floor(gameTime*1.3)%2===0){ctx.save();ctx.shadowBlur=10;ctx.shadowColor='#ff4a3a';dot(64,35.2,30,'255,86,70',.9,.45,5);ctx.restore()}
+}
+// FREIGHT TUNNEL: the ceiling in 20 m bays with a cross beam between them, a lamp strip over each lane
+// in every bay, a cable tray and green emergency lights along both walls, and a shut blast door with
+// hazard chevrons and a red beacon on each end wall. Far concrete fades into TUNNEL_SKY like the
+// facilities do, so the tube reads long.
+function drawTunnel(viewYaw,viewPitch){
+  const {hw,len,ceil}=TUNNEL,fade=(x,z)=>clamp(1-(Math.hypot(x-player.x,z-player.z)-60)/220,.22,1);
+  ctx.save();boxPlain=true;
+  for(let z=-len;z<len;z+=20){ctx.globalAlpha=fade(0,z+10);worldBox3D(0,z+10,2*hw+16,20,ceil,ceil+3,viewYaw,viewPitch,'rgba(1,8,9,.97)',.05);
+    if(z>-len)worldBox3D(0,z,2*hw,1.2,ceil-1.4,ceil,viewYaw,viewPitch,'rgba(1,8,9,.97)',.06)}
+  boxPlain=false;
+  const dot=(x,y,z,color,alpha,r,maxPx=3.4)=>{if(worldRec){recDot(x,y,z,color,alpha,r,1,maxPx);return}const p=project(x,y,z,viewYaw,viewPitch);if(!p||p.depth>320)return;
+    const a=ctx.globalAlpha;ctx.globalAlpha=alpha*a;ctx.fillStyle=`rgb(${color})`;ctx.beginPath();ctx.arc(p.x,p.y,clamp(r/p.depth*renderFocal*.9,1,maxPx),0,TAU);ctx.fill();ctx.globalAlpha=a};
+  for(let z=-len+10;z<len;z+=20)for(const x of [-12,12]){ctx.globalAlpha=fade(x,z);
+    worldBox3D(x,z,1.6,6.4,ceil-.7,ceil,viewYaw,viewPitch,'rgba(1,8,9,.97)',0);
+    worldLine3D(x-.45,ceil-.75,z-2.9,x-.45,ceil-.75,z+2.9,viewYaw,viewPitch,'226,242,236',.95,2.6,8);worldLine3D(x+.45,ceil-.75,z-2.9,x+.45,ceil-.75,z+2.9,viewYaw,viewPitch,'226,242,236',.95,2.6,8)}
+  ctx.globalAlpha=1;
+  for(const s of [-1,1]){const x=s*(hw-.15);
+    for(const y of [9,9.7])worldLine3D(x,y,-len,x,y,len,viewYaw,viewPitch,'91,240,204',.12,1);
+    for(let z=-len+12;z<len;z+=24){ctx.globalAlpha=fade(x,z);dot(x,2.6,z,'110,255,150',.75,.2,3)}ctx.globalAlpha=1}
+  for(const e of [-1,1]){const z=e*(len-.1),hz='217,180,67';
+    for(const [x0,y0,x1,y1] of [[-18,0,-18,16],[18,0,18,16],[-18,16,18,16],[0,0,0,16]])worldLine3D(x0,y0,z,x1,y1,z,viewYaw,viewPitch,'150,190,184',.35,1.6);
+    for(let k=-17;k<=15;k+=4)worldLine3D(k,0,z,k+2,1.6,z,viewYaw,viewPitch,hz,.7,2.2);
+    for(let k=-17;k<=15;k+=4)worldLine3D(k,14.4,z,k+2,16,z,viewYaw,viewPitch,hz,.55,2);
+    ctx.globalAlpha=fade(0,z);if(Math.floor(gameTime*1.2+e*.5)%2===0)dot(0,18,z,'255,86,70',.9,.45,5);ctx.globalAlpha=1}
+  ctx.restore();
 }
 // Power trunk line: lattice pylons along the spine, cables carrying steady pulses toward the gate.
 const PYLONS=(()=>{const out=[];for(let z=128;z>=-136;z-=38)for(const s of [-1,1]){const x=s*33;if(!collide(x,z,3))out.push({x,z,s})}return out})();
@@ -2169,7 +2218,7 @@ function drawSightLinkCue(viewYaw,viewPitch){
   ctx.shadowBlur=3;ctx.font='7px Consolas';ctx.textAlign='left';ctx.fillText('LINK',x1+g+l+4,cy+3);ctx.restore();
 }
 function drawKillPulse(){if(player.killPulse<=0)return;const k=1-player.killPulse,rr=Math.min(W,H)*(.08+k*.36),a=player.killPulse;ctx.save();ctx.strokeStyle=`rgba(255,220,135,${.48*a})`;ctx.shadowBlur=18;ctx.shadowColor='#ffd16f';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W/2,H*.49,rr,0,TAU);ctx.stroke();ctx.globalAlpha=.16*a;ctx.fillStyle='#fff0b5';ctx.fillRect(0,H*.49-1,W,2);ctx.restore()}
-function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);if(stage===2)drawSkydeck(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage!==2){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
+function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);if(stage===2)drawSkydeck(viewYaw,viewPitch);else if(stage===3)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
 
 // One primary attack and one light pressure attack may commit at a time.
 function updateCombatDirector(){
