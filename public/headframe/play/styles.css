@@ -212,7 +212,7 @@
 .result dt{font-size:10px;letter-spacing:.24em;color:rgba(226,223,204,.62)}
 .result dd{margin:0;font-size:15px;letter-spacing:.08em;font-variant-numeric:tabular-nums;color:#ece9d8}
 .result dd em{font-style:normal;font-size:10px;letter-spacing:.2em;color:#d8b46c;margin-left:10px}
-.result span{margin-top:16px;font-size:10px;color:#d8b46c;letter-spacing:.3em;word-spacing:.6em}
+.result span{margin-top:16px;font-size:10px;color:#d8b46c;letter-spacing:.2em;word-spacing:.25em;white-space:nowrap}
 .result.down{border-top-color:rgba(228,124,98,.6)}
 .result.down b{color:#ecd6cc}
 @keyframes resultIn{from{opacity:0;transform:translate(-14px,-50%)}to{opacity:1;transform:translateY(-50%)}}

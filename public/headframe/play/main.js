@@ -169,6 +169,7 @@ const KILL_VOICE={
   SCOUT:{boom:[190,64,.22,.38],blast:[4200,.38,.26],snap:[4200,5,.16],glass:8,ring:[[2140,.016,.5],[3420,.012,.42],[5810,.008,.3]],bend:.9,groan:null,cook:0},
   LANCER:{boom:[150,50,.32,.52],blast:[2800,.55,.34],snap:[1300,3,.2],glass:6,ring:[[410,.03,.8],[1130,.02,.65],[2380,.012,.5]],bend:.82,groan:[180,70,.6,.018],cook:0},
   TITAN:{boom:[90,42,.75,.7],blast:[1500,1.15,.46],snap:[520,1.4,.2],glass:4,ring:[[150,.035,1.6],[410,.026,1.3],[1030,.014,1]],bend:.74,groan:[100,48,1.6,.036],cook:5},
+  KITE:{boom:[170,58,.28,.42],blast:[3600,.5,.3],snap:[3000,4,.18],glass:7,ring:[[1500,.018,.6],[2650,.012,.5],[4400,.008,.36]],bend:.86,groan:null,cook:0},
   HEAVY:{boom:[110,42,.55,.62],blast:[1800,.9,.4],snap:[700,1.6,.18],glass:4,ring:[[190,.03,1.2],[505,.022,1],[1270,.012,.8]],bend:.78,groan:[120,55,1.1,.03],cook:3}
 };
 const sfx={
@@ -293,26 +294,47 @@ const blocks=[
 [-121,12,32,44,28,0],[116,24,34,46,39,3],[-112,101,34,36,34,1],[121,96,30,40,25,2],
 [-29,-34,13,18,13,2],[27,31,16,13,15,1]
 ];
-for(const b of blocks)addBuilding(...b);
-for(let z=-120;z<=120;z+=30)for(const x of [-23,23])lights.push({x,z,y:5.2});
+// SECTOR 02, SKYDECK: an elevated landing deck. The same deck becomes a runway; low hangars and cargo
+// stacks give cover, one control mast stands off the strip, and the rest is open sky for the KITE
+// flights that are its main threat. No pylons, gantries or foundry plant out here.
+const SKY_BLOCKS=[
+[-54,-62,36,28,14,3],[58,-92,32,30,12,3],[-62,44,26,22,10,3],[64,30,10,10,34,1],
+[-33,-10,8,6,5,3],[36,66,10,6,6,3],[31,-32,8,8,5,3],[-30,104,10,6,6,3],[-36,-118,12,8,7,3],
+[-112,-24,30,40,16,2],[112,-112,30,36,14,2],[-108,92,34,30,12,3],[110,102,30,30,15,2]
+];
+const SECTORS={1:{tag:'SECTOR 01',name:'TRANSFER DISTRICT',blocks},2:{tag:'SECTOR 02',name:'SKYDECK',blocks:SKY_BLOCKS}};
+const LAST_SECTOR=2;
+let stage=1,builtStage=0;
+function buildSector(n){if(builtStage===n)return;builtStage=n;buildings.length=0;lights.length=0;seed=17;for(const b of SECTORS[n].blocks)addBuilding(...b);
+  if(n===1)for(let z=-120;z<=120;z+=30)for(const x of [-23,23])lights.push({x,z,y:5.2})}
+buildSector(1);
 // ENDURANCE: no sector to clean. Reinforcements keep arriving out of view until the frame is lost;
 // every 6 breaks raise the threat level (one more hostile on the field, tougher, harder-hitting, more
 // BASTIONs). The hull never repairs, so the run ends when the damage adds up.
 let mode='sortie';
 const endure={level:1,spawnT:0,nextId:100,best:null};
 try{endure.best=JSON.parse(localStorage.getItem('hf.endure.best')||'null')}catch{}
-function setMode(m){mode=m==='endurance'?'endurance':'sortie';reset()}
+function setMode(m){mode=m==='endurance'?'endurance':'sortie';if(mode==='endurance')stage=1;reset()}
 const ATLAS_CHANCE=.16;
 function enduranceTarget(){return Math.min(6,2+endure.level)}
 function makeEnemy(x,z,type,id,i,k=1,dk=1){
-    const cfg=type==='TITAN'?{hp:1100,speed:3.4,desired:70,fire:3.6,dash:false,scale:2,damage:10}:type==='SCOUT'?{hp:68,speed:9.0,desired:29,fire:1.25,dash:true,scale:.88,damage:5}:type==='HEAVY'?{hp:165,speed:3.7,desired:48,fire:1.35,dash:false,scale:1.18,damage:10}:{hp:105,speed:6.1,desired:38,fire:1.30,dash:true,scale:1,damage:7};
+    const cfg=type==='KITE'?{hp:60,speed:26,desired:92,fire:5.2,dash:false,scale:1,damage:6}:type==='TITAN'?{hp:1100,speed:3.4,desired:70,fire:3.6,dash:false,scale:2,damage:10}:type==='SCOUT'?{hp:68,speed:9.0,desired:29,fire:1.25,dash:true,scale:.88,damage:5}:type==='HEAVY'?{hp:165,speed:3.7,desired:48,fire:1.35,dash:false,scale:1.18,damage:10}:{hp:105,speed:6.1,desired:38,fire:1.30,dash:true,scale:1,damage:7};
     const p=[x,z];cfg.hp=Math.round(cfg.hp*k);cfg.damage=Math.round(cfg.damage*dk);
     return {x:p[0],z:p[1],type,heavy:type==='HEAVY'||type==='TITAN',maxHp:cfg.hp,hp:cfg.hp,alive:true,id,dmgK:dk,yaw:0,phase:i*1.77,last:-i*.4,speed:cfg.speed,desired:cfg.desired,fireRate:cfg.fire,dashCap:cfg.dash,scale:cfg.scale,damage:cfg.damage,flash:0,muzzle:0,stun:0,dashCd:1.3+hash(i+8)*2.2,dashT:0,dashVX:0,dashVZ:0,lean:0,strafe:i%2?1:-1,marked:i<2?1.6:0,markLatch:false,focus:0,designated:0,awake:i<2,wakeT:0,charge:0,firePending:false,stagger:0,breakFlash:0,vx:0,vz:0,lungeCd:1.4+hash(i+22)*1.8,lungeWindup:0,lungeVX:0,lungeVZ:0,trail:[],trailTick:0,px:p[0],pz:p[1],flankSide:p[0]>=0?1:-1,recoverT:0,nextAttack:.95+i*.32,lastAttack:-i*.4,blockedT:0,dashPuffTime:0,attackKind:'',committedAim:null,chargeDuration:.62}}
 function spawn(){
   enemies.length=0;
   const layout=[[0,38,'HEAVY'],[25,65,'SCOUT'],[-38,8,'LANCER'],[42,-18,'SCOUT'],[0,-62,'HEAVY'],[-44,-82,'LANCER']];
+  if(mode!=='endurance'&&stage===2){
+    // SKYDECK: a few machines on the deck, and the KITE flights circling high over it.
+    const deck=[[0,-24,'HEAVY'],[-34,18,'SCOUT'],[36,-56,'SCOUT']];deck.forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));
+    for(let i=0;i<5;i++)enemies.push(makeKite(i,deck.length+i+1));return}
   (mode==='endurance'?layout.slice(0,3):layout).forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));
 }
+// A KITE starts on its orbit, already flying: the sky over SKYDECK is never empty. Attack runs begin a
+// few seconds in, one aircraft at a time.
+function makeKite(i,id){const ang=i/5*TAU+.35,R=78+hash(i+3)*30,alt=24+hash(i+7)*14,e=makeEnemy(Math.sin(ang)*R,-Math.cos(ang)*R-10,'KITE',id,i);
+  Object.assign(e,{y:alt,alt,orbitDir:i%2?1:-1,awake:true,wakeT:0,marked:0,nextAttack:4.5+i*2.4,lastAttack:0,fly:{mode:'orbit',ang,t:0,fired:0,second:0}});e.yaw=ang+e.orbitDir*Math.PI/2;return e}
+
 // Reinforcement: a point 70-125 m away that is clear of structures, preferring one outside the
 // head's view so the hostile arrives instead of popping in.
 function enduranceSpawn(){
@@ -334,7 +356,7 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':'-Sector: Vector Foundry 07.')}
+function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.')}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
@@ -342,12 +364,16 @@ function worldPan(x,z){const a=angleDiff(Math.atan2(x-player.x,-(z-player.z)),pl
 function collide(x,z,r=1.2){if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;for(const b of buildings)if(Math.abs(x-b.x)<b.w/2+r&&Math.abs(z-b.z)<b.d/2+r)return true;return false}
 function movePlayer(dx,dz){let hit=false;const dist=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(dist/.55)),sx=dx/steps,sz=dz/steps;for(let i=0;i<steps;i++){const nx=player.x+sx,nz=player.z+sz;if(!collide(nx,player.z,1.25))player.x=nx;else{player.vx=0;hit=true}if(!collide(player.x,nz,1.25))player.z=nz;else{player.vz=0;hit=true}}return hit}
 // Ray-vs-hostile: the main hit cylinder, plus ATLAS's two legs. Returns the earliest t or null.
-function enemyHitT(e,x0,y0,z0,x1,y1,z1,pad=0){const R=RIGS[e.type],H=R.hit;let t=sweepCylinder(x0,y0,z0,x1,y1,z1,e,H.r+pad,H.cy,H.hh+pad);
+function enemyHitT(e,x0,y0,z0,x1,y1,z1,pad=0){const R=RIGS[e.type],H=R.hit;let t=sweepCylinder(x0,y0,z0,x1,y1,z1,e,H.r+pad,H.cy+eY(e),H.hh+pad);
   if(R.legHit){const L=R.legHit,r=right(e.yaw);for(const s of [-1,1]){const u=sweepCylinder(x0,y0,z0,x1,y1,z1,{x:e.x+r.x*L.off*s,z:e.z+r.z*L.off*s},L.r+pad,L.cy,L.hh);if(u!==null&&(t===null||u<t))t=u}}return t}
 // Height to aim / look at: ATLAS's hull is ~10 m up, everyone else ~3 m.
 // ATLAS fights from ~70 m and is tall, so locks, designation and the attack director reach a little further.
 function reach(e){return e.type==='TITAN'?1.15:1}
-function aimY(e){return e.type==='TITAN'?RIGS.TITAN.hit.cy:3.0}
+function aimY(e){return e.type==='TITAN'?RIGS.TITAN.hit.cy:e.type==='KITE'?eY(e)+RIGS.KITE.hit.cy:3.0}
+// Flying machines carry their height in e.y (the root of the rig); everything on the deck has none.
+function eY(e){return e.y||0}
+// Line-of-sight height from a hostile toward the frame.
+function losY(e){return e.type==='TITAN'?aimY(e):3.15+eY(e)}
 function moveEnemy(e,dx,dz){const dist=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(dist/.45)),sx=dx/steps,sz=dz/steps,r=RIGS[e.type]?.wall??1.35;for(let i=0;i<steps;i++){const nx=e.x+sx,nz=e.z+sz;if(!collide(nx,e.z,r))e.x=nx;else e.dashT=0;if(!collide(e.x,nz,r))e.z=nz;else e.dashT=0}}
 function enemyDash(e,dx,dz,dist){if(!e.dashCap||e.dashCd>0||e.dashT>0||dist<16||dist>82)return;const side=e.strafe*(hash(e.id+Math.floor(gameTime*3))>.18?1:-1),tx=dz/dist*side,tz=-dx/dist*side,base=e.type==='SCOUT'?34:25,jitter=e.type==='SCOUT'?9:6;e.dashVX=tx*(base+hash(e.id+11)*jitter);e.dashVZ=tz*(base+hash(e.id+17)*jitter);e.dashT=e.type==='SCOUT'?.19:.16;e.dashCd=(e.type==='SCOUT'?1.45:2.35)+hash(e.id+Math.floor(gameTime))*(e.type==='SCOUT'?1.25:2.0);e.strafe*=-1;e.lean=side;sfx.enemyDash(e);puff(e.x,.15,e.z,e.type==='SCOUT'?12:8,'#ff7466',e.type==='SCOUT'?6:4.5)}
 function segmentAABBTime(x0,y0,z0,x1,y1,z1,b){
@@ -460,7 +486,7 @@ function fireMaul(){if(player.rocketCd>0)return;if(player.rockets<=0){if(gameTim
   for(let i=0;i<12;i++){const k=Math.random();particles.push({x:M[0]-a.x*(3.4+k*2),y:M[1]-a.y*3.4,z:M[2]-a.z*(3.4+k*2),px:M[0],py:M[1],pz:M[2],vx:-a.x*(6+Math.random()*8)+(Math.random()-.5)*4,vy:.5+Math.random()*2,vz:-a.z*(6+Math.random()*8)+(Math.random()-.5)*4,life:.25+Math.random()*.3,max:.55,color:i%3?'#ffb35c':'#e8f2ee',size:.4+Math.random()*.5,g:0})}}
 function maulBlast(x,y,z,direct){
   explode(x,y,z,true,false);shockwave(x,y,z,'#ffe2a8',MAUL.radius*1.2,.5);shockwave(x,.06,z,'#ffb35c',MAUL.radius*1.6,.7,'ground');lightBurst(x,y,z,'#ffd6a0',18,.4);const s=spatial(x,z);sfx.maulBlast(s.pan,s.g);
-  let hit=false;for(const e of enemies){if(!e.alive)continue;const H=RIGS[e.type].hit,dh=Math.max(0,Math.hypot(e.x-x,e.z-z)-H.r),dv=Math.max(0,Math.abs(y-H.cy)-H.hh),d=Math.hypot(dh,dv),dir=e===direct;if(!dir&&d>MAUL.radius)continue;
+  let hit=false;for(const e of enemies){if(!e.alive)continue;const H=RIGS[e.type].hit,dh=Math.max(0,Math.hypot(e.x-x,e.z-z)-H.r),dv=Math.max(0,Math.abs(y-H.cy-eY(e))-H.hh),d=Math.hypot(dh,dv),dir=e===direct;if(!dir&&d>MAUL.radius)continue;
     const k=dir?1:1-d/MAUL.radius;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=dir?MAUL.direct:MAUL.splash*k;e.flash=.2;e.hitPoint={x,y,z};e.hitT=.16;stats.hits++;hit=true;
     if(e.hp>0)chipArmor(e);staggerEnemy(e,MAUL.stagger*k);if(e.hp<=0){if(e.type==='TITAN')player.rockets=Math.min(MAUL.mag,player.rockets+2);killEnemy(e,'MAUL')}}
   if(hit)hitMark(s.pan);const pd=Math.hypot(player.x-x,player.z-z);if(pd<14)player.shake=Math.max(player.shake,.6*(1-pd/14))}
@@ -496,9 +522,9 @@ function staggerEnemy(e,power=20){
   if(brokeCharge)addFlow(14,'CHARGE BREAK');if(brokeLance)addFlow(14,'LANCE BREAK');
   player.shake=Math.max(player.shake,.42);sfx.stagger(worldPan(e.x,e.z));
   plog('Info',`-${brokeCharge?'Charge break':brokeLance?'Lance break':'Stagger'}. ${etag(e)}`);if(brokeCharge||brokeLance)say('STAGGER');
-  shockwave(e.x,2.7,e.z,'#ffe28c',5.5,.42);sparks(e.x,2.7,e.z,14,'#ffe28c',10);
+  shockwave(e.x,2.7+eY(e),e.z,'#ffe28c',5.5,.42);sparks(e.x,2.7+eY(e),e.z,14,'#ffe28c',10);
 }
-function killEnemy(e,weapon='CANNON'){if(!e.alive)return;const wasDesignated=e.designated>0;e.alive=false;e.deadAt=gameTime;e.firePending=false;e.charge=0;e.lungeWindup=0;e.dashT=0;e.attackKind="";{const col=CLASS_STYLE[e.type].edge,cy=RIGS[e.type].hit.cy,s=spatial(e.x,e.z);shatterEnemy(e);killWaves.push({x:e.x,z:e.z,t:gameTime});sparks(e.x,cy,e.z,44,col,16);sparks(e.x,cy,e.z,18,'#fff1d8',22);shockwave(e.x,cy,e.z,'#fff1d8',8,.36);shockwave(e.x,cy,e.z,col,15,.8);shockwave(e.x,.06,e.z,col,20,1.0,'ground');lightBurst(e.x,cy,e.z,'#ffd6b0',17,.36);sfx.kill(s.pan,e.type);if(e.type==='TITAN'){for(const y of [cy+4,cy-4,cy*.55,cy*.25])explode(e.x+(Math.random()-.5)*3,y,e.z+(Math.random()-.5)*3,true,false);shockwave(e.x,cy,e.z,'#ffd6b0',24,1.1);shockwave(e.x,.06,e.z,'#ff3a4a',42,1.4,'ground');player.shake=Math.max(player.shake,1.2)}}stats.kills++;hitStop=.055;const syncKill=player.syncTime>0;if(syncKill){player.syncChain++;player.syncTime=Math.min(5.4,player.syncTime+.42);player.fovKick=Math.max(player.fovKick,.62);}const refund=player.combo>0?22:18;player.boost=Math.min(100,player.boost+refund);player.heat=Math.max(0,player.heat-20);let reload=0;if(wasDesignated&&player.missiles<6){player.missiles++;reload=1}player.combo++;player.comboT=2.8;player.killPulse=1;player.fovKick=Math.max(player.fovKick,.42);player.shake=Math.max(player.shake,.52);stats.maxChain=Math.max(stats.maxChain,player.combo);addFlow(wasDesignated?26:12,wasDesignated?'DESIGNATE BREAK':'FRAME BREAK');plog(syncKill?'Sync':wasDesignated?'Link':'Info',`-${etag(e)} broken.${syncKill?` Sync x${player.syncChain}.`:player.combo>1?` Chain ${player.combo}.`:''}${reload?' MSSL +1.':''}`);pilotReact(player.combo>=3||syncKill?'laugh':'smug',player.combo>=3?1.4:1.0,2);{const left=mode==='endurance'?9:enemies.filter(x=>x.alive).length;if(left===1)say('LAST_ONE');else if(left>1){if(syncKill)say('SYNC_BREAK');else if(wasDesignated)say('DESIGNATE_BREAK');else if(player.combo>=3)say('CHAIN');else say('KILL',.6)}}if(lastDesignatedId===e.id)lastDesignatedId=0;if(wasDesignated)tryHmdHandoff(e.id);if(mode!=='endurance'&&enemies.every(x=>!x.alive)){missionClear=true;sfx.clear();plog('System','Sector clean.');pilotCut('clear');say('CLEAR');setTimeout(()=>{if(missionClear)showResult('SECTOR CLEAN')},650)}else combat.nextWake=Math.min(combat.nextWake,gameTime+.45)}
+function killEnemy(e,weapon='CANNON'){if(!e.alive)return;const wasDesignated=e.designated>0;e.alive=false;e.deadAt=gameTime;e.firePending=false;e.charge=0;e.lungeWindup=0;e.dashT=0;e.attackKind="";{const col=CLASS_STYLE[e.type].edge,cy=RIGS[e.type].hit.cy+eY(e),s=spatial(e.x,e.z);shatterEnemy(e);killWaves.push({x:e.x,z:e.z,t:gameTime});sparks(e.x,cy,e.z,44,col,16);sparks(e.x,cy,e.z,18,'#fff1d8',22);shockwave(e.x,cy,e.z,'#fff1d8',8,.36);shockwave(e.x,cy,e.z,col,15,.8);if(eY(e)<4)shockwave(e.x,.06,e.z,col,20,1.0,'ground');lightBurst(e.x,cy,e.z,'#ffd6b0',17,.36);sfx.kill(s.pan,e.type);if(e.type==='TITAN'){for(const y of [cy+4,cy-4,cy*.55,cy*.25])explode(e.x+(Math.random()-.5)*3,y,e.z+(Math.random()-.5)*3,true,false);shockwave(e.x,cy,e.z,'#ffd6b0',24,1.1);shockwave(e.x,.06,e.z,'#ff3a4a',42,1.4,'ground');player.shake=Math.max(player.shake,1.2)}}stats.kills++;hitStop=.055;const syncKill=player.syncTime>0;if(syncKill){player.syncChain++;player.syncTime=Math.min(5.4,player.syncTime+.42);player.fovKick=Math.max(player.fovKick,.62);}const refund=player.combo>0?22:18;player.boost=Math.min(100,player.boost+refund);player.heat=Math.max(0,player.heat-20);let reload=0;if(wasDesignated&&player.missiles<6){player.missiles++;reload=1}player.combo++;player.comboT=2.8;player.killPulse=1;player.fovKick=Math.max(player.fovKick,.42);player.shake=Math.max(player.shake,.52);stats.maxChain=Math.max(stats.maxChain,player.combo);addFlow(wasDesignated?26:12,wasDesignated?'DESIGNATE BREAK':'FRAME BREAK');plog(syncKill?'Sync':wasDesignated?'Link':'Info',`-${etag(e)} broken.${syncKill?` Sync x${player.syncChain}.`:player.combo>1?` Chain ${player.combo}.`:''}${reload?' MSSL +1.':''}`);pilotReact(player.combo>=3||syncKill?'laugh':'smug',player.combo>=3?1.4:1.0,2);{const left=mode==='endurance'?9:enemies.filter(x=>x.alive).length;if(left===1)say('LAST_ONE');else if(left>1){if(syncKill)say('SYNC_BREAK');else if(wasDesignated)say('DESIGNATE_BREAK');else if(player.combo>=3)say('CHAIN');else say('KILL',.6)}}if(lastDesignatedId===e.id)lastDesignatedId=0;if(wasDesignated)tryHmdHandoff(e.id);if(mode!=='endurance'&&enemies.every(x=>!x.alive)){missionClear=true;sfx.clear();plog('System','Sector clean.');pilotCut('clear');say('CLEAR');setTimeout(()=>{if(missionClear)showResult('SECTOR CLEAN')},650)}else combat.nextWake=Math.min(combat.nextWake,gameTime+.45)}
 
 // ---------- HEAD TRACKING ----------
 let manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,headPitch=0,headPitchTarget=0,basePitch=null,rawPitch=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
@@ -657,6 +683,9 @@ function worldLine3D(x0,y0,z0,x1,y1,z1,viewYaw,viewPitch,color='103,255,209',alp
 // silhouettes and depth read without a lamp, and the neon still carries the frame.
 const WORLD_CEL={top:[60,88,90],lit:[40,63,66],shade:[24,39,43],ink:'#010404'};
 const NIGHT={sky:['#071015','#0b171b','#111f20','#142321'],ground:'#0b1514'};
+// SKYDECK flies under a pre-dawn sky: deep blue, lighter toward the horizon, so a KITE reads against it.
+const SKYDECK_SKY=['#0a1424','#122036','#1c2c44','#27364a'];
+function skyStops(){return stage===2?SKYDECK_SKY:NIGHT.sky}
 function celRGB(c){const t=syncMix,L=(c[0]+c[1]+c[2])/3;return`rgb(${lerp(c[0],L*2.1+10,t)|0},${lerp(c[1],L*1.45+4,t)|0},${lerp(c[2],L*.45,t)|0})`}
 const worldInk=()=>clamp(H/720*2.4,1.6,4.5);
 function celFaces(faces,edgeAlpha,edgeColor){
@@ -704,9 +733,9 @@ function worldRingXY(cx,cy,cz,rx,ry,viewYaw,viewPitch,alpha=.20,color='103,255,2
   if(any)ctx.stroke();ctx.restore();
 }
 function drawSky(viewYaw,pitch){
-  if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:NIGHT.sky.map(colRGB),ground:colRGB(NIGHT.ground),cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
+  if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:skyStops().map(colRGB),ground:colRGB(NIGHT.ground),cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
   const hy=horizonY(pitch),g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,NIGHT.sky[0]);g.addColorStop(.42,NIGHT.sky[1]);g.addColorStop(.70,NIGHT.sky[2]);g.addColorStop(1,NIGHT.sky[3]);
+  {const S=skyStops();g.addColorStop(0,S[0]);g.addColorStop(.42,S[1]);g.addColorStop(.70,S[2]);g.addColorStop(1,S[3])};
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   // A very low, physical foundry glow on the horizon. It is not a HUD effect.
   const glow=ctx.createLinearGradient(0,hy-H*.12-H*.1*syncMix,0,hy+H*.16);glow.addColorStop(0,'rgba(29,112,91,0)');glow.addColorStop(.58,`rgba(${wc('35,151,118')},${(.06+.13*syncMix).toFixed(3)})`);glow.addColorStop(1,'rgba(21,79,66,0)');ctx.fillStyle=glow;ctx.fillRect(0,hy-H*.12,W,H*.28);
@@ -921,6 +950,27 @@ function drawBuilding(b,viewYaw,viewPitch){
   if(b.type===0)drawCoolingTower(b,viewYaw,viewPitch,o);else if(b.type===1)drawProcessStacks(b,viewYaw,viewPitch,o);else if(b.type===2)drawSubstation(b,viewYaw,viewPitch,o);else drawFoundryBlock(b,viewYaw,viewPitch,o);
   ctx.restore();
 }
+// SKYDECK: runway edge lights (white, amber along the far third of the strip),
+// threshold bars at both ends, a lead-in of approach lights running in from the far end, two marked
+// landing pads off the strip and a red beacon on the control mast.
+// The deck stands high over the city, so nothing tall is near: the far skyline is a low ring of
+// silhouettes ~300 m out with a scatter of lights, and the sky does the rest.
+const SKY_RING=(()=>{const out=[];for(let i=0;i<30;i++){const a=i/30*TAU+hash(i+40)*.12,r=285+hash(i+41)*45;out.push([Math.sin(a)*r,-Math.cos(a)*r,10+hash(i+42)*16,8+hash(i+43)*14,4+hash(i+44)*18])}return out})();
+const SKY_LIGHTS=(()=>{const out=[];for(let i=0;i<70;i++){const a=hash(i+90)*TAU,r=280+hash(i+91)*60;out.push([Math.sin(a)*r,1+hash(i+92)*16,-Math.cos(a)*r,hash(i+93)<.25])}return out})();
+function drawSkydeck(viewYaw,viewPitch){
+  for(const [x,z,w,d,h] of SKY_RING)worldBox3D(x,z,w,d,0,h,viewYaw,viewPitch,'rgba(6,12,20,.96)',.06,'120,160,210');
+  const dot=(x,y,z,color,alpha,r,maxPx=3.4)=>{if(worldRec){recDot(x,y,z,color,alpha,r,1,maxPx);return}const p=project(x,y,z,viewYaw,viewPitch);if(!p||p.depth>380)return;
+    ctx.globalAlpha=alpha;ctx.fillStyle=`rgb(${color})`;ctx.beginPath();ctx.arc(p.x,p.y,clamp(r/p.depth*renderFocal*.9,1,maxPx),0,TAU);ctx.fill()};
+  ctx.save();ctx.shadowBlur=6;ctx.shadowColor='#ffe7b0';
+  for(const [x,y,z,warm] of SKY_LIGHTS)dot(x,y,z,warm?'255,200,140':'170,210,255',.4,.9,1.6);
+  for(let z=-144;z<=144;z+=12)for(const side of [-1,1]){const far=z<-48;dot(side*19.2,.18,z,far?'255,196,104':'236,244,240',.62,.22)}
+  for(const z of [-150,150])for(let x=-16;x<=16;x+=2.6)dot(x,.18,z,z<0?'126,255,170':'255,120,96',.55,.2);
+  {const run=((gameTime*1.1)%1);for(let i=0;i<7;i++){const z=-158-i*9,on=Math.abs(i/7-(1-run))<.08;dot(0,.4,z,'255,255,255',on?.95:.18,on?.34:.18,on?4.4:2)}}
+  ctx.shadowBlur=0;ctx.restore();
+  for(const [cx,cz] of [[-40,8],[42,-130]]){const n=36;for(let i=0;i<n;i++){const a0=i/n*TAU,a1=(i+1)/n*TAU;worldLine3D(cx+Math.cos(a0)*8,.07,cz+Math.sin(a0)*8,cx+Math.cos(a1)*8,.07,cz+Math.sin(a1)*8,viewYaw,viewPitch,'236,214,140',.42,1.2)}
+    worldLine3D(cx-2.4,.07,cz-3,cx-2.4,.07,cz+3,viewYaw,viewPitch,'236,214,140',.5,1.4);worldLine3D(cx+2.4,.07,cz-3,cx+2.4,.07,cz+3,viewYaw,viewPitch,'236,214,140',.5,1.4);worldLine3D(cx-2.4,.07,cz,cx+2.4,.07,cz,viewYaw,viewPitch,'236,214,140',.5,1.4)}
+  if(Math.floor(gameTime*1.3)%2===0){ctx.save();ctx.shadowBlur=10;ctx.shadowColor='#ff4a3a';dot(64,35.2,30,'255,86,70',.9,.45,5);ctx.restore()}
+}
 // Power trunk line: lattice pylons along the spine, cables carrying steady pulses toward the gate.
 const PYLONS=(()=>{const out=[];for(let z=128;z>=-136;z-=38)for(const s of [-1,1]){const x=s*33;if(!collide(x,z,3))out.push({x,z,s})}return out})();
 function drawTrunkLine(vy,vp){
@@ -1009,10 +1059,14 @@ const CLASS_STYLE={
   SCOUT:{edge:'#ff4f86',core:'#ffd6e4',accent:'#ff7aa6',glow:'#ffa8c8',armor:[54,24,50],dark:[20,9,20],metal:[40,30,46]},
   LANCER:{edge:'#ff5a4e',core:'#ffd9d0',accent:'#ff8064',glow:'#ffbc96',armor:[62,24,22],dark:[22,9,9],metal:[46,34,34]},
   HEAVY:{edge:'#ff9a62',core:'#ffe6cf',accent:'#ffb070',glow:'#ffd58e',armor:[62,42,28],dark:[22,15,10],metal:[48,40,34]},
-  TITAN:{edge:'#ff3a4a',core:'#ffe0d8',accent:'#ff6a52',glow:'#ffb48a',armor:[46,40,46],dark:[16,13,16],metal:[40,36,40]}
+  TITAN:{edge:'#ff3a4a',core:'#ffe0d8',accent:'#ff6a52',glow:'#ffb48a',armor:[46,40,46],dark:[16,13,16],metal:[40,36,40]},
+  KITE:{edge:'#c27bff',core:'#efdcff',accent:'#d6a2ff',glow:'#e2c4ff',armor:[44,28,58],dark:[16,10,22],metal:[38,32,46]}
 };
 // Hostiles use the same cel language as HALBERD / KESTREL, each class in its own hue.
 CLASS_STYLE.SCOUT.toon={ink:'#12040c',trace:'#ff4f86',armor:[[214,98,152],[100,36,72]],dark:[[92,50,88],[40,18,38]],metal:[[172,136,164],[80,58,80]],accent:[[255,156,196],[150,60,104]]};
+// KITE is lilac: light enough to stand off SKYDECK's deep-blue sky, and away from the warm deck classes.
+// Seen mostly from below, so the shadow tones are kept light too.
+CLASS_STYLE.KITE.toon={ink:'#0b0612',trace:'#c27bff',armor:[[214,182,242],[150,116,190]],dark:[[120,92,146],[70,50,92]],metal:[[190,176,204],[120,108,140]],accent:[[236,200,255],[170,120,220]]};
 CLASS_STYLE.LANCER.toon={ink:'#120403',trace:'#ff5a4e',armor:[[222,96,80],[108,36,32]],dark:[[98,46,42],[42,16,14]],metal:[[178,140,132],[86,60,56]],accent:[[255,166,124],[150,70,50]]};
 // ATLAS is gunmetal with crimson trim: a value step away from the saturated small classes, so the big
 // machine reads as a different weight class at a glance.
@@ -1027,6 +1081,33 @@ function buildRig(def){
   return{...def,boneIndex:index,parts,partsByBone:order.map(n=>parts.filter(p=>p.bone===n))};
 }
 const RIGS={
+  // KITE: a swept-wing gunship, ~7 m span. Root at its height (e.y); the hull banks into turns and
+  // pitches with the climb.
+  KITE:buildRig({type:'KITE',name:'KITE',height:1.4,body:3.4,wall:2.0,hit:{r:3.1,cy:0,hh:.9},gaitRate:1,
+    bones:[['root',null,[0,0,0]],['body','root',[0,0,0]],['wingL','body',[-.55,0,-.2]],['wingR','body',[.55,0,-.2]],['tail','body',[0,.1,-1.7]],['gun','body',[0,-.38,.9]]],
+    muzzles:[['gun',[0,0,1.15]]],
+    parts(){
+      const P=[],B=(bone,p)=>{p.bone=bone;P.push(p);return p};
+      B('body',hexa([[-.55,-.3,-1.9],[.55,-.3,-1.9],[.22,-.2,2.3],[-.22,-.2,2.3],[-.45,.28,-1.7],[.45,.28,-1.7],[.14,.12,2.0],[-.14,.12,2.0]],{lines:2,name:'hull'}));
+      B('body',hexa([[-.38,-.48,-1.3],[.38,-.48,-1.3],[.16,-.36,1.5],[-.16,-.36,1.5],[-.5,-.3,-1.5],[.5,-.3,-1.5],[.2,-.22,1.8],[-.2,-.22,1.8]],{mat:'dark'}));
+      B('body',box(0,.3,-.2,.12,.06,2.4,{mat:'accent'}));
+      B('body',cyl(0,-.02,2.28,.17,.08,'z',10,{mat:'glow',glow:'eye'}));
+      for(const s of [-1,1]){B('body',cyl(s*.62,-.12,-1.15,.24,1.5,'z',8,{mat:'metal',name:'nacelle'}));B('body',cyl(s*.62,-.12,-1.95,.18,.06,'z',8,{mat:'glow',glow:'thrust'}))}
+      const wing=[];
+      wing.push(hexa([[-3.6,-.04,-1.6],[0,-.06,-.9],[0,-.06,.9],[-3.6,-.04,-1.05],[-3.6,.04,-1.58],[0,.08,-.88],[0,.08,.86],[-3.6,.04,-1.07]],{lines:3,lineArea:.2,name:'wing'}));
+      wing.push(beam([0,0,.9],[-3.6,0,-1.05],.12,.07,{mat:'accent'},[0,1,0]));
+      wing.push(box(-3.62,0,-1.32,.12,.1,.6,{mat:'glow',glow:'tip'}));
+      wing.push(hexa([[-2.6,-.12,-1.55],[-.4,-.14,-1.2],[-.4,-.14,-.8],[-2.6,-.12,-1.25],[-2.6,-.06,-1.53],[-.4,-.07,-1.18],[-.4,-.07,-.82],[-2.6,-.06,-1.27]],{mat:'dark',name:'flap'}));
+      wing.push(box(-1.7,-.2,-.3,.22,.18,.9,{mat:'dark',chip:true}));
+      for(const p of wing){B('wingL',p);P.push(mirrorPart(p,'wingR'))}
+      for(const s of [-1,1])B('tail',hexa([[s*.3-.04,0,-.5],[s*.3+.04,0,-.5],[s*.3+.04,0,.45],[s*.3-.04,0,.45],[s*.75-.03,.95,-.95],[s*.75+.03,.95,-.95],[s*.75+.03,.95,-.45],[s*.75-.03,.95,-.45]],{name:'fin'}));
+      B('gun',cyl(0,0,.5,.1,1.2,'z',8,{mat:'metal',name:'cannon'}));B('gun',box(0,.08,0,.32,.2,.5,{mat:'dark'}));
+      return P;
+    },
+    pose(e,A){const t=gameTime+e.phase,st=A.stag,sw=Math.sin(t*23)*st;
+      return{body:{p:[0,Math.sin(t*1.4)*.12,0],r:[(A.climb||0)*.55+sw*.2,0,-A.bank*.75+sw*.25]},
+        wingL:{r:[0,0,-.04+Math.sin(t*2.3)*.02]},wingR:{r:[0,0,.04-Math.sin(t*2.3)*.02]},tail:{r:[0,A.bank*.15,0]},gun:{r:[-A.prep*.2,0,0]}}}
+  }),
   SCOUT:buildRig({type:'SCOUT',name:'VANE',height:3.4,body:2.4,wall:2.0,hit:{r:2.35,cy:2.45,hh:1.0},gaitRate:.9,
     bones:[['root',null,[0,0,0]],['body','root',[0,2.45,0]],['head','body',[0,.34,.78]],['wingL','body',[-.62,.03,-.05]],['wingR','body',[.62,.03,-.05]],['tail','body',[0,.2,-1.15]],['clawL','body',[-.32,-.46,.55]],['clawR','body',[.32,-.46,.55]],['mast','body',[0,.3,-.55]]],
     muzzles:[['wingL',[-3.26,-.08,.42]],['wingR',[3.26,-.08,.42]]],
@@ -1246,7 +1327,8 @@ function updateEnemyAnim(e,dt){
   const A=e.anim||(e.anim={bank:0,fwd:0,prep:0,dash:0,recoil:0,stag:0,stagDir:1,speed:0});
   const f=forward(e.yaw),r=right(e.yaw),vf=(e.vx||0)*f.x+(e.vz||0)*f.z,vs=(e.vx||0)*r.x+(e.vz||0)*r.z,sp=Math.hypot(e.vx||0,e.vz||0);
   const k=(rate)=>1-Math.exp(-rate*dt);
-  A.speed=lerp(A.speed,sp,k(6));A.bank=lerp(A.bank,clamp(vs/14,-1,1),k(5));A.fwd=lerp(A.fwd,clamp(vf/12,-1,1),k(5));
+  A.speed=lerp(A.speed,sp,k(6));A.bank=lerp(A.bank,e.type==='KITE'?clamp(e.turn||0,-1,1):clamp(vs/14,-1,1),k(5));A.fwd=lerp(A.fwd,clamp(vf/12,-1,1),k(5));
+  if(e.type==='KITE')A.climb=lerp(A.climb||0,clamp(e.climbK||0,-1,1),k(4));
   const prep=e.type==='LANCER'?(e.lungeWindup>0?1-clamp(e.lungeWindup/.42,0,1):0):e.charge>0?1-clamp(e.charge/(e.chargeDuration||.62),0,1):0;
   A.prep=lerp(A.prep,prep,k(prep>A.prep?14:5));A.dash=lerp(A.dash,e.dashT>0?1:0,k(e.dashT>0?18:6));
   A.recoil=Math.max(0,A.recoil-dt*2.8);A.stag=Math.max(0,A.stag-dt*1.7);
@@ -1257,15 +1339,15 @@ function updateEnemyAnim(e,dt){
 // Pose: bone transforms + world vertices for every part. Cached per render frame.
 let poseFrame=0;
 function enemyPose(e){
-  const key=poseFrame+'|'+gameTime+'|'+e.x+'|'+e.z+'|'+e.yaw+'|'+(e.lostN||0);if(e._poseKey===key&&e._pose)return e._pose;
+  const key=poseFrame+'|'+gameTime+'|'+e.x+'|'+eY(e)+'|'+e.z+'|'+e.yaw+'|'+(e.lostN||0);if(e._poseKey===key&&e._pose)return e._pose;
   const rig=RIGS[e.type]||RIGS.LANCER,A=e.anim||(updateEnemyAnim(e,0),e.anim),pz=rig.pose(e,A);
-  const fwd=forward(e.yaw),rt=right(e.yaw),root={R:[rt.x,0,fwd.x,0,1,0,rt.z,0,fwd.z],t:[e.x,0,e.z]};
+  const fwd=forward(e.yaw),rt=right(e.yaw),root={R:[rt.x,0,fwd.x,0,1,0,rt.z,0,fwd.z],t:[e.x,eY(e),e.z]};
   const X={};for(const [name,parent,rest] of rig.bones){const q=pz[name]||{},p=q.p?(rig.scale?q.p.map(c=>c*rig.scale):q.p):[0,0,0],r=q.r||[0,0,0];const local={R:M3.rot(r[0],r[1],r[2]),t:[rest[0]+p[0],rest[1]+p[1],rest[2]+p[2]]};X[name]=parent?xfMul(X[parent],local):xfMul(root,local)}
   const parts=rig.parts.map((P,i)=>{const B=X[P.bone];return{P,i,X:B,wv:P.verts.map(v=>xfPoint(B,v))}});
   e._pose={rig,X,parts};e._poseKey=key;return e._pose;
 }
 function enemyMuzzles(e){const pose=enemyPose(e);return pose.rig.muzzles.map(([b,v])=>xfPoint(pose.X[b],v))}
-function enemyCenter(e){const rig=RIGS[e.type]||RIGS.LANCER;return{x:e.x,y:rig.hit.cy,z:e.z}}
+function enemyCenter(e){const rig=RIGS[e.type]||RIGS.LANCER;return{x:e.x,y:rig.hit.cy+eY(e),z:e.z}}
 function enemyScreenBox(e,viewYaw,viewPitch){
   const pose=enemyPose(e);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,dsum=0,n=0;
   for(const p of pose.parts){if(e.lost?.[p.i])continue;for(const v of p.wv){const q=project(v[0],v[1],v[2],viewYaw,viewPitch);if(!q)continue;x0=Math.min(x0,q.x);x1=Math.max(x1,q.x);y0=Math.min(y0,q.y);y1=Math.max(y1,q.y);dsum+=q.depth;n++}}
@@ -1356,7 +1438,7 @@ for(const [type,S] of Object.entries(CLASS_STYLE)){S.armorRGB=S.armor;S.darkRGB=
 
 function drawEnemy(e,viewYaw,viewPitch){
   const pose=enemyPose(e),rig=pose.rig,S=CLASS_STYLE[e.type]||CLASS_STYLE.LANCER,A=e.anim;
-  const c=project(e.x,rig.hit.cy,e.z,viewYaw,viewPitch);if(!c)return;
+  const c=project(e.x,rig.hit.cy+eY(e),e.z,viewYaw,viewPitch);if(!c)return;
   const depth=c.depth,near=clamp((60-depth)/48,0,1),far=clamp((depth-70)/90,0,1),hot=e.flash>0?clamp(e.flash/.1,0,1)*.85:0;
   const reveal=e.wakeT>0?1-e.wakeT/.62:1,revealY=reveal<1?reveal*(rig.height+.4):null,pulse=.5+.5*Math.sin(gameTime*2.1+e.phase);
   const glow={eye:.75+.25*pulse+A.prep*.6,tip:.55+.3*pulse+A.prep*.8+A.dash*.6,thrust:.35+A.dash*1.3+A.speed*.04+A.prep*.3,hover:.55+.2*Math.sin(gameTime*9+e.phase),core:.6+.4*pulse,blade:A.prep*1.2+A.dash,vent:A.prep*1.3+A.dash*.8,heat:.35+A.prep*.9+A.recoil*.8,muzzle:A.prep*1.3+A.recoil};
@@ -1376,7 +1458,7 @@ const enemyBatch=[],enemyFXQueue=[];
 function threeEnemy(e){const T3=typeof window!=='undefined'&&window.HF_THREE;if(!(T3&&T3.active))return false;if(T3.world)return true;return !!(T3.enemies!==false&&e.awake&&!(e.wakeT>0))}
 function flushThreeEnemies(viewYaw,viewPitch){
   if(!enemyBatch.length&&!worldRec)return;const T3=window.HF_THREE,insts=[];
-  for(const B of enemyBatch){const e=B.e,hitT=e.hitT>0?clamp(e.hitT/.12,0,1):0;B.insts.forEach((I,i)=>{if(I.hidden)return;insts.push({P:I.P,wv:I.wv,R:I.R,style:B.S,key:'e'+e.id+':'+i,hot:B.hot,ghost:B.ghost,revealY:B.revealY,glowK:I.P.mat==='glow'?(B.glow[I.P.glow]??1):1,hitPos:hitT>0&&e.hitPoint?[e.hitPoint.x,e.hitPoint.y,e.hitPoint.z]:null,hitT})})}
+  for(const B of enemyBatch){const e=B.e,hitT=e.hitT>0?clamp(e.hitT/.12,0,1):0;B.insts.forEach((I,i)=>{if(I.hidden)return;insts.push({P:I.P,wv:I.wv,R:I.R,style:B.S,key:'e'+e.type+e.id+':'+i,hot:B.hot,ghost:B.ghost,revealY:B.revealY,glowK:I.P.mat==='glow'?(B.glow[I.P.glow]??1):1,hitPos:hitT>0&&e.hitPoint?[e.hitPoint.x,e.hitPoint.y,e.hitPoint.z]:null,hitT})})}
   // with the world in WebGL the hostile effects (reveal, afterimages, muzzles) go into the same pass
   if(worldRec){for(const e of enemyFXQueue)drawEnemyFX(e,viewYaw,viewPitch);enemyFXQueue.length=0}
   const W3=worldRec;worldRec=null;
@@ -1405,7 +1487,8 @@ function drawEnemyFX(e,viewYaw,viewPitch){
   ctx.restore();
 }
 function drawEnemyGround(e,viewYaw,viewPitch){
-  const rig=RIGS[e.type]||RIGS.LANCER,S=CLASS_STYLE[e.type]||CLASS_STYLE.LANCER,c=project(e.x,rig.hit.cy,e.z,viewYaw,viewPitch);if(!c)return;const depth=c.depth,near=clamp((60-depth)/48,0,1);
+  if(eY(e)>22)return;
+  const rig=RIGS[e.type]||RIGS.LANCER,S=CLASS_STYLE[e.type]||CLASS_STYLE.LANCER,c=project(e.x,rig.hit.cy+eY(e),e.z,viewYaw,viewPitch);if(!c)return;const depth=c.depth,near=clamp((60-depth)/48,0,1);
   // Ground contact: a physical shadow + contact ring only for acquired or close machines.
   const ring=project(e.x,.04,e.z,viewYaw,viewPitch),edgeP=project(e.x+right(e.yaw).x*rig.body,.04,e.z+right(e.yaw).z*rig.body,viewYaw,viewPitch);
   if(ring&&edgeP&&worldRec){const rr=clamp(Math.hypot(edgeP.x-ring.x,edgeP.y-ring.y),5,Math.max(W,H)*.42),under={x:ring.x,y:ring.y,depth:ring.depth+rig.body};
@@ -1443,7 +1526,7 @@ function recordEnemyFX(e,pose,rig,S,A,revealY,viewYaw,viewPitch){
   if(charge>0||e.muzzle>0){for(const m of enemyMuzzles(e)){const q=project(m[0],m[1],m[2],viewYaw,viewPitch);if(!q)continue;const r=clamp(.5*q.f,3,46),f=atDepth(q,Math.max(NEAR_Z,q.depth-.4));
     if(charge>0){for(let k=0;k<2;k++)recDisc(f,r*(1.6-charge*.9)+k*6,S.glow,.25+.55*charge,true,1.4);recDisc(f,r*.35*(.4+charge),S.glow,.2+.6*charge)}
     if(e.muzzle>0){recDisc(f,r*.9,S.glow,.5);recDisc(f,r*.35,'#fff8ee',1)}}}
-  if(e.breakFlash>0){const b=enemyScreenBox(e,viewYaw,viewPitch),c=project(e.x,rig.hit.cy,e.z,viewYaw,viewPitch);if(b&&c)recDisc({x:(b.x0+b.x1)/2,y:(b.y0+b.y1)/2,depth:Math.max(NEAR_Z,c.depth-rig.body)},Math.max(b.x1-b.x0,b.y1-b.y0)*(.42+(1-e.breakFlash)*.3)+12,'#ffe59a',clamp(e.breakFlash*1.6,0,.9),true,1.6)}
+  if(e.breakFlash>0){const b=enemyScreenBox(e,viewYaw,viewPitch),c=project(e.x,rig.hit.cy+eY(e),e.z,viewYaw,viewPitch);if(b&&c)recDisc({x:(b.x0+b.x1)/2,y:(b.y0+b.y1)/2,depth:Math.max(NEAR_Z,c.depth-rig.body)},Math.max(b.x1-b.x0,b.y1-b.y0)*(.42+(1-e.breakFlash)*.3)+12,'#ffe59a',clamp(e.breakFlash*1.6,0,.9),true,1.6)}
 }
 function recordBolts(viewYaw,viewPitch){
   for(const b of playerBolts){const a=project(b.px,b.py,b.pz,viewYaw,viewPitch),p=project(b.x,b.y,b.z,viewYaw,viewPitch);if(!a||!p)continue;
@@ -1484,7 +1567,7 @@ function recordWaves(viewYaw,viewPitch){
 }
 function recordVectorEcho(e,viewYaw,viewPitch){
   if(!e.trail||e.trail.length<2||(e.marked<=0&&e.designated<=0))return;const des=e.designated>0;
-  for(let i=1;i<e.trail.length;i++){const a=e.trail[i-1],b=e.trail[i],pa=project(a.x,2.7,a.z,viewYaw,viewPitch),pb=project(b.x,2.7,b.z,viewYaw,viewPitch);if(!pa||!pb)continue;const life=clamp(Math.min(a.life,b.life)/.65,0,1);recSeg(pa,pb,des?'#67ffd1':'#ff7466',.10+.24*life,1,false,[4,6],des?8:4)}
+  for(let i=1;i<e.trail.length;i++){const a=e.trail[i-1],b=e.trail[i],pa=project(a.x,a.y??2.7,a.z,viewYaw,viewPitch),pb=project(b.x,b.y??2.7,b.z,viewYaw,viewPitch);if(!pa||!pb)continue;const life=clamp(Math.min(a.life,b.life)/.65,0,1);recSeg(pa,pb,des?'#67ffd1':'#ff7466',.10+.24*life,1,false,[4,6],des?8:4)}
 }
 function recordGroundRush(viewYaw,viewPitch){
   const speed=Math.hypot(player.vx,player.vz);if(speed<9)return;const mag=clamp((speed-8)/48,0,1),vl=speed||1,ux=player.vx/vl,uz=player.vz/vl,len=2.5+mag*8.5,gx0=Math.floor((player.x-62)/8)*8,gz0=Math.floor((player.z-62)/8)*8;
@@ -1576,7 +1659,7 @@ function drawVectorEcho(e,viewYaw,viewPitch){
   if(worldRec){recordVectorEcho(e,viewYaw,viewPitch);return}
   if(!e.trail||e.trail.length<2||(e.marked<=0&&e.designated<=0))return;
   ctx.save();ctx.setLineDash([4,6]);ctx.lineCap='round';ctx.shadowBlur=e.designated>0?8:4;ctx.shadowColor=e.designated>0?'#55ffd0':'#ff6359';
-  for(let i=1;i<e.trail.length;i++){const a=e.trail[i-1],b=e.trail[i],pa=project(a.x,2.7,a.z,viewYaw,viewPitch),pb=project(b.x,2.7,b.z,viewYaw,viewPitch);if(!pa||!pb)continue;const life=clamp(Math.min(a.life,b.life)/.65,0,1);ctx.globalAlpha=.10+.24*life;ctx.strokeStyle=e.designated>0?'#67ffd1':'#ff7466';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke()}
+  for(let i=1;i<e.trail.length;i++){const a=e.trail[i-1],b=e.trail[i],pa=project(a.x,a.y??2.7,a.z,viewYaw,viewPitch),pb=project(b.x,b.y??2.7,b.z,viewYaw,viewPitch);if(!pa||!pb)continue;const life=clamp(Math.min(a.life,b.life)/.65,0,1);ctx.globalAlpha=.10+.24*life;ctx.strokeStyle=e.designated>0?'#67ffd1':'#ff7466';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke()}
   ctx.setLineDash([]);ctx.globalAlpha=1;ctx.restore();
 }
 function threatMetric(b){const rx=b.x-player.x,rz=b.z-player.z,rvx=b.vx-player.vx,rvz=b.vz-player.vz,v2=rvx*rvx+rvz*rvz||1,t=clamp(-(rx*rvx+rz*rvz)/v2,0,.78),cx=rx+rvx*t,cz=rz+rvz*t;return{t,d:Math.hypot(cx,cz)}}
@@ -1915,7 +1998,7 @@ function drawScanCue(e,viewYaw,viewPitch){
   ctx.globalAlpha=.82;ctx.shadowBlur=4;ctx.font='8px Consolas';ctx.textAlign='left';ctx.fillText(designated?'HMD DES':'HMD ACQ',x0,y1+13);ctx.textAlign='right';ctx.fillText(designated?`${e.designated.toFixed(1)}s`:`${Math.round(progress*100)}%`,x1,y1+13)
   ctx.restore();
 }
-function drawLeadCue(viewYaw,viewPitch){const lock=getLock(.42);if(!lock||lock.e.marked<=0||!lock.e.awake)return;const e=lock.e,leadT=clamp(lock.dist/92,.08,1.15),lx=e.x+(e.vx||0)*leadT,lz=e.z+(e.vz||0)*leadT,p=project(lx,3.0,lz,viewYaw,viewPitch),q=project(e.x,3.0,e.z,viewYaw,viewPitch);if(!p||!q)return;ctx.save();ctx.strokeStyle='rgba(255,209,111,.68)';ctx.fillStyle='rgba(255,225,153,.82)';ctx.shadowBlur=8;ctx.shadowColor='#ffd16f';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);const r=7;ctx.beginPath();ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath();ctx.stroke();ctx.font='8px Consolas';ctx.textAlign='center';ctx.fillText('LEAD',p.x,p.y-12);ctx.restore()}
+function drawLeadCue(viewYaw,viewPitch){const lock=getLock(.42);if(!lock||lock.e.marked<=0||!lock.e.awake)return;const e=lock.e,leadT=clamp(lock.dist/92,.08,1.15),lx=e.x+(e.vx||0)*leadT,lz=e.z+(e.vz||0)*leadT,p=project(lx,3.0,lz,viewYaw,viewPitch),q=project(e.x,3.0+eY(e),e.z,viewYaw,viewPitch);if(!p||!q)return;ctx.save();ctx.strokeStyle='rgba(255,209,111,.68)';ctx.fillStyle='rgba(255,225,153,.82)';ctx.shadowBlur=8;ctx.shadowColor='#ffd16f';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);const r=7;ctx.beginPath();ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath();ctx.stroke();ctx.font='8px Consolas';ctx.textAlign='center';ctx.fillText('LEAD',p.x,p.y-12);ctx.restore()}
 function drawHmdBoresight(){
   const cx=W/2,cy=H*.49,target=visualContact,progress=target?clamp((target.focus||0)/.30,0,1):0;
   ctx.save();ctx.translate(cx,cy);ctx.strokeStyle='rgba(103,255,209,.38)';ctx.fillStyle='rgba(126,255,218,.62)';ctx.shadowBlur=4;ctx.shadowColor='#67ffd1';ctx.lineWidth=1;
@@ -2015,7 +2098,7 @@ function drawFoundryMachines(viewYaw,viewPitch){
 }
 
 function enemyOccluded(e){return !!segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z)}
-function drawOccludedContact(e,viewYaw,viewPitch){if(e.marked<=0&&e.designated<=0)return;const p=project(e.x,3.0,e.z,viewYaw,viewPitch);if(!p||p.x<-50||p.x>W+50||p.y<-50||p.y>H+50)return;ctx.save();const des=e.designated>0,r=des?18:13;ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.strokeStyle=des?'rgba(103,255,209,.62)':'rgba(255,99,89,.30)';ctx.shadowBlur=des?10:5;ctx.shadowColor=des?'#55ffd0':'#ff6359';ctx.setLineDash([4,5]);ctx.lineWidth=1;ctx.strokeRect(-r,-r,r*2,r*2);ctx.setLineDash([]);ctx.rotate(-Math.PI/4);ctx.font='8px Consolas';ctx.textAlign='center';ctx.fillStyle=des?'rgba(143,255,224,.78)':'rgba(255,126,111,.48)';ctx.fillText('OCCLUDED',0,-r-9);ctx.restore()}
+function drawOccludedContact(e,viewYaw,viewPitch){if(e.marked<=0&&e.designated<=0)return;const p=project(e.x,3.0+eY(e),e.z,viewYaw,viewPitch);if(!p||p.x<-50||p.x>W+50||p.y<-50||p.y>H+50)return;ctx.save();const des=e.designated>0,r=des?18:13;ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.strokeStyle=des?'rgba(103,255,209,.62)':'rgba(255,99,89,.30)';ctx.shadowBlur=des?10:5;ctx.shadowColor=des?'#55ffd0':'#ff6359';ctx.setLineDash([4,5]);ctx.lineWidth=1;ctx.strokeRect(-r,-r,r*2,r*2);ctx.setLineDash([]);ctx.rotate(-Math.PI/4);ctx.font='8px Consolas';ctx.textAlign='center';ctx.fillStyle=des?'rgba(143,255,224,.78)':'rgba(255,126,111,.48)';ctx.fillText('OCCLUDED',0,-r-9);ctx.restore()}
 function drawLancerCommit(viewYaw,viewPitch){
   ctx.save();ctx.setLineDash([5,7]);for(const e of enemies){if(!e.alive||e.type!=='LANCER'||e.lungeWindup<=0||enemyOccluded(e))continue;const len=.32,start=project(e.x,.08,e.z,viewYaw,viewPitch),end=project(e.x+e.lungeVX*len,.08,e.z+e.lungeVZ*len,viewYaw,viewPitch);if(!start||!end)continue;const k=1-clamp(e.lungeWindup/.42,0,1),pulse=.45+.55*Math.sin(gameTime*24);ctx.globalAlpha=.16+.30*k;ctx.strokeStyle='#ff956b';ctx.shadowBlur=6+7*pulse;ctx.shadowColor='#ff6f59';ctx.lineWidth=1.15;ctx.beginPath();ctx.moveTo(start.x,start.y);ctx.lineTo(end.x,end.y);ctx.stroke();const dx=end.x-start.x,dy=end.y-start.y,l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l;ctx.beginPath();ctx.moveTo(end.x+nx*8,end.y+ny*8);ctx.lineTo(end.x,end.y);ctx.lineTo(end.x-nx*8,end.y-ny*8);ctx.stroke();}ctx.setLineDash([]);ctx.globalAlpha=1;ctx.restore();
 }
@@ -2025,7 +2108,7 @@ function drawHeavyAimLines(viewYaw,viewPitch){
     if(!e.alive||!e.heavy||e.charge<=0||!e.awake||enemyOccluded(e))continue;
     const committed=e.charge<=.18,aim=committed?e.committedAim:{x:player.x+player.vx*.18,z:player.z+player.vz*.18};
     if(!aim)continue;
-    const p=projectSegment(e.x,3.15,e.z,aim.x,CAMERA_Y,aim.z,viewYaw,viewPitch);if(!p||!p[0]||!p[1])continue;
+    const p=projectSegment(e.x,3.15+eY(e),e.z,aim.x,CAMERA_Y,aim.z,viewYaw,viewPitch);if(!p||!p[0]||!p[1])continue;
     const c=1-clamp(e.charge/.62,0,1);ctx.globalAlpha=.18+.30*c;ctx.strokeStyle=committed?'#ff9a62':'#ff7862';
     ctx.shadowBlur=8;ctx.shadowColor=committed?'#ff6e4f':'#ff6359';ctx.lineWidth=committed?1.5:1;
     ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);ctx.lineTo(p[1].x,p[1].y);ctx.stroke();
@@ -2041,12 +2124,12 @@ function drawSightLinkCue(viewYaw,viewPitch){
   ctx.shadowBlur=3;ctx.font='7px Consolas';ctx.textAlign='left';ctx.fillText('LINK',x1+g+l+4,cy+3);ctx.restore();
 }
 function drawKillPulse(){if(player.killPulse<=0)return;const k=1-player.killPulse,rr=Math.min(W,H)*(.08+k*.36),a=player.killPulse;ctx.save();ctx.strokeStyle=`rgba(255,220,135,${.48*a})`;ctx.shadowBlur=18;ctx.shadowColor='#ffd16f';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W/2,H*.49,rr,0,TAU);ctx.stroke();ctx.globalAlpha=.16*a;ctx.fillStyle='#fff0b5';ctx.fillRect(0,H*.49-1,W,2);ctx.restore()}
-function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);drawDistantDistrict(viewYaw,viewPitch);drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch);for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch);drawHmdBoresight()}
+function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);if(stage===2)drawSkydeck(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage!==2){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch);drawHmdBoresight()}
 
 // One primary attack and one light pressure attack may commit at a time.
 function updateCombatDirector(){
   if(combat.nextWake<=gameTime){combat.nextWake=Infinity;wakeNearestCold()}
-  const eligible=e=>e.alive&&e.awake&&Math.hypot(e.x-player.x,e.z-player.z)<115*reach(e);
+  const eligible=e=>e.alive&&e.awake&&e.type!=='KITE'&&Math.hypot(e.x-player.x,e.z-player.z)<115*reach(e);
   const primary=enemies.find(e=>e.id===combat.primaryId),pressure=enemies.find(e=>e.id===combat.pressureId);
   const committed=e=>e&&(e.firePending||e.lungeWindup>0||e.attackKind==='LANCE'&&e.dashT>0||e.recoverT>0);
   if(!primary||!primary.alive||(!committed(primary)&&(!eligible(primary)||gameTime>=combat.primaryHold||primary.blockedT>1.6))){
@@ -2060,6 +2143,35 @@ function updateCombatDirector(){
     pool.sort((a,b)=>a.lastAttack-b.lastAttack);
     combat.pressureId=pool[0]?.id||0;combat.pressureHold=gameTime+2.4;
   }
+}
+// KITE flight. ORBIT: a wide circle high over the frame (radius ~80-110 m, 24-38 m up, so it sits
+// 12-25 deg above the horizon, never overhead for long). DIVE: one aircraft at a time turns in, drops to
+// ~13 m and fires two rounds when it is inside ~65 m with a clear line. CLIMB: it carries on over the
+// frame and climbs away, then rejoins the circle. It steers like an aircraft: a capped turn rate, banking.
+function updateKite(e,dt){
+  const F=e.fly,dx=player.x-e.x,dz=player.z-e.z,hd=Math.hypot(dx,dz)||1,quiet=!player.alive||missionClear;
+  let tx,ty,tz;
+  if(F.mode==='orbit'){
+    F.ang+=e.orbitDir*(e.speed/e.desired)*dt;const R=e.desired+Math.sin(gameTime*.3+e.phase)*12;tx=player.x+Math.sin(F.ang)*R;tz=player.z-Math.cos(F.ang)*R;ty=e.alt;
+    const diving=enemies.some(o=>o!==e&&o.alive&&o.fly&&o.fly.mode==='dive');
+    if(!quiet&&gameTime>=e.nextAttack&&gameTime>=(combat.airGate||0)&&!diving&&hd<150){F.mode='dive';F.t=0;F.fired=0;e.lastAttack=gameTime;e.marked=Math.max(e.marked,2.2);sfx.contact(e);plog('Caution',`-Attack run. ${etag(e)}`)}
+  }
+  if(F.mode==='dive'){
+    tx=player.x+player.vx*.5;tz=player.z+player.vz*.5;ty=13;F.t+=dt;
+    if(!quiet&&!F.fired&&hd<65&&e.y<26&&!segmentHitsWorld(e.x,e.y,e.z,player.x,CAMERA_Y,player.z)){enemyShoot(e,{x:player.x+player.vx*.12,z:player.z+player.vz*.12});F.fired=1;F.second=.24}
+    if(F.second>0){F.second-=dt;if(F.second<=0&&!quiet)enemyShoot(e)}
+    if(hd<14||F.t>7.5||quiet){F.mode='climb';F.t=0}
+  }
+  if(F.mode==='climb'){
+    const h=forward(e.yaw);tx=e.x+h.x*80;tz=e.z+h.z*80;ty=e.alt+6;F.t+=dt;
+    if(F.t>3.4){F.mode='orbit';F.ang=Math.atan2(e.x-player.x,-(e.z-player.z));e.nextAttack=gameTime+e.fireRate+hash(e.id+Math.floor(gameTime))*2.5;combat.airGate=gameTime+1.4}
+  }
+  const want=Math.atan2(tx-e.x,-(tz-e.z)),rate=F.mode==='dive'?1.15:.85,turn=clamp(angleDiff(want,e.yaw),-rate*dt,rate*dt);
+  e.yaw+=turn;e.turn=lerp(e.turn||0,clamp(turn/Math.max(dt,1e-4)/rate,-1,1),1-Math.exp(-4*dt));
+  const sp=e.speed*(F.mode==='dive'?1.3:1),f=forward(e.yaw),vy=clamp((ty-e.y)*.9,-15,10);
+  e.x+=f.x*sp*dt;e.z+=f.z*sp*dt;e.y=Math.max(8,e.y+vy*dt);e.climbK=vy/sp;e.vx=f.x*sp;e.vz=f.z*sp;
+  updateEnemyAnim(e,dt);
+  if((e.marked>0||e.designated>0)&&e.trailTick<=0){e.trailTick=.075;e.trail.push({x:e.x,y:2.7+eY(e),z:e.z,life:.65});if(e.trail.length>9)e.trail.shift()}
 }
 function finishEnemyAttack(e){
   e.recoverT=e.type==='TITAN'?1.4:e.heavy?.85:e.type==='LANCER'?.75:.38;
@@ -2078,14 +2190,15 @@ function updateEnemies(dt){
     if(e.marked<=0&&e.designated<=0)e.markLatch=false;
     if(!e.alive)continue;
     const wear=1-e.hp/e.maxHp;if(wear>.42&&Math.random()<dt*wear*7){const w=randomEnemyPoint(e);sparks(w.x,w.y,w.z,3+Math.floor(wear*5),wear>.7?'#ffd58a':CLASS_STYLE[e.type].edge,5)}
-    const dist=Math.hypot(e.x-player.x,e.z-player.z),los=!segmentHitsWorld(e.x,e.type==='TITAN'?aimY(e):3.15,e.z,player.x,CAMERA_Y,player.z);
+    const dist=Math.hypot(e.x-player.x,e.z-player.z),los=!segmentHitsWorld(e.x,losY(e),e.z,player.x,CAMERA_Y,player.z);
     e.blockedT=los?0:e.blockedT+dt;
     if(!e.awake&&dist<36&&los)wakeEnemy(e,'PROXIMITY CONTACT');
   }
   updateCombatDirector();updateEndurance(dt);
   for(const e of enemies){
     if(!e.alive){e.vx=e.vz=0;continue}
-    const dx=player.x-e.x,dz=player.z-e.z,dist=Math.hypot(dx,dz)||1,los=!segmentHitsWorld(e.x,e.type==='TITAN'?aimY(e):3.15,e.z,player.x,CAMERA_Y,player.z);
+    if(e.type==='KITE'){updateKite(e,dt);continue}
+    const dx=player.x-e.x,dz=player.z-e.z,dist=Math.hypot(dx,dz)||1,los=!segmentHitsWorld(e.x,losY(e),e.z,player.x,CAMERA_Y,player.z);
     e.yaw=Math.atan2(dx,-dz);
     if(!player.alive||missionClear||!e.awake||e.wakeT>0||e.stun>0){e.vx=e.vz=0;continue}
     if(e.recoverT>0){e.vx=e.vz=0;continue}
@@ -2099,7 +2212,7 @@ function updateEnemies(dt){
       if(e.heavy&&before>.18&&e.charge<=.18)e.committedAim={x:player.x+player.vx*.18,z:player.z+player.vz*.18};
       if(e.charge<=0){
         const aim=e.committedAim;
-        if(aim&&!segmentHitsWorld(e.x,3.15,e.z,aim.x,CAMERA_Y,aim.z))enemyShoot(e,aim);
+        if(aim&&!segmentHitsWorld(e.x,3.15+eY(e),e.z,aim.x,CAMERA_Y,aim.z))enemyShoot(e,aim);
         finishEnemyAttack(e);
       }
       continue;
@@ -2108,7 +2221,7 @@ function updateEnemies(dt){
       const step=Math.min(dt,e.dashT);e.dashT=Math.max(0,e.dashT-dt);moveEnemy(e,e.dashVX*step,e.dashVZ*step);
       e.dashPuffTime-=dt;if(e.dashPuffTime<=0){e.dashPuffTime+=1/30;puff(e.x,.12,e.z,1,'#c35b50',2)}
       if(e.dashT<=0&&e.attackKind==='LANCE'){
-        const aim=e.committedAim;if(aim&&!segmentHitsWorld(e.x,3.15,e.z,aim.x,CAMERA_Y,aim.z))enemyShoot(e,aim);
+        const aim=e.committedAim;if(aim&&!segmentHitsWorld(e.x,3.15+eY(e),e.z,aim.x,CAMERA_Y,aim.z))enemyShoot(e,aim);
         finishEnemyAttack(e);
       }
     }else{
@@ -2141,7 +2254,7 @@ function updateEnemies(dt){
     }
     const k=1-Math.exp(-36*dt);e.vx=lerp(e.vx||0,(e.x-e.px)/dt,k);e.vz=lerp(e.vz||0,(e.z-e.pz)/dt,k);
     updateEnemyAnim(e,dt);
-    if((e.marked>0||e.designated>0)&&e.trailTick<=0){e.trailTick=.075;e.trail.push({x:e.x,z:e.z,life:.65});if(e.trail.length>9)e.trail.shift()}
+    if((e.marked>0||e.designated>0)&&e.trailTick<=0){e.trailTick=.075;e.trail.push({x:e.x,y:2.7+eY(e),z:e.z,life:.65});if(e.trail.length>9)e.trail.shift()}
   }
 }
 
@@ -2155,19 +2268,20 @@ function showResult(title){const r=$('result');if(!r)return;if(!title){r.classLi
     sector='ENDURANCE';
     rows=[['BREAK',stats.kills+(rec&&down?'<em>NEW RECORD</em>':'')],['TIME',fmtTime(missionTime)],['THREAT LEVEL',endure.level],['ACCURACY',acc+'%'],['MAX CHAIN',stats.maxChain],
       ['BEST',endure.best?endure.best.kills+' / '+fmtTime(endure.best.time):'-']]}
-  else{sector='VECTOR FOUNDRY 07';
+  else{sector=SECTORS[stage].tag+' '+SECTORS[stage].name;
     rows=[['TIME',fmtTime(missionTime)],['BREAK',stats.kills+' / '+enemies.length],['ACCURACY',acc+'%'],['MAX CHAIN',stats.maxChain],['HMD DESIGNATIONS',stats.designations],['DAMAGE TAKEN',Math.round(stats.damage)]]}
   $('resultSector').textContent=sector;$('resultTitle').textContent=title;
+  const next=mode==='sortie'&&!down&&stage<LAST_SECTOR;$('resultKeys').textContent=(next?'ENTER NEXT SECTOR // ':'')+'R REDEPLOY // ESC MENU';
   // Rebuilt every time, so the rows run their arrival again.
   $('resultStats').innerHTML=rows.map(([k,v],i)=>`<div style="--i:${i}"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   r.classList.toggle('down',down);r.classList.add('hidden');void r.offsetWidth;r.classList.remove('hidden')}
 // Bodies are solid: the frame cannot walk through hostiles and hostiles do not stack.
 // A BURST into a hostile is a shoulder check: it staggers the target instead of clipping through it.
 function resolveBodies(){
-  for(const e of enemies){if(!e.alive)continue;const dx=player.x-e.x,dz=player.z-e.z,d=Math.hypot(dx,dz),min=1.3+RIGS[e.type].body;
+  for(const e of enemies){if(!e.alive||eY(e)>3)continue;const dx=player.x-e.x,dz=player.z-e.z,d=Math.hypot(dx,dz),min=1.3+RIGS[e.type].body;
     if(d>=min||d<1e-4)continue;const nx=dx/d,nz=dz/d,vn=player.vx*nx+player.vz*nz;movePlayer(nx*(min-d),nz*(min-d));
     if(vn<0){player.vx-=nx*vn;player.vz-=nz*vn;if(vn<-17&&player.impactCd<=0&&player.alive){player.impactCd=.35;player.shake=Math.max(player.shake,.75);player.fovKick=Math.max(player.fovKick,.3);sfx.impact();if(!e.awake)wakeEnemy(e,'CONTACT');staggerEnemy(e,40);sparks(e.x-nx*1.2,2.0,e.z-nz*1.2,18,'#ffe28c',10);plog('Info',`-Shoulder check. ${etag(e)}`);say('RAM')}}}
-  for(let i=0;i<enemies.length;i++){const a=enemies[i];if(!a.alive)continue;for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(!b.alive)continue;
+  for(let i=0;i<enemies.length;i++){const a=enemies[i];if(!a.alive||eY(a)>3)continue;for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(!b.alive||eY(b)>3)continue;
     const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz),min=(RIGS[a.type].body+RIGS[b.type].body)*.8;if(d>=min||d<1e-4)continue;const p=(min-d)/2;moveEnemy(a,-dx/d*p,-dz/d*p);moveEnemy(b,dx/d*p,dz/d*p)}}
 }
 function update(dt){
@@ -2209,13 +2323,16 @@ function update(dt){
   // Suspension: the nose dips when braking and squats back on throttle, on a spring with a little rebound.
   {const target=clamp(-fwdA*.0008,-.03,.03);player.suspV+=(90*(target-player.inertiaPitch)-11*player.suspV)*dt;player.inertiaPitch+=player.suspV*dt}player.prevVx=player.vx;player.prevVz=player.vz;
   // Mouse commands the weapon gimbal. Chassis catches up slowly; camera does not snap to the mouse.
-  player.aimYawTarget=clamp(player.aimYawTarget,-.62,.62);player.aimPitchTarget=clamp(player.aimPitchTarget,-.46,.36);
+  player.aimYawTarget=clamp(player.aimYawTarget,-.62,.62);player.aimPitchTarget=clamp(player.aimPitchTarget,-.46,.56);
   const yawStep=(player.syncTime>0?3.10:2.65)*dt,yd=player.aimYawTarget-player.torso;player.torso+=clamp(yd,-yawStep,yawStep);
   const pitchStep=(player.syncTime>0?3.20:2.80)*dt,pd=player.aimPitchTarget-player.pitch;player.pitch+=clamp(pd,-pitchStep,pitchStep);
   const soft=.24,desiredTurn=Math.abs(player.aimYawTarget)>soft?clamp(Math.sign(player.aimYawTarget)*(Math.abs(player.aimYawTarget)-soft)*2.35,-.92,.92):0;
   const angularAccel=Math.abs(desiredTurn)>Math.abs(player.yawVelocity)?2.6:4.2;player.yawVelocity+=clamp(desiredTurn-player.yawVelocity,-angularAccel*dt,angularAccel*dt);
   const turn=player.yawVelocity*dt;player.yaw+=turn;player.aimYawTarget-=turn;player.torso-=turn;
-  player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.36);player.camPitch=lerp(player.camPitch,player.pitch*.34,1-Math.exp(-5.5*dt));
+  player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.56);
+  // The view follows a third of the gun's pitch, and more once the gun is raised past ~10 deg, so a KITE
+  // high in the sky stays on screen while the gun is on it. Height is the mouse's job, not the head's.
+  player.camPitch=lerp(player.camPitch,player.pitch*.34+Math.max(0,player.pitch-.18)*.55,1-Math.exp(-5.5*dt));
   // The frame rolls on the wheels at its feet (key art): no footfalls, no stride. Its weight is in the
   // suspension instead (the spring pitch below, the lean in turns) and in the landing after a jump.
   updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,player.jy<=0&&(speed>.55||player.boostTime>0||player.glideTime>0));
@@ -2247,13 +2364,13 @@ function update(dt){
   for(const m of missiles){
     m.life-=dt;m.trail-=dt;m.hist.push({x:m.x,y:m.y,z:m.z});if(m.hist.length>22)m.hist.shift();
     if(!m.target?.alive&&!m.retargeted){m.retargeted=true;let best=null,bd=48;for(const e of enemies){if(!e.alive||!e.awake)continue;const d=Math.hypot(e.x-m.x,e.z-m.z);if(d<bd&&(e.x-m.x)*m.vx+(e.z-m.z)*m.vz>0){bd=d;best=e}}if(best)m.target=best}
-    if(m.target?.alive){const dx=m.target.x-m.x,dy=RIGS[m.target.type].hit.cy-m.y,dz=m.target.z-m.z,dist=Math.hypot(dx,dy,dz)||1,k=1-Math.exp(-5*dt);m.vx=lerp(m.vx,dx/dist*48,k);m.vy=lerp(m.vy,dy/dist*48,k);m.vz=lerp(m.vz,dz/dist*48,k)}
+    if(m.target?.alive){const dx=m.target.x-m.x,dy=RIGS[m.target.type].hit.cy+eY(m.target)-m.y,dz=m.target.z-m.z,dist=Math.hypot(dx,dy,dz)||1,k=1-Math.exp(-5*dt);m.vx=lerp(m.vx,dx/dist*48,k);m.vy=lerp(m.vy,dy/dist*48,k);m.vz=lerp(m.vz,dz/dist*48,k)}
     const nx=m.x+m.vx*dt,ny=m.y+m.vy*dt,nz=m.z+m.vz*dt;
     let impact=worldImpact(m.x,m.y,m.z,nx,ny,nz);
     if(m.target?.alive){const t=enemyHitT(m.target,m.x,m.y,m.z,nx,ny,nz,.35);if(t!==null&&(!impact||t<impact.t))impact={t,e:m.target}}
     if(impact){
       placeImpact(m,nx,ny,nz,impact.t);m.life=0;
-      if(impact.e){const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=62;e.flash=.18;e.hitPoint={x:m.x,y:m.y,z:m.z};e.hitT=.14;if(e.hp>0)chipArmor(e);staggerEnemy(e,54);explode(e.x,2.8,e.z,false);if(e.hp<=0)killEnemy(e,'MISSILE')}
+      if(impact.e){const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=62;e.flash=.18;e.hitPoint={x:m.x,y:m.y,z:m.z};e.hitT=.14;if(e.hp>0)chipArmor(e);staggerEnemy(e,54);explode(e.x,2.8+eY(e),e.z,false);if(e.hp<=0)killEnemy(e,'MISSILE')}
       else explode(m.x,m.y,m.z,false);
     }else{m.x=nx;m.y=ny;m.z=nz}
     if(m.life>0&&m.trail<=0){m.trail=.03;particles.push({x:m.x,y:m.y,z:m.z,px:m.x,py:m.y,pz:m.z,vx:(Math.random()-.5)*1.5,vy:.3,vz:(Math.random()-.5)*1.5,life:.28,max:.28,color:'#ffd16f',size:.3,g:0})}
@@ -2713,6 +2830,8 @@ function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(p
 requestAnimationFrame(loop);
 
 // ---------- CONTROLS ----------
+// The next sector is a fresh sortie: the frame is repaired and rearmed, and its figures start again.
+function nextSector(){stage=Math.min(LAST_SECTOR,stage+1);reset();say('SORTIE')}
 function startGame(lock=true){
   ensureAudio();playing=true;boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
   if(lock){
@@ -2732,9 +2851,9 @@ document.addEventListener('mousemove',e=>{if(!playing||(!new URLSearchParams(loc
 document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===2)fireMissile()});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon(player.weapon==='MAUL'?'HALBERD':'MAUL')},{passive:true});
-document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'))switchWeapon(e.code==='Digit1'?'HALBERD':'MAUL');if(e.code==='KeyX'&&!e.repeat)switchWeapon(player.weapon==='MAUL'?'HALBERD':'MAUL');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}});
+document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'))switchWeapon(e.code==='Digit1'?'HALBERD':'MAUL');if(e.code==='KeyX'&&!e.repeat)switchWeapon(player.weapon==='MAUL'?'HALBERD':'MAUL');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
-$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{reset();$('status').textContent='MISSION RESET'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='FULLSCREEN ERROR'}});
+$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='MISSION RESET'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='FULLSCREEN ERROR'}});
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind(gain,$('gainout'),'×',1);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);
 addEventListener('blur',()=>{clearInput();if(playing)pause()});
 addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());headWorker?.terminate()});
