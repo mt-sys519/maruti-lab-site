@@ -199,17 +199,24 @@
 #weaponPanel.vent #heatText{color:#ff6a48;text-shadow:0 0 10px rgba(255,90,60,.7);animation:ventBlink .26s steps(2) infinite}
 #weaponPanel.vent>i>em{background:#ff5a36;box-shadow:0 0 12px rgba(255,90,54,.7)}
 @keyframes ventBlink{50%{opacity:.35}}
-.result{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:10px;padding:20px 34px 16px;min-width:min(720px,90vw);
-  font-family:Bahnschrift,"DIN Alternate","Segoe UI","Helvetica Neue","Yu Gothic UI",sans-serif;
-  background:linear-gradient(90deg,transparent,rgba(5,9,9,.74) 14%,rgba(5,9,9,.74) 86%,transparent);border-top:1px solid rgba(226,223,204,.5);border-bottom:1px solid rgba(226,223,204,.2);
-  text-align:center;letter-spacing:.16em;animation:resultIn .5s cubic-bezier(.2,.8,.2,1)}
-/* HMD type (see HUD in main.js): light, widely tracked, warm off-white; no italic black display face */
-.result b{font-weight:300;font-size:clamp(24px,2.5vw,40px);letter-spacing:.46em;padding-left:.46em;color:#e2dfcc;text-shadow:0 0 14px rgba(0,0,0,.6)}
-.result div{font-size:11px;color:rgba(226,223,204,.72);font-variant-numeric:tabular-nums;line-height:1.7;letter-spacing:.18em}
-.result span{font-size:10px;color:#d8b46c;letter-spacing:.3em}
-.result.down{border-top-color:rgba(228,124,98,.6);border-bottom-color:rgba(228,124,98,.22)}
+/* Result: a column on the left, clear of AOI's cut-in on the right. The HMD type (see HUD in main.js):
+   light, widely tracked, warm off-white; one row per figure with a hairline under it, rows arrive in turn. */
+.result{position:absolute;left:clamp(40px,7vw,128px);top:46%;transform:translateY(-50%);width:min(430px,42vw);display:grid;gap:0;padding:18px 26px 16px 24px;
+  font-family:Bahnschrift,"DIN Alternate","Segoe UI","Helvetica Neue","Yu Gothic UI",sans-serif;color:#e2dfcc;
+  background:linear-gradient(90deg,rgba(5,9,9,.82),rgba(5,9,9,.66) 72%,transparent);border-top:1px solid rgba(226,223,204,.5);
+  letter-spacing:.16em;animation:resultIn .5s cubic-bezier(.2,.8,.2,1)}
+.result small{font-size:10px;letter-spacing:.3em;color:rgba(226,223,204,.6)}
+.result b{margin:8px 0 18px;font-weight:300;font-size:clamp(24px,2.4vw,38px);line-height:1.1;letter-spacing:.32em;color:#e2dfcc;text-shadow:0 0 14px rgba(0,0,0,.6)}
+.result dl{display:grid;margin:0}
+.result dl div{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:16px;padding:7px 0 6px;border-bottom:1px solid rgba(226,223,204,.14);opacity:0;animation:resultRow .32s ease-out forwards;animation-delay:calc(.35s + var(--i) * .09s)}
+.result dt{font-size:10px;letter-spacing:.24em;color:rgba(226,223,204,.62)}
+.result dd{margin:0;font-size:15px;letter-spacing:.08em;font-variant-numeric:tabular-nums;color:#ece9d8}
+.result dd em{font-style:normal;font-size:10px;letter-spacing:.2em;color:#d8b46c;margin-left:10px}
+.result span{margin-top:16px;font-size:10px;color:#d8b46c;letter-spacing:.3em;word-spacing:.6em}
+.result.down{border-top-color:rgba(228,124,98,.6)}
 .result.down b{color:#ecd6cc}
-@keyframes resultIn{from{opacity:0;transform:translate(-50%,-46%) scaleY(.6)}to{opacity:1;transform:translate(-50%,-50%)}}
+@keyframes resultIn{from{opacity:0;transform:translate(-14px,-50%)}to{opacity:1;transform:translateY(-50%)}}
+@keyframes resultRow{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 @media(max-width:800px){.settings{grid-template-columns:1fr 1fr 1fr}}
 
 /* v32: the machine carries its status (canvas cockpit). The DOM layer is only time,

@@ -2143,13 +2143,18 @@ function updateEnemies(dt){
 function downPlayer(){player.alive=false;plog('Warning','Frame lost.');pilotCut('down');say('DOWN');player.vx=player.vz=0;player.boostTime=player.glideTime=0;mouseButtons.clear();sfx.down();lightBurst(player.x,CAMERA_Y-1,player.z,'#ff6359',14,.6);setTimeout(()=>{if(!player.alive)showResult('FRAME DOWN')},700)}
 function fmtTime(t){return String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0')}
 function showResult(title){const r=$('result');if(!r)return;if(!title){r.classList.add('hidden');return}
-  const acc=stats.shots?Math.round(stats.hits/stats.shots*100):0;$('resultTitle').textContent=title;
+  const acc=stats.shots?Math.round(stats.hits/stats.shots*100):0,down=/^FRAME DOWN/.test(title);let rows,sector;
   if(mode==='endurance'){const b=endure.best,rec=!b||stats.kills>b.kills||stats.kills===b.kills&&missionTime>b.time;
-    if(rec&&title==='FRAME DOWN'){endure.best={kills:stats.kills,time:missionTime,level:endure.level};try{localStorage.setItem('hf.endure.best',JSON.stringify(endure.best))}catch{}}
-    $('resultTitle').textContent=rec&&title==='FRAME DOWN'?'FRAME DOWN // NEW RECORD':title;
-    $('resultStats').textContent=`ENDURANCE  //  BREAK ${stats.kills}  //  TIME ${fmtTime(missionTime)}  //  THREAT LV ${endure.level}  //  ACC ${acc}%  //  MAX CHAIN ${stats.maxChain}  //  BEST ${endure.best?endure.best.kills+' / '+fmtTime(endure.best.time):'-'}`}
-  else $('resultStats').textContent=`TIME ${fmtTime(missionTime)}  //  BREAK ${stats.kills}/${enemies.length}  //  ACC ${acc}%  //  MAX CHAIN ${stats.maxChain}  //  HMD DES ${stats.designations}  //  DAMAGE ${Math.round(stats.damage)}`;
-  r.classList.toggle('down',/^FRAME DOWN/.test(title));r.classList.remove('hidden')}
+    if(rec&&down){endure.best={kills:stats.kills,time:missionTime,level:endure.level};try{localStorage.setItem('hf.endure.best',JSON.stringify(endure.best))}catch{}}
+    sector='ENDURANCE';
+    rows=[['BREAK',stats.kills+(rec&&down?'<em>NEW RECORD</em>':'')],['TIME',fmtTime(missionTime)],['THREAT LEVEL',endure.level],['ACCURACY',acc+'%'],['MAX CHAIN',stats.maxChain],
+      ['BEST',endure.best?endure.best.kills+' / '+fmtTime(endure.best.time):'-']]}
+  else{sector='VECTOR FOUNDRY 07';
+    rows=[['TIME',fmtTime(missionTime)],['BREAK',stats.kills+' / '+enemies.length],['ACCURACY',acc+'%'],['MAX CHAIN',stats.maxChain],['HMD DESIGNATIONS',stats.designations],['DAMAGE TAKEN',Math.round(stats.damage)]]}
+  $('resultSector').textContent=sector;$('resultTitle').textContent=title;
+  // Rebuilt every time, so the rows run their arrival again.
+  $('resultStats').innerHTML=rows.map(([k,v],i)=>`<div style="--i:${i}"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  r.classList.toggle('down',down);r.classList.add('hidden');void r.offsetWidth;r.classList.remove('hidden')}
 // Bodies are solid: the frame cannot walk through hostiles and hostiles do not stack.
 // A BURST into a hostile is a shoulder check: it staggers the target instead of clipping through it.
 function resolveBodies(){
@@ -2323,7 +2328,7 @@ const pilotReady=k=>{const im=pilotImg[k];return !!(im&&im.complete&&im.naturalW
 // Per-expression framing on the 1280x760 plate (pupils at 520/760, y 300): x/y in eye-distance units from the eye midpoint, z = zoom.
 const PILOT_FRAME={calm:{x:0,y:0,z:1},shout:{x:0,y:.4,z:.45},cheer:{x:0,y:.2,z:.75},smug:{x:.2,y:.02,z:1.1},laugh:{x:0,y:.3,z:.62},smile:{x:0,y:.05,z:1},grit:{x:-.12,y:-.05,z:1.2},glance:{x:.22,y:-.02,z:1.14},closed:{x:0,y:0,z:1}};
 const PILOT_TAG={AOI:'#a9c9de',Info:'#cfd2c4',System:'#cfd2c4',Caution:'#d8b46c',Warning:'#e47c62',Link:'#8ed8c4',Sync:'#e6d08e'};
-const pilot={blinkT:3,blinking:0,glanceDir:1,entries:[],scroll:0,expr:'calm',prev:null,mix:1,fr:{x:0,y:0,z:1},hold:0,holdExpr:'calm',holdPrio:0,banner:null,cut:null,lostT:0,lagX:0,lastHead:0,boot:0,critLatch:false,wasPlaying:false};
+const pilot={blinkT:3,blinking:0,glanceDir:1,entries:[],scroll:0,expr:'calm',prev:null,mix:1,fr:{x:0,y:0,z:1},hold:0,holdExpr:'calm',holdPrio:0,banner:null,cut:null,lostT:0,clearT:0,lagX:0,lastHead:0,boot:0,critLatch:false,wasPlaying:false};
 // cool: a repeating status line (inbound, venting, critical) is not re-logged within this many seconds.
 const plogSeen=new Map();
 function plog(tag,text,cool=0){const last=pilot.entries[pilot.entries.length-1];
@@ -2363,7 +2368,7 @@ function updatePilot(dt){
   if(player.hp<30&&player.alive&&!pilot.critLatch){pilot.critLatch=true;pilotBanner('!FRAME CRITICAL!','- 装甲危険域 -','#ff7a5c',1.6)}else if(player.hp>=30)pilot.critLatch=false;
   if(pilot.banner){pilot.banner.t+=dt;if(pilot.banner.t>pilot.banner.dur)pilot.banner=null}
   if(pilot.cut)pilot.cut.t+=dt;
-  pilot.lostT=player.alive?0:pilot.lostT+dt;
+  pilot.lostT=player.alive?0:pilot.lostT+dt;pilot.clearT=missionClear&&player.alive?pilot.clearT+dt:0;
 }
 // Bitmap text: each distinct string is rasterised once into a small canvas (1 font pixel = 1 canvas
 // pixel, with a dark drop shadow) and blitted with smoothing off.
@@ -2419,6 +2424,7 @@ function drawPilotFace(x,y,w,h,s){
     g.globalCompositeOperation='source-atop';g.fillStyle=grade===1?'rgba(40,30,4,.30)':grade===2?'rgba(40,6,4,.30)':'rgba(2,22,24,.36)';g.fillRect(0,0,w,h);
     g.fillStyle='rgba(0,0,0,.16)';const step=Math.max(2,Math.round(3*s/2));for(let yy=0;yy<h;yy+=step)g.fillRect(0,yy,w,1);g.globalCompositeOperation='source-over'}
   if(!player.alive){drawLinkLost(L,x,y,w,h,s);return}
+  if(missionClear){drawLinkComplete(L,x,y,w,h,s);return}
   ctx.drawImage(L,x,y,w,h)}
 // The frame is down, so PILOT LINK goes with it: the last frames of AOI's feed tear into bands and
 // static, fold to a bright line (a set switching off), and the LOG is left on a dead panel with LINK LOST.
@@ -2437,6 +2443,25 @@ function drawLinkLost(L,x,y,w,h,s){
     hudText('LINK LOST',x+w-12*s,y+h*.5-13*s,10*s,HUD.warn,1,.36,300);ctx.globalAlpha=.5*on;hudText('NO SIGNAL FROM FRAME',x+w-12*s,y+h*.5+4*s,5.2*s,HUD.warn,1,.3);
   }
   ctx.restore()}
+// The sector is clean: AOI closes her eyes, the feed fades out (her face is already up in the cut-in),
+// the log entries go with it, and MISSION COMPLETE takes the whole LOG: a bright bar crosses the panel
+// and leaves the words behind it, their tracking pulls in and a glow settles. The rest is one small line.
+// Same place FRAME DOWN leaves LINK LOST.
+function drawLinkComplete(L,x,y,w,h,s){
+  const t=pilot.clearT,f=clamp((t-.5)/.6,0,1),u=t-1.05;
+  ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  if(f<1){ctx.globalAlpha=1-f;ctx.drawImage(L,x,y,w,h)}
+  ctx.globalAlpha=f;ctx.fillStyle='rgba(0,5,7,.92)';ctx.fillRect(x,y,w,h);
+  if(u>0){
+    const sw=clamp(u/.3,0,1),e=1-Math.pow(1-sw,3),k=1-Math.pow(1-clamp(u/.7,0,1),3),glow=Math.max(0,1-u/1.1),size=20*s,cx=x+w/2,cy=y+h*.42;
+    ctx.save();ctx.beginPath();ctx.rect(x,y,w*e,h);ctx.clip();ctx.globalAlpha=1;
+    ctx.shadowColor='rgba(255,246,218,.9)';ctx.shadowBlur=glow*18*s;
+    hudText('MISSION COMPLETE',cx,cy-size*.5,size,'#f3efdf',.5,.42-.12*k,300);ctx.restore();
+    const rule=w*.62*k;ctx.globalAlpha=.55;ctx.fillStyle=HUD.ink;ctx.fillRect(cx-rule/2,cy+size*.62,rule,Math.max(1,.6*s));
+    if(u<.55){ctx.globalAlpha=sw<1?1:1-(u-.3)/.25;ctx.fillStyle='#fffbe8';ctx.shadowColor='rgba(255,246,218,.9)';ctx.shadowBlur=10*s;ctx.fillRect(x+w*e-2*s,y+3*s,2.2*s,h-6*s);ctx.shadowBlur=0}
+    const a2=clamp((u-.5)/.45,0,1);if(a2>0){ctx.globalAlpha=.62*a2;hudText(`ALL HOSTILES BROKEN  //  TIME ${fmtTime(missionTime)}`,cx,cy+size*.62+6*s,5.2*s,HUD.ink,.5,.3)}
+  }
+  ctx.restore()}
 function drawPilotLink(){
   if(!playing)return;
   const b=pilot.boot;if(b<=0)return;
@@ -2448,9 +2473,11 @@ function drawPilotLink(){
   const ly=by-logH,lx=ox+sideW+gap,sy=by-sideH;
   // LOG with AOI behind the text: one entry per line, the tag in small caps in its own column.
   hudPanel(lx,ly,logW,logH,'LOG',s);drawPilotFace(lx+1,ly+1,logW-2,logH-2,s);ctx.globalAlpha=b;
-  ctx.save();ctx.beginPath();ctx.rect(lx,ly+pad*.5,logW,logH-pad);ctx.clip();const tagW=50*s,textW=logW-pad*2-tagW,E=pilot.entries;
+  // On SECTOR CLEAN the entries fade with AOI's feed and leave the panel to MISSION COMPLETE.
+  const clr=missionClear&&player.alive?clamp((pilot.clearT-.5)/.6,0,1):0;
+  ctx.save();ctx.beginPath();ctx.rect(lx,ly+pad*.5,logW,logH-pad);ctx.clip();const tagW=50*s,textW=logW-pad*2-tagW,E=clr<1?pilot.entries:[];
   for(let i=0;i<E.length;i++){const row=i-(E.length-4)+pilot.scroll;if(row<-1||row>4)continue;const e=E[i],age=gameTime-e.t,y=ly+pad+row*lh;
-    ctx.globalAlpha=b*clamp(age/.12,0,1)*(row<0?.5:1);const col=PILOT_TAG[e.tag]||HUD.ink;
+    ctx.globalAlpha=b*clamp(age/.12,0,1)*(row<0?.5:1)*(1-clr);const col=PILOT_TAG[e.tag]||HUD.ink;
     ctx.fillStyle=col;ctx.fillRect(Math.round(lx+pad),Math.round(y+lh*.5-1.5*s),Math.round(2.5*s),Math.round(2.5*s));
     hudText(e.tag.toUpperCase(),lx+pad+6*s,y+(lh-cap)*.5-.5*s,cap,col,0,.2);hudText(hudFit(e.text.replace(/^-\s*/,''),textW,fs),lx+pad+tagW,y+(lh-fs)*.5-.5*s,fs,HUD.ink)}
   ctx.restore();ctx.globalAlpha=b;
