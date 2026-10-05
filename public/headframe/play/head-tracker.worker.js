@@ -36,6 +36,8 @@ self.onmessage = async ({ data }) => {
     const matrix = result.facialTransformationMatrixes?.[0]?.data;
     self.postMessage({ type: 'pose', timestamp: data.timestamp, found: !!matrix,
       yaw: matrix ? -Math.atan2(matrix[8], matrix[10]) * 180 / Math.PI : 0,
+      // + when the face tilts up: the face's forward axis gains height.
+      pitch: matrix ? Math.atan2(matrix[9], Math.hypot(matrix[8], matrix[10])) * 180 / Math.PI : 0,
       inferenceMs: performance.now() - start });
   } catch (error) {
     self.postMessage({ type: 'error', message: String(error?.message || error) });

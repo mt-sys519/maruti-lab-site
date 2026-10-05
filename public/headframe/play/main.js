@@ -497,9 +497,12 @@ function staggerEnemy(e,power=20){
 function killEnemy(e,weapon='CANNON'){if(!e.alive)return;const wasDesignated=e.designated>0;e.alive=false;e.deadAt=gameTime;e.firePending=false;e.charge=0;e.lungeWindup=0;e.dashT=0;e.attackKind="";{const col=CLASS_STYLE[e.type].edge,cy=RIGS[e.type].hit.cy,s=spatial(e.x,e.z);shatterEnemy(e);killWaves.push({x:e.x,z:e.z,t:gameTime});sparks(e.x,cy,e.z,44,col,16);sparks(e.x,cy,e.z,18,'#fff1d8',22);shockwave(e.x,cy,e.z,'#fff1d8',8,.36);shockwave(e.x,cy,e.z,col,15,.8);shockwave(e.x,.06,e.z,col,20,1.0,'ground');lightBurst(e.x,cy,e.z,'#ffd6b0',17,.36);sfx.kill(s.pan,e.type);if(e.type==='TITAN'){for(const y of [cy+4,cy-4,cy*.55,cy*.25])explode(e.x+(Math.random()-.5)*3,y,e.z+(Math.random()-.5)*3,true,false);shockwave(e.x,cy,e.z,'#ffd6b0',24,1.1);shockwave(e.x,.06,e.z,'#ff3a4a',42,1.4,'ground');player.shake=Math.max(player.shake,1.2)}}stats.kills++;hitStop=.055;const syncKill=player.syncTime>0;if(syncKill){player.syncChain++;player.syncTime=Math.min(5.4,player.syncTime+.42);player.fovKick=Math.max(player.fovKick,.62);}const refund=player.combo>0?22:18;player.boost=Math.min(100,player.boost+refund);player.heat=Math.max(0,player.heat-20);let reload=0;if(wasDesignated&&player.missiles<6){player.missiles++;reload=1}player.combo++;player.comboT=2.8;player.killPulse=1;player.fovKick=Math.max(player.fovKick,.42);player.shake=Math.max(player.shake,.52);stats.maxChain=Math.max(stats.maxChain,player.combo);addFlow(wasDesignated?26:12,wasDesignated?'DESIGNATE BREAK':'FRAME BREAK');plog(syncKill?'Sync':wasDesignated?'Link':'Info',`-${etag(e)} broken.${syncKill?` Sync x${player.syncChain}.`:player.combo>1?` Chain ${player.combo}.`:''}${reload?' MSSL +1.':''}`);pilotReact(player.combo>=3||syncKill?'laugh':'smug',player.combo>=3?1.4:1.0,2);{const left=mode==='endurance'?9:enemies.filter(x=>x.alive).length;if(left===1)say('LAST_ONE');else if(left>1){if(syncKill)say('SYNC_BREAK');else if(wasDesignated)say('DESIGNATE_BREAK');else if(player.combo>=3)say('CHAIN');else say('KILL',.6)}}if(lastDesignatedId===e.id)lastDesignatedId=0;if(wasDesignated)tryHmdHandoff(e.id);if(mode!=='endurance'&&enemies.every(x=>!x.alive)){missionClear=true;sfx.clear();plog('System','Sector clean.');pilotCut('clear');say('CLEAR');setTimeout(()=>{if(missionClear)showResult('SECTOR CLEAN')},650)}else combat.nextWake=Math.min(combat.nextWake,gameTime+.45)}
 
 // ---------- HEAD TRACKING ----------
-let manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
+let manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,headPitch=0,headPitchTarget=0,basePitch=null,rawPitch=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
 let headBusy=false,headGeneration=0,headSampleTime=-Infinity,headRequestTime=0,headInferenceMs=0;
 const HEAD_FRESH_MS=250;
+// The head is mainly left / right. Up / down only nudges the view (degrees, after the dead zone, capped):
+// you sit in front of a screen and cannot look up at it, so height is the mouse's job. View only, never the aim.
+const HEAD_PITCH_GAIN=.5,HEAD_PITCH_MAX=5;
 const gain=$('gain'),dead=$('dead'),smooth=$('smooth');
 // Human neck, not a turret: a critically damped spring (slow start, fast middle, soft stop, no
 // overshoot) with a ~450 deg/s cap. SMOOTH sets the stiffness (0.13 -> 60 deg in ~0.3 s). Sub-stepped so
@@ -508,16 +511,18 @@ let headVel=0;
 function setHeadTarget(target,dt){const w=2.15/Math.max(.03,+smooth.value),n=Math.max(1,Math.ceil(dt*240)),h=dt/n;
   for(let i=0;i<n;i++){headVel+=(w*w*(target-headYaw)-2*w*headVel)*h;headVel=clamp(headVel,-450,450);headYaw+=headVel*h}}
 function headPoseFresh(now=performance.now()){return !headEnabled||(headFound&&now-headSampleTime<=HEAD_FRESH_MS)}
-function centerHead(){baseline=headPoseFresh()&&headFound?rawYaw:null;manualHead=0;headTarget=0;headYaw=0;headVel=0;plog('System','Head centered.');say('HEAD_CENTER')}
+function centerHead(){baseline=headPoseFresh()&&headFound?rawYaw:null;basePitch=baseline===null?null:rawPitch;headPitchTarget=0;headPitch=0;manualHead=0;headTarget=0;headYaw=0;headVel=0;plog('System','Head centered.');say('HEAD_CENTER')}
 function acceptHeadPose(data){
   if(data.timestamp<headSampleTime)return;
   headFound=!!data.found;
   headInferenceMs=data.inferenceMs||0;
   if(!data.found)return;
-  headSampleTime=data.timestamp;rawYaw=data.yaw;
-  if(baseline===null)baseline=rawYaw;
+  headSampleTime=data.timestamp;rawYaw=data.yaw;rawPitch=data.pitch||0;
+  if(baseline===null)baseline=rawYaw;if(basePitch===null)basePitch=rawPitch;
   const d=angleDiff(rawYaw*Math.PI/180,baseline*Math.PI/180)*180/Math.PI;
   headTarget=clamp(Math.sign(d)*Math.max(0,Math.abs(d)-(+dead.value))*(+gain.value),-60,60);
+  const dp=rawPitch-basePitch;
+  headPitchTarget=clamp(Math.sign(dp)*Math.max(0,Math.abs(dp)-(+dead.value))*HEAD_PITCH_GAIN,-HEAD_PITCH_MAX,HEAD_PITCH_MAX);
 }
 async function toggleHead(){
   if(headEnabled){disableHead();return}
@@ -549,7 +554,7 @@ function disableHead(status='HEAD OFF / Q-E MANUAL TEST'){
   headGeneration++;headEnabled=false;headFound=false;headBusy=false;
   headWorker?.terminate();headWorker=null;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-  video.srcObject=null;manualHead=headYaw;headTarget=headYaw;
+  video.srcObject=null;manualHead=headYaw;headTarget=headYaw;headPitchTarget=0;
   $('head').textContent='HEAD TRACKING';$('status').textContent=status;
 }
 async function captureHeadFrame(now){
@@ -571,11 +576,14 @@ function updateHead(now,dt){
     // Hold the current view on loss; stale poses cannot create designations.
     if(headPoseFresh(now))setHeadTarget(headTarget,dt);
   }else{
+    headPitchTarget=0;
     // Manual test: Q / E is a glance — the head snaps toward that side like a person looking, and comes
     // back to centre on release. The spring above gives it the human ease-in / ease-out.
     const q=keys.has('KeyQ'),e=keys.has('KeyE');manualHead=q&&!e?-55:e&&!q?55:0;
     setHeadTarget(manualHead,dt);
   }
+  // Same stiffness as the yaw spring, without its overshoot: a few degrees do not need one.
+  if(!headEnabled||headPoseFresh(now))headPitch+=(headPitchTarget-headPitch)*(1-Math.exp(-dt*2.15/Math.max(.03,+smooth.value)));
 }
 
 // ---------- PROJECTION ----------
@@ -2655,7 +2663,7 @@ function applyBloom(){
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'GLOW : HIGH':'GLOW : LOW'}
-function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,viewYaw=player.yaw+head,viewPitch=player.camPitch+player.inertiaPitch;renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
+function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,viewYaw=player.yaw+head,viewPitch=player.camPitch+player.inertiaPitch+headPitch*Math.PI/180;renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
 // canvas state reset, and the error goes to the console, window.__hfErrors and once per message to the LOG.
