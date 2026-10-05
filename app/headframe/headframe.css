@@ -1,0 +1,54 @@
+/* HEADFRAME's page, in the game's HMD language: near-black, hairlines, a
+   tracked light sans in off-white, amber only for the one thing to press.
+   Everything is scoped under .hfSkin so none of it reaches the lab's footer. */
+.hfSkin{
+  --hf-bg:#05090a;
+  --hf-ink:#e6ece9;
+  --hf-muted:#9aa8a4;
+  --hf-line:rgba(223,235,231,.16);
+  --hf-amber:#e3a957;
+  background:var(--hf-bg);
+  color:var(--hf-ink);
+  font-family:Bahnschrift,"DIN Alternate","Segoe UI","Helvetica Neue","Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;
+}
+.hfSkin a{color:inherit}
+
+.hfHeader{height:72px;padding:0 clamp(16px,5vw,76px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--hf-line)}
+.hfBrand{display:flex;align-items:center;gap:12px;text-decoration:none;font-size:15px;letter-spacing:.22em}
+.hfBrand small{display:block;margin-top:3px;font-size:9px;letter-spacing:.16em;color:var(--hf-muted)}
+.hfMark{display:inline-grid;place-items:center;width:32px;height:32px;border:1px solid rgba(230,236,233,.55);font-size:11px;font-weight:700;letter-spacing:.05em}
+.hfHeader nav{display:flex;gap:clamp(16px,3vw,36px);font-size:12px;letter-spacing:.08em}
+.hfHeader nav a{padding:6px 0;text-decoration:none;border-bottom:1px solid transparent}
+.hfHeader nav a:hover{border-color:var(--hf-ink)}
+
+.hfMain{max-width:880px;margin:0 auto;padding:0 clamp(16px,5vw,48px) 96px}
+
+.hfHero{padding:clamp(64px,12vh,128px) 0 clamp(48px,8vh,88px);border-bottom:1px solid var(--hf-line)}
+.hfEyebrow{margin:0;font-size:11px;letter-spacing:.3em;color:var(--hf-muted)}
+.hfHero h1{margin:14px 0 0;font-size:clamp(44px,9vw,96px);font-weight:300;letter-spacing:.18em;line-height:1}
+.hfLead{margin:28px 0 0;max-width:640px;font-size:15px;line-height:2;color:#d0d9d6;letter-spacing:.04em}
+.hfActions{margin-top:40px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px}
+.hfPlay{display:inline-grid;place-items:center;min-width:200px;height:48px;padding:0 24px;background:var(--hf-amber);color:#0b1112 !important;font-size:13px;font-weight:700;letter-spacing:.16em;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.hfPlay:hover{background:#f0bd75}
+.hfNeed{display:flex;flex-wrap:wrap;gap:4px 1em;margin:0;font-size:12px;letter-spacing:.08em;color:var(--hf-muted)}
+.hfTouchNote{display:none;margin:22px 0 0;padding:12px 14px;border-left:1px solid var(--hf-amber);font-size:13px;line-height:1.8;color:#f0d3a6}
+@media (hover:none) and (pointer:coarse){.hfTouchNote{display:block}}
+
+.hfSection{padding:56px 0 8px}
+.hfSection h2{margin:0 0 20px;font-size:13px;font-weight:400;letter-spacing:.3em;color:var(--hf-muted)}
+.hfSection p,.hfSection li{font-size:14px;line-height:2;letter-spacing:.03em;color:#d0d9d6}
+.hfSection p{margin:0 0 14px}
+.hfSection ul{margin:0 0 14px;padding-left:1.2em}
+.hfSmall{font-size:12px !important;color:var(--hf-muted) !important}
+
+.hfKeys{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0 32px;margin:0 0 22px}
+.hfKeys div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--hf-line);font-size:13px}
+.hfKeys dt{font-weight:700;letter-spacing:.1em}
+.hfKeys dd{margin:0;color:#d0d9d6}
+
+@media (max-width:640px){
+  .hfHeader{height:64px}
+  .hfHeader nav a:first-child{display:none}
+  .hfLead br{display:none}
+  .hfKeys div{grid-template-columns:104px 1fr}
+}

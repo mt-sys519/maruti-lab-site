@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0a0f12">
+  <title>HEADFRAME | Maruti Lab</title>
+  <link rel="stylesheet" href="styles.css?v=33">
+</head>
+<body>
+<main id="app">
+  <canvas id="game" aria-label="HEADFRAME game canvas" tabindex="0"></canvas>
+  <video id="webcam" playsinline muted></video>
+
+  <section id="boot" class="boot">
+    <div class="bootMark">HF</div>
+    <div class="eyebrow">TACTICAL POWER FRAME / VECTOR FOUNDRY 07</div>
+    <h1>HEADFRAME</h1>
+    <p class="tagline">Vector combat frame. Independent HMD sight. Mechanical response.</p>
+    <p class="lead">首は索敵とHMD指定、マウスは武器、機体は遅れて追従。三つを分離したまま、正面射撃と側方索敵を同時に扱う。</p>
+
+    <div class="primaryActions">
+      <button id="play" class="deploy">DEPLOY</button>
+      <button id="endure" class="endure">ENDURANCE</button>
+      <button id="full">FULL SCREEN</button>
+      <button id="head">HEAD TRACKING</button>
+      <button id="fx">GLOW : HIGH</button>
+      <button id="reset">RESET</button>
+    </div>
+
+    <div class="settings">
+      <label><span>MASTER</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
+      <label><span>MUSIC</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
+      <label><span>MOUSE SENS</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
+      <label><span>HEAD GAIN</span><output id="gainout">3.0×</output><input id="gain" type="range" min="1" max="5" value="3" step="0.1"></label>
+      <label><span>DEAD ZONE</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
+      <label><span>SMOOTH</span><output id="smoothout">0.13</output><input id="smooth" type="range" min="0.04" max="0.35" value="0.13" step="0.01"></label>
+    </div>
+
+    <div class="statusLine"><i id="statusDot"></i><span id="status">READY / CAMERA OPTIONAL</span></div>
+    <div class="keyline"><b>WASD</b> MOVE　<b>SHIFT</b> BURST　<b>SPACE</b> JUMP　<b>MOUSE</b> WEAPON GIMBAL　<b>LMB</b> CANNON　<b>RMB</b> MISSILE　<b>WHEEL / 1-2</b> WEAPON　<b>Q/E</b> HEAD TEST　<b>C</b> RECENTER　<b>ESC</b> MENU　<b>R</b> REDEPLOY</div>
+  </section>
+
+  <section id="hud" class="hud hidden" aria-live="polite">
+    <div class="hudTop"><div id="missionClock">00:00</div><div id="headstat"></div></div>
+    <div id="result" class="result hidden"><b id="resultTitle">SECTOR CLEAN</b><div id="resultStats"></div><span>R // REDEPLOY　　ESC // MENU</span></div>
+    <div id="damageFlash"></div>
+    <div id="boostVignette"></div>
+    <div id="muzzleFlash"></div>
+  </section>
+</main>
+<script src="main.js?v=33"></script>
+<!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
+<script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
+<script type="module" src="three-cel.js?v=33"></script>
+</body>
+</html>
