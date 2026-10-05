@@ -432,7 +432,25 @@ function drawPhoto(c,src){
   c.drawImage(src,-src.width*k/2,-src.height*k/2,src.width*k,src.height*k);c.restore();
 }
 // Overlaid photo: cropped to its frame (square, rounded, circle, ellipse), with an optional rim and shadow.
-function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:(L.ar||(ph?ph.img.width/ph.img.height:1));return {w:L.w,h:L.w/ar}}
+// そのまま (shape 'none'): the whole picture at its own proportions, nothing cut away, see-through parts kept.
+function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:L.shape==='none'&&ph?ph.img.width/ph.img.height:(L.ar||(ph?ph.img.width/ph.img.height:1));return {w:L.w,h:L.w/ar}}
+// The picture's outline in one colour, for a sticker-like rim and a shadow that follows the cut-out.
+function silhouette(ph,src,col){
+  const m=ph._sil||(ph._sil=new Map()),key=(src===ph.small?'s':'f')+col;let c=m.get(key);
+  if(!c){c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);x.globalCompositeOperation='source-in';x.fillStyle=col;x.fillRect(0,0,c.width,c.height);
+    m.set(key,c);while(m.size>4)m.delete(m.keys().next().value)}
+  return c;
+}
+function drawCutout(c,L,ph,f,thumb){
+  const src=adjusted(ph,thumb?ph.small:ph.img,L.adj),x=-f.w/2,y=-f.h/2,rim=()=>{ // the rim: the outline stamped round a ring
+    const r=L.w*L.border.w/100,s=silhouette(ph,thumb?ph.small:ph.img,L.border.color);
+    for(let i=0;i<24;i++){const t=i/24*Math.PI*2;c.drawImage(s,x+Math.cos(t)*r,y+Math.sin(t)*r,f.w,f.h)}
+  };
+  const T=c.getTransform(),k=Math.hypot(T.a,T.b);
+  if(L.shadow.on)sameShadow(c,L.w*L.shadow.x/100*k,L.w*L.shadow.y/100*k,L.w*L.shadow.blur/100*k,L.shadow.color,L.shadow.a,()=>{if(L.border.on)rim();else c.drawImage(silhouette(ph,thumb?ph.small:ph.img,'#000'),x,y,f.w,f.h)});
+  if(L.border.on)rim();
+  c.drawImage(src,x,y,f.w,f.h);
+}
 function imgPath(c,L,f){
   c.beginPath();
   if(L.shape==='circle'||L.shape==='ellipse')c.ellipse(0,0,f.w/2,f.h/2,0,0,Math.PI*2);
@@ -441,6 +459,7 @@ function imgPath(c,L,f){
 function drawImageLayer(c,L,thumb){
   const ph=photos.get(L.photoId),f=imgFrame(L);
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
+  if(L.shape==='none'&&ph){drawCutout(c,L,ph,f,thumb);c.restore();return {W:f.w,H:f.h}}
   const T=c.getTransform(),k=Math.hypot(T.a,T.b);
   if(L.shadow.on)sameShadow(c,L.w*L.shadow.x/100*k,L.w*L.shadow.y/100*k,L.w*L.shadow.blur/100*k,L.shadow.color,L.shadow.a,()=>{imgPath(c,L,f);c.fillStyle=L.border.on?L.border.color:'#fff';c.fill()});
   c.save();imgPath(c,L,f);c.clip();
@@ -665,8 +684,10 @@ function ensureFonts(ov){
 async function makePhoto(url,id=newId('p')){
   const im=new Image();im.src=url;await im.decode();
   const k=Math.min(1,720/Math.max(im.width,im.height)),sm=document.createElement('canvas');
-  sm.width=Math.round(im.width*k);sm.height=Math.round(im.height*k);sm.getContext('2d').drawImage(im,0,0,sm.width,sm.height);
-  photos.set(id,{url,img:im,small:sm});return id;
+  sm.width=Math.round(im.width*k);sm.height=Math.round(im.height*k);const sc=sm.getContext('2d',{willReadFrequently:true});sc.drawImage(im,0,0,sm.width,sm.height);
+  // a picture with see-through parts (a cut-out PNG) goes in as it is, with no frame
+  const a=sc.getImageData(0,0,sm.width,sm.height).data;let alpha=false;for(let i=3;i<a.length;i+=4)if(a[i]<250){alpha=true;break}
+  photos.set(id,{url,img:im,small:sm,alpha});return id;
 }
 const anyPhoto=()=>!!D.photoId||P.pages.some(pg=>pg&&pg.photoId);
 // worth keeping: it has a photo, or a plain or gradient background someone chose
@@ -875,7 +896,7 @@ const BAR={
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
   shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
-  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','中の位置',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
+  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],...(L.shape==='none'?[]:[['crop','中の位置',I.crop]]),['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
 };
 const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap']);
 
@@ -987,8 +1008,9 @@ const DRAW={
   // レイヤー: what the whole layer does (copy, stacking order, delete, see-through), the same for words,
   // shapes and photos. A shape's 濃さ under 色 is its fill alone; 透明度 here fades fill, line and shadow together.
   more:L=>btns([['dup','複製'],['front','前へ'],['back','後ろへ'],['del','削除']])+slider('透明度','opacity',.1,1,.01)+(isText(L)?'':posBlock(L)),
-  shape:L=>`${segs('shape',[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']])}
-    ${L.shape!=='circle'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
+  shape:L=>`${segs('shape',[['none','そのまま'],['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']])}
+    ${L.shape==='none'?'<p class="enote">写真の形のまま、切り抜かずに置きます。透明な部分のある PNG は、透明なまま重なります。</p>':''}
+    ${L.shape!=='circle'&&L.shape!=='none'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
     ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}`,
   // with nothing selected it works on the background photo
   adj:L=>{
@@ -1001,8 +1023,10 @@ const DRAW={
 };
 
 function addImage(photoId,i=0){
+  const cut=photos.get(photoId)?.alpha;
   const L={id:uid++,type:'image',photoId,x:D.W*(.5+.05*i),y:D.H*(.42+.05*i),w:D.W*.46,rot:0,shape:'round',r:5,ar:0,zs:1,zx:0,zy:0,opacity:1,
     border:{on:true,color:'#ffffff',w:2.5},shadow:{on:true,color:'#28190f',a:.28,x:0,y:1.5,blur:6}};
+  if(cut){L.shape='none';L.border.on=false}
   D.layers.splice(D.layers.filter(x=>!isText(x)).length,0,L); // above other photos and shapes, under the texts
   D.sel=L.id;return L;
 }
@@ -1266,12 +1290,12 @@ bodyEl.addEventListener('click',e=>{
 });
 $('#eimg').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
-  try{const urls=await Promise.all(fs.map(loadPhoto));for(const [i,u] of urls.entries())addImage(await makePhoto(u),i);tool=null;commit();panel();refresh()}
+  try{const urls=await Promise.all(fs.map(f=>loadPhoto(f,true)));for(const [i,u] of urls.entries())addImage(await makePhoto(u),i);tool=null;commit();panel();refresh()}
   catch{toast('読み込めない画像がありました')}
 });
 $('#eimgswap').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!isImg(L))return;
-  try{L.photoId=await makePhoto(await loadPhoto(f));Object.assign(L,{zs:1,zx:0,zy:0});commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
+  try{L.photoId=await makePhoto(await loadPhoto(f,true));Object.assign(L,{zs:1,zx:0,zy:0});if(photos.get(L.photoId).alpha&&L.shape!=='none'){L.shape='none';L.border.on=false}commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
 });
 $('#eadd').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;

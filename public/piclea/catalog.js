@@ -248,13 +248,15 @@ async function faceReady(fam,w,text){
 }
 
 // Shrink once so dozens of tiles and the editor never repaint a 12MP original. Nothing leaves the browser.
-async function loadPhoto(file){
+// keepAlpha: a picture laid over the photo keeps its see-through parts (saved as PNG); a background is flattened to JPEG.
+async function loadPhoto(file,keepAlpha){
   const img=new Image(),src=URL.createObjectURL(file);img.src=src;
   try{await img.decode()}catch{URL.revokeObjectURL(src);throw new Error('decode')}
   const k=Math.min(1,2048/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
   c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
-  c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(src);
-  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(src);
+  let see=false;if(keepAlpha&&!/jpe?g|heic|heif/i.test(file.type)){const d=x.getImageData(0,0,c.width,c.height).data;for(let i=3;i<d.length;i+=4)if(d[i]<250){see=true;break}}
+  const blob=await new Promise(r=>see?c.toBlob(r,'image/png'):c.toBlob(r,'image/jpeg',.92));
   return URL.createObjectURL(blob);
 }
 
