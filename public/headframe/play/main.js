@@ -2616,7 +2616,10 @@ function drawPilotBanner(s){const bn=pilot.banner;if(!bn)return;const a=clamp(bn
 const cutCache={};
 function cutPlate(kind){if(cutCache[kind])return cutCache[kind];const k=kind==='down'?'bust_shout':'bust_cheer';if(!pilotReady(k))return null;const c=makeCanvas();if(!c)return null;c.width=640;c.height=720;const g=c.getContext('2d');
   g.drawImage(pilotImg[k],0,0);g.globalCompositeOperation='source-atop';g.fillStyle=kind==='down'?'rgba(255,60,40,.26)':'rgba(70,255,220,.10)';g.fillRect(0,0,640,720);
-  g.globalCompositeOperation='destination-in';const fade=g.createLinearGradient(0,0,0,720);fade.addColorStop(0,'rgba(0,0,0,1)');fade.addColorStop(.72,'rgba(0,0,0,1)');fade.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=fade;g.fillRect(0,0,640,720);return cutCache[kind]=c}
+  g.globalCompositeOperation='destination-in';const fade=g.createLinearGradient(0,0,0,720);fade.addColorStop(0,'rgba(0,0,0,1)');fade.addColorStop(.72,'rgba(0,0,0,1)');fade.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=fade;g.fillRect(0,0,640,720);
+  // The plate is cut close round the head, and in the cheer AOI's raised fist meets its left edge: a hard
+  // edge left a sliver of hand standing in the air. The left edge dissolves instead (the right one is off screen).
+  const side=g.createLinearGradient(0,0,110,0);side.addColorStop(0,'rgba(0,0,0,0)');side.addColorStop(1,'rgba(0,0,0,1)');g.fillStyle=side;g.fillRect(0,0,640,720);return cutCache[kind]=c}
 // The plate's top edge stays above the screen (rotation and bob included): AOI's source art ends at her
 // crown, so a visible top edge would cut her hair flat.
 function drawPilotCut(){const c=pilot.cut;if(!c)return;const plate=cutPlate(c.kind);if(!plate)return;
