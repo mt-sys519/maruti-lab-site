@@ -36,8 +36,10 @@ const sel=()=>D.layers.find(l=>l.id===D.sel);
 const isText=L=>!!L&&!L.type,isImg=L=>!!L&&L.type==='image',isShape=L=>!!L&&L.type==='shape';
 // A line is a shape too: w is its length and h its thickness. 点線 is a row of round dots; the arrows and
 // 吹き出しの下 (a line with a V in the middle) are drawn with a pen of width h. 囲み are pen loops of width lw.
-const LINEISH=new Set(['line','dots','notch','arrow','arrowc','arrowl']),PENNED=new Set(['notch','arrow','arrowc','arrowl','scribble','scribble2']);
-const NOGLASS=new Set(['notch','arrow','arrowc','arrowl','bubble','bubbler','cloud','spiky','scribble','scribble2']);
+// RIBBON: pen strokes drawn as one tapered ribbon of thickness lw inside a w×h box (囲み and the 飾り lines).
+const RIBBON=new Set(['scribble','scribble2','swirl','coil','wave']),DECO=new Set(['sparkle','flower','blob','heart','arch']);
+const LINEISH=new Set(['line','dots','notch','arrow','arrowc','arrowl']),PENNED=new Set(['notch','arrow','arrowc','arrowl',...RIBBON]);
+const NOGLASS=new Set(['notch','arrow','arrowc','arrowl','bubble','bubbler','cloud','spiky',...RIBBON,...DECO]);
 const isLine=L=>isShape(L)&&LINEISH.has(L.kind);
 const bgOf=pg=>pg.bg||{type:'photo'},photoBg=pg=>bgOf(pg).type==='photo';
 function syncCur(){P.pages[P.cur]=clone(D)}
@@ -493,7 +495,7 @@ function shapeExt(L){
   if(L.kind==='arrow')return {w:w+h,h:arrowHead(L)*1.05+h*2};
   if(L.kind==='arrowc')return {w:w+h,h:w*.3+arrowHead(L)*.6+h*2};
   if(L.kind==='arrowl')return {w:w+h,h:w*.3+arrowHead(L)+h*2};
-  if(L.kind==='scribble'||L.kind==='scribble2')return {w:w+(L.lw||8)*2,h:h+(L.lw||8)*2};
+  if(RIBBON.has(L.kind))return {w:w+(L.lw||8)*2,h:h+(L.lw||8)*2};
   return {w,h};
 }
 // The pen paths. Arrows point right; turn the layer to aim them.
@@ -505,7 +507,7 @@ function penPath(c,L){
     const lift=nd*.45,half=w/2; // both ends turn up a little, like a smile
     polyTo(c,wobbly(pts.map(([x,y])=>{const u=Math.max(0,(Math.abs(x)-nw/2)/(half-nw/2));return [x,y-lift*u*u]}),h*.15+w*.005,sd));return;
   }
-  if(L.kind==='scribble'||L.kind==='scribble2'){polyTo(c,scribblePts(L));return}
+  if(RIBBON.has(L.kind)){polyTo(c,ribbonPts(L));return}
   let pts=[];
   if(L.kind==='arrow'){for(let i=0;i<=24;i++)pts.push([-w/2+w*i/24,0]);pts=wobbly(pts,h*.12+w*.006,sd)}
   else if(L.kind==='arrowc'){ // an arc rising and coming down onto its point
@@ -521,6 +523,18 @@ function penPath(c,L){
 }
 // A loop as a hand draws it: a little egg-shaped and tilted, starting inside and running out past where it
 // began (丸囲み), or going round and round with the middle wandering (ぐりぐり).
+// 飾り lines: a spiral from the middle out (うずまき), a run of loops like a phone cord (くるくる), a soft wave (なみなみ).
+function ribbonPts(L){
+  if(L.kind.startsWith('scribble'))return scribblePts(L);
+  const w=L.w,h=L.h,pts=[];
+  if(L.kind==='swirl'){const turns=2.6,n=360;for(let i=0;i<=n;i++){const t=i/n,a=-Math.PI/2+t*turns*Math.PI*2,k=.08+.92*t;pts.push([Math.cos(a)*w/2*k,Math.sin(a)*h/2*k])}}
+  else if(L.kind==='coil'){ // a prolate cycloid: each turn loops back over itself
+    const loops=5,n=420,b=w/loops*.42,a=(w-2*b)/(loops*Math.PI*2);
+    for(let i=0;i<=n;i++){const th=i/n*loops*Math.PI*2;pts.push([-w/2+b+a*th-b*Math.sin(th),-h/2*Math.cos(th)*.9])}
+  }
+  else{const n=240;for(let i=0;i<=n;i++){const t=i/n;pts.push([-w/2+w*t,h/2*Math.sin(t*Math.PI*2*2.5)])}}
+  return pts;
+}
 function scribblePts(L){
   const w=L.w,h=L.h,r=rng(L.seed||L.id||1),two=L.kind==='scribble2',turns=two?2.55+r()*.2:1.14+r()*.06,n=Math.round(120*turns);
   const tilt=(r()-.5)*.22,a0=-Math.PI*.6+(r()-.5)*.4,p1=r()*6,p2=r()*6,p3=r()*6,ct=Math.cos(tilt),st=Math.sin(tilt),pts=[];
@@ -547,8 +561,8 @@ function ribbon(c,pts,lw,seed){
 }
 // Fill or pen, whichever the shape is: used for the shape itself, its shadow and its jelly mask.
 function paintShape(c,L){
-  if(L.kind==='scribble'||L.kind==='scribble2'){c.beginPath();ribbon(c,scribblePts(L),L.lw||8,(L.seed||L.id||1)+1);c.fill();return}
-  if(PENNED.has(L.kind)){c.beginPath();penPath(c,L);c.lineWidth=L.kind.startsWith('scribble')?(L.lw||8):L.h;c.lineCap=c.lineJoin='round';c.strokeStyle=c.fillStyle;c.stroke()}
+  if(RIBBON.has(L.kind)){c.beginPath();ribbon(c,ribbonPts(L),L.lw||8,(L.seed||L.id||1)+1);c.fill();return}
+  if(PENNED.has(L.kind)){c.beginPath();penPath(c,L);c.lineWidth=L.h;c.lineCap=c.lineJoin='round';c.strokeStyle=c.fillStyle;c.stroke()}
   else{shapePath(c,L);c.fill()}
 }
 // 吹き出し are drawn by hand like the arrows: the outline is sampled, then pushed in and out a little along
@@ -586,8 +600,28 @@ function bubblePath(c,L){
   }
   handDrawn(c,o,amp,sd);
 }
+// 飾り shapes, worked out as outlines in a w×h box so a line, jelly and the shadow all follow them.
+function decoPath(c,L){
+  const w=L.w,h=L.h,o=[],P=Math.PI;
+  if(L.kind==='sparkle'){ // four points with the sides drawn in
+    const tips=[[0,-h/2],[w/2,0],[0,h/2],[-w/2,0]],q=.07;o.push(tips[0]);
+    for(let i=0;i<4;i++){const a=tips[i],b=tips[(i+1)%4];quadPts(o,a,[(a[0]+b[0])*q,(a[1]+b[1])*q],b,24)}o.pop();
+  }
+  else if(L.kind==='flower'){const n=5;for(let i=0;i<360;i++){const a=i/360*P*2,k=.5+.5*Math.pow(Math.abs(Math.cos(n*a/2)),.55);o.push([Math.sin(a)*w/2*k,-Math.cos(a)*h/2*k])}}
+  else if(L.kind==='blob'){ // a soft shape that is never quite round; the seed keeps each one as it came
+    const r=rng(L.seed||L.id||1),p=[r()*6,r()*6,r()*6],v=[];let m=0;
+    for(let i=0;i<240;i++){const a=i/240*P*2,k=1+.13*Math.sin(2*a+p[0])+.09*Math.sin(3*a+p[1])+.05*Math.sin(5*a+p[2]);v.push([Math.cos(a)*k,Math.sin(a)*k]);m=Math.max(m,k)}
+    for(const [x,y] of v)o.push([x/m*w/2,y/m*h/2]);
+  }
+  else if(L.kind==='heart'){for(let i=0;i<240;i++){const t=i/240*P*2,x=16*Math.sin(t)**3,y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));o.push([x/17*w/2,(y+2.5)/14.5*h/2])}}
+  else{ // arch: a half circle on a box, the window shape
+    const r=Math.min(w/2,h),top=-h/2+r;o.push([-w/2,h/2]);segPts(o,[-w/2,h/2],[-w/2,top],8);arcPts(o,0,top,w/2,r,P,P*2,60);segPts(o,[w/2,top],[w/2,h/2],8);
+  }
+  polyTo(c,o);c.closePath();
+}
 function shapePath(c,L){
   c.beginPath();
+  if(DECO.has(L.kind)){decoPath(c,L);return}
   if(L.kind==='bubble'||L.kind==='bubbler'||L.kind==='cloud'||L.kind==='spiky'){bubblePath(c,L);return}
   if(PENNED.has(L.kind)){penPath(c,L);return}
   if(L.kind==='dots'&&L.dstyle==='dash'){ // dashes about 3× the thickness, stretched a little so both ends are a dash
@@ -969,7 +1003,7 @@ const DRAW={
   sform:L=>`${groupOf(L.kind).length>1?segs('kind',groupOf(L.kind)):''}
     ${L.kind==='dots'?(L.dstyle??='dot',`<div class="erow"><span class="el">種類</span>${segs('dstyle',[['dot','点'],['dash','線']])}</div>`):''}
     ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
-      :L.kind.startsWith('scribble')?slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.lw??=8,slider('太さ','lw',1,80,.5))
+      :RIBBON.has(L.kind)?slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.lw??=8,slider('太さ','lw',1,80,.5))
       :L.kind==='circle'?slider('大きさ','w',6,3000,1):slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.kind==='round'?slider('角丸','r',0,100,1):'')}
     ${btns(isLine(L)||L.kind==='circle'?[['fullw','横幅いっぱい'],['center','真ん中へ']]:[['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
   sdeco:L=>`${isLine(L)||PENNED.has(L.kind)?'':`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>`}
@@ -1032,10 +1066,11 @@ function addImage(photoId,i=0){
 }
 // A shape only changes 形 within its own group, so w and h keep their meaning (a box's height, a pen's width).
 const SHAPES=[[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']],[['line','線'],['dots','点線']],[['notch','吹き出しの下']],
-  [['bubble','丸'],['bubbler','角丸'],['cloud','もくもく'],['spiky','ギザギザ']],[['arrow','まっすぐ'],['arrowc','カーブ'],['arrowl','くるっと']],[['scribble','丸囲み'],['scribble2','ぐりぐり']]];
+  [['bubble','丸'],['bubbler','角丸'],['cloud','もくもく'],['spiky','ギザギザ']],[['arrow','まっすぐ'],['arrowc','カーブ'],['arrowl','くるっと']],[['scribble','丸囲み'],['scribble2','ぐりぐり']],
+  [['sparkle','きらきら'],['flower','お花'],['blob','ふにゃ'],['heart','ハート'],['arch','アーチ']],[['swirl','うずまき'],['coil','くるくる'],['wave','なみなみ']]];
 const groupOf=k=>SHAPES.find(ks=>ks.some(([v])=>v===k))||SHAPES[0];
 // The 図形 sheet is laid out by look instead: clean ones for bands and backings, hand-drawn ones for decoration.
-const SHEET=[['基本',[['',SHAPES[0].concat(SHAPES[1])]]],['手書き',[['吹き出し',SHAPES[3].concat(SHAPES[2])],['矢印',SHAPES[4]],['囲み',SHAPES[5]]]]];
+const SHEET=[['基本',[['',SHAPES[0].concat(SHAPES[1])]]],['手書き',[['吹き出し',SHAPES[3].concat(SHAPES[2])],['矢印',SHAPES[4]],['囲み',SHAPES[5]]]],['飾り',[['かたち',SHAPES[6]],['線',SHAPES[7]]]]];
 const FILLABLE=L=>isShape(L)&&!isLine(L)&&!PENNED.has(L.kind);
 function shapeDefaults(kind){
   const W=D.W,rim={on:true,color:INK,w:5};
@@ -1043,7 +1078,9 @@ function shapeDefaults(kind){
     line:{w:W*.7,h:Math.max(2,Math.round(W/120)),a:1},dots:{w:W*.7,h:14,gap:250,dstyle:'dot',a:1},notch:{w:W*.7,h:6,a:1},
     arrow:{w:W*.4,h:10,a:1},arrowc:{w:W*.42,h:10,a:1},arrowl:{w:W*.46,h:10,a:1},
     bubble:{w:W*.52,h:W*.4,a:1,line:rim},bubbler:{w:W*.56,h:W*.37,a:1,line:rim},cloud:{w:W*.56,h:W*.39,a:1,line:rim},spiky:{w:W*.54,h:W*.41,a:1,line:rim},
-    scribble:{w:W*.42,h:W*.3,lw:10,a:1},scribble2:{w:W*.4,h:W*.28,lw:8,a:1}})[kind]||{};
+    scribble:{w:W*.42,h:W*.3,lw:10,a:1},scribble2:{w:W*.4,h:W*.28,lw:8,a:1},
+    sparkle:{w:W*.2,h:W*.26,a:1},flower:{w:W*.3,h:W*.3,a:1},blob:{w:W*.5,h:W*.38,a:.85},heart:{w:W*.3,h:W*.27,a:1},arch:{w:W*.4,h:W*.52,a:.85},
+    swirl:{w:W*.28,h:W*.28,lw:9,a:1},coil:{w:W*.6,h:W*.12,lw:7,a:1},wave:{w:W*.6,h:W*.07,lw:8,a:1}})[kind]||{};
 }
 function addShape(kind='rect'){
   const L={id:uid++,type:'shape',kind,x:D.W/2,y:D.H/2,w:D.W,h:D.H*.2,rot:0,r:40,color:'#ffffff',a:.85,opacity:1,seed:1+Math.floor(Math.random()*1e9),
@@ -1067,7 +1104,7 @@ function openShapes(){
       const cv2=b.querySelector('canvas'),x=cv2.getContext('2d'),kind=b.dataset.shk;
       const L={id:7,seed:7,type:'shape',kind,x:0,y:0,rot:0,r:40,opacity:1,color:'#fbf7f2',line:{on:false,color:INK,w:4},shadow:{on:false},...clone(shapeDefaults(kind))};
       if(PENNED.has(kind)||LINEISH.has(kind))L.color=INK;else{L.line={on:true,color:INK,w:0};L.a=1}
-      L.h=kind==='line'||kind==='dots'?Math.max(L.h,L.w*.05):L.h;if(PENNED.has(kind)&&!kind.startsWith('scribble'))L.h=L.w*.035;if(kind.startsWith('scribble'))L.lw=L.w*.04;
+      L.h=kind==='line'||kind==='dots'?Math.max(L.h,L.w*.05):L.h;if(PENNED.has(kind)&&!RIBBON.has(kind))L.h=L.w*.035;if(RIBBON.has(kind))L.lw=L.w*.04;
       const ex=shapeExt(L),k=Math.min(88/ex.w,88/ex.h);if(L.line.on)L.line.w=2.4/k;
       x.setTransform(k,0,0,k,56,56);drawShape(x,L);
     });
