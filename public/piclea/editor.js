@@ -444,7 +444,17 @@ function drawPhoto(c,src){
 const cropOf=L=>L.crop||{l:0,t:0,r:0,b:0};
 function cropAr(L,ph){const c=cropOf(L);return ph.img.width*(1-c.l-c.r)/(ph.img.height*(1-c.t-c.b))}
 function cropRect(L,src){const c=cropOf(L);return [src.width*c.l,src.height*c.t,src.width*(1-c.l-c.r),src.height*(1-c.t-c.b)]}
-function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:L.shape==='none'&&ph?cropAr(L,ph):(L.ar||(ph?cropAr(L,ph):1));return {w:L.w,h:L.w/ar}}
+function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:L.shape==='none'&&ph?cropAr(L,ph):(L.ar||(ph?(L.ir&1?1/cropAr(L,ph):cropAr(L,ph)):1));return {w:L.w,h:L.w/ar}}
+// The photo can turn inside its frame, the frame staying as it is: quarter turns (L.ir) plus a tilt (L.ia, degrees),
+// like the background photo. It is scaled to just cover the frame turned that way (times the zoom L.zs), and
+// L.zx/L.zy (-1..1) slide it along its own sides as far as it still covers. Unturned, this is the plain cover fit.
+const turned=L=>L.shape!=='none'&&!!((L.ir||0)%4||L.ia);
+function innerView(L,f,sw,sh){
+  const t=((L.ir||0)*90+(L.ia||0))*Math.PI/180,cs=Math.abs(Math.cos(t)),sn=Math.abs(Math.sin(t));
+  const bw=f.w*cs+f.h*sn,bh=f.w*sn+f.h*cs,k=Math.max(bw/sw,bh/sh)*L.zs,mx=(sw*k-bw)/2,my=(sh*k-bh)/2;
+  return {t,k,bw,bh,mx,my,ox:L.zx*mx,oy:L.zy*my};
+}
+function drawInner(c,L,f,src){const [sx,sy,sw,sh]=cropRect(L,src),v=innerView(L,f,sw,sh);c.rotate(v.t);c.drawImage(src,sx,sy,sw,sh,v.ox-sw*v.k/2,v.oy-sh*v.k/2,sw*v.k,sh*v.k)}
 // The picture's outline in one colour, for a sticker-like rim and a shadow that follows the cut-out.
 function silhouette(ph,src,col){
   const m=ph._sil||(ph._sil=new Map()),key=(src===ph.small?'s':'f')+col;let c=m.get(key);
@@ -475,8 +485,9 @@ function drawImageLayer(c,L,thumb){
   const T=c.getTransform(),k=Math.hypot(T.a,T.b);
   if(L.shadow.on)sameShadow(c,L.w*L.shadow.x/100*k,L.w*L.shadow.y/100*k,L.w*L.shadow.blur/100*k,L.shadow.color,L.shadow.a,()=>{imgPath(c,L,f);c.fillStyle=L.border.on?L.border.color:'#fff';c.fill()});
   if(ph&&G.g?.mode==='icrop'&&G.g.L===L){const src=thumb?ph.small:ph.img,[sx,sy,sw]=cropRect(L,src),sc=f.w/sw;c.save();c.globalAlpha*=.3;c.drawImage(src,-f.w/2-sx*sc,-f.h/2-sy*sc,src.width*sc,src.height*sc);c.restore()}
+  if(ph&&G.g?.mode==='iframe'&&G.g.L===L){c.save();c.globalAlpha*=.3;drawInner(c,L,f,thumb?ph.small:ph.img);c.restore()} // the rest of the turned photo, faint
   c.save();imgPath(c,L,f);c.clip();
-  if(ph){const src=adjusted(ph,thumb?ph.small:ph.img,L.adj),[sx,sy,sw,sh]=cropRect(L,src),sc=Math.max(f.w/sw,f.h/sh)*L.zs,dw=sw*sc,dh=sh*sc;c.drawImage(src,sx,sy,sw,sh,-dw/2+L.zx*(dw-f.w)/2,-dh/2+L.zy*(dh-f.h)/2,dw,dh)}
+  if(ph)drawInner(c,L,f,adjusted(ph,thumb?ph.small:ph.img,L.adj));
   else{ // an empty photo frame (from a 型): a plain card with a small picture mark
     c.fillStyle='#d8cfc4';c.fillRect(-f.w/2,-f.h/2,f.w,f.h);
     const s=Math.min(f.w,f.h)*.18;c.strokeStyle='rgba(255,255,255,.92)';c.lineWidth=s*.09;c.lineJoin=c.lineCap='round';
@@ -835,8 +846,8 @@ function hitHandle(L,p){
 const inside=L=>tool==='crop'&&isImg(L)&&!!L.photoId&&L.shape!=='none';
 function panInside(L,g,p){
   const ph=photos.get(L.photoId);if(!ph)return;
-  const f=imgFrame(L),[,,sw,sh]=cropRect(L,ph.img),sc=Math.max(f.w/sw,f.h/sh)*L.zs,rx=(sw*sc-f.w)/2,ry=(sh*sc-f.h)/2;
-  const cs=Math.cos(L.rot),sn=Math.sin(L.rot),dx=p.x-g.p.x,dy=p.y-g.p.y,qx=dx*cs+dy*sn,qy=-dx*sn+dy*cs;
+  const f=imgFrame(L),[,,sw,sh]=cropRect(L,ph.img),v=innerView(L,f,sw,sh),rx=v.mx,ry=v.my;
+  const a=L.rot+v.t,cs=Math.cos(a),sn=Math.sin(a),dx=p.x-g.p.x,dy=p.y-g.p.y,qx=dx*cs+dy*sn,qy=-dx*sn+dy*cs;
   if(rx>.5)L.zx=Math.max(-1,Math.min(1,g.zx+qx/rx));if(ry>.5)L.zy=Math.max(-1,Math.min(1,g.zy+qy/ry));
   syncInside(L);
 }
@@ -867,6 +878,29 @@ function cropDrag(L,g,p){
     const nh=u*(1-c.t-c.b),d=s*(nh-g.fh)/2;L.x=g.x-d*sn;L.y=g.y+d*cs;
   }
   L.crop=c;
+}
+// A turned photo has nothing square to trim, so its side handles move the frame's side instead: the photo stays
+// exactly where it is on the page, and the side stops where the photo would no longer cover the frame.
+function frameStart(L,h,p){
+  const ph=photos.get(L.photoId),f=imgFrame(L),[,,sw,sh]=cropRect(L,ph.img),v=innerView(L,f,sw,sh);
+  const ct=Math.cos(v.t),st=Math.sin(v.t),cx=v.ox*ct-v.oy*st,cy=v.ox*st+v.oy*ct,cr=Math.cos(L.rot),sr=Math.sin(L.rot);
+  L.ar=f.w/f.h;
+  return {mode:'iframe',L,e:h,p,x:L.x,y:L.y,fw:f.w,fh:f.h,rot:L.rot,t:v.t,sw,sh,k:v.k,P:{x:L.x+cx*cr-cy*sr,y:L.y+cx*sr+cy*cr}};
+}
+function frameDrag(L,g,p){
+  const cs=Math.cos(g.rot),sn=Math.sin(g.rot),dx=p.x-g.p.x,dy=p.y-g.p.y,qx=dx*cs+dy*sn,qy=-dx*sn+dy*cs;
+  const horiz=g.e==='r'||g.e==='l',s=g.e==='r'||g.e==='b'?1:-1,want=s*(horiz?qx:qy);
+  const fit=a=>{ // the frame with its side moved by a; null when the photo would no longer cover it
+    const nw=horiz?Math.max(8,g.fw+a):g.fw,nh=horiz?g.fh:Math.max(8,g.fh+a),d=s*(horiz?nw-g.fw:nh-g.fh)/2;
+    const x=horiz?g.x+d*cs:g.x-d*sn,y=horiz?g.y+d*sn:g.y+d*cs;
+    const ex=g.P.x-x,ey=g.P.y-y,b=g.rot+g.t,cb=Math.cos(b),sb=Math.sin(b),ox=ex*cb+ey*sb,oy=-ex*sb+ey*cb;
+    const v=innerView({...L,zs:1,zx:0,zy:0},{w:nw,h:nh},g.sw,g.sh),zs=g.k/v.k,mx=(g.sw*g.k-v.bw)/2,my=(g.sh*g.k-v.bh)/2,E=1e-6;
+    if(zs<1-E||mx<-E||my<-E||Math.abs(ox)>mx+1e-3||Math.abs(oy)>my+1e-3)return null;
+    return {w:nw,ar:nw/nh,x,y,zs,zx:mx>1e-3?Math.max(-1,Math.min(1,ox/mx)):0,zy:my>1e-3?Math.max(-1,Math.min(1,oy/my)):0};
+  };
+  let r=fit(want);
+  if(!r){let lo=0,hi=want;r=fit(0);for(let i=0;i<24;i++){const m=(lo+hi)/2,q=fit(m);if(q){lo=m;r=q}else hi=m}}
+  if(r)Object.assign(L,r);
 }
 // Dragging a side of a shape: the opposite side stays put.
 function stretch(L,g,p){
@@ -924,6 +958,7 @@ cv.addEventListener('pointerdown',e=>{
   else{
     const h=hitHandle(L,p);
     if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h,box:layerBox(L)};return}
+    if(h&&h.startsWith('edge:')&&isImg(L)&&turned(L)&&L.photoId){G.g=frameStart(L,h.slice(5),p);return}
     if(h&&h.startsWith('edge:')&&isImg(L)){bakeView(L);const f=imgFrame(L);G.g={mode:'icrop',L,e:h.slice(5),p,x:L.x,y:L.y,fw:f.w,fh:f.h,rot:L.rot,crop:{...cropOf(L)}};return}
     if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
     if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
@@ -947,6 +982,7 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
   else if(g.mode==='icrop'&&L){cropDrag(L,g,p)}
+  else if(g.mode==='iframe'&&L){frameDrag(L,g,p);syncInside(L)}
   else if(g.mode==='ipan'&&L)panInside(L,g,p);
   else if(g.mode==='izoom'&&L&&G.ptrs.size===2){L.zs=Math.max(1,Math.min(3,g.zs*two().d/g.t.d));syncInside(L)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
@@ -1018,7 +1054,7 @@ function endPtr(e){
     if((x1-x0)/kE()>4||(y1-y0)/kE()>4)for(const o of D.layers)if(G.M.has(o.id)&&o.x>=x0&&o.x<=x1&&o.y>=y0&&o.y<=y1)for(const m of mates(o))if(!ids.includes(m.id))ids.push(m.id);
     G.g=null;if(ids.length>1)MS=ids;else D.sel=ids[0]??null;panel();paint();return;
   }
-  if(g?.mode==='icrop'){G.g=null;commit();panel();paint();return} // 「トリミングを戻す」 appears once something is trimmed
+  if(g?.mode==='icrop'||g?.mode==='iframe'){G.g=null;commit();panel();paint();return} // 「トリミングを戻す」 appears once something is trimmed
   if(g?.mode==='mmove'&&!g.moved&&g.tap!=null){MS=[];D.sel=g.tap;G.g=null;panel();paint();return} // a tap on one of them: that one alone
   const tap=G.g&&G.g.mode==='move'&&!G.g.moved,was=tap&&G.g.was,L=sel();
   G.g=null;G.guides=null;commit();paint();
@@ -1072,7 +1108,7 @@ const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
 const pct=v=>Math.round(v*100)+'%';
 const f2=v=>(+v).toFixed(2);
-const FMT={gap:v=>Math.round(v)+'%',zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,ca:pct,gta:pct,'band.gta':pct,gd:pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
+const FMT={ia:v=>(+v)+'°',gap:v=>Math.round(v)+'%',zs:f2,zx:f2,zy:f2,'border.w':v=>(+v).toFixed(1),lh:f2,opacity:pct,'shadow.a':pct,ca:pct,gta:pct,'band.gta':pct,gd:pct,'band.a':pct,wrap:v=>+v?pct(v):'なし','band.line.w':v=>(+v).toFixed(1)};
 const fmt=k=>FMT[k]||(v=>Math.round(v));
 // Sizes and spacing can also be typed: the number beside the slider is a field (tap it, type, done).
 const NUM=new Set(['size','ls','lh','w','h']);
@@ -1191,7 +1227,7 @@ const DRAW={
       +btns([['adjreset','元に戻す'],...(!L&&P.pages.length>1?[['adjall','全ページの背景に当てる']]:[])]);
   },
   // トリミング: the side handles trim, and the photo moves and zooms inside its frame by hand or by slider.
-  crop:L=>`<p class="enote">${L.shape==='circle'?'':'写真の辺の四角を引くと、その辺から切れます。'}${L.shape==='none'?'':'写真を指で動かすと枠の中で位置が変わり、2本指で拡大できます。'}</p>${L.shape==='none'?'':slider('拡大','zs',1,3,.01)+slider('横','zx',-1,1,.01)+slider('縦','zy',-1,1,.01)}${L.crop?btns([['uncrop','トリミングを戻す']]):''}`,
+  crop:L=>`<p class="enote">${L.shape==='circle'?'':'写真の辺の四角を引くと、その辺から切れます。'}${L.shape==='none'?'':'写真を指で動かすと枠の中で位置が変わり、2本指で拡大できます。'}</p>${L.shape==='none'?'':slider('拡大','zs',1,3,.01)+slider('横','zx',-1,1,.01)+slider('縦','zy',-1,1,.01)+(L.ia??=0,slider('傾き','ia',-45,45,.5))}${(b=>b.length?btns(b):'')([...(L.shape==='none'?[]:[['irot','90°回す']]),...(L.crop?[['uncrop','トリミングを戻す']]:[])])}`,
 };
 
 function addImage(photoId,i=0){
@@ -1387,6 +1423,7 @@ bodyEl.addEventListener('click',e=>{
   if(act==='prot'){D.photo.r=((D.photo.r||0)+1)%4;commit();paint();return}
   if(act==='adjreset'){delete (L||D).adj;commit();panel();paint();return}
   if(act==='adjall'){syncCur();for(const pg of P.pages)pg.adj=clone(D.adj||{});commit();toast(`${P.pages.length}ページの背景を同じ調整にしました`);return}
+  if(act==='irot'&&isImg(L)){L.ir=((L.ir||0)+1)%4;commit();paint();return}
   if(act==='uncrop'&&isImg(L)){delete L.crop;L.zs=1;L.zx=L.zy=0;commit();panel();paint();return}
   if(act==='dup'&&L){dupSel();return}
   if(act==='del'&&L){removeSelected();return}
@@ -1503,7 +1540,7 @@ $('#eimg').addEventListener('change',async e=>{
 });
 $('#eimgswap').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!isImg(L))return;
-  try{L.photoId=await makePhoto(await loadPhoto(f,true));Object.assign(L,{zs:1,zx:0,zy:0});delete L.crop;if(photos.get(L.photoId).alpha&&L.shape!=='none'){L.shape='none';L.border.on=false}commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
+  try{L.photoId=await makePhoto(await loadPhoto(f,true));Object.assign(L,{zs:1,zx:0,zy:0,ir:0,ia:0});delete L.crop;if(photos.get(L.photoId).alpha&&L.shape!=='none'){L.shape='none';L.border.on=false}commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
 });
 $('#eadd').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
@@ -1580,7 +1617,7 @@ $('#dsheet').addEventListener('click',async e=>{
 // plus inside pages: when more photos come than it has pages, its last page repeats.
 function normPage(pg){
   return {bg:clone(bgOf(pg)),layers:pg.layers.map(L=>!isImg(L)?normL(L,pg.W,pg.H)
-    :(f=>({...normL(L,pg.W,pg.H),photoId:null,ar:f.w/f.h,zs:1,zx:0,zy:0,crop:null}))(imgFrame(L)))};
+    :(f=>({...normL(L,pg.W,pg.H),photoId:null,ar:f.w/f.h,zs:1,zx:0,zy:0,ir:0,ia:0,crop:null}))(imgFrame(L)))};
 }
 function tplPage(tp,W,H,ratio){
   return {ratio,W,H,photo:{s:1,ox:0,oy:0},sel:null,photoId:null,bg:clone(tp.bg||{type:'photo'}),
