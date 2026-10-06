@@ -830,6 +830,17 @@ function hitHandle(L,p){
   if(near(h.rot))return 'rot';if(h.corners.some(near))return 'scale';
   const e=Object.entries(h.edges).find(([,q])=>Math.hypot(p.x-q.x,p.y-q.y)<18*kE());return e?'edge:'+e[0]:null;
 }
+// With 中の位置 open, the photo in its frame follows the finger (and two fingers or the wheel zoom it), the
+// frame itself staying where it is; the sliders follow along.
+const inside=L=>tool==='crop'&&isImg(L)&&!!L.photoId&&L.shape!=='none';
+function panInside(L,g,p){
+  const ph=photos.get(L.photoId);if(!ph)return;
+  const f=imgFrame(L),[,,sw,sh]=cropRect(L,ph.img),sc=Math.max(f.w/sw,f.h/sh)*L.zs,rx=(sw*sc-f.w)/2,ry=(sh*sc-f.h)/2;
+  const cs=Math.cos(L.rot),sn=Math.sin(L.rot),dx=p.x-g.p.x,dy=p.y-g.p.y,qx=dx*cs+dy*sn,qy=-dx*sn+dy*cs;
+  if(rx>.5)L.zx=Math.max(-1,Math.min(1,g.zx+qx/rx));if(ry>.5)L.zy=Math.max(-1,Math.min(1,g.zy+qy/ry));
+  syncInside(L);
+}
+function syncInside(L){for(const k of ['zs','zx','zy']){const r=bodyEl.querySelector(`input[type=range][data-k="${k}"]`),v=bodyEl.querySelector(`[data-v="${k}"]`);if(r)r.value=L[k];if(v)v.textContent=fmt(k)(L[k])}}
 // Before trimming, what the frame shows now (its ratio, zoom and offset) becomes the trim itself, so nothing jumps.
 function bakeView(L){
   const ph=photos.get(L.photoId);if(!ph)return;
@@ -900,6 +911,7 @@ cv.addEventListener('pointerdown',e=>{
     const t=two();
     if(tool==='bg')G.g={mode:'pzoom',t,s:D.photo.s};
     else if(many){const u=ubox(msel());G.g={mode:'mpinch',t,c:{x:u.cx,y:u.cy},st:states()}}
+    else if(inside(L))G.g={mode:'izoom',t,zs:L.zs};
     else if(L)G.g={mode:'pinch',t,size:L[SZ(L)],h:L.h,rot:L.rot};
     return;
   }
@@ -915,6 +927,7 @@ cv.addEventListener('pointerdown',e=>{
     if(h&&h.startsWith('edge:')&&isImg(L)){bakeView(L);const f=imgFrame(L);G.g={mode:'icrop',L,e:h.slice(5),p,x:L.x,y:L.y,fw:f.w,fh:f.h,rot:L.rot,crop:{...cropOf(L)}};return}
     if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
     if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
+    if(inside(L)&&hitLayer(G.M,p,kE(),o=>o===L)){G.g={mode:'ipan',p,zx:L.zx,zy:L.zy};return} // 中の位置 open: a drag slides the photo in its frame
   }
   const H=hitLayer(G.M,p,kE());
   if(H&&(addMode||e.shiftKey)){toggleIn(H);G.g=null;tool=null;panel();paint();return}
@@ -934,6 +947,8 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
   else if(g.mode==='icrop'&&L){cropDrag(L,g,p)}
+  else if(g.mode==='ipan'&&L)panInside(L,g,p);
+  else if(g.mode==='izoom'&&L&&G.ptrs.size===2){L.zs=Math.max(1,Math.min(3,g.zs*two().d/g.t.d));syncInside(L)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
   else if(g.mode==='marq')g.q=p;
   else if(g.mode==='mmove'){
@@ -1012,7 +1027,7 @@ function endPtr(e){
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{
   e.preventDefault();const L=sel(),f=Math.exp(-e.deltaY/400);
-  if(tool==='bg')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(L)scaleBy(L,{size:L[SZ(L)],h:L.h},f);else return;
+  if(tool==='bg')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(inside(L)){L.zs=Math.max(1,Math.min(3,L.zs*f));syncInside(L)}else if(L)scaleBy(L,{size:L[SZ(L)],h:L.h},f);else return;
   paint();clearTimeout(textTimer);textTimer=setTimeout(commit,300);
 },{passive:false});
 // Off the picture (the grey around it): let go of the selection, or close the open tool.
@@ -1174,7 +1189,7 @@ const DRAW={
     return ADJ.map(([k,l])=>`<label class="erow wl"><span class="el">${l}</span><input type="range" data-adj="${k}" min="${k==='fade'?0:-100}" max="100" step="1" value="${a[k]||0}"><span class="ev" data-av="${k}">${a[k]||0}</span></label>`).join('')
       +btns([['adjreset','元に戻す'],...(!L&&P.pages.length>1?[['adjall','全ページの背景に当てる']]:[])]);
   },
-  crop:()=>`${slider('拡大','zs',1,3,.01)}${slider('横','zx',-1,1,.01)}${slider('縦','zy',-1,1,.01)}`,
+  crop:()=>`<p class="enote">開いている間は、写真を指で動かすと枠の中で位置が変わり、2本指で拡大できます。</p>${slider('拡大','zs',1,3,.01)}${slider('横','zx',-1,1,.01)}${slider('縦','zy',-1,1,.01)}`,
 };
 
 function addImage(photoId,i=0){
