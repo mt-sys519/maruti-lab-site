@@ -439,7 +439,12 @@ function drawPhoto(c,src){
 }
 // Overlaid photo: cropped to its frame (square, rounded, circle, ellipse), with an optional rim and shadow.
 // そのまま (shape 'none'): the whole picture at its own proportions, nothing cut away, see-through parts kept.
-function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:L.shape==='none'&&ph?ph.img.width/ph.img.height:(L.ar||(ph?ph.img.width/ph.img.height:1));return {w:L.w,h:L.w/ar}}
+// トリミング: L.crop = {l,t,r,b}, how much of each side of the picture is cut away (0..1 of its width or height).
+// Dragging a side handle of a photo trims it there; the frame then takes the trimmed picture's proportions.
+const cropOf=L=>L.crop||{l:0,t:0,r:0,b:0};
+function cropAr(L,ph){const c=cropOf(L);return ph.img.width*(1-c.l-c.r)/(ph.img.height*(1-c.t-c.b))}
+function cropRect(L,src){const c=cropOf(L);return [src.width*c.l,src.height*c.t,src.width*(1-c.l-c.r),src.height*(1-c.t-c.b)]}
+function imgFrame(L){const ph=photos.get(L.photoId),ar=L.shape==='circle'?1:L.shape==='none'&&ph?cropAr(L,ph):(L.ar||(ph?cropAr(L,ph):1));return {w:L.w,h:L.w/ar}}
 // The picture's outline in one colour, for a sticker-like rim and a shadow that follows the cut-out.
 function silhouette(ph,src,col){
   const m=ph._sil||(ph._sil=new Map()),key=(src===ph.small?'s':'f')+col;let c=m.get(key);
@@ -448,14 +453,15 @@ function silhouette(ph,src,col){
   return c;
 }
 function drawCutout(c,L,ph,f,thumb){
-  const src=adjusted(ph,thumb?ph.small:ph.img,L.adj),x=-f.w/2,y=-f.h/2,rim=()=>{ // the rim: the outline stamped round a ring
+  const src=adjusted(ph,thumb?ph.small:ph.img,L.adj),x=-f.w/2,y=-f.h/2,R=cropRect(L,src),put=(im,dx,dy)=>{const q=im===src?R:cropRect(L,im);c.drawImage(im,q[0],q[1],q[2],q[3],x+dx,y+dy,f.w,f.h)},rim=()=>{ // the rim: the outline stamped round a ring
     const r=L.w*L.border.w/100,s=silhouette(ph,thumb?ph.small:ph.img,L.border.color);
-    for(let i=0;i<24;i++){const t=i/24*Math.PI*2;c.drawImage(s,x+Math.cos(t)*r,y+Math.sin(t)*r,f.w,f.h)}
+    for(let i=0;i<24;i++){const t=i/24*Math.PI*2;put(s,Math.cos(t)*r,Math.sin(t)*r)}
   };
   const T=c.getTransform(),k=Math.hypot(T.a,T.b);
-  if(L.shadow.on)sameShadow(c,L.w*L.shadow.x/100*k,L.w*L.shadow.y/100*k,L.w*L.shadow.blur/100*k,L.shadow.color,L.shadow.a,()=>{if(L.border.on)rim();else c.drawImage(silhouette(ph,thumb?ph.small:ph.img,'#000'),x,y,f.w,f.h)});
+  if(L.shadow.on)sameShadow(c,L.w*L.shadow.x/100*k,L.w*L.shadow.y/100*k,L.w*L.shadow.blur/100*k,L.shadow.color,L.shadow.a,()=>{if(L.border.on)rim();else put(silhouette(ph,thumb?ph.small:ph.img,'#000'),0,0)});
   if(L.border.on)rim();
-  c.drawImage(src,x,y,f.w,f.h);
+  if(G.g?.mode==='icrop'&&G.g.L===L){const sc=f.w/R[2];c.save();c.globalAlpha*=.3;c.drawImage(src,x-R[0]*sc,y-R[1]*sc,src.width*sc,src.height*sc);c.restore()} // what is trimmed away, faint, while trimming
+  put(src,0,0);
 }
 function imgPath(c,L,f){
   c.beginPath();
@@ -468,8 +474,9 @@ function drawImageLayer(c,L,thumb){
   if(L.shape==='none'&&ph){drawCutout(c,L,ph,f,thumb);c.restore();return {W:f.w,H:f.h}}
   const T=c.getTransform(),k=Math.hypot(T.a,T.b);
   if(L.shadow.on)sameShadow(c,L.w*L.shadow.x/100*k,L.w*L.shadow.y/100*k,L.w*L.shadow.blur/100*k,L.shadow.color,L.shadow.a,()=>{imgPath(c,L,f);c.fillStyle=L.border.on?L.border.color:'#fff';c.fill()});
+  if(ph&&G.g?.mode==='icrop'&&G.g.L===L){const src=thumb?ph.small:ph.img,[sx,sy,sw]=cropRect(L,src),sc=f.w/sw;c.save();c.globalAlpha*=.3;c.drawImage(src,-f.w/2-sx*sc,-f.h/2-sy*sc,src.width*sc,src.height*sc);c.restore()}
   c.save();imgPath(c,L,f);c.clip();
-  if(ph){const src=adjusted(ph,thumb?ph.small:ph.img,L.adj),sc=Math.max(f.w/src.width,f.h/src.height)*L.zs,dw=src.width*sc,dh=src.height*sc;c.drawImage(src,-dw/2+L.zx*(dw-f.w)/2,-dh/2+L.zy*(dh-f.h)/2,dw,dh)}
+  if(ph){const src=adjusted(ph,thumb?ph.small:ph.img,L.adj),[sx,sy,sw,sh]=cropRect(L,src),sc=Math.max(f.w/sw,f.h/sh)*L.zs,dw=sw*sc,dh=sh*sc;c.drawImage(src,sx,sy,sw,sh,-dw/2+L.zx*(dw-f.w)/2,-dh/2+L.zy*(dh-f.h)/2,dw,dh)}
   else{ // an empty photo frame (from a 型): a plain card with a small picture mark
     c.fillStyle='#d8cfc4';c.fillRect(-f.w/2,-f.h/2,f.w,f.h);
     const s=Math.min(f.w,f.h)*.18;c.strokeStyle='rgba(255,255,255,.92)';c.lineWidth=s*.09;c.lineJoin=c.lineCap='round';
@@ -735,7 +742,7 @@ function handles(L,M,kk){
   const below=b.h/2+34*kk,room=L.y+below*cs+18*kk<D.H;
   // a shape also stretches one way from the middle of each side
   // a line only lengthens from its ends; its thickness is set in the panel
-  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isShape(L)&&L.kind!=='circle'?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
+  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
   return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
@@ -823,6 +830,33 @@ function hitHandle(L,p){
   if(near(h.rot))return 'rot';if(h.corners.some(near))return 'scale';
   const e=Object.entries(h.edges).find(([,q])=>Math.hypot(p.x-q.x,p.y-q.y)<18*kE());return e?'edge:'+e[0]:null;
 }
+// Before trimming, what the frame shows now (its ratio, zoom and offset) becomes the trim itself, so nothing jumps.
+function bakeView(L){
+  const ph=photos.get(L.photoId);if(!ph)return;
+  const f=imgFrame(L),iw=ph.img.width,ih=ph.img.height,[sx,sy,sw,sh]=cropRect(L,ph.img);
+  if(L.shape!=='none'){
+    const sc=Math.max(f.w/sw,f.h/sh)*L.zs,dw=sw*sc,dh=sh*sc,ox=-dw/2+L.zx*(dw-f.w)/2,oy=-dh/2+L.zy*(dh-f.h)/2;
+    const x0=sx+(-f.w/2-ox)/sc,x1=sx+(f.w/2-ox)/sc,y0=sy+(-f.h/2-oy)/sc,y1=sy+(f.h/2-oy)/sc;
+    L.crop={l:Math.max(0,x0/iw),r:Math.max(0,1-x1/iw),t:Math.max(0,y0/ih),b:Math.max(0,1-y1/ih)};
+  }
+  Object.assign(L,{ar:0,zs:1,zx:0,zy:0});
+}
+// Dragging a photo's side trims it there (or brings back what was trimmed); the opposite side stays put.
+function cropDrag(L,g,p){
+  const cs=Math.cos(g.rot),sn=Math.sin(g.rot),dx=p.x-g.p.x,dy=p.y-g.p.y,qx=dx*cs+dy*sn,qy=-dx*sn+dy*cs;
+  const horiz=g.e==='r'||g.e==='l',s=g.e==='r'||g.e==='b'?1:-1,c={...g.crop},MIN=.04;
+  if(horiz){
+    const cw0=1-c.l-c.r,u=g.fw/cw0,k=g.e,o=k==='r'?'l':'r';
+    c[k]=Math.max(0,Math.min(1-c[o]-MIN,c[k]-s*qx/u));
+    const nw=u*(1-c.l-c.r),d=s*(nw-g.fw)/2;L.w=nw;L.x=g.x+d*cs;L.y=g.y+d*sn;
+  }
+  else{
+    const ch0=1-c.t-c.b,u=g.fh/ch0,k=g.e,o=k==='b'?'t':'b';
+    c[k]=Math.max(0,Math.min(1-c[o]-MIN,c[k]-s*qy/u));
+    const nh=u*(1-c.t-c.b),d=s*(nh-g.fh)/2;L.x=g.x-d*sn;L.y=g.y+d*cs;
+  }
+  L.crop=c;
+}
 // Dragging a side of a shape: the opposite side stays put.
 function stretch(L,g,p){
   const dx=p.x-g.x0,dy=p.y-g.y0,cs=Math.cos(g.rot),sn=Math.sin(g.rot),q={x:dx*cs+dy*sn,y:-dx*sn+dy*cs};
@@ -878,6 +912,7 @@ cv.addEventListener('pointerdown',e=>{
   else{
     const h=hitHandle(L,p);
     if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h,box:layerBox(L)};return}
+    if(h&&h.startsWith('edge:')&&isImg(L)){bakeView(L);const f=imgFrame(L);G.g={mode:'icrop',L,e:h.slice(5),p,x:L.x,y:L.y,fw:f.w,fh:f.h,rot:L.rot,crop:{...cropOf(L)}};return}
     if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
     if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
   }
@@ -898,6 +933,7 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=snapAngle(g.rot+t.a-g.t.a,.1)}
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
+  else if(g.mode==='icrop'&&L){cropDrag(L,g,p)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
   else if(g.mode==='marq')g.q=p;
   else if(g.mode==='mmove'){
@@ -1129,7 +1165,8 @@ const DRAW={
   shape:L=>`${segs('shape',[['none','そのまま'],['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']])}
     ${L.shape==='none'?'<p class="enote">写真の形のまま、切り抜かずに置きます。透明な部分のある PNG は、透明なまま重なります。</p>':''}
     ${L.shape!=='circle'&&L.shape!=='none'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
-    ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}`,
+    ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}
+    ${L.shape==='circle'?'':`<p class="enote">写真の辺にある小さな四角を引くと、その辺からトリミングできます。</p>${L.crop?btns([['uncrop','トリミングを戻す']]):''}`}`,
   // with nothing selected it works on the background photo
   adj:L=>{
     if(!L&&!(photoBg(D)&&D.photoId))return `<p class="enote">背景が写真のときに使えます。重ねた写真は、写真をタップしてから「調整」で。</p>`;
@@ -1333,6 +1370,7 @@ bodyEl.addEventListener('click',e=>{
   if(act==='prot'){D.photo.r=((D.photo.r||0)+1)%4;commit();paint();return}
   if(act==='adjreset'){delete (L||D).adj;commit();panel();paint();return}
   if(act==='adjall'){syncCur();for(const pg of P.pages)pg.adj=clone(D.adj||{});commit();toast(`${P.pages.length}ページの背景を同じ調整にしました`);return}
+  if(act==='uncrop'&&isImg(L)){delete L.crop;L.zs=1;L.zx=L.zy=0;commit();panel();paint();return}
   if(act==='dup'&&L){dupSel();return}
   if(act==='del'&&L){removeSelected();return}
   if(act==='front'&&L){const i=D.layers.indexOf(L);if(i<D.layers.length-1){D.layers.splice(i,1);D.layers.splice(i+1,0,L);commit();paint()}return}
@@ -1448,7 +1486,7 @@ $('#eimg').addEventListener('change',async e=>{
 });
 $('#eimgswap').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!isImg(L))return;
-  try{L.photoId=await makePhoto(await loadPhoto(f,true));Object.assign(L,{zs:1,zx:0,zy:0});if(photos.get(L.photoId).alpha&&L.shape!=='none'){L.shape='none';L.border.on=false}commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
+  try{L.photoId=await makePhoto(await loadPhoto(f,true));Object.assign(L,{zs:1,zx:0,zy:0});delete L.crop;if(photos.get(L.photoId).alpha&&L.shape!=='none'){L.shape='none';L.border.on=false}commit();panel();refresh()}catch{toast('この画像は読み込めませんでした')}
 });
 $('#eadd').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
@@ -1525,7 +1563,7 @@ $('#dsheet').addEventListener('click',async e=>{
 // plus inside pages: when more photos come than it has pages, its last page repeats.
 function normPage(pg){
   return {bg:clone(bgOf(pg)),layers:pg.layers.map(L=>!isImg(L)?normL(L,pg.W,pg.H)
-    :(f=>({...normL(L,pg.W,pg.H),photoId:null,ar:f.w/f.h,zs:1,zx:0,zy:0}))(imgFrame(L)))};
+    :(f=>({...normL(L,pg.W,pg.H),photoId:null,ar:f.w/f.h,zs:1,zx:0,zy:0,crop:null}))(imgFrame(L)))};
 }
 function tplPage(tp,W,H,ratio){
   return {ratio,W,H,photo:{s:1,ox:0,oy:0},sel:null,photoId:null,bg:clone(tp.bg||{type:'photo'}),
