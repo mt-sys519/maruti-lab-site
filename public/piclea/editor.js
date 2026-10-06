@@ -689,6 +689,9 @@ function draw(c,o={}){
   if(o.ui==='edit')drawMulti(c,M,kk);
   return M;
 }
+// What 色 changes when several are held: their words and shapes (a photo has no colour of its own).
+const tinted=()=>msel().filter(L=>isText(L)||isShape(L));
+const setTint=c=>{for(const L of tinted())L.color=c};
 const mates=L=>L.grp?D.layers.filter(o=>o.grp===L.grp):[L];
 const msel=()=>MS.length>1?D.layers.filter(L=>MS.includes(L.id)):[];
 const multi=()=>msel().length>1;
@@ -1005,7 +1008,7 @@ const I={
 };
 const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
-  multi:()=>[['done','完了',I.done],['mgroup',grouped(msel())?'グループ解除':'グループ化',I.group],['mdup','複製',I.dup],['mdel','削除',I.del]],
+  multi:()=>[['done','完了',I.done],...(tinted().length?[['mcolor','色',colorIc(tinted()[0])]]:[]),['mgroup',grouped(msel())?'グループ解除':'グループ化',I.group],['mdup','複製',I.dup],['mdel','削除',I.del]],
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
   shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
@@ -1056,6 +1059,8 @@ function weightRow(L){
   return `<h5 class="esub">太さ</h5><div class="wrow">${ws.map(w=>`<button class="wbtn${w===L.w?' on':''}" data-wt="${w}" aria-label="${WNAME[w]||w}"><span style='font-family:${L.fam},sans-serif;font-weight:${w}'>${a}</span><small>${WNAME[w]||w}</small></button>`).join('')}</div>`;
 }
 const DRAW={
+  mcolor:()=>{const v=tinted()[0]?.color||'#ffffff';return `<div class="pal" data-mc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(v)?'':' on'}" aria-label="ほかの色"><input type="color" data-mcolor value="${v}"></label></div>
+    <p class="enote">選んだ文字と図形の色を、まとめて同じ色にします。写真は変わりません。</p>`},
   bg:()=>{
     const bg=bgOf(D);
     const body=bg.type==='color'?`<div class="pal" data-bgc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===bg.color?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(bg.color)?'':' on'}" aria-label="ほかの色"><input type="color" data-bgcolor value="${bg.color}"></label></div>`
@@ -1273,6 +1278,7 @@ bodyEl.addEventListener('input',e=>{
   if(t.classList.contains('fsearch')){fontQ=t.value;filterFonts();bodyEl.querySelector('.fontrow').scrollLeft=0;return}
   if(t.dataset.photo!=null){D.photo.s=+t.value;paint();return}
   if(t.dataset.ptilt!=null){D.photo.a=+t.value;bodyEl.querySelector('[data-v="ptilt"]').textContent=t.value+'°';paint();return}
+  if(t.dataset.mcolor!=null){setTint(t.value);t.parentElement.classList.add('on');$('#ebar .cdot')?.style.setProperty('background',t.value);paint();return}
   if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};t.parentElement.classList.add('on');paint();return}
   if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
@@ -1332,6 +1338,7 @@ bodyEl.addEventListener('click',e=>{
   if(act==='front'&&L){const i=D.layers.indexOf(L);if(i<D.layers.length-1){D.layers.splice(i,1);D.layers.splice(i+1,0,L);commit();paint()}return}
   if(act==='back'&&L){const i=D.layers.indexOf(L);if(i>0){D.layers.splice(i,1);D.layers.splice(i-1,0,L);commit();paint()}return}
   if(t.closest('[data-bgtype]')){const v=t.dataset.v,old=bgOf(D);D.bg=v==='color'?{type:v,color:old.color||'#f3e9dc'}:v==='grad'?{type:v,grad:old.grad||0}:{type:'photo'};commit();panel();paint();return}
+  if(t.closest('[data-mc]')&&t.dataset.c){setTint(t.dataset.c);commit();panel();paint();return}
   if(t.closest('[data-bgc]')&&t.dataset.c){D.bg={type:'color',color:t.dataset.c};commit();panel();paint();return}
   if(t.closest('[data-bgg]')){D.bg={type:'grad',grad:+t.dataset.g};commit();panel();paint();return}
   if(L&&isShape(L)&&(act==='fullw'||act==='fullh'||act==='center')){
