@@ -213,6 +213,11 @@
 .result dd{margin:0;font-size:15px;letter-spacing:.08em;font-variant-numeric:tabular-nums;color:#ece9d8}
 .result dd em{font-style:normal;font-size:10px;letter-spacing:.2em;color:#d8b46c;margin-left:10px}
 .result span{margin-top:16px;font-size:10px;color:#d8b46c;letter-spacing:.2em;word-spacing:.25em;white-space:nowrap}
+.result .acts{display:flex;gap:8px;margin-top:18px;pointer-events:auto;opacity:0;animation:resultRow .32s ease-out forwards;animation-delay:.95s}
+.result .acts button{flex:1 1 auto;padding:10px 12px 9px;background:rgba(2,8,8,.55);border:1px solid rgba(226,223,204,.34);color:#e2dfcc;font-size:10px;letter-spacing:.22em;white-space:nowrap;cursor:pointer}
+.result .acts button:hover{border-color:#ece9d8;background:rgba(226,223,204,.12)}
+.result .acts .go{background:#e3a957;border-color:#ffd291;color:#0b1112;font-weight:700}
+.result .acts .go:hover{background:#f0bd6e}
 .result.down{border-top-color:rgba(228,124,98,.6)}
 .result.down b{color:#ecd6cc}
 @keyframes resultIn{from{opacity:0;transform:translate(-14px,-50%)}to{opacity:1;transform:translateY(-50%)}}

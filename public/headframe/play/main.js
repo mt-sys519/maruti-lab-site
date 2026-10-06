@@ -245,6 +245,14 @@ const sfx={
   maul(){if(!ac)return;tone({f:110,f2:42,glide:.18,d:.42,g:.5,crush:true,pri:3});burst({hp:1800,d:.03,g:.18,pri:3});burst({bp:500,bp2:2600,fd:.35,q:.7,d:.6,g:.2,rev:.15,pri:3});burst({pink:true,lp:3200,lp2:500,fd:.5,d:.7,g:.12,rev:.2,pan:-.2});duckMusic(.62,.35)},
   maulBlast(pan=0,g=1){if(!ac)return;const now=ac.currentTime;tone({f:115,f2:42,glide:.5,d:.85,g:.6*g,crush:true,pri:3});burst({pink:true,lp:2800,lp2:200,fd:.6,d:.9,g:.4*g,crush:true,pan,pri:3});burst({hp:2400,d:.05,g:.12*g,pan,pri:3});
     for(let i=0;i<6;i++)burst({t:now+.05+Math.random()*.35,bp:1200+Math.random()*3500,q:5,d:.03+Math.random()*.06,g:.04*g,pan:clamp(pan+(Math.random()-.5)*.6,-1,1),rev:.2,pri:2});duckMusic(.5,.6)},
+  // FLAIL: a deep wide boom with a rattle of shot, then the pump racking twice.
+  flail(){if(!ac)return;const now=ac.currentTime;tone({f:82,f2:36,glide:.2,d:.42,g:.55,crush:true,pri:3});burst({hp:900,d:.05,g:.3,pri:3});burst({bp:1400,bp2:380,fd:.3,q:.6,d:.45,g:.24,rev:.2,pri:3});
+    burst({pink:true,lp:2600,lp2:300,fd:.6,d:.8,g:.1,rev:.3});for(const t of [.34,.46])burst({t:now+t,bp:2300,q:3.5,d:.045,g:.09});tone({t:now+.34,f:170,f2:110,glide:.05,d:.07,g:.08,crush:true});duckMusic(.7,.3)},
+  // BARDICHE: a heavy blade cutting air, then a chop with a metal ring when it lands.
+  axe(){if(!ac)return;burst({bp:240,bp2:1300,fd:.2,q:.8,a:.06,d:.34,g:.26,pan:.15});burst({lp:300,lp2:90,fd:.3,a:.04,d:.32,g:.2});tone({f:70,f2:44,glide:.25,d:.3,g:.18,crush:true})},
+  axeWind(){if(!ac)return;tone({type:'sawtooth',f:90,f2:150,glide:.3,a:.08,d:.34,g:.035,lp:900});burst({lp:500,lp2:200,fd:.3,a:.1,d:.3,g:.05})},
+  axeHit(pan=0){if(!ac)return;tone({f:72,f2:30,glide:.2,d:.5,g:.6,crush:true,pri:3,pan});burst({pink:true,lp:900,lp2:120,fd:.5,d:.6,g:.16,rev:.25,pan});burst({hp:1600,d:.03,g:.2,pri:3,pan});
+    for(const [f,g] of [[540,.05],[1310,.03],[2780,.016]])tone({f:f*(.97+Math.random()*.06),d:.55,g,rev:.25,pan,pri:2});burst({bp:900,bp2:300,fd:.25,q:.8,d:.3,g:.14,pan})},
   swap(){if(!ac)return;const now=ac.currentTime;tone({f:420,type:'square',d:.03,g:.012,lp:1800});burst({t:now+.12,bp:1600,q:3,d:.05,g:.05});tone({t:now+.25,f:150,f2:90,glide:.06,d:.09,g:.09,crush:true});burst({t:now+.25,bp:2600,q:4,d:.04,g:.04})},
   jump(){if(!ac)return;tone({f:90,f2:150,glide:.12,d:.2,g:.22,crush:true});burst({bp:600,bp2:2200,fd:.2,q:.8,d:.3,g:.12,rev:.1});burst({hp:3000,d:.05,g:.04})},
   land(k=1){if(!ac)return;tone({f:96,f2:40,glide:.14,d:.36,g:.42*k,crush:true,pri:3});burst({pink:true,lp:900,d:.25,g:.16*k});burst({bp:2300,q:3,d:.05,g:.05*k});burst({t:ac.currentTime+.07,hp:4200,d:.2,g:.016*k})},
@@ -359,6 +367,8 @@ function enduranceSpawn(){
   // From threat level 3 an ATLAS sometimes joins the reinforcements, never two at once.
   const L=endure.level,heavy=Math.min(.4,.12+.04*L),r=Math.random(),titan=L>=3&&!enemies.some(e=>e.alive&&e.type==='TITAN')&&Math.random()<ATLAS_CHANCE,
     type=titan?'TITAN':r<heavy?'HEAVY':r<heavy+(1-heavy)*.45?'LANCER':'SCOUT';
+  // From threat level 2 KITE flights join too, up to one fewer than the level and never more than three.
+  if(!titan&&L>=2&&enemies.filter(e=>e.alive&&e.type==='KITE').length<Math.min(3,L-1)&&Math.random()<KITE_CHANCE)return enduranceKite(L);
   const viewYaw=player.yaw+headYaw*Math.PI/180;let pick=null,fallback=null;
   for(let t=0;t<60&&!pick;t++){const a=Math.random()*TAU,d=titan?85+Math.random()*40:70+Math.random()*55,x=clamp(player.x+Math.sin(a)*d,-WORLD+8,WORLD-8),z=clamp(player.z-Math.cos(a)*d,-WORLD+8,WORLD-8);
     if(collide(x,z,titan?6:4)||enemies.some(e=>e.alive&&Math.hypot(e.x-x,e.z-z)<14))continue;const dd=Math.hypot(x-player.x,z-player.z);if(dd<60)continue;
@@ -366,6 +376,11 @@ function enduranceSpawn(){
   const at=pick||fallback;if(!at)return null;
   const k=Math.min(1.8,1+.1*(L-1)),dk=Math.min(1.5,1+.06*(L-1)),e=makeEnemy(at.x,at.z,type,endure.nextId++,enemies.length,k,dk);e.awake=false;e.marked=0;e.nextAttack=gameTime+1.6;e.lastAttack=gameTime;
   enemies.push(e);wakeEnemy(e,'NEW CONTACT');if(titan){plog('Warning',`-Heavy walker inbound. ${etag(e)}`);pilotGlance(e,1.2,2)}return e}
+const KITE_CHANCE=.24;
+function enduranceKite(L){const viewYaw=player.yaw+headYaw*Math.PI/180,a=viewYaw+Math.PI*(.6+Math.random()*.8),k=Math.min(1.8,1+.1*(L-1)),dk=Math.min(1.5,1+.06*(L-1)),e=makeKite(0,endure.nextId++),R=e.desired+10;
+  e.x=clamp(player.x+Math.sin(a)*R,-WORLD+8,WORLD-8);e.z=clamp(player.z-Math.cos(a)*R,-WORLD+8,WORLD-8);e.px=e.x;e.pz=e.z;e.fly.ang=a;e.yaw=a+e.orbitDir*Math.PI/2;
+  e.maxHp=e.hp=Math.round(e.hp*k);e.damage=Math.round(e.damage*dk);e.dmgK=dk;e.nextAttack=gameTime+3+Math.random()*2;e.lastAttack=gameTime;
+  enemies.push(e);plog('Warning',`-Air contact inbound. ${etag(e)}`);sfx.contact(e);return e}
 function updateEndurance(dt){
   if(mode!=='endurance'||!player.alive)return;
   const L=1+Math.floor(stats.kills/6);if(L>endure.level){endure.level=L;plog('Warning',`-Threat level ${L}. More hostiles inbound.`)}
@@ -374,7 +389,7 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,scope:0});rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':stage===3?'-Sector 03: Freight tunnel. Walkers inbound.':'-Sector: Vector Foundry 07.');if(secondArm())plog('System',`-Second arm: ${secondArm()}${secondArm()==='ARBALEST'?' [scope]':''}.`)}
+function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,pumpT:-9,scope:0,scopeOn:false,swing:null});cockpit.axeTrail=[];rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':stage===3?'-Sector 03: Freight tunnel. Walkers inbound.':'-Sector: Vector Foundry 07.');if(secondArms().length)plog('System',`-Second arm${secondArms().length>1?'s':''}: ${secondArms().map(w=>w+(w==='ARBALEST'?' [scope]':'')).join(' / ')}.`)}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
@@ -501,11 +516,65 @@ const MAUL={mag:4,regen:7,cd:.9,speed:64,direct:150,splash:95,radius:8,stagger:7
 // ARBALEST: a bolt-action rifle for SKYDECK's long sky. Armed means scoped: the view narrows 2.6x onto the
 // gun's line and the head stops steering it. One click, one round, ~1 s to cycle the bolt.
 const ARBALEST={cycle:1.05,speed:430,damage:120,zoom:2.6};
-// Each sector issues one second arm next to HALBERD: none in SECTOR 01, ARBALEST in SKYDECK, MAUL later
-// (ENDURANCE keeps MAUL: ATLAS comes there).
-function secondArm(){return mode==='endurance'?'MAUL':stage===2?'ARBALEST':stage>=3?'MAUL':null}
+// FLAIL: a pump-action scatter cannon for SECTOR 01's dashing VANEs. One click, nine pellets in a wide cone,
+// full damage inside ~15 m falling to a third by ~45 m and gone by ~65 m; the spread forgives a chassis that
+// is still turning toward what the head is tracking. ~0.6 s to rack the next shell.
+const FLAIL={cycle:.62,pellets:9,cone:.085,speed:170,life:.4,damage:22,near:15,far:45};
+// Each sector issues one second arm next to HALBERD: FLAIL in SECTOR 01, ARBALEST in SKYDECK, MAUL in the
+// FREIGHT TUNNEL. ENDURANCE carries everything: both second arms share slot 2 (press 2 again for the other,
+// the way a slot holds more than one item in CS).
+function secondArms(){return mode==='endurance'?['MAUL','ARBALEST','FLAIL']:stage===2?['ARBALEST']:stage>=3?['MAUL']:['FLAIL']}
+function secondArm(){return secondArms()[0]||null}
+// BARDICHE: the melee axe (the big blade in Edge of Tomorrow), carried everywhere on key 3. Keys are slots
+// by kind: 1 HALBERD, 2 the sector's second arm (nothing where none is issued), 3 BARDICHE.
+// LMB swings, and it is heavy: a slow heave back to the right (the servos strain), a beat at the top, a cut
+// that accelerates across the front, a follow-through past the end and a long recovery. The frame slows
+// while it swings and the view is dragged with the blade. The swing lunges the frame at a hostile ahead
+// within LUNGE m; the cut hits what is in its arc out to REACH m (past the hull), bites with a long
+// hit-stop and staggers. V swings it from any weapon with no swap and goes back after.
+const BARDICHE={wind:.3,hold:.06,cut:.17,over:.12,rec:.5,reach:8,arc:1.6,damage:75,stagger:45,lunge:12,knock:2};
+function carried(){return['HALBERD',...secondArms(),'BARDICHE']}
+function nextSecond(){const A=secondArms(),i=A.indexOf(player.weapon);return i>=0?A[(i+1)%A.length]:A.includes(player.lastSecond)?player.lastSecond:A[0]||null}
 let wheelT=0;
-function switchWeapon(w){if(w==='second')w=secondArm();if(w==='other')w=player.weapon==='HALBERD'?secondArm():'HALBERD';if(!w||w!=='HALBERD'&&w!==secondArm())return;if(!playing||!player.alive||w===player.weapon||cockpit.swapT>0)return;player.weapon=w;cockpit.swapT=.5;sfx.swap();plog('System',w==='MAUL'?`-MAUL armed [rocket x${player.rockets}].`:w==='ARBALEST'?'-ARBALEST armed [scope].':'-HALBERD armed [30mm].')}
+function switchWeapon(w){const C=carried();if(w==='second')w=nextSecond();if(w==='other')w=C[(C.indexOf(player.weapon)+1)%C.length];if(!w||!C.includes(w))return;if(!playing||!player.alive||w===player.weapon||cockpit.swapT>0||player.swing)return;player.weapon=w;player.scopeOn=false;if(secondArms().includes(w))player.lastSecond=w;cockpit.swapT=.5;sfx.swap();plog('System',w==='MAUL'?`-MAUL armed [rocket x${player.rockets}].`:w==='ARBALEST'?'-ARBALEST armed [scope].':w==='FLAIL'?'-FLAIL armed [scatter].':w==='BARDICHE'?'-BARDICHE armed [blade].':'-HALBERD armed [30mm].')}
+function swingAxe(quick=false){if(!playing||!player.alive||missionClear||player.swing||cockpit.swapT>0)return;
+  if(player.weapon!=='BARDICHE'){if(!quick)return;player.swing={t:0,ret:player.weapon,hit:false,cut:false};player.weapon='BARDICHE';cockpit.shown='BARDICHE'}
+  else player.swing={t:0,ret:null,hit:false,cut:false}}
+function swingEnd(){const B=BARDICHE;return B.wind+B.hold+B.cut+B.over+B.rec}
+function updateSwing(dt){const S=player.swing;if(!S)return;S.t+=dt;const B=BARDICHE,ay=player.yaw+player.torso,cut0=B.wind+B.hold;
+  if(!S.strain){S.strain=true;sfx.axeWind()}
+  if(!S.lunged){S.lunged=true;
+    // Lunge from the start of the wind-up: close on the nearest hostile ahead within LUNGE m that is low
+    // enough to hit, so the cut lands on it.
+    let best=null,bd=B.lunge;for(const e of enemies){if(!e.alive||eY(e)>8)continue;const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)-RIGS[e.type].hit.r;
+      if(d<bd&&d>B.reach*.55&&Math.abs(angleDiff(Math.atan2(dx,-dz),ay))<.55&&!segmentHitsWorld(player.x,2,player.z,e.x,2,e.z)){bd=d;best=e}}
+    // The step is held from the middle of the heave to the bite, so the frame carries its weight into the cut.
+    if(best){const dx=best.x-player.x,dz=best.z-player.z,l=Math.hypot(dx,dz)||1,T=cut0+B.cut*.6-B.wind*.5,v=clamp((bd-B.reach*.5)/T,0,40);S.lunge=[dx/l*v,dz/l*v]}}
+  if(S.lunge&&S.t>=B.wind*.5&&S.t<cut0+B.cut*.6){player.vx=S.lunge[0];player.vz=S.lunge[1];if(!S.stepped){S.stepped=true;player.fovKick=Math.max(player.fovKick,.4);player.shake=Math.max(player.shake,.3)}}
+  if(!S.cut&&S.t>=cut0){S.cut=true;sfx.axe();cockpit.heaveV-=1.6}
+  if(!S.hit&&S.t>=cut0+B.cut*.6){S.hit=true;let any=false,pan=0;
+    for(const e of enemies){if(!e.alive||eY(e)>7.5)continue;const dx=e.x-player.x,dz=e.z-player.z,l=Math.hypot(dx,dz)||1,R=RIGS[e.type].hit.r;
+      if(l-R>B.reach||Math.abs(angleDiff(Math.atan2(dx,-dz),ay))>B.arc/2&&l>R+2||segmentHitsWorld(player.x,2,player.z,e.x,2,e.z))continue;
+      if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');any=true;pan=worldPan(e.x,e.z);const hx=e.x-dx/l*R,hz=e.z-dz/l*R,hy=Math.min(CAMERA_Y,RIGS[e.type].hit.cy+eY(e));
+      e.hp-=B.damage;e.flash=.24;e.hitPoint={x:hx,y:hy,z:hz};e.hitT=.2;sparks(hx,hy,hz,22,'#e8f4ff',14,'#ffffff');sparks(hx,hy,hz,10,'#6fa8ff',9);
+      if(e.type!=='TITAN')moveEnemy(e,dx/l*B.knock,dz/l*B.knock);
+      if(e.hp>0){chipArmor(e);staggerEnemy(e,B.stagger)}else killEnemy(e,'BARDICHE')}
+    if(any){hitStop=Math.max(hitStop,.13);player.shake=Math.max(player.shake,.95);player.hitMarkT=.14;cockpit.heaveV-=3.4;sfx.axeHit(pan)}}
+  if(S.t>=swingEnd()){if(S.ret&&player.alive)player.weapon=S.ret;player.swing=null}}
+// The blade drags the view: a little to the right as it is heaved back, hard to the left through the cut.
+function axeSway(){const S=player.swing,B=BARDICHE;if(!S)return 0;const t=S.t,c0=B.wind+B.hold,c1=c0+B.cut+B.over,sm=u=>u*u*(3-2*u);
+  if(t<c0)return .035*sm(clamp(t/B.wind,0,1));if(t<c1){const u=(t-c0)/(c1-c0);return lerp(.035,-.06,sm(clamp(u*1.4,0,1)))}return -.06*(1-sm(clamp((t-c1)/B.rec,0,1)))}
+// The scope is the pilot's call: ARBALEST comes up unscoped, RMB (or F / a middle click) puts the eye to the scope
+// and takes it away again. Switching away drops it.
+function toggleScope(){if(!playing||!player.alive||missionClear||player.weapon!=='ARBALEST'||cockpit.swapT>0)return;player.scopeOn=!player.scopeOn;sfx.ui()}
+function fireFlail(){if(gameTime-(player.pumpT??-9)<FLAIL.cycle)return;player.pumpT=gameTime;const a=aimVector(),r=right(player.yaw+player.torso),
+    M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<5?cockpit.muzzle:[player.x+r.x*.72+a.x*.6,CAMERA_Y-.3,player.z+r.z*.72+a.z*.6],shot={hit:false},up=[-a.x*a.y,1-a.y*a.y,-a.z*a.y];
+  stats.shots+=FLAIL.pellets;
+  for(let i=0;i<FLAIL.pellets;i++){const ang=i/FLAIL.pellets*TAU+Math.random()*.5,rad=FLAIL.cone*Math.sqrt(i?(.25+.75*Math.random()):0),cx=Math.cos(ang)*rad,cy=Math.sin(ang)*rad,
+      dx=a.x+r.x*cx+up[0]*cy,dy=a.y+up[1]*cy,dz=a.z+r.z*cx+up[2]*cy,l=Math.hypot(dx,dy,dz)||1,sp=FLAIL.speed*(.92+Math.random()*.16);
+    playerBolts.push({x:M[0],y:M[1],z:M[2],px:M[0]-dx/l,py:M[1]-dy/l,pz:M[2]-dz/l,vx:dx/l*sp,vy:dy/l*sp,vz:dz/l*sp,life:FLAIL.life,damage:FLAIL.damage,syncId:0,pellet:true,ox:M[0],oz:M[2],shot})}
+  player.shake=Math.max(player.shake,.6);player.gunKick=1.5;player.fovKick=Math.max(player.fovKick,.3);flash('muzzleFlash',90);sfx.flail();
+  for(let i=0;i<10;i++)particles.push({x:M[0]+a.x*.4,y:M[1]+a.y*.4,z:M[2]+a.z*.4,px:M[0],py:M[1],pz:M[2],vx:a.x*(8+Math.random()*10)+(Math.random()-.5)*6,vy:a.y*8+(Math.random()-.5)*4,vz:a.z*(8+Math.random()*10)+(Math.random()-.5)*6,life:.12+Math.random()*.12,max:.24,color:i%2?'#ffd88a':'#fff4d6',size:.3+Math.random()*.4,g:0})}
 function fireArbalest(){if(gameTime-(player.snipeT??-9)<ARBALEST.cycle)return;player.snipeT=gameTime;stats.shots++;
   const a=aimVector(),M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<6?cockpit.muzzle:null,r=right(player.yaw+player.torso),
     x=M?M[0]:player.x+r.x*.72+a.x*.6,y=M?M[1]:CAMERA_Y-.28,z=M?M[2]:player.z+r.z*.72+a.z*.6,sp=ARBALEST.speed;
@@ -534,11 +603,10 @@ function updateRockets(dt){
       particles.push({x:r.x,y:r.y,z:r.z,px:r.x,py:r.y,pz:r.z,vx:(Math.random()-.5)*.8,vy:.6+Math.random()*.6,vz:(Math.random()-.5)*.8,life:.7,max:.7,color:'#6f7f7b',size:.7,g:0})}}
   for(let i=rockets.length-1;i>=0;i--)if(rockets[i].life<=0)rockets.splice(i,1)}
 function aimVector(){const y=player.yaw+player.torso,p=player.pitch,cp=Math.cos(p);return{x:Math.sin(y)*cp,y:Math.sin(p),z:-Math.cos(y)*cp}}
-function fire(fresh=false){if(!playing||!player.alive||missionClear||cockpit.swapT>0)return;if(player.weapon==='MAUL'){if(fresh)fireMaul();return}if(player.weapon==='ARBALEST'){if(fresh)fireArbalest();return}const now=gameTime;if(now-lastFire<.092)return;if(player.vent){if(now-(fire.warnT??-9)>.6){fire.warnT=now;plog('Caution','HALBERD venting.',3)}return}lastFire=now;stats.shots++;const linked=getSightLink();player.heat=Math.min(100,player.heat+(linked?(player.syncTime>0?5.5:7.6):(player.syncTime>0?8.2:9.5)));const a=aimVector(),r=right(player.yaw+player.torso),M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<5?cockpit.muzzle:null,muzzleX=M?M[0]:player.x+r.x*.72+a.x*.35,muzzleZ=M?M[2]:player.z+r.z*.72+a.z*.35,muzzleY=M?M[1]:CAMERA_Y-.28;const spread=(Math.random()-.5)*(linked?.0022:.0045),rs=right(player.yaw+player.torso);const speed=linked?(player.syncTime>0?112:102):(player.syncTime>0?98:92);playerBolts.push({x:muzzleX,y:muzzleY,z:muzzleZ,px:muzzleX-a.x*1.8,py:muzzleY-a.y*1.8,pz:muzzleZ-a.z*1.8,vx:(a.x+rs.x*spread)*speed,vy:a.y*speed,vz:(a.z+rs.z*spread)*speed,life:1.9,damage:linked?(player.syncTime>0?29:25):20,syncId:linked?.e.id||0});player.shake=Math.max(player.shake,linked?.34:.30);player.gunKick=1;flash('muzzleFlash',55);sfx.fire(!!linked);if(player.heat>=100){player.vent=true;sfx.overheat();plog('Warning','HALBERD overheat. Venting.');pilotReact('grit',.8,1);say('OVERHEAT')}}
+function fire(fresh=false){if(!playing||!player.alive||missionClear||cockpit.swapT>0)return;if(player.weapon==='BARDICHE'){if(fresh)swingAxe();return}if(player.weapon==='MAUL'){if(fresh)fireMaul();return}if(player.weapon==='ARBALEST'){if(fresh)fireArbalest();return}if(player.weapon==='FLAIL'){if(fresh)fireFlail();return}const now=gameTime;if(now-lastFire<.092)return;if(player.vent){if(now-(fire.warnT??-9)>.6){fire.warnT=now;plog('Caution','HALBERD venting.',3)}return}lastFire=now;stats.shots++;const linked=getSightLink();player.heat=Math.min(100,player.heat+(linked?(player.syncTime>0?5.5:7.6):(player.syncTime>0?8.2:9.5)));const a=aimVector(),r=right(player.yaw+player.torso),M=cockpit.muzzle&&Math.hypot(cockpit.muzzle[0]-player.x,cockpit.muzzle[2]-player.z)<5?cockpit.muzzle:null,muzzleX=M?M[0]:player.x+r.x*.72+a.x*.35,muzzleZ=M?M[2]:player.z+r.z*.72+a.z*.35,muzzleY=M?M[1]:CAMERA_Y-.28;const spread=(Math.random()-.5)*(linked?.0022:.0045),rs=right(player.yaw+player.torso);const speed=linked?(player.syncTime>0?112:102):(player.syncTime>0?98:92);playerBolts.push({x:muzzleX,y:muzzleY,z:muzzleZ,px:muzzleX-a.x*1.8,py:muzzleY-a.y*1.8,pz:muzzleZ-a.z*1.8,vx:(a.x+rs.x*spread)*speed,vy:a.y*speed,vz:(a.z+rs.z*spread)*speed,life:1.9,damage:linked?(player.syncTime>0?29:25):20,syncId:linked?.e.id||0});player.shake=Math.max(player.shake,linked?.34:.30);player.gunKick=1;flash('muzzleFlash',55);sfx.fire(!!linked);if(player.heat>=100){player.vent=true;sfx.overheat();plog('Warning','HALBERD overheat. Venting.');pilotReact('grit',.8,1);say('OVERHEAT')}}
 function getLock(maxAngle=.18){const ay=player.yaw+player.torso,ap=player.pitch;let best=null,bestScore=maxAngle;for(const e of enemies){if(!e.alive)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>130||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)+.2-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);if(score<bestScore){bestScore=score;best={e,dist,score}}}return best}
 function getHmdLock(){const e=enemies.find(x=>x.id===lastDesignatedId&&x.alive&&x.designated>0);if(!e)return null;const dist=Math.hypot(e.x-player.x,e.z-player.z);if(dist>135||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))return null;return{e,dist,score:0,hmd:true}}
 function getSightLink(maxAngle=.105){const h=getHmdLock();if(!h)return null;const e=h.e,ay=player.yaw+player.torso,ap=player.pitch,dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz)||1,ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);return score<maxAngle?{e,dist,score}:null}
-function fireMissile(){if(!playing||!player.alive||missionClear||player.missileCd>0)return;const lock=getHmdLock()||getLock(.24);if(!lock){plog('Caution','No missile lock.');say('NO_LOCK');return}if(player.missiles<=0){plog('Caution','Missiles empty.');say('MISSILE_EMPTY');return}player.missiles--;player.missileCd=.8;cockpit.podKick=1;const r=right(player.yaw),f=forward(player.yaw);missiles.push({x:player.x-r.x*.8-f.x*.2,y:CAMERA_Y-.7,z:player.z-r.z*.8-f.z*.2,vx:f.x*16,vy:1.8,vz:f.z*16,target:lock.e,life:4,trail:0,hist:[]});player.shake=.18;sfx.missile();if(lock.hmd)plog('Link',`-KESTREL away. ${etag(lock.e)}`);say('MISSILE')}
 function wakeEnemy(e,label='CONTACT'){if(!e||!e.alive||e.awake)return;e.awake=true;e.wakeT=.62;e.marked=Math.max(e.marked||0,1.8);e.flash=.18;sfx.contact(e);plog('Caution',`-${label==='HMD HANDOFF'?'Handoff contact':'Hostile contact'}. ${etag(e)}`);pilotGlance(e,.8,1);sayContact(e);shockwave(e.x,.06,e.z,'#ff7667',9,.62,'ground')}
 function wakeNearestCold(){let best=null,bd=1e9;for(const e of enemies){if(!e.alive||e.awake)continue;const d=Math.hypot(e.x-player.x,e.z-player.z);if(d<bd){bd=d;best=e}}if(best)wakeEnemy(best,'NEW CONTACT')}
 function tryHmdHandoff(excludeId=0){const viewYaw=player.yaw+headYaw*Math.PI/180;let best=null,bestA=.30;for(const e of enemies){if(!e.alive||e.id===excludeId)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>120||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const a=Math.abs(angleDiff(Math.atan2(dx,-dz),viewYaw));if(a<bestA){bestA=a;best=e}}if(!best)return;best.focus=Math.max(best.focus||0,.17);best.marked=Math.max(best.marked||0,1.4);if(!best.awake)wakeEnemy(best,'HMD HANDOFF');plog('Link',`-HMD handoff. ${etag(best)}`)}
@@ -556,7 +624,7 @@ function staggerEnemy(e,power=20){
   plog('Info',`-${brokeCharge?'Charge break':brokeLance?'Lance break':'Stagger'}. ${etag(e)}`);if(brokeCharge||brokeLance)say('STAGGER');
   shockwave(e.x,2.7+eY(e),e.z,'#ffe28c',5.5,.42);sparks(e.x,2.7+eY(e),e.z,14,'#ffe28c',10);
 }
-function killEnemy(e,weapon='CANNON'){if(!e.alive)return;const wasDesignated=e.designated>0;e.alive=false;e.deadAt=gameTime;e.firePending=false;e.charge=0;e.lungeWindup=0;e.dashT=0;e.attackKind="";{const col=CLASS_STYLE[e.type].edge,cy=RIGS[e.type].hit.cy+eY(e),s=spatial(e.x,e.z);shatterEnemy(e);killWaves.push({x:e.x,z:e.z,t:gameTime});sparks(e.x,cy,e.z,44,col,16);sparks(e.x,cy,e.z,18,'#fff1d8',22);shockwave(e.x,cy,e.z,'#fff1d8',8,.36);shockwave(e.x,cy,e.z,col,15,.8);if(eY(e)<4)shockwave(e.x,.06,e.z,col,20,1.0,'ground');lightBurst(e.x,cy,e.z,'#ffd6b0',17,.36);sfx.kill(s.pan,e.type);if(e.type==='TITAN'){for(const y of [cy+4,cy-4,cy*.55,cy*.25])explode(e.x+(Math.random()-.5)*3,y,e.z+(Math.random()-.5)*3,true,false);shockwave(e.x,cy,e.z,'#ffd6b0',24,1.1);shockwave(e.x,.06,e.z,'#ff3a4a',42,1.4,'ground');player.shake=Math.max(player.shake,1.2)}}stats.kills++;hitStop=.055;const syncKill=player.syncTime>0;if(syncKill){player.syncChain++;player.syncTime=Math.min(5.4,player.syncTime+.42);player.fovKick=Math.max(player.fovKick,.62);}const refund=player.combo>0?22:18;player.boost=Math.min(100,player.boost+refund);player.heat=Math.max(0,player.heat-20);let reload=0;if(wasDesignated&&player.missiles<6){player.missiles++;reload=1}player.combo++;player.comboT=2.8;player.killPulse=1;player.fovKick=Math.max(player.fovKick,.42);player.shake=Math.max(player.shake,.52);stats.maxChain=Math.max(stats.maxChain,player.combo);addFlow(wasDesignated?26:12,wasDesignated?'DESIGNATE BREAK':'FRAME BREAK');plog(syncKill?'Sync':wasDesignated?'Link':'Info',`-${etag(e)} broken.${syncKill?` Sync x${player.syncChain}.`:player.combo>1?` Chain ${player.combo}.`:''}${reload?' MSSL +1.':''}`);pilotReact(player.combo>=3||syncKill?'laugh':'smug',player.combo>=3?1.4:1.0,2);{const left=mode==='endurance'?9:enemies.filter(x=>x.alive).length;if(left===1)say('LAST_ONE');else if(left>1){if(syncKill)say('SYNC_BREAK');else if(wasDesignated)say('DESIGNATE_BREAK');else if(player.combo>=3)say('CHAIN');else say('KILL',.6)}}if(lastDesignatedId===e.id)lastDesignatedId=0;if(wasDesignated)tryHmdHandoff(e.id);if(mode!=='endurance'&&enemies.every(x=>!x.alive)){missionClear=true;sfx.clear();plog('System','Sector clean.');pilotCut('clear');say('CLEAR');setTimeout(()=>{if(missionClear)showResult('SECTOR CLEAN')},650)}else combat.nextWake=Math.min(combat.nextWake,gameTime+.45)}
+function killEnemy(e,weapon='CANNON'){if(!e.alive)return;const wasDesignated=e.designated>0;e.alive=false;e.deadAt=gameTime;e.firePending=false;e.charge=0;e.lungeWindup=0;e.dashT=0;e.attackKind="";{const col=CLASS_STYLE[e.type].edge,cy=RIGS[e.type].hit.cy+eY(e),s=spatial(e.x,e.z);shatterEnemy(e);killWaves.push({x:e.x,z:e.z,t:gameTime});sparks(e.x,cy,e.z,44,col,16);sparks(e.x,cy,e.z,18,'#fff1d8',22);shockwave(e.x,cy,e.z,'#fff1d8',8,.36);shockwave(e.x,cy,e.z,col,15,.8);if(eY(e)<4)shockwave(e.x,.06,e.z,col,20,1.0,'ground');lightBurst(e.x,cy,e.z,'#ffd6b0',17,.36);sfx.kill(s.pan,e.type);if(e.type==='TITAN'){for(const y of [cy+4,cy-4,cy*.55,cy*.25])explode(e.x+(Math.random()-.5)*3,y,e.z+(Math.random()-.5)*3,true,false);shockwave(e.x,cy,e.z,'#ffd6b0',24,1.1);shockwave(e.x,.06,e.z,'#ff3a4a',42,1.4,'ground');player.shake=Math.max(player.shake,1.2)}}stats.kills++;hitStop=.055;const syncKill=player.syncTime>0;if(syncKill){player.syncChain++;player.syncTime=Math.min(5.4,player.syncTime+.42);player.fovKick=Math.max(player.fovKick,.62);}const refund=player.combo>0?22:18;player.boost=Math.min(100,player.boost+refund);player.heat=Math.max(0,player.heat-20);let reload=0;player.combo++;player.comboT=2.8;player.killPulse=1;player.fovKick=Math.max(player.fovKick,.42);player.shake=Math.max(player.shake,.52);stats.maxChain=Math.max(stats.maxChain,player.combo);addFlow(wasDesignated?26:12,wasDesignated?'DESIGNATE BREAK':'FRAME BREAK');plog(syncKill?'Sync':wasDesignated?'Link':'Info',`-${etag(e)} broken.${syncKill?` Sync x${player.syncChain}.`:player.combo>1?` Chain ${player.combo}.`:''}${reload?' MSSL +1.':''}`);pilotReact(player.combo>=3||syncKill?'laugh':'smug',player.combo>=3?1.4:1.0,2);{const left=mode==='endurance'?9:enemies.filter(x=>x.alive).length;if(left===1)say('LAST_ONE');else if(left>1){if(syncKill)say('SYNC_BREAK');else if(wasDesignated)say('DESIGNATE_BREAK');else if(player.combo>=3)say('CHAIN');else say('KILL',.6)}}if(lastDesignatedId===e.id)lastDesignatedId=0;if(wasDesignated)tryHmdHandoff(e.id);if(mode!=='endurance'&&enemies.every(x=>!x.alive)){missionClear=true;sfx.clear();plog('System','Sector clean.');pilotCut('clear');say('CLEAR');setTimeout(()=>{if(missionClear)showResult('SECTOR CLEAN')},650)}else combat.nextWake=Math.min(combat.nextWake,gameTime+.45)}
 
 // ---------- HEAD TRACKING ----------
 let manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,headPitch=0,headPitchTarget=0,basePitch=null,rawPitch=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
@@ -1846,12 +1914,28 @@ const COCKPIT=(()=>{
     M('gun',box(0,-.1,.62,.08,.09,.14,{mat:'dark'}));
     M('gun',beam([0,-.08,.58],[0,-.32,.48],.07,.05,{mat:'metal',name:'grip'},[1,0,0]));
     M('gun',hexa([[.16,.0,.8],[.21,.0,.8],[.21,.0,1.7],[.16,.0,1.7],[.16,.2,.85],[.2,.2,.85],[.2,.2,1.65],[.16,.2,1.65]],{mat:'armor',name:'plate'}))}
-  // HMD-slaved missile pod.
-  B('frame',beam([-1.4,-.8,1.7],[-1.12,-.5,2.3],.1,.08,{mat:'metal'},[0,0,1]),POD_STYLE);
-  // KESTREL pod (head-slaved): same cel treatment in the HMD's cyan.
-  B('pod',hexa([[-.16,-.11,-.34],[.16,-.11,-.34],[.16,-.11,.2],[-.16,-.11,.2],[-.14,.1,-.32],[.14,.1,-.32],[.14,.1,.18],[-.14,.1,.18]],{lines:1,lineArea:.03,name:'pod'}),POD_STYLE);
-  B('pod',box(0,.115,-.08,.17,.03,.27,{mat:'dark'}),POD_STYLE);B('pod',box(0,0,.205,.28,.18,.014,{mat:'dark'}),POD_STYLE);
-  B('pod',box(.17,0,-.06,.03,.12,.3,{mat:'metal'}),POD_STYLE);
+  // FLAIL: a short, fat over-and-under scatter cannon: a boxy receiver, two wide barrels, a pump fore-end
+  // the fist rides on, a flared choke, a shell tube under the barrels and a blue light on the side.
+  {const A=(bone,q)=>{B(bone,q,GUN_STYLE).weapon='FLAIL'};
+    A('gun',hexa([[-.15,-.15,-.26],[.15,-.15,-.26],[.15,-.15,.5],[-.15,-.15,.5],[-.13,.13,-.23],[.13,.13,-.23],[.12,.12,.46],[-.12,.12,.46]],{lines:2,lineArea:.03,name:'receiver'}));
+    for(const y of [.05,-.09])A('gun',cyl(0,y,1.25,.085,1.5,'z',10,{mat:'armor',name:'barrel',lines:1,lineArea:.01}));
+    A('gun',box(0,-.02,2.02,.22,.32,.16,{mat:'dark',name:'choke'}));A('gun',box(0,-.02,2.11,.24,.06,.04,{mat:'accent'}));
+    A('gun',box(0,-.17,1.05,.2,.13,.62,{mat:'metal',name:'pump'}));for(const z of [.82,.95,1.08,1.21])A('gun',box(0,-.235,z,.21,.015,.05,{mat:'dark'}));
+    A('gun',cyl(0,-.2,1.6,.05,.75,'z',8,{mat:'dark',name:'tube'}));
+    A('gun',box(0,.17,.12,.06,.06,.3,{mat:'metal',name:'sight'}));A('gun',box(.155,.0,.15,.012,.03,.5,{mat:'glow',glow:'hmd'}));
+    A('gun',beam([-.13,-.13,-.16],[-.25,-.4,-.48],.08,.06,{mat:'metal',name:'grip'},[1,0,0]))}
+  // BARDICHE: a long dark haft through the same fist and a broad steel blade on the left (the cutting side
+  // of a right-to-left swing), lying flat so the pilot sees its face; a blue light along the edge, a back
+  // spike, a top spike and a pommel.
+  {const A=(bone,q)=>{B(bone,q,GUN_STYLE).weapon='BARDICHE'};
+    A('gun',cyl(.03,-.2,1.55,.055,2.9,'z',8,{mat:'dark',name:'haft'}));
+    for(const z of [.45,1.95,2.35])A('gun',cyl(.03,-.2,z,.07,.06,'z',8,{mat:'metal'}));
+    A('gun',box(.03,-.2,.08,.13,.13,.14,{mat:'metal',name:'pommel'}));
+    A('gun',hexa([[-.95,-.23,2.0],[-.02,-.235,2.4],[-.02,-.235,3.0],[-.95,-.23,3.35],[-.95,-.17,2.0],[-.02,-.165,2.4],[-.02,-.165,3.0],[-.95,-.17,3.35]],{mat:'metal',name:'blade',lines:1,lineArea:.01}));
+    A('gun',box(-.95,-.2,2.675,.03,.075,1.36,{mat:'glow',glow:'hmd'}));
+    A('gun',box(-.1,-.2,2.7,.18,.11,.68,{mat:'dark',name:'socket'}));
+    A('gun',hexa([[.06,-.225,2.55],[.38,-.215,2.66],[.38,-.215,2.74],[.06,-.225,2.85],[.06,-.175,2.55],[.38,-.185,2.66],[.38,-.185,2.74],[.06,-.175,2.85]],{mat:'armor',name:'spike'}));
+    A('gun',cyl(.03,-.2,3.2,.032,.36,'z',6,{mat:'metal'}))}
   return P;
 })();
 const CP_BONES=[['frame',null,[0,0,0]],['gun','frame',[.86,-.35,1.25]],['louverL','gun',[-.05,.09,.12]],['louverR','gun',[.05,.09,.12]],['barrel','gun',[0,0,0]],['pod','frame',[-1.1,-.46,2.35]]];
@@ -1870,10 +1954,21 @@ function cockpitPose(){
   // receiver down and outboard (louvers open), each shot kicks the whole arm, not just the barrel.
   const vent=C.ventK,rs=Math.max(1-C.raise,C.swapK*.8),ease=rs*rs*(3-2*rs),kick=player.gunKick,mk=C.maulKick;
   const gun={p:[ease*.08,-ease*.55-vent*.025,-ease*.25-kick*.035-mk*.14],r:[player.pitch-vent*.1+kick*.025-ease*.55+mk*.09,player.torso,vent*.17+ease*.4]},barrel={p:[0,0,-.24*kick]};
+  if(C.shown==='BARDICHE'){const k=axePose();for(let i=0;i<3;i++){gun.p[i]+=k[i];gun.r[i]+=k[3+i]}}
   C.podYaw=lerp(C.podYaw,clamp(h,-.75,.75),.12);const podKick=C.podKick;C.podPitch=lerp(C.podPitch,player.camPitch*.6,.1);
   const pod={p:[0,-ease*.3,-podKick*.09],r:[C.podPitch-ease*.4+podKick*.05,C.podYaw*.9,0]};
   return{frame,gun,barrel,pod,louverL:{r:[0,0,vent*.9+boost*.3]},louverR:{r:[0,0,-vent*.9-boost*.3]},load};
 }
+// BARDICHE acting, added to the gun bone: held raised and canted at rest; the wind-up draws it back to
+// the right, the cut sweeps it hard across to the left and down, the recovery brings it back.
+const AXE_REST=[.04,.02,0,.28,.12,.35],AXE_WIND=[.12,.32,-.3,.55,.45,.75],AXE_TOP=[.13,.34,-.33,.58,.5,.78],AXE_CUT=[-.36,.04,.12,.02,-.78,-.32],AXE_OVER=[-.46,-.04,.16,-.08,-.92,-.4];
+function axePose(){const S=player.swing,B=BARDICHE,mix=(a,b,t)=>a.map((v,i)=>lerp(v,b[i],t)),sm=u=>u*u*(3-2*u);if(!S)return AXE_REST;let t=S.t;
+  if(t<B.wind)return mix(AXE_REST,AXE_WIND,sm(t/B.wind));t-=B.wind;
+  if(t<B.hold)return mix(AXE_WIND,AXE_TOP,t/B.hold);t-=B.hold;
+  // the cut starts slow and accelerates: the blade's weight, not a flick
+  if(t<B.cut){const u=t/B.cut;return mix(AXE_TOP,AXE_CUT,u*u*u*.6+u*u*.4)}t-=B.cut;
+  if(t<B.over){const u=t/B.over;return mix(AXE_CUT,AXE_OVER,1-(1-u)*(1-u))}t-=B.over;
+  return mix(AXE_OVER,AXE_REST,sm(clamp(t/B.rec,0,1)))}
 function cockpitXf(pz){
   const fwd=forward(player.yaw),rt=right(player.yaw),root={R:[rt.x,0,fwd.x,0,1,0,rt.z,0,fwd.z],t:[player.x,CAMERA_Y,player.z]},X={};
   for(const [n,parent,rest] of CP_BONES){const q=pz[n]||{},p=q.p||[0,0,0],r=q.r||[0,0,0];X[n]=xfMul(parent?X[parent]:root,{R:M3.rot(r[0],r[1],r[2]),t:[rest[0]+p[0],rest[1]+p[1],rest[2]+p[2]]})}
@@ -1967,11 +2062,15 @@ function drawCockpit(speed,viewYaw,viewPitch){
   const P3=(bone,v)=>{const w=xfPoint(X[bone],v);return project(w[0],w[1],w[2],viewYaw,viewPitch)};
   // Stencilled weapon names on the receiver side and the pod flank (affine-mapped bitmap text).
   if(C.shown==='MAUL')stencil(P3,'gun','MAUL',[-.17,.17,2.3],[-.17,.17,1.6],[-.17,.04,2.3],'#c9d0da');
+  else if(C.shown==='FLAIL')stencil(P3,'gun','FLAIL',[-.102,-.12,1.32],[-.102,-.12,.86],[-.102,-.215,1.32],'#c9d0da');
+  else if(C.shown==='BARDICHE')stencil(P3,'gun','BARDICHE',[-.86,-.163,2.84],[-.2,-.163,2.84],[-.86,-.163,2.56],'#c9d0da');
   else if(C.shown==='ARBALEST')stencil(P3,'gun','ARBALEST',[-.08,.05,2.15],[-.08,.05,.85],[-.08,-.03,2.15],'#c9d0da');
   else stencil(P3,'barrel','HALBERD',[-.05,.103,1.32],[-.05,.103,.7],[-.1,.052,1.32],'#c9d0da');
   ctx.save();ctx.lineCap='round';ctx.shadowBlur=0;ctx.globalCompositeOperation='lighter';
   // Gun: heat bar along the receiver, glowing barrel, vent steam.
-  if(C.shown==='MAUL'){if(C.maulKick>.3){const m=P3('gun',[0,.1,3.25]),b=P3('gun',[0,.1,.1]);for(const [q,k] of [[m,1],[b,.7]]){if(!q)continue;const r=clamp(q.f*.32,8,90)*C.maulKick*k;ctx.globalAlpha=.6*C.maulKick;ctx.fillStyle='#ffb35c';ctx.beginPath();ctx.arc(q.x,q.y,r,0,TAU);ctx.fill();ctx.globalAlpha=C.maulKick;ctx.fillStyle='#fffbe8';ctx.beginPath();ctx.arc(q.x,q.y,r*.35,0,TAU);ctx.fill()}}}
+  if(C.shown==='FLAIL'){if(player.gunKick>.25){const m=P3('gun',[0,-.02,2.2]);if(m){const r=clamp(m.f*.3,8,90)*player.gunKick;ctx.globalAlpha=.6*player.gunKick;ctx.fillStyle='#ffc75a';ctx.beginPath();ctx.arc(m.x,m.y,r,0,TAU);ctx.fill();ctx.globalAlpha=player.gunKick;ctx.fillStyle='#fffbe8';ctx.beginPath();ctx.arc(m.x,m.y,r*.4,0,TAU);ctx.fill()}}}
+  else if(C.shown==='BARDICHE'){}
+  else if(C.shown==='MAUL'){if(C.maulKick>.3){const m=P3('gun',[0,.1,3.25]),b=P3('gun',[0,.1,.1]);for(const [q,k] of [[m,1],[b,.7]]){if(!q)continue;const r=clamp(q.f*.32,8,90)*C.maulKick*k;ctx.globalAlpha=.6*C.maulKick;ctx.fillStyle='#ffb35c';ctx.beginPath();ctx.arc(q.x,q.y,r,0,TAU);ctx.fill();ctx.globalAlpha=C.maulKick;ctx.fillStyle='#fffbe8';ctx.beginPath();ctx.arc(q.x,q.y,r*.35,0,TAU);ctx.fill()}}}
   else{const heat=player.heat/100,a=P3('gun',[-.16,.02,-.25]),b=P3('gun',[-.16,.02,-.25+.75*heat]);if(a&&b&&heat>.02){ctx.globalAlpha=.9;ctx.strokeStyle=player.vent?'#ff5a36':heat>.7?'#ff8a3a':'#ffc75a';ctx.lineWidth=clamp(a.f*.025,2,6);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}
     const hk=clamp((player.heat-45)/55,0,1);if(hk>0||player.vent){const p0=P3('barrel',[0,0,.6]),p1=P3('barrel',[0,0,2.7]);if(p0&&p1){ctx.globalAlpha=player.vent?.55+.25*Math.sin(gameTime*22):.6*hk;ctx.strokeStyle=player.vent?'#ff4a2a':'#ff7a3a';ctx.lineWidth=clamp(p0.f*.1,2,14);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke()}}
     if(player.vent){for(let i=0;i<10;i++){const k=(gameTime*1.6+i/10)%1,q=P3('gun',[(i%2?.07:-.07),.13+k*.42,.05+(i%5)*.08]);if(!q)continue;ctx.globalAlpha=(1-k)*.18;ctx.strokeStyle='#e6fff8';ctx.lineWidth=clamp(q.f*.012,1,4)*(1+k);ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.quadraticCurveTo(q.x+Math.sin(gameTime*5+i)*10,q.y-12,q.x+Math.sin(gameTime*3+i)*6,q.y-28*(.5+k));ctx.stroke()}}
@@ -1981,7 +2080,13 @@ function drawCockpit(speed,viewYaw,viewPitch){
   drawVisor(viewYaw);
   // Gun muzzle in world space for the cannon (bolts leave the real barrel).
   {const f=C.foreW,q=f&&project(f[0],f[1],f[2],viewYaw,viewPitch);visorFX.armPt=q&&q.x>-60&&q.x<W+60&&q.y>-60&&q.y<H+60?{x:clamp(q.x/W,.04,.94),y:clamp(q.y/H,.05,.86)}:{x:.88,y:.86}}
-  C.muzzle=C.shown==='MAUL'?xfPoint(X.gun,[0,.1,3.2]):C.shown==='ARBALEST'?xfPoint(X.gun,[0,0,3.75]):xfPoint(X.barrel,[0,0,2.95]);
+  // BARDICHE: the edge's sweep leaves a short blue-white smear through the cut.
+  {const S=player.swing,T=C.axeTrail||(C.axeTrail=[]);if(C.shown==='BARDICHE'&&S&&S.t>=BARDICHE.wind+BARDICHE.hold+BARDICHE.cut*.2&&S.t<=BARDICHE.wind+BARDICHE.hold+BARDICHE.cut+BARDICHE.over*.6)T.push({a:xfPoint(X.gun,[-.95,-.2,2.0]),b:xfPoint(X.gun,[-.95,-.2,3.35]),t:gameTime});
+    while(T.length&&(gameTime-T[0].t>.11||!S))T.shift();
+    if(T.length>1){ctx.save();ctx.globalCompositeOperation='lighter';for(let i=1;i<T.length;i++){const A=T[i-1],Bq=T[i],q=[A.a,Bq.a,Bq.b,A.b].map(v=>project(v[0],v[1],v[2],viewYaw,viewPitch));if(q.some(v=>!v))continue;
+      const k=1-(gameTime-Bq.t)/.11;ctx.globalAlpha=.32*k;ctx.fillStyle='#bcd8ff';ctx.beginPath();q.forEach((v,j)=>j?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));ctx.closePath();ctx.fill();
+      ctx.globalAlpha=.85*k;ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(q[2].x,q[2].y);ctx.lineTo(q[3].x,q[3].y);ctx.stroke()}ctx.restore()}}
+  C.muzzle=C.shown==='FLAIL'?xfPoint(X.gun,[0,-.02,2.15]):C.shown==='BARDICHE'?xfPoint(X.gun,[-.5,-.2,2.7]):C.shown==='MAUL'?xfPoint(X.gun,[0,.1,3.2]):C.shown==='ARBALEST'?xfPoint(X.gun,[0,0,3.75]):xfPoint(X.barrel,[0,0,2.95]);
 }
 // Yellow/ink hazard stripes laid along a strip of the capsule (a->b length, a->c width).
 function hazard(P3,a,b,c,n){ctx.save();for(let i=0;i<n;i++){const t0=i/n,t1=(i+.5)/n,k=.5/n,q=[[t0,0],[t1,0],[t1+k,1],[t0+k,1]].map(([t,w])=>P3('frame',[lerp(a[0],b[0],t)+(c[0]-a[0])*w,lerp(a[1],b[1],t)+(c[1]-a[1])*w,lerp(a[2],b[2],t)+(c[2]-a[2])*w]));if(q.some(v=>!v))continue;ctx.globalAlpha=.9;ctx.fillStyle='#e8c34a';ctx.beginPath();q.forEach((p,j)=>j?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fill()}ctx.restore()}
@@ -2366,7 +2471,9 @@ function showResult(title){const r=$('result');if(!r)return;if(!title){r.classLi
   else{sector=SECTORS[stage].tag+' '+SECTORS[stage].name;
     rows=[['TIME',fmtTime(missionTime)],['BREAK',stats.kills+' / '+enemies.length],['ACCURACY',acc+'%'],['MAX CHAIN',stats.maxChain],['HMD DESIGNATIONS',stats.designations],['DAMAGE TAKEN',Math.round(stats.damage)]]}
   $('resultSector').textContent=sector;$('resultTitle').textContent=title;
-  const next=mode==='sortie'&&!down&&stage<LAST_SECTOR;$('resultKeys').textContent=(next?'ENTER NEXT SECTOR // ':'')+'R REDEPLOY // ESC MENU';
+  // Choices are buttons: the pointer lock is released so the cursor can pick one (Enter / R / ESC still work).
+  const next=mode==='sortie'&&!down&&stage<LAST_SECTOR;$('resultKeys').innerHTML=(next?'<button class="go" data-act="next">NEXT SECTOR</button>':'')+'<button data-act="again">REDEPLOY</button><button data-act="menu">MENU</button>';
+  if(typeof document!=='undefined'&&document.pointerLockElement)document.exitPointerLock?.();
   // Rebuilt every time, so the rows run their arrival again.
   $('resultStats').innerHTML=rows.map(([k,v],i)=>`<div style="--i:${i}"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   r.classList.toggle('down',down);r.classList.add('hidden');void r.offsetWidth;r.classList.remove('hidden')}
@@ -2389,7 +2496,7 @@ function update(dt){
   const boostedThisStep=player.boostTime>0,airborne=player.jy>0;
   if(player.alive&&!missionClear&&!boostedThisStep){
     const moving=Math.abs(d.sx)+Math.abs(d.sz)>.05;
-    const targetSpeed=(d.sz<-.25?13.5:Math.abs(d.sx)>.35?16.5:19.5)*(player.syncTime>0?1.12:1);
+    const targetSpeed=(d.sz<-.25?13.5:Math.abs(d.sx)>.35?16.5:19.5)*(player.syncTime>0?1.12:1)*(player.swing?.45:1);
     const braking=moving&&speed>1&&(player.vx*d.x+player.vz*d.z)/speed<-.25;
     const rate=braking?10.5:player.glideTime>0?(moving?3.8:3.2):moving?8.5:7.0;
     const k=1-Math.exp(-rate*(airborne?JUMP.air:1)*dt);player.vx=lerp(player.vx,d.x*targetSpeed,k);player.vz=lerp(player.vz,d.z*targetSpeed,k);
@@ -2425,7 +2532,7 @@ function update(dt){
   const angularAccel=Math.abs(desiredTurn)>Math.abs(player.yawVelocity)?2.6:4.2;player.yawVelocity+=clamp(desiredTurn-player.yawVelocity,-angularAccel*dt,angularAccel*dt);
   const turn=player.yawVelocity*dt;player.yaw+=turn;player.aimYawTarget-=turn;player.torso-=turn;
   player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.56);
-  {const want=player.alive&&!missionClear&&cockpit.shown==='ARBALEST'&&cockpit.swapT<=0?1:0;player.scope=(player.scope||0)+(want-(player.scope||0))*(1-Math.exp(-(want?10:14)*dt));if(player.scope<.002)player.scope=0}
+  {const want=player.alive&&!missionClear&&player.scopeOn&&cockpit.shown==='ARBALEST'&&cockpit.swapT<=0?1:0;player.scope=(player.scope||0)+(want-(player.scope||0))*(1-Math.exp(-(want?10:14)*dt));if(player.scope<.002)player.scope=0}
   // The view follows a third of the gun's pitch, and more once the gun is raised past ~10 deg, so a KITE
   // high in the sky stays on screen while the gun is on it. Height is the mouse's job, not the head's.
   player.camPitch=lerp(player.camPitch,player.pitch*.34+Math.max(0,player.pitch-.18)*.55,1-Math.exp(-5.5*dt));
@@ -2449,11 +2556,14 @@ function update(dt){
     if(!impact){b.x=nx;b.y=ny;b.z=nz;continue}
     placeImpact(b,nx,ny,nz,impact.t);b.life=0;
     if(impact.b){sparks(b.x,b.y,b.z,7,'#8fffe0',6,'#e8fff8');shockwave(b.x,b.y,b.z,'#8fffe0',1.2,.18);continue}
-    const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=b.damage;e.flash=.10;e.hitPoint={x:b.x,y:b.y,z:b.z};e.hitT=.12;if(e.hp>0)chipArmor(e);
-    const syncHit=b.syncId===e.id;stats.hits++;staggerEnemy(e,b.damage+(syncHit?9:0));hitMark(worldPan(e.x,e.z));
+    const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');
+    // FLAIL pellets lose their bite with the distance they have flown; one hit mark per shell.
+    const dmg=b.pellet?b.damage*clamp(1-(Math.hypot(b.x-b.ox,b.z-b.oz)-FLAIL.near)/(FLAIL.far-FLAIL.near)*.67,.33,1):b.damage;
+    e.hp-=dmg;e.flash=.10;e.hitPoint={x:b.x,y:b.y,z:b.z};e.hitT=.12;if(e.hp>0)chipArmor(e);
+    const syncHit=b.syncId===e.id;stats.hits++;staggerEnemy(e,dmg+(syncHit?9:0));if(!b.shot||!b.shot.hit){if(b.shot)b.shot.hit=true;hitMark(worldPan(e.x,e.z))}
     sparks(b.x,b.y,b.z,syncHit?16:11,syncHit?'#ffe08a':'#ffc467',syncHit?11:8.5);sparks(b.x,b.y,b.z,4,CLASS_STYLE[e.type].edge,6);shockwave(b.x,b.y,b.z,syncHit?'#ffe08a':'#ffd7a0',syncHit?2.2:1.5,.16);
     if(syncHit){player.heat=Math.max(0,player.heat-1.5);addFlow(player.syncTime>0?4:8);e.breakFlash=Math.max(e.breakFlash,.16)}
-    if(e.hp<=0)killEnemy(e,syncHit?'SIGHT LINK':'CANNON');
+    if(e.hp<=0)killEnemy(e,syncHit?'SIGHT LINK':b.pellet?'FLAIL':'CANNON');
   }
   for(let i=playerBolts.length-1;i>=0;i--)if(playerBolts[i].life<=0||Math.abs(playerBolts[i].x)>WORLD*1.4||Math.abs(playerBolts[i].z)>WORLD*1.4)playerBolts.splice(i,1);
   // missiles
@@ -2472,7 +2582,7 @@ function update(dt){
     if(m.life>0&&m.trail<=0){m.trail=.03;particles.push({x:m.x,y:m.y,z:m.z,px:m.x,py:m.y,pz:m.z,vx:(Math.random()-.5)*1.5,vy:.3,vz:(Math.random()-.5)*1.5,life:.28,max:.28,color:'#ffd16f',size:.3,g:0})}
   }
   for(let i=missiles.length-1;i>=0;i--)if(missiles[i].life<=0)missiles.splice(i,1);
-  updateRockets(dt);
+  updateRockets(dt);updateSwing(dt);
   // hostile bolts
   for(const b of enemyBolts){
     b.px=b.x;b.py=b.y;b.pz=b.z;
@@ -2702,22 +2812,23 @@ function drawPilotLink(){
     ctx.fillStyle=col;ctx.fillRect(Math.round(lx+pad),Math.round(y+lh*.5-1.5*s),Math.round(2.5*s),Math.round(2.5*s));
     hudText(e.tag.toUpperCase(),lx+pad+6*s,y+(lh-cap)*.5-.5*s,cap,col,0,.2);hudText(hudFit(e.text.replace(/^-\s*/,''),textW,fs),lx+pad+tagW,y+(lh-fs)*.5-.5*s,fs,HUD.ink)}
   ctx.restore();ctx.globalAlpha=b;
-  // FRAME: hull as four thin cells with its percentage, pod count, boost along the bottom edge.
+  // FRAME: hull as four thin cells with its percentage, boost along the bottom edge.
   const danger=player.alive&&player.hp<30,blink=Math.floor(gameTime*3)%2===0,fx=ox,hp=clamp(player.hp/100,0,1),hc=danger?HUD.warn:HUD.ink;
   hudPanel(fx,sy,sideW,sideH,'FRAME',s,danger?HUD.warn:undefined);
   {const x0=fx+pad,x1=fx+sideW-pad,cw=(x1-x0-3*s*3)/4;
     hudText('HULL',x0,sy+pad,cap,HUD.dim,0,.2);hudText(String(Math.round(player.hp)),x1,sy+pad-3*s,11*s,hc,1,.02,300);
     const yb=sy+pad+14*s;for(let i=0;i<4;i++){const f=clamp(hp*4-i,0,1),x=x0+i*(cw+3*s);ctx.fillStyle=HUD.faint;ctx.fillRect(x,yb,cw,2*s);if(f>0){ctx.fillStyle=hc;ctx.fillRect(x,yb,cw*f,2*s)}}
-    hudText('POD',x0,sy+sideH-pad-cap-7*s,cap,HUD.dim,0,.2);hudText(String(player.missiles),x1,sy+sideH-pad-14*s,11*s,HUD.teal,1,.02,300);
     const yB=sy+sideH-3*s;ctx.fillStyle=HUD.faint;ctx.fillRect(x0,yB,x1-x0,1*s);ctx.fillStyle=player.boostTime>0?'#ffffff':HUD.teal;ctx.fillRect(x0,yB,(x1-x0)*clamp(player.boost/100,0,1),1*s);
     if(danger&&blink)hudText('DANGER',fx+sideW,sy-14*s,cap,HUD.warn,1,.3)}
   // FLOW / SYNC as a hairline along the LOG's top edge.
   {const fl=player.syncTime>0?1:clamp(player.flow/100,0,1);ctx.fillStyle=player.syncTime>0?HUD.sync:'rgba(230,208,142,.7)';ctx.fillRect(lx,ly-2*s,logW*fl,1.5*s)}
   // ARM: weapon name, barrel heat (or MAUL rounds), VENT / RELOAD.
   const ax=lx+logW+gap,heat=clamp(player.heat/100,0,1);hudPanel(ax,sy,sideW,sideH,'ARM',s);
-  {const x0=ax+pad,x1=ax+sideW-pad,maul=cockpit.shown==='MAUL',arb=cockpit.shown==='ARBALEST';hudText(maul?'MAUL':arb?'ARBALEST':'HALBERD',x0,sy+pad,fs,HUD.caution,0,.16);
+  {const x0=ax+pad,x1=ax+sideW-pad,maul=cockpit.shown==='MAUL',arb=cockpit.shown==='ARBALEST',axe=cockpit.shown==='BARDICHE',fl=cockpit.shown==='FLAIL';hudText(maul?'MAUL':arb?'ARBALEST':axe?'BARDICHE':fl?'FLAIL':'HALBERD',x0,sy+pad,fs,HUD.caution,0,.16);
     const gy=sy+sideH-pad-4*s;
-    if(arb){const cyc=clamp((gameTime-(player.snipeT??-9))/ARBALEST.cycle,0,1);ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=cyc<1?'rgba(216,180,108,.6)':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*cyc,2*s);hudText(cyc<1?'CYCLING':'READY',x0,gy-cap-5*s,cap,cyc<1?HUD.caution:HUD.dim,0,.2)}
+    if(fl){const cyc=clamp((gameTime-(player.pumpT??-9))/FLAIL.cycle,0,1);ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=cyc<1?'rgba(216,180,108,.6)':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*cyc,2*s);hudText(cyc<1?'PUMP':'READY',x0,gy-cap-5*s,cap,cyc<1?HUD.caution:HUD.dim,0,.2)}
+    else if(axe){const S=player.swing,f=S?clamp(S.t/swingEnd(),0,1):1;ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=S?'rgba(216,180,108,.6)':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*f,2*s);hudText(S?'SWING':'READY',x0,gy-cap-5*s,cap,S?HUD.caution:HUD.dim,0,.2)}
+    else if(arb){const cyc=clamp((gameTime-(player.snipeT??-9))/ARBALEST.cycle,0,1);ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=cyc<1?'rgba(216,180,108,.6)':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*cyc,2*s);hudText(cyc<1?'CYCLING':'READY',x0,gy-cap-5*s,cap,cyc<1?HUD.caution:HUD.dim,0,.2)}
     else if(maul){const n=MAUL.mag,cw=(x1-x0-2*s*(n-1))/n;for(let i=0;i<n;i++){const x=x0+i*(cw+2*s),f=i<player.rockets?1:i===player.rockets?player.rocketRegen/MAUL.regen:0;ctx.fillStyle=HUD.faint;ctx.fillRect(x,gy,cw,2*s);if(f>0){ctx.fillStyle=f<1?'rgba(216,180,108,.5)':HUD.caution;ctx.fillRect(x,gy,cw*f,2*s)}}
       hudText(player.rockets?'ROUNDS '+player.rockets:'RELOAD',x0,gy-cap-5*s,cap,player.rockets?HUD.dim:HUD.warn,0,.2)}
     else{const hot=player.vent;ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=hot?(blink?HUD.warn:'rgba(228,124,98,.4)'):heat>.7?'#e09a62':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*heat,2*s);
@@ -2915,7 +3026,7 @@ function applyBloom(){
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'GLOW : HIGH':'GLOW : LOW'}
-function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
+function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
 // canvas state reset, and the error goes to the console, window.__hfErrors and once per message to the LOG.
@@ -2936,19 +3047,21 @@ function startGame(lock=true){
     try{if(canvas.requestPointerLock){const pending=canvas.requestPointerLock();pending?.catch(failed)}else failed()}
     catch{failed()}
   }
-  if(playing){if(!say('SORTIE'))vox.pending={event:'SORTIE',chance:1,t:performance.now()};plog('System','-Armament online [HALBERD 30mm].');plog('System','-HMD pod online [KESTREL x6].');plog('Info','Front: cannon. Flank: HMD missile.');pilotReact('closed',.75,1)}
+  if(playing){if(!say('SORTIE'))vox.pending={event:'SORTIE',chance:1,t:performance.now()};plog('System','-Armament online [HALBERD 30mm].');plog('Info','Track with the head. The frame turns slow.');pilotReact('closed',.75,1)}
 }
+$('resultKeys').addEventListener('click',e=>{const a=e.target?.closest?.('button')?.dataset?.act;if(!a||!playing)return;sfx.ui();if(a==='menu'){pause();return}
+  if(a==='next')nextSector();else{reset();say('REDEPLOY')}canvas.focus?.();try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}});
 $('play').addEventListener('click',()=>{if(mode!=='sortie')setMode('sortie');startGame(true)});
 $('endure').addEventListener('click',()=>{if(mode!=='endurance')setMode('endurance');startGame(true)});
 if(endure.best)$('status').textContent=`READY / ENDURANCE BEST ${endure.best.kills} BREAK ${fmtTime(endure.best.time)}`;
 function clearInput(){keys.clear();mouseButtons.clear();boostLatch=false}
 function pause(){playing=false;clearInput();boot.classList.remove('hidden');hud.classList.add('hidden');updateEngine(0,false)}
-document.addEventListener('pointerlockchange',()=>{if(playing&&document.pointerLockElement!==canvas&&!new URLSearchParams(location.search).has('demo'))pause()});
+document.addEventListener('pointerlockchange',()=>{if(playing&&player.alive&&!missionClear&&document.pointerLockElement!==canvas&&!new URLSearchParams(location.search).has('demo'))pause()});
 document.addEventListener('mousemove',e=>{if(!playing||(!new URLSearchParams(location.search).has('demo')&&document.pointerLockElement!==canvas)||!player.alive)return;const ms=+mouseSens.value/(1+(ARBALEST.zoom-1)*(player.scope||0));player.aimYawTarget+=e.movementX*.00135*ms;player.aimPitchTarget-=e.movementY*.00125*ms});
-document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===2)fireMissile()});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
-document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'))switchWeapon(e.code==='Digit1'?'HALBERD':'second');if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
+document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='MISSION RESET'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='FULLSCREEN ERROR'}});
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind(gain,$('gainout'),'×',1);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);

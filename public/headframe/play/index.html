@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0a0f12">
   <title>HEADFRAME | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=36">
+  <link rel="stylesheet" href="styles.css?v=37">
 </head>
 <body>
 <main id="app">
@@ -39,18 +39,18 @@
     </div>
 
     <div class="statusLine"><i id="statusDot"></i><span id="status">READY / CAMERA OPTIONAL</span></div>
-    <div class="keyline"><b>WASD</b> MOVE　<b>SHIFT</b> BURST　<b>SPACE</b> JUMP　<b>MOUSE</b> WEAPON GIMBAL　<b>LMB</b> CANNON　<b>RMB</b> MISSILE　<b>WHEEL / 1-2</b> WEAPON　<b>Q/E</b> HEAD TEST　<b>C</b> RECENTER　<b>ESC</b> MENU　<b>R</b> REDEPLOY</div>
+    <div class="keyline"><b>WASD</b> MOVE　<b>SHIFT</b> BURST　<b>SPACE</b> JUMP　<b>MOUSE</b> WEAPON GIMBAL　<b>LMB</b> CANNON　<b>RMB</b> SCOPE　<b>WHEEL / 1-3</b> WEAPON　<b>V</b> AXE　<b>Q/E</b> HEAD TEST　<b>C</b> RECENTER　<b>ESC</b> MENU　<b>R</b> REDEPLOY</div>
   </section>
 
   <section id="hud" class="hud hidden" aria-live="polite">
     <div class="hudTop"><div id="missionClock">00:00</div><div id="headstat"></div></div>
-    <div id="result" class="result hidden"><small id="resultSector">VECTOR FOUNDRY 07</small><b id="resultTitle">SECTOR CLEAN</b><dl id="resultStats"></dl><span id="resultKeys">R REDEPLOY // ESC MENU</span></div>
+    <div id="result" class="result hidden"><small id="resultSector">VECTOR FOUNDRY 07</small><b id="resultTitle">SECTOR CLEAN</b><dl id="resultStats"></dl><div id="resultKeys" class="acts"></div></div>
     <div id="damageFlash"></div>
     <div id="boostVignette"></div>
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=37"></script>
+<script src="main.js?v=42"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=34"></script>
