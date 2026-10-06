@@ -742,7 +742,7 @@ function handles(L,M,kk){
   const below=b.h/2+34*kk,room=L.y+below*cs+18*kk<D.H;
   // a shape also stretches one way from the middle of each side
   // a line only lengthens from its ends; its thickness is set in the panel
-  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
+  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle'&&tool==='crop')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
   return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
@@ -830,7 +830,7 @@ function hitHandle(L,p){
   if(near(h.rot))return 'rot';if(h.corners.some(near))return 'scale';
   const e=Object.entries(h.edges).find(([,q])=>Math.hypot(p.x-q.x,p.y-q.y)<18*kE());return e?'edge:'+e[0]:null;
 }
-// With 中の位置 open, the photo in its frame follows the finger (and two fingers or the wheel zoom it), the
+// With トリミング open, the photo in its frame follows the finger (and two fingers or the wheel zoom it), the
 // frame itself staying where it is; the sliders follow along.
 const inside=L=>tool==='crop'&&isImg(L)&&!!L.photoId&&L.shape!=='none';
 function panInside(L,g,p){
@@ -927,7 +927,7 @@ cv.addEventListener('pointerdown',e=>{
     if(h&&h.startsWith('edge:')&&isImg(L)){bakeView(L);const f=imgFrame(L);G.g={mode:'icrop',L,e:h.slice(5),p,x:L.x,y:L.y,fw:f.w,fh:f.h,rot:L.rot,crop:{...cropOf(L)}};return}
     if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
     if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
-    if(inside(L)&&hitLayer(G.M,p,kE(),o=>o===L)){G.g={mode:'ipan',p,zx:L.zx,zy:L.zy};return} // 中の位置 open: a drag slides the photo in its frame
+    if(inside(L)&&hitLayer(G.M,p,kE(),o=>o===L)){G.g={mode:'ipan',p,zx:L.zx,zy:L.zy};return} // トリミング open: a drag slides the photo in its frame
   }
   const H=hitLayer(G.M,p,kE());
   if(H&&(addMode||e.shiftKey)){toggleIn(H);G.g=null;tool=null;panel();paint();return}
@@ -1018,6 +1018,7 @@ function endPtr(e){
     if((x1-x0)/kE()>4||(y1-y0)/kE()>4)for(const o of D.layers)if(G.M.has(o.id)&&o.x>=x0&&o.x<=x1&&o.y>=y0&&o.y<=y1)for(const m of mates(o))if(!ids.includes(m.id))ids.push(m.id);
     G.g=null;if(ids.length>1)MS=ids;else D.sel=ids[0]??null;panel();paint();return;
   }
+  if(g?.mode==='icrop'){G.g=null;commit();panel();paint();return} // 「トリミングを戻す」 appears once something is trimmed
   if(g?.mode==='mmove'&&!g.moved&&g.tap!=null){MS=[];D.sel=g.tap;G.g=null;panel();paint();return} // a tap on one of them: that one alone
   const tap=G.g&&G.g.mode==='move'&&!G.g.moved,was=tap&&G.g.was,L=sel();
   G.g=null;G.guides=null;commit();paint();
@@ -1063,7 +1064,7 @@ const BAR={
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
   shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
-  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],...(L.shape==='none'?[]:[['crop','中の位置',I.crop]]),['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
+  image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','トリミング',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
 };
 const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap','mgroup','mdup','mdel']);
 
@@ -1181,7 +1182,7 @@ const DRAW={
     ${L.shape==='none'?'<p class="enote">写真の形のまま、切り抜かずに置きます。透明な部分のある PNG は、透明なまま重なります。</p>':''}
     ${L.shape!=='circle'&&L.shape!=='none'?segs('ar',[[0,'元の形'],[1,'1:1'],[.8,'4:5'],[1.5,'3:2']]):''}
     ${slider('大きさ','w',40,2000,1)}${L.shape==='round'?slider('角丸','r',0,50,1):''}
-    ${L.shape==='circle'?'':`<p class="enote">写真の辺にある小さな四角を引くと、その辺からトリミングできます。</p>${L.crop?btns([['uncrop','トリミングを戻す']]):''}`}`,
+`,
   // with nothing selected it works on the background photo
   adj:L=>{
     if(!L&&!(photoBg(D)&&D.photoId))return `<p class="enote">背景が写真のときに使えます。重ねた写真は、写真をタップしてから「調整」で。</p>`;
@@ -1189,7 +1190,8 @@ const DRAW={
     return ADJ.map(([k,l])=>`<label class="erow wl"><span class="el">${l}</span><input type="range" data-adj="${k}" min="${k==='fade'?0:-100}" max="100" step="1" value="${a[k]||0}"><span class="ev" data-av="${k}">${a[k]||0}</span></label>`).join('')
       +btns([['adjreset','元に戻す'],...(!L&&P.pages.length>1?[['adjall','全ページの背景に当てる']]:[])]);
   },
-  crop:()=>`<p class="enote">開いている間は、写真を指で動かすと枠の中で位置が変わり、2本指で拡大できます。</p>${slider('拡大','zs',1,3,.01)}${slider('横','zx',-1,1,.01)}${slider('縦','zy',-1,1,.01)}`,
+  // トリミング: the side handles trim, and the photo moves and zooms inside its frame by hand or by slider.
+  crop:L=>`<p class="enote">${L.shape==='circle'?'':'写真の辺の四角を引くと、その辺から切れます。'}${L.shape==='none'?'':'写真を指で動かすと枠の中で位置が変わり、2本指で拡大できます。'}</p>${L.shape==='none'?'':slider('拡大','zs',1,3,.01)+slider('横','zx',-1,1,.01)+slider('縦','zy',-1,1,.01)}${L.crop?btns([['uncrop','トリミングを戻す']]):''}`,
 };
 
 function addImage(photoId,i=0){
