@@ -23,6 +23,10 @@ const NOSTART=/^[、。，．,.)）」』】〕〉》！？!?ー〜～…‥・�
 // worked on lives in D; P.pages keeps plain copies and is brought up to date by syncCur().
 const D={ratio:'4:5',W:OUT_W,H:Math.round(OUT_W*5/4),photo:{s:1,ox:0,oy:0},layers:[],sel:null,photoId:null};
 const P={pages:[],cur:0};
+// Several at once (as in Canva): MS holds their ids while D.sel stays empty. Layers that share a grp are a group:
+// touching one takes them all, and a tap on one of them while they are held picks just that one to edit.
+// addMode (選択を追加 on a phone, Shift on a computer) makes each tap add or take away.
+let MS=[],addMode=false;
 const photos=new Map();
 let uid=1;
 const newId=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -47,7 +51,7 @@ function loadInto(pg){for(const k of Object.keys(D))delete D[k];Object.assign(D,
 // Another page drawn in D's place for a moment. D gets its own objects back, not copies: anything still holding a
 // layer (a delete waiting on its confirm, a photo being picked) must find the same object afterwards.
 function withPage(pg,fn){const keep={...D};loadInto(pg);try{return fn()}finally{for(const k of Object.keys(D))delete D[k];Object.assign(D,keep)}}
-function goPage(i){syncCur();P.cur=i;loadInto(P.pages[i])}
+function goPage(i){syncCur();P.cur=i;loadInto(P.pages[i]);MS=[];addMode=false}
 const face=(L,ov)=>ov&&ov.id===L.id?{fam:ov.font[1],w:ov.font[4]}:{fam:L.fam,w:L.w};
 const fontStr=(f,size)=>`${f.w} ${size}px ${f.fam}, sans-serif`;
 const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`};
@@ -682,7 +686,34 @@ function draw(c,o={}){
       rotIcon(c,h.rot.x,h.rot.y,kk);
     }
   }
+  if(o.ui==='edit')drawMulti(c,M,kk);
   return M;
+}
+const mates=L=>L.grp?D.layers.filter(o=>o.grp===L.grp):[L];
+const msel=()=>MS.length>1?D.layers.filter(L=>MS.includes(L.id)):[];
+const multi=()=>msel().length>1;
+const grouped=Ls=>Ls.length>1&&!!Ls[0].grp&&Ls.every(L=>L.grp===Ls[0].grp)&&mates(Ls[0]).length===Ls.length;
+// The box round everything held, upright, in picture px.
+function ubox(Ls,M=G.M,kk=kE()){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const L of Ls){if(!M.has(L.id))continue;const b=box(L,M,kk),cs=Math.cos(L.rot),sn=Math.sin(L.rot);
+    for(const [i,j] of [[-1,-1],[1,-1],[1,1],[-1,1]]){const x=L.x+i*b.w/2*cs-j*b.h/2*sn,y=L.y+i*b.w/2*sn+j*b.h/2*cs;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}}
+  return {x0,y0,x1,y1,w:x1-x0,h:y1-y0,cx:(x0+x1)/2,cy:(y0+y1)/2};
+}
+function mhandles(u,kk){
+  const m=12*kk,at=(x,y)=>({x:Math.max(m,Math.min(D.W-m,x)),y:Math.max(m,Math.min(D.H-m,y))}),room=u.y1+52*kk<D.H;
+  return {corners:[[u.x0,u.y0],[u.x1,u.y0],[u.x1,u.y1],[u.x0,u.y1]].map(([x,y])=>at(x,y)),rot:at(u.cx,room?u.y1+34*kk:u.y0-34*kk)};
+}
+function drawMulti(c,M,kk){
+  if(G.g?.mode==='marq'){const a=G.g.p,b=G.g.q;c.save();c.fillStyle='rgba(196,154,144,.14)';c.strokeStyle='#c49a90';c.lineWidth=1.2*kk;c.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);c.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);c.restore()}
+  const Ls=msel().filter(L=>M.has(L.id));if(Ls.length<2)return;
+  c.save();c.setLineDash([4*kk,3*kk]);c.lineWidth=1.2*kk;c.strokeStyle='rgba(255,255,255,.95)';
+  for(const L of Ls){const b=box(L,M,kk);c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.strokeRect(-b.w/2,-b.h/2,b.w,b.h);c.restore()}
+  c.setLineDash([]);const u=ubox(Ls,M,kk),h=mhandles(u,kk);
+  c.lineWidth=3.5*kk;c.strokeStyle='rgba(40,25,15,.22)';c.strokeRect(u.x0,u.y0,u.w,u.h);c.lineWidth=1.5*kk;c.strokeStyle='#fff';c.strokeRect(u.x0,u.y0,u.w,u.h);
+  const dot=(x,y,r)=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();c.stroke()};
+  c.fillStyle='#fff';c.strokeStyle='rgba(40,25,15,.3)';c.lineWidth=kk;c.shadowColor='rgba(40,25,15,.3)';c.shadowBlur=4;
+  for(const q of h.corners)dot(q.x,q.y,6.5*kk);dot(h.rot.x,h.rot.y,13*kk);c.restore();rotIcon(c,h.rot.x,h.rot.y,kk);
 }
 function rotIcon(c,x,y,kk){
   const r=5.5*kk,a0=-Math.PI*.15,a1=Math.PI*1.35,s=3.4*kk,t=a1+Math.PI/2,px=x+r*Math.cos(a1),py=y+r*Math.sin(a1);
@@ -745,7 +776,7 @@ async function addPhotos(urls){
 let hist=[],redo=[];
 const snap=()=>{syncCur();return JSON.stringify(clone(P))};
 function commit(){const s=snap();if(hist.at(-1)===s)return;hist.push(s);if(hist.length>80)hist.shift();redo=[];syncUndo();stripSoon();autosave()}
-function restore(s){const o=JSON.parse(s);P.pages=o.pages;P.cur=o.cur;loadInto(P.pages[P.cur]);sizeCanvas();panel();refresh();syncUndo();renderStrip();emit('change')}
+function restore(s){MS=[];addMode=false;const o=JSON.parse(s);P.pages=o.pages;P.cur=o.cur;loadInto(P.pages[P.cur]);sizeCanvas();panel();refresh();syncUndo();renderStrip();emit('change')}
 function undo(){if(hist.length<2)return;redo.push(hist.pop());restore(hist.at(-1))}
 function redoIt(){if(!redo.length)return;const s=redo.pop();hist.push(s);restore(s)}
 function syncUndo(){$('#eundo').disabled=hist.length<2;$('#eredo').disabled=!redo.length}
@@ -810,25 +841,51 @@ const clampSz=(L,v)=>isText(L)?Math.max(12,Math.min(900,v)):Math.max(isShape(L)?
 function scaleBy(L,g,r){L[SZ(L)]=clampSz(L,g.size*r);if(isShape(L))L.h=Math.max(6,g.h*L.w/g.size)}
 // Level and upright pull the angle in; two fingers wobble more than the rotate handle, so they get a wider catch.
 function snapAngle(a,tol=.05){const d=Math.round(a/(Math.PI/2))*(Math.PI/2);return Math.abs(a-d)<tol?d:a}
-function deselect(){D.sel=null;tool=null;panel();paint()}
+function deselect(){D.sel=null;MS=[];addMode=false;tool=null;panel();paint()}
+// Where each held layer started, so a move, a resize or a turn works from there.
+const states=()=>msel().map(L=>({L,x:L.x,y:L.y,rot:L.rot,size:L[SZ(L)],h:L.h}));
+// Grow by r and turn by da round c, each layer keeping its place in the whole.
+function applyT(g,r,da){
+  const cs=Math.cos(da),sn=Math.sin(da);
+  for(const s of g.st){const vx=(s.x-g.c.x)*r,vy=(s.y-g.c.y)*r,L=s.L;L.x=g.c.x+vx*cs-vy*sn;L.y=g.c.y+vx*sn+vy*cs;L.rot=s.rot+da;L[SZ(L)]=clampSz(L,s.size*r);if(isShape(L))L.h=Math.max(1,s.h*r)}
+}
+// A tap with 選択を追加 on (or Shift held) adds what was touched, with its group, or takes it away again.
+function toggleIn(H){
+  const base=MS.length>1?[...MS]:D.sel?mates(sel()).map(o=>o.id):[],ids=mates(H).map(o=>o.id),has=ids.every(id=>base.includes(id));
+  const next=has?base.filter(id=>!ids.includes(id)):[...base,...ids.filter(id=>!base.includes(id))];
+  if(next.length>1){MS=next;D.sel=null}else{MS=[];D.sel=next[0]??null}
+}
 
 cv.addEventListener('pointerdown',e=>{
   try{cv.setPointerCapture(e.pointerId)}catch{}const p=pt(e);G.ptrs.set(e.pointerId,p);
-  const L=sel();
+  const L=sel(),many=multi();
   if(G.ptrs.size===2){
     const t=two();
     if(tool==='bg')G.g={mode:'pzoom',t,s:D.photo.s};
+    else if(many){const u=ubox(msel());G.g={mode:'mpinch',t,c:{x:u.cx,y:u.cy},st:states()}}
     else if(L)G.g={mode:'pinch',t,size:L[SZ(L)],h:L.h,rot:L.rot};
     return;
   }
   if(tool==='bg'){if(photoBg(D))G.g={mode:'pan',p,ox:D.photo.ox,oy:D.photo.oy};return}
-  const h=hitHandle(L,p);
-  if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h,box:layerBox(L)};return}
-  if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
-  if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
+  if(many){
+    const u=ubox(msel()),mh=mhandles(u,kE()),near=q=>Math.hypot(p.x-q.x,p.y-q.y)<22*kE(),c={x:u.cx,y:u.cy};
+    if(near(mh.rot)){G.g={mode:'mrot',c,a:Math.atan2(p.y-c.y,p.x-c.x),st:states()};return}
+    if(mh.corners.some(near)){G.g={mode:'mscale',c,d:Math.max(1,Math.hypot(p.x-c.x,p.y-c.y)),st:states()};return}
+  }
+  else{
+    const h=hitHandle(L,p);
+    if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h,box:layerBox(L)};return}
+    if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
+    if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
+  }
   const H=hitLayer(G.M,p,kE());
-  if(H){const was=D.sel===H.id;D.sel=H.id;G.g={mode:'move',p,x:H.x,y:H.y,was,moved:false};if(!was)panel()}
-  else{G.g=null;if(D.sel)deselect()}
+  if(H&&(addMode||e.shiftKey)){toggleIn(H);G.g=null;tool=null;panel();paint();return}
+  if(!H&&many){const u=ubox(msel());if(p.x>=u.x0&&p.x<=u.x1&&p.y>=u.y0&&p.y<=u.y1){G.g={mode:'mmove',p,st:states(),u,tap:null,moved:false};return}} // the gaps inside the box drag the lot too
+  if(H&&many&&MS.includes(H.id)){G.g={mode:'mmove',p,st:states(),u:ubox(msel()),tap:H.id,moved:false};paint();return}
+  if(H&&mates(H).length>1){MS=mates(H).map(o=>o.id);D.sel=null;tool=null;G.g={mode:'mmove',p,st:states(),u:ubox(msel()),tap:null,moved:false};panel();paint();return}
+  if(H){const was=D.sel===H.id;if(many)MS=[];D.sel=H.id;G.g={mode:'move',p,x:H.x,y:H.y,was,moved:false};if(!was||many)panel()}
+  else if(e.pointerType==='mouse'){if(D.sel||MS.length)deselect();G.g={mode:'marq',p,q:p}} // a mouse drag on nothing draws a box round what to take
+  else{G.g=null;if(D.sel||MS.length)deselect()}
   paint();
 });
 cv.addEventListener('pointermove',e=>{
@@ -839,6 +896,17 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
+  else if(g.mode==='marq')g.q=p;
+  else if(g.mode==='mmove'){
+    if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;g.moved=true;
+    let dx=p.x-g.p.x,dy=p.y-g.p.y;const u=g.u,T=targets(new Set(g.st.map(s=>s.L))),thr=SNAP*kE();
+    const gx=nearest([u.x0+dx,u.cx+dx,u.x1+dx],T.xs,thr),gy=nearest([u.y0+dy,u.cy+dy,u.y1+dy],T.ys,thr);
+    dx+=gx?gx.d:0;dy+=gy?gy.d:0;for(const s of g.st){s.L.x=s.x+dx;s.L.y=s.y+dy}
+    G.guides={x:gx?.t??null,y:gy?.t??null};
+  }
+  else if(g.mode==='mscale')applyT(g,Math.max(.05,Math.hypot(p.x-g.c.x,p.y-g.c.y)/g.d),0);
+  else if(g.mode==='mrot')applyT(g,1,snapAngle(Math.atan2(p.y-g.c.y,p.x-g.c.x)-g.a));
+  else if(g.mode==='mpinch'&&G.ptrs.size===2){const t=two();applyT(g,Math.max(.05,t.d/g.t.d),snapAngle(t.a-g.t.a,.1))}
   else if(g.mode==='move'&&L){
     if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;g.moved=true;
     const r=snapBox(L,g.x+p.x-g.p.x,g.y+p.y-g.p.y,SNAP*kE());L.x=r.x;L.y=r.y;G.guides=r.guides;
@@ -854,9 +922,9 @@ function lines(L,x=L.x,y=L.y){
   const b=layerBox(L),sw=Math.abs(Math.sin(L.rot))>.5,w=sw?b.h:b.w,h=sw?b.w:b.h;
   return straight(L)?{xs:[x-w/2,x,x+w/2],ys:[y-h/2,y,y+h/2]}:{xs:[x],ys:[y]};
 }
-function targets(L){
-  const xs=[0,D.W/2,D.W],ys=[0,D.H/2,D.H];
-  for(const o of D.layers)if(o!==L&&G.M.has(o.id)){const l=lines(o);xs.push(...l.xs);ys.push(...l.ys)}
+function targets(L){ // L: the layer being moved, or a Set of them
+  const xs=[0,D.W/2,D.W],ys=[0,D.H/2,D.H],ex=L instanceof Set?L:new Set([L]);
+  for(const o of D.layers)if(!ex.has(o)&&G.M.has(o.id)){const l=lines(o);xs.push(...l.xs);ys.push(...l.ys)}
   return {xs,ys};
 }
 const SNAP=8; // screen px, as in tldraw, Excalidraw and GIMP
@@ -890,6 +958,13 @@ function snapMove(L,x,y,thr){
 function endPtr(e){
   if(!G.ptrs.has(e.pointerId))return;G.ptrs.delete(e.pointerId);
   if(G.ptrs.size)return;
+  const g=G.g;
+  if(g?.mode==='marq'){ // everything whose middle is inside the box, with its group
+    const x0=Math.min(g.p.x,g.q.x),x1=Math.max(g.p.x,g.q.x),y0=Math.min(g.p.y,g.q.y),y1=Math.max(g.p.y,g.q.y),ids=[];
+    if((x1-x0)/kE()>4||(y1-y0)/kE()>4)for(const o of D.layers)if(G.M.has(o.id)&&o.x>=x0&&o.x<=x1&&o.y>=y0&&o.y<=y1)for(const m of mates(o))if(!ids.includes(m.id))ids.push(m.id);
+    G.g=null;if(ids.length>1)MS=ids;else D.sel=ids[0]??null;panel();paint();return;
+  }
+  if(g?.mode==='mmove'&&!g.moved&&g.tap!=null){MS=[];D.sel=g.tap;G.g=null;panel();paint();return} // a tap on one of them: that one alone
   const tap=G.g&&G.g.mode==='move'&&!G.g.moved,was=tap&&G.g.was,L=sel();
   G.g=null;G.guides=null;commit();paint();
   if(tap&&isImg(L)&&!L.photoId)$('#eimgswap').click(); // an empty frame: one tap to fill it
@@ -923,16 +998,20 @@ const I={
   more:ic('<path d="M12 4.5l8 4-8 4-8-4z"/><path d="M4 12.5l8 4 8-4"/><path d="M4 16.5l8 4 8-4"/>'),
   shape:ic('<circle cx="9" cy="9" r="5.2"/><rect x="11" y="11" width="9.5" height="9.5" rx="2"/>'),
   adj:ic('<path d="M4 7h9M17.5 7h2.5M4 17h2.5M11 17h9"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="8.8" cy="17" r="2.2"/>'),
+  group:ic('<rect x="3.5" y="3.5" width="17" height="17" rx="2.5" stroke-dasharray="2.6 2.4"/><rect x="7" y="7" width="6.5" height="6.5" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/>'),
+  dup:ic('<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 00-1.5-1.5H6A1.5 1.5 0 004.5 6v8A1.5 1.5 0 006 15.5h2.5"/>'),
+  del:ic('<path d="M5 7h14M10 7V5h4v2M7 7l1 12.5h8L17 7"/>'),
   crop:ic('<path d="M12 3.5v17M3.5 12h17M9.3 6.2L12 3.5l2.7 2.7M9.3 17.8l2.7 2.7 2.7-2.7M6.2 9.3L3.5 12l2.7 2.7M17.8 9.3l2.7 2.7-2.7 2.7"/>'),
 };
 const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
+  multi:()=>[['done','完了',I.done],['mgroup',grouped(msel())?'グループ解除':'グループ化',I.group],['mdup','複製',I.dup],['mdel','削除',I.del]],
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
   shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
   image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],...(L.shape==='none'?[]:[['crop','中の位置',I.crop]]),['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
 };
-const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap']);
+const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap','mgroup','mdup','mdel']);
 
 const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
@@ -1111,6 +1190,22 @@ function openShapes(){
   }
   shSheet.hidden=false;
 }
+function groupToggle(){
+  const Ls=msel();if(Ls.length<2)return;
+  if(grouped(Ls)){for(const L of Ls)delete L.grp;toast('グループを解除しました')}
+  else{const id=newId('g');for(const L of Ls)L.grp=id;toast('グループにしました。1つをタップすると全部が選ばれます')}
+  addMode=false;commit();panel();paint();
+}
+function dupMulti(){
+  const Ls=msel();if(Ls.length<2)return;const gm=new Map(),ids=[];
+  for(const L of Ls){const n=Object.assign(clone(L),{id:uid++,x:L.x+D.W*.04,y:L.y+D.W*.04});if(L.grp){if(!gm.has(L.grp))gm.set(L.grp,newId('g'));n.grp=gm.get(L.grp)}D.layers.push(n);ids.push(n.id)}
+  MS=ids;addMode=false;commit();panel();refresh();
+}
+async function removeMulti(){
+  const Ls=msel();if(Ls.length<2)return;
+  if(!await ask(`選んだ${Ls.length}つを消しますか？`,{ok:'消す'}))return;
+  const gone=new Set(Ls.map(L=>L.id));D.layers=D.layers.filter(L=>!gone.has(L.id));MS=[];addMode=false;tool=null;commit();panel();paint();
+}
 async function removeSelected(){
   const L=sel();if(!L)return;
   if(!await ask(isText(L)?'この文字を消しますか？':isShape(L)?'この図形を消しますか？':'この写真を消しますか？',{ok:'消す'}))return;
@@ -1130,7 +1225,7 @@ function filterFonts(){
 }
 const bodyEl=$('#ebody');
 function panel(){
-  const L=sel(),items=BAR[!L?'none':isText(L)?'text':isShape(L)?'shape':'image'](L);
+  const L=sel(),items=BAR[multi()?'multi':!L?'none':isText(L)?'text':isShape(L)?'shape':'image'](L);
   if(L&&isText(L)){L.band.shape??='rect';L.band.line??={on:false,color:INK,w:3}}
   if(tool&&(ACT.has(tool)||!items.some(x=>x[0]===tool)))tool=null;
   $('#ebar').innerHTML=items.map(([k,l,svg])=>`<button data-tool="${k}" class="${tool===k?'on':''}${k==='done'?' done':''}">${svg}<span>${l}</span></button>`).join('');
@@ -1160,6 +1255,9 @@ $('#ebar').addEventListener('click',e=>{
     case 'design':openDesign();return;
     case 'edit':openText();return;
     case 'swap':$('#eimgswap').click();return;
+    case 'mgroup':groupToggle();return;
+    case 'mdup':dupMulti();return;
+    case 'mdel':removeMulti();return;
   }
   tool=tool===b.dataset.tool?null:b.dataset.tool;panel();paint();
 });
@@ -1194,20 +1292,29 @@ bodyEl.addEventListener('change',e=>{
   if(L&&t.dataset.pos){
     const v=parseFloat(t.value.replace(/[^\d.\-]/g,'')),b=layerBox(L);
     if(!isNaN(v)){if(t.dataset.pos==='x')L.x=v+b.w/2;else if(t.dataset.pos==='y')L.y=v+b.h/2;else L.rot=v*Math.PI/180}
-    commit();paint();syncPos();return;
+    showAlign(L);fadeAlign();commit();paint();syncPos();return;
   }
   if(adjLive){adjLive=false;paint()}commit();
 });
 bodyEl.addEventListener('focusin',e=>{if(e.target.classList.contains('num'))setTimeout(()=>e.target.select(),0)});
 bodyEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('num')){e.preventDefault();e.target.blur()}});
+// Nudging and typed X/Y never snap, but the same guide as a drag shows whenever an edge or the middle
+// sits on another layer's or the picture's (to within half a pixel), and fades a moment after.
+let alignT=0;
+function showAlign(L){
+  clearTimeout(alignT);if(!L){G.guides=null;return}
+  const l=lines(L),T=targets(L),on=(vs,ts)=>{for(const v of vs)for(const t of ts)if(Math.abs(t-v)<.5)return t;return null};
+  const x=on(l.xs,T.xs),y=on(l.ys,T.ys);G.guides=x==null&&y==null?null:{x,y};
+}
+const fadeAlign=()=>{clearTimeout(alignT);alignT=setTimeout(()=>{G.guides=null;paint()},900)};
 let nudgeT=0;
 bodyEl.addEventListener('pointerdown',e=>{
   const b=e.target.closest('[data-nudge]'),L=sel();if(!b||!L)return;e.preventDefault();
   const [dx,dy]=b.dataset.nudge.split(',').map(Number);let n=0;
-  const step=()=>{const k=n++<20?1:5;L.x+=dx*k;L.y+=dy*k;paint()};
+  const step=()=>{const k=n++<20?1:5;L.x+=dx*k;L.y+=dy*k;showAlign(L);paint()};
   step();clearTimeout(nudgeT);
   const go=()=>{step();nudgeT=setTimeout(go,50)};nudgeT=setTimeout(go,400);
-  const stop=()=>{clearTimeout(nudgeT);commit();removeEventListener('pointerup',stop);removeEventListener('pointercancel',stop)};
+  const stop=()=>{clearTimeout(nudgeT);fadeAlign();commit();removeEventListener('pointerup',stop);removeEventListener('pointercancel',stop)};
   addEventListener('pointerup',stop);addEventListener('pointercancel',stop);
 });
 bodyEl.addEventListener('click',e=>{
@@ -1262,15 +1369,16 @@ function dupSel(){const L=sel();if(!L)return;const n=Object.assign(clone(L),{id:
 /* ---------- the little bar over the selection (like Canva's): the way in to typing is right there ---------- */
 const flo=$('#efloat');
 function placeFloat(){
-  const L=sel(),busy=G.g&&(G.g.mode!=='move'||G.g.moved);
-  if(!L||tool==='bg'||!tedit.hidden||busy||!G.M.has(L.id)){flo.hidden=true;return}
-  const key=isText(L)?'t':isShape(L)?'s':L.photoId?'i':'e';
+  const L=sel(),many=multi(),busy=G.g&&((G.g.mode!=='move'&&G.g.mode!=='mmove')||G.g.moved);
+  if((!L&&!many)||tool==='bg'||!tedit.hidden||busy||(L&&!G.M.has(L.id))){flo.hidden=true;return}
+  const key=many?(grouped(msel())?'mg':'m'):(isText(L)?'t':isShape(L)?'s':L.photoId?'i':'e')+(addMode?'+':'');
   if(flo.dataset.key!==key){
     flo.dataset.key=key;
-    flo.innerHTML=(key==='t'?'<button data-fl="edit">編集</button>':key==='s'?'':`<button data-fl="swap">${key==='i'?'差し替え':'はめる'}</button>`)+'<button data-fl="dup">複製</button><button data-fl="del">削除</button>';
+    flo.innerHTML=many?`<button data-fl="group">${key==='mg'?'グループ解除':'グループ化'}</button><button data-fl="mdup">複製</button><button data-fl="mdel">削除</button>`
+      :(key[0]==='t'?'<button data-fl="edit">編集</button>':key[0]==='s'?'':`<button data-fl="swap">${key[0]==='i'?'差し替え':'はめる'}</button>`)+`<button data-fl="dup">複製</button><button data-fl="del">削除</button><button data-fl="add"${addMode?' class="on"':''}>選択を追加</button>`;
   }
   flo.hidden=false;
-  const h=handles(L,G.M,kE()),xs=h.corners.map(q=>q.x),ys=h.corners.map(q=>q.y);
+  const h=many?mhandles(ubox(msel()),kE()):handles(L,G.M,kE()),xs=h.corners.map(q=>q.x),ys=h.corners.map(q=>q.y);
   const cr=cv.getBoundingClientRect(),sr=$('#estage').getBoundingClientRect(),k=cr.width/D.W,fw=flo.offsetWidth,fh=flo.offsetHeight;
   const top=cr.top-sr.top+Math.min(...ys)*k,bot=cr.top-sr.top+Math.max(...ys)*k,rotBelow=h.rot.y>(Math.min(...ys)+Math.max(...ys))/2;
   // on the side away from the rotate handle; if that side has no room, the other side past the handle
@@ -1282,7 +1390,8 @@ function placeFloat(){
 }
 flo.addEventListener('click',e=>{
   const b=e.target.closest('[data-fl]');if(!b)return;
-  ({edit:()=>openText(),swap:()=>$('#eimgswap').click(),dup:dupSel,del:removeSelected})[b.dataset.fl]();
+  ({edit:()=>openText(),swap:()=>$('#eimgswap').click(),dup:dupSel,del:removeSelected,group:groupToggle,mdup:dupMulti,mdel:removeMulti,
+    add:()=>{addMode=!addMode;if(addMode)toast('ほかに選びたいものをタップしてください');placeFloat()}})[b.dataset.fl]();
 });
 
 const tedit=$('#etedit'),tarea=$('#etxt');
@@ -1698,8 +1807,9 @@ document.addEventListener('keydown',e=>{
   const typing=/TEXTAREA|INPUT/.test(document.activeElement?.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();e.shiftKey?redoIt():undo()}
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'&&!typing){e.preventDefault();redoIt()}
+  else if((e.key==='Delete'||e.key==='Backspace')&&!typing&&multi()){e.preventDefault();removeMulti()}
   else if((e.key==='Delete'||e.key==='Backspace')&&!typing&&sel()){e.preventDefault();removeSelected()}
-  else if(e.key==='Escape'){if(!tedit.hidden)closeText();else if(sel())deselect()}
+  else if(e.key==='Escape'){if(!tedit.hidden)closeText();else if(sel()||MS.length)deselect()}
 });
 $('#efile').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
