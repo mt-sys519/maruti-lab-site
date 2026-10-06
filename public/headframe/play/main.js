@@ -121,9 +121,12 @@ function buildBed(){
   // Wheel motors (the frame's feet roll, after the key art): a hub-motor whine that rises with ground speed
   // while BURST and its glide are on the wheels, and spins down when the frame is back on its feet.
   bed.motor=ac.createGain();bed.motor.gain.value=0;bed.motorF=ac.createBiquadFilter();bed.motorF.type='bandpass';bed.motorF.Q.value=3.2;bed.motorF.frequency.value=900;bed.motorF.connect(bed.motor).connect(sfxBus);
+  // Tyre scrub: rubber dragged sideways when the frame changes direction or turns while it rolls.
+  bed.scrub=ac.createGain();bed.scrub.gain.value=0;bed.scrubF=ac.createBiquadFilter();bed.scrubF.type='bandpass';bed.scrubF.Q.value=2.2;bed.scrubF.frequency.value=1700;
+  loop(noiseWhite).connect(bed.scrubF).connect(bed.scrub).connect(sfxBus);
   bed.motorO=[['square',0,.35],['sawtooth',-1200,.5]].map(([type,cents,g0])=>{const o=ac.createOscillator();o.type=type;o.frequency.value=220;o.detune.value=cents;const g=ac.createGain();g.gain.value=g0;o.connect(g).connect(bed.motorF);o.start();return o});
 }
-function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0,rolling=false){
+function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0,rolling=false,scrub=0){
   if(!ac||!bed.hum)return;
   const t=ac.currentTime,on=playing&&player.alive?1:0,v=clamp(speed/62,0,1.2),turn=clamp(Math.abs(turnRate)/.92,0,1),gim=clamp(Math.abs(gimbalLoad)/.55,0,1);
   bed.hum.gain.setTargetAtTime(on*(.022+v*.010+(boosting?.014:0)+(syncing?.008:0)),t,.15);
@@ -133,7 +136,8 @@ function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0,rolli
   const sf=150+turn*170+gim*140;for(const o of bed.servoO)o.frequency.setTargetAtTime(sf,t,.07);bed.servoF.frequency.setTargetAtTime(sf*4.2,t,.07);
   bed.wind.gain.setTargetAtTime(on*Math.min(.085,v*v*.05+(boosting?.05:0)),t,.10);
   bed.windF.frequency.setTargetAtTime(700+speed*32+(boosting?1100:0),t,.12);
-  if(bed.motor){bed.motor.gain.setTargetAtTime(on*(rolling?(boosting?.05:.008+Math.min(1,v)*.024):0),t,rolling?.05:.22);
+  if(bed.scrub){bed.scrub.gain.setTargetAtTime(on*(rolling?Math.min(.07,scrub*.07):0),t,.04);bed.scrubF.frequency.setTargetAtTime(1500+scrub*700,t,.05)}
+  if(bed.motor){bed.motor.gain.setTargetAtTime(on*(rolling?(boosting?.06:.018+Math.min(1,v)*.05):0),t,rolling?.05:.22);
     const mf=rolling?240+speed*15:140;for(const o of bed.motorO)o.frequency.setTargetAtTime(mf,t,rolling?.06:.35);bed.motorF.frequency.setTargetAtTime(mf*2.6,t,.08)}
 }
 // Music clock ------------------------------------------------------------------
@@ -217,11 +221,17 @@ const sfx={
     burst({hp:4200,d:.012,g:.26,pri:3});burst({bp:1900*r,bp2:600,q:.8,d:.12,g:.32,pri:3});
     tone({f:120*r,f2:38,glide:.16,d:.32,g:.5,crush:true,pri:3});burst({pink:true,lp:1600,lp2:200,fd:.9,d:1.1,g:.09,rev:.35,dly:.12});
     burst({t:ac.currentTime+.28,bp:3200,q:5,d:.035,g:.05});burst({t:ac.currentTime+.5,bp:2400,q:4,d:.05,g:.05})},
-  boost(){if(!ac)return;tone({f:92,f2:50,glide:.2,d:.34,g:.38,crush:true,pri:3});
-    // the wheels bite: a short tyre chirp on top of the thrust
-    burst({bp:2600,bp2:1500,fd:.14,q:7,d:.18,g:.10,pri:3});
-    burst({bp:520,bp2:2900,fd:.22,q:.8,d:.42,g:.24,pri:3});burst({pink:true,lp:5200,lp2:700,fd:.5,d:.6,g:.12,rev:.12});
-    tone({f:110,f2:262,glide:.2,type:'sawtooth',d:.28,g:.03,lp:1500})},
+  // BURST on the ground is the wheels: the hub motors scream up while the tyres spin and squeal, then bite.
+  boost(){if(!ac)return;const now=ac.currentTime;
+    tone({type:'sawtooth',f:180,f2:760,glide:.22,a:.01,d:.42,g:.05,lp:2400,pri:3});tone({type:'square',f:90,f2:380,glide:.22,a:.01,d:.38,g:.03,lp:1400});
+    burst({bp:2300,bp2:1700,fd:.3,q:6,a:.01,d:.34,g:.13,pri:3});burst({bp:3100,bp2:2400,fd:.25,q:9,a:.02,d:.26,g:.06});
+    burst({lp:420,lp2:180,fd:.3,d:.36,g:.2})},
+  bite(){if(!ac)return;tone({f:88,f2:44,glide:.12,d:.24,g:.36,crush:true,pri:3});burst({pink:true,lp:1600,lp2:300,fd:.25,d:.3,g:.18})},
+  // BURST in the air is the backpack: a jet that keeps pushing.
+  jet(){if(!ac)return;tone({f:92,f2:50,glide:.2,d:.34,g:.3,crush:true,pri:3});
+    burst({bp:520,bp2:2900,fd:.22,q:.8,a:.02,d:.6,g:.26,pri:3});burst({pink:true,lp:5200,lp2:700,fd:.6,a:.03,d:.75,g:.14,rev:.15});burst({hp:3000,a:.05,hold:.2,d:.35,g:.05})},
+  // A tyre crossing a deck joint: a small low knock with a click.
+  joint(k=1,pan=0){if(!ac)return;tone({f:64+Math.random()*10,f2:40,glide:.06,d:.09,g:.13*k,crush:true,pan});burst({bp:1300+Math.random()*500,q:2.5,d:.025,g:.04*k,pan})},
   damage(){if(!ac)return;const now=ac.currentTime;tone({f:110,f2:48,glide:.25,d:.3,g:.48,crush:true,pri:3});burst({pink:true,lp:2600,lp2:380,d:.28,g:.36,crush:true,pri:3});
     tone({f:880,type:'square',d:.09,g:.020,lp:2400,pri:2});tone({t:now+.11,f:660,type:'square',d:.10,g:.018,lp:2200,pri:2});tone({f:2350,d:.45,g:.006});duckMusic(.38,.6)},
   impact(){if(!ac)return;tone({f:96,f2:44,glide:.28,d:.38,g:.46,crush:true,pri:3});burst({pink:true,lp:800,d:.24,g:.2});for(const [f,g] of [[182,.022],[497,.016],[973,.010]])tone({f,d:.45,g,rev:.2})},
@@ -292,7 +302,7 @@ musicVol.addEventListener('input',()=>{if(musicBus)musicBus.gain.setTargetAtTime
 const EYE_Y=3.25, WORLD=155;let CAMERA_Y=EYE_Y;
 const player={x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0};
 const buildings=[],enemies=[],playerBolts=[],enemyBolts=[],missiles=[],rockets=[],particles=[],shards=[],waves=[],debris=[],lights=[],keys=new Set(),mouseButtons=new Set();
-let playing=false,last=performance.now(),gameTime=0,lastFire=-Infinity,boostLatch=false,missionClear=false,lastLockedId=0,lastSightLinkId=0,lastDesignatedId=0,visualContact=null,hitStop=0,inboundCooldown=0,missionTime=0;
+const wheelKnock=[];let playing=false,last=performance.now(),gameTime=0,lastFire=-Infinity,boostLatch=false,missionClear=false,lastLockedId=0,lastSightLinkId=0,lastDesignatedId=0,visualContact=null,hitStop=0,inboundCooldown=0,missionTime=0;
 const stats={shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0};
 const combat={primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity};
 let seed=17;function hash(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
@@ -389,7 +399,7 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,pumpT:-9,scope:0,scopeOn:false,swing:null});cockpit.axeTrail=[];rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':stage===3?'-Sector 03: Freight tunnel. Walkers inbound.':'-Sector: Vector Foundry 07.');if(secondArms().length)plog('System',`-Second arm${secondArms().length>1?'s':''}: ${secondArms().map(w=>w+(w==='ARBALEST'?' [scope]':'')).join(' / ')}.`)}
+function reset(){if(mode==='endurance')stage=1;buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,pumpT:-9,scope:0,scopeOn:false,swing:null,dashSpin:0,dashJet:null,dashDir:null,dashSlide:false,airDashed:false,scrub:0,jointZ:null,jointX:null});wheelKnock.length=0;cockpit.axeTrail=[];rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;plog('System','-Combat mode activate.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Skydeck. Flights overhead.':stage===3?'-Sector 03: Freight tunnel. Walkers inbound.':'-Sector: Vector Foundry 07.');if(secondArms().length)plog('System',`-Second arm${secondArms().length>1?'s':''}: ${secondArms().map(w=>w+(w==='ARBALEST'?' [scope]':'')).join(' / ')}.`)}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
@@ -503,10 +513,26 @@ function doJump(){if(!playing||!player.alive||missionClear||player.jy>0||player.
   for(let i=0;i<14;i++)particles.push({x:player.x+(Math.random()-.5)*2.4,y:.1,z:player.z+(Math.random()-.5)*2.4,px:player.x,py:.1,pz:player.z,vx:(Math.random()-.5)*7,vy:.4+Math.random()*1.4,vz:(Math.random()-.5)*7,life:.3+Math.random()*.3,max:.6,color:i%3?'#c8b89d':'#ffb35c',size:.3+Math.random()*.6})}
 function updateJump(dt){player.jumpCd=Math.max(0,player.jumpCd-dt);
   if(player.jy>0||player.jvy>0){player.jvy-=JUMP.g*dt;player.jy+=player.jvy*dt;
-    if(player.jy<=0){const k=clamp(-player.jvy/JUMP.v,.3,1.4);player.jy=0;player.jvy=0;player.jumpCd=.2;cockpit.heaveV-=3.2*k;player.shake=Math.max(player.shake,.35*k);sfx.land(k);shockwave(player.x,.06,player.z,'#c8b89d',5*k,.45,'ground');
+    if(player.jy<=0){const k=clamp(-player.jvy/JUMP.v,.3,1.4);player.airDashed=false;player.jy=0;player.jvy=0;player.jumpCd=.2;cockpit.heaveV-=3.2*k;player.shake=Math.max(player.shake,.35*k);sfx.land(k);shockwave(player.x,.06,player.z,'#c8b89d',5*k,.45,'ground');
       for(let i=0;i<16;i++)particles.push({x:player.x+(Math.random()-.5)*3,y:.1,z:player.z+(Math.random()-.5)*3,px:player.x,py:.1,pz:player.z,vx:(Math.random()-.5)*9*k,vy:.3+Math.random(),vz:(Math.random()-.5)*9*k,life:.3+Math.random()*.35,max:.65,color:'#c8b89d',size:.3+Math.random()*.7})}}
   CAMERA_Y=EYE_Y+player.jy}
-function doBoost(){const d=inputDir();if(!playing||missionClear||(Math.abs(d.sx)+Math.abs(d.sz))<.1||player.boostCool>0||player.boost<24||!player.alive)return;player.boost-=24;player.boostCool=.18;player.regenDelay=.75;player.boostTime=.23;player.glideTime=0;player.boostTrailClock=0;player.fovKick=1;const power=Math.abs(d.sx)>.4?52:60;player.vx=d.x*power;player.vz=d.z*power;player.shake=.8;player.roll=clamp(-d.sx*.065,-.065,.065);for(let i=0;i<20;i++)particles.push({x:player.x-d.x*(1+Math.random()*2)+(Math.random()-.5)*2,y:.25+Math.random()*.6,z:player.z-d.z*(1+Math.random()*2)+(Math.random()-.5)*2,px:player.x,py:.2,pz:player.z,vx:-d.x*(2+Math.random()*8)+(Math.random()-.5)*4,vy:Math.random()*2,vz:-d.z*(2+Math.random()*8)+(Math.random()-.5)*4,life:.3+Math.random()*.35,max:.65,color:'#5fe8c4',size:.2+Math.random()*.8});waves.push({x:player.x,y:.06,z:player.z,color:'#67ffd1',size:11,life:.38,max:.38,kind:'ground'});flash('boostVignette',180);sfx.boost()}
+// BURST. On the ground it is the wheels: 0.06 s of wheelspin (the frame squats, the tyres scream), then they
+// bite and throw the frame; a sideways burst slides a little at the end. In the air it is the backpack: one
+// push per jump, a little softer but held longer, a lift, more boost, the old jet sound.
+const DASH={spin:.06,cost:24,air:34};
+function doBoost(){const d=inputDir();if(!playing||missionClear||(Math.abs(d.sx)+Math.abs(d.sz))<.1||player.boostCool>0||!player.alive)return;const air=player.jy>0;
+  if(air?(player.airDashed||player.boost<DASH.air):player.boost<DASH.cost)return;player.boost-=air?DASH.air:DASH.cost;player.boostCool=.18;player.regenDelay=.75;player.glideTime=0;player.boostTrailClock=0;player.roll=clamp(-d.sx*.065,-.065,.065);
+  const side=Math.abs(d.sx)>.4,power=side?52:60;
+  if(air){player.airDashed=true;player.dashSpin=0;player.boostTime=.36;player.dashSlide=false;player.vx=d.x*power*.78;player.vz=d.z*power*.78;player.jvy=Math.max(player.jvy,2.6);player.fovKick=.8;player.shake=.55;player.dashJet=[d.x*power*.78,d.z*power*.78];
+    for(let i=0;i<16;i++)particles.push({x:player.x-d.x*1.5+(Math.random()-.5)*1.4,y:CAMERA_Y+.4+Math.random()*.6,z:player.z-d.z*1.5+(Math.random()-.5)*1.4,px:player.x,py:CAMERA_Y,pz:player.z,vx:-d.x*(8+Math.random()*8)+(Math.random()-.5)*3,vy:-1-Math.random()*3,vz:-d.z*(8+Math.random()*8)+(Math.random()-.5)*3,life:.25+Math.random()*.3,max:.55,color:i%3?'#8fd8ff':'#e8f6ff',size:.3+Math.random()*.7,g:0});
+    flash('boostVignette',220);sfx.jet();return}
+  player.dashJet=null;player.dashSpin=DASH.spin;player.boostTime=DASH.spin+.23;player.dashDir=[d.x*power,d.z*power];player.dashSlide=side;player.shake=.35;cockpit.heaveV-=1.4;
+  for(let i=0;i<14;i++)particles.push({x:player.x+(Math.random()-.5)*2.6,y:.12,z:player.z+(Math.random()-.5)*2.6,px:player.x,py:.1,pz:player.z,vx:-d.x*(3+Math.random()*7)+(Math.random()-.5)*5,vy:.3+Math.random()*1.2,vz:-d.z*(3+Math.random()*7)+(Math.random()-.5)*5,life:.2+Math.random()*.25,max:.45,color:i%3?'#c8b89d':'#8a8478',size:.3+Math.random()*.7});
+  sfx.boost()}
+// The wheels bite at the end of the spin: the frame is thrown, the ground ring goes out.
+function dashBite(){const D=player.dashDir;if(!D)return;player.vx=D[0];player.vz=D[1];player.fovKick=1;player.shake=.8;cockpit.heaveV+=2.2;const l=Math.hypot(D[0],D[1])||1,dx=D[0]/l,dz=D[1]/l;
+  for(let i=0;i<20;i++)particles.push({x:player.x-dx*(1+Math.random()*2)+(Math.random()-.5)*2,y:.25+Math.random()*.6,z:player.z-dz*(1+Math.random()*2)+(Math.random()-.5)*2,px:player.x,py:.2,pz:player.z,vx:-dx*(2+Math.random()*8)+(Math.random()-.5)*4,vy:Math.random()*2,vz:-dz*(2+Math.random()*8)+(Math.random()-.5)*4,life:.3+Math.random()*.35,max:.65,color:'#5fe8c4',size:.2+Math.random()*.8});
+  waves.push({x:player.x,y:.06,z:player.z,color:'#67ffd1',size:11,life:.38,max:.38,kind:'ground'});flash('boostVignette',180);sfx.bite()}
 
 // ---------- MAUL (bazooka) ----------
 // The arm's second weapon: one rocket per click (holding the button does not repeat), slow and heavy,
@@ -2498,13 +2524,16 @@ function update(dt){
     const moving=Math.abs(d.sx)+Math.abs(d.sz)>.05;
     const targetSpeed=(d.sz<-.25?13.5:Math.abs(d.sx)>.35?16.5:19.5)*(player.syncTime>0?1.12:1)*(player.swing?.45:1);
     const braking=moving&&speed>1&&(player.vx*d.x+player.vz*d.z)/speed<-.25;
-    const rate=braking?10.5:player.glideTime>0?(moving?3.8:3.2):moving?8.5:7.0;
+    // Motor torque: strong off the line, tapering toward top speed (braking and coasting unchanged).
+    const accel=moving&&!braking&&speed<targetSpeed,rate=braking?10.5:player.glideTime>0?(moving?3.8:3.2):accel?clamp(13*(1-.75*speed/targetSpeed),3.2,13):moving?8.5:7.0;
     const k=1-Math.exp(-rate*(airborne?JUMP.air:1)*dt);player.vx=lerp(player.vx,d.x*targetSpeed,k);player.vz=lerp(player.vz,d.z*targetSpeed,k);
     player.glideTime=Math.max(0,player.glideTime-dt);
   }
   if(boostedThisStep){
+    if(player.dashSpin>0){player.dashSpin-=dt;if(player.dashSpin<=0){player.dashSpin=0;dashBite()}}
+    if(player.dashJet){player.vx=player.dashJet[0];player.vz=player.dashJet[1]}
     player.boostTime=Math.max(0,player.boostTime-dt);
-    if(player.boostTime===0)player.glideTime=.24;
+    if(player.boostTime===0){player.glideTime=player.dashSlide?.4:.24;player.dashJet=null}
     player.boostTrailClock-=dt;
     while(player.boostTrailClock<=0){
       player.boostTrailClock+=1/60;
@@ -2538,7 +2567,17 @@ function update(dt){
   player.camPitch=lerp(player.camPitch,player.pitch*.34+Math.max(0,player.pitch-.18)*.55,1-Math.exp(-5.5*dt));
   // The frame rolls on the wheels at its feet (key art): no footfalls, no stride. Its weight is in the
   // suspension instead (the spring pitch below, the lean in turns) and in the landing after a jump.
-  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,player.jy<=0&&(speed>.55||player.boostTime>0||player.glideTime>0));
+  // Deck joints: the deck is laid in 6 m x 5.83 m panels. Each time the wheels cross a joint the front
+  // pair knocks and the rear pair follows a wheelbase later (2.4 m), with a small jolt. The spacing comes
+  // from the speed, so it never settles into a beat.
+  if(player.jy<=0&&speed>2.5&&player.alive){const jz=Math.floor(player.z/6),jx=Math.floor((player.x+17.5)/5.83);
+    if(player.jointZ!=null&&(jz!==player.jointZ||jx!==player.jointX)){const k=clamp(speed/30,.35,1.3);sfx.joint(k);cockpit.heaveV-=.35*k;wheelKnock.push(gameTime+2.4/speed)}
+    player.jointZ=jz;player.jointX=jx}else{player.jointZ=player.jointX=null}
+  for(let i=wheelKnock.length-1;i>=0;i--)if(gameTime>=wheelKnock[i]){wheelKnock.splice(i,1);const k=clamp(speed/30,.35,1.3)*.8;sfx.joint(k);cockpit.heaveV-=.25*k}
+  // Scrub: sideways acceleration of the velocity (a change of direction) plus the chassis turning while it rolls.
+  {const ax=(player.vx-player.prevVx)/Math.max(dt,1e-3),az=(player.vz-player.prevVz)/Math.max(dt,1e-3),l=speed||1,lat=Math.abs(ax*(-player.vz/l)+az*(player.vx/l));
+    player.scrub=lerp(player.scrub||0,speed>3&&player.boostTime<=0?clamp(lat/55+Math.abs(player.yawVelocity)*speed/40,0,1):0,1-Math.exp(-dt*12))}
+  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,player.jy<=0&&(speed>.55||player.boostTime>0||player.glideTime>0),player.scrub);
   {let awakeN=0,committed=false;for(const e of enemies)if(e.alive&&e.awake){awakeN++;if(e.firePending||e.lungeWindup>0)committed=true}music.target=!player.alive?0:missionClear?.1:clamp(.2+awakeN*.16+(committed?.12:0)+(player.syncTime>0?.6:0),0,1)}
   updateCockpit(dt);
   updateVisualDesignation(dt);
