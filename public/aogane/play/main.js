@@ -3230,7 +3230,7 @@ requestAnimationFrame(loop);
 function saySortie(){return(stage===2?say('SORTIE_TUNNEL'):stage===3?say('SORTIE_DECK'):false)||say('SORTIE')}
 function nextSector(){stage=Math.min(LAST_SECTOR,stage+1);reset();saySortie()}
 function startGame(lock=true){
-  ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');everStarted=true;$('playLabel').textContent='再開';$('playNote').textContent='';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
+  ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');everStarted=true;$('toTitle').classList.remove('hidden');$('playLabel').textContent='再開';$('playNote').textContent='';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
   if(lock){
     const failed=()=>{pause();$('status').textContent='マウスを固定できませんでした。Chrome か Edge で開いてください'};
     try{if(canvas.requestPointerLock){const pending=canvas.requestPointerLock();pending?.catch(failed)}else failed()}
@@ -3242,11 +3242,14 @@ $('resultKeys').addEventListener('click',e=>{const a=e.target?.closest?.('button
   if(a==='mission'){setMode('sortie');playLabel();saySortie()}else if(a==='next')nextSector();else if(a==='restart'){stage=1;reset();say('SORTIE')}else{reset();say('REDEPLOY')}canvas.focus?.();try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}});
 // Camera gate: the head is the point of the game, so the first 出撃 with the camera off stops on a page that
 // says so, with turning it on as the big button. Choosing to go without is remembered (hf.camGate).
-let everStarted=false,camGateSkip=false;try{camGateSkip=localStorage.getItem('hf.camGate')==='skip'}catch{}
+let everStarted=false,gateSeen=false,camGateSkip=false;try{camGateSkip=localStorage.getItem('hf.camGate')==='skip'}catch{}
 function showCamGate(on){$('camGate').classList.toggle('hidden',!on);boot.classList.toggle('gated',on)}
 // Every ミッション opens with the tutorial; once it has been finished (hf.tutorial) Tab skips it.
 function playLabel(){if(everStarted)return;$('playNote').textContent=tutDone?'3つのエリアを攻略':'はじめは操作説明から'}
-function begin(m){if(!everStarted||mode!==m)setMode(m);if(!headEnabled&&!camGateSkip&&!everStarted){showCamGate(true);sfx.ui();return}startGame(true)}
+function begin(m){if(!everStarted||mode!==m)setMode(m);if(!headEnabled&&!camGateSkip&&!everStarted&&!gateSeen){gateSeen=true;showCamGate(true);sfx.ui();return}startGame(true)}
+// ESC mid-run opens this same menu over the frozen sortie; タイトルへ戻る drops the run and brings the cover back.
+function toTitle(){sfx.ui();playing=false;everStarted=false;stage=1;setMode('sortie');$('cover')?.classList.remove('hidden');boot.classList.remove('started');$('toTitle').classList.add('hidden');$('playLabel').textContent='ミッション';playLabel();$('status').textContent=''}
+$('toTitle').addEventListener('click',toTitle);
 $('play').addEventListener('click',()=>{if(everStarted){startGame(true);return}begin('training')});
 // Turning the camera on and locking the pointer in one click would hide the cursor under the browser's
 // camera prompt, so the gate waits for the camera and then offers 出撃 (the pointer lock needs that click).
