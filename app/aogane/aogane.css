@@ -121,7 +121,7 @@
   radial-gradient(60% 60% at 100% 100%,rgba(194,123,255,.08),transparent 70%),#0d0709}
 .hfBand-sectors{--wm:rgba(255,255,255,.07);background:
   linear-gradient(90deg,#05090a 0%,rgba(5,9,10,.94) 45%,rgba(5,9,10,.55) 100%),
-  url(/aogane/play/assets/cover.webp) right center/cover no-repeat,#05090a}
+  url(/aogane/play/assets/cover.webp?v=2) right center/cover no-repeat,#05090a}
 .hfBand .hfEntries div{background:linear-gradient(135deg,rgba(5,9,10,.72),rgba(5,9,10,.5));backdrop-filter:blur(2px)}
 .hfBand .hfSteps li{background:rgba(5,9,10,.6)}
 
