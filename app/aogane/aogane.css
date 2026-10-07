@@ -53,6 +53,17 @@
 .hfSection p,.hfSection li{font-size:14px;line-height:2;letter-spacing:.03em;color:#d0d9d6}
 .hfSection p{margin:0 0 14px}
 .hfSection ul{margin:0 0 14px;padding-left:1.2em}
+.hfSection h3{margin:28px 0 8px;font-size:15px;font-weight:600;letter-spacing:.06em;color:var(--hf-ink)}
+.hfSection h2+h3{margin-top:0}
+.hfGuide{display:flex;flex-wrap:wrap;gap:8px 20px;padding:20px 0;border-bottom:1px solid var(--hf-line);font-size:12px;letter-spacing:.12em}
+.hfGuide a{color:#c0ceca;text-decoration:none;border-bottom:1px solid transparent}
+.hfGuide a:hover{color:var(--hf-ink);border-color:var(--hf-ink)}
+.hfEntries{margin:8px 0 22px;border-top:1px solid var(--hf-line)}
+.hfEntries div{display:grid;grid-template-columns:180px 1fr;gap:16px;padding:14px 0;border-bottom:1px solid var(--hf-line)}
+.hfEntries dt{font-size:15px;letter-spacing:.14em;line-height:1.3}
+.hfEntries dt span{display:block;margin-top:6px;font-size:11px;letter-spacing:.08em;color:var(--hf-muted)}
+.hfEntries dd{margin:0;font-size:14px;line-height:1.9;color:#d0d9d6}
+[id]{scroll-margin-top:16px}
 .hfSmall{font-size:12px !important;color:var(--hf-muted) !important}
 
 .hfKeys{display:grid;grid-template-columns:1fr;max-width:640px;margin:0 0 22px}
@@ -74,6 +85,7 @@
   .hfLead br{display:none}
   .hfKeys div{grid-template-columns:104px 80px 1fr}
   .hfCast div{grid-template-columns:1fr;gap:8px}
+  .hfEntries div{grid-template-columns:1fr;gap:8px}
 }
 
 /* 蒼鉄 in the game's title face (Shippori Mincho B1 ExtraBold, close to the lettering on the key art):
