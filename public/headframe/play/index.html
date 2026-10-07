@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0a0f12">
   <title>HEADFRAME | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=37">
+  <link rel="stylesheet" href="styles.css?v=38">
 </head>
 <body>
 <main id="app">
@@ -23,8 +23,11 @@
     <div class="primaryActions">
       <button id="play" class="deploy">DEPLOY</button>
       <button id="endure" class="endure">ENDURANCE</button>
+      <button id="head" class="cam"><i class="lamp"></i><span id="headLabel">CAMERA : OFF</span></button>
+    </div>
+    <p id="camNote" class="camNote">顔の向きで周りを見ます。映像は端末の外に出ません。</p>
+    <div class="subActions">
       <button id="full">FULL SCREEN</button>
-      <button id="head">HEAD TRACKING</button>
       <button id="fx">GLOW : HIGH</button>
       <button id="reset">RESET</button>
     </div>
@@ -33,7 +36,7 @@
       <label><span>MASTER</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
       <label><span>MUSIC</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
       <label><span>MOUSE SENS</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
-      <label><span>HEAD GAIN</span><output id="gainout">3.0×</output><input id="gain" type="range" min="1" max="5" value="3" step="0.1"></label>
+      <label><span>HEAD GAIN</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
       <label><span>DEAD ZONE</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
       <label><span>SMOOTH</span><output id="smoothout">0.13</output><input id="smooth" type="range" min="0.04" max="0.35" value="0.13" step="0.01"></label>
     </div>
@@ -50,7 +53,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=44"></script>
+<script src="main.js?v=45"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=34"></script>

@@ -253,3 +253,22 @@
 .boot .statusLine:after{color:rgba(230,236,233,.4)}
 .boot .keyline{font-size:10px;line-height:1.8;letter-spacing:.06em}
 .boot .keyline b{letter-spacing:.1em}
+/* CAMERA sits with DEPLOY / ENDURANCE: the head is the point of the game. A lamp says its state (off,
+   loading blinks, on is blue, failed is red) and the line under it says what it is for or why it failed. */
+.boot .primaryActions .cam{display:inline-flex;align-items:center;gap:10px;min-width:170px;border-color:rgba(120,190,255,.55)}
+.cam .lamp{width:9px;height:9px;border-radius:50%;background:#3a4548;box-shadow:inset 0 0 0 1px rgba(230,236,233,.35);flex:none}
+.cam.loading .lamp{background:#8fc4ff;animation:camBlink .7s steps(2) infinite}
+.cam.on{border-color:#8fc4ff!important;color:#d8ecff}.cam.on .lamp{background:#6fb4ff;box-shadow:0 0 10px #6fb4ff,0 0 2px #fff}
+.cam.fail{border-color:rgba(255,110,96,.8)!important}.cam.fail .lamp{background:#ff6e60;box-shadow:0 0 8px rgba(255,110,96,.8)}
+@keyframes camBlink{50%{opacity:.25}}
+.camNote{margin:9px 0 0;font-size:11px;line-height:1.6;color:#b9c7c3;font-family:"Noto Sans JP",sans-serif;letter-spacing:.02em}
+.camNote:empty{display:none}
+.subActions{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.subActions button{height:28px;padding:0 11px;border:1px solid rgba(223,235,231,.22);background:rgba(8,16,18,.5);color:#b9c6c2;font-size:9px;letter-spacing:.12em;cursor:pointer;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px))}
+.subActions button:hover{border-color:rgba(240,181,101,.8);color:#e6ece9}
+/* The last sector's clear ends the sortie: OPERATION COMPLETE in the light of the clear, the three
+   sectors' times under it, and the way back to SECTOR 01. */
+.result.final{border-top-color:rgba(243,214,150,.75)}
+.result.final small{color:#e7c27c;letter-spacing:.36em}
+.result.final b{font-size:clamp(26px,2.7vw,42px);color:#f6efd8;text-shadow:0 0 18px rgba(255,236,190,.45),0 0 14px rgba(0,0,0,.6)}
+.result.final dt{letter-spacing:.16em}
