@@ -2819,6 +2819,8 @@ function pilotGlance(e,dur=.9,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)retur
 // designate); each step ends when the player does it, and the hostiles sleep until the designation step
 // (no proximity wake, no HMD designation before it). Done once, remembered in hf.tutorial; a redeploy
 // before it is done starts it again. ENDURANCE and later sectors never show it.
+// The head step asks for 8 deg with the camera (20 deg with Q / E, which snaps to 55): at HEAD GAIN 1.0 and
+// a 2.5 deg dead zone, 20 deg meant turning the face ~23 deg, past where the screen can still be read.
 const TUT_STEPS=[
   {id:'move',en:'MOVE',jp:'WASD で移動',sub:'機体は車輪で走ります'},
   {id:'burst',en:'BURST',jp:'移動しながら SHIFT でブースト',sub:'空中ではバックパックの噴射になります'},
@@ -2837,7 +2839,7 @@ function updateTutorial(dt){
   if(tut.doneT>0)tut.doneT=Math.max(0,tut.doneT-dt);
   const st=tutStep();if(!st||!playing||!player.alive||headNeedCenter&&headEnabled&&headFound)return;tut.t+=dt;
   if(!tut.base)tut.base={x:player.x,z:player.z,shots:stats.shots,des:stats.designations};
-  const b=tut.base,ok=st.id==='move'?Math.hypot(player.x-b.x,player.z-b.z)>6:st.id==='burst'?player.boostTime>0:st.id==='fire'?stats.shots-b.shots>=3:st.id==='head'?Math.abs(headYaw)>=20:stats.designations>b.des;
+  const b=tut.base,ok=st.id==='move'?Math.hypot(player.x-b.x,player.z-b.z)>6:st.id==='burst'?player.boostTime>0:st.id==='fire'?stats.shots-b.shots>=3:st.id==='head'?Math.abs(headYaw)>=(headEnabled?8:20):stats.designations>b.des;
   if(ok&&tut.t>.6)tutAdvance()}
 function drawTutorial(s){
   const cal=headNeedCenter&&headEnabled&&headFound&&playing;
