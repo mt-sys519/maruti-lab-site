@@ -931,11 +931,27 @@ function drawSky(viewYaw,pitch){
   const hy=horizonY(pitch),g=ctx.createLinearGradient(0,0,0,H);
   {const S=skyStops();g.addColorStop(0,S[0]);g.addColorStop(.42,S[1]);g.addColorStop(.70,S[2]);g.addColorStop(1,S[3])};
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  if(stage!==2)return; // no air on the Moon to carry a glow along the horizon
+  if(stage!==2){drawMoonSky(viewYaw,hy);return} // no air on the Moon to carry a glow along the horizon
   // A very low, physical foundry glow on the horizon. It is not a HUD effect.
   const glow=ctx.createLinearGradient(0,hy-H*.12-H*.1*syncMix,0,hy+H*.16);glow.addColorStop(0,'rgba(29,112,91,0)');glow.addColorStop(.58,`rgba(${wc('35,151,118')},${(.06+.13*syncMix).toFixed(3)})`);glow.addColorStop(1,'rgba(21,79,66,0)');ctx.fillStyle=glow;ctx.fillRect(0,hy-H*.12,W,H*.28);
   ctx.save();ctx.strokeStyle='rgba(99,255,211,.065)';ctx.lineWidth=1;ctx.shadowBlur=5;ctx.shadowColor='#55ffd0';ctx.beginPath();ctx.moveTo(0,hy);ctx.lineTo(W,hy);ctx.stroke();ctx.restore();
 }
+// Canvas fallback of the WebGL moonSky: the same fixed star field (azimuth / elevation, so it holds still
+// while the head turns) and Earth at EAZ / EEL, lit from the sun's side, without the shader's surface detail.
+const MOON_STARS=(()=>{let k=7;const r=()=>(k=(k*16807)%2147483647)/2147483647,S=[];for(let i=0;i<520;i++){const b=r()**3;S.push([r()*Math.PI*2,Math.asin(r()*.98),.9+1.2*b,.55+.75*b,r()])}return S})();
+function drawMoonSky(viewYaw,hy){
+  const f=renderFocal,cx=W/2,fade=1-.75*sunVis(),at=(az,el)=>{const rel=((az-viewYaw)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI;if(Math.abs(rel)>1.25)return null;return{x:cx+Math.tan(rel)*f,y:hy-Math.tan(el)*f/Math.cos(rel)}};
+  ctx.save();
+  for(const [az,el,rad,b,t] of MOON_STARS){const p=at(az,el);if(!p||p.y>=hy||p.x<0||p.x>W||p.y<0)continue;ctx.fillStyle=`rgba(${t<.5?'191,209,255':'255,237,209'},${Math.min(1,b*fade).toFixed(2)})`;ctx.fillRect(p.x-rad*.5,p.y-rad*.5,rad,rad)}
+  const e=at(.08,.25);if(e){const R=.05*f/Math.cos(((.08-viewYaw)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI);
+    const halo=ctx.createRadialGradient(e.x,e.y,R,e.x,e.y,R*1.25);halo.addColorStop(0,'rgba(77,133,255,.22)');halo.addColorStop(1,'rgba(77,133,255,0)');ctx.fillStyle=halo;ctx.beginPath();ctx.arc(e.x,e.y,R*1.25,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(e.x,e.y,R,0,Math.PI*2);ctx.fillStyle='#03060d';ctx.fill();ctx.save();ctx.clip();
+    // the lit side faces the sun (left): an ocean disc with the night side cut away by an offset circle
+    const sea=ctx.createRadialGradient(e.x-R*.45,e.y-R*.15,R*.1,e.x,e.y,R);sea.addColorStop(0,'#1c4687');sea.addColorStop(.7,'#0c2a5e');sea.addColorStop(1,'#3a6fc4');
+    ctx.fillStyle=sea;ctx.beginPath();ctx.arc(e.x,e.y,R,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(220,228,240,.35)';for(const [u,v,w] of [[-.5,-.35,.32],[-.2,.3,.26],[-.62,.2,.18]]){ctx.beginPath();ctx.ellipse(e.x+u*R,e.y+v*R,w*R,w*R*.42,.3,0,Math.PI*2);ctx.fill()}
+    ctx.fillStyle='#03060d';ctx.beginPath();ctx.arc(e.x+R*1.3,e.y-R*.2,R*1.12,0,Math.PI*2);ctx.fill();ctx.restore()}
+  ctx.restore()}
 function drawDistantDistrict(viewYaw,viewPitch){
   // v30: the Foundry is a megastructure, not a street bordered by boxes. Multiple vertical layers,
   // silhouettes and operating infrastructure establish scale before the combat lane is read.
@@ -1463,7 +1479,9 @@ const RIGS={
       B('turret',hexa([[-1.45,0,-1.15],[1.45,0,-1.15],[1.3,0,1.05],[-1.3,0,1.05],[-1.15,.72,-1.0],[1.15,.72,-1.0],[.95,.66,.8],[-.95,.66,.8]],{lines:2,name:'turret'}));
       B('turret',beam([.55,.66,-.6],[.62,1.6,-.85],.1,.08,{mat:'metal'}));B('turret',box(.62,1.62,-.85,.5,.12,.14,{mat:'accent'}));B('turret',box(.62,1.62,-.76,.36,.06,.06,{mat:'glow',glow:'eye'}));
       for(const [bn,s] of [['gunL',-1],['gunR',1]]){
-        B(bn,box(0,0,.1,.7,.62,.9,{chip:true,name:'mantlet'}));
+        // The mantlet carries the gun and never chips (it left a hole at the gun's root); its face plate breaks off.
+        B(bn,box(0,0,.1,.7,.62,.9,{name:'mantlet'}));
+        B(bn,box(0,0,.6,.76,.68,.1,{chip:true,name:'mantletplate'}));
         B(bn,cyl(0,0,1.25,.3,1.4,'z',10,{mat:'dark'}));
         B(bn,cyl(0,0,3.05,.19,3.2,'z',10,{mat:'metal',name:'barrel'}));
         for(const z of [2.0,3.4])B(bn,cyl(0,0,z,.23,.08,'z',10,{mat:'dark'}));
