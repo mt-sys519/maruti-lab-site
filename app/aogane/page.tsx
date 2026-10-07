@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { SiteFooter } from "../SiteFooter";
 
@@ -30,8 +31,8 @@ const controls: [string, string, string][] = [
   ["R", "—", "再出撃"],
 ];
 
-// [name, kind, what it is and how to use it]
-type Entry = [string, string, string];
+// [name, kind, what it is and how to use it, accent colour]
+type Entry = [string, string, string, string?];
 
 const weapons: Entry[] = [
   ["HALBERD", "30mm機関砲／全エリア・1", "左クリックを押している間、撃ち続けます。撃ち続けると砲身が熱を持ち、限界を超えると冷えるまで撃てなくなります。HMDで指定した敵に照準を重ねると SIGHT LINK になり、弾が速く、まとまり、威力が上がって、熱もたまりにくくなります。"],
@@ -42,17 +43,24 @@ const weapons: Entry[] = [
 ];
 
 const hostiles: Entry[] = [
-  ["VANE", "浮遊型・マゼンタ", "6〜8mの高さに浮いて、素早く横へ滑りながら2連射してきます。装甲は薄いので、見失わないことが一番の対策です。"],
-  ["PIKE", "槍持ち・赤", "槍を構えて突っ込んできます。突進の最中に撃ってよろけさせると、攻撃を止められます（LANCE BREAK）。"],
-  ["BASTION", "砲台型・オレンジ", "4本脚で動きは遅いものの、長い砲身で溜めてから重い一発を撃ってきます。溜めている間によろけさせると、砲撃を止められます（CHARGE BREAK）。"],
-  ["ATLAS", "大型歩行機・ガンメタルと深紅", "高さ15mの歩行機。70mほど離れたところから2門の砲で撃ってきます。撃つほど装甲板が剥がれていきます。MAUL の直撃と、足もとへ回り込む動きが効きます。"],
-  ["KITE", "飛行型・ライラック", "噴射で空を飛び、頭上を大きく旋回しては、1機ずつ急降下して撃ってきます。撃ったあとはまた上昇するので、高いところにいる間は ARBALEST で狙えます。"],
+  ["VANE", "浮遊型・マゼンタ", "6〜8mの高さに浮いて、素早く横へ滑りながら2連射してきます。装甲は薄いので、見失わないことが一番の対策です。", "#ff4f86"],
+  ["PIKE", "槍持ち・赤", "槍を構えて突っ込んできます。突進の最中に撃ってよろけさせると、攻撃を止められます（LANCE BREAK）。", "#ff5a4e"],
+  ["BASTION", "砲台型・オレンジ", "4本脚で動きは遅いものの、長い砲身で溜めてから重い一発を撃ってきます。溜めている間によろけさせると、砲撃を止められます（CHARGE BREAK）。", "#ff9a62"],
+  ["ATLAS", "大型歩行機・ガンメタルと深紅", "高さ15mの歩行機。70mほど離れたところから2門の砲で撃ってきます。撃つほど装甲板が剥がれていきます。MAUL の直撃と、足もとへ回り込む動きが効きます。", "#ff3a4a"],
+  ["KITE", "飛行型・ライラック", "噴射で空を飛び、頭上を大きく旋回しては、1機ずつ急降下して撃ってきます。撃ったあとはまた上昇するので、高いところにいる間は ARBALEST で狙えます。", "#c27bff"],
 ];
 
 const sectors: Entry[] = [
-  ["SECTOR 01", "TRANSFER DISTRICT", "送電施設の街区。VANE・PIKE・BASTION が待ち構えています。2本目の武器は FLAIL。"],
-  ["SECTOR 02", "FREIGHT TUNNEL", "天井の低い貨物トンネル。PIKE と BASTION の奥に、ATLAS が2体並んでいます。2本目の武器は MAUL。"],
-  ["SECTOR 03", "SKYDECK", "夜明けの発着場。KITE の編隊と地上の機体を相手にします。2本目の武器は ARBALEST。"],
+  ["SECTOR 01", "TRANSFER DISTRICT", "送電施設の街区。VANE・PIKE・BASTION が待ち構えています。2本目の武器は FLAIL。", "#5fd4e0"],
+  ["SECTOR 02", "FREIGHT TUNNEL", "天井の低い貨物トンネル。PIKE と BASTION の奥に、ATLAS が2体並んでいます。2本目の武器は MAUL。", "#5fd4e0"],
+  ["SECTOR 03", "SKYDECK", "夜明けの発着場。KITE の編隊と地上の機体を相手にします。2本目の武器は ARBALEST。", "#5fd4e0"],
+];
+
+const steps: [string, string][] = [
+  ["見て、指定する", "敵を約0.3秒見つめると、HMD がその敵を指定して印を付けます。眠っている敵は、指定すると目を覚まします。カメラで遊んでいるなら、顔を向けて見つめるだけで指定できます。"],
+  ["指定した敵に照準を重ねる（SIGHT LINK）", "指定した敵に HALBERD の照準を重ねると SIGHT LINK になり、弾が強くなります。顔で次の敵を見つけて指定し、マウスで照準を合わせる。これがこのゲームの基本の流れです。"],
+  ["FLOW をためて SYNC DRIVE", "指定、SIGHT LINK での命中、突進や砲撃の阻止、ぎりぎりでの回避で FLOW がたまります。満タンになると、4.5秒の SYNC DRIVE に入ります。視界が金色に変わり、ブーストが回復して砲身が冷え、弾の威力も上がります。SYNC DRIVE 中に敵を倒すと、そのぶん時間が延びます。"],
+  ["走る、跳ぶ", "蒼鉄は足の車輪で走ります。地上でブーストすると、車輪が一瞬空転してから一気に加速します。ジャンプ中のブーストは背中の噴射で、1回のジャンプにつき1回だけ使えます。見えていない敵の方角は、画面上の時計の下にあるソナーの帯で確かめられます。"],
 ];
 
 const guide: [string, string][] = [
@@ -69,8 +77,8 @@ const guide: [string, string][] = [
 function Entries({ items }: { items: Entry[] }) {
   return (
     <dl className="hfEntries">
-      {items.map(([name, kind, text]) => (
-        <div key={name}>
+      {items.map(([name, kind, text, color]) => (
+        <div key={name} style={color ? ({ "--c": color } as CSSProperties) : undefined}>
           <dt>
             {name}
             <span>{kind}</span>
@@ -174,22 +182,15 @@ export default function AoganePage() {
 
         <section className="hfSection" id="play">
           <h2>戦い方</h2>
-          <h3>見て、指定する</h3>
-          <p>
-            敵を約0.3秒見つめると、HMD がその敵を指定して印を付けます。眠っている敵は、指定すると目を覚まします。カメラで遊んでいるなら、顔を向けて見つめるだけで指定できます。
-          </p>
-          <h3>指定した敵に照準を重ねる（SIGHT LINK）</h3>
-          <p>
-            指定した敵に HALBERD の照準を重ねると SIGHT LINK になり、弾が強くなります。顔で次の敵を見つけて指定し、マウスで照準を合わせる。これがこのゲームの基本の流れです。
-          </p>
-          <h3>FLOW をためて SYNC DRIVE</h3>
-          <p>
-            指定、SIGHT LINK での命中、突進や砲撃の阻止、ぎりぎりでの回避で FLOW がたまります。満タンになると、4.5秒の SYNC DRIVE に入ります。視界が金色に変わり、ブーストが回復して砲身が冷え、弾の威力も上がります。SYNC DRIVE 中に敵を倒すと、そのぶん時間が延びます。
-          </p>
-          <h3>走る、跳ぶ</h3>
-          <p>
-            蒼鉄は足の車輪で走ります。地上でブーストすると、車輪が一瞬空転してから一気に加速します。ジャンプ中のブーストは背中の噴射で、1回のジャンプにつき1回だけ使えます。見えていない敵の方角は、画面上の時計の下にあるソナーの帯で確かめられます。
-          </p>
+          <ol className="hfSteps">
+            {steps.map(([title, text], i) => (
+              <li key={title}>
+                <span className="hfStepNo">{String(i + 1).padStart(2, "0")}</span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section className="hfSection" id="arms">
