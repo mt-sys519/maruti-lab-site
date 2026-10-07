@@ -525,7 +525,7 @@ function burnDebris(d){
       spinY:(Math.random()-.5)*12,spinX:(Math.random()-.5)*9,age:0,life:.32+Math.random()*.4,color:col,width:l>1.2?2.0:l>.5?1.5:1.0})}
 }
 // Armour chipping: as wear passes thresholds a real armour plate breaks off and the frame beneath shows.
-function chipArmor(e){
+function chipArmor(e){if(tut.on)return;
   const wear=1-e.hp/e.maxHp,level=wear>.8?3:wear>.55?2:wear>.3?1:0;
   while((e.lostN||0)<level){const pose=enemyPose(e),cands=pose.parts.filter(p=>p.P.chip&&!e.lost?.[p.i]);if(!cands.length)break;
     const p=cands[Math.floor(Math.random()*cands.length)];spawnDebris(e,p.i,.6,.7);(e.lost||(e.lost={}))[p.i]=true;e.lostN=(e.lostN||0)+1;
@@ -611,7 +611,7 @@ function updateSwing(dt){const S=player.swing;if(!S)return;S.t+=dt;const B=BARDI
     for(const e of enemies){if(!e.alive||eY(e)>7.5)continue;const dx=e.x-player.x,dz=e.z-player.z,l=Math.hypot(dx,dz)||1,R=RIGS[e.type].hit.r;
       if(l-R>B.reach||Math.abs(angleDiff(Math.atan2(dx,-dz),ay))>B.arc/2&&l>R+2||segmentHitsWorld(player.x,2,player.z,e.x,2,e.z))continue;
       if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');any=true;pan=worldPan(e.x,e.z);const hx=e.x-dx/l*R,hz=e.z-dz/l*R,hy=Math.min(CAMERA_Y,RIGS[e.type].hit.cy+eY(e));
-      e.hp-=B.damage;e.flash=.24;e.hitPoint={x:hx,y:hy,z:hz};e.hitT=.2;sparks(hx,hy,hz,22,'#e8f4ff',14,'#ffffff');sparks(hx,hy,hz,10,'#6fa8ff',9);
+      e.hp-=tutArmor(B.damage);e.flash=.24;e.hitPoint={x:hx,y:hy,z:hz};e.hitT=.2;sparks(hx,hy,hz,22,'#e8f4ff',14,'#ffffff');sparks(hx,hy,hz,10,'#6fa8ff',9);
       if(e.type!=='TITAN')moveEnemy(e,dx/l*B.knock,dz/l*B.knock);
       if(e.hp>0){chipArmor(e);staggerEnemy(e,B.stagger)}else killEnemy(e,'BARDICHE')}
     if(any){hitStop=Math.max(hitStop,.13);player.shake=Math.max(player.shake,.95);player.hitMarkT=.14;cockpit.heaveV-=3.4;sfx.axeHit(pan)}}
@@ -643,7 +643,7 @@ function fireMaul(){if(player.rocketCd>0)return;if(player.rockets<=0){if(gameTim
 function maulBlast(x,y,z,direct){
   explode(x,y,z,true,false);shockwave(x,y,z,'#ffe2a8',MAUL.radius*1.2,.5);shockwave(x,.06,z,'#ffb35c',MAUL.radius*1.6,.7,'ground');lightBurst(x,y,z,'#ffd6a0',18,.4);const s=spatial(x,z);sfx.maulBlast(s.pan,s.g);
   let hit=false;for(const e of enemies){if(!e.alive)continue;const H=RIGS[e.type].hit,dh=Math.max(0,Math.hypot(e.x-x,e.z-z)-H.r),dv=Math.max(0,Math.abs(y-H.cy-eY(e))-H.hh),d=Math.hypot(dh,dv),dir=e===direct;if(!dir&&d>MAUL.radius)continue;
-    const k=dir?1:1-d/MAUL.radius;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=dir?MAUL.direct:MAUL.splash*k;e.flash=.2;e.hitPoint={x,y,z};e.hitT=.16;stats.hits++;hit=true;
+    const k=dir?1:1-d/MAUL.radius;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=tutArmor(dir?MAUL.direct:MAUL.splash*k);e.flash=.2;e.hitPoint={x,y,z};e.hitT=.16;stats.hits++;hit=true;
     if(e.hp>0)chipArmor(e);staggerEnemy(e,MAUL.stagger*k);if(e.hp<=0){if(e.type==='TITAN')player.rockets=Math.min(MAUL.mag,player.rockets+2);killEnemy(e,'MAUL')}}
   if(hit)hitMark(s.pan);const pd=Math.hypot(player.x-x,player.z-z);if(pd<14)player.shake=Math.max(player.shake,.6*(1-pd/14))}
 function updateRockets(dt){
@@ -662,7 +662,7 @@ function fire(fresh=false){if(!playing||!player.alive||missionClear||cockpit.swa
 function getLock(maxAngle=.18){const ay=player.yaw+player.torso,ap=player.pitch;let best=null,bestScore=maxAngle;for(const e of enemies){if(!e.alive)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>130||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)+.2-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);if(score<bestScore){bestScore=score;best={e,dist,score}}}return best}
 function getHmdLock(){const e=enemies.find(x=>x.id===lastDesignatedId&&x.alive&&x.designated>0);if(!e)return null;const dist=Math.hypot(e.x-player.x,e.z-player.z);if(dist>135||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))return null;return{e,dist,score:0,hmd:true}}
 function getSightLink(maxAngle=.105){const h=getHmdLock();if(!h)return null;const e=h.e,ay=player.yaw+player.torso,ap=player.pitch,dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz)||1,ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);return score<maxAngle?{e,dist,score}:null}
-function wakeEnemy(e,label='CONTACT'){if(!e||!e.alive||e.awake)return;e.awake=true;e.wakeT=.62;e.marked=Math.max(e.marked||0,1.8);e.flash=.18;sfx.contact(e);plog('Caution',`-${label==='HMD HANDOFF'?'Handoff contact':'Hostile contact'}. ${etag(e)}`);pilotGlance(e,.8,1);sayContact(e);shockwave(e.x,.06,e.z,'#ff7667',9,.62,'ground')}
+function wakeEnemy(e,label='CONTACT'){if(!e||!e.alive||e.awake||tutHold())return;e.awake=true;e.wakeT=.62;e.marked=Math.max(e.marked||0,1.8);e.flash=.18;sfx.contact(e);plog('Caution',`-${label==='HMD HANDOFF'?'Handoff contact':'Hostile contact'}. ${etag(e)}`);pilotGlance(e,.8,1);sayContact(e);shockwave(e.x,.06,e.z,'#ff7667',9,.62,'ground')}
 function wakeNearestCold(){let best=null,bd=1e9;for(const e of enemies){if(!e.alive||e.awake)continue;const d=Math.hypot(e.x-player.x,e.z-player.z);if(d<bd){bd=d;best=e}}if(best)wakeEnemy(best,'NEW CONTACT')}
 function tryHmdHandoff(excludeId=0){const viewYaw=player.yaw+headYaw*Math.PI/180;let best=null,bestA=.30;for(const e of enemies){if(!e.alive||e.id===excludeId)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>120||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const a=Math.abs(angleDiff(Math.atan2(dx,-dz),viewYaw));if(a<bestA){bestA=a;best=e}}if(!best)return;best.focus=Math.max(best.focus||0,.17);best.marked=Math.max(best.marked||0,1.4);if(!best.awake)wakeEnemy(best,'HMD HANDOFF');plog('HMD',`-Handoff. ${etag(best)}`)}
 function enemyShoot(e,aim=null){const shots=e.type==='SCOUT'||e.type==='TITAN'?2:1,muzzles=enemyMuzzles(e);for(let n=0;n<shots;n++){const m=muzzles[n%muzzles.length],lead=e.type==='SCOUT'?.06:e.heavy?.18:.11,tx=(aim?.x??(player.x+player.vx*lead))-m[0],tz=(aim?.z??(player.z+player.vz*lead))-m[2],td=Math.hypot(tx,tz)||1,spread=(Math.random()-.5)*(e.heavy?.014:e.type==='SCOUT'?.05:.034),sp=e.type==='TITAN'?46:e.heavy?42:e.type==='SCOUT'?39:35;enemyBolts.push({x:m[0],y:m[1],z:m[2],px:m[0],py:m[1],pz:m[2],vx:(tx/td+spread)*sp,vy:((CAMERA_Y-m[1])/td)*sp,vz:(tz/td+spread)*sp,life:3.0,damage:e.type==='SCOUT'?Math.round(4*(e.dmgK||1)):e.damage,type:e.type,heavy:!!e.heavy,big:e.type==='TITAN',near:false,threatened:false,evadeCandidate:false})}e.muzzle=.11;if(e.anim){e.anim.recoil=1;e.anim.recoilSide=-(e.anim.recoilSide||1)}if(e.type==='TITAN')sfx.titanFire(e);else if(e.heavy)sfx.heavyFire(e);else sfx.hostile(e)}
@@ -2724,7 +2724,7 @@ function update(dt){
     const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');
     // FLAIL pellets lose their bite with the distance they have flown; one hit mark per shell.
     const dmg=b.pellet?b.damage*clamp(1-(Math.hypot(b.x-b.ox,b.z-b.oz)-FLAIL.near)/(FLAIL.far-FLAIL.near)*.67,.33,1):b.damage;
-    e.hp-=dmg;e.flash=.10;e.hitPoint={x:b.x,y:b.y,z:b.z};e.hitT=.12;if(e.hp>0)chipArmor(e);
+    e.hp-=tutArmor(dmg);e.flash=.10;e.hitPoint={x:b.x,y:b.y,z:b.z};e.hitT=.12;if(e.hp>0)chipArmor(e);
     const syncHit=b.syncId===e.id;stats.hits++;staggerEnemy(e,dmg+(syncHit?9:0));if(!b.shot||!b.shot.hit){if(b.shot)b.shot.hit=true;hitMark(worldPan(e.x,e.z))}
     sparks(b.x,b.y,b.z,syncHit?16:11,syncHit?'#ffe08a':'#ffc467',syncHit?11:8.5);sparks(b.x,b.y,b.z,4,CLASS_STYLE[e.type].edge,6);shockwave(b.x,b.y,b.z,syncHit?'#ffe08a':'#ffd7a0',syncHit?2.2:1.5,.16);
     if(syncHit){player.heat=Math.max(0,player.heat-1.5);addFlow(player.syncTime>0?4:8);e.breakFlash=Math.max(e.breakFlash,.16)}
@@ -2741,7 +2741,7 @@ function update(dt){
     if(m.target?.alive){const t=enemyHitT(m.target,m.x,m.y,m.z,nx,ny,nz,.35);if(t!==null&&(!impact||t<impact.t))impact={t,e:m.target}}
     if(impact){
       placeImpact(m,nx,ny,nz,impact.t);m.life=0;
-      if(impact.e){const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=62;e.flash=.18;e.hitPoint={x:m.x,y:m.y,z:m.z};e.hitT=.14;if(e.hp>0)chipArmor(e);staggerEnemy(e,54);explode(e.x,2.8+eY(e),e.z,false);if(e.hp<=0)killEnemy(e,'MISSILE')}
+      if(impact.e){const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=tutArmor(62);e.flash=.18;e.hitPoint={x:m.x,y:m.y,z:m.z};e.hitT=.14;if(e.hp>0)chipArmor(e);staggerEnemy(e,54);explode(e.x,2.8+eY(e),e.z,false);if(e.hp<=0)killEnemy(e,'MISSILE')}
       else explode(m.x,m.y,m.z,false);
     }else{m.x=nx;m.y=ny;m.z=nz}
     if(m.life>0&&m.trail<=0){m.trail=.03;particles.push({x:m.x,y:m.y,z:m.z,px:m.x,py:m.y,pz:m.z,vx:(Math.random()-.5)*1.5,vy:.3,vz:(Math.random()-.5)*1.5,life:.28,max:.28,color:'#ffd16f',size:.3,g:0})}
@@ -2853,6 +2853,9 @@ let tutDone=false;try{tutDone=localStorage.getItem('hf.tutorial')==='done'}catch
 function tutStart(){Object.assign(tut,{on:mode==='training',i:0,t:0,base:null,doneT:0});if(tut.on)for(const e of enemies)e.awake=false} // the two forward machines usually start awake
 // hostiles stay asleep and undesignated until the designation step
 function tutHold(){return tut.on&&tut.i<4}
+// The two machines cannot be broken until the guide is over: hits still flash and spark, they take no damage
+// (and stay asleep until the designation step), so the tutorial cannot be cleared by shooting through it.
+function tutArmor(v){return tut.on?0:v}
 function tutStep(){return tut.on?TUT_STEPS[tut.i]:null}
 function tutAdvance(){sfx.ui();tut.i++;tut.t=0;tut.base=null;if(tut.i>=TUT_STEPS.length){tut.on=false;tut.doneT=4.5;tutDone=true;playLabel();try{localStorage.setItem('hf.tutorial','done')}catch{}plog('Info','-Training complete. Break every hostile.')}}
 function updateTutorial(dt){
