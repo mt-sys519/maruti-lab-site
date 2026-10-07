@@ -3178,7 +3178,7 @@ async function voxLoad(){if(typeof fetch==='undefined')return;
   try{const r=await fetch(VOX_BASE+'aoi_lines.csv',{cache:'no-cache'});if(!r.ok)return;voxSetLines(await r.text())}catch{return}
   const exts=['mp3','ogg','webm','wav'];
   await Promise.all(vox.lines.map(async L=>{for(const e of exts){try{const r=await fetch(VOX_BASE+`aoi_${L.id}.${e}?v=1`);if(r.ok){vox.raw[L.id]=await r.arrayBuffer();return}}catch{}}}));
-}
+  vox.ready=true}
 if(typeof window!=='undefined'&&typeof fetch!=='undefined')voxLoad();
 // Decode once the AudioContext exists (it needs a user gesture), then run any line that was waiting.
 function voxTick(){if(!ac||!vox.ready)return;
