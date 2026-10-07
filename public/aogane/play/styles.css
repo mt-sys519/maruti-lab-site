@@ -325,7 +325,11 @@
 /* Why the head is lost (dark picture / no face), under the top line; the same words replace the camera note on the menu. */
 .camWarn{position:absolute;left:50%;top:86px;transform:translateX(-50%);max-width:min(720px,calc(100% - 48px));padding:7px 16px;background:rgba(5,9,9,.7);border-top:1px solid rgba(240,181,101,.75);color:#ffd9a0;font:13px/1.6 "Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.05em;text-align:center}
 .camNote.warn{color:#ffcf8f}
-.healthNote{position:fixed;right:24px;bottom:22px;width:260px;text-align:right;margin:0;font:11px/1.7 "Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.02em;color:#8f9d99}
+.healthNote{position:fixed;right:24px;bottom:22px;width:304px;background:rgba(10,8,6,.88);border:2px solid #f2c230;text-shadow:none}
+/* Yellow-and-black hazard tape across the top, CAUTION on a black plate in it; the warning itself in red. */
+.healthNote .hazard{height:18px;display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(-45deg,#f2c230 0 9px,#141414 9px 18px)}
+.healthNote .hazard b{padding:1px 8px;background:#141414;color:#f2c230;font:700 10px/1.4 Bahnschrift,"DIN Alternate","Segoe UI",sans-serif;letter-spacing:.3em}
+.healthNote p{margin:0;padding:8px 12px 9px;font:700 12px/1.7 "Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.02em;color:#ff4f3f}
 /* Gamepad: the key line swaps to the pad's, and the button the pad is on is ringed. */
 .keyline.padKeys{display:none}body.pad .keyline.padKeys{display:block}body.pad .keyline.keyKeys{display:none}
 /* The menu buttons are clipped to a cut-corner shape, which also clips an outline: the pad's ring is drawn inside. */
