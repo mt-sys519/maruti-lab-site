@@ -673,7 +673,7 @@ function staggerEnemy(e,power=20){
 function killEnemy(e,weapon='CANNON'){if(!e.alive)return;const wasDesignated=e.designated>0;e.alive=false;e.deadAt=gameTime;e.firePending=false;e.charge=0;e.lungeWindup=0;e.dashT=0;e.attackKind="";{const col=CLASS_STYLE[e.type].edge,cy=RIGS[e.type].hit.cy+eY(e),s=spatial(e.x,e.z);shatterEnemy(e);killWaves.push({x:e.x,z:e.z,t:gameTime});sparks(e.x,cy,e.z,44,col,16);sparks(e.x,cy,e.z,18,'#fff1d8',22);shockwave(e.x,cy,e.z,'#fff1d8',8,.36);shockwave(e.x,cy,e.z,col,15,.8);if(eY(e)<4)shockwave(e.x,.06,e.z,col,20,1.0,'ground');lightBurst(e.x,cy,e.z,'#ffd6b0',17,.36);sfx.kill(s.pan,e.type);if(e.type==='TITAN'){for(const y of [cy+4,cy-4,cy*.55,cy*.25])explode(e.x+(Math.random()-.5)*3,y,e.z+(Math.random()-.5)*3,true,false);shockwave(e.x,cy,e.z,'#ffd6b0',24,1.1);shockwave(e.x,.06,e.z,'#ff3a4a',42,1.4,'ground');player.shake=Math.max(player.shake,1.2)}}stats.kills++;hitStop=.055;const syncKill=player.syncTime>0;if(syncKill){player.syncChain++;player.syncTime=Math.min(5.4,player.syncTime+.42);player.fovKick=Math.max(player.fovKick,.62);}const refund=player.combo>0?22:18;player.boost=Math.min(100,player.boost+refund);player.heat=Math.max(0,player.heat-20);let reload=0;player.combo++;player.comboT=2.8;player.killPulse=1;player.fovKick=Math.max(player.fovKick,.42);player.shake=Math.max(player.shake,.52);stats.maxChain=Math.max(stats.maxChain,player.combo);addFlow(wasDesignated?26:12,wasDesignated?'DESIGNATE BREAK':'FRAME BREAK');plog(syncKill?'Sync':wasDesignated?'HMD':'Info',`-${etag(e)} broken.${syncKill?` Sync x${player.syncChain}.`:player.combo>1?` Chain ${player.combo}.`:''}${reload?' MSSL +1.':''}`);pilotReact(player.combo>=3||syncKill?'laugh':'smug',player.combo>=3?1.4:1.0,2);{const left=mode==='endurance'?9:enemies.filter(x=>x.alive).length;if(left===1)say('LAST_ONE');else if(left>1){if(syncKill)say('SYNC_BREAK');else if(wasDesignated)say('DESIGNATE_BREAK');else if(player.combo>=3)say('CHAIN');else say('KILL',.6)}}if(lastDesignatedId===e.id)lastDesignatedId=0;if(wasDesignated)tryHmdHandoff(e.id);if(mode!=='endurance'&&enemies.every(x=>!x.alive)){missionClear=true;sfx.clear();const fin=finalClear();if(mode==='sortie')campaign[stage]={time:missionTime,kills:stats.kills};plog('System',fin?'All sectors clean. Operation complete.':'Sector clean.');pilotCut('clear');if(!(fin&&say('FINAL')))say('CLEAR');setTimeout(()=>{if(missionClear)showResult(fin?'OPERATION COMPLETE':'SECTOR CLEAN')},650)}else combat.nextWake=Math.min(combat.nextWake,gameTime+.45)}
 
 // ---------- HEAD TRACKING ----------
-let manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,headPitch=0,headPitchTarget=0,basePitch=null,rawPitch=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
+let headNeedCenter=false,manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,headPitch=0,headPitchTarget=0,basePitch=null,rawPitch=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
 let headBusy=false,headGeneration=0,headSampleTime=-Infinity,headRequestTime=0,headInferenceMs=0;
 const HEAD_FRESH_MS=250;
 // The head is mainly left / right. Up / down only nudges the view (degrees, after the dead zone, capped):
@@ -687,14 +687,14 @@ let headVel=0;
 function setHeadTarget(target,dt){const w=2.15/Math.max(.03,+smooth.value),n=Math.max(1,Math.ceil(dt*240)),h=dt/n;
   for(let i=0;i<n;i++){headVel+=(w*w*(target-headYaw)-2*w*headVel)*h;headVel=clamp(headVel,-450,450);headYaw+=headVel*h}}
 function headPoseFresh(now=performance.now()){return !headEnabled||(headFound&&now-headSampleTime<=HEAD_FRESH_MS)}
-function centerHead(){baseline=headPoseFresh()&&headFound?rawYaw:null;basePitch=baseline===null?null:rawPitch;headPitchTarget=0;headPitch=0;manualHead=0;headTarget=0;headYaw=0;headVel=0;plog('System','Head centered.');say('HEAD_CENTER')}
+function centerHead(){headNeedCenter=false;baseline=headPoseFresh()&&headFound?rawYaw:null;basePitch=baseline===null?null:rawPitch;headPitchTarget=0;headPitch=0;manualHead=0;headTarget=0;headYaw=0;headVel=0;plog('System','Head centered.');say('HEAD_CENTER')}
 function acceptHeadPose(data){
   if(data.timestamp<headSampleTime)return;
   headFound=!!data.found;
   headInferenceMs=data.inferenceMs||0;
   if(!data.found)return;
   headSampleTime=data.timestamp;rawYaw=data.yaw;rawPitch=data.pitch||0;
-  if(baseline===null)baseline=rawYaw;if(basePitch===null)basePitch=rawPitch;
+  if(baseline===null){baseline=rawYaw;headNeedCenter=true}if(basePitch===null)basePitch=rawPitch;
   const d=angleDiff(rawYaw*Math.PI/180,baseline*Math.PI/180)*180/Math.PI;
   headTarget=clamp(Math.sign(d)*Math.max(0,Math.abs(d)-(+dead.value))*(+gain.value),-60,60);
   const dp=rawPitch-basePitch;
@@ -707,22 +707,22 @@ const CAM_NOTE={off:'顔の向きで周りを見ます。映像は端末の外�
   denied:'カメラが許可されていません。アドレスバーのカメラのアイコンと、Windows の設定 → プライバシー → カメラを確認してください。',
   none:'カメラが見つかりません。つながっているか確認してください。',load:'顔認識を読み込めませんでした。通信を確認して、もう一度押してください。',
   browser:'このブラウザでは使えません。Chrome か Edge で開いてください。',lost:'カメラが止まりました。もう一度押すと再開します。'};
-function camUI(state,note){const b=$('head');for(const k of ['on','loading','fail'])b.classList.toggle(k,k===state);$('headLabel').textContent=state==='on'?'カメラ：オン':state==='loading'?'カメラ：準備中…':state==='fail'?'カメラ：失敗':'カメラ：オフ';$('camNote').textContent=CAM_NOTE[note||state]||CAM_NOTE.off}
+function camUI(state,note){if(typeof gateCamUI==='function')gateCamUI(state);const b=$('head');for(const k of ['on','loading','fail'])b.classList.toggle(k,k===state);$('headLabel').textContent=state==='on'?'カメラ：オン':state==='loading'?'カメラ：準備中…':state==='fail'?'カメラ：失敗':'カメラで遊ぶ（おすすめ）';$('camNote').textContent=CAM_NOTE[note||state]||CAM_NOTE.off}
 function camError(error){const n=error?.name||'';return n==='NotReadableError'||n==='TrackStartError'||n==='AbortError'?'busy':n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError'?'denied':n==='NotFoundError'||n==='OverconstrainedError'||n==='DevicesNotFoundError'?'none':/ImageBitmap unavailable/.test(error?.message||'')?'browser':'load'}
 async function toggleHead(){
   if(headEnabled){disableHead();return}
   const btn=$('head'),generation=++headGeneration;
-  btn.disabled=true;$('status').textContent='LOADING HEAD TRACKER…';camUI('loading');
+  btn.disabled=true;$('status').textContent='顔認識を読み込み中…';camUI('loading');
   try{
     if(!window.Worker||!window.createImageBitmap)throw new Error('Worker / ImageBitmap unavailable');
     const worker=new Worker(((typeof window!=='undefined'&&window.HF_ASSET_BASE)||'')+'head-tracker.worker.js');headWorker=worker;
     await new Promise((resolve,reject)=>{
       const timeout=setTimeout(()=>reject(new Error('Tracker initialization timeout')),30000);
-      worker.onerror=event=>{clearTimeout(timeout);reject(new Error(event.message||'Tracker Worker failed'));if(headEnabled)disableHead('HEAD FAILED / Q-E MANUAL TEST')};
+      worker.onerror=event=>{clearTimeout(timeout);reject(new Error(event.message||'Tracker Worker failed'));if(headEnabled)disableHead('カメラが使えません　Q / E で首を振れます')};
       worker.onmessage=({data})=>{
         if(generation!==headGeneration)return;
         if(data.type==='ready'){clearTimeout(timeout);resolve();return}
-        if(data.type==='error'){clearTimeout(timeout);reject(new Error(data.message));if(headEnabled){disableHead('HEAD FAILED / Q-E MANUAL TEST');plog('Caution','Head tracker off.')}return}
+        if(data.type==='error'){clearTimeout(timeout);reject(new Error(data.message));if(headEnabled){disableHead('カメラが使えません　Q / E で首を振れます');plog('Caution','Head tracker off.')}return}
         if(data.type==='pose'){headBusy=false;if(headEnabled)acceptHeadPose(data)}
       };
       worker.postMessage({type:'init'});
@@ -731,11 +731,11 @@ async function toggleHead(){
     stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:30,max:30},facingMode:'user'},audio:false});
     video.srcObject=stream;await video.play();
     headEnabled=true;baseline=null;headFound=false;headSampleTime=-Infinity;headBusy=false;lastFace=0;lastVT=-1;
-    camUI('on');$('status').textContent='HEAD ACTIVE / LOOK FORWARD + PRESS C';
-  }catch(error){console.error(error);if(generation!==headGeneration)return;disableHead('HEAD FAILED / Q-E MANUAL TEST',camError(error));plog('Caution','Head tracker off.')}
+    camUI('on');$('status').textContent='カメラ準備完了　画面の正面を向いて C';
+  }catch(error){console.error(error);if(generation!==headGeneration)return;disableHead('カメラが使えません　Q / E で首を振れます',camError(error));plog('Caution','Head tracker off.')}
   finally{btn.disabled=false}
 }
-function disableHead(status='HEAD OFF / Q-E MANUAL TEST',why=null){
+function disableHead(status='カメラ：オフ　Q / E で首を振れます',why=null){
   headGeneration++;headEnabled=false;headFound=false;headBusy=false;
   headWorker?.terminate();headWorker=null;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
@@ -751,11 +751,11 @@ async function captureHeadFrame(now){
     const bitmap=await createImageBitmap(video,{resizeWidth:320,resizeHeight:height,resizeQuality:'low'});
     if(!headEnabled||generation!==headGeneration){bitmap.close();return}
     worker.postMessage({type:'frame',bitmap,timestamp:now},[bitmap]);
-  }catch(error){if(generation===headGeneration){console.error(error);disableHead('HEAD FAILED / Q-E MANUAL TEST')}}
+  }catch(error){if(generation===headGeneration){console.error(error);disableHead('カメラが使えません　Q / E で首を振れます')}}
 }
 function updateHead(now,dt){
   if(headEnabled){
-    if(headBusy&&now-headRequestTime>10000){disableHead('HEAD TIMEOUT / Q-E MANUAL TEST');return}
+    if(headBusy&&now-headRequestTime>10000){disableHead('カメラが応答しません　Q / E で首を振れます');return}
     // The camera keeps reading on the menu (C still centres), but the paused view holds still.
     captureHeadFrame(now);if(!playing)return;
     // Filtering runs at display frequency, even between camera samples.
@@ -2835,17 +2835,18 @@ function tutStep(){return tut.on?TUT_STEPS[tut.i]:null}
 function tutAdvance(){sfx.ui();tut.i++;tut.t=0;tut.base=null;if(tut.i>=TUT_STEPS.length){tut.on=false;tut.doneT=4.5;tutDone=true;try{localStorage.setItem('hf.tutorial','done')}catch{}plog('Info','-Training complete. Break every hostile.')}}
 function updateTutorial(dt){
   if(tut.doneT>0)tut.doneT=Math.max(0,tut.doneT-dt);
-  const st=tutStep();if(!st||!playing||!player.alive)return;tut.t+=dt;
+  const st=tutStep();if(!st||!playing||!player.alive||headNeedCenter&&headEnabled&&headFound)return;tut.t+=dt;
   if(!tut.base)tut.base={x:player.x,z:player.z,shots:stats.shots,des:stats.designations};
   const b=tut.base,ok=st.id==='move'?Math.hypot(player.x-b.x,player.z-b.z)>6:st.id==='burst'?player.boostTime>0:st.id==='fire'?stats.shots-b.shots>=3:st.id==='head'?Math.abs(headYaw)>=20:stats.designations>b.des;
   if(ok&&tut.t>.6)tutAdvance()}
 function drawTutorial(s){
-  const st=tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
-  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':'Q / E で首を左右に振る'):st.jp;
-  const sub=done?'首で探して、マウスで撃つ':st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
+  const cal=headNeedCenter&&headEnabled&&headFound&&playing;
+  const st=cal?{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが首の正面になります。ずれたらいつでも C'}:tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
+  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':cal?st.jp:st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':'Q / E で首を左右に振る'):st.jp;
+  const sub=done?'首で探して、マウスで撃つ':cal?st.sub:st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
   const a=done?clamp(tut.doneT/.4,0,1):clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
   ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
-  hudText(done?'TRAINING COMPLETE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
+  hudText(done?'TRAINING COMPLETE':cal?'HEAD  CALIBRATE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
   hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);ctx.restore()}
 function pilotBanner(en,jp,color='#dcfff4',dur=1.5){pilot.banner={en,jp,color,t:0,dur}}
 function pilotCut(kind){pilot.cut={kind,t:0}}
@@ -3232,7 +3233,17 @@ function startGame(lock=true){
 }
 $('resultKeys').addEventListener('click',e=>{const a=e.target?.closest?.('button')?.dataset?.act;if(!a||!playing)return;sfx.ui();if(a==='menu'){pause();return}
   if(a==='next')nextSector();else if(a==='restart'){stage=1;reset();say('SORTIE')}else{reset();say('REDEPLOY')}canvas.focus?.();try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}});
-$('play').addEventListener('click',()=>{if(mode!=='sortie')setMode('sortie');startGame(true)});
+// Camera gate: the head is the point of the game, so the first 出撃 with the camera off stops on a page that
+// says so, with turning it on as the big button. Choosing to go without is remembered (hf.camGate).
+let camGateSkip=false;try{camGateSkip=localStorage.getItem('hf.camGate')==='skip'}catch{}
+function showCamGate(on){$('camGate').classList.toggle('hidden',!on);boot.classList.toggle('gated',on)}
+$('play').addEventListener('click',()=>{if(mode!=='sortie')setMode('sortie');if(!headEnabled&&!camGateSkip&&!boot.classList.contains('started')){showCamGate(true);sfx.ui();return}startGame(true)});
+// Turning the camera on and locking the pointer in one click would hide the cursor under the browser's
+// camera prompt, so the gate waits for the camera and then offers 出撃 (the pointer lock needs that click).
+let gateCamState='';
+function gateCamUI(state){if($('camGate').classList.contains('hidden'))return;const b=$('gateCam');gateCamState=state;b.disabled=state==='loading';b.textContent=state==='on'?'出撃':state==='loading'?'カメラを準備中…（許可を求められたら許可）':state==='fail'?'カメラが使えません':'カメラをオンにして出撃'}
+$('gateCam').addEventListener('click',()=>{if(headEnabled&&gateCamState==='on'){showCamGate(false);startGame(true);return}if(!headEnabled){gateCamUI('loading');toggleHead()}});
+$('gateSkip').addEventListener('click',()=>{showCamGate(false);camGateSkip=true;try{localStorage.setItem('hf.camGate','skip')}catch{}startGame(true)});
 $('endure').addEventListener('click',()=>{if(mode!=='endurance')setMode('endurance');startGame(true)});
 if(endure.best)$('status').textContent=`準備完了　耐久戦の最高記録 ${endure.best.kills}機撃破 ${fmtTime(endure.best.time)}`;
 function clearInput(){keys.clear();mouseButtons.clear();boostLatch=false}
