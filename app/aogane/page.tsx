@@ -56,6 +56,24 @@ export default function AoganePage() {
           <p className="hfLead">
             WEBカメラ式ヘッドトラッキングFPS
           </p>
+          <dl className="hfCast">
+            <div>
+              <dt>
+                AOI<span>パイロット</span>
+              </dt>
+              <dd>
+                補正も制御もない旧式の機体を、自分の目と手だけで乗りこなすエース。地球へ帰るために、暴走した施設の奥へ向かう。
+              </dd>
+            </div>
+            <div>
+              <dt>
+                蒼鉄<span>有人機</span>
+              </dt>
+              <dd>
+                どこにも通信がつながっていない旧式の機体。窓はなく、パイロットはヘルメットに映る外の映像だけを頼りに戦う。足の車輪で月面を走り、背中の噴射で跳ぶ。
+              </dd>
+            </div>
+          </dl>
           <div className="hfActions">
             <a className="hfPlay" href={playUrl}>
               ゲームを開く
