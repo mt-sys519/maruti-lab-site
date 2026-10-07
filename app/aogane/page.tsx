@@ -6,7 +6,7 @@ const playUrl = "/aogane/play/";
 export const metadata: Metadata = {
   title: { absolute: "蒼鉄 -AOGANE-｜首で探して、マウスで撃つ" },
   description:
-    "首の向きで索敵し、マウスで武器を向ける一人称のメカアクション。ウェブカメラで頭の動きを読み取れます（なくても遊べます）。PCのブラウザで動く、Maruti Labの開発中のゲームです。",
+    "ウェブカメラで頭の動きを読み取り、機体に乗り込んだように周りを見回して戦うヘッドトラッキングFPS。カメラなしでも、ゲームパッドでも遊べます。PCのブラウザで動く、Maruti Labの開発中のゲームです。",
   alternates: { canonical: "https://marutilab.com/aogane" },
   // Live before it is announced: the game is unfinished and the page is not
   // linked from anywhere yet. This comes off, and /aogane joins the
@@ -14,19 +14,20 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const controls: [string, string][] = [
-  ["W A S D", "移動"],
-  ["SHIFT", "ブースト"],
-  ["SPACE", "ジャンプ"],
-  ["マウス", "武器の向き"],
-  ["左クリック", "撃つ・振る"],
-  ["右クリック", "スコープ（ARBALEST）"],
-  ["ホイール / 1・2・3", "武器の切り替え（3は斧）"],
-  ["V", "斧をとっさに振る"],
-  ["Q / E", "首を左右へ（カメラなしのとき）"],
-  ["C", "首の向きを正面に戻す"],
-  ["ESC", "メニュー"],
-  ["R", "再出撃"],
+// [keyboard / mouse, Xbox-layout pad, what it does]
+const controls: [string, string, string][] = [
+  ["W A S D", "左スティック", "移動"],
+  ["SHIFT", "B", "ブースト"],
+  ["SPACE", "A", "ジャンプ"],
+  ["マウス", "右スティック", "武器の向き"],
+  ["左クリック", "RT", "撃つ・振る"],
+  ["右クリック", "LT", "スコープ（ARBALEST）"],
+  ["ホイール / 1・2・3", "Y", "武器の切り替え（3は斧）"],
+  ["V", "X", "斧をとっさに振る"],
+  ["Q / E", "LB / RB", "首を左右へ（カメラなしのとき）"],
+  ["C", "R3", "首の向きを正面に戻す"],
+  ["ESC", "メニュー", "メニュー"],
+  ["R", "—", "再出撃"],
 ];
 
 export default function AoganePage() {
@@ -55,23 +56,18 @@ export default function AoganePage() {
           <p className="hfLead">
             WEBカメラ式ヘッドトラッキングFPS
           </p>
-          <p className="hfLead">
-            地球へ電力を送る月面施設で、管理AIが暴走しました。施設のネットワークにつながる機械は、遠隔で操る機体も含めてすべてAIに乗っ取られます。
-            <br />
-            通信を持たない旧式の有人機「蒼鉄」に乗り、エースパイロットのAOIがAIの中枢を奪いに向かいます。
-          </p>
           <div className="hfActions">
             <a className="hfPlay" href={playUrl}>
               ゲームを開く
             </a>
             <p className="hfNeed">
               <span>PC専用</span>
-              <span>マウスとキーボードが要ります</span>
+              <span>マウスとキーボード、またはゲームパッド</span>
               <span>ウェブカメラは任意</span>
             </p>
           </div>
           <p className="hfTouchNote">
-            スマートフォンとタブレットでは遊べません。マウスとキーボードのあるPCで開いてください。
+            スマートフォンとタブレットでは遊べません。PCで開いてください。
           </p>
         </section>
 
@@ -91,19 +87,25 @@ export default function AoganePage() {
         <section className="hfSection">
           <h2>どんなゲームか</h2>
           <p>
-            ヘルメットの中から見る視界（HMD）は、首を向けた方向を映します。武器は首とは別に、マウスで向けます。正面の敵を撃ちながら、首だけ横へ振って次の敵を探す。その二つを同時に扱うのがこのゲームの中心です。
+            ウェブカメラが顔の向きを読み取り、頭を動かすと、ヘルメットの中から見る視界（HMD）がそのまま動きます。画面の前に座ったまま、機体に乗り込んで周りを見回している感覚で戦えるのが、このゲームの醍醐味です。
           </p>
           <p>
-            ウェブカメラがあれば、実際に頭を動かすと視界が動きます。カメラがなくても、Q と E のキーで首を振って遊べます。
+            銃は頭とは別に、マウスかパッドの右スティックで狙います。カメラがなくても、Q と E（パッドなら LB と RB）で首を左右に振って遊べます。
           </p>
         </section>
 
         <section className="hfSection" id="controls">
           <h2>操作</h2>
           <dl className="hfKeys">
-            {controls.map(([key, what]) => (
+            <div className="hfKeysHead" aria-hidden="true">
+              <span>キーボード・マウス</span>
+              <span>パッド</span>
+              <span />
+            </div>
+            {controls.map(([key, padKey, what]) => (
               <div key={key}>
                 <dt>{key}</dt>
+                <dt className="hfPadKey">{padKey}</dt>
                 <dd>{what}</dd>
               </div>
             ))}
@@ -112,7 +114,7 @@ export default function AoganePage() {
             ゲームを開いたら「ミッション」で出撃、「サバイバル」は倒れるまで戦い続けるモードです。「カメラで遊ぶ」でカメラを使った首の操作に切り替わり、「全画面」で全画面になります。
           </p>
           <p className="hfSmall">
-            Xbox 配置のゲームパッドでも遊べます。左スティックで移動、右スティックで銃の向き、RT で撃ちます。パッドを触ると、ゲーム内の画面下の操作表示がパッド用に切り替わります。
+            ゲームパッドは Xbox 配置です。パッドを触ると、ゲーム内の画面下の操作表示がパッド用に切り替わります。
           </p>
         </section>
 
@@ -137,8 +139,8 @@ export default function AoganePage() {
         <section className="hfSection">
           <h2>動作環境</h2>
           <ul>
-            <li>マウスとキーボードのあるPC。スマートフォンとタブレットには対応していません。</li>
-            <li>WebGL 2 が使えるブラウザ。使えない環境では軽い描画方式に切り替わりますが、動きが重くなります。</li>
+            <li>PC（マウスとキーボード、または Xbox 配置のゲームパッド）。スマートフォンとタブレットには対応していません。</li>
+            <li>Google Chrome または Microsoft Edge の最新版（Firefox と Safari は動作未確認）。WebGL 2 が使えない環境では軽い描画方式に切り替わりますが、動きが重くなります。</li>
             <li>ウェブカメラは任意です。</li>
             <li>動きが重いときは、ゲーム内の「設定」で「解像度」を下げるか、「発光」を弱にしてください。解像度の％は今の画面の大きさに対する割合で、たとえば 1920×1080 の全画面なら 75% で 1440×810、50% で 960×540 で描きます。</li>
           </ul>

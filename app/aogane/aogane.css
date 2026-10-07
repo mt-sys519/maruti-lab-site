@@ -50,9 +50,11 @@
 .hfSection ul{margin:0 0 14px;padding-left:1.2em}
 .hfSmall{font-size:12px !important;color:var(--hf-muted) !important}
 
-.hfKeys{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0 32px;margin:0 0 22px}
-.hfKeys div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--hf-line);font-size:13px}
+.hfKeys{display:grid;grid-template-columns:1fr;max-width:640px;margin:0 0 22px}
+.hfKeys div{display:grid;grid-template-columns:130px 96px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--hf-line);font-size:13px}
 .hfKeys dt{font-weight:700;letter-spacing:.1em}
+.hfKeys .hfPadKey{color:#8fb8c8}
+.hfKeys .hfKeysHead{grid-column:1/-1;font-size:11px;letter-spacing:.12em;color:#8a9894;padding:0 0 6px}
 .hfKeys dd{margin:0;color:#d0d9d6}
 
 @media (max-width:860px){
@@ -65,7 +67,7 @@
   .hfHeader{height:64px}
   .hfHeader nav a:first-child{display:none}
   .hfLead br{display:none}
-  .hfKeys div{grid-template-columns:104px 1fr}
+  .hfKeys div{grid-template-columns:104px 80px 1fr}
 }
 
 /* 蒼鉄 in the game's title face (Shippori Mincho B1 ExtraBold, close to the lettering on the key art):
