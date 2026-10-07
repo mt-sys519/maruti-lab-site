@@ -1027,9 +1027,10 @@ function drawCoolingTower(b,vy,vp,o){
   vCyl(cx,cz,R,rTop,0,h,vy,vp,{...o,edge:.0,fill:'rgba(1,6,7,.62)'});
   // Two families of straight members whose twist forms the hyperboloid waist; far members dimmer.
   const eyeA=Math.atan2(player.z-cz,player.x-cx);ctx.lineWidth=.6;
-  // The straight members of a hyperboloid pass inside the frustum through its ends, so the solid stands
-  // in at the waist radius and the lattice stays outside it.
-  if(worldRec){const c1=wc('91,255,207'),c2=wc('120,255,220'),c3=wc('150,255,230'),body=worldRec.cyls[worldRec.cyls.length-1];if(body){body.r0*=.84;body.r1*=.84}
+  // The tower is a solid shell (it hides what is behind it, so it must look like it does): the one frustum
+  // is replaced by eight that follow the hyperboloid just inside its straight members, which stay on top.
+  if(worldRec){const c1=wc('91,255,207'),c2=wc('120,255,220'),c3=wc('150,255,230'),body=worldRec.cyls.pop(),rad=t=>Math.sqrt(((1-t)*R)**2+(t*rTop)**2+2*(1-t)*t*R*rTop*Math.cos(phi))*.95;
+    if(body)for(let i=0;i<8;i++){const t0=i/8,t1=(i+1)/8;worldRec.cyls.push({...body,r0:rad(t0),r1:rad(t1),y0:h*t0,y1:h*t1})}
     for(const fam of [1,-1])for(let i=0;i<N;i++){const a=i/N*TAU,a2=a+fam*phi;recLine(cx+Math.cos(a)*R,0,cz+Math.sin(a)*R,cx+Math.cos(a2)*rTop,h,cz+Math.sin(a2)*rTop,c1,Math.min(1,.17*o.glow),.6)}
     for(const [y,r,a] of [[0,R,.25],[h*.62,R*Math.cos(phi/2)*.98,.22],[h,rTop,.45]])for(let i=0;i<40;i++){const t0=i/40*TAU,t1=(i+1)/40*TAU;recLine(cx+Math.cos(t0)*r,y,cz+Math.sin(t0)*r,cx+Math.cos(t1)*r,y,cz+Math.sin(t1)*r,c2,Math.min(1,a*o.glow),y===h?1.2:.8)}
     for(let k=0;k<3;k++){const t=(gameTime*.12+k/3)%1,y=h+t*14,r=rTop*(1+t*.5);for(let i=0;i<24;i++){const t0=i/24*TAU,t1=(i+1)/24*TAU;recLine(cx+Math.cos(t0)*r,y,cz+Math.sin(t0)*r,cx+Math.cos(t1)*r,y,cz+Math.sin(t1)*r,c3,(1-t)*.08*o.glow,.8)}}
@@ -1615,12 +1616,14 @@ function drawEnemy(e,viewYaw,viewPitch){
   const c=project(e.x,rig.hit.cy+eY(e),e.z,viewYaw,viewPitch);if(!c)return;
   const depth=c.depth,near=clamp((60-depth)/48,0,1),far=clamp((depth-70)/90,0,1),hot=e.flash>0?clamp(e.flash/.1,0,1)*.85:0;
   const reveal=e.wakeT>0?1-e.wakeT/.62:1,revealY=reveal<1?reveal*(rig.height+.4):null,pulse=.5+.5*Math.sin(gameTime*2.1+e.phase);
-  const glow={eye:.75+.25*pulse+A.prep*.6,tip:.55+.3*pulse+A.prep*.8+A.dash*.6,thrust:.35+A.dash*1.3+A.speed*.04+A.prep*.3,hover:.55+.2*Math.sin(gameTime*9+e.phase),core:.6+.4*pulse,blade:A.prep*1.2+A.dash,vent:A.prep*1.3+A.dash*.8,heat:.35+A.prep*.9+A.recoil*.8,muzzle:A.prep*1.3+A.recoil};
+  // A dormant hostile is solid like any other (a see-through one read as standing behind a wall); it is
+  // asleep because its lights are out: eyes, vents and thrusters at a tenth.
+  const sleep=e.awake?1:.1,glow={eye:.75+.25*pulse+A.prep*.6,tip:.55+.3*pulse+A.prep*.8+A.dash*.6,thrust:.35+A.dash*1.3+A.speed*.04+A.prep*.3,hover:.55+.2*Math.sin(gameTime*9+e.phase),core:.6+.4*pulse,blade:A.prep*1.2+A.dash,vent:A.prep*1.3+A.dash*.8,heat:.35+A.prep*.9+A.recoil*.8,muzzle:A.prep*1.3+A.recoil};if(sleep<1)for(const k in glow)glow[k]*=sleep;
   const insts=pose.parts.map(p=>({P:p.P,wv:p.wv,R:p.X.R,hidden:e.lost?.[p.i]}));
   // WebGL: hostiles are batched and drawn after the sorted pass (buildings occlude them through depth);
   // the ground contact and the hostile effects are recorded into the same pass.
-  if(threeEnemy(e)){enemyBatch.push({e,insts,S,hot,glow,ghost:e.awake?0:.22,revealY});drawEnemyGround(e,viewYaw,viewPitch);enemyFXQueue.push(e);return}
-  renderMeshInstances(insts,viewYaw,viewPitch,{style:S,inkW:2+near*3.2,alpha:(e.awake?1:.22)*(1-far*.35),silW:1.35+near*.95,crW:.8+near*.35,halo:e.awake?.07+.05*pulse+.25*hot:0,detail:depth<75,creases:depth<110,glow,revealY,hitPoint:e.hitPoint,hitT:e.hitT>0?clamp(e.hitT/.12,0,1):0,fillAlpha:e.awake?1:.55});
+  if(threeEnemy(e)){enemyBatch.push({e,insts,S,hot,glow,ghost:0,revealY});drawEnemyGround(e,viewYaw,viewPitch);enemyFXQueue.push(e);return}
+  renderMeshInstances(insts,viewYaw,viewPitch,{style:S,inkW:2+near*3.2,alpha:1-far*.35,silW:1.35+near*.95,crW:.8+near*.35,halo:e.awake?.07+.05*pulse+.25*hot:0,detail:depth<75,creases:depth<110,glow,revealY,hitPoint:e.hitPoint,hitT:e.hitT>0?clamp(e.hitT/.12,0,1):0,fillAlpha:1});
   drawEnemyFX(e,viewYaw,viewPitch);drawEnemyGround(e,viewYaw,viewPitch)
 }
 // Keep WebGL-drawn matte surfaces out of the bloom source, as renderMeshInstances does: front faces only

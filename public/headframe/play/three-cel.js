@@ -73,6 +73,21 @@ const ndMat = new THREE.RawShaderMaterial({
     void main(){ oN = vec4(normalize(vN) * 0.5 + 0.5, vD / 20.0); oId = vec4(partId, fade, hostile, 1.0); }`,
   uniforms: { partId: { value: 0 }, fade: { value: 1 }, hostile: { value: 0 } },
 });
+// World solids in the normal + depth pass: depth only, placed by their model matrix (ndMat writes
+// world-space hostile vertices and has none, which left every building at the origin, so hostile ink
+// showed through walls). They hide what stands behind them and add no ink of their own, as before.
+const ndDepthMat = new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3, colorWrite: false,
+  vertexShader: /* glsl */`
+    precision highp float;
+    in vec3 position;
+    uniform mat4 projectionMatrix, viewMatrix, modelMatrix;
+    void main(){ gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    layout(location = 0) out vec4 oN; layout(location = 1) out vec4 oId;
+    void main(){ oN = vec4(0.0); oId = vec4(0.0); }`,
+});
 const mats = new Map();
 const rgb = a => new THREE.Vector3(a[0] / 255, a[1] / 255, a[2] / 255);
 const hex = h => { const n = parseInt(h.slice(1), 16); return new THREE.Vector3((n >> 16) / 255, (n >> 8 & 255) / 255, (n & 255) / 255); };
@@ -172,7 +187,7 @@ const worldMat = new THREE.RawShaderMaterial({
     void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(transpose(inverse(mat3(modelMatrix))) * normal); /* non-uniform scale: normals need the inverse transpose */ gl_Position = projectionMatrix * viewMatrix * w; }`,
   fragmentShader: /* glsl */`
     precision highp float;
-    uniform vec3 light, camPos, celTop, celLit, celShade; uniform float sync, wFade, box, seed, y0, hgt; uniform vec4 ext, win;
+    uniform vec3 light, camPos, celTop, celLit, celShade, haze; uniform float sync, wFade, box, seed, y0, hgt; uniform vec4 ext, win;
     in vec3 vN; in vec3 vW; out vec4 o;
     float hsh(float n){ return fract(sin(n * 127.1 + 311.7) * 43758.5453); }
     vec3 cel(vec3 c){ float L = (c.r + c.g + c.b) / 3.0; return mix(c, vec3(L * 2.1 + 10.0 / 255.0, L * 1.45 + 4.0 / 255.0, L * 0.45), sync); }
@@ -203,11 +218,13 @@ const worldMat = new THREE.RawShaderMaterial({
           }
         }
       }
-      o = vec4(c * wFade, wFade);
+      // distance fades a solid into the horizon haze but never makes it see-through: what it hides
+      // must look like it is in the way
+      o = vec4(mix(haze, c, wFade), 1.0);
     }`,
-  uniforms: { celTop: { value: new THREE.Vector3() }, celLit: { value: new THREE.Vector3() }, celShade: { value: new THREE.Vector3() }, light: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() }, sync: { value: 0 }, wFade: { value: 1 }, box: { value: 1 }, seed: { value: 0 }, y0: { value: 0 }, hgt: { value: 1 }, ext: { value: new THREE.Vector4() }, win: { value: new THREE.Vector4() } },
+  uniforms: { celTop: { value: new THREE.Vector3() }, celLit: { value: new THREE.Vector3() }, celShade: { value: new THREE.Vector3() }, light: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() }, sync: { value: 0 }, wFade: { value: 1 }, haze: { value: new THREE.Vector3() }, box: { value: 1 }, seed: { value: 0 }, y0: { value: 0 }, hgt: { value: 1 }, ext: { value: new THREE.Vector4() }, win: { value: new THREE.Vector4() } },
   polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2,
-  // distance-faded solids are laid over the sky (premultiplied), so the pass stays opaque
+  // solids are opaque (alpha 1); the premultiplied blend is kept so nothing else changes
   blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
 });
 const boxGeo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
@@ -216,7 +233,7 @@ const cylGeo = ratio => { const k = Math.round(ratio * 50) / 50; let g = cylGeos
 const boxPool = [], cylPool = [];
 function poolMesh(pool, i, geo) {
   let m = pool[i];
-  if (!m) { m = new THREE.Mesh(geo, worldMat); m.frustumCulled = false; m.onBeforeRender = setPerMesh; m.userData.world = true; m.userData.partId = ((pool === boxPool ? 1 : 2) * 1009 + i * 37) % 4093 / 4096 + 1 / 8192; scene.add(m); pool[i] = m; }
+  if (!m) { m = new THREE.Mesh(geo, worldMat); m.frustumCulled = false; m.onBeforeRender = setPerMesh; m.userData.world = true; m.renderOrder = -1; /* before hostiles, whose parts all sit at the origin: in the normal + depth pass the world is depth only and must be there first to hide them */ m.userData.partId = ((pool === boxPool ? 1 : 2) * 1009 + i * 37) % 4093 / 4096 + 1 / 8192; scene.add(m); pool[i] = m; }
   if (m.geometry !== geo) m.geometry = geo;
   return m;
 }
@@ -537,7 +554,7 @@ function draw(o) {
   renderer.setRenderTarget(rtColor); renderer.setClearColor(0x000000, 0); renderer.clear();
   if (sky) { const u = skyMat.uniforms; u.hy.value = sky.hy; u.gy0.value = sky.glowY0; u.gy1.value = sky.glowY1; u.ga.value = sky.glowA; u.gc.value.set(sky.glowCol[0] / 255, sky.glowCol[1] / 255, sky.glowCol[2] / 255);
     const v3 = (t, c) => t.set(c[0] / 255, c[1] / 255, c[2] / 255); ['c0', 'c1', 'c2', 'c3'].forEach((k, i) => v3(u[k].value, sky.stops[i])); v3(u.gnd.value, sky.ground);
-    const w = worldMat.uniforms; v3(w.celTop.value, sky.cel[0]); v3(w.celLit.value, sky.cel[1]); v3(w.celShade.value, sky.cel[2]);
+    const w = worldMat.uniforms; v3(w.celTop.value, sky.cel[0]); v3(w.celLit.value, sky.cel[1]); v3(w.celShade.value, sky.cel[2]); v3(w.haze.value, sky.stops[3]);
     renderer.render(skyScene, quadCam); }
   renderer.render(scene, camera);
   // normal + depth pass: occluders stay depth-only so they hide hostiles without drawing outlines of their own
@@ -545,7 +562,7 @@ function draw(o) {
   for (const ch of scene.children) {
     if (!ch.visible || ch.userData.occluder) continue;
     if (ch.userData.line || ch.isLineSegments || ch.isPoints || ch.material?.userData?.glow) { ch.visible = false; hidden.push(ch); continue; }
-    if (ch.isMesh) { ch.userData.cm = ch.material; ch.material = ndMat; swapped.push(ch); }
+    if (ch.isMesh) { ch.userData.cm = ch.material; ch.material = ch.userData.world ? ndDepthMat : ndMat; swapped.push(ch); }
   }
   renderer.setRenderTarget(rtND); renderer.clear(); renderer.render(scene, camera);
   for (const ch of swapped) ch.material = ch.userData.cm;
