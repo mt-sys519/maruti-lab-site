@@ -694,11 +694,13 @@ const HEAD_FRESH_MS=250;
 // you sit in front of a screen and cannot look up at it, so height is the mouse's job. View only, never the aim.
 const HEAD_PITCH_GAIN=.5,HEAD_PITCH_MAX=5;
 const gain=$('gain'),dead=$('dead'),smooth=$('smooth');
+// 首の追従速度: the slider runs negative so right is faster; the spring's time scale is its magnitude (0.13 = 1.00x).
+function headSmooth(){return Math.max(.03,-(+smooth.value))}
 // Human neck, not a turret: a critically damped spring (slow start, fast middle, soft stop, no
 // overshoot) with a ~450 deg/s cap. SMOOTH sets the stiffness (0.13 -> 60 deg in ~0.3 s). Sub-stepped so
 // the response is the same at any frame rate.
 let headVel=0;
-function setHeadTarget(target,dt){const w=2.15/Math.max(.03,+smooth.value),n=Math.max(1,Math.ceil(dt*240)),h=dt/n;
+function setHeadTarget(target,dt){const w=2.15/headSmooth(),n=Math.max(1,Math.ceil(dt*240)),h=dt/n;
   for(let i=0;i<n;i++){headVel+=(w*w*(target-headYaw)-2*w*headVel)*h;headVel=clamp(headVel,-450,450);headYaw+=headVel*h}}
 function headPoseFresh(now=performance.now()){return !headEnabled||(headFound&&now-headSampleTime<=HEAD_FRESH_MS)}
 function centerHead(){headNeedCenter=false;baseline=headPoseFresh()&&headFound?rawYaw:null;basePitch=baseline===null?null:rawPitch;headPitchTarget=0;headPitch=0;manualHead=0;headTarget=0;headYaw=0;headVel=0;plog('System','Head centered.');say('HEAD_CENTER')}
@@ -794,7 +796,7 @@ function updateHead(now,dt){
     setHeadTarget(manualHead,dt);
   }
   // Same stiffness as the yaw spring, without its overshoot: a few degrees do not need one.
-  if(!headEnabled||headPoseFresh(now))headPitch+=(headPitchTarget-headPitch)*(1-Math.exp(-dt*2.15/Math.max(.03,+smooth.value)));
+  if(!headEnabled||headPoseFresh(now))headPitch+=(headPitchTarget-headPitch)*(1-Math.exp(-dt*2.15/headSmooth()));
 }
 
 // ---------- PROJECTION ----------
@@ -3319,7 +3321,7 @@ document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;c
 document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector();if((e.code==='Enter'||e.code==='NumpadEnter'||e.code==='Space')&&!e.repeat)skipEnding()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='1面からやり直します'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='全画面にできませんでした'}});
-function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind($('padSens'),$('padsensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);
+function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind($('padSens'),$('padsensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);{const f=()=>$('smoothout').textContent=(.13/headSmooth()).toFixed(2)+'×';smooth.addEventListener('input',f);f()}
 addEventListener('blur',()=>{clearInput();if(playing)pause()});
 addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());headWorker?.terminate()});
 // ---------- GAMEPAD ----------

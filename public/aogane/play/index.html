@@ -41,8 +41,8 @@
       <label><span>マウス感度</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
       <label><span>スティック感度</span><output id="padsensout">1.00×</output><input id="padSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
       <label><span>首の感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
-      <label><span>首の遊び</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
-      <label><span>首のなめらかさ</span><output id="smoothout">0.13</output><input id="smooth" type="range" min="0.04" max="0.35" value="0.13" step="0.01"></label>
+      <label><span>首のデッドゾーン</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
+      <label><span>首の追従速度</span><output id="smoothout">1.00×</output><input id="smooth" type="range" min="-0.35" max="-0.04" value="-0.13" step="0.01"></label>
       </div>
     </div>
 
@@ -74,7 +74,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=89"></script>
+<script src="main.js?v=90"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>
