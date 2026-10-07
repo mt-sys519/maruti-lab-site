@@ -125,11 +125,19 @@ function buildBed(){
   loop(noiseWhite).connect(bed.windF).connect(bed.wind).connect(sfxBus);
   // Wheel motors (the frame's feet roll, after the key art): a hub-motor whine that rises with ground speed
   // while BURST and its glide are on the wheels, and spins down when the frame is back on its feet.
-  bed.motor=ac.createGain();bed.motor.gain.value=0;bed.motorF=ac.createBiquadFilter();bed.motorF.type='bandpass';bed.motorF.Q.value=3.2;bed.motorF.frequency.value=900;bed.motorF.connect(bed.motor).connect(sfxBus);
+  // Heavy and SF rather than a toy whine (user, 2026-10-07): an inverter that sings up the scale, a geared
+  // growl under it chopped by the gear mesh, and a sub you feel through the frame (the Moon carries no air,
+  // so what AOI hears of her drive comes up through the chassis).
+  bed.motor=ac.createGain();bed.motor.gain.value=0;bed.motor.connect(sfxBus);
+  bed.motorF=ac.createBiquadFilter();bed.motorF.type='bandpass';bed.motorF.Q.value=5;bed.motorF.frequency.value=900;const whine=ac.createGain();whine.gain.value=.28;bed.motorF.connect(whine).connect(bed.motor);
+  bed.growlF=ac.createBiquadFilter();bed.growlF.type='lowpass';bed.growlF.frequency.value=400;bed.growlF.Q.value=.9;bed.growlG=ac.createGain();bed.growlG.gain.value=.75;bed.growlF.connect(bed.growlG).connect(bed.motor);
+  bed.growlO=[0,-14].map(c=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=60;o.detune.value=c;o.connect(bed.growlF);o.start();return o});
+  bed.gearL=ac.createOscillator();bed.gearL.frequency.value=18;const gd=ac.createGain();gd.gain.value=.4;bed.gearL.connect(gd).connect(bed.growlG.gain);bed.gearL.start();
+  bed.subO=ac.createOscillator();bed.subO.type='sine';bed.subO.frequency.value=34;const sg=ac.createGain();sg.gain.value=.9;bed.subO.connect(sg).connect(bed.motor);bed.subO.start();
   // Tyre scrub: rubber dragged sideways when the frame changes direction or turns while it rolls.
   bed.scrub=ac.createGain();bed.scrub.gain.value=0;bed.scrubF=ac.createBiquadFilter();bed.scrubF.type='bandpass';bed.scrubF.Q.value=2.2;bed.scrubF.frequency.value=1700;
   loop(noiseWhite).connect(bed.scrubF).connect(bed.scrub).connect(sfxBus);
-  bed.motorO=[['square',0,.35],['sawtooth',-1200,.5]].map(([type,cents,g0])=>{const o=ac.createOscillator();o.type=type;o.frequency.value=220;o.detune.value=cents;const g=ac.createGain();g.gain.value=g0;o.connect(g).connect(bed.motorF);o.start();return o});
+  bed.motorO=[['sawtooth',0,.5],['sawtooth',9,.5]].map(([type,cents,g0])=>{const o=ac.createOscillator();o.type=type;o.frequency.value=220;o.detune.value=cents;const g=ac.createGain();g.gain.value=g0;o.connect(g).connect(bed.motorF);o.start();return o});
 }
 function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0,rolling=false,scrub=0){
   if(!ac||!bed.hum)return;
@@ -139,11 +147,12 @@ function updateEngine(speed,boosting,syncing=false,turnRate=0,gimbalLoad=0,rolli
   bed.driveF.frequency.setTargetAtTime(110+speed*6+(boosting?320:0),t,.08);
   bed.servo.gain.setTargetAtTime(on*(turn*.022+gim*.016),t,.05);
   const sf=150+turn*170+gim*140;for(const o of bed.servoO)o.frequency.setTargetAtTime(sf,t,.07);bed.servoF.frequency.setTargetAtTime(sf*4.2,t,.07);
-  bed.wind.gain.setTargetAtTime(on*Math.min(.085,v*v*.05+(boosting?.05:0)),t,.10);
+  bed.wind.gain.setTargetAtTime(0,t,.10); // no air on the Moon: no rush of wind
   bed.windF.frequency.setTargetAtTime(700+speed*32+(boosting?1100:0),t,.12);
   if(bed.scrub){bed.scrub.gain.setTargetAtTime(on*(rolling?Math.min(.07,scrub*.07):0),t,.04);bed.scrubF.frequency.setTargetAtTime(1500+scrub*700,t,.05)}
-  if(bed.motor){bed.motor.gain.setTargetAtTime(on*(rolling?(boosting?.06:.018+Math.min(1,v)*.05):0),t,rolling?.05:.22);
-    const mf=rolling?240+speed*15:140;for(const o of bed.motorO)o.frequency.setTargetAtTime(mf,t,rolling?.06:.35);bed.motorF.frequency.setTargetAtTime(mf*2.6,t,.08)}
+  if(bed.motor){bed.motor.gain.setTargetAtTime(on*(rolling?(boosting?.14:.05+Math.min(1,v)*.07):0),t,rolling?.05:.22);
+    const mf=rolling?240+speed*15:140,k=rolling?.06:.35;for(const o of bed.motorO)o.frequency.setTargetAtTime(mf,t,k);bed.motorF.frequency.setTargetAtTime(mf*2.2,t,.08);
+    for(const o of bed.growlO)o.frequency.setTargetAtTime(mf*.25,t,k);bed.growlF.frequency.setTargetAtTime(260+mf*.35,t,.08);bed.subO.frequency.setTargetAtTime(Math.max(28,mf*.125),t,k);bed.gearL.frequency.setTargetAtTime(mf*.07,t,k)}
 }
 // Music clock ------------------------------------------------------------------
 function chordAt(step){return CHORDS[Math.floor(step/32)%CHORDS.length]}
@@ -902,6 +911,20 @@ function worldRingXY(cx,cy,cz,rx,ry,viewYaw,viewPitch,alpha=.20,color='103,255,2
 // last one (0 = below, 1 = just up). Eased per frame so a kill brightens the deck over a second or two.
 let sunK=0;
 function sunTarget(){if(stage!==3)return 0;let n=0,a=0;for(const e of enemies){n++;if(e.alive)a++}return n?1-a/n:0}
+// Sunrise shadows on SKYDECK: the sun sits on the left horizon, so every building and walking hostile throws a
+// long shadow to the right across deck and regolith, darkening as the sun clears the rim (same sunVis as the
+// sky shader). Each caster's footprint is swept away from the sun as one quad, drawn over the deck tiles.
+const SUN_AZ=-1.15;
+function sunVis(){return clamp((-.05+.065*sunK+.006)/.016,0,1)}
+// the deck tiles catch the low sun too, so the shadows have something to fall on
+function sunLit(c){const v=stage===3?sunVis():0;return v>0?c.map((x,i)=>lerp(x,[118,116,110][i],.6*v)):c}
+function recordSunShadows(){
+  const v=sunVis();if(!worldRec||stage!==3||v<=0)return;const sx=-Math.sin(SUN_AZ),sz=Math.cos(SUN_AZ),nx=-sz,nz=sx,Q=worldRec.groundQ2,a=.62*v;
+  const cast=(cx,cz,w,d,h)=>{const L=Math.min(220,h*12),C=[[cx-w/2,cz-d/2],[cx+w/2,cz-d/2],[cx+w/2,cz+d/2],[cx-w/2,cz+d/2]];let A=C[0],B=C[0];
+    for(const c of C){const p=c[0]*nx+c[1]*nz;if(p<A[0]*nx+A[1]*nz)A=c;if(p>B[0]*nx+B[1]*nz)B=c}
+    Q.push(A[0],.04,A[1],B[0],.04,B[1],B[0]+sx*L,.04,B[1]+sz*L,A[0]+sx*L,.04,A[1]+sz*L,0,0,0,a)};
+  for(const b of buildings)cast(b.x,b.z,b.w,b.d,b.h);
+  for(const e of enemies)if(e.alive&&e.type!=='KITE')cast(e.x,e.z,2.6,2.6,e.type==='TITAN'?15:4)}
 function drawSky(viewYaw,pitch){
   {const t=sunTarget();sunK=stage===3?sunK+(t-sunK)*.025:0}
   if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:skyStops().map(colRGB),ground:colRGB(NIGHT.ground),moon:stage===2?0:1,sun:sunK,yaw:viewYaw,foc:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
@@ -1013,7 +1036,7 @@ function recordGround(){
   for(const side of [-1,1])for(let i=0;i<6;i++){const span=270,z=((gameTime*(16+side*1.1)+i*47+135)%span)-135;recWSeg(side*24.2,.08,z,side*24.2,.08,z-5.6,'119,255,217',.34,1.2,false,7)}
   R.segsN=R.ground2;R.quads=R.groundQ2;
   const zA=Math.floor((player.z-80)/6)*6,zB=player.z+80,seg=(x0,z0,x1,z1,col,a,w)=>recWSeg(x0,.03,z0,x1,.03,z1,col,a,w,false);
-  for(let z=zA;z<zB;z+=6){const f=clamp(1-Math.abs(z+3-player.z)/80,0,1);if(f>0)recQuad(-17.5,z,17.5,z+6,.02,celRGB(Math.floor(z/6)%2?[24,36,38]:[27,40,42]),.85*f)}
+  for(let z=zA;z<zB;z+=6){const f=clamp(1-Math.abs(z+3-player.z)/80,0,1);if(f>0)recQuad(-17.5,z,17.5,z+6,.02,celRGB(sunLit(Math.floor(z/6)%2?[24,36,38]:[27,40,42])),.85*f)}
   for(let z=zA;z<zB;z+=6)seg(-17.5,z,17.5,z,WORLD_CEL.ink,.75,1.2);for(let x=-17.5;x<=17.5;x+=5.83)seg(x,zA,x,zB,WORLD_CEL.ink,.75,1.2);
   for(const x of [-8.75,8.75])for(let z=Math.floor(zA/8)*8;z<zB;z+=8)seg(x,z,x,z+4,'#dfe9e4',.6,2.4);
   for(const x of [-16.9,16.9])seg(x,zA,x,zB,'#d9b443',.75,2.6);
@@ -2407,7 +2430,7 @@ function drawSightLinkCue(viewYaw,viewPitch){
   ctx.shadowBlur=3;ctx.font='7px Consolas';ctx.textAlign='left';ctx.fillText('LINK',x1+g+l+4,cy+3);ctx.restore();
 }
 function drawKillPulse(){if(player.killPulse<=0)return;const k=1-player.killPulse,rr=Math.min(W,H)*(.08+k*.36),a=player.killPulse;ctx.save();ctx.strokeStyle=`rgba(255,220,135,${.48*a})`;ctx.shadowBlur=18;ctx.shadowColor='#ffd16f';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W/2,H*.49,rr,0,TAU);ctx.stroke();ctx.globalAlpha=.16*a;ctx.fillStyle='#fff0b5';ctx.fillRect(0,H*.49-1,W,2);ctx.restore()}
-function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;bootFrame();drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);bootRing();if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(bootK(x.o.x,x.o.z)&&(!enemyOccluded(x.o)||threeEnemy(x.o)))drawEnemy(x.o,viewYaw,viewPitch)}bootR=1e9;if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
+function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;bootFrame();drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);recordSunShadows();bootRing();if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(bootK(x.o.x,x.o.z)&&(!enemyOccluded(x.o)||threeEnemy(x.o)))drawEnemy(x.o,viewYaw,viewPitch)}bootR=1e9;if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
 
 // One primary attack and one light pressure attack may commit at a time.
 function updateCombatDirector(){
