@@ -431,7 +431,7 @@ function enemyHitT(e,x0,y0,z0,x1,y1,z1,pad=0){const R=RIGS[e.type],H=R.hit;let t
 // Height to aim / look at: ATLAS's hull is ~10 m up, everyone else ~3 m.
 // ATLAS fights from ~70 m and is tall, so locks, designation and the attack director reach a little further.
 function reach(e){return e.type==='TITAN'?1.15:1}
-function aimY(e){return e.type==='TITAN'?RIGS.TITAN.hit.cy:e.type==='KITE'?eY(e)+RIGS.KITE.hit.cy:3.0}
+function aimY(e){return e.type==='TITAN'?RIGS.TITAN.hit.cy:e.type==='KITE'||e.type==='SCOUT'?eY(e)+RIGS[e.type].hit.cy:3.0}
 // Flying machines carry their height in e.y (the root of the rig); everything on the deck has none.
 function eY(e){return e.y||0}
 // Line-of-sight height from a hostile toward the frame.
@@ -924,7 +924,7 @@ function recordSunShadows(){
     for(const c of C){const p=c[0]*nx+c[1]*nz;if(p<A[0]*nx+A[1]*nz)A=c;if(p>B[0]*nx+B[1]*nz)B=c}
     Q.push(A[0],.04,A[1],B[0],.04,B[1],B[0]+sx*L,.04,B[1]+sz*L,A[0]+sx*L,.04,A[1]+sz*L,0,0,0,a)};
   for(const b of buildings)cast(b.x,b.z,b.w,b.d,b.h);
-  for(const e of enemies)if(e.alive&&e.type!=='KITE')cast(e.x,e.z,2.6,2.6,e.type==='TITAN'?15:4)}
+  for(const e of enemies)if(e.alive&&eY(e)<1)cast(e.x,e.z,2.6,2.6,e.type==='TITAN'?15:4)}
 function drawSky(viewYaw,pitch){
   {const t=sunTarget();sunK=stage===3?sunK+(t-sunK)*.025:0;if(sunK<=0)sunSaid=false;else if(!sunSaid&&playing&&sunVis()>.5){sunSaid=true;say('SUNRISE')}}
   if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:skyStops().map(colRGB),ground:colRGB(NIGHT.ground),moon:stage===2?0:1,sun:sunK,yaw:viewYaw,foc:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
@@ -2322,7 +2322,7 @@ function drawScanCue(e,viewYaw,viewPitch){
   ctx.globalAlpha=.82;ctx.shadowBlur=4;ctx.font='8px Consolas';ctx.textAlign='left';ctx.fillText(designated?'HMD DES':'HMD ACQ',x0,y1+13);ctx.textAlign='right';ctx.fillText(designated?`${e.designated.toFixed(1)}s`:`${Math.round(progress*100)}%`,x1,y1+13)
   ctx.restore();
 }
-function drawLeadCue(viewYaw,viewPitch){const lock=getLock(.42);if(!lock||lock.e.marked<=0||!lock.e.awake)return;const e=lock.e,leadT=clamp(lock.dist/92,.08,1.15),lx=e.x+(e.vx||0)*leadT,lz=e.z+(e.vz||0)*leadT,p=project(lx,3.0,lz,viewYaw,viewPitch),q=project(e.x,3.0+eY(e),e.z,viewYaw,viewPitch);if(!p||!q)return;ctx.save();ctx.strokeStyle='rgba(255,209,111,.68)';ctx.fillStyle='rgba(255,225,153,.82)';ctx.shadowBlur=8;ctx.shadowColor='#ffd16f';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);const r=7;ctx.beginPath();ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath();ctx.stroke();ctx.font='8px Consolas';ctx.textAlign='center';ctx.fillText('LEAD',p.x,p.y-12);ctx.restore()}
+function drawLeadCue(viewYaw,viewPitch){const lock=getLock(.42);if(!lock||lock.e.marked<=0||!lock.e.awake)return;const e=lock.e,leadT=clamp(lock.dist/92,.08,1.15),lx=e.x+(e.vx||0)*leadT,lz=e.z+(e.vz||0)*leadT,p=project(lx,3.0+eY(e),lz,viewYaw,viewPitch),q=project(e.x,3.0+eY(e),e.z,viewYaw,viewPitch);if(!p||!q)return;ctx.save();ctx.strokeStyle='rgba(255,209,111,.68)';ctx.fillStyle='rgba(255,225,153,.82)';ctx.shadowBlur=8;ctx.shadowColor='#ffd16f';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);const r=7;ctx.beginPath();ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath();ctx.stroke();ctx.font='8px Consolas';ctx.textAlign='center';ctx.fillText('LEAD',p.x,p.y-12);ctx.restore()}
 function drawHmdBoresight(){
   const cx=W/2,cy=H*.49,target=visualContact,progress=target?clamp((target.focus||0)/.30,0,1):0;
   ctx.save();ctx.translate(cx,cy);ctx.strokeStyle='rgba(103,255,209,.38)';ctx.fillStyle='rgba(126,255,218,.62)';ctx.shadowBlur=4;ctx.shadowColor='#67ffd1';ctx.lineWidth=1;
@@ -2523,6 +2523,9 @@ function updateEnemies(dt){
   for(const e of enemies){
     if(!e.alive){e.vx=e.vz=0;continue}
     if(e.type==='KITE'){updateKite(e,dt);continue}
+    // VANE is a drone: asleep it idles just off the deck, awake it rises to its own height (body 6.5-8.5 m up) with a
+    // slow drift, so it reads apart from the walkers and is looked up at (~6-11 deg at its ~29 m, inside the view's ~18).
+    if(e.type==='SCOUT'){if(e.alt==null)e.alt=4+hash(e.id+5)*2;const ty=e.awake?e.alt+Math.sin(gameTime*.9+e.phase)*.6:0;e.y=eY(e)+(ty-eY(e))*Math.min(1,dt*(e.awake?1.1:3))}
     const dx=player.x-e.x,dz=player.z-e.z,dist=Math.hypot(dx,dz)||1,los=!segmentHitsWorld(e.x,losY(e),e.z,player.x,CAMERA_Y,player.z);
     e.yaw=Math.atan2(dx,-dz);
     if(!player.alive||missionClear||!e.awake||e.wakeT>0||e.stun>0){e.vx=e.vz=0;continue}
