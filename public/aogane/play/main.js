@@ -196,8 +196,8 @@ const KILL_VOICE={
 const sfx={
   // 30mm: transient click, cracking report, chest thump, short tail. Immediate, never quantised.
   fire(linked=false){if(!ac)return;const r=.96+Math.random()*.08;
-    burst({hp:3200,d:.014,g:.28,pri:2});burst({bp:2400*r,bp2:900,q:.9,d:.075,g:.35,pri:2});
-    tone({f:170*r,f2:50,glide:.07,d:.15,g:.44,crush:true,pri:2});burst({pink:true,lp:1100,lp2:260,d:.24,g:.085,rev:.06});
+    burst({hp:3200,d:.014,g:.40,pri:2});burst({bp:2400*r,bp2:900,q:.9,d:.075,g:.49,pri:2});
+    tone({f:170*r,f2:50,glide:.07,d:.15,g:.62,crush:true,pri:2});burst({pink:true,lp:1100,lp2:260,d:.24,g:.12,rev:.06});
     tone({f:96*r,type:'square',d:.035,g:.018,lp:700,t:ac.currentTime+.035});
     if(linked){const ch=chordAt(music.step);tone({f:midiHz(ROOT+24+ch[Math.floor(Math.random()*ch.length)]),type:'triangle',d:.06,g:.014,dly:.12})}},
   // Hit: tight metallic tick now, then an ascending chord note on the next 16th (Rez).
@@ -3205,7 +3205,7 @@ function say(event,chance=1,fromQueue=false){
   if(busy&&vox.cur){try{vox.cur.stop()}catch{}}
   // Radio voice: band-limit, presence lift, light saturation, squelch ticks at both ends.
   const src=ac.createBufferSource();src.buffer=buf;const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=260;const pk=ac.createBiquadFilter();pk.type='peaking';pk.frequency.value=1900;pk.Q.value=.8;pk.gain.value=4;
-  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;const sh=ac.createWaveShaper();sh.curve=softClipCurve(1.6);const g=ac.createGain();g.gain.value=.36;
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;const sh=ac.createWaveShaper();sh.curve=softClipCurve(1.6);const g=ac.createGain();g.gain.value=.255;
   src.connect(hp).connect(pk).connect(lp).connect(sh).connect(g).connect(voiceBus);src.start(now+.03);
   const dur=buf.duration+.03;burst({t:now,hp:2600,lp:7000,d:.035,g:.03,pri:3});burst({t:now+dur,hp:2600,lp:7000,d:.05,g:.025,pri:3});
   vox.cur=src;vox.curPrio=P;vox.curEnd=now+dur;vox.lastEnd=now+dur;vox.lastId[event]=L.id;vox.cool[event]=now+L.cool;voxDuck(dur);
