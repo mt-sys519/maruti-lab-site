@@ -655,7 +655,7 @@ function getHmdLock(){const e=enemies.find(x=>x.id===lastDesignatedId&&x.alive&&
 function getSightLink(maxAngle=.105){const h=getHmdLock();if(!h)return null;const e=h.e,ay=player.yaw+player.torso,ap=player.pitch,dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz)||1,ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);return score<maxAngle?{e,dist,score}:null}
 function wakeEnemy(e,label='CONTACT'){if(!e||!e.alive||e.awake)return;e.awake=true;e.wakeT=.62;e.marked=Math.max(e.marked||0,1.8);e.flash=.18;sfx.contact(e);plog('Caution',`-${label==='HMD HANDOFF'?'Handoff contact':'Hostile contact'}. ${etag(e)}`);pilotGlance(e,.8,1);sayContact(e);shockwave(e.x,.06,e.z,'#ff7667',9,.62,'ground')}
 function wakeNearestCold(){let best=null,bd=1e9;for(const e of enemies){if(!e.alive||e.awake)continue;const d=Math.hypot(e.x-player.x,e.z-player.z);if(d<bd){bd=d;best=e}}if(best)wakeEnemy(best,'NEW CONTACT')}
-function tryHmdHandoff(excludeId=0){const viewYaw=player.yaw+headYaw*Math.PI/180;let best=null,bestA=.30;for(const e of enemies){if(!e.alive||e.id===excludeId)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>120||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const a=Math.abs(angleDiff(Math.atan2(dx,-dz),viewYaw));if(a<bestA){bestA=a;best=e}}if(!best)return;best.focus=Math.max(best.focus||0,.17);best.marked=Math.max(best.marked||0,1.4);if(!best.awake)wakeEnemy(best,'HMD HANDOFF');plog('Link',`-HMD handoff. ${etag(best)}`)}
+function tryHmdHandoff(excludeId=0){const viewYaw=player.yaw+headYaw*Math.PI/180;let best=null,bestA=.30;for(const e of enemies){if(!e.alive||e.id===excludeId)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>120||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const a=Math.abs(angleDiff(Math.atan2(dx,-dz),viewYaw));if(a<bestA){bestA=a;best=e}}if(!best)return;best.focus=Math.max(best.focus||0,.17);best.marked=Math.max(best.marked||0,1.4);if(!best.awake)wakeEnemy(best,'HMD HANDOFF');plog('HMD',`-Handoff. ${etag(best)}`)}
 function enemyShoot(e,aim=null){const shots=e.type==='SCOUT'||e.type==='TITAN'?2:1,muzzles=enemyMuzzles(e);for(let n=0;n<shots;n++){const m=muzzles[n%muzzles.length],lead=e.type==='SCOUT'?.06:e.heavy?.18:.11,tx=(aim?.x??(player.x+player.vx*lead))-m[0],tz=(aim?.z??(player.z+player.vz*lead))-m[2],td=Math.hypot(tx,tz)||1,spread=(Math.random()-.5)*(e.heavy?.014:e.type==='SCOUT'?.05:.034),sp=e.type==='TITAN'?46:e.heavy?42:e.type==='SCOUT'?39:35;enemyBolts.push({x:m[0],y:m[1],z:m[2],px:m[0],py:m[1],pz:m[2],vx:(tx/td+spread)*sp,vy:((CAMERA_Y-m[1])/td)*sp,vz:(tz/td+spread)*sp,life:3.0,damage:e.type==='SCOUT'?Math.round(4*(e.dmgK||1)):e.damage,type:e.type,heavy:!!e.heavy,big:e.type==='TITAN',near:false,threatened:false,evadeCandidate:false})}e.muzzle=.11;if(e.anim){e.anim.recoil=1;e.anim.recoilSide=-(e.anim.recoilSide||1)}if(e.type==='TITAN')sfx.titanFire(e);else if(e.heavy)sfx.heavyFire(e);else sfx.hostile(e)}
 function staggerEnemy(e,power=20){
   e.stagger=(e.stagger||0)+power;
@@ -2301,7 +2301,7 @@ function updateVisualDesignation(dt){
   if(target.focus>=.30){
     target.designated=4.8;target.marked=4.8;lastDesignatedId=target.id;
     if(!target.awake)wakeEnemy(target,'VISUAL CONTACT');
-    if(!target.markLatch){target.markLatch=true;sfx.designate(stats.designations++);addFlow(18,'HMD DESIGNATE');plog('Link',`-HMD designate. ${etag(target)}`);pilotGlance(target,.9,1);say('DESIGNATE')}
+    if(!target.markLatch){target.markLatch=true;sfx.designate(stats.designations++);addFlow(18,'HMD DESIGNATE');plog('HMD',`-Designate. ${etag(target)}`);pilotGlance(target,.9,1);say('DESIGNATE')}
   }
 }
 function drawScanCue(e,viewYaw,viewPitch){
@@ -2798,7 +2798,7 @@ if(typeof Image!=='undefined')for(const k of [...PILOT_EXPR,'bust_shout','bust_c
 const pilotReady=k=>{const im=pilotImg[k];return !!(im&&im.complete&&im.naturalWidth)};
 // Per-expression framing on the 1280x760 plate (pupils at 520/760, y 300): x/y in eye-distance units from the eye midpoint, z = zoom.
 const PILOT_FRAME={calm:{x:0,y:0,z:1},shout:{x:0,y:.4,z:.45},cheer:{x:0,y:.2,z:.75},smug:{x:.2,y:.02,z:1.1},laugh:{x:0,y:.3,z:.62},smile:{x:0,y:.05,z:1},grit:{x:-.12,y:-.05,z:1.2},glance:{x:.22,y:-.02,z:1.14},closed:{x:0,y:0,z:1}};
-const PILOT_TAG={AOI:'#a9c9de',Info:'#cfd2c4',System:'#cfd2c4',Caution:'#d8b46c',Warning:'#e47c62',Link:'#8ed8c4',Sync:'#e6d08e'};
+const PILOT_TAG={AOI:'#a9c9de',Info:'#cfd2c4',System:'#cfd2c4',Caution:'#d8b46c',Warning:'#e47c62',HMD:'#8ed8c4',Sync:'#e6d08e'};
 const pilot={blinkT:3,blinking:0,glanceDir:1,entries:[],scroll:0,expr:'calm',prev:null,mix:1,fr:{x:0,y:0,z:1},hold:0,holdExpr:'calm',holdPrio:0,banner:null,cut:null,lostT:0,clearT:0,lagX:0,lastHead:0,boot:0,critLatch:false,wasPlaying:false};
 // cool: a repeating status line (inbound, venting, critical) is not re-logged within this many seconds.
 const plogSeen=new Map();
