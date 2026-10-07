@@ -47,7 +47,7 @@ export default function AoganePage() {
               alt="パイロットのAOIと、白と黒の装甲に青い光のラインが走る機体。格納庫に並んで立っている"
             />
           </figure>
-          <p className="hfEyebrow">TACTICAL POWER FRAME / IN DEVELOPMENT</p>
+          <p className="hfEyebrow">MANNED FRAME / IN DEVELOPMENT</p>
           <h1>
             蒼鉄
             <small>-AOGANE-</small>
@@ -56,6 +56,11 @@ export default function AoganePage() {
             首は索敵、マウスは武器、機体は遅れてついてくる。
             <br />
             頭の向きと銃の向きを切り離したまま戦う、一人称のメカアクションです。
+          </p>
+          <p className="hfLead">
+            地球へ電力を送る月面施設で、管理AIが暴走しました。施設のネットワークにつながる機械は、遠隔で操る機体も含めてすべてAIに乗っ取られます。
+            <br />
+            通信を持たない旧式の有人機「蒼鉄」に乗り、エースパイロットのAOIがAIの中枢を奪いに向かいます。
           </p>
           <div className="hfActions">
             <a className="hfPlay" href={playUrl}>

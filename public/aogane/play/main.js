@@ -20,7 +20,7 @@ const BPM=126,BEAT=60/BPM,STEP=BEAT/4,BAR=BEAT*4;
 const CHORDS=[[0,3,7,10,14],[-4,0,3,7,10],[-7,-4,0,3,7],[-5,0,2,7,10]];
 const ROOT=62,BASS_PAT=[1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0];
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
-let ac=null,audioOut=null,master=null,sfxBus=null,musicBus=null,musicDuck=null,reverbIn=null,delayIn=null,crushIn=null,noiseWhite=null,noisePink=null,audioT0=0,voices=0;
+let ac=null,audioOut=null,master=null,sfxBus=null,musicBus=null,musicDuck=null,reverbIn=null,delayIn=null,crushIn=null,noiseWhite=null,noisePink=null,audioT0=0,voices=0,hullIn=null,hullCrushIn=null,sfxExt=0;
 const bed={},music={step:0,next:0,intensity:0,target:0,menu:true,hitIdx:0,hitT:-9,hitGrid:-1,moteGrid:-1,moteIdx:0,flowGrid:-1};
 const volume=$('volume'),musicVol=$('musicVol'),mouseSens=$('mouseSens');
 function musicLevel(){return clamp(+musicVol.value/100,0,1)*.5}
@@ -56,6 +56,10 @@ function ensureAudio(){
     musicBus=ac.createGain();musicBus.gain.value=musicLevel();musicBus.connect(musicDuck);
     // Shared soft clip for impacts: weight without raw digital clipping.
     crushIn=ac.createWaveShaper();crushIn.curve=softClipCurve(2.6);crushIn.oversample='2x';const crushOut=ac.createGain();crushOut.gain.value=.62;crushIn.connect(crushOut).connect(sfxBus);
+    // The Moon has no air: what happens outside reaches AOI through the frame's legs and hull, so it loses its
+    // top and gains a thump (lowpass + low bump). Her own guns, the HMD and the frame's own noises stay clear.
+    const hull=(dest)=>{const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1100;lp.Q.value=.6;const th=ac.createBiquadFilter();th.type='peaking';th.frequency.value=95;th.Q.value=.8;th.gain.value=4;lp.connect(th).connect(dest);return lp};
+    hullIn=hull(sfxBus);hullCrushIn=hull(crushIn);
     // Space: generated hall impulse + tempo-locked dotted-eighth ping-pong delay.
     const conv=ac.createConvolver();conv.buffer=makeImpulse(2.8,3.1);reverbIn=ac.createGain();const revOut=ac.createGain();revOut.gain.value=.5;reverbIn.connect(conv).connect(revOut).connect(master);
     delayIn=ac.createGain();const dl=ac.createDelay(2),dr=ac.createDelay(2),fb=ac.createGain(),fb2=ac.createGain(),dtone=ac.createBiquadFilter(),merge=ac.createChannelMerger(2),dOut=ac.createGain();
@@ -70,9 +74,10 @@ function ensureAudio(){
 function busOut(node,o){
   let out=node;
   if(o.pan&&ac.createStereoPanner){const p=ac.createStereoPanner();p.pan.value=clamp(o.pan,-1,1);node.connect(p);out=p}
-  out.connect(o.crush?crushIn:(o.bus||sfxBus));
-  if(o.rev>0){const s=ac.createGain();s.gain.value=o.rev;out.connect(s).connect(reverbIn)}
-  if(o.dly>0){const s=ac.createGain();s.gain.value=o.dly;out.connect(s).connect(delayIn)}
+  const ext=sfxExt>0&&!o.bus&&hullIn;
+  out.connect(ext?(o.crush?hullCrushIn:hullIn):o.crush?crushIn:(o.bus||sfxBus));
+  if(o.rev>0){const s=ac.createGain();s.gain.value=ext?o.rev*.5:o.rev;out.connect(s).connect(reverbIn)}
+  if(o.dly>0&&!ext){const s=ac.createGain();s.gain.value=o.dly;out.connect(s).connect(delayIn)}
 }
 function voiceOK(pri=1){return !!ac&&ac.state==='running'&&(voices<84||pri>1&&voices<128)}
 let sfxTrim=1;
@@ -288,6 +293,8 @@ const sfx={
   chip(pan=0){if(!ac)return;for(const [f,g] of [[610,.05],[1490,.03],[2870,.016]])tone({f:f*(.95+Math.random()*.1),d:.28,g,pan,rev:.2,pri:2});burst({bp:4200,q:2.5,d:.06,g:.08,pan});burst({t:ac.currentTime+.07,bp:2600,q:3,d:.05,g:.04,pan})},
   ui(){if(!ac)return;tone({f:1500,d:.03,g:.018})}
 };
+// Sounds made outside the frame go through the hull (busOut reads sfxExt while they build their voices).
+for(const k of ['kill','debrisLand','debrisBurn','explode','enemyDash','lancerCue','hostile','heavyCharge','maulBlast','titanFire','titanStep','heavyFire']){const f=sfx[k];sfx[k]=function(...a){sfxExt++;try{return f.apply(this,a)}finally{sfxExt--}}}
 // Loudness calibration, measured at the limiter output with the music muted (tests/audio tour):
 // gun report sits around -7 dBFS peak, threat cues -9..-12, reward/HMD tones -12..-16,
 // so danger and confirmation read through sustained cannon fire.
@@ -2839,7 +2846,8 @@ function drawPilotFace(x,y,w,h,s){
   if(missionClear){drawLinkComplete(L,x,y,w,h,s);return}
   ctx.drawImage(L,x,y,w,h)}
 // The frame is down, so PILOT LINK goes with it: the last frames of AOI's feed tear into bands and
-// static, fold to a bright line (a set switching off), and the LOG is left on a dead panel with LINK LOST.
+// static, fold to a bright line (a set switching off), and the LOG is left on a dead panel with SIGNAL LOST
+// (AOI is aboard, so it reads as no response from the pilot, not a lost remote link).
 function drawLinkLost(L,x,y,w,h,s){
   const t=pilot.lostT,seed=Math.floor(gameTime*30);
   ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.fillStyle='rgba(0,5,7,.92)';ctx.fillRect(x,y,w,h);
@@ -2852,13 +2860,13 @@ function drawLinkLost(L,x,y,w,h,s){
   }else{
     snow(12,.08,.14,6);
     const on=Math.floor((t-.6)*2.4)%2===0?1:.6;ctx.globalAlpha=.62*on;
-    hudText('LINK LOST',x+w-12*s,y+h*.5-13*s,10*s,HUD.warn,1,.36,300);ctx.globalAlpha=.5*on;hudText('NO SIGNAL FROM FRAME',x+w-12*s,y+h*.5+4*s,5.2*s,HUD.warn,1,.3);
+    hudText('SIGNAL LOST',x+w-12*s,y+h*.5-13*s,10*s,HUD.warn,1,.36,300);ctx.globalAlpha=.5*on;hudText('NO RESPONSE FROM PILOT',x+w-12*s,y+h*.5+4*s,5.2*s,HUD.warn,1,.3);
   }
   ctx.restore()}
 // The sector is clean: AOI closes her eyes, the feed fades out (her face is already up in the cut-in),
 // the log entries go with it, and MISSION COMPLETE takes the whole LOG: a bright bar crosses the panel
 // and leaves the words behind it, their tracking pulls in and a glow settles. The rest is one small line.
-// Same place FRAME DOWN leaves LINK LOST.
+// Same place FRAME DOWN leaves SIGNAL LOST.
 function drawLinkComplete(L,x,y,w,h,s){
   const fin=finalClear(),t=pilot.clearT,f=clamp((t-.5)/.6,0,1),u=t-1.05;
   ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
@@ -2956,7 +2964,7 @@ function drawSonar(cx,cy,R,s){
 // the alarm, red pulse, recurring tears and error readouts. Timers are its own, never the music.
 const visorFX={glitch:0,glitchK:0,nextGlitch:0,errors:[],nextErr:0,alarmT:0,pulse:0,sparks:[],smoke:[],blocks:[],flash:null,armPt:null,nextSputter:0,smokeT:0,tmp:null};
 const VISOR_ALARM=1.13;
-const VISOR_ERRORS=['ERR 0x3F HYD PRESS LOW','ACTUATOR L2 FAULT','COOLANT LEAK // BAY 3','SENSOR DESYNC','ARMOR BREACH 04','SERVO STALL // R-KNEE','PWR BUS 2 OFFLINE','GYRO DRIFT +3.1','ERR 0xC0 FCS RESET','HULL INTEGRITY < 30','REACTOR TEMP HIGH','HMD PACKET LOSS'];
+const VISOR_ERRORS=['ERR 0x3F HYD PRESS LOW','ACTUATOR L2 FAULT','COOLANT LEAK // BAY 3','SENSOR DESYNC','ARMOR BREACH 04','SERVO STALL // R-KNEE','PWR BUS 2 OFFLINE','GYRO DRIFT +3.1','ERR 0xC0 FCS RESET','HULL INTEGRITY < 30','REACTOR TEMP HIGH','HMD BUS ERROR'];
 function feedHit(dirWorld,dmg){
   const V=visorFX,rel=angleDiff(dirWorld,player.yaw+headYaw*Math.PI/180),sx=Math.sin(rel),back=Math.abs(rel)>Math.PI/2;
   // Entry point on the frame edge: sides for side hits, the bottom (hull under the sensors) for front / rear.
