@@ -694,7 +694,7 @@ const HEAD_FRESH_MS=250;
 // you sit in front of a screen and cannot look up at it, so height is the mouse's job. View only, never the aim.
 const HEAD_PITCH_GAIN=.5,HEAD_PITCH_MAX=5;
 const gain=$('gain'),dead=$('dead'),smooth=$('smooth');
-// 首の追従速度: the slider runs negative so right is faster; the spring's time scale is its magnitude (0.13 = 1.00x).
+// トラッキングの追従速度: the slider runs negative so right is faster; the spring's time scale is its magnitude (0.13 = 1.00x).
 function headSmooth(){return Math.max(.03,-(+smooth.value))}
 // Human neck, not a turret: a critically damped spring (slow start, fast middle, soft stop, no
 // overshoot) with a ~450 deg/s cap. SMOOTH sets the stiffness (0.13 -> 60 deg in ~0.3 s). Sub-stepped so
@@ -734,11 +734,11 @@ async function toggleHead(){
     const worker=new Worker(((typeof window!=='undefined'&&window.HF_ASSET_BASE)||'')+'head-tracker.worker.js');headWorker=worker;
     await new Promise((resolve,reject)=>{
       const timeout=setTimeout(()=>reject(new Error('Tracker initialization timeout')),30000);
-      worker.onerror=event=>{clearTimeout(timeout);reject(new Error(event.message||'Tracker Worker failed'));if(headEnabled)disableHead('カメラが使えません　Q / E で首を振れます')};
+      worker.onerror=event=>{clearTimeout(timeout);reject(new Error(event.message||'Tracker Worker failed'));if(headEnabled)disableHead('カメラが使えません　Q / E で視点を振れます')};
       worker.onmessage=({data})=>{
         if(generation!==headGeneration)return;
         if(data.type==='ready'){clearTimeout(timeout);resolve();return}
-        if(data.type==='error'){clearTimeout(timeout);reject(new Error(data.message));if(headEnabled){disableHead('カメラが使えません　Q / E で首を振れます');plog('Caution','Head tracker off.')}return}
+        if(data.type==='error'){clearTimeout(timeout);reject(new Error(data.message));if(headEnabled){disableHead('カメラが使えません　Q / E で視点を振れます');plog('Caution','Head tracker off.')}return}
         if(data.type==='pose'){headBusy=false;if(headEnabled)acceptHeadPose(data)}
       };
       worker.postMessage({type:'init'});
@@ -748,10 +748,10 @@ async function toggleHead(){
     video.srcObject=stream;await video.play();
     headEnabled=true;baseline=null;headFound=false;headSampleTime=-Infinity;headBusy=false;lastFace=0;lastVT=-1;
     camUI('on');$('status').textContent='カメラ準備完了　画面の正面を向いて C';
-  }catch(error){console.error(error);if(generation!==headGeneration)return;disableHead('カメラが使えません　Q / E で首を振れます',camError(error));plog('Caution','Head tracker off.')}
+  }catch(error){console.error(error);if(generation!==headGeneration)return;disableHead('カメラが使えません　Q / E で視点を振れます',camError(error));plog('Caution','Head tracker off.')}
   finally{btn.disabled=false}
 }
-function disableHead(status='カメラ：オフ　Q / E で首を振れます',why=null){
+function disableHead(status='カメラ：オフ　Q / E で視点を振れます',why=null){
   headGeneration++;headEnabled=false;headFound=false;headBusy=false;
   headWorker?.terminate();headWorker=null;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
@@ -767,7 +767,7 @@ async function captureHeadFrame(now){
     const bitmap=await createImageBitmap(video,{resizeWidth:320,resizeHeight:height,resizeQuality:'low'});
     if(!headEnabled||generation!==headGeneration){bitmap.close();return}
     worker.postMessage({type:'frame',bitmap,timestamp:now},[bitmap]);
-  }catch(error){if(generation===headGeneration){console.error(error);disableHead('カメラが使えません　Q / E で首を振れます')}}
+  }catch(error){if(generation===headGeneration){console.error(error);disableHead('カメラが使えません　Q / E で視点を振れます')}}
 }
 // When the face is lost for a moment, say why: a webcam picture too dark to find a face in (a dim room, a
 // window behind the player) or no face in it. Brightness is the mean of a 32x24 copy, twice a second.
@@ -782,7 +782,7 @@ function updateCamWarn(now){const L=camLight;
 function updateHead(now,dt){
   updateCamWarn(now);
   if(headEnabled){
-    if(headBusy&&now-headRequestTime>10000){disableHead('カメラが応答しません　Q / E で首を振れます');return}
+    if(headBusy&&now-headRequestTime>10000){disableHead('カメラが応答しません　Q / E で視点を振れます');return}
     // The camera keeps reading on the menu (C still centres), but the paused view holds still.
     captureHeadFrame(now);if(!playing)return;
     // Filtering runs at display frequency, even between camera samples.
@@ -2852,8 +2852,8 @@ const TUT_STEPS=[
   {id:'move',en:'MOVE',jp:'WASD で移動',pjp:'左スティックで移動',sub:'機体は車輪で走ります'},
   {id:'burst',en:'BURST',jp:'移動しながら SHIFT でブースト',pjp:'移動しながら B でブースト',sub:'空中ではバックパックの噴射になります'},
   {id:'fire',en:'FIRE',jp:'マウスで銃を向けて、左クリックで撃つ',pjp:'右スティックで銃を向けて、RT で撃つ',sub:'機体は銃の向きへ遅れてついてきます'},
-  {id:'head',en:'LOOK',jp:'',sub:'首は銃と別に動きます。周りを見るのは首の仕事'},
-  {id:'designate',en:'DESIGNATE',jp:'敵を見つめて HMD で指定する',sub:'首を向けた先の敵に印が付きます'},
+  {id:'head',en:'LOOK',jp:'',sub:'視点は銃と別に動きます。周りは顔を向けて見る'},
+  {id:'designate',en:'DESIGNATE',jp:'敵を見つめて HMD で指定する',sub:'顔を向けた先の敵に印が付きます'},
 ];
 const tut={on:false,i:0,t:0,base:null,doneT:0};
 let tutDone=false;try{tutDone=localStorage.getItem('hf.tutorial')==='done'}catch{}
@@ -2897,9 +2897,9 @@ function updateTutorial(dt){
 function skipTraining(){sfx.ui();tut.on=false;tut.doneT=0;setMode('sortie');saySortie()}
 function drawTutorial(s){
   const cal=headNeedCenter&&headEnabled&&headFound&&playing;
-  const st=cal?(padDriven?{en:'CALIBRATE',jp:'画面の正面を向いて、右スティックを押し込む',sub:'そこが首の正面になります。ずれたらいつでも押し込み直す'}:{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが首の正面になります。ずれたらいつでも C'}):tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
-  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':cal?st.jp:st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':padDriven?'LB / RB で首を左右に振る':'Q / E で首を左右に振る'):padDriven&&st.pjp||st.jp;
-  const sub=done?(padDriven?'首で探して、RT で撃つ':'首で探して、マウスで撃つ'):cal?st.sub:st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
+  const st=cal?(padDriven?{en:'CALIBRATE',jp:'画面の正面を向いて、右スティックを押し込む',sub:'そこが視点の正面になります。ずれたらいつでも押し込み直す'}:{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが視点の正面になります。ずれたらいつでも C'}):tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
+  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':cal?st.jp:st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':padDriven?'LB / RB で視点を左右に振る':'Q / E で視点を左右に振る'):padDriven&&st.pjp||st.jp;
+  const sub=done?(padDriven?'見回して、RT で撃つ':'見回して、マウスで撃つ'):cal?st.sub:st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
   const a=done?clamp(tut.doneT/.4,0,1):cal?1:clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
   ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
   hudText(done?'TRAINING COMPLETE':cal?'HEAD  CALIBRATE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
