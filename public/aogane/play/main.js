@@ -948,6 +948,11 @@ function drawDistantDistrict(viewYaw,viewPitch){
     for(const y of [h*.38,h*.67,h*.90])worldRingXY(x,y,z,3.2,1.15,viewYaw,viewPitch,.08,'89,222,190',.65,0,18);
   }
 
+  // The reason the plant exists: a transmitter dish beyond the district, turned up to Earth, so from the
+  // spine you see its back against the stars. Lattice mast, a bright rim and lamps on it (WebGL only).
+  if(worldRec){const X=-92,Z=-300,Y=90,R=30;worldBox3D(X,Z,9,9,0,Y-6,viewYaw,viewPitch,'rgba(1,8,9,.99)',0);for(const s of [-1,1])worldBox3D(X+s*14,Z+6,3,3,0,Y-30,viewYaw,viewPitch,'rgba(1,8,9,.99)',0);
+    const p=project(X,Y,Z+4,viewYaw,viewPitch);if(p){const rp=R*p.f;recDisc(p,rp,'20,23,30',1,false,0,1,0);recDisc(p,rp,'210,214,222',.55,true,Math.max(1.2,rp*.035),1,0);for(let i=0;i<12;i++){const t=i/12*TAU;recSeg({x:p.x+Math.cos(t)*rp*.08,y:p.y+Math.sin(t)*rp*.08,depth:p.depth-.5},{x:p.x+Math.cos(t)*rp*.97,y:p.y+Math.sin(t)*rp*.97,depth:p.depth-.5},'120,126,138',.5,Math.max(1,rp*.018),false)}recDisc(p,rp*.55,'120,126,138',.35,false,Math.max(1,rp*.012),1,0);recDisc(p,rp*.1,'44,48,58',1,false,0,1,0)}
+    for(let i=0;i<8;i++){const a=i/8*TAU;recDot(X+Math.cos(a)*R,Y+Math.sin(a)*R,Z+4,'255,70,52',Math.floor(gameTime*.8)%2===0?.9:.25,.6,1.5,4)}}
   // Foundry throat: a huge asymmetric processing gate at the end of the district. Its silhouette is
   // deliberately rectilinear/angled so it cannot be mistaken for HMD symbology.
   const gateZ=-242,gx=18,gL=gx-38,gR=gx+38;
@@ -1115,7 +1120,29 @@ function drawBuilding(b,viewYaw,viewPitch){
   ctx.save();ctx.globalAlpha=alpha;ctx.shadowBlur=0;ctx.lineCap='round';
   if(b.type===4){boxPlain=true;worldBox3D(b.x,b.z,b.w,b.d,0,b.h,viewYaw,viewPitch,'rgba(1,8,9,.97)',.07);boxPlain=false}
   else if(b.type===0)drawCoolingTower(b,viewYaw,viewPitch,o);else if(b.type===1)drawProcessStacks(b,viewYaw,viewPitch,o);else if(b.type===2)drawSubstation(b,viewYaw,viewPitch,o);else drawFoundryBlock(b,viewYaw,viewPitch,o);
+  if(worldRec&&b.type!==4)drawPlantKit(b,viewYaw,viewPitch);
   ctx.restore();
+}
+// A working lunar plant rather than a data city: real fittings and real lamps on every facility (WebGL).
+// Lamps sit only where a plant has them: floods on the wall that faces the spine with a pool of light under
+// them, a walkway lamp row along that wall, red aviation beacons on anything tall. The kit adds mass and
+// scale: radiator fins and plant on the roof (a lunar plant sheds its heat by radiating it), pipe runs along
+// the spine-side wall and a stair tower on one corner. All of it stays inside the footprint and on the roof.
+function drawPlantKit(b,vy,vp){
+  const r=k=>hash(b.seed*7.31+k),hw=b.w/2,hd=b.d/2,s=b.x>0?-1:1,wx=b.x+s*hw,h=b.h,top=b.type===0?h*.92:h;
+  const fill='rgba(1,8,9,.97)',box=(cx,cz,w,d,y0,y1)=>worldBox3D(cx,cz,w,d,y0,y1,vy,vp,fill,0);
+  // roof: a bank of radiator fins and two plant housings (cooling towers keep their open throat)
+  if(b.type!==0){const n=Math.max(3,Math.floor(b.d/3.2)),fx=b.x-s*hw*.35;for(let i=0;i<n;i++)box(fx,b.z-hd+1.6+i*(b.d-3.2)/Math.max(1,n-1),hw*.7,.35,top,top+3.2+r(1)*1.5);
+    box(b.x+s*hw*.45,b.z-hd*.4,3.4,4.2,top,top+2.2);box(b.x+s*hw*.5,b.z+hd*.45,2.6,2.6,top,top+3)}
+  // spine-side wall: two pipe runs on brackets and a stair tower at the far corner
+  for(const y of [3.2,5.4])box(wx+s*.45,b.z,.6,b.d*.9,y,y+.6);
+  const sz=b.z-s*0+(r(2)<.5?-1:1)*(hd-1.6);box(wx+s*1.3,sz,2.4,2.8,0,Math.min(top,h)+1.2);
+  // lamps: a walkway row along that wall, floods on it with a pool of light at their foot, a beacon on top
+  for(let z=b.z-hd+2;z<=b.z+hd-2;z+=4.2)recDot(wx+s*.9,2.6,z,'255,222,170',.55,.16,1,2.4);
+  for(const f of [-.28,.28]){const z=b.z+b.d*f,ly=Math.min(h*.45,11);recDot(wx+s*.5,ly,z,'255,240,214',.9,.3,1.5,4);
+    const p=project(wx+s*2,.1,z,vy,vp);if(p)recDisc(p,Math.min(9*p.f,260),'255,226,180',.16,true,0,.32,1);
+    const q=project(wx+s*.2,ly*.55,z,vy,vp);if(q)recDisc(q,Math.min(5.5*q.f,200),'255,232,196',.1,true,0,1.5,1)}
+  if(top>24&&Math.floor(gameTime*.9+r(3)*2)%2===0)recDot(b.x,top+(b.type===0?0:3.4),b.z,'255,70,52',.95,.4,2,5);
 }
 // SKYDECK: runway edge lights (white, amber along the far third of the strip),
 // threshold bars at both ends, a lead-in of approach lights running in from the far end, two marked
