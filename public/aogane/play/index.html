@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0a0f12">
   <title>蒼鉄 -AOGANE- | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=45">
+  <link rel="stylesheet" href="styles.css?v=46">
 </head>
 <body>
 <main id="app">
@@ -43,9 +43,16 @@
     </div>
 
     <div class="statusLine"><i id="statusDot"></i><span id="status">準備完了</span></div>
+    <p class="healthNote">画面酔いしやすい方はご注意ください。気分が悪くなったら、すぐに休んでください。</p>
     <div class="keyline"><span><b>WASD</b> 移動</span><span><b>SHIFT</b> ブースト</span><span><b>SPACE</b> ジャンプ</span><span><b>マウス</b> 武器の向き</span><span><b>左クリック</b> 撃つ</span><span><b>右クリック</b> スコープ</span><span><b>ホイール / 1-3</b> 武器の切り替え</span><span><b>V</b> 斧</span><span><b>Q/E</b> 首を左右へ（カメラなし）</span><span><b>C</b> 首を正面に戻す</span><span><b>ESC</b> メニュー</span><span><b>R</b> 再出撃</span></div>
   </section>
 
+  <div id="titleConfirm" class="camGate hidden" role="dialog" aria-labelledby="titleConfirmTitle">
+    <p class="camGateEyebrow">RETURN TO TITLE</p>
+    <h2 id="titleConfirmTitle">タイトルへ戻りますか？</h2>
+    <p>このプレイの進行は失われます。</p>
+    <div class="camGateActs"><button id="titleYes">タイトルへ戻る</button><button id="titleNo" class="deploy">プレイにもどる</button></div>
+  </div>
   <div id="camGate" class="camGate hidden" role="dialog" aria-labelledby="camGateTitle">
     <p class="camGateEyebrow">BEFORE YOU START</p>
     <h2 id="camGateTitle">このゲームは、顔の向きで周りを見ます</h2>
@@ -55,14 +62,14 @@
   </div>
 
   <section id="hud" class="hud hidden" aria-live="polite">
-    <div class="hudTop"><div id="missionClock">00:00</div><div id="headstat"></div></div>
+    <div class="hudTop"><div id="missionClock">00:00</div><div id="headstat"></div></div><div id="camWarn" class="camWarn hidden"></div>
     <div id="result" class="result hidden"><small id="resultSector">VECTOR FOUNDRY 07</small><b id="resultTitle">SECTOR CLEAN</b><dl id="resultStats"></dl><div id="resultKeys" class="acts"></div></div>
     <div id="damageFlash"></div>
     <div id="boostVignette"></div>
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=76"></script>
+<script src="main.js?v=78"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>

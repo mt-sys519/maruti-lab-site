@@ -757,7 +757,18 @@ async function captureHeadFrame(now){
     worker.postMessage({type:'frame',bitmap,timestamp:now},[bitmap]);
   }catch(error){if(generation===headGeneration){console.error(error);disableHead('カメラが使えません　Q / E で首を振れます')}}
 }
+// When the face is lost for a moment, say why: a webcam picture too dark to find a face in (a dim room, a
+// window behind the player) or no face in it. Brightness is the mean of a 32x24 copy, twice a second.
+const CAM_DARK=65,camWarnEl=$('camWarn'),camLight={cv:null,luma:-1,t:0,lostSince:0,key:''};
+const CAM_WARN={dark:'暗くて顔が見えません。部屋を明るくするか、顔に正面から光を当ててください',noface:'顔が見つかりません。カメラの正面に顔を入れてください（暗い部屋や逆光だと見つけにくくなります）'};
+function updateCamWarn(now){const L=camLight;
+  if(headEnabled&&video.readyState>=2&&now-L.t>=500){L.t=now;if(!L.cv){L.cv=document.createElement('canvas');L.cv.width=32;L.cv.height=24}const g=L.cv.getContext('2d',{willReadFrequently:true});g.drawImage(video,0,0,32,24);const px=g.getImageData(0,0,32,24).data;let sum=0;for(let i=0;i<px.length;i+=4)sum+=px[i]*.299+px[i+1]*.587+px[i+2]*.114;L.luma=sum/(px.length/4)}
+  const lost=headEnabled&&!headPoseFresh(now);if(!lost)L.lostSince=0;else if(!L.lostSince)L.lostSince=now;
+  const key=lost&&now-L.lostSince>1500?(L.luma>=0&&L.luma<CAM_DARK?'dark':'noface'):'';if(key===L.key)return;L.key=key;
+  camWarnEl.textContent=CAM_WARN[key]||'';camWarnEl.classList.toggle('hidden',!key);
+  const note=$('camNote');note.classList.toggle('warn',!!key);if(headEnabled)note.textContent=CAM_WARN[key]||CAM_NOTE.on}
 function updateHead(now,dt){
+  updateCamWarn(now);
   if(headEnabled){
     if(headBusy&&now-headRequestTime>10000){disableHead('カメラが応答しません　Q / E で首を振れます');return}
     // The camera keeps reading on the menu (C still centres), but the paused view holds still.
@@ -3249,7 +3260,8 @@ function playLabel(){if(everStarted)return;$('playNote').textContent=tutDone?'3�
 function begin(m){if(!everStarted||mode!==m)setMode(m);if(!headEnabled&&!camGateSkip&&!everStarted&&!gateSeen){gateSeen=true;showCamGate(true);sfx.ui();return}startGame(true)}
 // ESC mid-run opens this same menu over the frozen sortie; タイトルへ戻る drops the run and brings the cover back.
 function toTitle(){sfx.ui();playing=false;everStarted=false;stage=1;setMode('sortie');$('cover')?.classList.remove('hidden');boot.classList.remove('started');$('toTitle').classList.add('hidden');$('playLabel').textContent='ミッション';playLabel();$('status').textContent=''}
-$('toTitle').addEventListener('click',toTitle);
+function askTitle(on){$('titleConfirm').classList.toggle('hidden',!on);boot.classList.toggle('gated',on)}
+$('toTitle').addEventListener('click',()=>{sfx.ui();askTitle(true)});$('titleYes').addEventListener('click',()=>{askTitle(false);toTitle()});$('titleNo').addEventListener('click',()=>{sfx.ui();askTitle(false);startGame(true)});
 $('play').addEventListener('click',()=>{if(everStarted){startGame(true);return}begin('training')});
 // Turning the camera on and locking the pointer in one click would hide the cursor under the browser's
 // camera prompt, so the gate waits for the camera and then offers 出撃 (the pointer lock needs that click).
@@ -3267,7 +3279,7 @@ document.addEventListener('mousemove',e=>{if(!playing||(!new URLSearchParams(loc
 document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
-document.addEventListener('keydown',e=>{if(e.code==='Tab'&&playing&&mode==='training'&&tutDone){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
+document.addEventListener('keydown',e=>{if(e.code==='Tab'&&playing&&mode==='training'&&tutDone){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='1面からやり直します'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='全画面にできませんでした'}});
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);

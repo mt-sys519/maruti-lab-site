@@ -98,18 +98,26 @@ export default function AoganePage() {
             ))}
           </dl>
           <p className="hfSmall">
-            ゲームを開いたら DEPLOY で出撃、ENDURANCE は耐久モードです。HEAD TRACKING でカメラを使った首の操作に切り替わり、FULL SCREEN で全画面になります。
+            ゲームを開いたら「ミッション」で出撃、「サバイバル」は倒れるまで戦い続けるモードです。「カメラで遊ぶ」でカメラを使った首の操作に切り替わり、「全画面」で全画面になります。
           </p>
         </section>
 
         <section className="hfSection" id="camera">
           <h2>カメラについて</h2>
           <p>
-            カメラは HEAD TRACKING を押したときだけ使い、そのときブラウザが許可を求めます。映像はお使いの端末の中で顔の向きを計算するためだけに使い、録画も保存もせず、Maruti Lab を含めどこへも送りません。
+            カメラは「カメラで遊ぶ」を押したときだけ使い、そのときブラウザが許可を求めます。映像はお使いの端末の中で顔の向きを計算するためだけに使い、録画も保存もせず、Maruti Lab を含めどこへも送りません。
           </p>
           <p>
             顔の向きの計算には Google の MediaPipe を使っています。そのプログラムと学習済みモデルは、初めてカメラを使うときに jsDelivr（cdn.jsdelivr.net）と Google（storage.googleapis.com）から読み込みます。この読み込みにカメラの映像は含まれません。
           </p>
+        </section>
+
+        <section className="hfSection" id="caution">
+          <h2>遊ぶ前に</h2>
+          <ul>
+            <li>画面が大きく動くゲームです。画面酔いしやすい方はご注意ください。気分が悪くなったら、すぐにやめて休んでください。首の感度はゲーム内の「設定」で下げられます。</li>
+            <li>カメラを使うときは、明るい部屋で遊んでください。暗い部屋や、窓を背にした逆光では顔を見つけられず、首の操作が止まります。</li>
+          </ul>
         </section>
 
         <section className="hfSection">
