@@ -9,6 +9,18 @@ export const metadata: Metadata = {
   description:
     "ウェブカメラで頭の動きを読み取り、機体に乗り込んだように周りを見回して戦うヘッドトラッキングFPS。カメラなしでも、ゲームパッドでも遊べます。PCのブラウザで動く、Maruti Labの開発中のゲームです。",
   alternates: { canonical: "https://marutilab.com/aogane" },
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    siteName: "Maruti Lab",
+    title: "蒼鉄 -AOGANE-｜WEBカメラ式ヘッドトラッキングFPS",
+    description: "ウェブカメラで頭の動きを読み取り、機体に乗り込んだように周りを見回して戦うヘッドトラッキングFPS。",
+    images: [{ url: "https://marutilab.com/aogane/og.jpg", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://marutilab.com/aogane/og.jpg"],
+  },
   // Live before it is announced: the game is unfinished and the page is not
   // linked from anywhere yet. This comes off, and /aogane joins the
   // sitemap and the front page, on the day it is published.

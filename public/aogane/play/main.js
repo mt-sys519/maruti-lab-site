@@ -3280,7 +3280,7 @@ function nextSector(){stage=Math.min(LAST_SECTOR,stage+1);reset();saySortie()}
 function startGame(lock=true){
   if(padDriven)lock=false; // a pad press is not a user gesture: the lock would fail and pause at once
   if(!player.alive||missionClear)lock=false; // back to the result card: its buttons need the cursor
-  ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');everStarted=true;$('toTitle').classList.remove('hidden');$('playLabel').textContent='再開';$('playNote').textContent='';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
+  ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');everStarted=true;$('toTitle').classList.remove('hidden');$('about').classList.add('hidden');$('playLabel').textContent='再開';$('playNote').textContent='';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
   if(lock){
     const failed=()=>{pause();$('status').textContent='マウスを固定できませんでした。Chrome か Edge で開いてください'};
     try{if(canvas.requestPointerLock){const pending=canvas.requestPointerLock();pending?.catch(failed)}else failed()}
@@ -3298,7 +3298,7 @@ function showCamGate(on){$('camGate').classList.toggle('hidden',!on);boot.classL
 function playLabel(){if(everStarted)return;$('playNote').textContent=tutDone?'3つのエリアを攻略':'はじめは操作説明から'}
 function begin(m){if(!everStarted||mode!==m)setMode(m);if(!headEnabled&&!camGateSkip&&!everStarted&&!gateSeen){gateSeen=true;showCamGate(true);sfx.ui();return}startGame(true)}
 // ESC mid-run opens this same menu over the frozen sortie; タイトルへ戻る drops the run and brings the cover back.
-function toTitle(){sfx.ui();playing=false;everStarted=false;stage=1;setMode('sortie');$('cover')?.classList.remove('hidden');boot.classList.remove('started');$('toTitle').classList.add('hidden');$('playLabel').textContent='ミッション';playLabel();$('status').textContent=''}
+function toTitle(){sfx.ui();playing=false;everStarted=false;stage=1;setMode('sortie');$('cover')?.classList.remove('hidden');boot.classList.remove('started');$('toTitle').classList.add('hidden');$('about').classList.remove('hidden');$('playLabel').textContent='ミッション';playLabel();$('status').textContent=''}
 function askTitle(on){$('titleConfirm').classList.toggle('hidden',!on);boot.classList.toggle('gated',on)}
 $('toTitle').addEventListener('click',()=>{sfx.ui();askTitle(true)});$('titleYes').addEventListener('click',()=>{askTitle(false);toTitle()});$('titleNo').addEventListener('click',()=>{sfx.ui();askTitle(false);startGame(true)});
 $('play').addEventListener('click',()=>{if(everStarted){startGame(true);return}begin('training')});
@@ -3333,6 +3333,7 @@ const PAD_DEAD=.16,pad={lx:0,ly:0,rx:0,ry:0,rt:false,lb:false,rb:false,prev:[],f
 let padDriven=false;
 function setPadDriven(on){if(padDriven===on)return;padDriven=on;document.body.classList.toggle('pad',on);canvas.style.cursor=on?'none':'';if(!on)padFocus(null)}
 function padStick(x,y){const m=Math.hypot(x,y);if(m<PAD_DEAD)return[0,0];const k=Math.min(1,(m-PAD_DEAD)/(1-PAD_DEAD))/m;return[x*k,y*k]}
+$('about')?.addEventListener('click',()=>{location.href='../'});
 function padLayer(){const shown=el=>el&&!el.classList.contains('hidden');
   const root=shown($('titleConfirm'))?$('titleConfirm'):shown($('camGate'))?$('camGate'):playing?(shown($('result'))?$('resultKeys'):null):boot;
   return root?[...root.querySelectorAll('button')].filter(b=>!b.disabled&&b.offsetParent!==null&&getComputedStyle(b).visibility!=='hidden'):[]}
