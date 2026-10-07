@@ -422,11 +422,13 @@ const skyMat = new THREE.RawShaderMaterial({
   vertexShader: 'precision highp float;\nin vec3 position;\nvoid main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: /* glsl */`
     precision highp float;
-    uniform vec2 scr, ppos; uniform float dpr, hy, gy0, gy1, ga, moon, yaw, foc, camY; uniform vec3 gc, c0, c1, c2, c3, gnd; out vec4 o;
+    uniform vec2 scr, ppos; uniform float dpr, hy, gy0, gy1, ga, moon, yaw, foc, camY, sun; uniform vec3 gc, c0, c1, c2, c3, gnd; out vec4 o;
     // SECTOR 01, the Moon: a black sky with stars, Earth hung low ahead, and regolith with craters out past the
     // facility strip. Directions follow main.js project(): yaw-only camera, pitch as a lens shift (hy), so a pixel's
     // azimuth is yaw + atan(dx / foc) and the tangent of its elevation is (hy - y) cos(rel) / foc.
-    const float PI2 = 6.2831853, EAZ = 0.08, EEL = 0.25, ER = 0.05;
+    const float PI2 = 6.2831853, EAZ = 0.08, EEL = 0.25, ER = 0.05, SAZ = -1.15;
+    // the sun on SKYDECK: below the left horizon, cresting it as the last hostile breaks (sunVis matches main.js)
+    float sunEl(){ return -0.05 + 0.065 * sun; } float sunVis(){ return clamp((sunEl() + 0.006) / 0.016, 0.0, 1.0); }
     float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
     float h31(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
     float n3(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -448,11 +450,12 @@ const skyMat = new THREE.RawShaderMaterial({
       float cz = camY * foc / max(dy, 0.35), cx = dx * cz / foc, sn = sin(yaw), cs = cos(yaw);
       vec2 w = ppos + vec2(cx * cs + cz * sn, cx * sn - cz * cs);
       if (abs(w.x) < 38.5 && abs(w.y) < 151.0) return gnd;
-      vec2 L = vec2(sin(EAZ), -cos(EAZ));
+      float sv = sunVis(); vec2 L = normalize(mix(vec2(sin(EAZ), -cos(EAZ)), vec2(sin(SAZ), -cos(SAZ)), sv));
       float k = clamp(1.0 - cz / 260.0, 0.0, 1.0), kf = clamp(1.0 - cz / 70.0, 0.0, 1.0);
       float g = 0.82 + 0.3 * (n2(w * 0.045) - 0.5) + 0.22 * kf * (n2(w * 0.9) - 0.5);
       g += k * (crater(w, 26.0, 0.55, L) + 0.8 * crater(w + 13.0, 9.0, 0.45, L)) + kf * 0.7 * crater(w + 5.0, 3.2, 0.4, L);
-      return vec3(52.0, 55.0, 63.0) / 255.0 * max(g, 0.25);
+      // low sun: grey-white regolith, crater walls lit hard from the side
+      return mix(vec3(52.0, 55.0, 63.0) / 255.0, vec3(104.0, 101.0, 96.0) / 255.0, sv) * max(g + sv * 0.5 * (g - 0.82), 0.25);
     }
     vec3 moonSky(float dx, float y){
       float rel = atan(dx, foc), A = mod(yaw + rel, PI2), el = atan((hy - y) * cos(rel) / foc);
@@ -460,10 +463,10 @@ const skyMat = new THREE.RawShaderMaterial({
       // stars on a fixed azimuth / elevation lattice, so they hold still in the sky while the head turns
       const float CS = PI2 / 900.0; vec2 sp = vec2(A, el) / CS, id = floor(sp); float h = h21(id + 0.5);
       if (h < 0.075) { vec2 at = 0.2 + 0.6 * vec2(h21(id + 2.2), h21(id + 9.4)); vec2 dv = (sp - id - at) * CS * foc; dv.x *= cos(el);
-        float b = pow(h21(id + 4.4), 3.0), rad = 0.9 + 1.2 * b; c += mix(vec3(0.75, 0.82, 1.0), vec3(1.0, 0.93, 0.82), h21(id + 6.6)) * (0.55 + 0.75 * b) * smoothstep(rad, 0.0, length(dv)); }
+        float b = pow(h21(id + 4.4), 3.0), rad = 0.9 + 1.2 * b; c += (1.0 - 0.75 * sunVis()) * mix(vec3(0.75, 0.82, 1.0), vec3(1.0, 0.93, 0.82), h21(id + 6.6)) * (0.55 + 0.75 * b) * smoothstep(rad, 0.0, length(dv)); }
       // Earth: a gibbous disc lit from the right, oceans, land, cloud, a thin blue limb and a few city lights on the night side
       float da = mod(A - EAZ + PI2 * 0.5, PI2) - PI2 * 0.5; vec2 q = vec2(da * cos(el), el - EEL) / ER; float r = length(q);
-      vec3 Ls = normalize(vec3(0.78, 0.22, 0.42));
+      vec3 Ls = normalize(vec3(-0.78, 0.22, 0.42)); // lit from the sun's side (left)
       if (r < 1.0) {
         vec3 n = vec3(q, sqrt(1.0 - r * r)); float lam = dot(n, Ls), day = smoothstep(-0.06, 0.18, lam);
         float land = smoothstep(0.5, 0.56, fb3(n * 2.3 + 4.0)), cl = smoothstep(0.52, 0.74, fb3(n * 4.2 + vec3(9.0, 2.0, 5.0)));
@@ -475,6 +478,11 @@ const skyMat = new THREE.RawShaderMaterial({
       } else {
         float side = clamp(dot(q / r, Ls.xy / length(Ls.xy)) * 0.6 + 0.4, 0.0, 1.0);
         c += vec3(0.3, 0.52, 1.0) * 0.22 * side * exp(-(r - 1.0) * 22.0);
+      }
+      if (sun > 0.0) {
+        // no air: the sky stays black; a white disc, a tight glare and, before it rises, a faint corona over the rim
+        float ds = length(vec2((mod(A - SAZ + PI2 * 0.5, PI2) - PI2 * 0.5) * cos(el), el - sunEl())), sv = sunVis();
+        c += vec3(1.0, 0.97, 0.9) * (sv * (smoothstep(0.013, 0.011, ds) * 3.0 + 0.9 * exp(-ds * ds / 0.0009) + 0.22 * exp(-ds / 0.09)) + sun * (1.0 - sv) * 0.35 * exp(-ds / 0.05));
       }
       return c;
     }
@@ -494,7 +502,7 @@ const skyMat = new THREE.RawShaderMaterial({
       c += vec3(85.0, 255.0, 208.0) / 255.0 * 0.03 * exp(-d * d / 12.5);
       o = vec4(c, 1.0);
     }`,
-  uniforms: { scr: fxU.scr, dpr: fxU.dpr, hy: { value: 0 }, gy0: { value: 0 }, gy1: { value: 1 }, ga: { value: 0 }, gc: { value: new THREE.Vector3() }, c0: { value: new THREE.Vector3() }, c1: { value: new THREE.Vector3() }, c2: { value: new THREE.Vector3() }, c3: { value: new THREE.Vector3() }, gnd: { value: new THREE.Vector3() }, moon: { value: 0 }, yaw: { value: 0 }, foc: { value: 1 }, camY: { value: 3.25 }, ppos: { value: new THREE.Vector2() } },
+  uniforms: { scr: fxU.scr, dpr: fxU.dpr, hy: { value: 0 }, gy0: { value: 0 }, gy1: { value: 1 }, ga: { value: 0 }, gc: { value: new THREE.Vector3() }, c0: { value: new THREE.Vector3() }, c1: { value: new THREE.Vector3() }, c2: { value: new THREE.Vector3() }, c3: { value: new THREE.Vector3() }, gnd: { value: new THREE.Vector3() }, moon: { value: 0 }, sun: { value: 0 }, yaw: { value: 0 }, foc: { value: 1 }, camY: { value: 3.25 }, ppos: { value: new THREE.Vector2() } },
 });
 const skyScene = new THREE.Scene(); skyScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), skyMat));
 
@@ -610,8 +618,11 @@ function draw(o) {
   renderer.setRenderTarget(rtColor); renderer.setClearColor(0x000000, 0); renderer.clear();
   if (sky) { const u = skyMat.uniforms; u.hy.value = sky.hy; u.gy0.value = sky.glowY0; u.gy1.value = sky.glowY1; u.ga.value = sky.glowA; u.gc.value.set(sky.glowCol[0] / 255, sky.glowCol[1] / 255, sky.glowCol[2] / 255);
     const v3 = (t, c) => t.set(c[0] / 255, c[1] / 255, c[2] / 255); ['c0', 'c1', 'c2', 'c3'].forEach((k, i) => v3(u[k].value, sky.stops[i])); v3(u.gnd.value, sky.ground);
-    u.moon.value = sky.moon || 0; u.yaw.value = sky.yaw || 0; u.foc.value = sky.foc || 1; u.camY.value = sky.camY || 3.25; u.ppos.value.set(sky.px || 0, sky.pz || 0);
+    u.moon.value = sky.moon || 0; u.sun.value = sky.sun || 0; u.yaw.value = sky.yaw || 0; u.foc.value = sky.foc || 1; u.camY.value = sky.camY || 3.25; u.ppos.value.set(sky.px || 0, sky.pz || 0);
     const w = worldMat.uniforms; v3(w.celTop.value, sky.cel[0]); v3(w.celLit.value, sky.cel[1]); v3(w.celShade.value, sky.cel[2]); v3(w.haze.value, sky.stops[3]);
+    // sunrise on SKYDECK: the faces toward the low sun (left) go hard white, tops catch some of it, the light swings to it
+    const sv = Math.min(1, Math.max(0, (-0.05 + 0.065 * (sky.sun || 0) + 0.006) / 0.016));
+    if (sv > 0) { w.celLit.value.lerp(new THREE.Vector3(.86, .84, .80), sv); w.celTop.value.lerp(new THREE.Vector3(.55, .55, .56), sv * .6); w.light.value.lerp(new THREE.Vector3(Math.sin(-1.15), .05, -Math.cos(-1.15)), sv).normalize(); }
     renderer.render(skyScene, quadCam); }
   renderer.render(scene, camera);
   // normal + depth pass: occluders stay depth-only so they hide hostiles without drawing outlines of their own

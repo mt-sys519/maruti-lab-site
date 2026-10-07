@@ -821,7 +821,8 @@ function worldLine3D(x0,y0,z0,x1,y1,z1,viewYaw,viewPitch,color='103,255,209',alp
 // pale characters read first), a heavy ink contour, back faces culled, and thin cyan accent edges.
 // Night palette, shared by the Canvas and WebGL renderers. Unlit surfaces are dim teal-grey, not black:
 // silhouettes and depth read without a lamp, and the neon still carries the frame.
-const WORLD_CEL={top:[60,88,90],lit:[40,63,66],shade:[24,39,43],ink:'#010404'};
+// Earthshine: the night side of the Moon is lit by Earth, a cool blue-grey rather than the old teal (lamps stay cyan).
+const WORLD_CEL={top:[64,80,98],lit:[44,57,72],shade:[24,32,43],ink:'#010404'};
 // SECTOR 01 is on the Moon: a black sky (no air to light it), and the last stop is what far solids fade into,
 // the dark grey of regolith out past the lamps rather than an air haze. WebGL adds stars, Earth and the regolith.
 const NIGHT={sky:['#020308','#03050b','#05070d','#15181e'],ground:'#0b1514'};
@@ -879,8 +880,13 @@ function worldRingXY(cx,cy,cz,rx,ry,viewYaw,viewPitch,alpha=.20,color='103,255,2
   for(let i=0;i<=segments;i++){const a=phase+i/segments*TAU,p=project(cx+Math.cos(a)*rx,cy+Math.sin(a)*ry,cz,viewYaw,viewPitch);if(p){if(prev)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);any=true}prev=p}
   if(any)ctx.stroke();ctx.restore();
 }
+// SKYDECK ends at sunrise: the sun climbs to the left horizon as the deck's hostiles break and clears it with the
+// last one (0 = below, 1 = just up). Eased per frame so a kill brightens the deck over a second or two.
+let sunK=0;
+function sunTarget(){if(stage!==3)return 0;let n=0,a=0;for(const e of enemies){n++;if(e.alive)a++}return n?1-a/n:0}
 function drawSky(viewYaw,pitch){
-  if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:skyStops().map(colRGB),ground:colRGB(NIGHT.ground),moon:stage===2?0:1,yaw:viewYaw,foc:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
+  {const t=sunTarget();sunK=stage===3?sunK+(t-sunK)*.025:0}
+  if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:skyStops().map(colRGB),ground:colRGB(NIGHT.ground),moon:stage===2?0:1,sun:sunK,yaw:viewYaw,foc:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
   const hy=horizonY(pitch),g=ctx.createLinearGradient(0,0,0,H);
   {const S=skyStops();g.addColorStop(0,S[0]);g.addColorStop(.42,S[1]);g.addColorStop(.70,S[2]);g.addColorStop(1,S[3])};
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
