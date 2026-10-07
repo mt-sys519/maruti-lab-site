@@ -14,6 +14,8 @@ import { PrAds } from "./PrAds";
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const yuramekiUrl = "/yurameki";
+const aoganeUrl = "/aogane";
+const aoganePlayUrl = "/aogane/play/";
 
 const works = [
   {
@@ -113,6 +115,22 @@ export default function Home() {
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" />
       <BitRetro />
+
+      {/* AOGANE is its own section, not a MarutiBit cartridge: a full game with
+          its own intro page (/aogane) and the game in a page of its own. */}
+      <section id="aogane" className="feature featureAogane" aria-labelledby="aogane-title">
+        <a className="featureImage aoganeImage imageLink" href={aoganeUrl} aria-label="蒼鉄 -AOGANE-の紹介ページを開く">
+          <Image src="/aogane/play/assets/cover.webp" alt="パイロットのAOIと有人機・蒼鉄" fill sizes="(max-width: 800px) 100vw, 62vw" />
+        </a>
+        <div className="featureCopy">
+          <p className="workNumber">PC GAME</p>
+          <h2 id="aogane-title">蒼鉄<small>-AOGANE-</small></h2>
+          <p className="workTagline">WEBカメラ式ヘッドトラッキングFPS</p>
+          <p>顔を向けた方へ視界が動き、銃はマウスで構える。AIが暴走した月面の送電施設へ、人の手で動かせる最後の機体・蒼鉄で向かいます。PCのブラウザで遊べます。</p>
+          <a className="textButton refinedLink" href={aoganePlayUrl}><span>ゲームを開く</span></a>
+          <a className="featureSubLink refinedLink" href={aoganeUrl}><span>蒼鉄について</span></a>
+        </div>
+      </section>
 
       <section className="feature featureClock" aria-labelledby="clock-title">
         <div className="clockCopy">

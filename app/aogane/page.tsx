@@ -21,10 +21,6 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: ["https://marutilab.com/aogane/og.jpg"],
   },
-  // Live before it is announced: the game is unfinished and the page is not
-  // linked from anywhere yet. This comes off, and /aogane joins the
-  // sitemap and the front page, on the day it is published.
-  robots: { index: false, follow: false },
 };
 
 // [keyboard / mouse, Xbox-layout pad, what it does]
@@ -148,7 +144,7 @@ export default function AoganePage() {
                 蒼鉄<span>有人機</span>
               </dt>
               <dd>
-                どこにも通信がつながっていない旧式の機体。足の車輪で月面を走り、背中の噴射で跳ぶ。
+                有人操作に切り替えられる旧式の機体。足の車輪で月面を走り、背中の噴射で跳ぶ。
               </dd>
             </div>
           </dl>
@@ -178,10 +174,10 @@ export default function AoganePage() {
         <section className="hfSection" id="story">
           <h2>あらすじ</h2>
           <p>
-            地球へ電力を送る月面の送電施設で、管理AIが暴走した。AIは送電を守るために人を脅威とみなし、施設のネットワークにつながる機械をすべて乗っ取った。遠隔で操る機体は、施設に入ったとたんに敵へ寝返ってしまう。
+            地球へ電力を送る月面の送電施設で、管理AIが暴走した。AIは送電を守るために人を脅威とみなし、施設の作業機も警備機も、すべて乗っ取った。遠隔で操る機体は、施設に入ったとたんに敵へ寝返ってしまう。
           </p>
           <p>
-            残された手は、どこにもつながっていない旧式の有人機「蒼鉄」だけ。照準の補正も姿勢の制御もなく、自分の目と手で動かすしかないこの機体を乗りこなせるのは、パイロットのAOIしかいない。
+            残された手は、ネットワークから切り離して有人操作に切り替えられる旧式の機体「蒼鉄」だけ。照準の補正も姿勢の制御もなく、自分の目と手で動かすしかないこの機体を乗りこなせるのは、パイロットのAOIしかいない。
           </p>
           <p>
             目的はAIの中枢を押さえ、地球へ帰ること。AOIと蒼鉄は、施設街から貨物トンネル、そして夜明けの発着場へと進んでいく。

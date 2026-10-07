@@ -19,6 +19,7 @@ const pages = [
   "/piclea/guide/",
   "/piclea/faq/",
   "/piclea/licenses.html",
+  "/aogane",
   "/yurameki",
   "/yurameki/about",
   "/yurameki/gallery",

@@ -31,15 +31,10 @@ mkdirSync(dest, { recursive: true });
 for (const f of files) { mkdirSync(dirname(join(dest, f)), { recursive: true }); cpSync(join(src, f), join(dest, f)); }
 for (const d of dirs) cpSync(join(src, d), join(dest, d), { recursive: true });
 
-// Unlisted until it is announced: the page says noindex itself, and the tab
-// says what it is instead of the build number.
+// The tab says what it is instead of the build number. (Until 2026-10-08 the
+// page also carried noindex; that came off when AOGANE was announced.)
 let html = readFileSync(join(src, "index.html"), "utf8");
 html = html.replace(/<title>[^<]*<\/title>/, "<title>蒼鉄 -AOGANE- | Maruti Lab</title>");
-html = html.replace(
-  /(<meta name="viewport"[^>]*>)/,
-  '$1\n  <meta name="robots" content="noindex,nofollow">',
-);
-if (!html.includes('name="robots"')) throw new Error("could not add the robots meta");
 writeFileSync(join(dest, "index.html"), html);
 
 console.log(`AOGANE copied from ${src} to ${dest}`);

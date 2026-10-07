@@ -2866,7 +2866,7 @@ function tutHold(){return tut.on&&tut.i<4}
 // The story is written, not staged: a short briefing the first time SECTOR 01 opens, and a closing card on the
 // last clear (the sunrise deck, AOI's FINAL line, three lines, then OPERATION COMPLETE). Enter / A / a click
 // after the first line goes straight to the result.
-const BRIEF={en:'BRIEFING',lines:['月面送電施設の管理AIが暴走。施設網につながる機械は、すべて敵になった','通信を持たない旧式の有人機・蒼鉄で、AIの中枢へ向かう']};
+const BRIEF={en:'BRIEFING',lines:['月面送電施設の管理AIが暴走。施設の作業機も警備機も、すべて乗っ取られた','有人操作に切り替えられる旧式の機体・蒼鉄で、AIの中枢へ向かう']};
 const brief={t:-1,shown:false};
 const ENDING_LINES=['AIの中枢は押さえた。施設の機械が、ひとつずつ動きを止めていく','夜明けの発着場に、迎えの船が降りてくる','蒼鉄は役目を終えた。AOI は、地球へ帰る'];
 const ENDING_LEN=12.5;const ending={on:false,t:0};

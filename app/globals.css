@@ -699,3 +699,19 @@ footer{padding-top:34px;padding-bottom:34px}
 
 /* A tool's name in its own header, with the lab signing underneath. */
 .toolBrandName{display:flex;flex-direction:column;line-height:1.05}.toolBrandName small{margin-top:4px;font-size:9px;font-weight:500;letter-spacing:.08em;opacity:.62}
+
+/* AOGANE (蒼鉄) on the front page: the YURAMEKI-sized feature in the game's
+   own dark, the cover art on the left (AOI stands left in it), the title in
+   the game's title face (a two-glyph subset served with the game). */
+@font-face{font-family:"AOGANE Title";src:url("/aogane/play/assets/fonts/shippori-b1-800-title.woff2") format("woff2");font-weight:800;font-display:swap}
+.featureAogane{grid-template-columns:minmax(0,1.55fr) minmax(330px,.8fr);background:#0a0f12;color:#ece9e1}
+.aoganeImage{min-height:720px}.aoganeImage img{object-position:28% 50%}
+.aoganeImage:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 62%,rgba(10,15,18,.85))}
+.featureAogane .workNumber{color:#7fa9bd}
+.featureAogane .featureCopy h2{font:800 clamp(56px,6.2vw,92px)/1 "AOGANE Title","Shippori Mincho B1","Yu Mincho",serif;letter-spacing:.08em;display:flex;flex-direction:column;gap:14px}
+.featureAogane .featureCopy h2 small{font:500 clamp(14px,1.3vw,18px)/1 "Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.42em;color:#a9c6d4}
+.featureAogane .workTagline{color:#ece9e1!important;font-size:clamp(16px,1.55vw,22px)!important;white-space:nowrap}
+.featureAogane .featureCopy>p{color:#a7b3b9}
+.featureAogane .refinedLink,.featureAogane .featureSubLink{color:#ece9e1}
+.featureAogane .refinedLink:hover,.featureAogane .refinedLink:focus-visible{color:#8fd8ff}
+@media(max-width:900px){.featureAogane{grid-template-columns:1fr}.featureAogane .featureImage{order:1;min-height:58vw}.featureAogane .featureCopy{order:2}.aoganeImage:after{background:linear-gradient(180deg,transparent 70%,rgba(10,15,18,.7))}}
