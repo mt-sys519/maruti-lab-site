@@ -5,7 +5,12 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
 const canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const boot=$('boot'),hud=$('hud'),video=$('webcam');
 let W=1280,H=720,DPR=1;
-function resize(){DPR=Math.min(devicePixelRatio||1,1.35);W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
+// 解像度 (設定): the whole frame, WebGL and HMD alike, renders at 100 / 75 / 50 % of the screen's pixels and the
+// browser scales it up. Everything sizes from DPR, so the scale is folded into it. Kept in hf.res.
+const RES_STEPS=[1,.75,.5];let resScale=1;try{const v=+localStorage.getItem('hf.res');if(RES_STEPS.includes(v))resScale=v}catch{}
+function resLabel(){const b=document.getElementById('res');if(b)b.textContent=`解像度：${Math.round(resScale*100)}%（${canvas.width}×${canvas.height}）`}
+function resize(){DPR=Math.min(devicePixelRatio||1,1.35)*resScale;W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);resLabel()}
+function cycleRes(){resScale=RES_STEPS[(RES_STEPS.indexOf(resScale)+1)%RES_STEPS.length];try{localStorage.setItem('hf.res',String(resScale))}catch{}resize()}
 addEventListener('resize',resize);resize();
 
 // ---------- AUDIO ----------
@@ -3026,7 +3031,8 @@ function drawPilotLink(){
   if(!playing)return;
   const b=pilot.boot;if(b<=0)return;
   // type scale: never below ~11 px body / 8 px labels, so a small window keeps a readable strip
-  const sv=H*DPR/1080*2.4,s=Math.max(1.45,Math.max(1,sv>=2?Math.round(sv):Math.round(sv*2)/2)/DPR),lh=12.5*s,pad=6*s,fs=7.8*s,cap=5.6*s;
+  // the HMD's size ignores 解像度 (hd is the screen's own pixel ratio)
+  const hd=DPR/resScale,sv=H*hd/1080*2.4,s=Math.max(1.45,Math.max(1,sv>=2?Math.round(sv):Math.round(sv*2)/2)/hd),lh=12.5*s,pad=6*s,fs=7.8*s,cap=5.6*s;
   const logW=Math.min(W*.5,330*s),logH=lh*4+pad*2,sideW=Math.max(70*s,logW*.24),sideH=logH,gap=10*s;
   const total=sideW*2+logW+gap*2,ox=W/2-total/2+pilot.lagX+(Math.random()-.5)*player.shake*4,by=H-16*s-(1-b)*24*s+(Math.random()-.5)*player.shake*3;
   ctx.save();ctx.globalAlpha=b;
@@ -3251,6 +3257,7 @@ function applyBloom(){
   ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='lighter';ctx.imageSmoothingEnabled=true;
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
+$('res').addEventListener('click',()=>{cycleRes();sfx.ui()});resLabel();
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'発光：強':'発光：弱'}
 function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
