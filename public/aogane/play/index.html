@@ -6,12 +6,13 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0a0f12">
   <title>蒼鉄 -AOGANE- | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=39">
+  <link rel="stylesheet" href="styles.css?v=40">
 </head>
 <body>
 <main id="app">
   <canvas id="game" aria-label="AOGANE game canvas" tabindex="0"></canvas>
   <video id="webcam" playsinline muted></video>
+  <div id="cover" class="cover" aria-hidden="true"></div>
 
   <section id="boot" class="boot">
     <div class="bootMark">蒼</div>
@@ -21,28 +22,28 @@
     <p class="lead">首は索敵とHMD指定、マウスは武器、機体は遅れて追従。三つを分離したまま、正面射撃と側方索敵を同時に扱う。</p>
 
     <div class="primaryActions">
-      <button id="play" class="deploy">DEPLOY</button>
-      <button id="endure" class="endure">ENDURANCE</button>
-      <button id="head" class="cam"><i class="lamp"></i><span id="headLabel">CAMERA : OFF</span></button>
+      <button id="play" class="deploy">出撃</button>
+      <button id="endure" class="endure">耐久戦</button>
+      <button id="head" class="cam"><i class="lamp"></i><span id="headLabel">カメラ：オフ</span></button>
     </div>
     <p id="camNote" class="camNote">顔の向きで周りを見ます。映像は端末の外に出ません。</p>
     <div class="subActions">
-      <button id="full">FULL SCREEN</button>
-      <button id="fx">GLOW : HIGH</button>
-      <button id="reset">RESET</button>
+      <button id="full">全画面</button>
+      <button id="fx">発光：強</button>
+      <button id="reset">最初から</button>
     </div>
 
     <div class="settings">
-      <label><span>MASTER</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
-      <label><span>MUSIC</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
-      <label><span>MOUSE SENS</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
-      <label><span>HEAD GAIN</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
-      <label><span>DEAD ZONE</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
-      <label><span>SMOOTH</span><output id="smoothout">0.13</output><input id="smooth" type="range" min="0.04" max="0.35" value="0.13" step="0.01"></label>
+      <label><span>全体の音量</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
+      <label><span>音楽</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
+      <label><span>マウス感度</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
+      <label><span>首の感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
+      <label><span>首の遊び</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
+      <label><span>首のなめらかさ</span><output id="smoothout">0.13</output><input id="smooth" type="range" min="0.04" max="0.35" value="0.13" step="0.01"></label>
     </div>
 
-    <div class="statusLine"><i id="statusDot"></i><span id="status">READY / CAMERA OPTIONAL</span></div>
-    <div class="keyline"><b>WASD</b> MOVE　<b>SHIFT</b> BURST　<b>SPACE</b> JUMP　<b>MOUSE</b> WEAPON GIMBAL　<b>LMB</b> CANNON　<b>RMB</b> SCOPE　<b>WHEEL / 1-3</b> WEAPON　<b>V</b> AXE　<b>Q/E</b> HEAD TEST　<b>C</b> RECENTER　<b>ESC</b> MENU　<b>R</b> REDEPLOY</div>
+    <div class="statusLine"><i id="statusDot"></i><span id="status">準備完了　カメラはなくても遊べます</span></div>
+    <div class="keyline"><b>WASD</b> 移動　<b>SHIFT</b> ブースト　<b>SPACE</b> ジャンプ　<b>マウス</b> 武器の向き　<b>左クリック</b> 撃つ　<b>右クリック</b> スコープ　<b>ホイール / 1-3</b> 武器の切り替え　<b>V</b> 斧　<b>Q/E</b> 首を左右へ（カメラなし）　<b>C</b> 首を正面に戻す　<b>ESC</b> メニュー　<b>R</b> 再出撃</div>
   </section>
 
   <section id="hud" class="hud hidden" aria-live="polite">
@@ -53,7 +54,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=68"></script>
+<script src="main.js?v=69"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>

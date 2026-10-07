@@ -35,16 +35,16 @@ export default function AoganePage() {
       <main className="hfMain">
         <section className="hfHero">
           {/* Key art: AOI beside her frame. It is the first thing to catch the eye, so it sits beside the
-              name on a wide screen and under it on a phone. The art may still change. */}
+              name on a wide screen and under it on a phone. The art may still change. poster-1024.webp (the same scene with 蒼鉄 lettered on it) waits for the front page and the OG image on the day it is announced. */}
           <figure className="hfKey">
             {/* eslint-disable-next-line @next/next/no-img-element -- two fixed WebP sizes, served as is */}
             <img
-              src="/aogane/key-900.webp"
-              srcSet="/aogane/key-560.webp 560w, /aogane/key-900.webp 900w"
+              src="/aogane/key-900.webp?v=2"
+              srcSet="/aogane/key-560.webp?v=2 560w, /aogane/key-900.webp?v=2 900w"
               sizes="(max-width: 860px) 100vw, 420px"
               width={900}
-              height={1125}
-              alt="パイロットのAOIと、白と黒の装甲に青い光のラインが走る機体。格納庫に並んで立っている"
+              height={1350}
+              alt="ヘルメットを手に提げたパイロットのAOIと、背後に立つ白と黒の機体「蒼鉄」。格納庫の向こうに月面と地球が見える"
             />
           </figure>
           <p className="hfEyebrow">MANNED FRAME / IN DEVELOPMENT</p>

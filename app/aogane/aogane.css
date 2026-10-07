@@ -67,3 +67,9 @@
   .hfLead br{display:none}
   .hfKeys div{grid-template-columns:104px 1fr}
 }
+
+/* 蒼鉄 in the game's title face (Shippori Mincho B1 ExtraBold, close to the lettering on the key art):
+   a two-glyph subset served with the game. */
+@font-face{font-family:"AOGANE Title";src:url(/aogane/play/assets/fonts/shippori-b1-800-title.woff2) format("woff2");font-weight:800;font-display:swap;unicode-range:U+84BC,U+9244}
+.hfHero h1{font-family:"AOGANE Title","Shippori Mincho B1","Yu Mincho","Hiragino Mincho ProN",serif;font-weight:800;letter-spacing:.12em}
+.hfHero h1 small{font-family:Bahnschrift,"DIN Alternate","Segoe UI","Helvetica Neue",sans-serif;font-weight:400}

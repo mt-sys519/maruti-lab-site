@@ -707,7 +707,7 @@ const CAM_NOTE={off:'顔の向きで周りを見ます。映像は端末の外�
   denied:'カメラが許可されていません。アドレスバーのカメラのアイコンと、Windows の設定 → プライバシー → カメラを確認してください。',
   none:'カメラが見つかりません。つながっているか確認してください。',load:'顔認識を読み込めませんでした。通信を確認して、もう一度押してください。',
   browser:'このブラウザでは使えません。Chrome か Edge で開いてください。',lost:'カメラが止まりました。もう一度押すと再開します。'};
-function camUI(state,note){const b=$('head');for(const k of ['on','loading','fail'])b.classList.toggle(k,k===state);$('headLabel').textContent=state==='on'?'CAMERA : ON':state==='loading'?'CAMERA : …':'CAMERA : OFF';$('camNote').textContent=CAM_NOTE[note||state]||CAM_NOTE.off}
+function camUI(state,note){const b=$('head');for(const k of ['on','loading','fail'])b.classList.toggle(k,k===state);$('headLabel').textContent=state==='on'?'カメラ：オン':state==='loading'?'カメラ：準備中…':state==='fail'?'カメラ：失敗':'カメラ：オフ';$('camNote').textContent=CAM_NOTE[note||state]||CAM_NOTE.off}
 function camError(error){const n=error?.name||'';return n==='NotReadableError'||n==='TrackStartError'||n==='AbortError'?'busy':n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError'?'denied':n==='NotFoundError'||n==='OverconstrainedError'||n==='DevicesNotFoundError'?'none':/ImageBitmap unavailable/.test(error?.message||'')?'browser':'load'}
 async function toggleHead(){
   if(headEnabled){disableHead();return}
@@ -2602,7 +2602,7 @@ function showResult(title){const r=$('result');if(!r)return;if(!title){r.classLi
     rows=[['TIME',fmtTime(missionTime)],['BREAK',stats.kills+' / '+enemies.length],['ACCURACY',acc+'%'],['MAX CHAIN',stats.maxChain],['HMD DESIGNATIONS',stats.designations],['DAMAGE TAKEN',Math.round(stats.damage)]]}
   $('resultSector').textContent=sector;$('resultTitle').textContent=title;
   // Choices are buttons: the pointer lock is released so the cursor can pick one (Enter / R / ESC still work).
-  const next=mode==='sortie'&&!down&&stage<LAST_SECTOR;const fin=title==='OPERATION COMPLETE';$('resultKeys').innerHTML=fin?'<button class="go" data-act="restart">FROM SECTOR 01</button><button data-act="menu">MENU</button>':(next?'<button class="go" data-act="next">NEXT SECTOR</button>':'')+'<button data-act="again">REDEPLOY</button><button data-act="menu">MENU</button>';r.classList.toggle('final',fin);
+  const next=mode==='sortie'&&!down&&stage<LAST_SECTOR;const fin=title==='OPERATION COMPLETE';$('resultKeys').innerHTML=fin?'<button class="go" data-act="restart">1面から</button><button data-act="menu">メニュー</button>':(next?'<button class="go" data-act="next">次のエリアへ</button>':'')+'<button data-act="again">再出撃</button><button data-act="menu">メニュー</button>';r.classList.toggle('final',fin);
   if(typeof document!=='undefined'&&document.pointerLockElement)document.exitPointerLock?.();
   // Rebuilt every time, so the rows run their arrival again.
   $('resultStats').innerHTML=rows.map(([k,v],i)=>`<div style="--i:${i}"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
@@ -3169,7 +3169,7 @@ function applyBloom(){
   ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='lighter';ctx.imageSmoothingEnabled=true;
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
-function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'GLOW : HIGH':'GLOW : LOW'}
+function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'発光：強':'発光：弱'}
 function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
@@ -3178,7 +3178,7 @@ const frameErrors=new Map();
 function reportFrameError(err){const msg=String(err&&err.message||err);console.error(err);try{(window.__hfErrors=window.__hfErrors||[]).push({t:gameTime,msg,stack:String(err&&err.stack||'')})}catch{}
   try{ctx.restore();ctx.restore()}catch{}try{ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowBlur=0}catch{}lineBatch=null;
   if(!frameErrors.has(msg)){frameErrors.set(msg,1);try{plog('Warning','-ERR '+msg.slice(0,36))}catch{}}}
-function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent='GLOW : LOW (AUTO)';plog('System','Glow auto low.')}}else perf.t=0;updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
+function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent='発光：弱（自動）';plog('System','Glow auto low.')}}else perf.t=0;updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
 // ---------- CONTROLS ----------
@@ -3187,9 +3187,9 @@ requestAnimationFrame(loop);
 function saySortie(){return(stage===2?say('SORTIE_TUNNEL'):stage===3?say('SORTIE_DECK'):false)||say('SORTIE')}
 function nextSector(){stage=Math.min(LAST_SECTOR,stage+1);reset();saySortie()}
 function startGame(lock=true){
-  ensureAudio();playing=true;if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
+  ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');$('play').textContent='再開';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
   if(lock){
-    const failed=()=>{pause();$('status').textContent='POINTER LOCK UNAVAILABLE / OPEN IN CHROME OR EDGE'};
+    const failed=()=>{pause();$('status').textContent='マウスを固定できませんでした。Chrome か Edge で開いてください'};
     try{if(canvas.requestPointerLock){const pending=canvas.requestPointerLock();pending?.catch(failed)}else failed()}
     catch{failed()}
   }
@@ -3199,7 +3199,7 @@ $('resultKeys').addEventListener('click',e=>{const a=e.target?.closest?.('button
   if(a==='next')nextSector();else if(a==='restart'){stage=1;reset();say('SORTIE')}else{reset();say('REDEPLOY')}canvas.focus?.();try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}});
 $('play').addEventListener('click',()=>{if(mode!=='sortie')setMode('sortie');startGame(true)});
 $('endure').addEventListener('click',()=>{if(mode!=='endurance')setMode('endurance');startGame(true)});
-if(endure.best)$('status').textContent=`READY / ENDURANCE BEST ${endure.best.kills} BREAK ${fmtTime(endure.best.time)}`;
+if(endure.best)$('status').textContent=`準備完了　耐久戦の最高記録 ${endure.best.kills}機撃破 ${fmtTime(endure.best.time)}`;
 function clearInput(){keys.clear();mouseButtons.clear();boostLatch=false}
 function pause(){playing=false;clearInput();boot.classList.remove('hidden');hud.classList.add('hidden');updateEngine(0,false)}
 document.addEventListener('pointerlockchange',()=>{if(playing&&player.alive&&!missionClear&&document.pointerLockElement!==canvas&&!new URLSearchParams(location.search).has('demo'))pause()});
@@ -3209,7 +3209,7 @@ document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
 document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
-$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='MISSION RESET'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='FULLSCREEN ERROR'}});
+$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='1面からやり直します'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='全画面にできませんでした'}});
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);
 addEventListener('blur',()=>{clearInput();if(playing)pause()});
 addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());headWorker?.terminate()});

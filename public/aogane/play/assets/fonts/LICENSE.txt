@@ -1,0 +1,1 @@
+Shippori Mincho B1 (assets/fonts/shippori-b1-800-title.woff2, only the glyphs 蒼 and 鉄) is (c) FONTDASU, licensed under the SIL Open Font License 1.1: https://openfontlicense.org

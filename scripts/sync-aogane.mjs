@@ -21,8 +21,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const src = resolve(process.argv[2] ?? "C:/Users/a_tkm/Documents/GitHub/aogane");
 const dest = join(root, "public", "aogane", "play");
 
-const files = ["main.js", "three-cel.js", "styles.css", "head-tracker.worker.js"];
-const dirs = ["vendor", "assets/pilot"];
+const files = ["main.js", "three-cel.js", "styles.css", "head-tracker.worker.js", "assets/cover.webp"];
+const dirs = ["vendor", "assets/pilot", "assets/fonts"];
 
 for (const f of ["index.html", ...files, ...dirs]) {
   if (!existsSync(join(src, f))) throw new Error(`missing in ${src}: ${f}`);
@@ -30,7 +30,7 @@ for (const f of ["index.html", ...files, ...dirs]) {
 
 rmSync(dest, { recursive: true, force: true });
 mkdirSync(dest, { recursive: true });
-for (const f of files) cpSync(join(src, f), join(dest, f));
+for (const f of files) { mkdirSync(dirname(join(dest, f)), { recursive: true }); cpSync(join(src, f), join(dest, f)); }
 for (const d of dirs) cpSync(join(src, d), join(dest, d), { recursive: true });
 
 // Unlisted until it is announced: the page says noindex itself, and the tab
