@@ -823,7 +823,8 @@ function poly(points,fill,stroke=null,lw=1){if(points.some(p=>!p))return;ctx.beg
 // boxes / cyls: solids; lines: flat array [x0,y0,z0,x1,y1,z1,r,g,b,a,width,ink] per segment.
 let worldRec=null;
 function threeWorldOn(){const T=typeof window!=='undefined'&&window.HF_THREE;return !!(T&&T.active&&T.world)}
-const rgbOf=c=>c.split(',').map(Number);
+// Colour strings repeat every frame (and SYNC's gold is quantised by wc), so each one is split once.
+const RGB_CACHE=new Map(),rgbOf=c=>{let v=RGB_CACHE.get(c);if(!v){v=c.split(',').map(Number);if(RGB_CACHE.size>4096)RGB_CACHE.clear();RGB_CACHE.set(c,v)}return v};
 // HMD boot (sector start and redeploy): AOGANE has no canopy, and what AOI sees of the plant is the HMD's
 // sensor reconstruction. At the start it is not built yet: only the camera image (sky, Earth, regolith) is
 // there, and a scan ring runs out from the frame drawing the plant as it passes, its front edges lit bright.
