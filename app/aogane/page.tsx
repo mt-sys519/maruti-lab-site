@@ -53,9 +53,7 @@ export default function AoganePage() {
             <small>-AOGANE-</small>
           </h1>
           <p className="hfLead">
-            首は索敵、マウスは武器、機体は遅れてついてくる。
-            <br />
-            頭の向きと銃の向きを切り離したまま戦う、一人称のメカアクションです。
+            WEBカメラ式ヘッドトラッキングFPS
           </p>
           <p className="hfLead">
             地球へ電力を送る月面施設で、管理AIが暴走しました。施設のネットワークにつながる機械は、遠隔で操る機体も含めてすべてAIに乗っ取られます。
