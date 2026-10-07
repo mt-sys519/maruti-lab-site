@@ -277,7 +277,13 @@
 /* Title art (2026-10-07): AOI and 蒼鉄 under Earth, shown until the first sortie. AOI stands on the left,
    so the menu moves to the right over the regolith until then; the pause menu stays where it was. */
 @font-face{font-family:"AOGANE Title";src:url(assets/fonts/shippori-b1-800-title.woff2) format("woff2");font-weight:800;font-display:swap;unicode-range:U+84BC,U+9244}
-#cover{position:absolute;inset:0;background:linear-gradient(to left,rgba(2,6,8,.9) 0,rgba(2,6,8,.62) 36%,rgba(2,6,8,0) 60%),url(assets/cover.webp) 30% center/cover no-repeat #020808}
+/* The art is never zoomed past the screen's height: on a screen wider than 16:9 it is shown whole, fitted to
+   the height on the left, and fades into the dark on the right where the menu stands (cover-sizing it there
+   cropped AOI at the knees and made her look heavy). On a narrower screen it fills the height and its right
+   side is cut instead. */
+#cover{position:absolute;inset:0;overflow:hidden;background:#020808}
+#cover:before{content:"";position:absolute;left:0;top:0;height:100%;aspect-ratio:1672/941;background:url(assets/cover.webp) center/100% 100% no-repeat;-webkit-mask-image:linear-gradient(to left,transparent 0,#000 16%);mask-image:linear-gradient(to left,transparent 0,#000 16%)}
+#cover:after{content:"";position:absolute;inset:0;background:linear-gradient(to left,rgba(2,6,8,.9) 0,rgba(2,6,8,.6) 34%,rgba(2,6,8,0) 58%)}
 .boot:not(.started){left:auto;right:clamp(20px,4vw,64px);width:min(560px,calc(100% - 40px))}
 .boot:not(.started) .settings{grid-template-columns:repeat(3,minmax(0,1fr))}
 .boot h1{font-family:"AOGANE Title","Shippori Mincho B1","Yu Mincho","Hiragino Mincho ProN",serif;font-weight:800;letter-spacing:.12em}
@@ -289,3 +295,6 @@
 .statusLine,.keyline{font-family:"Noto Sans JP","Yu Gothic UI",sans-serif}.keyline{font-size:10px}
 .result .acts button{font-family:"Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.12em;font-size:12px}
 .statusLine:after{content:none}.keyline{word-break:keep-all}
+.keyline span{white-space:nowrap;margin-right:1.1em;display:inline-block}
+/* a big screen gets a bigger menu */
+@media (min-width:1700px) and (min-height:900px){.boot{zoom:1.22}}
