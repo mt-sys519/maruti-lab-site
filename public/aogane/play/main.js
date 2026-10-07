@@ -2794,7 +2794,7 @@ const UNIFONT_HEX='0000000000000000000000000000000000000000080808080808080008080
 const PILOT_EXPR=['calm','closed','shout','cheer','smug','laugh','grit','glance'];
 const PILOT_BASE=(typeof window!=='undefined'&&window.HF_ASSET_BASE)||'';
 const pilotImg={};
-if(typeof Image!=='undefined')for(const k of [...PILOT_EXPR,'bust_shout','bust_cheer']){const im=new Image();im.decoding='async';im.src=PILOT_BASE+'assets/pilot/aoi_'+k+'.webp';pilotImg[k]=im}
+if(typeof Image!=='undefined')for(const k of [...PILOT_EXPR,'bust_shout','bust_cheer']){const im=new Image();im.decoding='async';im.src=PILOT_BASE+'assets/pilot/aoi_'+k+'.webp?v=3';pilotImg[k]=im}
 const pilotReady=k=>{const im=pilotImg[k];return !!(im&&im.complete&&im.naturalWidth)};
 // Per-expression framing on the 1280x760 plate (pupils at 520/760, y 300): x/y in eye-distance units from the eye midpoint, z = zoom.
 const PILOT_FRAME={calm:{x:0,y:0,z:1},shout:{x:0,y:.4,z:.45},cheer:{x:0,y:.2,z:.75},smug:{x:.2,y:.02,z:1.1},laugh:{x:0,y:.3,z:.62},grit:{x:-.12,y:-.05,z:1.2},glance:{x:.22,y:-.02,z:1.14},closed:{x:0,y:0,z:1}};
