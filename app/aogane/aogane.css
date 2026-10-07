@@ -12,6 +12,7 @@
   font-family:Bahnschrift,"DIN Alternate","Segoe UI","Helvetica Neue","Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;
 }
 .hfSkin a{color:inherit}
+.hfSkin{overflow-x:clip}
 
 .hfHeader{height:72px;padding:0 clamp(16px,5vw,76px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--hf-line)}
 .hfBrand{display:flex;align-items:center;gap:12px;text-decoration:none;font-size:15px;letter-spacing:.22em}
@@ -99,3 +100,27 @@
 @font-face{font-family:"AOGANE Title";src:url(/aogane/play/assets/fonts/shippori-b1-800-title.woff2) format("woff2");font-weight:800;font-display:swap;unicode-range:U+84BC,U+9244}
 .hfHero h1{font-family:"AOGANE Title","Shippori Mincho B1","Yu Mincho","Hiragino Mincho ProN",serif;font-weight:800;letter-spacing:.12em}
 .hfHero h1 small{font-family:Bahnschrift,"DIN Alternate","Segoe UI","Helvetica Neue",sans-serif;font-weight:400}
+
+/* Guide bands: the four guide sections run the full width of the window, each on its own ground,
+   with the section's English name laid big and faint behind its heading. */
+.hfBand{position:relative;margin:56px calc(50% - 50vw) 0;padding:0 calc(50vw - 50%) 72px;overflow:hidden;border-top:1px solid var(--hf-line);border-bottom:1px solid var(--hf-line)}
+.hfBand+.hfBand{margin-top:0;border-top:0}
+.hfBand .hfSection{position:relative}
+.hfBand .hfSection:before{content:attr(data-en);position:absolute;top:34px;left:-6px;font-family:Bahnschrift,"DIN Alternate","Segoe UI",sans-serif;font-size:clamp(72px,12vw,168px);font-weight:700;line-height:1;letter-spacing:.04em;color:var(--wm,rgba(255,255,255,.05));white-space:nowrap;pointer-events:none}
+.hfBand .hfSection>*{position:relative}
+.hfBand-play{--wm:rgba(95,212,224,.08);background:
+  repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px),
+  linear-gradient(rgba(95,212,224,.07) 1px,transparent 1px) 0 0/40px 40px,
+  linear-gradient(90deg,rgba(95,212,224,.07) 1px,transparent 1px) 0 0/40px 40px,
+  radial-gradient(90% 70% at 50% 0%,rgba(95,212,224,.10),transparent 70%),#061113}
+.hfBand-arms{--wm:rgba(227,169,87,.09);background:
+  radial-gradient(80% 90% at 100% 0%,rgba(227,169,87,.18),transparent 65%),
+  repeating-linear-gradient(135deg,rgba(227,169,87,.03) 0 2px,transparent 2px 22px),#0c0a07}
+.hfBand-hostiles{--wm:rgba(255,58,74,.09);background:
+  radial-gradient(80% 90% at 0% 0%,rgba(255,58,74,.17),transparent 65%),
+  radial-gradient(60% 60% at 100% 100%,rgba(194,123,255,.08),transparent 70%),#0d0709}
+.hfBand-sectors{--wm:rgba(255,255,255,.07);background:
+  linear-gradient(90deg,#05090a 0%,rgba(5,9,10,.94) 45%,rgba(5,9,10,.55) 100%),
+  url(/aogane/play/assets/cover.webp) right center/cover no-repeat,#05090a}
+.hfBand .hfEntries div{background:linear-gradient(135deg,rgba(5,9,10,.72),rgba(5,9,10,.5));backdrop-filter:blur(2px)}
+.hfBand .hfSteps li{background:rgba(5,9,10,.6)}

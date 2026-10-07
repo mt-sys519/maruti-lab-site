@@ -180,43 +180,51 @@ export default function AoganePage() {
           </p>
         </section>
 
-        <section className="hfSection" id="play">
-          <h2>戦い方</h2>
-          <ol className="hfSteps">
-            {steps.map(([title, text], i) => (
-              <li key={title}>
-                <span className="hfStepNo">{String(i + 1).padStart(2, "0")}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
+        <div className="hfBand hfBand-play">
+          <section className="hfSection" id="play" data-en="COMBAT">
+            <h2>戦い方</h2>
+            <ol className="hfSteps">
+              {steps.map(([title, text], i) => (
+                <li key={title}>
+                  <span className="hfStepNo">{String(i + 1).padStart(2, "0")}</span>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </div>
 
-        <section className="hfSection" id="arms">
-          <h2>武器</h2>
-          <p>
-            持てる武器は3つです。1 が HALBERD、2 がそのエリアで渡される2本目の武器、3 が斧の BARDICHE です。SECTOR ごとに2本目が変わります。
-          </p>
-          <Entries items={weapons} />
-        </section>
+        <div className="hfBand hfBand-arms">
+          <section className="hfSection" id="arms" data-en="ARMS">
+            <h2>武器</h2>
+            <p>
+              持てる武器は3つです。1 が HALBERD、2 がそのエリアで渡される2本目の武器、3 が斧の BARDICHE です。SECTOR ごとに2本目が変わります。
+            </p>
+            <Entries items={weapons} />
+          </section>
+        </div>
 
-        <section className="hfSection" id="hostiles">
-          <h2>敵</h2>
-          <p>施設のネットワークに乗っ取られた機械たちです。種類ごとに色が分かれています。</p>
-          <Entries items={hostiles} />
-        </section>
+        <div className="hfBand hfBand-hostiles">
+          <section className="hfSection" id="hostiles" data-en="HOSTILES">
+            <h2>敵</h2>
+            <p>施設のネットワークに乗っ取られた機械たちです。種類ごとに色が分かれています。</p>
+            <Entries items={hostiles} />
+          </section>
+        </div>
 
-        <section className="hfSection" id="sectors">
-          <h2>エリアとモード</h2>
-          <p>
-            「ミッション」では3つのエリアを順に進み、SECTOR 03 を抜けると作戦完了です。はじめに操作説明があり、2回目からは Tab で飛ばせます。
-          </p>
-          <Entries items={sectors} />
-          <p>
-            「サバイバル」は、倒れるまで戦い続けるモードです。武器はすべて持った状態で始まり、6機倒すごとに敵が強くなり、途中からは KITE も加わります。機体の修理はありません。
-          </p>
-        </section>
+        <div className="hfBand hfBand-sectors">
+          <section className="hfSection" id="sectors" data-en="SECTORS">
+            <h2>エリアとモード</h2>
+            <p>
+              「ミッション」では3つのエリアを順に進み、SECTOR 03 を抜けると作戦完了です。はじめに操作説明があり、2回目からは Tab で飛ばせます。
+            </p>
+            <Entries items={sectors} />
+            <p>
+              「サバイバル」は、倒れるまで戦い続けるモードです。武器はすべて持った状態で始まり、6機倒すごとに敵が強くなり、途中からは KITE も加わります。機体の修理はありません。
+            </p>
+          </section>
+        </div>
 
         <section className="hfSection" id="controls">
           <h2>操作</h2>
