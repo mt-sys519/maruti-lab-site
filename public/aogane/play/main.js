@@ -290,6 +290,13 @@ const sfx={
   axeWind(){if(!ac)return;tone({type:'sawtooth',f:90,f2:150,glide:.3,a:.08,d:.34,g:.035,lp:900});burst({lp:500,lp2:200,fd:.3,a:.1,d:.3,g:.05})},
   axeHit(pan=0){if(!ac)return;tone({f:72,f2:30,glide:.2,d:.5,g:.6,crush:true,pri:3,pan});burst({pink:true,lp:900,lp2:120,fd:.5,d:.6,g:.16,rev:.25,pan});burst({hp:1600,d:.03,g:.2,pri:3,pan});
     for(const [f,g] of [[540,.05],[1310,.03],[2780,.016]])tone({f:f*(.97+Math.random()*.06),d:.55,g,rev:.25,pan,pri:2});burst({bp:900,bp2:300,fd:.25,q:.8,d:.3,g:.14,pan})},
+  // Aiming: a short servo, the lock clacking home on a dull thud, then two flat HMD pips; putting it down is a lighter
+  // clack and one lower pip. No pitch glides: sliding tones read as a squeaky toy (user, 2026-10-08).
+  adsIn(){if(!ac)return;const now=ac.currentTime;burst({t:now,bp:700,bp2:1300,fd:.14,q:3,a:.02,d:.15,g:.1,pri:3});
+    burst({t:now+.13,bp:1250,q:7,a:.001,d:.16,g:.3,pri:3});burst({t:now+.13,bp:3200,q:3,a:.001,d:.05,g:.2,pri:3});burst({t:now+.13,lp:200,a:.002,d:.2,g:.45,pri:3});tone({t:now+.13,f:68,a:.003,d:.18,g:.22,pri:3});
+    tone({t:now+.26,f:1900,a:.003,d:.06,g:.05,pri:3});tone({t:now+.33,f:1900,a:.003,d:.06,g:.05,pri:3})},
+  adsOut(){if(!ac)return;const now=ac.currentTime;burst({t:now,bp:1000,q:6,a:.001,d:.12,g:.24,pri:3});burst({t:now,lp:180,a:.002,d:.15,g:.35,pri:3});tone({t:now,f:60,a:.003,d:.14,g:.16,pri:3});
+    burst({t:now+.06,bp:1400,bp2:800,fd:.12,q:3,a:.01,d:.12,g:.07,pri:3});tone({t:now+.12,f:1300,a:.003,d:.06,g:.04,pri:3})},
   swap(){if(!ac)return;const now=ac.currentTime;tone({f:420,type:'square',d:.03,g:.012,lp:1800});burst({t:now+.12,bp:1600,q:3,d:.05,g:.05});tone({t:now+.25,f:150,f2:90,glide:.06,d:.09,g:.09,crush:true});burst({t:now+.25,bp:2600,q:4,d:.04,g:.04})},
   jump(){if(!ac)return;tone({f:90,f2:150,glide:.12,d:.2,g:.22,crush:true});burst({bp:600,bp2:2200,fd:.2,q:.8,d:.3,g:.12,rev:.1});burst({hp:3000,d:.05,g:.04})},
   land(k=1){if(!ac)return;tone({f:96,f2:40,glide:.14,d:.36,g:.42*k,crush:true,pri:3});burst({pink:true,lp:900,d:.25,g:.16*k});burst({bp:2300,q:3,d:.05,g:.05*k});burst({t:ac.currentTime+.07,hp:4200,d:.2,g:.016*k})},
@@ -320,7 +327,7 @@ for(const k of ['kill','debrisLand','debrisBurn','explode','enemyDash','lancerCu
 // Loudness calibration, measured at the limiter output with the music muted (tests/audio tour):
 // gun report sits around -7 dBFS peak, threat cues -9..-12, reward/HMD tones -12..-16,
 // so danger and confirmation read through sustained cannon fire.
-const SFX_TRIM={chip:1.6,fire:.68,hit:2.8,lock:2.8,designate:2.5,scan:2.8,enemyDash:2.4,lancerCue:2.8,hostile:3,heavyCharge:4,contact:2.8,stagger:2.5,flow:2.2,evade:3,nearMiss:2.7,inbound:2.5,overheat:1.25,vented:2.8,mote:1.8,clear:2.5};
+const SFX_TRIM={chip:1.6,fire:.68,hit:2.8,lock:2.8,designate:2.5,scan:2.8,enemyDash:2.4,lancerCue:2.8,hostile:3,heavyCharge:4,contact:2.8,stagger:2.5,flow:2.2,evade:3,nearMiss:2.7,inbound:2.5,overheat:1.25,vented:2.8,adsIn:2.5,adsOut:2.5,mote:1.8,clear:2.5};
 for(const [k,v] of Object.entries(SFX_TRIM)){const f=sfx[k];sfx[k]=(...args)=>{const prev=sfxTrim;sfxTrim=v;try{return f(...args)}finally{sfxTrim=prev}}}
 volume.addEventListener('input',()=>{if(master)master.gain.setTargetAtTime(+volume.value/100,ac.currentTime,.03);$('volout').textContent=volume.value+'%'});$('volout').textContent=volume.value+'%';
 voiceVol.addEventListener('input',()=>{if(voiceBus)voiceBus.gain.setTargetAtTime(voiceLevel(),ac.currentTime,.05);$('voiceout').textContent=voiceVol.value+'%'});$('voiceout').textContent=voiceVol.value+'%';
@@ -631,7 +638,7 @@ function axeSway(){const S=player.swing,B=BARDICHE;if(!S)return 0;const t=S.t,c0
   if(t<c0)return .035*sm(clamp(t/B.wind,0,1));if(t<c1){const u=(t-c0)/(c1-c0);return lerp(.035,-.06,sm(clamp(u*1.4,0,1)))}return -.06*(1-sm(clamp((t-c1)/B.rec,0,1)))}
 // The scope is the pilot's call: ARBALEST comes up unscoped, RMB (or F / a middle click) puts the eye to the scope
 // and takes it away again. Switching away drops it.
-function toggleScope(){if(!playing||!player.alive||missionClear||!(player.weapon==='ARBALEST'||player.weapon==='HALBERD')||cockpit.swapT>0)return;player.scopeOn=!player.scopeOn;if(!player.scopeOn)adsFold();sfx.ui()}
+function toggleScope(){if(!playing||!player.alive||missionClear||!(player.weapon==='ARBALEST'||player.weapon==='HALBERD')||cockpit.swapT>0)return;player.scopeOn=!player.scopeOn;if(!player.scopeOn)adsFold();if(player.weapon!=='HALBERD')sfx.ui();else if(player.scopeOn){player.adsT=gameTime;sfx.adsIn()}else sfx.adsOut()}
 // Aiming (HALBERD, the same RMB / LT, trial 2026-10-08): while held up the gun keeps the screen centre. The head still
 // turns the view, at ADS_HEAD of its pull, and carries the gun with it; the mouse aims and turns the frame as ever.
 // The view narrows by ADS_ZOOM. Leaving it, the gun stays where it was pointed (adsFold) instead of swinging back.
@@ -2298,12 +2305,29 @@ function drawScope(viewYaw,viewPitch){const k=player.scope||0;if(k<.02)return;
   ctx.strokeStyle=cyc<1?'rgba(216,180,108,.8)':ink+'.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,R-6,Math.PI*.62,Math.PI*.62+Math.PI*.76*cyc);ctx.stroke();
   hudText(cyc<1?'CYCLING':'READY',cx,cy+R*.86,5.4*s,cyc<1?'#d8b46c':'#e2dfcc',.5,.3);
   ctx.restore()}
+// Aiming sight: a dot with split hairlines and three drop ticks, in the link / heat colours of the ring it replaces.
+function drawAdsSight(p,linked,heat){const col=player.vent?'#ff4a2a':heat>.75?'#ff8a3a':linked?'#8fffe0':'#ffc75a',g=8,L=44;
+  const hair=()=>{ctx.beginPath();ctx.moveTo(p.x-L,p.y);ctx.lineTo(p.x-g,p.y);ctx.moveTo(p.x+g,p.y);ctx.lineTo(p.x+L,p.y);ctx.moveTo(p.x,p.y+g);ctx.lineTo(p.x,p.y+L*.8);for(let i=1;i<=3;i++){const y=p.y+g+i*9,w=7-i*1.5;ctx.moveTo(p.x-w,y);ctx.lineTo(p.x+w,y)}};
+  ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=4.5;hair();ctx.stroke();
+  ctx.globalCompositeOperation='lighter';ctx.strokeStyle=col;ctx.globalAlpha=player.vent?.5+.4*Math.sin(gameTime*22):.95;ctx.lineWidth=1.6;hair();ctx.stroke();
+  ctx.globalAlpha=1;ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,2.2,0,TAU);ctx.fill()}
+// Aiming frame: brackets close in from the corners onto the centre field, the edges darken, one scan line runs down
+// the HMD as it switches to the gun camera (player.adsT), and a label says so.
+function drawAdsFrame(){const k=player.ads||0;if(k<.01||(player.scope||0)>.05)return;const e=1-Math.pow(1-k,3),s=Math.min(W,H)/720;
+  ctx.save();const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.32,W/2,H/2,Math.max(W,H)*.62);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,`rgba(2,6,8,${.55*e})`);ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+  const hw=lerp(W/2-14*s,W*.26,e),hh=lerp(H/2-14*s,H*.27,e),x0=W/2-hw,x1=W/2+hw,y0=H/2-hh,y1=H/2+hh,a=26*s;
+  ctx.globalCompositeOperation='lighter';ctx.strokeStyle=HUD.teal;ctx.globalAlpha=.85*k;ctx.lineWidth=Math.max(1.5,2*s);ctx.lineCap='square';ctx.beginPath();
+  for(const [x,y,dx,dy] of [[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]]){ctx.moveTo(x+dx*a,y);ctx.lineTo(x,y);ctx.lineTo(x,y+dy*a)}ctx.stroke();
+  ctx.globalAlpha=.5*k;ctx.beginPath();ctx.moveTo(W/2,y0-4*s);ctx.lineTo(W/2,y0+6*s);ctx.moveTo(W/2,y1+4*s);ctx.lineTo(W/2,y1-6*s);ctx.moveTo(x0-4*s,H/2);ctx.lineTo(x0+6*s,H/2);ctx.moveTo(x1+4*s,H/2);ctx.lineTo(x1-6*s,H/2);ctx.stroke();
+  const t=gameTime-(player.adsT??-9);if(t>=0&&t<.32){const y=lerp(y0,y1,t/.32),gr=ctx.createLinearGradient(0,y-18*s,0,y);gr.addColorStop(0,'rgba(142,216,196,0)');gr.addColorStop(1,'rgba(142,216,196,.5)');ctx.globalAlpha=.7*(1-t/.32);ctx.fillStyle=gr;ctx.fillRect(x0,y-18*s,x1-x0,18*s);ctx.fillStyle=HUD.teal;ctx.fillRect(x0,y,x1-x0,Math.max(1,1.2*s))}
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=k;hudText('GUN CAM  //  HALBERD',x0+2*s,y0-14*s,7*s,HUD.teal,0,.3);hudText('×1.25',x1-2*s,y1+6*s,7*s,HUD.teal,1,.2);ctx.restore()}
 function drawGunSight(viewYaw,viewPitch){
   const a=aimVector(),p=project(player.x+a.x*85,CAMERA_Y+a.y*85,player.z+a.z*85,viewYaw,viewPitch);
   const linked=getSightLink(),lock=getLock(.24),heat=player.heat/100;
   ctx.save();ctx.lineCap='round';
   if(!p||p.x<20||p.x>W-20||p.y<20||p.y>H-20){ // gun is pointing outside the HMD view: a witness tick on the canopy edge
     const side=Math.sign(angleDiff(player.yaw+player.torso,viewYaw))||1;ctx.strokeStyle='#ffc75a';ctx.globalAlpha=.8;ctx.lineWidth=2;const x=side>0?W-40:40,y=H*.49;ctx.beginPath();ctx.moveTo(x-side*10,y-8);ctx.lineTo(x,y);ctx.lineTo(x-side*10,y+8);ctx.stroke();ctx.restore();return}
+  if((player.ads||0)>.5&&cockpit.shown==='HALBERD'){drawAdsSight(p,linked,heat);ctx.restore();return}
   const maul=cockpit.shown==='MAUL',r=maul?26:20,gap=maul?.55:.3+(linked?0:.25);
   // With the head tracked the view moves under the gun, so the sight wanders across the screen: a dark halo keeps it
   // readable over lit walls and blasts, and four outer ticks give the eye something to find from the corner of the view.
@@ -2490,7 +2514,7 @@ function drawSightLinkCue(viewYaw,viewPitch){
   ctx.shadowBlur=3;ctx.font='7px Consolas';ctx.textAlign='left';ctx.fillText('LINK',x1+g+l+4,cy+3);ctx.restore();
 }
 function drawKillPulse(){if(player.killPulse<=0)return;const k=1-player.killPulse,rr=Math.min(W,H)*(.08+k*.36),a=player.killPulse;ctx.save();ctx.strokeStyle=`rgba(255,220,135,${.48*a})`;ctx.shadowBlur=18;ctx.shadowColor='#ffd16f';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W/2,H*.49,rr,0,TAU);ctx.stroke();ctx.globalAlpha=.16*a;ctx.fillStyle='#fff0b5';ctx.fillRect(0,H*.49-1,W,2);ctx.restore()}
-function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;bootFrame();drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);recordSunShadows();bootRing();if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(bootK(x.o.x,x.o.z)&&(!enemyOccluded(x.o)||threeEnemy(x.o)))drawEnemy(x.o,viewYaw,viewPitch)}bootR=1e9;if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
+function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;bootFrame();drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);recordSunShadows();bootRing();if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(bootK(x.o.x,x.o.z)&&(!enemyOccluded(x.o)||threeEnemy(x.o)))drawEnemy(x.o,viewYaw,viewPitch)}bootR=1e9;if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawAdsFrame();drawScope(viewYaw,viewPitch)}
 
 // One primary attack and one light pressure attack may commit at a time.
 function updateCombatDirector(){
