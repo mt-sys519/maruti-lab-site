@@ -511,7 +511,7 @@ function dissolveShard(s){const p=shardEnds(s),n=s.width>1.5?3:2;for(let i=0;i<n
 function absorbMote(){player.absorb=Math.min(1,player.absorb+.03);sfx.mote()}
 // JUMP (Space): a heavy hop, ~3 m up and ~1.1 s in the air. Steering is weak in the air; BURST still
 // works. Hostile shots aimed before the jump pass underneath. Landing drops the frame on its spring.
-const JUMP={v:11,g:20,air:.35};
+const JUMP={v:10,g:11,air:.35}; // lunar: a higher, slower arc (apex ~4.5 m, ~1.8 s in the air)
 function doJump(){if(!playing||!player.alive||missionClear||player.jy>0||player.jvy>0||player.jumpCd>0)return;player.jvy=JUMP.v;player.jy=.001;cockpit.heaveV+=1.2;player.shake=Math.max(player.shake,.18);sfx.jump();
   for(let i=0;i<14;i++)particles.push({x:player.x+(Math.random()-.5)*2.4,y:.1,z:player.z+(Math.random()-.5)*2.4,px:player.x,py:.1,pz:player.z,vx:(Math.random()-.5)*7,vy:.4+Math.random()*1.4,vz:(Math.random()-.5)*7,life:.3+Math.random()*.3,max:.6,color:i%3?'#c8b89d':'#ffb35c',size:.3+Math.random()*.6})}
 function updateJump(dt){player.jumpCd=Math.max(0,player.jumpCd-dt);
@@ -1263,7 +1263,7 @@ function buildRig(def){
   return{...def,boneIndex:index,parts,partsByBone:order.map(n=>parts.filter(p=>p.bone===n))};
 }
 const RIGS={
-  // KITE: a swept-wing gunship, ~7 m span. Root at its height (e.y); the hull banks into turns and
+  // KITE: a thruster gunship, ~5 m across its pods. Root at its height (e.y); the hull banks into turns and
   // pitches with the climb.
   KITE:buildRig({type:'KITE',name:'KITE',height:1.4,body:3.4,wall:2.0,hit:{r:3.1,cy:0,hh:.9},gaitRate:1,
     bones:[['root',null,[0,0,0]],['body','root',[0,0,0]],['wingL','body',[-.55,0,-.2]],['wingR','body',[.55,0,-.2]],['tail','body',[0,.1,-1.7]],['gun','body',[0,-.38,.9]]],
@@ -1275,14 +1275,18 @@ const RIGS={
       B('body',box(0,.3,-.2,.12,.06,2.4,{mat:'accent'}));
       B('body',cyl(0,-.02,2.28,.17,.08,'z',10,{mat:'glow',glow:'eye'}));
       for(const s of [-1,1]){B('body',cyl(s*.62,-.12,-1.15,.24,1.5,'z',8,{mat:'metal',name:'nacelle'}));B('body',cyl(s*.62,-.12,-1.95,.18,.06,'z',8,{mat:'glow',glow:'thrust'}))}
+      // No air on the Moon, so no wings: short pylons carry a thruster pod each side, nozzles firing down, and the
+      // tail fins give way to an attitude-thruster block. The span stays ~5 m so it still reads at range.
       const wing=[];
-      wing.push(hexa([[-3.6,-.04,-1.6],[0,-.06,-.9],[0,-.06,.9],[-3.6,-.04,-1.05],[-3.6,.04,-1.58],[0,.08,-.88],[0,.08,.86],[-3.6,.04,-1.07]],{lines:3,lineArea:.2,name:'wing'}));
-      wing.push(beam([0,0,.9],[-3.6,0,-1.05],.12,.07,{mat:'accent'},[0,1,0]));
-      wing.push(box(-3.62,0,-1.32,.12,.1,.6,{mat:'glow',glow:'tip'}));
-      wing.push(hexa([[-2.6,-.12,-1.55],[-.4,-.14,-1.2],[-.4,-.14,-.8],[-2.6,-.12,-1.25],[-2.6,-.06,-1.53],[-.4,-.07,-1.18],[-.4,-.07,-.82],[-2.6,-.06,-1.27]],{mat:'dark',name:'flap'}));
-      wing.push(box(-1.7,-.2,-.3,.22,.18,.9,{mat:'dark',chip:true}));
+      wing.push(hexa([[-2.1,-.05,-.75],[0,-.06,-.6],[0,-.06,.4],[-2.1,-.05,.15],[-2.1,.05,-.73],[0,.07,-.58],[0,.07,.38],[-2.1,.05,.13]],{lines:3,lineArea:.2,name:'pylon'}));
+      wing.push(beam([0,.02,-.1],[-2.2,.02,-.3],.12,.07,{mat:'accent'},[0,1,0]));
+      wing.push(cyl(-2.45,0,-.3,.4,1.6,'z',10,{mat:'metal',name:'pod'}));
+      wing.push(cyl(-2.45,-.52,-.3,.34,.42,'y',10,{mat:'dark',name:'nozzle'},.22));
+      wing.push(cyl(-2.45,-.75,-.3,.28,.04,'y',10,{mat:'glow',glow:'thrust'}));
+      wing.push(box(-2.45,.42,-.3,.14,.1,.5,{mat:'glow',glow:'tip'}));
+      wing.push(box(-1.2,-.16,-.2,.22,.18,.7,{mat:'dark',chip:true}));
       for(const p of wing){B('wingL',p);P.push(mirrorPart(p,'wingR'))}
-      for(const s of [-1,1])B('tail',hexa([[s*.3-.04,0,-.5],[s*.3+.04,0,-.5],[s*.3+.04,0,.45],[s*.3-.04,0,.45],[s*.75-.03,.95,-.95],[s*.75+.03,.95,-.95],[s*.75+.03,.95,-.45],[s*.75-.03,.95,-.45]],{name:'fin'}));
+      B('tail',box(0,.05,-.1,.62,.22,.5,{mat:'dark',name:'rcs'}));for(const s of [-1,1])B('tail',box(s*.34,.05,-.36,.1,.1,.04,{mat:'glow',glow:'thrust'}));
       B('gun',cyl(0,0,.5,.1,1.2,'z',8,{mat:'metal',name:'cannon'}));B('gun',box(0,.08,0,.32,.2,.5,{mat:'dark'}));
       return P;
     },
@@ -2706,9 +2710,9 @@ function updateEffects(dt){
   }
   for(let i=particles.length-1;i>=0;i--)if(particles[i].life<=0)particles.splice(i,1);
   if(particles.length>2600)particles.splice(0,particles.length-2600);
-  for(const d of debris){d.age+=dt;d.vy-=9*dt;d.c[0]+=d.vx*dt;d.c[1]+=d.vy*dt;d.c[2]+=d.vz*dt;if(d.c[1]<.25){if(d.vy<-2.5&&d.lands<2){d.lands++;debrisSound('land',d.c[0],d.c[2],(pan,g)=>sfx.debrisLand(pan,g,d.size,d.mat,-d.vy))}d.c[1]=.25;d.vy*=-.35;d.vx*=.6;d.vz*=.6;d.w=d.w.map(v=>v*.6)}d.D=M3.mul(M3.rot(d.w[0]*dt,d.w[1]*dt,d.w[2]*dt),d.D);if(d.age>=d.life)burnDebris(d)}
+  for(const d of debris){d.age+=dt;d.vy-=6*dt;d.c[0]+=d.vx*dt;d.c[1]+=d.vy*dt;d.c[2]+=d.vz*dt;if(d.c[1]<.25){if(d.vy<-2.5&&d.lands<2){d.lands++;debrisSound('land',d.c[0],d.c[2],(pan,g)=>sfx.debrisLand(pan,g,d.size,d.mat,-d.vy))}d.c[1]=.25;d.vy*=-.35;d.vx*=.6;d.vz*=.6;d.w=d.w.map(v=>v*.6)}d.D=M3.mul(M3.rot(d.w[0]*dt,d.w[1]*dt,d.w[2]*dt),d.D);if(d.age>=d.life)burnDebris(d)}
   for(let i=debris.length-1;i>=0;i--)if(debris[i].age>=debris[i].life)debris.splice(i,1);
-  for(const s of shards){s.age+=dt;const drag=Math.exp(-1.2*dt);s.vx*=drag;s.vz*=drag;s.vy-=9*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;if(s.y<.06){s.y=.06;s.vy*=-.3;s.vx*=.5;s.vz*=.5;s.spinX*=.4;s.spinY*=.4}if(s.age>=s.life)dissolveShard(s)}
+  for(const s of shards){s.age+=dt;const drag=Math.exp(-1.2*dt);s.vx*=drag;s.vz*=drag;s.vy-=6*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;if(s.y<.06){s.y=.06;s.vy*=-.3;s.vx*=.5;s.vz*=.5;s.spinX*=.4;s.spinY*=.4}if(s.age>=s.life)dissolveShard(s)}
   for(let i=shards.length-1;i>=0;i--)if(shards[i].age>=shards[i].life)shards.splice(i,1);
   for(const w of waves)w.life-=dt;for(let i=waves.length-1;i>=0;i--)if(waves[i].life<=0)waves.splice(i,1);
 }
