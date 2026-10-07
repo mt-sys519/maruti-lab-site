@@ -274,30 +274,35 @@
 .result.final small{color:#e7c27c;letter-spacing:.36em}
 .result.final b{font-size:clamp(26px,2.7vw,42px);color:#f6efd8;text-shadow:0 0 18px rgba(255,236,190,.45),0 0 14px rgba(0,0,0,.6)}
 .result.final dt{letter-spacing:.16em}
-/* Title art (2026-10-07): AOI and 蒼鉄 under Earth, shown until the first sortie. AOI stands on the left,
-   so the menu moves to the right over the regolith until then; the pause menu stays where it was. */
+/* Start screen (2026-10-07). The menu is the point of the screen, the art is the backdrop: dimmed, set to
+   the right of the menu (AOI stands just past it, her frame and Earth beyond; the art's right edge is cut on
+   a 16:9 screen) and fading out on the left where the menu stands as one vertical list. Settings live behind
+   設定 and open beside the list. The pause menu (ESC) uses the same layout over the live view. */
 @font-face{font-family:"AOGANE Title";src:url(assets/fonts/shippori-b1-800-title.woff2) format("woff2");font-weight:800;font-display:swap;unicode-range:U+84BC,U+9244}
-/* The art is never zoomed past the screen's height: on a screen wider than 16:9 it is shown whole, fitted to
-   the height on the left, and fades into the dark on the right where the menu stands (cover-sizing it there
-   cropped AOI at the knees and made her look heavy). On a narrower screen it fills the height and its right
-   side is cut instead. */
 #cover{position:absolute;inset:0;overflow:hidden;background:#020808}
-#cover:before{content:"";position:absolute;left:0;top:0;height:100%;aspect-ratio:1672/941;background:url(assets/cover.webp) center/100% 100% no-repeat;-webkit-mask-image:linear-gradient(to left,transparent 0,#000 16%);mask-image:linear-gradient(to left,transparent 0,#000 16%)}
-#cover:after{content:"";position:absolute;inset:0;background:linear-gradient(to left,rgba(2,6,8,.9) 0,rgba(2,6,8,.6) 34%,rgba(2,6,8,0) 58%)}
-.boot:not(.started){left:auto;right:clamp(20px,4vw,64px);width:min(560px,calc(100% - 40px))}
-.boot:not(.started) .settings{grid-template-columns:repeat(3,minmax(0,1fr))}
-.boot h1{font-family:"AOGANE Title","Shippori Mincho B1","Yu Mincho","Hiragino Mincho ProN",serif;font-weight:800;letter-spacing:.12em}
+#cover:before{content:"";position:absolute;left:max(26vw,calc(100vw - 100vh * 1672 / 941));top:0;height:100%;aspect-ratio:1672/941;background:url(assets/cover.webp) center/100% 100% no-repeat;filter:brightness(.82) saturate(.95);-webkit-mask-image:linear-gradient(to right,transparent 0,#000 14%);mask-image:linear-gradient(to right,transparent 0,#000 14%)}
+#cover:after{content:"";position:absolute;inset:0;background:linear-gradient(to right,rgba(2,6,8,.96) 0,rgba(2,6,8,.85) 22%,rgba(2,6,8,0) 44%),linear-gradient(to top,rgba(2,6,8,.8) 0,rgba(2,6,8,0) 18%)}
+.boot,.boot.started{left:clamp(32px,7vw,140px);right:auto;top:0;bottom:0;transform:none;width:min(420px,calc(100% - 64px));padding:0;display:flex;flex-direction:column;justify-content:center}
+.boot:after{display:none}
+.boot h1{font-family:"AOGANE Title","Shippori Mincho B1","Yu Mincho","Hiragino Mincho ProN",serif;font-weight:800;letter-spacing:.12em;font-size:clamp(56px,7vw,96px)}
 .boot h1 small{font-family:Bahnschrift,"DIN Alternate","Segoe UI",sans-serif;font-weight:300}
-.primaryActions button,.subActions button{font-family:"Noto Sans JP","Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;letter-spacing:.12em}
-.primaryActions button{font-size:14px}.primaryActions .deploy{font-size:16px;letter-spacing:.3em}
-.subActions button{font-size:12px}
-.settings span{font-size:10px;letter-spacing:.06em;font-family:"Noto Sans JP","Yu Gothic UI",sans-serif}
-.statusLine,.keyline{font-family:"Noto Sans JP","Yu Gothic UI",sans-serif}.keyline{font-size:10px}
+.boot .tagline{margin-bottom:34px}
+.boot .primaryActions{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:300px}
+.boot .primaryActions button{height:50px;min-width:0;padding:0 22px;text-align:left;justify-content:flex-start;font-family:"Noto Sans JP","Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;font-size:16px;letter-spacing:.2em}
+.boot .primaryActions .deploy{font-size:18px;letter-spacing:.4em}
+.boot .primaryActions .menuSub{height:40px;font-size:13px;color:#b9c6c2;border-color:rgba(223,235,231,.2);background:rgba(8,16,18,.45)}
+.boot .primaryActions .menuSub.on{border-color:rgba(240,181,101,.8);color:#f0d3a6}
+.camNote{width:300px}
+.settingsPanel{position:absolute;left:calc(100% + 28px);top:50%;transform:translateY(-50%);width:480px;padding:14px;background:rgba(4,10,12,.86);border-top:1px solid rgba(223,235,231,.22)}
+.settingsPanel .subActions{margin-top:0}
+.settingsPanel .settings{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px;max-width:none}
+.subActions button{font-family:"Noto Sans JP","Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;font-size:12px;letter-spacing:.12em}
+.settings span{font-size:11px;letter-spacing:.06em;font-family:"Noto Sans JP","Yu Gothic UI",sans-serif}
+.statusLine{margin-top:22px}.statusLine,.keyline{font-family:"Noto Sans JP","Yu Gothic UI",sans-serif}.statusLine:after{content:none}
+.keyline{position:absolute;left:0;bottom:22px;width:62vw;margin:0;font-size:11px;word-break:keep-all;opacity:.85}
+.keyline span{white-space:nowrap;margin-right:1.3em;display:inline-block}
 .result .acts button{font-family:"Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.12em;font-size:12px}
-.statusLine:after{content:none}.keyline{word-break:keep-all}
-.keyline span{white-space:nowrap;margin-right:1.1em;display:inline-block}
-/* The menu grows with the screen's height (it was laid out for ~768 px; on a 2K screen it was tiny). */
-@media (min-height:860px){.boot{zoom:1.2}}
-@media (min-height:1000px){.boot{zoom:1.4}}
-@media (min-height:1250px){.boot{zoom:1.7}}
-@media (min-height:1500px){.boot{zoom:2}}
+@media (min-height:860px){.boot{zoom:1.15}}
+@media (min-height:1000px){.boot{zoom:1.3}}
+@media (min-height:1250px){.boot{zoom:1.55}}
+@media (min-height:1500px){.boot{zoom:1.8}}

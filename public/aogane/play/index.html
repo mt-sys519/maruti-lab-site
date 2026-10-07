@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0a0f12">
   <title>蒼鉄 -AOGANE- | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=42">
+  <link rel="stylesheet" href="styles.css?v=43">
 </head>
 <body>
 <main id="app">
@@ -18,27 +18,27 @@
     <div class="eyebrow">MANNED FRAME / LUNAR POWER RELAY</div>
     <h1>蒼鉄<small>-AOGANE-</small></h1>
     <p class="tagline">No link. No assist. Head and hand.</p>
-    <p class="lead">首は索敵とHMD指定、マウスは武器、機体は遅れて追従。三つを分離したまま、正面射撃と側方索敵を同時に扱う。</p>
-
     <div class="primaryActions">
       <button id="play" class="deploy">出撃</button>
       <button id="endure" class="endure">耐久戦</button>
       <button id="head" class="cam"><i class="lamp"></i><span id="headLabel">カメラ：オフ</span></button>
+      <button id="settingsBtn" class="menuSub" aria-expanded="false">設定</button>
+      <button id="full" class="menuSub">全画面</button>
     </div>
     <p id="camNote" class="camNote">顔の向きで周りを見ます。映像は端末の外に出ません。</p>
-    <div class="subActions">
-      <button id="full">全画面</button>
-      <button id="fx">発光：強</button>
-      <button id="reset">最初から</button>
-    </div>
-
-    <div class="settings">
+    <div id="settingsPanel" class="settingsPanel hidden">
+      <div class="subActions">
+        <button id="fx">発光：強</button>
+        <button id="reset">最初から</button>
+      </div>
+      <div class="settings">
       <label><span>全体の音量</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
       <label><span>音楽</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
       <label><span>マウス感度</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
       <label><span>首の感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
       <label><span>首の遊び</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
       <label><span>首のなめらかさ</span><output id="smoothout">0.13</output><input id="smooth" type="range" min="0.04" max="0.35" value="0.13" step="0.01"></label>
+      </div>
     </div>
 
     <div class="statusLine"><i id="statusDot"></i><span id="status">準備完了　カメラはなくても遊べます</span></div>
@@ -53,7 +53,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=69"></script>
+<script src="main.js?v=70"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>
