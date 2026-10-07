@@ -418,7 +418,7 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){if(mode==='endurance')stage=1;if(mode==='sortie'&&stage===1)for(const k in campaign)delete campaign[k];buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,pumpT:-9,scope:0,scopeOn:false,swing:null,dashSpin:0,dashJet:null,dashDir:null,dashSlide:false,airDashed:false,scrub:0,jointZ:null,jointX:null});wheelKnock.length=0;cockpit.axeTrail=[];rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;if(playing)hmdBoot=performance.now();else bootPending=true;plog('System','-Combat mode activate.');plog('System','-Sensor reconstruction.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Freight tunnel. Walkers inbound.':stage===3?'-Sector 03: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.');if(secondArms().length)plog('System',`-Second arm${secondArms().length>1?'s':''}: ${secondArms().map(w=>w+(w==='ARBALEST'?' [scope]':'')).join(' / ')}.`)}
+function reset(){if(mode==='endurance')stage=1;if(mode==='sortie'&&stage===1)for(const k in campaign)delete campaign[k];buildSector(stage);Object.assign(player,{x:0,z:86,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:86,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,pumpT:-9,scope:0,scopeOn:false,swing:null,dashSpin:0,dashJet:null,dashDir:null,dashSlide:false,airDashed:false,scrub:0,jointZ:null,jointX:null});wheelKnock.length=0;cockpit.axeTrail=[];rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});tutStart();missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,nextWake:Infinity,airGate:0});spawn();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;if(playing)hmdBoot=performance.now();else bootPending=true;plog('System','-Combat mode activate.');plog('System','-Sensor reconstruction.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Freight tunnel. Walkers inbound.':stage===3?'-Sector 03: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.');if(secondArms().length)plog('System',`-Second arm${secondArms().length>1?'s':''}: ${secondArms().map(w=>w+(w==='ARBALEST'?' [scope]':'')).join(' / ')}.`)}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
@@ -2296,6 +2296,7 @@ function updateVisualDesignation(dt){
     if(e.designated>0)e.marked=Math.max(e.marked,e.designated);
     if(e.designated<=0&&lastDesignatedId===e.id)lastDesignatedId=0;
   }
+  if(target&&tutHold()){visualContact=null;return}
   if(!target)return;
   target.focus=Math.min(.38,(target.focus||0)+dt);target.marked=Math.max(target.marked,.65);
   if(target.focus>=.30){
@@ -2517,7 +2518,7 @@ function updateEnemies(dt){
     const wear=1-e.hp/e.maxHp;if(wear>.42&&Math.random()<dt*wear*7){const w=randomEnemyPoint(e);sparks(w.x,w.y,w.z,3+Math.floor(wear*5),wear>.7?'#ffd58a':CLASS_STYLE[e.type].edge,5)}
     const dist=Math.hypot(e.x-player.x,e.z-player.z),los=!segmentHitsWorld(e.x,losY(e),e.z,player.x,CAMERA_Y,player.z);
     e.blockedT=los?0:e.blockedT+dt;
-    if(!e.awake&&dist<36&&los)wakeEnemy(e,'PROXIMITY CONTACT');
+    if(!e.awake&&dist<36&&los&&!tutHold())wakeEnemy(e,'PROXIMITY CONTACT');
   }
   updateCombatDirector();updateEndurance(dt);
   for(const e of enemies){
@@ -2619,6 +2620,7 @@ function resolveBodies(){
 function update(dt){
   if(!(dt>0))return; // a zero-length frame would divide 0/0 in velocity estimates
   if(mouseButtons.has(0))fire();
+  updateTutorial(dt);
   player.boostCool=Math.max(0,player.boostCool-dt);player.impactCd=Math.max(0,player.impactCd-dt);inboundCooldown=Math.max(0,inboundCooldown-dt);player.hitDirT=Math.max(0,player.hitDirT-dt);player.regenDelay=Math.max(0,player.regenDelay-dt);player.missileCd=Math.max(0,player.missileCd-dt);const hadSync=player.syncTime>0;player.syncTime=Math.max(0,player.syncTime-dt);if(hadSync&&player.syncTime<=0)player.syncChain=0;player.heat=Math.max(0,player.heat-(player.vent?58:player.syncTime>0?42:27)*dt);if(player.vent&&player.heat<=32){player.vent=false;sfx.vented();cockpit.flashW=.55;plog('Info','HALBERD cooled. Weapons free.');say('COOLED')}player.absorb=Math.max(0,player.absorb-dt*1.6);syncMix=lerp(syncMix,player.syncTime>0?1:0,1-Math.exp(-(player.syncTime>0?5:2.2)*dt));while(killWaves.length&&gameTime-killWaves[0].t>1.7)killWaves.shift();if(player.alive&&!missionClear)missionTime+=dt;if(player.regenDelay<=0)player.boost=Math.min(100,player.boost+(player.syncTime>0?32:20)*dt);if(player.syncTime<=0)player.flow=Math.max(0,player.flow-dt*1.8);player.fovKick*=Math.exp(-7*dt);player.gunKick*=Math.exp(-18*dt);player.shake*=Math.exp(-8*dt);player.roll*=Math.exp(-6*dt);player.killPulse=Math.max(0,player.killPulse-dt*2.8);player.hitMarkT=Math.max(0,(player.hitMarkT||0)-dt);if(player.comboT>0){player.comboT-=dt;if(player.comboT<=0)player.combo=0}
   player.px=player.x;player.pz=player.z;
   updateJump(dt);
@@ -2812,6 +2814,39 @@ function plog(tag,text,cool=0){const last=pilot.entries[pilot.entries.length-1];
 function pilotReact(expr,dur,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)return;pilot.holdExpr=expr;pilot.hold=dur;pilot.holdPrio=prio}
 // Side-eye toward a hostile: the plate looks to screen-right, so it is mirrored for targets on the left of the view.
 function pilotGlance(e,dur=.9,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)return;const a=angleDiff(Math.atan2(e.x-player.x,-(e.z-player.z)),player.yaw+headYaw*Math.PI/180);pilot.glanceDir=a<0?-1:1;pilotReact('glance',dur,prio)}
+// ---------- FIRST-SORTIE TUTORIAL ----------
+// The first SECTOR 01 sortie walks through the controls one at a time on the HMD (move, burst, fire, head,
+// designate); each step ends when the player does it, and the hostiles sleep until the designation step
+// (no proximity wake, no HMD designation before it). Done once, remembered in hf.tutorial; a redeploy
+// before it is done starts it again. ENDURANCE and later sectors never show it.
+const TUT_STEPS=[
+  {id:'move',en:'MOVE',jp:'WASD で移動',sub:'機体は車輪で走ります'},
+  {id:'burst',en:'BURST',jp:'移動しながら SHIFT でブースト',sub:'空中ではバックパックの噴射になります'},
+  {id:'fire',en:'FIRE',jp:'マウスで銃を向けて、左クリックで撃つ',sub:'機体は銃の向きへ遅れてついてきます'},
+  {id:'head',en:'LOOK',jp:'',sub:'首は銃と別に動きます。周りを見るのは首の仕事'},
+  {id:'designate',en:'DESIGNATE',jp:'敵を見つめて HMD で指定する',sub:'首を向けた先の敵に印が付きます'},
+];
+const tut={on:false,i:0,t:0,base:null,doneT:0};
+let tutDone=false;try{tutDone=localStorage.getItem('hf.tutorial')==='done'}catch{}
+function tutStart(){Object.assign(tut,{on:!tutDone&&mode==='sortie'&&stage===1,i:0,t:0,base:null,doneT:0});if(tut.on)for(const e of enemies)e.awake=false} // the two forward machines usually start awake
+// hostiles stay asleep and undesignated until the designation step
+function tutHold(){return tut.on&&tut.i<4}
+function tutStep(){return tut.on?TUT_STEPS[tut.i]:null}
+function tutAdvance(){sfx.ui();tut.i++;tut.t=0;tut.base=null;if(tut.i>=TUT_STEPS.length){tut.on=false;tut.doneT=4.5;tutDone=true;try{localStorage.setItem('hf.tutorial','done')}catch{}plog('Info','-Training complete. Break every hostile.')}}
+function updateTutorial(dt){
+  if(tut.doneT>0)tut.doneT=Math.max(0,tut.doneT-dt);
+  const st=tutStep();if(!st||!playing||!player.alive)return;tut.t+=dt;
+  if(!tut.base)tut.base={x:player.x,z:player.z,shots:stats.shots,des:stats.designations};
+  const b=tut.base,ok=st.id==='move'?Math.hypot(player.x-b.x,player.z-b.z)>6:st.id==='burst'?player.boostTime>0:st.id==='fire'?stats.shots-b.shots>=3:st.id==='head'?Math.abs(headYaw)>=20:stats.designations>b.des;
+  if(ok&&tut.t>.6)tutAdvance()}
+function drawTutorial(s){
+  const st=tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
+  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':'Q / E で首を左右に振る'):st.jp;
+  const sub=done?'首で探して、マウスで撃つ':st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
+  const a=done?clamp(tut.doneT/.4,0,1):clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
+  ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
+  hudText(done?'TRAINING COMPLETE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
+  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);ctx.restore()}
 function pilotBanner(en,jp,color='#dcfff4',dur=1.5){pilot.banner={en,jp,color,t:0,dur}}
 function pilotCut(kind){pilot.cut={kind,t:0}}
 const etag=e=>(RIGS[e.type]?.name||e.type)+' '+String(e.id).padStart(2,'0');
@@ -2979,7 +3014,7 @@ function drawPilotLink(){
       hudText(hot?'VENT':'HEAT',x0,gy-cap-5*s,cap,hot?HUD.warn:HUD.dim,0,.2);hudText(String(Math.round(heat*100)),x1,gy-cap-5*s,cap,hot?HUD.warn:HUD.dim,1,.1)}}
   drawSonar(ox-gap-logH*.5,by-logH*.5,logH*.5,s);
   ctx.restore();
-  drawPilotBanner(s);
+  drawPilotBanner(s);drawTutorial(s);
 }
 // SONAR: chassis-up scope at the strip's left end. A ping ring sweeps outward on its own period
 // (never the music); each hostile shows where the ring last found it, flares, and settles dim until the
