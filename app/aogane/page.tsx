@@ -100,6 +100,9 @@ export default function AoganePage() {
           <p className="hfSmall">
             ゲームを開いたら「ミッション」で出撃、「サバイバル」は倒れるまで戦い続けるモードです。「カメラで遊ぶ」でカメラを使った首の操作に切り替わり、「全画面」で全画面になります。
           </p>
+          <p className="hfSmall">
+            Xbox 配置のゲームパッドでも遊べます。左スティックで移動、右スティックで銃の向き、RT で撃ちます。パッドを触ると、ゲーム内の画面下の操作表示がパッド用に切り替わります。
+          </p>
         </section>
 
         <section className="hfSection" id="camera">

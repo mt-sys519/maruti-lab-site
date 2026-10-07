@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0a0f12">
   <title>蒼鉄 -AOGANE- | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=46">
+  <link rel="stylesheet" href="styles.css?v=47">
 </head>
 <body>
 <main id="app">
@@ -36,6 +36,7 @@
       <label><span>全体の音量</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
       <label><span>音楽</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
       <label><span>マウス感度</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
+      <label><span>スティック感度</span><output id="padsensout">1.00×</output><input id="padSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
       <label><span>首の感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
       <label><span>首の遊び</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
       <label><span>首のなめらかさ</span><output id="smoothout">0.13</output><input id="smooth" type="range" min="0.04" max="0.35" value="0.13" step="0.01"></label>
@@ -44,7 +45,8 @@
 
     <div class="statusLine"><i id="statusDot"></i><span id="status">準備完了</span></div>
     <p class="healthNote">画面酔いしやすい方はご注意ください。気分が悪くなったら、すぐに休んでください。</p>
-    <div class="keyline"><span><b>WASD</b> 移動</span><span><b>SHIFT</b> ブースト</span><span><b>SPACE</b> ジャンプ</span><span><b>マウス</b> 武器の向き</span><span><b>左クリック</b> 撃つ</span><span><b>右クリック</b> スコープ</span><span><b>ホイール / 1-3</b> 武器の切り替え</span><span><b>V</b> 斧</span><span><b>Q/E</b> 首を左右へ（カメラなし）</span><span><b>C</b> 首を正面に戻す</span><span><b>ESC</b> メニュー</span><span><b>R</b> 再出撃</span></div>
+    <div class="keyline padKeys"><span><b>左スティック</b> 移動</span><span><b>右スティック</b> 銃の向き</span><span><b>RT</b> 撃つ</span><span><b>LT</b> スコープ</span><span><b>A</b> ジャンプ</span><span><b>B</b> ブースト</span><span><b>X</b> 斧</span><span><b>Y</b> 武器の切り替え</span><span><b>LB / RB</b> 首を左右へ（カメラなし）</span><span><b>右スティック押し込み</b> 首を正面に戻す</span><span><b>メニューボタン</b> メニュー</span></div>
+    <div class="keyline keyKeys"><span><b>WASD</b> 移動</span><span><b>SHIFT</b> ブースト</span><span><b>SPACE</b> ジャンプ</span><span><b>マウス</b> 武器の向き</span><span><b>左クリック</b> 撃つ</span><span><b>右クリック</b> スコープ</span><span><b>ホイール / 1-3</b> 武器の切り替え</span><span><b>V</b> 斧</span><span><b>Q/E</b> 首を左右へ（カメラなし）</span><span><b>C</b> 首を正面に戻す</span><span><b>ESC</b> メニュー</span><span><b>R</b> 再出撃</span></div>
   </section>
 
   <div id="titleConfirm" class="camGate hidden" role="dialog" aria-labelledby="titleConfirmTitle">
@@ -69,7 +71,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=78"></script>
+<script src="main.js?v=79"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>

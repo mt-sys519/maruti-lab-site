@@ -483,7 +483,7 @@ function closestPlayerPass(b){
   const t=clamp(-(rx*dx+rz*dz)/(dx*dx+dz*dz||1),0,1);
   return {d:Math.hypot(rx+dx*t,rz+dz*t),y:lerp(b.py,b.y,t)};
 }
-function inputDir(){let sx=0,sz=0;if(keys.has('KeyW'))sz++;if(keys.has('KeyS'))sz--;if(keys.has('KeyD'))sx++;if(keys.has('KeyA'))sx--;const n=Math.hypot(sx,sz)||1;sx/=n;sz/=n;const f=forward(player.yaw),r=right(player.yaw);return{x:r.x*sx+f.x*sz,z:r.z*sx+f.z*sz,sx,sz}}
+function inputDir(){let sx=0,sz=0;if(keys.has('KeyW'))sz++;if(keys.has('KeyS'))sz--;if(keys.has('KeyD'))sx++;if(keys.has('KeyA'))sx--;const n=Math.hypot(sx,sz)||1;sx/=n;sz/=n;if(!sx&&!sz&&(pad.lx||pad.ly)){sx=pad.lx;sz=-pad.ly}const f=forward(player.yaw),r=right(player.yaw);return{x:r.x*sx+f.x*sz,z:r.z*sx+f.z*sz,sx,sz}}
 // Transient text now lives in the PILOT LINK log (see plog); the DOM keeps only clock / HMD loss / result.
 function hitMark(pan=0){player.hitMarkT=.09;player.shake=Math.max(player.shake,.12);sfx.hit(pan)}
 function flash(id,ms=70){const e=$(id);e.classList.add('on');setTimeout(()=>e.classList.remove('on'),ms)}
@@ -780,7 +780,7 @@ function updateHead(now,dt){
     headPitchTarget=0;
     // Manual test: Q / E is a glance — the head snaps toward that side like a person looking, and comes
     // back to centre on release. The spring above gives it the human ease-in / ease-out.
-    const q=keys.has('KeyQ'),e=keys.has('KeyE');manualHead=q&&!e?-55:e&&!q?55:0;
+    const q=keys.has('KeyQ')||pad.lb,e=keys.has('KeyE')||pad.rb;manualHead=q&&!e?-55:e&&!q?55:0;
     setHeadTarget(manualHead,dt);
   }
   // Same stiffness as the yaw spring, without its overshoot: a few degrees do not need one.
@@ -2634,7 +2634,7 @@ function resolveBodies(){
 }
 function update(dt){
   if(!(dt>0))return; // a zero-length frame would divide 0/0 in velocity estimates
-  if(mouseButtons.has(0))fire();
+  if(mouseButtons.has(0)||pad.rt)fire();
   updateTutorial(dt);
   player.boostCool=Math.max(0,player.boostCool-dt);player.impactCd=Math.max(0,player.impactCd-dt);inboundCooldown=Math.max(0,inboundCooldown-dt);player.hitDirT=Math.max(0,player.hitDirT-dt);player.regenDelay=Math.max(0,player.regenDelay-dt);player.missileCd=Math.max(0,player.missileCd-dt);const hadSync=player.syncTime>0;player.syncTime=Math.max(0,player.syncTime-dt);if(hadSync&&player.syncTime<=0)player.syncChain=0;player.heat=Math.max(0,player.heat-(player.vent?58:player.syncTime>0?42:27)*dt);if(player.vent&&player.heat<=32){player.vent=false;sfx.vented();cockpit.flashW=.55;plog('Info','HALBERD cooled. Weapons free.');say('COOLED')}player.absorb=Math.max(0,player.absorb-dt*1.6);syncMix=lerp(syncMix,player.syncTime>0?1:0,1-Math.exp(-(player.syncTime>0?5:2.2)*dt));while(killWaves.length&&gameTime-killWaves[0].t>1.7)killWaves.shift();if(player.alive&&!missionClear)missionTime+=dt;if(player.regenDelay<=0)player.boost=Math.min(100,player.boost+(player.syncTime>0?32:20)*dt);if(player.syncTime<=0)player.flow=Math.max(0,player.flow-dt*1.8);player.fovKick*=Math.exp(-7*dt);player.gunKick*=Math.exp(-18*dt);player.shake*=Math.exp(-8*dt);player.roll*=Math.exp(-6*dt);player.killPulse=Math.max(0,player.killPulse-dt*2.8);player.hitMarkT=Math.max(0,(player.hitMarkT||0)-dt);if(player.comboT>0){player.comboT-=dt;if(player.comboT<=0)player.combo=0}
   player.px=player.x;player.pz=player.z;
@@ -2837,9 +2837,9 @@ function pilotGlance(e,dur=.9,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)retur
 // The head step asks for 8 deg with the camera (20 deg with Q / E, which snaps to 55): at HEAD GAIN 1.0 and
 // a 2.5 deg dead zone, 20 deg meant turning the face ~23 deg, past where the screen can still be read.
 const TUT_STEPS=[
-  {id:'move',en:'MOVE',jp:'WASD で移動',sub:'機体は車輪で走ります'},
-  {id:'burst',en:'BURST',jp:'移動しながら SHIFT でブースト',sub:'空中ではバックパックの噴射になります'},
-  {id:'fire',en:'FIRE',jp:'マウスで銃を向けて、左クリックで撃つ',sub:'機体は銃の向きへ遅れてついてきます'},
+  {id:'move',en:'MOVE',jp:'WASD で移動',pjp:'左スティックで移動',sub:'機体は車輪で走ります'},
+  {id:'burst',en:'BURST',jp:'移動しながら SHIFT でブースト',pjp:'移動しながら B でブースト',sub:'空中ではバックパックの噴射になります'},
+  {id:'fire',en:'FIRE',jp:'マウスで銃を向けて、左クリックで撃つ',pjp:'右スティックで銃を向けて、RT で撃つ',sub:'機体は銃の向きへ遅れてついてきます'},
   {id:'head',en:'LOOK',jp:'',sub:'首は銃と別に動きます。周りを見るのは首の仕事'},
   {id:'designate',en:'DESIGNATE',jp:'敵を見つめて HMD で指定する',sub:'首を向けた先の敵に印が付きます'},
 ];
@@ -2859,13 +2859,13 @@ function updateTutorial(dt){
 function skipTraining(){sfx.ui();tut.on=false;tut.doneT=0;setMode('sortie');saySortie()}
 function drawTutorial(s){
   const cal=headNeedCenter&&headEnabled&&headFound&&playing;
-  const st=cal?{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが首の正面になります。ずれたらいつでも C'}:tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
-  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':cal?st.jp:st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':'Q / E で首を左右に振る'):st.jp;
-  const sub=done?'首で探して、マウスで撃つ':cal?st.sub:st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
+  const st=cal?(padDriven?{en:'CALIBRATE',jp:'画面の正面を向いて、右スティックを押し込む',sub:'そこが首の正面になります。ずれたらいつでも押し込み直す'}:{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが首の正面になります。ずれたらいつでも C'}):tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
+  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':cal?st.jp:st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':padDriven?'LB / RB で首を左右に振る':'Q / E で首を左右に振る'):padDriven&&st.pjp||st.jp;
+  const sub=done?(padDriven?'首で探して、RT で撃つ':'首で探して、マウスで撃つ'):cal?st.sub:st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
   const a=done?clamp(tut.doneT/.4,0,1):clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
   ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
   hudText(done?'TRAINING COMPLETE':cal?'HEAD  CALIBRATE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
-  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(tutDone&&mode==='training'&&!done)hudText('Tab でスキップ',x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
+  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(tutDone&&mode==='training'&&!done)hudText(padDriven?'ビューボタンでスキップ':'Tab でスキップ',x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
 function pilotBanner(en,jp,color='#dcfff4',dur=1.5){pilot.banner={en,jp,color,t:0,dur}}
 function pilotCut(kind){pilot.cut={kind,t:0}}
 const etag=e=>(RIGS[e.type]?.name||e.type)+' '+String(e.id).padStart(2,'0');
@@ -3232,7 +3232,7 @@ const frameErrors=new Map();
 function reportFrameError(err){const msg=String(err&&err.message||err);console.error(err);try{(window.__hfErrors=window.__hfErrors||[]).push({t:gameTime,msg,stack:String(err&&err.stack||'')})}catch{}
   try{ctx.restore();ctx.restore()}catch{}try{ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowBlur=0}catch{}lineBatch=null;
   if(!frameErrors.has(msg)){frameErrors.set(msg,1);try{plog('Warning','-ERR '+msg.slice(0,36))}catch{}}}
-function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent='発光：弱（自動）';plog('System','Glow auto low.')}}else perf.t=0;updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
+function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent='発光：弱（自動）';plog('System','Glow auto low.')}}else perf.t=0;pollPad(dt);updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
 // ---------- CONTROLS ----------
@@ -3241,6 +3241,7 @@ requestAnimationFrame(loop);
 function saySortie(){return(stage===2?say('SORTIE_TUNNEL'):stage===3?say('SORTIE_DECK'):false)||say('SORTIE')}
 function nextSector(){stage=Math.min(LAST_SECTOR,stage+1);reset();saySortie()}
 function startGame(lock=true){
+  if(padDriven)lock=false; // a pad press is not a user gesture: the lock would fail and pause at once
   ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');everStarted=true;$('toTitle').classList.remove('hidden');$('playLabel').textContent='再開';$('playNote').textContent='';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
   if(lock){
     const failed=()=>{pause();$('status').textContent='マウスを固定できませんでした。Chrome か Edge で開いてください'};
@@ -3275,16 +3276,57 @@ if(endure.best)$('status').textContent=`準備完了　サバイバルの最高�
 function clearInput(){keys.clear();mouseButtons.clear();boostLatch=false}
 function pause(){playing=false;clearInput();boot.classList.remove('hidden');hud.classList.add('hidden');updateEngine(0,false)}
 document.addEventListener('pointerlockchange',()=>{if(playing&&player.alive&&!missionClear&&document.pointerLockElement!==canvas&&!new URLSearchParams(location.search).has('demo'))pause()});
-document.addEventListener('mousemove',e=>{if(!playing||(!new URLSearchParams(location.search).has('demo')&&document.pointerLockElement!==canvas)||!player.alive)return;const ms=+mouseSens.value/(1+(ARBALEST.zoom-1)*(player.scope||0));player.aimYawTarget+=e.movementX*.00135*ms;player.aimPitchTarget-=e.movementY*.00125*ms});
-document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('mousemove',e=>{if(padDriven&&(e.movementX||e.movementY))setPadDriven(false);if(!playing||(!new URLSearchParams(location.search).has('demo')&&document.pointerLockElement!==canvas)||!player.alive)return;const ms=+mouseSens.value/(1+(ARBALEST.zoom-1)*(player.scope||0));player.aimYawTarget+=e.movementX*.00135*ms;player.aimPitchTarget-=e.movementY*.00125*ms});
+document.addEventListener('mousedown',e=>{if(padDriven)setPadDriven(false);if(playing&&e.target===canvas&&document.pointerLockElement!==canvas){try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}}mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
-document.addEventListener('keydown',e=>{if(e.code==='Tab'&&playing&&mode==='training'&&tutDone){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
+document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'&&tutDone){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='1面からやり直します'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='全画面にできませんでした'}});
-function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);
+function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind($('padSens'),$('padsensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);
 addEventListener('blur',()=>{clearInput();if(playing)pause()});
 addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());headWorker?.terminate()});
+// ---------- GAMEPAD ----------
+// Xbox layout (standard mapping). No aim assist: the right stick turns the gun on a curve (fine near the centre,
+// quick at full tilt, a little quicker the longer it is held there), scaled by スティック感度.
+// In play: L stick move, R stick gun, RT fire, LT scope, A jump, B boost, X axe, Y switch, LB / RB glance
+// (camera off), R3 centre the head, Menu pause, View skip the tutorial. Menus: d-pad / L stick choose, A press, B back.
+const PAD_DEAD=.16,pad={lx:0,ly:0,rx:0,ry:0,rt:false,lb:false,rb:false,prev:[],full:0,navT:0,navDir:0,focus:null};
+let padDriven=false;
+function setPadDriven(on){if(padDriven===on)return;padDriven=on;document.body.classList.toggle('pad',on);canvas.style.cursor=on?'none':'';if(!on)padFocus(null)}
+function padStick(x,y){const m=Math.hypot(x,y);if(m<PAD_DEAD)return[0,0];const k=Math.min(1,(m-PAD_DEAD)/(1-PAD_DEAD))/m;return[x*k,y*k]}
+function padLayer(){const shown=el=>el&&!el.classList.contains('hidden');
+  const root=shown($('titleConfirm'))?$('titleConfirm'):shown($('camGate'))?$('camGate'):playing?(shown($('result'))?$('resultKeys'):null):boot;
+  return root?[...root.querySelectorAll('button')].filter(b=>!b.disabled&&b.offsetParent!==null&&getComputedStyle(b).visibility!=='hidden'):[]}
+function padFocus(b){if(pad.focus)pad.focus.classList.remove('padFocus');pad.focus=b;if(b){b.classList.add('padFocus');b.focus?.({preventScroll:true})}}
+function pollPad(dt){
+  const all=[...(navigator.getGamepads?.()||[])].filter(g=>g&&g.connected),gp=all.find(g=>g.mapping==='standard')||all[0];
+  if(!gp){pad.lx=pad.ly=pad.rx=pad.ry=0;pad.rt=pad.lb=pad.rb=false;pad.prev=[];return}
+  const B=gp.buttons.map(b=>b.pressed||b.value>.5),P=pad.prev,hit=i=>B[i]&&!P[i];pad.prev=B;
+  [pad.lx,pad.ly]=padStick(gp.axes[0]||0,gp.axes[1]||0);[pad.rx,pad.ry]=padStick(gp.axes[2]||0,gp.axes[3]||0);
+  if(B.some(Boolean)||pad.lx||pad.ly||pad.rx||pad.ry)setPadDriven(true);
+  if(!padDriven)return;
+  const layer=padLayer();
+  if(layer.length){ // a menu, a dialog or the result card
+    pad.rt=pad.lb=pad.rb=false;
+    if(!layer.includes(pad.focus))padFocus(layer[0]);
+    const dir=hit(12)||hit(14)?-1:hit(13)||hit(15)?1:0,sy=Math.abs(pad.ly)>.6?Math.sign(pad.ly):Math.abs(pad.lx)>.6?Math.sign(pad.lx):0;
+    pad.navT-=dt;let step=dir;if(!step&&sy){if(sy!==pad.navDir||pad.navT<=0){step=sy;pad.navT=pad.navDir===sy?.16:.4}}pad.navDir=sy;
+    if(step){const i=layer.indexOf(pad.focus);padFocus(layer[(i+step+layer.length)%layer.length]);sfx.ui()}
+    if(hit(0)&&pad.focus){pad.focus.click();return}
+    if(hit(1)){if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);else if(!$('settingsPanel').classList.contains('hidden'))$('settingsBtn').click()}
+    if(hit(9)&&!playing&&everStarted&&$('titleConfirm').classList.contains('hidden')){padFocus(null);startGame(false)}
+    return}
+  padFocus(null);
+  if(!playing)return;
+  pad.rt=B[7];pad.lb=B[4];pad.rb=B[5];
+  if(hit(9)){pause();document.exitPointerLock?.();return}
+  if(hit(8)&&mode==='training'&&tutDone)skipTraining();
+  if(hit(7))fire(true);if(hit(6))toggleScope();if(hit(0))doJump();if(hit(1))doBoost();if(hit(2))swingAxe(true);if(hit(3))switchWeapon('other');if(hit(11))centerHead();
+  if(!player.alive)return;
+  pad.full=Math.hypot(pad.rx,pad.ry)>.95?pad.full+dt:0;
+  const curve=v=>Math.sign(v)*v*v,boost=1+Math.min(.6,Math.max(0,pad.full-.2)*1.5),ms=+$('padSens').value*boost/(1+(ARBALEST.zoom-1)*(player.scope||0));
+  player.aimYawTarget+=curve(pad.rx)*2.4*ms*dt;player.aimPitchTarget-=curve(pad.ry)*1.6*ms*dt}
 reset();
 if(new URLSearchParams(location.search).has('demo'))setTimeout(()=>startGame(false),80);
 })();
