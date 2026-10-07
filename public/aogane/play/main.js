@@ -2862,7 +2862,7 @@ function drawTutorial(s){
   const st=cal?(padDriven?{en:'CALIBRATE',jp:'画面の正面を向いて、右スティックを押し込む',sub:'そこが首の正面になります。ずれたらいつでも押し込み直す'}:{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが首の正面になります。ずれたらいつでも C'}):tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
   const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':cal?st.jp:st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':padDriven?'LB / RB で首を左右に振る':'Q / E で首を左右に振る'):padDriven&&st.pjp||st.jp;
   const sub=done?(padDriven?'首で探して、RT で撃つ':'首で探して、マウスで撃つ'):cal?st.sub:st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
-  const a=done?clamp(tut.doneT/.4,0,1):clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
+  const a=done?clamp(tut.doneT/.4,0,1):cal?1:clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
   ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
   hudText(done?'TRAINING COMPLETE':cal?'HEAD  CALIBRATE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
   hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(tutDone&&mode==='training'&&!done)hudText(padDriven?'ビューボタンでスキップ':'Tab でスキップ',x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
@@ -3197,7 +3197,7 @@ function say(event,chance=1,fromQueue=false){
   if(busy&&vox.cur){try{vox.cur.stop()}catch{}}
   // Radio voice: band-limit, presence lift, light saturation, squelch ticks at both ends.
   const src=ac.createBufferSource();src.buffer=buf;const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=260;const pk=ac.createBiquadFilter();pk.type='peaking';pk.frequency.value=1900;pk.Q.value=.8;pk.gain.value=4;
-  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;const sh=ac.createWaveShaper();sh.curve=softClipCurve(1.6);const g=ac.createGain();g.gain.value=.95;
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;const sh=ac.createWaveShaper();sh.curve=softClipCurve(1.6);const g=ac.createGain();g.gain.value=.5;
   src.connect(hp).connect(pk).connect(lp).connect(sh).connect(g).connect(master);src.start(now+.03);
   const dur=buf.duration+.03;burst({t:now,hp:2600,lp:7000,d:.035,g:.03,pri:3});burst({t:now+dur,hp:2600,lp:7000,d:.05,g:.025,pri:3});
   vox.cur=src;vox.curPrio=P;vox.curEnd=now+dur;vox.lastEnd=now+dur;vox.lastId[event]=L.id;vox.cool[event]=now+L.cool;voxDuck(dur);
