@@ -35,6 +35,8 @@
       <div class="settings">
       <label><span>全体の音量</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
       <label><span>音楽</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
+      <label><span>ボイス</span><output id="voiceout">100%</output><input id="voiceVol" type="range" min="0" max="100" value="100" step="1"></label>
+      <label><span>効果音</span><output id="seout">100%</output><input id="seVol" type="range" min="0" max="100" value="100" step="1"></label>
       <label><span>マウス感度</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
       <label><span>スティック感度</span><output id="padsensout">1.00×</output><input id="padSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
       <label><span>首の感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
@@ -71,7 +73,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=81"></script>
+<script src="main.js?v=82"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>

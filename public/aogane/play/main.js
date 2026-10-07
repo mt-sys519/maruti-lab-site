@@ -20,10 +20,11 @@ const BPM=126,BEAT=60/BPM,STEP=BEAT/4,BAR=BEAT*4;
 const CHORDS=[[0,3,7,10,14],[-4,0,3,7,10],[-7,-4,0,3,7],[-5,0,2,7,10]];
 const ROOT=62,BASS_PAT=[1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0];
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
-let ac=null,audioOut=null,master=null,sfxBus=null,musicBus=null,musicDuck=null,reverbIn=null,delayIn=null,crushIn=null,noiseWhite=null,noisePink=null,audioT0=0,voices=0,hullIn=null,hullCrushIn=null,sfxExt=0;
+let ac=null,audioOut=null,master=null,sfxBus=null,voiceBus=null,seRev=null,seDly=null,musicBus=null,musicDuck=null,reverbIn=null,delayIn=null,crushIn=null,noiseWhite=null,noisePink=null,audioT0=0,voices=0,hullIn=null,hullCrushIn=null,sfxExt=0;
 const bed={},music={step:0,next:0,intensity:0,target:0,menu:true,hitIdx:0,hitT:-9,hitGrid:-1,moteGrid:-1,moteIdx:0,flowGrid:-1};
-const volume=$('volume'),musicVol=$('musicVol'),mouseSens=$('mouseSens');
+const volume=$('volume'),musicVol=$('musicVol'),voiceVol=$('voiceVol'),seVol=$('seVol'),mouseSens=$('mouseSens');
 function musicLevel(){return clamp(+musicVol.value/100,0,1)*.5}
+const SFX_BUS=.92;function seLevel(){return clamp(+seVol.value/100,0,1)}function voiceLevel(){return clamp(+voiceVol.value/100,0,1)}
 function softClipCurve(k){const n=2048,c=new Float32Array(n),norm=Math.tanh(k);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(k*x)/norm}return c}
 function makeNoise(seconds,pink){
   const n=Math.floor(ac.sampleRate*seconds),buf=ac.createBuffer(1,n,ac.sampleRate),d=buf.getChannelData(0);
@@ -51,7 +52,7 @@ function ensureAudio(){
     const glue=ac.createDynamicsCompressor();glue.threshold.value=-18;glue.knee.value=10;glue.ratio.value=2.4;glue.attack.value=.008;glue.release.value=.2;
     const limiter=ac.createDynamicsCompressor();limiter.threshold.value=-2.5;limiter.knee.value=0;limiter.ratio.value=20;limiter.attack.value=.001;limiter.release.value=.08;
     audioOut=ac.createGain();master.connect(sub).connect(mud).connect(air).connect(glue).connect(limiter).connect(audioOut).connect(ac.destination);
-    sfxBus=ac.createGain();sfxBus.gain.value=.92;sfxBus.connect(master);
+    sfxBus=ac.createGain();sfxBus.gain.value=SFX_BUS*seLevel();sfxBus.connect(master);voiceBus=ac.createGain();voiceBus.gain.value=voiceLevel();voiceBus.connect(master);
     musicDuck=ac.createGain();musicDuck.gain.value=1;musicDuck.connect(master);
     musicBus=ac.createGain();musicBus.gain.value=musicLevel();musicBus.connect(musicDuck);
     // Shared soft clip for impacts: weight without raw digital clipping.
@@ -65,6 +66,8 @@ function ensureAudio(){
     delayIn=ac.createGain();const dl=ac.createDelay(2),dr=ac.createDelay(2),fb=ac.createGain(),fb2=ac.createGain(),dtone=ac.createBiquadFilter(),merge=ac.createChannelMerger(2),dOut=ac.createGain();
     dl.delayTime.value=dr.delayTime.value=BEAT*.75;fb.gain.value=.42;fb2.gain.value=.42;dtone.type='lowpass';dtone.frequency.value=3400;dOut.gain.value=.34;
     delayIn.connect(dtone).connect(dl);dl.connect(fb).connect(dr);dr.connect(fb2).connect(dl);dl.connect(merge,0,0);dr.connect(merge,0,1);merge.connect(dOut).connect(master);
+    // Effects' sends to the shared hall and delay pass the 効果音 fader too (music sends go straight in).
+    seRev=ac.createGain();seRev.gain.value=seLevel();seRev.connect(reverbIn);seDly=ac.createGain();seDly.gain.value=seLevel();seDly.connect(delayIn);
     noiseWhite=makeNoise(2,false);noisePink=makeNoise(3,true);
     buildBed();
     audioT0=ac.currentTime+.06;music.step=0;music.next=audioT0;
@@ -76,8 +79,8 @@ function busOut(node,o){
   if(o.pan&&ac.createStereoPanner){const p=ac.createStereoPanner();p.pan.value=clamp(o.pan,-1,1);node.connect(p);out=p}
   const ext=sfxExt>0&&!o.bus&&hullIn;
   out.connect(ext?(o.crush?hullCrushIn:hullIn):o.crush?crushIn:(o.bus||sfxBus));
-  if(o.rev>0){const s=ac.createGain();s.gain.value=ext?o.rev*.5:o.rev;out.connect(s).connect(reverbIn)}
-  if(o.dly>0&&!ext){const s=ac.createGain();s.gain.value=o.dly;out.connect(s).connect(delayIn)}
+  if(o.rev>0){const s=ac.createGain();s.gain.value=ext?o.rev*.5:o.rev;out.connect(s).connect(o.bus?reverbIn:seRev)}
+  if(o.dly>0&&!ext){const s=ac.createGain();s.gain.value=o.dly;out.connect(s).connect(o.bus?delayIn:seDly)}
 }
 function voiceOK(pri=1){return !!ac&&ac.state==='running'&&(voices<84||pri>1&&voices<128)}
 let sfxTrim=1;
@@ -193,8 +196,8 @@ const KILL_VOICE={
 const sfx={
   // 30mm: transient click, cracking report, chest thump, short tail. Immediate, never quantised.
   fire(linked=false){if(!ac)return;const r=.96+Math.random()*.08;
-    burst({hp:3200,d:.014,g:.20,pri:2});burst({bp:2400*r,bp2:900,q:.9,d:.075,g:.25,pri:2});
-    tone({f:170*r,f2:50,glide:.07,d:.15,g:.34,crush:true,pri:2});burst({pink:true,lp:1100,lp2:260,d:.24,g:.06,rev:.06});
+    burst({hp:3200,d:.014,g:.28,pri:2});burst({bp:2400*r,bp2:900,q:.9,d:.075,g:.35,pri:2});
+    tone({f:170*r,f2:50,glide:.07,d:.15,g:.44,crush:true,pri:2});burst({pink:true,lp:1100,lp2:260,d:.24,g:.085,rev:.06});
     tone({f:96*r,type:'square',d:.035,g:.018,lp:700,t:ac.currentTime+.035});
     if(linked){const ch=chordAt(music.step);tone({f:midiHz(ROOT+24+ch[Math.floor(Math.random()*ch.length)]),type:'triangle',d:.06,g:.014,dly:.12})}},
   // Hit: tight metallic tick now, then an ascending chord note on the next 16th (Rez).
@@ -310,6 +313,8 @@ for(const k of ['kill','debrisLand','debrisBurn','explode','enemyDash','lancerCu
 const SFX_TRIM={chip:1.6,fire:.68,hit:2.8,lock:2.8,designate:2.5,scan:2.8,enemyDash:2.4,lancerCue:2.8,hostile:3,heavyCharge:4,contact:2.8,stagger:2.5,flow:2.2,evade:3,nearMiss:2.7,inbound:2.5,overheat:1.25,vented:2.8,mote:1.8,clear:2.5};
 for(const [k,v] of Object.entries(SFX_TRIM)){const f=sfx[k];sfx[k]=(...args)=>{const prev=sfxTrim;sfxTrim=v;try{return f(...args)}finally{sfxTrim=prev}}}
 volume.addEventListener('input',()=>{if(master)master.gain.setTargetAtTime(+volume.value/100,ac.currentTime,.03);$('volout').textContent=volume.value+'%'});$('volout').textContent=volume.value+'%';
+voiceVol.addEventListener('input',()=>{if(voiceBus)voiceBus.gain.setTargetAtTime(voiceLevel(),ac.currentTime,.05);$('voiceout').textContent=voiceVol.value+'%'});$('voiceout').textContent=voiceVol.value+'%';
+seVol.addEventListener('input',()=>{if(sfxBus){const t=ac.currentTime,k=seLevel();sfxBus.gain.setTargetAtTime(SFX_BUS*k,t,.05);seRev.gain.setTargetAtTime(k,t,.05);seDly.gain.setTargetAtTime(k,t,.05)}$('seout').textContent=seVol.value+'%'});$('seout').textContent=seVol.value+'%';
 musicVol.addEventListener('input',()=>{if(musicBus)musicBus.gain.setTargetAtTime(musicLevel(),ac.currentTime,.05);$('musicout').textContent=musicVol.value+'%'});$('musicout').textContent=musicVol.value+'%';
 
 // ---------- WORLD ----------
@@ -2865,7 +2870,7 @@ function drawTutorial(s){
   const a=done?clamp(tut.doneT/.4,0,1):cal?1:clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
   ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
   hudText(done?'TRAINING COMPLETE':cal?'HEAD  CALIBRATE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
-  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(tutDone&&mode==='training'&&!done)hudText(padDriven?'ビューボタンでスキップ':'Tab でスキップ',x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
+  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(mode==='training'&&!done)hudText(padDriven?'ビューボタンでスキップ':'Tab でスキップ',x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
 function pilotBanner(en,jp,color='#dcfff4',dur=1.5){pilot.banner={en,jp,color,t:0,dur}}
 function pilotCut(kind){pilot.cut={kind,t:0}}
 const etag=e=>(RIGS[e.type]?.name||e.type)+' '+String(e.id).padStart(2,'0');
@@ -3197,8 +3202,8 @@ function say(event,chance=1,fromQueue=false){
   if(busy&&vox.cur){try{vox.cur.stop()}catch{}}
   // Radio voice: band-limit, presence lift, light saturation, squelch ticks at both ends.
   const src=ac.createBufferSource();src.buffer=buf;const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=260;const pk=ac.createBiquadFilter();pk.type='peaking';pk.frequency.value=1900;pk.Q.value=.8;pk.gain.value=4;
-  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;const sh=ac.createWaveShaper();sh.curve=softClipCurve(1.6);const g=ac.createGain();g.gain.value=.5;
-  src.connect(hp).connect(pk).connect(lp).connect(sh).connect(g).connect(master);src.start(now+.03);
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;const sh=ac.createWaveShaper();sh.curve=softClipCurve(1.6);const g=ac.createGain();g.gain.value=.36;
+  src.connect(hp).connect(pk).connect(lp).connect(sh).connect(g).connect(voiceBus);src.start(now+.03);
   const dur=buf.duration+.03;burst({t:now,hp:2600,lp:7000,d:.035,g:.03,pri:3});burst({t:now+dur,hp:2600,lp:7000,d:.05,g:.025,pri:3});
   vox.cur=src;vox.curPrio=P;vox.curEnd=now+dur;vox.lastEnd=now+dur;vox.lastId[event]=L.id;vox.cool[event]=now+L.cool;voxDuck(dur);
   if(L.face&&PILOT_EXPR.includes(L.face))pilotReact(L.face,Math.max(.8,dur+.2),Math.max(1,P));
@@ -3280,7 +3285,7 @@ document.addEventListener('mousemove',e=>{if(padDriven&&(e.movementX||e.movement
 document.addEventListener('mousedown',e=>{if(padDriven)setPadDriven(false);if(playing&&e.target===canvas&&document.pointerLockElement!==canvas){try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}}mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
-document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'&&tutDone){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
+document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='1面からやり直します'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='全画面にできませんでした'}});
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind($('padSens'),$('padsensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);
@@ -3321,7 +3326,7 @@ function pollPad(dt){
   if(!playing)return;
   pad.rt=B[7];pad.lb=B[4];pad.rb=B[5];
   if(hit(9)){pause();document.exitPointerLock?.();return}
-  if(hit(8)&&mode==='training'&&tutDone)skipTraining();
+  if(hit(8)&&mode==='training')skipTraining();
   if(hit(7))fire(true);if(hit(6))toggleScope();if(hit(0))doJump();if(hit(1))doBoost();if(hit(2))swingAxe(true);if(hit(3))switchWeapon('other');if(hit(11))centerHead();
   if(!player.alive)return;
   pad.full=Math.hypot(pad.rx,pad.ry)>.95?pad.full+dt:0;
