@@ -5,9 +5,9 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
 const canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const boot=$('boot'),hud=$('hud'),video=$('webcam');
 // Language (設定): menus, HUD and AOI's subtitles follow hf.lang, her recorded voice follows hf.voiceLang, so either
-// can be Japanese or English on its own. Until text is chosen it follows the browser: Japanese for a Japanese browser
-// (or when it cannot tell), English otherwise. The voice stays Japanese unless chosen. jt(ja,en) picks the current text.
-let lang='ja',voiceLang='ja';try{const nav=typeof navigator!=='undefined'&&(navigator.languages||[navigator.language]).filter(Boolean),saved=localStorage.getItem('hf.lang');lang=saved?(saved==='en'?'en':'ja'):nav&&nav.length&&!/^ja/i.test(nav[0])?'en':'ja';if(localStorage.getItem('hf.voiceLang')==='en')voiceLang='en'}catch{}
+// can be Japanese or English on its own. Until one is chosen it follows the browser: Japanese for a Japanese browser
+// (or when it cannot tell), English otherwise. jt(ja,en) picks the current text.
+let lang='ja',voiceLang='ja';try{const nav=typeof navigator!=='undefined'&&(navigator.languages||[navigator.language]).filter(Boolean),saved=localStorage.getItem('hf.lang');const auto=nav&&nav.length&&!/^ja/i.test(nav[0])?'en':'ja',savedV=localStorage.getItem('hf.voiceLang');lang=saved?(saved==='en'?'en':'ja'):auto;voiceLang=savedV?(savedV==='en'?'en':'ja'):auto}catch{}
 const jt=(ja,en)=>lang==='en'?en:ja,jtA=a=>a?jt(a[0],a[1]):'';
 let W=1280,H=720,DPR=1;
 // 解像度 (設定): the whole frame, WebGL and HMD alike, renders at 100 / 75 / 50 % of the screen's pixels and the
