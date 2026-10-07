@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "../SiteFooter";
 
-const playUrl = "/headframe/play/";
+const playUrl = "/aogane/play/";
 
 export const metadata: Metadata = {
-  title: { absolute: "HEADFRAME｜首で探して、マウスで撃つ" },
+  title: { absolute: "蒼鉄 -AOGANE-｜首で探して、マウスで撃つ" },
   description:
     "首の向きで索敵し、マウスで武器を向ける一人称のメカアクション。ウェブカメラで頭の動きを読み取れます（なくても遊べます）。PCのブラウザで動く、Maruti Labの開発中のゲームです。",
-  alternates: { canonical: "https://marutilab.com/headframe" },
+  alternates: { canonical: "https://marutilab.com/aogane" },
   // Live before it is announced: the game is unfinished and the page is not
-  // linked from anywhere yet. This comes off, and /headframe joins the
+  // linked from anywhere yet. This comes off, and /aogane joins the
   // sitemap and the front page, on the day it is published.
   robots: { index: false, follow: false },
 };
@@ -29,7 +29,7 @@ const controls: [string, string][] = [
   ["R", "再出撃"],
 ];
 
-export default function HeadframePage() {
+export default function AoganePage() {
   return (
     <>
       <main className="hfMain">
@@ -39,8 +39,8 @@ export default function HeadframePage() {
           <figure className="hfKey">
             {/* eslint-disable-next-line @next/next/no-img-element -- two fixed WebP sizes, served as is */}
             <img
-              src="/headframe/key-900.webp"
-              srcSet="/headframe/key-560.webp 560w, /headframe/key-900.webp 900w"
+              src="/aogane/key-900.webp"
+              srcSet="/aogane/key-560.webp 560w, /aogane/key-900.webp 900w"
               sizes="(max-width: 860px) 100vw, 420px"
               width={900}
               height={1125}
@@ -48,7 +48,10 @@ export default function HeadframePage() {
             />
           </figure>
           <p className="hfEyebrow">TACTICAL POWER FRAME / IN DEVELOPMENT</p>
-          <h1>HEADFRAME</h1>
+          <h1>
+            蒼鉄
+            <small>-AOGANE-</small>
+          </h1>
           <p className="hfLead">
             首は索敵、マウスは武器、機体は遅れてついてくる。
             <br />

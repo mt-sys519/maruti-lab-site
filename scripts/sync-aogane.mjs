@@ -1,11 +1,11 @@
-// Copy the playable HEADFRAME build into public/headframe/play.
+// Copy the playable AOGANE (蒼鉄) build into public/aogane/play.
 //
 // The game lives in its own repository and keeps changing there; this copies
 // only what the browser needs, so proto/, tests/, design/, tools/ and
 // launch.py stay behind. The game opens in a page of its own rather than an
 // iframe: it asks for pointer lock, full screen and the camera.
 //
-//   node scripts/sync-headframe.mjs [path-to-headframe-repo]
+//   node scripts/sync-aogane.mjs [path-to-aogane-repo]
 //
 // assets/voice is left out on purpose. Without aoi_lines.csv the voice loader
 // stops at its first request; with it, and no directory listing to read, it
@@ -18,8 +18,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const src = resolve(process.argv[2] ?? "C:/Users/a_tkm/Documents/GitHub/headframe");
-const dest = join(root, "public", "headframe", "play");
+const src = resolve(process.argv[2] ?? "C:/Users/a_tkm/Documents/GitHub/aogane");
+const dest = join(root, "public", "aogane", "play");
 
 const files = ["main.js", "three-cel.js", "styles.css", "head-tracker.worker.js"];
 const dirs = ["vendor", "assets/pilot"];
@@ -36,7 +36,7 @@ for (const d of dirs) cpSync(join(src, d), join(dest, d), { recursive: true });
 // Unlisted until it is announced: the page says noindex itself, and the tab
 // says what it is instead of the build number.
 let html = readFileSync(join(src, "index.html"), "utf8");
-html = html.replace(/<title>[^<]*<\/title>/, "<title>HEADFRAME | Maruti Lab</title>");
+html = html.replace(/<title>[^<]*<\/title>/, "<title>蒼鉄 -AOGANE- | Maruti Lab</title>");
 html = html.replace(
   /(<meta name="viewport"[^>]*>)/,
   '$1\n  <meta name="robots" content="noindex,nofollow">',
@@ -44,4 +44,4 @@ html = html.replace(
 if (!html.includes('name="robots"')) throw new Error("could not add the robots meta");
 writeFileSync(join(dest, "index.html"), html);
 
-console.log(`HEADFRAME copied from ${src} to ${dest}`);
+console.log(`AOGANE copied from ${src} to ${dest}`);

@@ -1,4 +1,4 @@
-// HEADFRAME's WebGL renderer (three.js, vendored in vendor/three.min.js). main.js records the frame under
+// AOGANE's WebGL renderer (three.js, vendored in vendor/three.min.js). main.js records the frame under
 // the HMD (sky, ground, world, hostiles, debris, shots and blasts) and the gun arm, and hands them to draw();
 // the result is a canvas main.js composites where its Canvas renderer would have drawn. Without WebGL 2, on
 // a lost context or with ?canvas in the URL, window.HF_THREE stays inactive and main.js draws with Canvas.
@@ -17,7 +17,7 @@ if (!query.has('canvas')) try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, premultipliedAlpha: true });
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   renderer.autoClear = false;
-} catch (e) { console.warn('HEADFRAME three: WebGL unavailable', e); }
+} catch (e) { console.warn('AOGANE three: WebGL unavailable', e); }
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera();
@@ -578,7 +578,7 @@ function draw(o) {
 
 const api = { canvas, active: !!renderer, enemies: true, world: true, draw };
 // a lost context falls back to Canvas for the rest of the session (three.js restores, but our targets would not be)
-canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); api.active = false; renderer = null; console.warn('HEADFRAME three: context lost, drawing with Canvas'); });
+canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); api.active = false; renderer = null; console.warn('AOGANE three: context lost, drawing with Canvas'); });
 if (query.has('dev')) {
   const label = document.createElement('div');
   Object.assign(label.style, { position: 'fixed', right: '12px', top: '10px', zIndex: 50, font: '11px Consolas, monospace', letterSpacing: '.12em', color: '#8fffe0', background: 'rgba(2,9,10,.6)', padding: '4px 8px', pointerEvents: 'none' });

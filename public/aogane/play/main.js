@@ -1852,7 +1852,7 @@ function drawGroundRush(viewYaw,viewPitch){
 }
 function drawSpeedFX(speed){if(player.boostTime<=0&&speed<22&&player.syncTime<=0)return;const k=clamp((speed-15)/25+(player.boostTime>0?.7:0)+(player.syncTime>0?.22:0),0,1);ctx.save();ctx.globalAlpha=.12+.22*k;ctx.strokeStyle='#e8f2ee';ctx.lineWidth=1;for(let i=0;i<34;i++){const a=i*2.399+gameTime*.2,r0=Math.min(W,H)*(.14+hash(i)*.28),len=(15+hash(i+9)*70)*k,cx=W/2+Math.cos(a)*r0,cy=H/2+Math.sin(a)*r0*.62;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*len,cy+Math.sin(a)*len*.62);ctx.stroke()}ctx.restore()}
 // ---------- COCKPIT (v32) ---------------------------------------------------------
-// HEADFRAME's pilot capsule sits in the chassis; the HMD head unit turns inside it.
+// AOGANE's pilot capsule sits in the chassis; the HMD head unit turns inside it.
 // Everything here is real geometry in the chassis frame (x right, y up, z forward, metres
 // from the eye) rendered with the same face+line renderer as the hostiles, so a head turn
 // produces genuine parallax: near struts slide past far ones, the head pivots on a neck.

@@ -18,6 +18,7 @@
 .targetbox{background:linear-gradient(90deg,rgba(240,181,101,.035),transparent)}
 
 /* v0.11: sight-marking emphasis */
+.boot h1 small{display:block;margin-top:14px;font-size:13px;font-weight:400;letter-spacing:.42em;color:#c0ceca}
 .boot .tagline{letter-spacing:.075em}.statusLine:after{content:'  // LOOK TO MARK';color:rgba(103,255,209,.48);margin-left:8px}.targetbox b{letter-spacing:.04em}
 
 /* v0.11: contact / acquisition emphasis */
@@ -236,12 +237,13 @@
 .hud #warning{top:9%;font-size:11px}
 .primaryActions .endure{min-width:150px;border-color:rgba(240,181,101,.8);color:#f0b565;font-weight:900}
 
-/* Title screen in the HMD type, matching its page on marutilab.com/headframe: the light tracked sans,
+/* Title screen in the HMD type, matching its page on marutilab.com/aogane: the light tracked sans,
    warm off-white, hairlines; amber is kept for DEPLOY, the one thing to press. No italic black display face. */
 .boot{font-family:Bahnschrift,"DIN Alternate","Segoe UI","Helvetica Neue","Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif}
 .boot .bootMark{width:34px;height:34px;font-size:11px;font-weight:700;margin-bottom:18px}
 .boot .eyebrow{font-size:11px;letter-spacing:.3em;color:#9aa8a4}
 .boot h1{margin-top:12px;font-family:inherit;font-style:normal;font-weight:300;font-size:clamp(44px,6.2vw,92px);line-height:1;letter-spacing:.18em;color:#e6ece9}
+.boot h1 small{display:block;margin-top:14px;font-size:13px;font-weight:400;letter-spacing:.42em;color:#c0ceca}
 .boot .tagline{margin-top:14px;font-size:11px;font-weight:400;letter-spacing:.2em;color:#c0ceca}
 .boot .lead{margin:16px 0 24px;font-size:14px;line-height:1.9;letter-spacing:.04em;color:#d0d9d6}
 .boot .primaryActions button{padding:0 14px;font-size:11px;font-weight:400;letter-spacing:.12em}

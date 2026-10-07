@@ -1,4 +1,4 @@
-/* HEADFRAME's page, in the game's HMD language: near-black, hairlines, a
+/* AOGANE's page, in the game's HMD language: near-black, hairlines, a
    tracked light sans in off-white, amber only for the one thing to press.
    Everything is scoped under .hfSkin so none of it reaches the lab's footer. */
 .hfSkin{
@@ -34,6 +34,7 @@
 .hfKey:after{right:-8px;top:-8px;border-width:1px 1px 0 0}
 .hfEyebrow{margin:0;font-size:11px;letter-spacing:.3em;color:var(--hf-muted)}
 .hfHero h1{margin:14px 0 0;font-size:clamp(44px,6.4vw,76px);font-weight:300;letter-spacing:.18em;line-height:1}
+.hfHero h1 small{display:block;margin-top:14px;font-size:13px;font-weight:400;letter-spacing:.42em;color:#c0ceca}
 .hfLead{margin:28px 0 0;max-width:640px;font-size:15px;line-height:2;color:#d0d9d6;letter-spacing:.04em}
 .hfActions{margin-top:40px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px}
 .hfPlay{display:inline-grid;place-items:center;min-width:200px;height:48px;padding:0 24px;background:var(--hf-amber);color:#0b1112 !important;font-size:13px;font-weight:700;letter-spacing:.16em;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
