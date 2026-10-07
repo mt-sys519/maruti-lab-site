@@ -74,18 +74,24 @@ const guide: [string, string][] = [
   ["specs", "動作環境"],
 ];
 
-function Entries({ items }: { items: Entry[] }) {
+// variant "slot": one long bar per weapon with its key; "hex": a honeycomb of hexagons.
+function Entries({ items, variant }: { items: Entry[]; variant?: "slot" | "hex" }) {
   return (
-    <dl className="hfEntries">
-      {items.map(([name, kind, text, color]) => (
-        <div key={name} style={color ? ({ "--c": color } as CSSProperties) : undefined}>
-          <dt>
-            {name}
-            <span>{kind}</span>
-          </dt>
-          <dd>{text}</dd>
-        </div>
-      ))}
+    <dl className={variant ? `hfEntries hfEntries-${variant}` : "hfEntries"}>
+      {items.map(([name, kind, text, color]) => {
+        const slot = variant === "slot" ? kind.split("・").pop() : null;
+        const label = slot ? kind.slice(0, kind.lastIndexOf("・")) : kind;
+        return (
+          <div key={name} style={color ? ({ "--c": color } as CSSProperties) : undefined}>
+            {slot && <b className="hfSlot">{slot}</b>}
+            <dt>
+              {name}
+              <span>{label}</span>
+            </dt>
+            <dd>{text}</dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }
@@ -201,7 +207,7 @@ export default function AoganePage() {
             <p>
               持てる武器は3つです。1 が HALBERD、2 がそのエリアで渡される2本目の武器、3 が斧の BARDICHE です。SECTOR ごとに2本目が変わります。
             </p>
-            <Entries items={weapons} />
+            <Entries items={weapons} variant="slot" />
           </section>
         </div>
 
@@ -209,7 +215,7 @@ export default function AoganePage() {
           <section className="hfSection" id="hostiles" data-en="HOSTILES">
             <h2>敵</h2>
             <p>施設のネットワークに乗っ取られた機械たちです。種類ごとに色が分かれています。</p>
-            <Entries items={hostiles} />
+            <Entries items={hostiles} variant="hex" />
           </section>
         </div>
 
