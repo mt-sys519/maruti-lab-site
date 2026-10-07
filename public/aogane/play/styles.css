@@ -323,7 +323,7 @@
 .boot .primaryActions .deploy small{opacity:.8}
 .boot .primaryActions{width:340px}
 /* Why the head is lost (dark picture / no face), under the top line; the same words replace the camera note on the menu. */
-.camWarn{position:absolute;left:50%;top:46px;transform:translateX(-50%);max-width:min(720px,calc(100% - 48px));padding:7px 16px;background:rgba(5,9,9,.7);border-top:1px solid rgba(240,181,101,.75);color:#ffd9a0;font:13px/1.6 "Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.05em;text-align:center}
+.camWarn{position:absolute;left:50%;top:86px;transform:translateX(-50%);max-width:min(720px,calc(100% - 48px));padding:7px 16px;background:rgba(5,9,9,.7);border-top:1px solid rgba(240,181,101,.75);color:#ffd9a0;font:13px/1.6 "Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.05em;text-align:center}
 .camNote.warn{color:#ffcf8f}
 .healthNote{position:fixed;right:24px;bottom:22px;width:260px;text-align:right;margin:0;font:11px/1.7 "Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.02em;color:#8f9d99}
 /* Gamepad: the key line swaps to the pad's, and the button the pad is on is ringed. */

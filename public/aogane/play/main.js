@@ -3039,38 +3039,35 @@ function drawPilotLink(){
       hudText(player.rockets?'ROUNDS '+player.rockets:'RELOAD',x0,gy-cap-5*s,cap,player.rockets?HUD.dim:HUD.warn,0,.2)}
     else{const hot=player.vent;ctx.fillStyle=HUD.faint;ctx.fillRect(x0,gy,x1-x0,2*s);ctx.fillStyle=hot?(blink?HUD.warn:'rgba(228,124,98,.4)'):heat>.7?'#e09a62':HUD.ink;ctx.fillRect(x0,gy,(x1-x0)*heat,2*s);
       hudText(hot?'VENT':'HEAT',x0,gy-cap-5*s,cap,hot?HUD.warn:HUD.dim,0,.2);hudText(String(Math.round(heat*100)),x1,gy-cap-5*s,cap,hot?HUD.warn:HUD.dim,1,.1)}}
-  drawSonar(ox-gap-logH*.5,by-logH*.5,logH*.5,s);
   ctx.restore();
-  drawPilotBanner(s);drawTutorial(s);
+  drawCompass(s);drawPilotBanner(s);drawTutorial(s);
 }
-// SONAR: chassis-up scope at the strip's left end. A ping ring sweeps outward on its own period
-// (never the music); each hostile shows where the ring last found it, flares, and settles dim until the
-// next pass refreshes it (a hostile the ring stops finding drops off after 1.5 periods).
-// The HMD-designated hostile is tracked live. The head's view wedge (cyan) and the gun bearing
-// (amber) show the control split. Hostiles beyond range sit on the rim as bearing ticks.
-const SONAR={range:90,period:2.0,last:0,blips:new Map()};
-function sonarPoint(x,z){const dx=x-player.x,dz=z-player.z,c=Math.cos(-player.yaw),n=Math.sin(-player.yaw);return{x:(dx*c-dz*n)/SONAR.range,y:(dx*n+dz*c)/SONAR.range}}
-function updateSonar(){const ph=(gameTime%SONAR.period)/SONAR.period,r1=ph*1.15,r0=ph<SONAR.last?-1:SONAR.last*1.15;SONAR.last=ph;
-  for(const [id] of SONAR.blips)if(!enemies.some(e=>e.id===id&&e.alive))SONAR.blips.delete(id);
-  for(const e of enemies){if(!e.alive)continue;const p=sonarPoint(e.x,e.z),d=Math.hypot(p.x,p.y);if(d>r0&&d<=r1)SONAR.blips.set(e.id,{x:p.x,y:p.y,t:gameTime,type:e.type})}
-  return r1}
-function drawSonar(cx,cy,R,s){
-  const ring=updateSonar(),B=clamp(pilot.boot,0,1),col=HUD.line,px=Math.max(2,Math.round(3*s));ctx.save();
-  ctx.fillStyle=HUD.veil;ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fill();
-  ctx.fillStyle=HUD.ink;ctx.fillRect(Math.round(cx-R),Math.round(cy-R-8*s),Math.round(3*s),Math.round(3*s));hudText('SONAR',cx-R+6*s,cy-R-10.5*s,5.2*s,HUD.ink,0,.32);
-  ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.clip();
-  const h=headYaw*Math.PI/180;ctx.fillStyle='rgba(103,255,209,.13)';ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,-Math.PI/2+h-.36,-Math.PI/2+h+.36);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(220,255,244,.16)';ctx.lineWidth=Math.max(1,s*.75);for(const k of [1/3,2/3]){ctx.beginPath();ctx.arc(cx,cy,R*k,0,TAU);ctx.stroke()}
-  if(ring<1){ctx.globalAlpha=B*(.5*(1-ring));ctx.strokeStyle='#67ffd1';ctx.lineWidth=Math.max(1,s);ctx.beginPath();ctx.arc(cx,cy,R*ring,0,TAU);ctx.stroke();ctx.globalAlpha=B}
-  const g=player.torso;ctx.strokeStyle='rgba(255,199,90,.85)';ctx.lineWidth=Math.max(1,s);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.sin(g)*R*.9,cy-Math.cos(g)*R*.9);ctx.stroke();
-  for(const b of SONAR.blips.values()){const age=(gameTime-b.t)/SONAR.period;if(age>1.5)continue;const a=Math.max(.4,1-age*.75);ctx.globalAlpha=B*(a);ctx.fillStyle=CLASS_STYLE[b.type].edge;const k=b.type==='TITAN'?2.2:b.type==='HEAVY'?1.5:1;ctx.fillRect(Math.round(cx+b.x*R-px*k/2),Math.round(cy+b.y*R-px*k/2),Math.ceil(px*k),Math.ceil(px*k))}
-  ctx.globalAlpha=B*(1);
-  for(const e of enemies){if(!e.alive)continue;const p=sonarPoint(e.x,e.z),d=Math.hypot(p.x,p.y);
-    if(d>1){if(d>2.2)continue;const ux=p.x/d,uy=p.y/d;ctx.globalAlpha=B*(.75);ctx.strokeStyle=CLASS_STYLE[e.type].edge;ctx.lineWidth=Math.max(1,s*1.5);ctx.beginPath();ctx.moveTo(cx+ux*R*.86,cy+uy*R*.86);ctx.lineTo(cx+ux*R*.98,cy+uy*R*.98);ctx.stroke();continue}
-    if(e.designated>0){const x=cx+p.x*R,y=cy+p.y*R,q=px*1.6;ctx.globalAlpha=B*(1);ctx.fillStyle='#8fffe0';ctx.fillRect(Math.round(x-px/2),Math.round(y-px/2),px,px);ctx.strokeStyle='#8fffe0';ctx.lineWidth=Math.max(1,s*.75);ctx.strokeRect(Math.round(x-q)+.5,Math.round(y-q)+.5,Math.round(q*2),Math.round(q*2))}}
-  ctx.restore();
-  ctx.fillStyle=HUD.ink;ctx.beginPath();ctx.moveTo(cx,cy-px*1.4);ctx.lineTo(cx+px,cy+px);ctx.lineTo(cx-px,cy+px);ctx.closePath();ctx.fill();
-  ctx.strokeStyle=col;ctx.lineWidth=Math.max(1,s*.6);ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.stroke();
+// SONAR as a bearing strip under the clock (2026-10-07, user's choice). The round scope sat at the bottom, and
+// looking down at it tipped the face out of the webcam; this one is read with the eyes alone. Centred on where
+// the head looks, +-90 deg: ticks every 15 deg, the screen's own field as a lighter band, the gun's bearing in
+// amber (the head / gun split the scope used to show), hostiles in their class colour (nearer = bigger, past
+// the 90 m range a thin tick), the HMD-designated one bracketed, and the nearest hostile behind each shoulder as
+// a chevron at that end.
+const SONAR={range:90},COMPASS_SPAN=Math.PI/2;
+function drawCompass(s){
+  const B=clamp(pilot.boot,0,1),viewYaw=player.yaw+headYaw*Math.PI/180,w=Math.min(W*.5,300*s),cx=W/2,x0=cx-w/2,h=10*s,y=46+h*.6,X=a=>cx+a/COMPASS_SPAN*w/2,u=s*.7;
+  ctx.save();ctx.globalAlpha=B;
+  ctx.fillStyle=HUD.veil;ctx.fillRect(x0,y-h*.6,w,h*1.6);
+  const fov=Math.min(COMPASS_SPAN,Math.atan(W/2/renderFocal));ctx.fillStyle='rgba(103,255,209,.10)';ctx.fillRect(X(-fov),y-h*.6,X(fov)-X(-fov),h*1.6);
+  ctx.strokeStyle=HUD.line;ctx.lineWidth=Math.max(1,s*.6);ctx.beginPath();ctx.moveTo(x0,y+h*.5);ctx.lineTo(x0+w,y+h*.5);
+  for(let d=-90;d<=90;d+=15){const x=X(d*Math.PI/180),k=d%45===0?.55:.3;ctx.moveTo(x,y+h*.5);ctx.lineTo(x,y+h*(.5-k))}ctx.stroke();
+  ctx.fillStyle=HUD.ink;ctx.beginPath();ctx.moveTo(cx,y+h*.5+1);ctx.lineTo(cx-3*u,y+h*.5+4*u);ctx.lineTo(cx+3*u,y+h*.5+4*u);ctx.closePath();ctx.fill();
+  const g=angleDiff(player.yaw+player.torso,viewYaw);if(Math.abs(g)<=COMPASS_SPAN){ctx.strokeStyle='rgba(255,199,90,.9)';ctx.lineWidth=Math.max(1,s);ctx.beginPath();ctx.moveTo(X(g),y-h*.55);ctx.lineTo(X(g),y+h*.5);ctx.stroke()}
+  const behind={'-1':null,'1':null};
+  for(const e of enemies){if(!e.alive)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz),a=angleDiff(Math.atan2(dx,-dz),viewYaw),col=CLASS_STYLE[e.type].edge;
+    if(Math.abs(a)>COMPASS_SPAN){const k=a<0?'-1':'1';if(!behind[k]||dist<behind[k].dist)behind[k]={dist,col};continue}
+    const x=X(a);
+    if(dist>SONAR.range){ctx.globalAlpha=B*.6;ctx.strokeStyle=col;ctx.lineWidth=Math.max(1,s);ctx.beginPath();ctx.moveTo(x,y-h*.2);ctx.lineTo(x,y+h*.3);ctx.stroke();ctx.globalAlpha=B;continue}
+    const r=(2+4*(1-dist/SONAR.range))*u*(e.type==='TITAN'?1.6:e.type==='HEAVY'?1.25:1);
+    ctx.fillStyle=col;ctx.fillRect(Math.round(x-r),Math.round(y-r),Math.ceil(r*2),Math.ceil(r*2));
+    if(e.designated>0){const q=r+3*u;ctx.strokeStyle='#8fffe0';ctx.lineWidth=Math.max(1,s*.75);ctx.strokeRect(Math.round(x-q)+.5,Math.round(y-q)+.5,Math.round(q*2),Math.round(q*2))}}
+  for(const dir of [-1,1]){const b=behind[String(dir)];if(!b)continue;const x=cx+dir*(w/2+7*s);ctx.globalAlpha=B*Math.min(1,.45+.55*(1-Math.min(1,b.dist/SONAR.range)));ctx.fillStyle=b.col;ctx.beginPath();ctx.moveTo(x+dir*6*u,y);ctx.lineTo(x-dir*u,y-6*u);ctx.lineTo(x-dir*u,y+6*u);ctx.closePath();ctx.fill()}
+  ctx.globalAlpha=B;ctx.fillStyle=HUD.ink;ctx.fillRect(Math.round(x0),Math.round(y-h*.6-7*s),Math.round(3*u),Math.round(3*u));hudText('SONAR',x0+5*s,y-h*.6-8.5*s,5.2*s,HUD.dim,0,.32);
   ctx.restore()}
 // ---------- VISOR DAMAGE ----------
 // The pilot is not hit, the frame is: nothing breaks the visor. The outside view is the frame's sensor
