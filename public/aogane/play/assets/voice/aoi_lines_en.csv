@@ -1,0 +1,73 @@
+id,event,priority,cooldown_s,face,text,style,trigger
+sortie_01,SORTIE,2,0,closed→calm,"Aoi, Aogane. Launching.","Calm and short. Settle your breath inside the helmet first. ""Aogane"" is ah-oh-GAH-neh.",Sortie (as her eyes open)
+sortie_tunnel_01,SORTIE_TUNNEL,2,0,calm,Entering the freight tunnel. The core's up ahead.,"Lower voice, careful.",Sector 2 (FREIGHT TUNNEL) sortie
+sortie_tunnel_02,SORTIE_TUNNEL,2,0,calm,"Dark in here. ...Not that it matters. The lines show me everything.","A little bravado, and the last part is to herself.",
+sortie_deck_01,SORTIE_DECK,2,0,calm,The launch deck. I keep it clear until our ride gets here.,"Focused, clear.",Sector 3 (SKYDECK) sortie
+sortie_deck_02,SORTIE_DECK,2,0,calm,"Almost dawn. Stay with me to the end, Aogane.","Quietly, as if talking to the machine. ""Aogane"" is ah-oh-GAH-neh.",
+sortie_02,SORTIE,2,0,closed→calm,View's built. ...I can do this.,"Composed, a small spark of confidence at the end. She watches the HMD draw the world in.",
+sortie_03,SORTIE,2,0,closed→calm,"No comms, no assist. Fine by me.","Low, fearless.",
+redeploy_01,REDEPLOY,2,0,calm,Redeploying. I'm not going down this time.,"Holding back frustration, quietly determined.",Redeploy with R
+redeploy_02,REDEPLOY,2,0,calm,"One more time. You're stuck with me, Aogane.","A small laugh, strong. Talking to the machine. ""Aogane"" is ah-oh-GAH-neh.",
+contact_01,CONTACT,1,6,glance,Contact.,"Calm, short.",An enemy wakes or appears
+contact_02,CONTACT,1,6,glance,Here they come.,"Calm, short, under her breath.",
+contact_03,CONTACT,1,6,glance,"Movement, over there.","Calm, short.",
+contact_vane,CONTACT_VANE,1,6,glance,Vane. Fast one coming.,"Calm, short.",A SCOUT appears (optional)
+contact_pike,CONTACT_PIKE,1,6,glance,Pike. It's going to charge.,"Calm, short, a little wary.",A LANCER appears (optional)
+contact_bastion,CONTACT_BASTION,1,6,glance,Bastion... a tough one.,"Low, she doesn't like it.",A HEAVY appears (optional)
+contact_atlas,CONTACT_ATLAS,1,6,glance,Atlas... the big one's awake.,"A sharp breath, low.",An ATLAS is spotted
+contact_kite,CONTACT_KITE,1,6,glance,"Kite, above! It's diving!","Sharp, as if looking up.",A KITE is spotted
+designate_01,DESIGNATE,1,3,glance,Marked.,"Calm, short, crisp.",Target designated with the HMD
+designate_02,DESIGNATE,1,3,glance,Got it.,"Calm, short.",
+designate_03,DESIGNATE,1,3,glance,"That one. Marked.","Calm, short.",
+kill_01,KILL,1,1.5,smug,Down.,"Calm, short.",One kill (thinned out; not every time)
+kill_02,KILL,1,1.5,smug,One.,"Calm, short.",
+kill_03,KILL,1,1.5,smug,Dropped it.,"Cold, short.",
+kill_04,KILL,1,1.5,smug,That's one.,A little pleased with herself.,
+chain_01,CHAIN,2,2,laugh,Chain break!,"High energy, competitive.",Three or more in a chain
+chain_02,CHAIN,2,2,laugh,Not done yet!,"Having fun, laughing.",
+chain_03,CHAIN,2,2,laugh,Can't stop me now!,"Fired up, almost shouting.",
+desbreak_01,DESIGNATE_BREAK,2,2,smug,"Marked target down. I'm in the flow.","She feels it working, a little proud.",A designated target is destroyed (missile +1)
+desbreak_02,DESIGNATE_BREAK,2,2,smug,"Right on the mark. Next.","Short, relaxed.",
+stagger_01,STAGGER,1,3,smug,Stopped it!,Sharp.,An enemy's charge-up or rush is broken
+stagger_02,STAGGER,1,3,smug,Charge broken.,Fearless.,
+ram_01,RAM,1,3,grit,Move!,With force.,Ramming
+ram_02,RAM,1,3,grit,Out of my way!,Rough.,
+lastone_01,LAST_ONE,2,0,calm,One left.,"Calm, short, focused.",One enemy remains
+lastone_02,LAST_ONE,2,0,calm,Just one more.,"Quietly, taking aim.",
+sync_01,SYNC,2,0,cheer,"Sync drive... here we go!","A sudden rush, having fun.",SYNC DRIVE starts
+sync_02,SYNC,2,0,cheer,Sync! I can see everything!,"Excited, bright.",
+sync_03,SYNC,2,0,cheer,"I've got this, I've got this!","Laughing, fired up.",
+syncbreak_01,SYNC_BREAK,1,1.2,laugh,Next!,"Bouncy, short.",A kill during SYNC
+syncbreak_02,SYNC_BREAK,1,1.2,laugh,Another!,"Having fun, short.",
+evade_01,EVADE,1,3,smug,Whoops.,Plenty of room to spare.,A shot dodged with the boost
+evade_02,EVADE,1,3,smug,Missed me.,Teasing.,
+evade_03,EVADE,1,3,smug,Saw that.,"Calm, short, unbothered.",
+inbound_01,INBOUND,2,6,grit,Incoming!,"Sharp, a warning.",A shot on a hit course is closing in
+inbound_02,INBOUND,2,6,grit,They've got me locked!,"Fast, keeping the panic down.",
+lance_01,LANCE,2,5,grit,Pike's charging!,Tense.,A PIKE starts its charge
+lance_02,LANCE,2,5,grit,Lance coming!,"Sharp, fast.",
+heavy_01,HEAVY_CHARGE,2,6,grit,Shell coming! Move!,A strong warning.,A BASTION charges its cannon
+heavy_02,HEAVY_CHARGE,2,6,grit,Bastion's charging up!,Tense.,
+hit_01,HIT,2,2.5,grit,Ngh...!,"Breath caught, holding back the pain.",Hit
+hit_02,HIT,2,2.5,grit,"Tch, took one!",Annoyed at herself.,
+hit_03,HIT,2,2.5,grit,"Hit. Still fine.","Putting on a brave face, short.",
+critical_01,CRITICAL,3,0,shout,Armor's at the limit! This is bad!,"Almost shouting, desperate.",The moment armor drops under 30%
+critical_02,CRITICAL,3,0,shout,"No good, it won't hold!","Panicking, almost shouting.",
+critical_03,CRITICAL,3,0,shout,"I can't see outside... sensors, hold on!","On the edge of a shout, teeth clenched.",
+overheat_01,OVERHEAT,2,0,grit,Halberd's overheating!,Rattled.,The 30mm overheats
+overheat_02,OVERHEAT,2,0,grit,"Too hot... cooling down!","Irritated, fast.",
+cooled_01,COOLED,1,0,calm,"Cooled. I can fire.","Calm, short.",Cooling is done
+cooled_02,COOLED,1,0,smug,Halberd's back.,A little pleased.,
+clear_01,CLEAR,3,0,cheer,"Sector secured. ...Phew.",Letting out a breath she was holding.,Every hostile destroyed
+clear_02,CLEAR,3,0,cheer,"All hostiles down. Perfect, right?","Proud, smiling.",
+clear_03,CLEAR,3,0,cheer,"Clear. Moving on.","Switching gears, looking ahead.",
+sunrise_01,SUNRISE,2,0,calm,...The sun's coming up.,"A soft breath, quiet. Taken by the view.",The sun clears the horizon in Sector 3
+sunrise_02,SUNRISE,2,0,calm,"Dawn. Our ride's coming.","A little brighter, relieved.",
+final_01,FINAL,3,0,cheer,"Core secured. ...Let's go home. To Earth.","Quiet, the tension finally letting go.",Sector 3 cleared = operation complete (OPERATION COMPLETE)
+final_02,FINAL,3,0,cheer,"All sectors clear. Dinner when we get back, okay?","Bright, a little shy.",
+down_01,DOWN,3,0,shout,"No, the frame's...!","Close to a scream, cut off.",Destroyed
+down_02,DOWN,3,0,shout,"Sorry... I'm going down!","In pain, frustrated.",
+down_03,DOWN,3,0,shout,"It's not... over yet...!","Out of breath, pure stubbornness.",
+hmdlost_01,HMD_LOST,2,8,grit,"Lost the HMD! Bring your head back!",Flustered.,Head tracking lost
+hmdlost_02,HMD_LOST,2,8,grit,Tracking's gone!,"Rattled, short.",
+center_01,HEAD_CENTER,0,3,calm,"HMD, centered.","Calm, short.",Head centre reset with C

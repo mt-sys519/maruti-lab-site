@@ -20,50 +20,52 @@
     <div class="primaryActions">
       <button id="play" class="deploy"><span id="playLabel">ミッション</span><small id="playNote">3つのエリアを攻略</small></button>
       <button id="head" class="cam"><i class="lamp"></i><span id="headLabel">カメラで遊ぶ（おすすめ）</span></button>
-      <button id="endure" class="endure">サバイバル<small>倒れるまで戦い続ける</small></button>
-      <button id="settingsBtn" class="menuSub" aria-expanded="false">設定</button>
-      <button id="full" class="menuSub">全画面</button>
-      <button id="toTitle" class="menuSub hidden">タイトルへ戻る</button>
-      <button id="about" class="menuSub">紹介・遊び方</button>
+      <button id="endure" class="endure" data-i18n="endure">サバイバル<small>倒れるまで戦い続ける</small></button>
+      <button id="settingsBtn" class="menuSub" aria-expanded="false" data-i18n="settings">設定</button>
+      <button id="full" class="menuSub" data-i18n="full">全画面</button>
+      <button id="toTitle" class="menuSub hidden" data-i18n="toTitle">タイトルへ戻る</button>
+      <button id="about" class="menuSub" data-i18n="about">紹介・遊び方</button>
     </div>
     <p id="camNote" class="camNote">顔の向きで周りを見ます。映像は端末の外に出ません。</p>
     <div id="settingsPanel" class="settingsPanel hidden">
       <div class="subActions">
         <button id="fx">発光：強</button>
         <button id="res">解像度：100%</button>
-        <button id="reset">最初から</button>
+        <button id="reset" data-i18n="reset">最初から</button>
+        <button id="langBtn">文字 / Language：日本語</button>
+        <button id="voiceLangBtn">ボイス：日本語</button>
       </div>
       <div class="settings">
-      <label><span>全体の音量</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
-      <label><span>音楽</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
-      <label><span>ボイス</span><output id="voiceout">100%</output><input id="voiceVol" type="range" min="0" max="100" value="100" step="1"></label>
-      <label><span>効果音</span><output id="seout">100%</output><input id="seVol" type="range" min="0" max="100" value="100" step="1"></label>
-      <label><span>マウス感度</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
-      <label><span>スティック感度</span><output id="padsensout">1.00×</output><input id="padSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
-      <label><span>トラッキングの感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
-      <label><span>トラッキングのデッドゾーン</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
-      <label><span>トラッキングの追従速度</span><output id="smoothout">1.00×</output><input id="smooth" type="range" min="-0.35" max="-0.04" value="-0.13" step="0.01"></label>
+      <label><span data-i18n="vol">全体の音量</span><output id="volout">100%</output><input id="volume" type="range" min="0" max="100" value="100" step="1"></label>
+      <label><span data-i18n="music">音楽</span><output id="musicout">70%</output><input id="musicVol" type="range" min="0" max="100" value="70" step="1"></label>
+      <label><span data-i18n="voice">ボイス</span><output id="voiceout">100%</output><input id="voiceVol" type="range" min="0" max="100" value="100" step="1"></label>
+      <label><span data-i18n="se">効果音</span><output id="seout">100%</output><input id="seVol" type="range" min="0" max="100" value="100" step="1"></label>
+      <label><span data-i18n="mouse">マウス感度</span><output id="sensout">1.00×</output><input id="mouseSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
+      <label><span data-i18n="stick">スティック感度</span><output id="padsensout">1.00×</output><input id="padSens" type="range" min="0.35" max="2.50" value="1.00" step="0.05"></label>
+      <label><span data-i18n="tgain">トラッキングの感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
+      <label><span data-i18n="tdead">トラッキングのデッドゾーン</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
+      <label><span data-i18n="tsmooth">トラッキングの追従速度</span><output id="smoothout">1.00×</output><input id="smooth" type="range" min="-0.35" max="-0.04" value="-0.13" step="0.01"></label>
       </div>
     </div>
 
     <div class="statusLine"><i id="statusDot"></i><span id="status">準備完了</span></div>
-    <div class="healthNote" role="note"><div class="cautionIn"><div class="cautionHead"><i></i><b>CAUTION</b></div><p>画面酔いしやすい方はご注意ください。<br>気分が悪くなったら、すぐに休んでください。</p></div></div>
-    <div class="keyline padKeys"><span><b>左スティック</b> 移動</span><span><b>右スティック</b> 銃の向き</span><span><b>RT</b> 撃つ</span><span><b>LT</b> スコープ</span><span><b>A</b> ジャンプ</span><span><b>B</b> ブースト</span><span><b>X</b> 斧</span><span><b>Y</b> 武器の切り替え</span><span><b>LB / RB</b> 視点を左右へ（カメラなし）</span><span><b>右スティック押し込み</b> 視点を正面に戻す</span><span><b>メニューボタン</b> メニュー</span></div>
-    <div class="keyline keyKeys"><span><b>WASD</b> 移動</span><span><b>SHIFT</b> ブースト</span><span><b>SPACE</b> ジャンプ</span><span><b>マウス</b> 武器の向き</span><span><b>左クリック</b> 撃つ</span><span><b>右クリック</b> スコープ</span><span><b>ホイール / 1-3</b> 武器の切り替え</span><span><b>V</b> 斧</span><span><b>Q/E</b> 視点を左右へ（カメラなし）</span><span><b>C</b> 視点を正面に戻す</span><span><b>ESC</b> メニュー</span><span><b>R</b> 再出撃</span></div>
+    <div class="healthNote" role="note"><div class="cautionIn"><div class="cautionHead"><i></i><b>CAUTION</b></div><p data-i18n="caution">画面酔いしやすい方はご注意ください。<br>気分が悪くなったら、すぐに休んでください。</p></div></div>
+    <div class="keyline padKeys" data-i18n="padKeys"><span><b>左スティック</b> 移動</span><span><b>右スティック</b> 銃の向き</span><span><b>RT</b> 撃つ</span><span><b>LT</b> スコープ</span><span><b>A</b> ジャンプ</span><span><b>B</b> ブースト</span><span><b>X</b> 斧</span><span><b>Y</b> 武器の切り替え</span><span><b>LB / RB</b> 視点を左右へ（カメラなし）</span><span><b>右スティック押し込み</b> 視点を正面に戻す</span><span><b>メニューボタン</b> メニュー</span></div>
+    <div class="keyline keyKeys" data-i18n="keyKeys"><span><b>WASD</b> 移動</span><span><b>SHIFT</b> ブースト</span><span><b>SPACE</b> ジャンプ</span><span><b>マウス</b> 武器の向き</span><span><b>左クリック</b> 撃つ</span><span><b>右クリック</b> スコープ</span><span><b>ホイール / 1-3</b> 武器の切り替え</span><span><b>V</b> 斧</span><span><b>Q/E</b> 視点を左右へ（カメラなし）</span><span><b>C</b> 視点を正面に戻す</span><span><b>ESC</b> メニュー</span><span><b>R</b> 再出撃</span></div>
   </section>
 
   <div id="titleConfirm" class="camGate hidden" role="dialog" aria-labelledby="titleConfirmTitle">
     <p class="camGateEyebrow">RETURN TO TITLE</p>
-    <h2 id="titleConfirmTitle">タイトルへ戻りますか？</h2>
-    <p>このプレイの進行は失われます。</p>
-    <div class="camGateActs"><button id="titleYes">タイトルへ戻る</button><button id="titleNo" class="deploy">プレイにもどる</button></div>
+    <h2 id="titleConfirmTitle" data-i18n="titleQ">タイトルへ戻りますか？</h2>
+    <p data-i18n="titleLost">このプレイの進行は失われます。</p>
+    <div class="camGateActs"><button id="titleYes" data-i18n="titleYes">タイトルへ戻る</button><button id="titleNo" class="deploy" data-i18n="titleNo">プレイにもどる</button></div>
   </div>
   <div id="camGate" class="camGate hidden" role="dialog" aria-labelledby="camGateTitle">
     <p class="camGateEyebrow">BEFORE YOU START</p>
-    <h2 id="camGateTitle">このゲームは、顔の向きで周りを見ます</h2>
-    <p>ウェブカメラで頭の向きを読み取り、顔を向けた方へ視点が動きます。銃はマウスで、視点とは別に動きます。カメラがなくても Q / E キーで視点を振って遊べますが、カメラがあればぜひオンにしてください。</p>
-    <p class="camGateSmall">映像は端末の中だけで処理され、外には送られません。</p>
-    <div class="camGateActs"><button id="gateCam" class="deploy">カメラをオンにして始める</button><button id="gateSkip">カメラなしで始める</button></div>
+    <h2 id="camGateTitle" data-i18n="gateH">このゲームは、顔の向きで周りを見ます</h2>
+    <p data-i18n="gateP">ウェブカメラで頭の向きを読み取り、顔を向けた方へ視点が動きます。銃はマウスで、視点とは別に動きます。カメラがなくても Q / E キーで視点を振って遊べますが、カメラがあればぜひオンにしてください。</p>
+    <p class="camGateSmall" data-i18n="gateSmall">映像は端末の中だけで処理され、外には送られません。</p>
+    <div class="camGateActs"><button id="gateCam" class="deploy" data-i18n="gateCam">カメラをオンにして始める</button><button id="gateSkip" data-i18n="gateSkip">カメラなしで始める</button></div>
   </div>
 
   <section id="hud" class="hud hidden" aria-live="polite">
@@ -74,7 +76,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=93"></script>
+<script src="main.js?v=94"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>

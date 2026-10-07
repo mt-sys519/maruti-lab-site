@@ -9,7 +9,9 @@
 //
 // assets/voice ships the script (aoi_lines.csv) and AOI's recorded lines as
 // aoi_<id>.mp3 (2026-10-07); the loader asks for each id's MP3 first, so no
-// directory listing is needed and nothing 404s.
+// directory listing is needed and nothing 404s. aoi_lines_en.csv is the English
+// script (subtitles); English recordings will go in assets/voice/en/, and until
+// they exist the English voice setting asks for them (404) and plays the Japanese.
 
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

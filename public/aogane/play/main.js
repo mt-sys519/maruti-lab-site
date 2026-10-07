@@ -4,11 +4,15 @@ const $=id=>document.getElementById(id), TAU=Math.PI*2;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
 const canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const boot=$('boot'),hud=$('hud'),video=$('webcam');
+// Language (設定): menus, HUD and AOI's subtitles follow hf.lang, her recorded voice follows hf.voiceLang, so either
+// can be Japanese or English on its own. Japanese unless chosen. jt(ja,en) picks the current text.
+let lang='ja',voiceLang='ja';try{if(localStorage.getItem('hf.lang')==='en')lang='en';if(localStorage.getItem('hf.voiceLang')==='en')voiceLang='en'}catch{}
+const jt=(ja,en)=>lang==='en'?en:ja,jtA=a=>a?jt(a[0],a[1]):'';
 let W=1280,H=720,DPR=1;
 // 解像度 (設定): the whole frame, WebGL and HMD alike, renders at 100 / 75 / 50 % of the screen's pixels and the
 // browser scales it up. Everything sizes from DPR, so the scale is folded into it. Kept in hf.res.
 const RES_STEPS=[1,.75,.5];let resScale=1;try{const v=+localStorage.getItem('hf.res');if(RES_STEPS.includes(v))resScale=v}catch{}
-function resLabel(){const b=document.getElementById('res');if(b)b.textContent=`解像度：${Math.round(resScale*100)}%（${canvas.width}×${canvas.height}）`}
+function resLabel(){const b=document.getElementById('res');if(b)b.textContent=jt(`解像度：${Math.round(resScale*100)}%（${canvas.width}×${canvas.height}）`,`Resolution: ${Math.round(resScale*100)}% (${canvas.width}×${canvas.height})`)}
 function resize(){DPR=Math.min(devicePixelRatio||1,1.35)*resScale;W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);resLabel()}
 function cycleRes(){resScale=RES_STEPS[(RES_STEPS.indexOf(resScale)+1)%RES_STEPS.length];try{localStorage.setItem('hf.res',String(resScale))}catch{}resize()}
 addEventListener('resize',resize);resize();
@@ -497,7 +501,7 @@ function inputDir(){let sx=0,sz=0;if(keys.has('KeyW'))sz++;if(keys.has('KeyS'))s
 // Transient text now lives in the PILOT LINK log (see plog); the DOM keeps only clock / HMD loss / result.
 function hitMark(pan=0){player.hitMarkT=.09;player.shake=Math.max(player.shake,.12);sfx.hit(pan)}
 function flash(id,ms=70){const e=$(id);e.classList.add('on');setTimeout(()=>e.classList.remove('on'),ms)}
-function addFlow(n,label=''){if(!player.alive||missionClear)return;player.flow=clamp(player.flow+n,0,100);if(n>=12)sfx.flow();if(player.flow>=100&&player.syncTime<=0){waves.push({x:player.x,y:.06,z:player.z,color:'#ffd16f',size:60,life:.9,max:.9,kind:'ground'});player.flow=0;player.syncTime=4.5;player.syncChain=0;player.boost=Math.min(100,player.boost+28);player.heat=Math.max(0,player.heat-28);player.fovKick=Math.max(player.fovKick,.62);sfx.sync();plog('Sync','Vector flow. Sync drive.');pilotBanner('!SYNC DRIVE!','- 同期駆動 -','#ffe08a',1.3);pilotReact('cheer',1.6,2);say('SYNC')}}
+function addFlow(n,label=''){if(!player.alive||missionClear)return;player.flow=clamp(player.flow+n,0,100);if(n>=12)sfx.flow();if(player.flow>=100&&player.syncTime<=0){waves.push({x:player.x,y:.06,z:player.z,color:'#ffd16f',size:60,life:.9,max:.9,kind:'ground'});player.flow=0;player.syncTime=4.5;player.syncChain=0;player.boost=Math.min(100,player.boost+28);player.heat=Math.max(0,player.heat-28);player.fovKick=Math.max(player.fovKick,.62);sfx.sync();plog('Sync','Vector flow. Sync drive.');pilotBanner('!SYNC DRIVE!',jt('- 同期駆動 -','- VECTOR FLOW -'),'#ffe08a',1.3);pilotReact('cheer',1.6,2);say('SYNC')}}
 function puff(x,y,z,count=8,color='#4fbfa0',power=4){for(let i=0;i<count;i++)particles.push({x,y,z,px:x,py:y,pz:z,vx:(Math.random()-.5)*power,vy:.5+Math.random()*power,vz:(Math.random()-.5)*power,life:.25+Math.random()*.45,max:.7,color,size:.18+Math.random()*.45})}
 // v31 emissive feedback primitives. Everything here is drawn additively and picked up by the bloom pass.
 const rgbCache=new Map();function rgba(hex,a){let c=rgbCache.get(hex);if(!c){const n=parseInt(hex.slice(1),16);c=`${n>>16},${n>>8&255},${n&255}`;rgbCache.set(hex,c)}return`rgba(${c},${clamp(a,0,1).toFixed(3)})`}
@@ -718,27 +722,30 @@ function acceptHeadPose(data){
 }
 // The CAMERA button on the menu: a lamp (off / loading / on / failed) and a line under it that says, in
 // Japanese, what the camera is for or why it did not start.
-const CAM_NOTE={off:'顔の向きで周りを見ます。映像は端末の外に出ません。',loading:'顔認識を読み込み中…（初回は数秒かかります）',on:'顔を正面に向けて C を押すと、そこが正面になります。',
-  busy:'ほかのアプリ（会議アプリやカメラの付属ソフトなど）がカメラを使っています。閉じてからもう一度押してください。',
-  denied:'カメラが許可されていません。アドレスバーのカメラのアイコンと、Windows の設定 → プライバシー → カメラを確認してください。',
-  none:'カメラが見つかりません。つながっているか確認してください。',load:'顔認識を読み込めませんでした。通信を確認して、もう一度押してください。',
-  browser:'このブラウザでは使えません。Chrome か Edge で開いてください。',lost:'カメラが止まりました。もう一度押すと再開します。'};
-function camUI(state,note){if(typeof gateCamUI==='function')gateCamUI(state);const b=$('head');for(const k of ['on','loading','fail'])b.classList.toggle(k,k===state);$('headLabel').textContent=state==='on'?'カメラ：オン':state==='loading'?'カメラ：準備中…':state==='fail'?'カメラ：失敗':'カメラで遊ぶ（おすすめ）';$('camNote').textContent=CAM_NOTE[note||state]||CAM_NOTE.off}
+const CAM_NOTE={off:['顔の向きで周りを見ます。映像は端末の外に出ません。','Look around by turning your face. The video never leaves your device.'],loading:['顔認識を読み込み中…（初回は数秒かかります）','Loading face tracking… (a few seconds the first time)'],on:['顔を正面に向けて C を押すと、そこが正面になります。','Face the screen and press C: that becomes straight ahead.'],
+  busy:['ほかのアプリ（会議アプリやカメラの付属ソフトなど）がカメラを使っています。閉じてからもう一度押してください。','Another app (a meeting app, or the software that came with the camera) is using the camera. Close it and press again.'],
+  denied:['カメラが許可されていません。アドレスバーのカメラのアイコンと、Windows の設定 → プライバシー → カメラを確認してください。',"The camera isn't allowed. Check the camera icon in the address bar, and Windows Settings → Privacy → Camera."],
+  none:['カメラが見つかりません。つながっているか確認してください。','No camera found. Check that it is connected.'],load:['顔認識を読み込めませんでした。通信を確認して、もう一度押してください。',"Couldn't load face tracking. Check your connection and press again."],
+  browser:['このブラウザでは使えません。Chrome か Edge で開いてください。',"This browser can't run it. Open the game in Chrome or Edge."],lost:['カメラが止まりました。もう一度押すと再開します。','The camera stopped. Press again to restart it.']};
+const camText=(T,k)=>T[k]?jtA(T[k]):'';
+// relabel: only the words change (a language switch), so the camera gate is left alone.
+let camLast=['off',null];
+function camUI(state,note,relabel){if(!relabel&&typeof gateCamUI==='function')gateCamUI(state);const b=$('head');for(const k of ['on','loading','fail'])b.classList.toggle(k,k===state);camLast=[state,note];$('headLabel').textContent=state==='on'?jt('カメラ：オン','Camera: on'):state==='loading'?jt('カメラ：準備中…','Camera: starting…'):state==='fail'?jt('カメラ：失敗','Camera: failed'):jt('カメラで遊ぶ（おすすめ）','Play with camera (best)');$('camNote').textContent=camText(CAM_NOTE,note||state)||camText(CAM_NOTE,'off')}
 function camError(error){const n=error?.name||'';return n==='NotReadableError'||n==='TrackStartError'||n==='AbortError'?'busy':n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError'?'denied':n==='NotFoundError'||n==='OverconstrainedError'||n==='DevicesNotFoundError'?'none':/ImageBitmap unavailable/.test(error?.message||'')?'browser':'load'}
 async function toggleHead(){
   if(headEnabled){disableHead();return}
   const btn=$('head'),generation=++headGeneration;
-  btn.disabled=true;$('status').textContent='顔認識を読み込み中…';camUI('loading');
+  btn.disabled=true;$('status').textContent=jt('顔認識を読み込み中…','Loading face tracking…');camUI('loading');
   try{
     if(!window.Worker||!window.createImageBitmap)throw new Error('Worker / ImageBitmap unavailable');
     const worker=new Worker(((typeof window!=='undefined'&&window.HF_ASSET_BASE)||'')+'head-tracker.worker.js');headWorker=worker;
     await new Promise((resolve,reject)=>{
       const timeout=setTimeout(()=>reject(new Error('Tracker initialization timeout')),30000);
-      worker.onerror=event=>{clearTimeout(timeout);reject(new Error(event.message||'Tracker Worker failed'));if(headEnabled)disableHead('カメラが使えません　Q / E で視点を振れます')};
+      worker.onerror=event=>{clearTimeout(timeout);reject(new Error(event.message||'Tracker Worker failed'));if(headEnabled)disableHead(jt('カメラが使えません　Q / E で視点を振れます','Camera unavailable — turn the view with Q / E'))};
       worker.onmessage=({data})=>{
         if(generation!==headGeneration)return;
         if(data.type==='ready'){clearTimeout(timeout);resolve();return}
-        if(data.type==='error'){clearTimeout(timeout);reject(new Error(data.message));if(headEnabled){disableHead('カメラが使えません　Q / E で視点を振れます');plog('Caution','Head tracker off.')}return}
+        if(data.type==='error'){clearTimeout(timeout);reject(new Error(data.message));if(headEnabled){disableHead(jt('カメラが使えません　Q / E で視点を振れます','Camera unavailable — turn the view with Q / E'));plog('Caution','Head tracker off.')}return}
         if(data.type==='pose'){headBusy=false;if(headEnabled)acceptHeadPose(data)}
       };
       worker.postMessage({type:'init'});
@@ -747,11 +754,11 @@ async function toggleHead(){
     stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:30,max:30},facingMode:'user'},audio:false});
     video.srcObject=stream;await video.play();
     headEnabled=true;baseline=null;headFound=false;headSampleTime=-Infinity;headBusy=false;lastFace=0;lastVT=-1;
-    camUI('on');$('status').textContent='カメラ準備完了　画面の正面を向いて C';
-  }catch(error){console.error(error);if(generation!==headGeneration)return;disableHead('カメラが使えません　Q / E で視点を振れます',camError(error));plog('Caution','Head tracker off.')}
+    camUI('on');$('status').textContent=jt('カメラ準備完了　画面の正面を向いて C','Camera ready — face the screen and press C');
+  }catch(error){console.error(error);if(generation!==headGeneration)return;disableHead(jt('カメラが使えません　Q / E で視点を振れます','Camera unavailable — turn the view with Q / E'),camError(error));plog('Caution','Head tracker off.')}
   finally{btn.disabled=false}
 }
-function disableHead(status='カメラ：オフ　Q / E で視点を振れます',why=null){
+function disableHead(status=jt('カメラ：オフ　Q / E で視点を振れます','Camera off — turn the view with Q / E'),why=null){
   headGeneration++;headEnabled=false;headFound=false;headBusy=false;
   headWorker?.terminate();headWorker=null;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
@@ -767,22 +774,22 @@ async function captureHeadFrame(now){
     const bitmap=await createImageBitmap(video,{resizeWidth:320,resizeHeight:height,resizeQuality:'low'});
     if(!headEnabled||generation!==headGeneration){bitmap.close();return}
     worker.postMessage({type:'frame',bitmap,timestamp:now},[bitmap]);
-  }catch(error){if(generation===headGeneration){console.error(error);disableHead('カメラが使えません　Q / E で視点を振れます')}}
+  }catch(error){if(generation===headGeneration){console.error(error);disableHead(jt('カメラが使えません　Q / E で視点を振れます','Camera unavailable — turn the view with Q / E'))}}
 }
 // When the face is lost for a moment, say why: a webcam picture too dark to find a face in (a dim room, a
 // window behind the player) or no face in it. Brightness is the mean of a 32x24 copy, twice a second.
 const CAM_DARK=65,camWarnEl=$('camWarn'),camLight={cv:null,luma:-1,t:0,lostSince:0,key:''};
-const CAM_WARN={dark:'暗くて顔が見えません。部屋を明るくするか、顔に正面から光を当ててください',noface:'顔が見つかりません。カメラの正面に顔を入れてください（暗い部屋や逆光だと見つけにくくなります）'};
+const CAM_WARN={dark:['暗くて顔が見えません。部屋を明るくするか、顔に正面から光を当ててください',"Too dark to see your face. Brighten the room, or light your face from the front"],noface:['顔が見つかりません。カメラの正面に顔を入れてください（暗い部屋や逆光だと見つけにくくなります）',"Can't find your face. Get it in front of the camera (a dark room or a light behind you makes it harder)"]};
 function updateCamWarn(now){const L=camLight;
   if(headEnabled&&video.readyState>=2&&now-L.t>=500){L.t=now;if(!L.cv){L.cv=document.createElement('canvas');L.cv.width=32;L.cv.height=24}const g=L.cv.getContext('2d',{willReadFrequently:true});g.drawImage(video,0,0,32,24);const px=g.getImageData(0,0,32,24).data;let sum=0;for(let i=0;i<px.length;i+=4)sum+=px[i]*.299+px[i+1]*.587+px[i+2]*.114;L.luma=sum/(px.length/4)}
   const lost=headEnabled&&!headPoseFresh(now);if(!lost)L.lostSince=0;else if(!L.lostSince)L.lostSince=now;
   const key=lost&&now-L.lostSince>1500?(L.luma>=0&&L.luma<CAM_DARK?'dark':'noface'):'';if(key===L.key)return;L.key=key;
-  camWarnEl.textContent=CAM_WARN[key]||'';camWarnEl.classList.toggle('hidden',!key);
-  const note=$('camNote');note.classList.toggle('warn',!!key);if(headEnabled)note.textContent=CAM_WARN[key]||CAM_NOTE.on}
+  camWarnEl.textContent=camText(CAM_WARN,key);camWarnEl.classList.toggle('hidden',!key);
+  const note=$('camNote');note.classList.toggle('warn',!!key);if(headEnabled)note.textContent=camText(CAM_WARN,key)||camText(CAM_NOTE,'on')}
 function updateHead(now,dt){
   updateCamWarn(now);
   if(headEnabled){
-    if(headBusy&&now-headRequestTime>10000){disableHead('カメラが応答しません　Q / E で視点を振れます');return}
+    if(headBusy&&now-headRequestTime>10000){disableHead(jt('カメラが応答しません　Q / E で視点を振れます','Camera not responding — turn the view with Q / E'));return}
     // The camera keeps reading on the menu (C still centres), but the paused view holds still.
     captureHeadFrame(now);if(!playing)return;
     // Filtering runs at display frequency, even between camera samples.
@@ -2631,7 +2638,7 @@ function showResult(title){const r=$('result');if(!r)return;if(!title){r.classLi
     rows=[['TIME',fmtTime(missionTime)],['BREAK',stats.kills+' / '+enemies.length],['ACCURACY',acc+'%'],['MAX CHAIN',stats.maxChain],['HMD DESIGNATIONS',stats.designations],['DAMAGE TAKEN',Math.round(stats.damage)]]}
   $('resultSector').textContent=sector;$('resultTitle').textContent=title;
   // Choices are buttons: the pointer lock is released so the cursor can pick one (Enter / R / ESC still work).
-  const next=mode==='sortie'&&!down&&stage<LAST_SECTOR;const fin=title==='OPERATION COMPLETE';$('resultKeys').innerHTML=mode==='training'&&!down?'<button class="go" data-act="mission">ミッションへ</button><button data-act="again">もう一度</button><button data-act="menu">メニュー</button>':fin?'<button class="go" data-act="restart">1面から</button><button data-act="menu">メニュー</button>':(next?'<button class="go" data-act="next">次のエリアへ</button>':'')+'<button data-act="again">再出撃</button><button data-act="menu">メニュー</button>';r.classList.toggle('final',fin);
+  const next=mode==='sortie'&&!down&&stage<LAST_SECTOR;const fin=title==='OPERATION COMPLETE';const menuB=`<button data-act="menu">${jt('メニュー','Menu')}</button>`;$('resultKeys').innerHTML=mode==='training'&&!down?`<button class="go" data-act="mission">${jt('ミッションへ','To the mission')}</button><button data-act="again">${jt('もう一度','Again')}</button>`+menuB:fin?`<button class="go" data-act="restart">${jt('1面から','From Sector 1')}</button>`+menuB:(next?`<button class="go" data-act="next">${jt('次のエリアへ','Next area')}</button>`:'')+`<button data-act="again">${jt('再出撃','Redeploy')}</button>`+menuB;r.classList.toggle('final',fin);
   if(typeof document!=='undefined'&&document.pointerLockElement)document.exitPointerLock?.();
   // Rebuilt every time, so the rows run their arrival again.
   $('resultStats').innerHTML=rows.map(([k,v],i)=>`<div style="--i:${i}"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
@@ -2772,7 +2779,7 @@ function update(dt){
       if(impact.b){sparks(b.x,b.y,b.z,6,'#ff7a5c',5);continue}
       player.hp=Math.max(0,player.hp-(b.damage||7));player.hitDir=Math.atan2(b.px-player.x,-(b.pz-player.z));player.hitDirT=.72;
       stats.damage+=b.damage||7;cockpitHit(Math.atan2(b.px-player.x,-(b.pz-player.z)),b.damage||7);flash('damageFlash',125);sfx.damage();player.shake=.72;
-      if(player.hp<30)plog('Warning','Frame integrity critical.',5);pilotReact(player.hp<30?'shout':'grit',.9,3);if(player.hp>0){if(player.hp<30&&!pilot.critLatch){pilot.critLatch=true;pilotBanner('!FRAME CRITICAL!','- 装甲危険域 -','#ff7a5c',1.6);say('CRITICAL')}else say('HIT')}if(player.hp<=0)downPlayer();
+      if(player.hp<30)plog('Warning','Frame integrity critical.',5);pilotReact(player.hp<30?'shout':'grit',.9,3);if(player.hp>0){if(player.hp<30&&!pilot.critLatch){pilot.critLatch=true;pilotBanner('!FRAME CRITICAL!',jt('- 装甲危険域 -','- ARMOR IN THE RED -'),'#ff7a5c',1.6);say('CRITICAL')}else say('HIT')}if(player.hp<=0)downPlayer();
       continue;
     }
     b.x=nx;b.y=ny;b.z=nz;
@@ -2852,11 +2859,11 @@ function pilotGlance(e,dur=.9,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)retur
 // The head step asks for 8 deg with the camera (20 deg with Q / E, which snaps to 55): at HEAD GAIN 1.0 and
 // a 2.5 deg dead zone, 20 deg meant turning the face ~23 deg, past where the screen can still be read.
 const TUT_STEPS=[
-  {id:'move',en:'MOVE',jp:'WASD で移動',pjp:'左スティックで移動',sub:'機体は車輪で走ります'},
-  {id:'burst',en:'BURST',jp:'移動しながら SHIFT でブースト',pjp:'移動しながら B でブースト',sub:'空中ではバックパックの噴射になります'},
-  {id:'fire',en:'FIRE',jp:'マウスで銃を向けて、左クリックで撃つ',pjp:'右スティックで銃を向けて、RT で撃つ',sub:'機体は銃の向きへ遅れてついてきます'},
-  {id:'head',en:'LOOK',jp:'',sub:'視点は銃と別に動きます。周りは顔を向けて見る'},
-  {id:'designate',en:'DESIGNATE',jp:'敵を見つめて HMD で指定する',sub:'顔を向けた先の敵に印が付きます'},
+  {id:'move',en:'MOVE',jp:['WASD で移動','Move with WASD'],pjp:['左スティックで移動','Move with the left stick'],sub:['機体は車輪で走ります','The frame runs on wheels']},
+  {id:'burst',en:'BURST',jp:['移動しながら SHIFT でブースト','Press SHIFT while moving to boost'],pjp:['移動しながら B でブースト','Press B while moving to boost'],sub:['空中ではバックパックの噴射になります','In the air it fires the backpack jet']},
+  {id:'fire',en:'FIRE',jp:['マウスで銃を向けて、左クリックで撃つ','Aim with the mouse, left-click to fire'],pjp:['右スティックで銃を向けて、RT で撃つ','Aim with the right stick, RT to fire'],sub:['機体は銃の向きへ遅れてついてきます','The frame turns after the gun, a beat behind']},
+  {id:'head',en:'LOOK',jp:null,sub:['視点は銃と別に動きます。周りは顔を向けて見る','The view moves apart from the gun. Look around with your face']},
+  {id:'designate',en:'DESIGNATE',jp:['敵を見つめて HMD で指定する','Look at an enemy to mark it with the HMD'],sub:['顔を向けた先の敵に印が付きます','The enemy you face gets marked']},
 ];
 const tut={on:false,i:0,t:0,base:null,doneT:0};
 let tutDone=false;try{tutDone=localStorage.getItem('hf.tutorial')==='done'}catch{}
@@ -2866,9 +2873,11 @@ function tutHold(){return tut.on&&tut.i<4}
 // The story is written, not staged: a short briefing the first time SECTOR 01 opens, and a closing card on the
 // last clear (the sunrise deck, AOI's FINAL line, three lines, then OPERATION COMPLETE). Enter / A / a click
 // after the first line goes straight to the result.
-const BRIEF={en:'BRIEFING',lines:['月面送電施設の管理AIが暴走。施設の作業機も警備機も、すべて乗っ取られた','有人操作に切り替えられる旧式の機体・蒼鉄で、AIの中枢へ向かう']};
+const BRIEF={en:'BRIEFING',lines:{ja:['月面送電施設の管理AIが暴走。施設の作業機も警備機も、すべて乗っ取られた','有人操作に切り替えられる旧式の機体・蒼鉄で、AIの中枢へ向かう'],
+  en:["The lunar power relay's control AI has gone rogue and seized every work and security machine","Take AOGANE, an old frame that can switch to manned control, to the AI's core"]}};
 const brief={t:-1,shown:false};
-const ENDING_LINES=['AIの中枢は押さえた。施設の機械が、ひとつずつ動きを止めていく','夜明けの発着場に、迎えの船が降りてくる','蒼鉄は役目を終えた。AOI は、地球へ帰る'];
+const ENDING_LINES={ja:['AIの中枢は押さえた。施設の機械が、ひとつずつ動きを止めていく','夜明けの発着場に、迎えの船が降りてくる','蒼鉄は役目を終えた。AOI は、地球へ帰る'],
+  en:["The AI's core is secured. One by one, the facility's machines fall still",'Over the launch deck at dawn, the ship that will take her home comes down',"AOGANE's work is done. AOI is going home to Earth"]};
 const ENDING_LEN=12.5;const ending={on:false,t:0};
 function updateStory(dt){
   if(playing&&mode==='sortie'&&stage===1&&!brief.shown&&!missionClear&&player.alive){brief.shown=true;brief.t=0}
@@ -2880,11 +2889,11 @@ function drawStory(s){
   const cal=headNeedCenter&&headEnabled&&headFound&&playing;
   if(brief.t>=0&&!cal&&!tut.on){const t=brief.t,a=Math.min(clamp(t/.5,0,1),clamp((9-t)/.8,0,1)),w=Math.min(W*.8,520*s),h=62*s,x=W/2-w/2,y=H*.17;
     ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const k=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,k);ctx.fillRect(x,y+h-k,w,k);
-    hudText('BRIEFING',W/2,y+7*s,6.5*s,'#e3a957',.5,.3);hudText(BRIEF.lines[0],W/2,y+21*s,9.5*s,'#eef2f0',.5,.04,500);hudText(BRIEF.lines[1],W/2,y+39*s,9.5*s,'#eef2f0',.5,.04,500);ctx.restore()}
+    hudText('BRIEFING',W/2,y+7*s,6.5*s,'#e3a957',.5,.3);hudText(BRIEF.lines[lang][0],W/2,y+21*s,9.5*s,'#eef2f0',.5,.04,500);hudText(BRIEF.lines[lang][1],W/2,y+39*s,9.5*s,'#eef2f0',.5,.04,500);ctx.restore()}
   if(ending.on){const t=ending.t,out=clamp((ENDING_LEN-t)/.8,0,1);
     ctx.save();
-    ENDING_LINES.forEach((line,i)=>{const t0=2.4+i*2.4,a=clamp((t-t0)/.9,0,1)*out;if(a<=0)return;ctx.globalAlpha=a;hudText(line,W/2,H*.36+i*20*s-(1-a)*4*s,11*s,'#f3efdf',.5,.06,400)});
-    if(t>2.6){ctx.globalAlpha=.55*out;hudText(padDriven?'A で次へ':'Enter / クリックで次へ',W-24*s,H-14*s,5.6*s,HUD.dim,1,.12)}
+    ENDING_LINES[lang].forEach((line,i)=>{const t0=2.4+i*2.4,a=clamp((t-t0)/.9,0,1)*out;if(a<=0)return;ctx.globalAlpha=a;hudText(line,W/2,H*.36+i*20*s-(1-a)*4*s,11*s,'#f3efdf',.5,.06,400)});
+    if(t>2.6){ctx.globalAlpha=.55*out;hudText(padDriven?jt('A で次へ','A to continue'):jt('Enter / クリックで次へ','Enter / click to continue'),W-24*s,H-14*s,5.6*s,HUD.dim,1,.12)}
     ctx.restore()}}
 // The two machines cannot be broken until the guide is over: hits still flash and spark, they take no damage
 // (and stay asleep until the designation step), so the tutorial cannot be cleared by shooting through it.
@@ -2900,13 +2909,13 @@ function updateTutorial(dt){
 function skipTraining(){sfx.ui();tut.on=false;tut.doneT=0;setMode('sortie');saySortie()}
 function drawTutorial(s){
   const cal=headNeedCenter&&headEnabled&&headFound&&playing;
-  const st=cal?(padDriven?{en:'CALIBRATE',jp:'画面の正面を向いて、右スティックを押し込む',sub:'そこが視点の正面になります。ずれたらいつでも押し込み直す'}:{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが視点の正面になります。ずれたらいつでも C'}):tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
-  const jp=done?'指定した敵を撃て。全機撃破で次のエリアへ':cal?st.jp:st.id==='head'?(headEnabled?'顔を左右に向けて、横を見る':padDriven?'LB / RB で視点を左右に振る':'Q / E で視点を左右に振る'):padDriven&&st.pjp||st.jp;
-  const sub=done?(padDriven?'見回して、RT で撃つ':'見回して、マウスで撃つ'):cal?st.sub:st.id==='head'&&!headEnabled?'カメラをオンにすると、顔の向きで周りを見られます':st.sub;
+  const st=cal?(padDriven?{en:'CALIBRATE',jp:['画面の正面を向いて、右スティックを押し込む','Face the screen and click the right stick'],sub:['そこが視点の正面になります。ずれたらいつでも押し込み直す','That becomes straight ahead. Click it again whenever it drifts']}:{en:'CALIBRATE',jp:['画面の正面を向いて C を押す','Face the screen and press C'],sub:['そこが視点の正面になります。ずれたらいつでも C','That becomes straight ahead. Press C again whenever it drifts']}):tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
+  const jp=done?jt('指定した敵を撃て。全機撃破で次のエリアへ','Shoot the marked enemies. Break them all to move on'):cal?jtA(st.jp):st.id==='head'?(headEnabled?jt('顔を左右に向けて、横を見る','Turn your face left and right to look aside'):padDriven?jt('LB / RB で視点を左右に振る','Turn the view with LB / RB'):jt('Q / E で視点を左右に振る','Turn the view with Q / E')):jtA(padDriven&&st.pjp||st.jp);
+  const sub=done?(padDriven?jt('見回して、RT で撃つ','Look around, fire with RT'):jt('見回して、マウスで撃つ','Look around, fire with the mouse')):cal?jtA(st.sub):st.id==='head'&&!headEnabled?jt('カメラをオンにすると、顔の向きで周りを見られます','Turn on the camera to look around with your face'):jtA(st.sub);
   const a=done?clamp(tut.doneT/.4,0,1):cal?1:clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
   ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
   hudText(done?'TRAINING COMPLETE':cal?'HEAD  CALIBRATE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
-  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(mode==='training'&&!done)hudText(padDriven?'ビューボタンでスキップ':'Tab でスキップ',x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
+  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(mode==='training'&&!done)hudText(padDriven?jt('ビューボタンでスキップ','View button to skip'):jt('Tab でスキップ','Tab to skip'),x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
 function pilotBanner(en,jp,color='#dcfff4',dur=1.5){pilot.banner={en,jp,color,t:0,dur}}
 function pilotCut(kind){pilot.cut={kind,t:0}}
 const etag=e=>(RIGS[e.type]?.name||e.type)+' '+String(e.id).padStart(2,'0');
@@ -2934,7 +2943,7 @@ function updatePilot(dt){
   pilot.scroll*=Math.exp(-dt*13);if(pilot.scroll<.01)pilot.scroll=0;
   const hv=dt>0?(headYaw-pilot.lastHead)/dt:0;pilot.lastHead=headYaw;pilot.lagX+=(clamp(-hv*.12,-12,12)-pilot.lagX)*(1-Math.exp(-dt*9));
   pilot.boot=playing?Math.min(1,pilot.boot+dt/.45):0;
-  if(player.hp<30&&player.alive&&!pilot.critLatch){pilot.critLatch=true;pilotBanner('!FRAME CRITICAL!','- 装甲危険域 -','#ff7a5c',1.6)}else if(player.hp>=30)pilot.critLatch=false;
+  if(player.hp<30&&player.alive&&!pilot.critLatch){pilot.critLatch=true;pilotBanner('!FRAME CRITICAL!',jt('- 装甲危険域 -','- ARMOR IN THE RED -'),'#ff7a5c',1.6)}else if(player.hp>=30)pilot.critLatch=false;
   if(pilot.banner){pilot.banner.t+=dt;if(pilot.banner.t>pilot.banner.dur)pilot.banner=null}
   if(pilot.cut)pilot.cut.t+=dt;
   pilot.lostT=player.alive?0:pilot.lostT+dt;pilot.clearT=missionClear&&player.alive?pilot.clearT+dt:0;
@@ -3200,7 +3209,7 @@ function drawPilotCut(){const c=pilot.cut;if(!c)return;const plate=cutPlate(c.ki
 // priority, cooldown, face, text). Any assets/voice/aoi_<id>.(mp3|ogg|webm|wav) that exists is played
 // for its event; missing files are simply silent. Lines play the moment the event happens (never on
 // the music grid), through a radio band-pass, with the music ducked, AOI's face held for the clip
-// and a Japanese subtitle line in the LOG.
+// and her subtitle line in the LOG (aoi_lines_en.csv carries the English text and the English recording's script).
 const vox={lines:[],byEvent:{},raw:{},buf:{},cool:{},lastId:{},cur:null,curPrio:-1,curEnd:0,lastEnd:-9,decoding:false,pending:null,ready:false};
 const VOX_BASE=PILOT_BASE+'assets/voice/';
 function voxParseCSV(t){const rows=[];let row=[],cell='',q=false;for(let i=0;i<t.length;i++){const c=t[i];
@@ -3208,20 +3217,28 @@ function voxParseCSV(t){const rows=[];let row=[],cell='',q=false;for(let i=0;i<t
     else if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(cell);cell='';if(row.length>1)rows.push(row);row=[]}else cell+=c}
   if(cell||row.length){row.push(cell);if(row.length>1)rows.push(row)}return rows}
 function voxSetLines(csvText){const rows=voxParseCSV(csvText.replace(/^﻿/,''));const head=rows.shift()||[],ix=k=>head.indexOf(k);vox.lines.length=0;vox.byEvent={};
-  for(const r of rows){const L={id:r[ix('id')],event:r[ix('event')],prio:+r[ix('priority')]||0,cool:+r[ix('cooldown_s')]||0,face:(r[ix('face')]||'').split('→').pop().trim(),text:r[ix('text')]||''};if(!L.id||!L.event)continue;vox.lines.push(L);(vox.byEvent[L.event]=vox.byEvent[L.event]||[]).push(L)}}
+  for(const r of rows){const L={id:r[ix('id')],event:r[ix('event')],prio:+r[ix('priority')]||0,cool:+r[ix('cooldown_s')]||0,face:(r[ix('face')]||'').split('→').pop().trim(),text:r[ix('text')]||'',en:''};if(!L.id||!L.event)continue;vox.lines.push(L);(vox.byEvent[L.event]=vox.byEvent[L.event]||[]).push(L)}}
 // Load the script, then each line's audio straight from its id: the recordings ship as aoi_<id>.mp3
 // (trimmed, loudness-normalised, 64 kb/s mono), so MP3 is tried first and a production server never sees a
 // 404 for them; a drop-in in another format is still found. (This used to read a directory listing,
 // which only launch.py serves.)
 async function voxLoad(){if(typeof fetch==='undefined')return;
   try{const r=await fetch(VOX_BASE+'aoi_lines.csv',{cache:'no-cache'});if(!r.ok)return;voxSetLines(await r.text())}catch{return}
+  try{const r=await fetch(VOX_BASE+'aoi_lines_en.csv',{cache:'no-cache'});if(r.ok)voxSetEnglish(await r.text())}catch{}
+  await voxLoadAudio()}
+function voxSetEnglish(csvText){const rows=voxParseCSV(csvText.replace(/^\uFEFF/,''));const head=rows.shift()||[],id=head.indexOf('id'),tx=head.indexOf('text'),by={};for(const r of rows)by[r[id]]=r[tx]||'';for(const L of vox.lines)L.en=by[L.id]||''}
+// The English voice is assets/voice/en/aoi_<id>.mp3; a line with no English recording yet plays the Japanese one.
+// Changing the voice in 設定 drops every clip and loads again (voxGen keeps a stale load or decode from landing).
+let voxGen=0;
+async function voxLoadAudio(){const gen=++voxGen,en=voiceLang==='en';vox.ready=false;vox.raw={};vox.buf={};vox.pending=null;
   const exts=['mp3','ogg','webm','wav'];
-  await Promise.all(vox.lines.map(async L=>{for(const e of exts){try{const r=await fetch(VOX_BASE+`aoi_${L.id}.${e}?v=1`);if(r.ok){vox.raw[L.id]=await r.arrayBuffer();return}}catch{}}}));
-  vox.ready=true}
+  await Promise.all(vox.lines.map(async L=>{const tries=(en?[`en/aoi_${L.id}.mp3`]:[]).concat(exts.map(e=>`aoi_${L.id}.${e}`));
+    for(const p of tries){try{const r=await fetch(VOX_BASE+p+'?v=1');if(r.ok){const b=await r.arrayBuffer();if(gen===voxGen)vox.raw[L.id]=b;return}}catch{}}}));
+  if(gen===voxGen)vox.ready=true}
 if(typeof window!=='undefined'&&typeof fetch!=='undefined')voxLoad();
 // Decode once the AudioContext exists (it needs a user gesture), then run any line that was waiting.
 function voxTick(){if(!ac||!vox.ready)return;
-  if(!vox.decoding){const ids=Object.keys(vox.raw);if(ids.length){vox.decoding=true;Promise.all(ids.map(id=>{const b=vox.raw[id];delete vox.raw[id];return ac.decodeAudioData(b).then(buf=>{vox.buf[id]=buf}).catch(()=>{})})).then(()=>{vox.decoding=false})}}
+  if(!vox.decoding){const ids=Object.keys(vox.raw),g=voxGen;if(ids.length){vox.decoding=true;Promise.all(ids.map(id=>{const b=vox.raw[id];delete vox.raw[id];return ac.decodeAudioData(b).then(buf=>{if(g===voxGen)vox.buf[id]=buf}).catch(()=>{})})).then(()=>{vox.decoding=false})}}
   if(vox.pending&&!vox.decoding){const p=vox.pending;if(performance.now()-p.t>2500)vox.pending=null;else if(say(p.event,p.chance,true))vox.pending=null}
   if(vox.cur&&ac.currentTime>=vox.curEnd){vox.cur=null;vox.curPrio=-1}}
 function voxDuck(dur){const t=ac.currentTime,g=musicDuck.gain;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(.5,t+.06);g.setValueAtTime(.5,t+dur);g.setTargetAtTime(music.menu?.42:1,t+dur,.18)}
@@ -3241,7 +3258,7 @@ function say(event,chance=1,fromQueue=false){
   const dur=buf.duration+.03;burst({t:now,hp:2600,lp:7000,d:.035,g:.03,pri:3});burst({t:now+dur,hp:2600,lp:7000,d:.05,g:.025,pri:3});
   vox.cur=src;vox.curPrio=P;vox.curEnd=now+dur;vox.lastEnd=now+dur;vox.lastId[event]=L.id;vox.cool[event]=now+L.cool;voxDuck(dur);
   if(L.face&&PILOT_EXPR.includes(L.face))pilotReact(L.face,Math.max(.8,dur+.2),Math.max(1,P));
-  if(L.text)plog('AOI',L.text);
+  const line=lang==='en'&&L.en||L.text;if(line)plog('AOI',line);
   return true}
 // Contact lines: the class-specific callout when one exists, otherwise the generic one.
 function sayContact(e){if(!(Math.random()<.6&&say('CONTACT_'+(RIGS[e.type]?.name||e.type))))say('CONTACT')}
@@ -3263,7 +3280,7 @@ function applyBloom(){
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
 $('res').addEventListener('click',()=>{cycleRes();sfx.ui()});resLabel();
-function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'発光：強':'発光：弱'}
+function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?jt('発光：強','Glow: high'):jt('発光：弱','Glow: low')}
 function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
@@ -3272,7 +3289,7 @@ const frameErrors=new Map();
 function reportFrameError(err){const msg=String(err&&err.message||err);console.error(err);try{(window.__hfErrors=window.__hfErrors||[]).push({t:gameTime,msg,stack:String(err&&err.stack||'')})}catch{}
   try{ctx.restore();ctx.restore()}catch{}try{ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowBlur=0}catch{}lineBatch=null;
   if(!frameErrors.has(msg)){frameErrors.set(msg,1);try{plog('Warning','-ERR '+msg.slice(0,36))}catch{}}}
-function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent='発光：弱（自動）';plog('System','Glow auto low.')}}else perf.t=0;pollPad(dt);updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
+function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent=jt('発光：弱（自動）','Glow: low (auto)');plog('System','Glow auto low.')}}else perf.t=0;pollPad(dt);updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
 // ---------- CONTROLS ----------
@@ -3283,9 +3300,9 @@ function nextSector(){stage=Math.min(LAST_SECTOR,stage+1);reset();saySortie()}
 function startGame(lock=true){
   if(padDriven)lock=false; // a pad press is not a user gesture: the lock would fail and pause at once
   if(!player.alive||missionClear)lock=false; // back to the result card: its buttons need the cursor
-  ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');everStarted=true;$('toTitle').classList.remove('hidden');$('about').classList.add('hidden');$('playLabel').textContent='再開';$('playNote').textContent='';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
+  ensureAudio();playing=true;$('cover')?.classList.add('hidden');boot.classList.add('started');everStarted=true;$('toTitle').classList.remove('hidden');$('about').classList.add('hidden');$('playLabel').textContent=jt('再開','Resume');$('playNote').textContent='';if(bootPending){bootPending=false;hmdBoot=performance.now()}boot.classList.add('hidden');hud.classList.remove('hidden');canvas.focus?.();
   if(lock){
-    const failed=()=>{pause();$('status').textContent='マウスを固定できませんでした。Chrome か Edge で開いてください'};
+    const failed=()=>{pause();$('status').textContent=jt('マウスを固定できませんでした。Chrome か Edge で開いてください',"Couldn't lock the mouse. Open the game in Chrome or Edge")};
     try{if(canvas.requestPointerLock){const pending=canvas.requestPointerLock();pending?.catch(failed)}else failed()}
     catch{failed()}
   }
@@ -3298,22 +3315,23 @@ $('resultKeys').addEventListener('click',e=>{const a=e.target?.closest?.('button
 let everStarted=false,gateSeen=false,camGateSkip=false;try{camGateSkip=localStorage.getItem('hf.camGate')==='skip'}catch{}
 function showCamGate(on){$('camGate').classList.toggle('hidden',!on);boot.classList.toggle('gated',on)}
 // Every ミッション opens with the tutorial; once it has been finished (hf.tutorial) Tab skips it.
-function playLabel(){if(everStarted)return;$('playNote').textContent=tutDone?'3つのエリアを攻略':'はじめは操作説明から'}
+function playLabel(){if(everStarted)return;$('playNote').textContent=tutDone?jt('3つのエリアを攻略','Clear three areas'):jt('はじめは操作説明から','Starts with the controls')}
 function begin(m){if(!everStarted||mode!==m)setMode(m);if(!headEnabled&&!camGateSkip&&!everStarted&&!gateSeen){gateSeen=true;showCamGate(true);sfx.ui();return}startGame(true)}
 // ESC mid-run opens this same menu over the frozen sortie; タイトルへ戻る drops the run and brings the cover back.
-function toTitle(){sfx.ui();playing=false;everStarted=false;stage=1;setMode('sortie');$('cover')?.classList.remove('hidden');boot.classList.remove('started');$('toTitle').classList.add('hidden');$('about').classList.remove('hidden');$('playLabel').textContent='ミッション';playLabel();$('status').textContent=''}
+function toTitle(){sfx.ui();playing=false;everStarted=false;stage=1;setMode('sortie');$('cover')?.classList.remove('hidden');boot.classList.remove('started');$('toTitle').classList.add('hidden');$('about').classList.remove('hidden');$('playLabel').textContent=jt('ミッション','Mission');playLabel();$('status').textContent=''}
 function askTitle(on){$('titleConfirm').classList.toggle('hidden',!on);boot.classList.toggle('gated',on)}
 $('toTitle').addEventListener('click',()=>{sfx.ui();askTitle(true)});$('titleYes').addEventListener('click',()=>{askTitle(false);toTitle()});$('titleNo').addEventListener('click',()=>{sfx.ui();askTitle(false);startGame(true)});
 $('play').addEventListener('click',()=>{if(everStarted){startGame(true);return}begin('training')});
 // Turning the camera on and locking the pointer in one click would hide the cursor under the browser's
 // camera prompt, so the gate waits for the camera and then offers 出撃 (the pointer lock needs that click).
 let gateCamState='';
-function gateCamUI(state){if($('camGate').classList.contains('hidden'))return;const b=$('gateCam');gateCamState=state;b.disabled=state==='loading';b.textContent=state==='on'?'出撃':state==='loading'?'カメラを準備中…（許可を求められたら許可）':state==='fail'?'カメラが使えません':'カメラをオンにして出撃'}
+function gateCamUI(state){if($('camGate').classList.contains('hidden'))return;const b=$('gateCam');gateCamState=state;b.disabled=state==='loading';b.textContent=state==='on'?jt('出撃','Deploy'):state==='loading'?jt('カメラを準備中…（許可を求められたら許可）','Starting camera… (allow it if asked)'):state==='fail'?jt('カメラが使えません','Camera unavailable'):jt('カメラをオンにして出撃','Turn on camera and deploy')}
 $('gateCam').addEventListener('click',()=>{if(headEnabled&&gateCamState==='on'){showCamGate(false);startGame(true);return}if(!headEnabled){gateCamUI('loading');toggleHead()}});
 $('gateSkip').addEventListener('click',()=>{showCamGate(false);camGateSkip=true;try{localStorage.setItem('hf.camGate','skip')}catch{}startGame(true)});
 $('endure').addEventListener('click',()=>begin('endurance'));
 playLabel();
-if(endure.best)$('status').textContent=`準備完了　サバイバルの最高記録 ${endure.best.kills}機撃破 ${fmtTime(endure.best.time)}`;
+function readyStatus(){if(endure.best)$('status').textContent=jt(`準備完了　サバイバルの最高記録 ${endure.best.kills}機撃破 ${fmtTime(endure.best.time)}`,`Ready — Survival best: ${endure.best.kills} kills, ${fmtTime(endure.best.time)}`);else $('status').textContent=jt('準備完了','Ready')}
+readyStatus();
 function clearInput(){keys.clear();mouseButtons.clear();boostLatch=false}
 function pause(){playing=false;clearInput();boot.classList.remove('hidden');hud.classList.add('hidden');updateEngine(0,false)}
 document.addEventListener('pointerlockchange',()=>{if(playing&&player.alive&&!missionClear&&document.pointerLockElement!==canvas&&!new URLSearchParams(location.search).has('demo'))pause()});
@@ -3323,7 +3341,23 @@ document.addEventListener('mousedown',e=>{if(padDriven)setPadDriven(false);if(pl
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
 document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector();if((e.code==='Enter'||e.code==='NumpadEnter'||e.code==='Space')&&!e.repeat)skipEnding()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
-$('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='1面からやり直します'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='全画面にできませんでした'}});
+$('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent=jt('1面からやり直します','Restarting from Sector 1')});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent=jt('全画面にできませんでした',"Couldn't go fullscreen")}});
+// Static menu text: the Japanese is whatever index.html holds (kept the first time), the English is here.
+const I18N_EN={endure:'Survival<small>Fight until you fall</small>',settings:'Settings',full:'Fullscreen',toTitle:'Back to title',about:'About / How to play',reset:'Restart',
+  vol:'Master volume',music:'Music',voice:'Voice',se:'Sound effects',mouse:'Mouse sensitivity',stick:'Stick sensitivity',tgain:'Tracking sensitivity',tdead:'Tracking dead zone',tsmooth:'Tracking response',
+  caution:'Take care if you get motion sick easily.<br>If you start to feel unwell, stop and rest right away.',
+  padKeys:'<span><b>Left stick</b> Move</span><span><b>Right stick</b> Aim gun</span><span><b>RT</b> Fire</span><span><b>LT</b> Scope</span><span><b>A</b> Jump</span><span><b>B</b> Boost</span><span><b>X</b> Axe</span><span><b>Y</b> Switch weapon</span><span><b>LB / RB</b> Look left / right (no camera)</span><span><b>Right stick click</b> Recenter view</span><span><b>Menu button</b> Menu</span>',
+  keyKeys:'<span><b>WASD</b> Move</span><span><b>SHIFT</b> Boost</span><span><b>SPACE</b> Jump</span><span><b>Mouse</b> Aim weapon</span><span><b>Left click</b> Fire</span><span><b>Right click</b> Scope</span><span><b>Wheel / 1-3</b> Switch weapon</span><span><b>V</b> Axe</span><span><b>Q/E</b> Look left / right (no camera)</span><span><b>C</b> Recenter view</span><span><b>ESC</b> Menu</span><span><b>R</b> Redeploy</span>',
+  titleQ:'Return to the title?',titleLost:'Progress in this run will be lost.',titleYes:'Back to title',titleNo:'Keep playing',
+  gateH:'You look around with your face',gateP:'Your webcam reads which way your head is turned, and the view follows your face. The gun is aimed with the mouse, apart from the view. Without a camera you can still play by turning the view with Q / E, but if you have one, please turn it on.',
+  gateSmall:'The video is processed only on your device and is never sent anywhere.',gateCam:'Turn on camera and start',gateSkip:'Start without camera'};
+const i18nEls=document.querySelectorAll?[...document.querySelectorAll('[data-i18n]')].map(el=>({el,ja:el.innerHTML})):[];
+function applyLang(){if(document.documentElement)document.documentElement.lang=lang;for(const {el,ja} of i18nEls)el.innerHTML=lang==='en'?I18N_EN[el.dataset.i18n]??ja:ja;
+  $('langBtn').textContent=jt('文字 / Language：日本語','Language: English');$('voiceLangBtn').textContent=jt('ボイス：','Voice: ')+(voiceLang==='en'?jt('英語','English'):jt('日本語','Japanese'));
+  resLabel();setFx(fxHigh);camUI(camLast[0],camLast[1],true);$('playLabel').textContent=everStarted?jt('再開','Resume'):jt('ミッション','Mission');playLabel()}
+$('langBtn').addEventListener('click',()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('hf.lang',lang)}catch{}applyLang();readyStatus();sfx.ui()});
+$('voiceLangBtn').addEventListener('click',()=>{voiceLang=voiceLang==='en'?'ja':'en';try{localStorage.setItem('hf.voiceLang',voiceLang)}catch{}applyLang();sfx.ui();if(vox.lines.length)voxLoadAudio()});
+applyLang();
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind($('padSens'),$('padsensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);{const f=()=>$('smoothout').textContent=(.13/headSmooth()).toFixed(2)+'×';smooth.addEventListener('input',f);f()}
 addEventListener('blur',()=>{clearInput();if(playing)pause()});
 addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());headWorker?.terminate()});
