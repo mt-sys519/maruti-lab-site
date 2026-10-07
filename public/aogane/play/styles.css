@@ -296,5 +296,8 @@
 .result .acts button{font-family:"Noto Sans JP","Yu Gothic UI",sans-serif;letter-spacing:.12em;font-size:12px}
 .statusLine:after{content:none}.keyline{word-break:keep-all}
 .keyline span{white-space:nowrap;margin-right:1.1em;display:inline-block}
-/* a big screen gets a bigger menu */
-@media (min-width:1700px) and (min-height:900px){.boot{zoom:1.22}}
+/* The menu grows with the screen's height (it was laid out for ~768 px; on a 2K screen it was tiny). */
+@media (min-height:860px){.boot{zoom:1.2}}
+@media (min-height:1000px){.boot{zoom:1.4}}
+@media (min-height:1250px){.boot{zoom:1.7}}
+@media (min-height:1500px){.boot{zoom:2}}

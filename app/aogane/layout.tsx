@@ -15,7 +15,6 @@ export default function AoganeLayout({ children }: { children: ReactNode }) {
     <div className="hfSkin">
       <header className="hfHeader">
         <a className="hfBrand" href="/aogane" aria-label="蒼鉄 -AOGANE- トップ">
-          <span className="hfMark" aria-hidden="true">蒼</span>
           <span>
             蒼鉄 -AOGANE-
             <small>by Maruti Lab</small>
