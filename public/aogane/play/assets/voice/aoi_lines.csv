@@ -1,0 +1,73 @@
+id,event,priority,cooldown_s,face,text,style,trigger
+sortie_01,SORTIE,2,0,closed→calm,アオイ、蒼鉄、出る。,冷静に、短く。ヘルメットの中で息を整えてから。「蒼鉄」は「あおがね」と読む,出撃（目を開ける演出と同時）
+sortie_tunnel_01,SORTIE_TUNNEL,2,0,calm,貨物トンネルに入る。中枢はこの先。,声を落として、慎重に,2面（FREIGHT TUNNEL）の出撃
+sortie_tunnel_02,SORTIE_TUNNEL,2,0,calm,暗いね。……線で全部、見えてるけど。,少し強がって、最後は自分に言い聞かせるように,
+sortie_deck_01,SORTIE_DECK,2,0,calm,発着場。迎えが来るまで、ここを空ける。,引き締めて、はっきりと,3面（SKYDECK）の出撃
+sortie_deck_02,SORTIE_DECK,2,0,calm,夜明けまで、もう少し。最後まで頼むよ、蒼鉄。,機体に語りかけるように、静かに。「蒼鉄」は「あおがね」と読む,
+sortie_02,SORTIE,2,0,closed→calm,視界、組み上がった。……いける。,落ち着いて、最後だけ小さく自信を込めて。HMDに景色が描かれていくのを見ながら,
+sortie_03,SORTIE,2,0,closed→calm,通信なし、補助なし。上等。,低めに、不敵に,
+redeploy_01,REDEPLOY,2,0,calm,再出撃。今度は落ちない。,悔しさを抑えて、静かに決意して,R で再出撃
+redeploy_02,REDEPLOY,2,0,calm,もう一回。付き合ってもらうよ、蒼鉄。,少し笑って、強気に。機体に語りかけるように。「蒼鉄」は「あおがね」と読む,
+contact_01,CONTACT,1,6,glance,敵影。,冷静に、短く、,敵が起動・出現
+contact_02,CONTACT,1,6,glance,来た。,冷静に、短く、小声で,
+contact_03,CONTACT,1,6,glance,反応あり、そっち。,冷静に、短く、,
+contact_vane,CONTACT_VANE,1,6,glance,ヴェイン。速いの来る。,冷静に、短く、,SCOUT が出現（任意）
+contact_pike,CONTACT_PIKE,1,6,glance,パイク。突っ込んでくるよ。,冷静に、短く、少し警戒して,LANCER が出現（任意）
+contact_bastion,CONTACT_BASTION,1,6,glance,バスティオン……硬いのが出た。,嫌そうに、低く,HEAVY が出現（任意）
+contact_atlas,CONTACT_ATLAS,1,6,glance,アトラス……でかいのが起きた。,息をのんで、低く,ATLAS を見つけたとき
+contact_kite,CONTACT_KITE,1,6,glance,カイト、上！ 降りてくる！,鋭く、上を見上げるように,KITE を見つけたとき
+designate_01,DESIGNATE,1,3,glance,マーク。,冷静に、短く、きびきびと,HMD で目標指定
+designate_02,DESIGNATE,1,3,glance,捉えた。,冷静に、短く、,
+designate_03,DESIGNATE,1,3,glance,そこ、指定。,冷静に、短く、,
+kill_01,KILL,1,1.5,smug,撃破。,冷静に、短く、,1機撃破（毎回ではなく間引いて再生）
+kill_02,KILL,1,1.5,smug,一機。,冷静に、短く、,
+kill_03,KILL,1,1.5,smug,落ちた。,冷たく、短く,
+kill_04,KILL,1,1.5,smug,まず一つ。,少し得意げに,
+chain_01,CHAIN,2,2,laugh,連続撃破！,テンション高く、勝ち気に,3連鎖以上
+chain_02,CHAIN,2,2,laugh,まだまだ！,楽しそうに、笑いながら,
+chain_03,CHAIN,2,2,laugh,止まんないよ！,高揚して、叫ぶように,
+desbreak_01,DESIGNATE_BREAK,2,2,smug,指定目標、撃破。流れ、来てる。,手応えを感じて、少し得意げに,指定目標を撃破（ミサイル+1）
+desbreak_02,DESIGNATE_BREAK,2,2,smug,マークどおり。次。,短く、余裕を持って,
+stagger_01,STAGGER,1,3,smug,止めた！,鋭く,敵の溜め・突進を潰した
+stagger_02,STAGGER,1,3,smug,溜め、潰した。,不敵に,
+ram_01,RAM,1,3,grit,どいて！,力を込めて,体当たり
+ram_02,RAM,1,3,grit,邪魔！,荒っぽく,
+lastone_01,LAST_ONE,2,0,calm,残り一機。,冷静に、短く、集中して,残り1機になった
+lastone_02,LAST_ONE,2,0,calm,あと一つ。,静かに、狙いを定めるように,
+sync_01,SYNC,2,0,cheer,同期駆動――乗ってきた！,一気に高揚して、楽しそうに,SYNC DRIVE 開始
+sync_02,SYNC,2,0,cheer,シンク！ 全部見える！,興奮して、明るく,
+sync_03,SYNC,2,0,cheer,いける、いけるよ！,笑いながら、高揚して,
+syncbreak_01,SYNC_BREAK,1,1.2,laugh,次！,弾むように、短く,SYNC 中の撃破
+syncbreak_02,SYNC_BREAK,1,1.2,laugh,もう一つ！,楽しそうに、短く,
+evade_01,EVADE,1,3,smug,おっと。,余裕たっぷりに,ブーストで弾を回避
+evade_02,EVADE,1,3,smug,当たらないよ。,からかうように,
+evade_03,EVADE,1,3,smug,見えてる。,冷静に、短く、余裕をもって,
+inbound_01,INBOUND,2,6,grit,弾、来る！,鋭く、警告するように,被弾コースの弾が接近
+inbound_02,INBOUND,2,6,grit,狙われてる！,焦りを抑えて、速く,
+lance_01,LANCE,2,5,grit,パイク、突っ込んでくる！,緊迫して,PIKE が突進を開始
+lance_02,LANCE,2,5,grit,槍、来るよ！,鋭く、速く,
+heavy_01,HEAVY_CHARGE,2,6,grit,砲撃、来る！ 動いて！,強く警告して,BASTION が砲撃の溜め
+heavy_02,HEAVY_CHARGE,2,6,grit,バスティオン、溜めてる！,緊迫して,
+hit_01,HIT,2,2.5,grit,っ……！,息を詰めるように、痛みをこらえて,被弾
+hit_02,HIT,2,2.5,grit,くっ、もらった！,悔しそうに,
+hit_03,HIT,2,2.5,grit,被弾。まだ平気。,強がって、短く,
+critical_01,CRITICAL,3,0,shout,装甲限界！ やばい！,叫ぶように、必死に,装甲30%未満に入った瞬間
+critical_02,CRITICAL,3,0,shout,まずい、持たない！,焦って、叫ぶように,
+critical_03,CRITICAL,3,0,shout,外が見えない……センサー、もって！,叫ぶ寸前、歯を食いしばって,
+overheat_01,OVERHEAT,2,0,grit,ハルバード、オーバーヒート！,焦って,30mm がオーバーヒート
+overheat_02,OVERHEAT,2,0,grit,熱っ……冷却する！,苛立って、速く,
+cooled_01,COOLED,1,0,calm,冷却完了、撃てる。,冷静に、短く、,冷却が終わった
+cooled_02,COOLED,1,0,smug,ハルバード、復帰。,少し得意げに,
+clear_01,CLEAR,3,0,cheer,セクター制圧。……ふぅ。,張っていた息を吐くように,全機撃破
+clear_02,CLEAR,3,0,cheer,全機撃破。完璧でしょ？,得意げに、笑って,
+clear_03,CLEAR,3,0,cheer,クリア。先、進むよ。,切り替えて、前を向いて,
+sunrise_01,SUNRISE,2,0,calm,……日が昇る。,息をのんで、静かに。見とれるように,3面で地平線から太陽が出たとき
+sunrise_02,SUNRISE,2,0,calm,夜明け。迎え、来るよ。,少し明るく、ほっとして,
+final_01,FINAL,3,0,cheer,中枢、確保。……帰ろう、地球に。,張り詰めていたものがほどけるように、静かに,3面クリア＝作戦完了（OPERATION COMPLETE）
+final_02,FINAL,3,0,cheer,全セクター制圧。帰ったらごはんね。,明るく、少し照れて,
+down_01,DOWN,3,0,shout,嘘、機体が――！,悲鳴に近く、途中で途切れるように,撃破された
+down_02,DOWN,3,0,shout,ごめん……落ちる！,苦しそうに、悔しさをこめて,
+down_03,DOWN,3,0,shout,まだ、終わってない……！,息を切らして、意地で,
+hmdlost_01,HMD_LOST,2,8,grit,HMD、見失った！ 首、戻して！,慌てて,ヘッドトラッキングを見失った
+hmdlost_02,HMD_LOST,2,8,grit,トラッキング切れた！,焦って、短く,
+center_01,HEAD_CENTER,0,3,calm,HMD、センター。,冷静に、短く、,C で首の中心をリセット

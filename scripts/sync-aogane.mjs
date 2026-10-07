@@ -7,11 +7,9 @@
 //
 //   node scripts/sync-aogane.mjs [path-to-aogane-repo]
 //
-// assets/voice is left out on purpose. Without aoi_lines.csv the voice loader
-// stops at its first request; with it, and no directory listing to read, it
-// probes four extensions for every line and fills the console with 404s.
-// Copy it in once the recorded lines exist and the loader no longer needs a
-// listing.
+// assets/voice ships the script (aoi_lines.csv) and AOI's recorded lines as
+// aoi_<id>.mp3 (2026-10-07); the loader asks for each id's MP3 first, so no
+// directory listing is needed and nothing 404s.
 
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -22,7 +20,7 @@ const src = resolve(process.argv[2] ?? "C:/Users/a_tkm/Documents/GitHub/aogane")
 const dest = join(root, "public", "aogane", "play");
 
 const files = ["main.js", "three-cel.js", "styles.css", "head-tracker.worker.js", "assets/cover.webp"];
-const dirs = ["vendor", "assets/pilot", "assets/fonts"];
+const dirs = ["vendor", "assets/pilot", "assets/fonts", "assets/voice"];
 
 for (const f of ["index.html", ...files, ...dirs]) {
   if (!existsSync(join(src, f))) throw new Error(`missing in ${src}: ${f}`);

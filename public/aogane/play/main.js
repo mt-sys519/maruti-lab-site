@@ -3147,7 +3147,7 @@ function drawPilotCut(){const c=pilot.cut;if(!c)return;const plate=cutPlate(c.ki
   ctx.save();ctx.globalAlpha=a*.9;ctx.translate(x+w/2,y+h/2);ctx.rotate((c.kind==='down'?-.05:.03)*(1-e*.4));ctx.drawImage(plate,-w/2,-h/2,w,h);ctx.restore()}
 // ---------- AOI VOICE ----------
 // Drop-in voice: design/AOI_VOICE_SCRIPT.md + assets/voice/aoi_lines.csv define every line (id, event,
-// priority, cooldown, face, text). Any assets/voice/aoi_<id>.(wav|ogg|mp3|webm) that exists is played
+// priority, cooldown, face, text). Any assets/voice/aoi_<id>.(mp3|ogg|webm|wav) that exists is played
 // for its event; missing files are simply silent. Lines play the moment the event happens (never on
 // the music grid), through a radio band-pass, with the music ducked, AOI's face held for the clip
 // and a Japanese subtitle line in the LOG.
@@ -3159,15 +3159,15 @@ function voxParseCSV(t){const rows=[];let row=[],cell='',q=false;for(let i=0;i<t
   if(cell||row.length){row.push(cell);if(row.length>1)rows.push(row)}return rows}
 function voxSetLines(csvText){const rows=voxParseCSV(csvText.replace(/^﻿/,''));const head=rows.shift()||[],ix=k=>head.indexOf(k);vox.lines.length=0;vox.byEvent={};
   for(const r of rows){const L={id:r[ix('id')],event:r[ix('event')],prio:+r[ix('priority')]||0,cool:+r[ix('cooldown_s')]||0,face:(r[ix('face')]||'').split('→').pop().trim(),text:r[ix('text')]||''};if(!L.id||!L.event)continue;vox.lines.push(L);(vox.byEvent[L.event]=vox.byEvent[L.event]||[]).push(L)}}
-// Load the script and whatever audio files exist. A directory listing (launch.py serves one) avoids
-// probing every id; without it each id is probed once per extension.
+// Load the script, then each line's audio straight from its id: the recordings ship as aoi_<id>.mp3
+// (trimmed, loudness-normalised, 64 kb/s mono), so MP3 is tried first and a production server never sees a
+// 404 for them; a drop-in in another format is still found. (This used to read a directory listing,
+// which only launch.py serves.)
 async function voxLoad(){if(typeof fetch==='undefined')return;
-  try{const r=await fetch(VOX_BASE+'aoi_lines.csv',{cache:'no-store'});if(!r.ok)return;voxSetLines(await r.text())}catch{return}
-  let names=null;try{const r=await fetch(VOX_BASE,{cache:'no-store'});if(r.ok){const html=await r.text();names=[...html.matchAll(/href="([^"]+)"/g)].map(m=>decodeURIComponent(m[1]))}}catch{}
-  const exts=['wav','ogg','mp3','webm'];
-  await Promise.all(vox.lines.map(async L=>{let file=null;if(names){for(const e of exts)if(names.includes(`aoi_${L.id}.${e}`)){file=`aoi_${L.id}.${e}`;break}if(!file)return}
-    for(const e of file?[null]:exts){const f=file||`aoi_${L.id}.${e}`;try{const r=await fetch(VOX_BASE+f);if(r.ok){vox.raw[L.id]=await r.arrayBuffer();return}}catch{}}}));
-  vox.ready=true}
+  try{const r=await fetch(VOX_BASE+'aoi_lines.csv',{cache:'no-cache'});if(!r.ok)return;voxSetLines(await r.text())}catch{return}
+  const exts=['mp3','ogg','webm','wav'];
+  await Promise.all(vox.lines.map(async L=>{for(const e of exts){try{const r=await fetch(VOX_BASE+`aoi_${L.id}.${e}?v=1`);if(r.ok){vox.raw[L.id]=await r.arrayBuffer();return}}catch{}}}));
+}
 if(typeof window!=='undefined'&&typeof fetch!=='undefined')voxLoad();
 // Decode once the AudioContext exists (it needs a user gesture), then run any line that was waiting.
 function voxTick(){if(!ac||!vox.ready)return;
