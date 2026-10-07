@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0a0f12">
   <title>蒼鉄 -AOGANE- | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=44">
+  <link rel="stylesheet" href="styles.css?v=45">
 </head>
 <body>
 <main id="app">
@@ -19,9 +19,10 @@
     <h1>蒼鉄<small>-AOGANE-</small></h1>
     <p class="tagline">No link. No assist. Head and hand.</p>
     <div class="primaryActions">
-      <button id="play" class="deploy">出撃</button>
+      <button id="play" class="deploy"><span id="playLabel">ミッション</span><small id="playNote">3つのエリアを攻略</small></button>
       <button id="head" class="cam"><i class="lamp"></i><span id="headLabel">カメラで遊ぶ（おすすめ）</span></button>
-      <button id="endure" class="endure">耐久戦</button>
+      <button id="train" class="train">訓練<small>操作を覚える</small></button>
+      <button id="endure" class="endure">サバイバル<small>倒れるまで戦い続ける</small></button>
       <button id="settingsBtn" class="menuSub" aria-expanded="false">設定</button>
       <button id="full" class="menuSub">全画面</button>
     </div>
@@ -46,11 +47,11 @@
   </section>
 
   <div id="camGate" class="camGate hidden" role="dialog" aria-labelledby="camGateTitle">
-    <p class="camGateEyebrow">BEFORE SORTIE</p>
+    <p class="camGateEyebrow">BEFORE YOU START</p>
     <h2 id="camGateTitle">このゲームは、顔の向きで周りを見ます</h2>
     <p>ウェブカメラで頭の向きを読み取り、首で敵を探します。銃はマウスで、首とは別に動きます。カメラがなくても Q / E キーで首を振って遊べますが、カメラがあればぜひオンにしてください。</p>
     <p class="camGateSmall">映像は端末の中だけで処理され、外には送られません。</p>
-    <div class="camGateActs"><button id="gateCam" class="deploy">カメラをオンにして出撃</button><button id="gateSkip">カメラなしで出撃</button></div>
+    <div class="camGateActs"><button id="gateCam" class="deploy">カメラをオンにして始める</button><button id="gateSkip">カメラなしで始める</button></div>
   </div>
 
   <section id="hud" class="hud hidden" aria-live="polite">
@@ -61,7 +62,7 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=73"></script>
+<script src="main.js?v=74"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>

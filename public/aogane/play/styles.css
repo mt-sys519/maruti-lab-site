@@ -317,3 +317,9 @@
 .camGateActs button{height:50px;padding:0 22px;border:1px solid rgba(223,235,231,.3);background:rgba(8,16,18,.7);color:#b9c6c2;font:inherit;font-size:13px;letter-spacing:.1em;cursor:pointer}
 .camGateActs .deploy{background:#e3a957;border-color:#ffd291;color:#0b1112;font-size:16px;font-weight:700;letter-spacing:.14em}
 @media (min-height:860px){.camGate{zoom:1.15}}@media (min-height:1000px){.camGate{zoom:1.3}}@media (min-height:1250px){.camGate{zoom:1.55}}@media (min-height:1500px){.camGate{zoom:1.8}}
+/* Mode buttons carry a one-line caption on the right */
+.boot .primaryActions button{display:flex;align-items:center;gap:12px}
+.boot .primaryActions button small{margin-left:auto;font-size:11px;font-weight:400;letter-spacing:.06em;opacity:.72}
+.boot .primaryActions .deploy small{opacity:.8}
+.boot .primaryActions .train{font-weight:400;border-color:rgba(223,235,231,.36);color:#e6ece9}
+.boot .primaryActions{width:340px}
