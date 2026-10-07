@@ -553,8 +553,9 @@ function secondArms(){return mode==='endurance'?['MAUL','ARBALEST','FLAIL']:stag
 function secondArm(){return secondArms()[0]||null}
 // BARDICHE: the melee axe (the big blade in Edge of Tomorrow), carried everywhere on key 3. Keys are slots
 // by kind: 1 HALBERD, 2 the sector's second arm (nothing where none is issued), 3 BARDICHE.
-// LMB swings, and it is heavy: a slow heave back to the right (the servos strain), a beat at the top, a cut
-// that accelerates across the front, a follow-through past the end and a long recovery. The frame slows
+// LMB swings, and it is heavy, swung the way a person swings an axe: a slow heave up over the right shoulder
+// (the servos strain), a beat at the top, a diagonal cut that accelerates down across the front, a
+// follow-through to the lower left and a long recovery. The frame slows
 // while it swings and the view is dragged with the blade. The swing lunges the frame at a hostile ahead
 // within LUNGE m; the cut hits what is in its arc out to REACH m (past the hull), bites with a long
 // hit-stop and staggers. V swings it from any weapon with no swap and goes back after.
@@ -1405,7 +1406,9 @@ const RIGS={
       for(const x of [-.8,-.4,0,.4,.8])B('rad',box(x,0,0,.08,.9,.55,{mat:'dark'}));
       B('rad',box(0,0,-.15,1.9,.6,.04,{mat:'glow',glow:'heat'}));
       for(const s of ['L','R']){const k=s==='L'?-1:1;
-        B('thigh'+s,beam([0,.1,.1],[0,-1.95,-.95],.72,.5,{lines:1,chip:true,name:'thigh'}));
+        // The thigh is structure and never chips; the plate on its front is what breaks off.
+        B('thigh'+s,beam([0,.1,.1],[0,-1.95,-.95],.72,.5,{lines:1,name:'thigh'}));
+        B('thigh'+s,hexa([[-.42,-.29,.31],[.42,-.29,.31],[.42,-.34,.42],[-.42,-.34,.42],[-.32,-1.59,-.43],[.32,-1.59,-.43],[.32,-1.64,-.32],[-.32,-1.64,-.32]],{chip:true,name:'thighplate'}));
         B('thigh'+s,beam([k*.42,-.3,.15],[k*.42,-1.6,-.6],.12,.1,{mat:'metal'},[1,0,0]));
         B('shin'+s,cyl(0,0,0,.42,.8,'x',10,{mat:'metal'}));
         B('shin'+s,beam([0,0,0],[0,-1.92,.92],.5,.36,{mat:'armor',lines:1,name:'shin'}));
@@ -1985,15 +1988,18 @@ function cockpitPose(){
   const pod={p:[0,-ease*.3,-podKick*.09],r:[C.podPitch-ease*.4+podKick*.05,C.podYaw*.9,0]};
   return{frame,gun,barrel,pod,louverL:{r:[0,0,vent*.9+boost*.3]},louverR:{r:[0,0,-vent*.9-boost*.3]},load};
 }
-// BARDICHE acting, added to the gun bone: held raised and canted at rest; the wind-up draws it back to
-// the right, the cut sweeps it hard across to the left and down, the recovery brings it back.
-const AXE_REST=[.04,.02,0,.28,.12,.35],AXE_WIND=[.12,.32,-.3,.55,.45,.75],AXE_TOP=[.13,.34,-.33,.58,.5,.78],AXE_CUT=[-.36,.04,.12,.02,-.78,-.32],AXE_OVER=[-.46,-.04,.16,-.08,-.92,-.4];
+// BARDICHE acting, added to the gun bone (its origin is the fist): held raised and canted at rest. The
+// swing is a person's diagonal chop: the fist comes up and in beside the helmet with the haft laid back over
+// the right shoulder and the edge facing forward, then the cut comes over and down across the front to the
+// lower left, the arm reaching out through the hit, and the recovery brings it back.
+const AXE_REST=[.04,.02,0,.28,.12,.35],AXE_WIND=[-.62,.24,-.12,1.3,.3,.9],AXE_TOP=[-.66,.28,-.16,1.42,.34,.95],AXE_CUT=[-.45,-.08,.3,.12,-.4,.85],AXE_OVER=[-.85,-.5,.1,-.75,-.95,.8];
 function axePose(){const S=player.swing,B=BARDICHE,mix=(a,b,t)=>a.map((v,i)=>lerp(v,b[i],t)),sm=u=>u*u*(3-2*u);if(!S)return AXE_REST;let t=S.t;
   if(t<B.wind)return mix(AXE_REST,AXE_WIND,sm(t/B.wind));t-=B.wind;
   if(t<B.hold)return mix(AXE_WIND,AXE_TOP,t/B.hold);t-=B.hold;
-  // the cut starts slow and accelerates: the blade's weight, not a flick
-  if(t<B.cut){const u=t/B.cut;return mix(AXE_TOP,AXE_CUT,u*u*u*.6+u*u*.4)}t-=B.cut;
-  if(t<B.over){const u=t/B.over;return mix(AXE_CUT,AXE_OVER,1-(1-u)*(1-u))}t-=B.over;
+  // the cut starts slow and accelerates, and is in front at the bite (60% into the cut, see updateSwing):
+  // the blade's weight, not a flick; then it carries on down to the left and slows
+  const bite=B.cut*.6;if(t<bite){const u=t/bite;return mix(AXE_TOP,AXE_CUT,u*u*u*.6+u*u*.4)}t-=bite;
+  const fol=B.cut-bite+B.over;if(t<fol){const u=t/fol;return mix(AXE_CUT,AXE_OVER,1-(1-u)*(1-u))}t-=fol;
   return mix(AXE_OVER,AXE_REST,sm(clamp(t/B.rec,0,1)))}
 function cockpitXf(pz){
   const fwd=forward(player.yaw),rt=right(player.yaw),root={R:[rt.x,0,fwd.x,0,1,0,rt.z,0,fwd.z],t:[player.x,CAMERA_Y,player.z]},X={};
