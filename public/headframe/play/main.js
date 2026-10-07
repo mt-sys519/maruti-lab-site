@@ -740,7 +740,8 @@ async function captureHeadFrame(now){
 function updateHead(now,dt){
   if(headEnabled){
     if(headBusy&&now-headRequestTime>10000){disableHead('HEAD TIMEOUT / Q-E MANUAL TEST');return}
-    captureHeadFrame(now);
+    // The camera keeps reading on the menu (C still centres), but the paused view holds still.
+    captureHeadFrame(now);if(!playing)return;
     // Filtering runs at display frequency, even between camera samples.
     // Hold the current view on loss; stale poses cannot create designations.
     if(headPoseFresh(now))setHeadTarget(headTarget,dt);
