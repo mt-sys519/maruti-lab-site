@@ -366,7 +366,9 @@ buildSector(1);
 let mode='sortie';
 const endure={level:1,spawnT:0,nextId:100,best:null};
 try{endure.best=JSON.parse(localStorage.getItem('hf.endure.best')||'null')}catch{}
-// Modes: sortie (ミッション, SECTOR 01-03), endurance (サバイバル), training (訓練: SECTOR 01 with two sleeping machines and the steps).
+// Modes: sortie (ミッション, SECTOR 01-03), endurance (サバイバル), training (the tutorial in front of every ミッション:
+// SECTOR 01 with two sleeping machines and the steps; compulsory the first time, Tab skips it after that).
+// A training range like recent FPS games is wanted later as its own menu entry (the user, 2026-10-07).
 function setMode(m){mode=m==='endurance'||m==='training'?m:'sortie';if(mode!=='sortie')stage=1;reset()}
 const ATLAS_CHANCE=.16;
 function enduranceTarget(){return Math.min(6,2+endure.level)}
@@ -2843,6 +2845,7 @@ function updateTutorial(dt){
   if(!tut.base)tut.base={x:player.x,z:player.z,shots:stats.shots,des:stats.designations};
   const b=tut.base,ok=st.id==='move'?Math.hypot(player.x-b.x,player.z-b.z)>6:st.id==='burst'?player.boostTime>0:st.id==='fire'?stats.shots-b.shots>=3:st.id==='head'?Math.abs(headYaw)>=(headEnabled?8:20):stats.designations>b.des;
   if(ok&&tut.t>.6)tutAdvance()}
+function skipTraining(){sfx.ui();tut.on=false;tut.doneT=0;setMode('sortie');saySortie()}
 function drawTutorial(s){
   const cal=headNeedCenter&&headEnabled&&headFound&&playing;
   const st=cal?{en:'CALIBRATE',jp:'画面の正面を向いて C を押す',sub:'そこが首の正面になります。ずれたらいつでも C'}:tutStep(),done=!st&&tut.doneT>0;if(!st&&!done)return;
@@ -2851,7 +2854,7 @@ function drawTutorial(s){
   const a=done?clamp(tut.doneT/.4,0,1):clamp(tut.t/.25,0,1),w=Math.min(W*.7,460*s),h=58*s,x=W/2-w/2,y=H*.17;
   ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const t=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,t);ctx.fillRect(x,y+h-t,w,t);
   hudText(done?'TRAINING COMPLETE':cal?'HEAD  CALIBRATE':`TRAINING ${tut.i+1}/${TUT_STEPS.length}  ${st.en}`,W/2,y+7*s,6.5*s,'#e3a957',.5,.3);
-  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);ctx.restore()}
+  hudText(jp,W/2,y+21*s,12*s,'#eef2f0',.5,.04,700);hudText(sub,W/2,y+42*s,6.5*s,HUD.dim,.5,.04);if(tutDone&&mode==='training'&&!done)hudText('Tab でスキップ',x+w-8*s,y+7*s,6*s,HUD.dim,1,.1);ctx.restore()}
 function pilotBanner(en,jp,color='#dcfff4',dur=1.5){pilot.banner={en,jp,color,t:0,dur}}
 function pilotCut(kind){pilot.cut={kind,t:0}}
 const etag=e=>(RIGS[e.type]?.name||e.type)+' '+String(e.id).padStart(2,'0');
@@ -3241,11 +3244,10 @@ $('resultKeys').addEventListener('click',e=>{const a=e.target?.closest?.('button
 // says so, with turning it on as the big button. Choosing to go without is remembered (hf.camGate).
 let everStarted=false,camGateSkip=false;try{camGateSkip=localStorage.getItem('hf.camGate')==='skip'}catch{}
 function showCamGate(on){$('camGate').classList.toggle('hidden',!on);boot.classList.toggle('gated',on)}
-// The first ミッション goes through 訓練 (hf.tutorial); after that it goes straight to SECTOR 01.
-function playLabel(){if(everStarted)return;$('playNote').textContent=tutDone?'3つのエリアを攻略':'はじめは訓練から'}
+// Every ミッション opens with the tutorial; once it has been finished (hf.tutorial) Tab skips it.
+function playLabel(){if(everStarted)return;$('playNote').textContent=tutDone?'3つのエリアを攻略':'はじめは操作説明から'}
 function begin(m){if(!everStarted||mode!==m)setMode(m);if(!headEnabled&&!camGateSkip&&!everStarted){showCamGate(true);sfx.ui();return}startGame(true)}
-$('play').addEventListener('click',()=>{if(everStarted){startGame(true);return}begin(tutDone?'sortie':'training')});
-$('train').addEventListener('click',()=>begin('training'));
+$('play').addEventListener('click',()=>{if(everStarted){startGame(true);return}begin('training')});
 // Turning the camera on and locking the pointer in one click would hide the cursor under the browser's
 // camera prompt, so the gate waits for the camera and then offers 出撃 (the pointer lock needs that click).
 let gateCamState='';
@@ -3262,7 +3264,7 @@ document.addEventListener('mousemove',e=>{if(!playing||(!new URLSearchParams(loc
 document.addEventListener('mousedown',e=>{mouseButtons.add(e.button);if(e.button===0)fire(true);if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
-document.addEventListener('keydown',e=>{if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
+document.addEventListener('keydown',e=>{if(e.code==='Tab'&&playing&&mode==='training'&&tutDone){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent='1面からやり直します'});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent='全画面にできませんでした'}});
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);bind(smooth,$('smoothout'),'',2);

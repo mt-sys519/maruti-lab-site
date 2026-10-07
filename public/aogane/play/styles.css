@@ -321,5 +321,4 @@
 .boot .primaryActions button{display:flex;align-items:center;gap:12px}
 .boot .primaryActions button small{margin-left:auto;font-size:11px;font-weight:400;letter-spacing:.06em;opacity:.72}
 .boot .primaryActions .deploy small{opacity:.8}
-.boot .primaryActions .train{font-weight:400;border-color:rgba(223,235,231,.36);color:#e6ece9}
 .boot .primaryActions{width:340px}
