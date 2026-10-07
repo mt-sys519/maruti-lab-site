@@ -788,10 +788,14 @@ function poly(points,fill,stroke=null,lw=1){if(points.some(p=>!p))return;ctx.beg
 let worldRec=null;
 function threeWorldOn(){const T=typeof window!=='undefined'&&window.HF_THREE;return !!(T&&T.active&&T.world)}
 const rgbOf=c=>c.split(',').map(Number);
+// A real lunar plant, not a data city: while the world itself is recorded (worldPass), cyan glow lines (edge
+// accents, data carriers, rings, lattices) drop to a faint sheen. Lamps, windows, warning paint and ink stay.
+let worldPass=false;
+function glowCut(c,a){return worldPass&&c[0]<c[1]*.8&&c[1]>140&&c[2]>110?a*.12:a}
 // dots: [x,y,z,r,g,b,a,worldRadius,minPx,maxPx] for beacons and lamps (additive, screen-size clamped)
 function recDot(x,y,z,color,alpha,radius,minPx,maxPx){const c=rgbOf(color);worldRec.dots.push(x,y,z,c[0],c[1],c[2],alpha*ctx.globalAlpha,radius,minPx,maxPx)}
 function recCurve(fn,n,color,alpha,width,ink=0){let p=fn(0);for(let i=1;i<=n;i++){const q=fn(i/n);recLine(p[0],p[1],p[2],q[0],q[1],q[2],color,alpha,width,ink);p=q}}
-function recLine(x0,y0,z0,x1,y1,z1,color,alpha,width,ink=0){const c=rgbOf(color);worldRec.lines.push(x0,y0,z0,x1,y1,z1,c[0],c[1],c[2],alpha*ctx.globalAlpha,width,ink)}
+function recLine(x0,y0,z0,x1,y1,z1,color,alpha,width,ink=0){const c=rgbOf(color);worldRec.lines.push(x0,y0,z0,x1,y1,z1,c[0],c[1],c[2],glowCut(c,alpha)*ctx.globalAlpha,width,ink)}
 // The rest of the frame in the same pass: sky, ground and the overlay effects. Each Canvas path keeps
 // its code; while worldRec is set it records the same strokes instead, with their depth, so walls hide
 // what stands behind them. Colours are '#rgb', '#rrggbb', 'r,g,b' or 'rgb(a)(...)'.
@@ -802,11 +806,11 @@ function colRGB(c){let v=colCache.get(c);if(v)return v;let m;
   else{const p=c.split(',').map(Number);v=[p[0],p[1],p[2],p[3]??1]}
   if(colCache.size>4000)colCache.clear();colCache.set(c,v);return v}
 // screen-space segment between projected points (x, y, depth): [x0,y0,d0,0, x1,y1,d1,0, r,g,b,a, width,dashOn,dashOff,blur]
-function recSeg(a,b,color,alpha,width,add=true,dash=null,blur=0){if(!a||!b||alpha<=.003)return;const c=colRGB(color);(add?worldRec.segsA:worldRec.segsN).push(a.x,a.y,a.depth,0,b.x,b.y,b.depth,0,c[0],c[1],c[2],alpha*c[3],width,dash?dash[0]:0,dash?dash[1]:0,blur)}
+function recSeg(a,b,color,alpha,width,add=true,dash=null,blur=0){if(!a||!b||alpha<=.003)return;const c=colRGB(color);alpha=glowCut(c,alpha);(add?worldRec.segsA:worldRec.segsN).push(a.x,a.y,a.depth,0,b.x,b.y,b.depth,0,c[0],c[1],c[2],alpha*c[3],width,dash?dash[0]:0,dash?dash[1]:0,blur)}
 // world-space segment (clipped at the near plane on the GPU), same layout with mode 1
-function recWSeg(x0,y0,z0,x1,y1,z1,color,alpha,width,add=true,blur=0){if(alpha<=.003)return;const c=colRGB(color);(add?worldRec.segsA:worldRec.segsN).push(x0,y0,z0,1,x1,y1,z1,1,c[0],c[1],c[2],alpha*c[3],width,0,0,blur)}
+function recWSeg(x0,y0,z0,x1,y1,z1,color,alpha,width,add=true,blur=0){if(alpha<=.003)return;const c=colRGB(color);alpha=glowCut(c,alpha);(add?worldRec.segsA:worldRec.segsN).push(x0,y0,z0,1,x1,y1,z1,1,c[0],c[1],c[2],alpha*c[3],width,0,0,blur)}
 // disc / ring / ellipse at a projected point: [x,y,d,0, radius,ringWidth(0 = filled),aspect,soft, r,g,b,a]; soft 1 = the radial light falloff
-function recDisc(p,r,color,alpha,add=true,ring=0,aspect=1,soft=0){if(!p||alpha<=.003||r<=0)return;const c=colRGB(color);(soft?worldRec.glows:add?worldRec.discsA:worldRec.discsN).push(p.x,p.y,p.depth,0,r,ring,aspect,soft,c[0],c[1],c[2],alpha*c[3])}
+function recDisc(p,r,color,alpha,add=true,ring=0,aspect=1,soft=0){if(!p||alpha<=.003||r<=0)return;const c=colRGB(color);if(!soft)alpha=glowCut(c,alpha);(soft?worldRec.glows:add?worldRec.discsA:worldRec.discsN).push(p.x,p.y,p.depth,0,r,ring,aspect,soft,c[0],c[1],c[2],alpha*c[3])}
 // flat ground quad (world corners in order): [x,y,z]*4, r,g,b,a
 function recQuad(x0,z0,x1,z1,y,color,alpha){const c=colRGB(color);worldRec.quads.push(x0,y,z0,x1,y,z0,x1,y,z1,x0,y,z1,c[0],c[1],c[2],alpha*c[3])}
 // Line batching: between beginLines() and endLines() world lines are collected per style (alpha
@@ -829,7 +833,7 @@ function worldLine3D(x0,y0,z0,x1,y1,z1,viewYaw,viewPitch,color='103,255,209',alp
 // Night palette, shared by the Canvas and WebGL renderers. Unlit surfaces are dim teal-grey, not black:
 // silhouettes and depth read without a lamp, and the neon still carries the frame.
 // Earthshine: the night side of the Moon is lit by Earth, a cool blue-grey rather than the old teal (lamps stay cyan).
-const WORLD_CEL={top:[64,80,98],lit:[44,57,72],shade:[24,32,43],ink:'#010404'};
+const WORLD_CEL={top:[70,75,84],lit:[50,54,62],shade:[26,29,36],ink:'#010404'};
 // SECTOR 01 is on the Moon: a black sky (no air to light it), and the last stop is what far solids fade into,
 // the dark grey of regolith out past the lamps rather than an air haze. WebGL adds stars, Earth and the regolith.
 const NIGHT={sky:['#020308','#03050b','#05070d','#15181e'],ground:'#0b1514'};
@@ -838,7 +842,7 @@ const SKYDECK_SKY=NIGHT.sky; // the deck is on the Moon too: black sky, stars an
 // FREIGHT TUNNEL has no sky: this is only what far concrete fades into, a dark haze down the tube.
 const TUNNEL_SKY=['#06090a','#080c0d','#0b1011','#0e1415'];
 function skyStops(){return stage===2?TUNNEL_SKY:stage===3?SKYDECK_SKY:NIGHT.sky}
-function celRGB(c){const t=syncMix,L=(c[0]+c[1]+c[2])/3;return`rgb(${lerp(c[0],L*2.1+10,t)|0},${lerp(c[1],L*1.45+4,t)|0},${lerp(c[2],L*.45,t)|0})`}
+function celRGB(c){const t=0,L=(c[0]+c[1]+c[2])/3;return`rgb(${lerp(c[0],L*2.1+10,t)|0},${lerp(c[1],L*1.45+4,t)|0},${lerp(c[2],L*.45,t)|0})`}
 const worldInk=()=>clamp(H/720*2.4,1.6,4.5);
 function celFaces(faces,edgeAlpha,edgeColor){
   if(!faces.length)return;ctx.lineJoin='round';ctx.fillStyle=ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=worldInk();ctx.beginPath();
@@ -849,7 +853,7 @@ function celFaces(faces,edgeAlpha,edgeColor){
 // and no roof rail.
 let boxPlain=false;
 function worldBox3D(cx,cz,w,d,y0,y1,viewYaw,viewPitch,fill='rgba(1,8,9,.96)',edgeAlpha=.12,edgeColor='91,240,204'){
-  if(worldRec){worldRec.boxes.push({cx,cz,w,d,y0,y1,edgeAlpha,edge:rgbOf(wc(edgeColor)),alpha:ctx.globalAlpha,plain:boxPlain});return}
+  if(worldRec){const ec=rgbOf(edgeColor);worldRec.boxes.push({cx,cz,w,d,y0,y1,edgeAlpha:glowCut(ec,edgeAlpha),edge:rgbOf(wc(edgeColor)),alpha:ctx.globalAlpha,plain:boxPlain});return}
   const xa=cx-w/2,xb=cx+w/2,za=cz-d/2,zb=cz+d/2;
   const lo=[project(xa,y0,za,viewYaw,viewPitch),project(xb,y0,za,viewYaw,viewPitch),project(xb,y0,zb,viewYaw,viewPitch),project(xa,y0,zb,viewYaw,viewPitch)];
   const hi=[project(xa,y1,za,viewYaw,viewPitch),project(xb,y1,za,viewYaw,viewPitch),project(xb,y1,zb,viewYaw,viewPitch),project(xa,y1,zb,viewYaw,viewPitch)];
@@ -1181,8 +1185,9 @@ function drawTrunkLine(vy,vp){
   ctx.restore();
 }
 // SYNC world state: world vectors lerp toward gold. Cached per (colour, quantised mix).
-let syncMix=0;const wcCache=new Map();
-function wc(rgb){const q=Math.round(syncMix*20);if(!q)return rgb;const key=rgb+'|'+q;let v=wcCache.get(key);if(!v){const c=rgb.split(',').map(Number),g=[255,212,120],m=q/20;v=c.map((x,i)=>Math.round(lerp(x,g[i],m*.85))).join(',');wcCache.set(key,v)}return v}
+let syncMix=0;
+// SYNC DRIVE is AOI's state, not the world's: the plant keeps its colours (only the frame and HMD go gold).
+function wc(rgb){return rgb}
 // ---------- MECH MODELS (v32) ----------------------------------------------------
 // Hostiles are articulated machines: armour parts hang on bones, bones are posed every
 // frame from the AI state (gait, bank, windup, brace, recoil, stagger). Rendering is
@@ -2396,7 +2401,7 @@ function drawSightLinkCue(viewYaw,viewPitch){
   ctx.shadowBlur=3;ctx.font='7px Consolas';ctx.textAlign='left';ctx.fillText('LINK',x1+g+l+4,cy+3);ctx.restore();
 }
 function drawKillPulse(){if(player.killPulse<=0)return;const k=1-player.killPulse,rr=Math.min(W,H)*(.08+k*.36),a=player.killPulse;ctx.save();ctx.strokeStyle=`rgba(255,220,135,${.48*a})`;ctx.shadowBlur=18;ctx.shadowColor='#ffd16f';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W/2,H*.49,rr,0,TAU);ctx.stroke();ctx.globalAlpha=.16*a;ctx.fillStyle='#fff0b5';ctx.fillRect(0,H*.49-1,W,2);ctx.restore()}
-function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
+function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;worldPass=true;drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}worldPass=false;for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t){worldPass=true;drawBuilding(x.o,viewYaw,viewPitch)}else{worldPass=false;if(!enemyOccluded(x.o)||threeEnemy(x.o))drawEnemy(x.o,viewYaw,viewPitch)}}worldPass=false;if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawScope(viewYaw,viewPitch)}
 
 // One primary attack and one light pressure attack may commit at a time.
 function updateCombatDirector(){
@@ -3115,7 +3120,7 @@ function applyBloom(){
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?'GLOW : HIGH':'GLOW : LOW'}
-function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
+function render(){poseFrame++;bloomMask.length=0;worldGlow=1;const head=headYaw*Math.PI/180,sc=player.scope||0,viewYaw=lerp(player.yaw+head,player.yaw+player.torso,sc)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,sc);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc);ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
 // canvas state reset, and the error goes to the console, window.__hfErrors and once per message to the LOG.

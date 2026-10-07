@@ -208,7 +208,7 @@ const worldMat = new THREE.RawShaderMaterial({
             float r = floor((v - 1.6) / 3.2 + 0.5), vc = 1.6 + r * 3.2, cols = max(0.0, floor((Wm - 1.0 - 1.4) / 2.4) + 1.0), cc = floor((u - 1.4) / 2.4 + 0.5), uc = 1.4 + cc * 2.4, idx = r * cols + cc;
             if (r >= 0.0 && vc < hgt - 1.0 && cc >= 0.0 && uc < Wm - 1.0 && idx < 48.0 && abs(u - uc) < 0.45 && abs(v - vc) < 0.5) {
               bool lit = fract(sin(dot(vec2(idx + fi * 13.0, mod(seed, 97.0)), vec2(12.9898, 78.233))) * 43758.5453) > 0.62;
-              c = lit ? mix(c, vec3(150.0, 240.0, 226.0) / 255.0, 0.55 * 0.8) : mix(c, vec3(2.0, 8.0, 10.0) / 255.0, 0.85 * 0.8);
+              c = lit ? mix(c, vec3(255.0, 222.0, 170.0) / 255.0, 0.55 * 0.8) : mix(c, vec3(2.0, 8.0, 10.0) / 255.0, 0.85 * 0.8);
             }
           }
           if (y0 < 0.1 && hgt > 2.0) {
@@ -604,7 +604,7 @@ function draw(o) {
   syncStrokes(o.world);
   fxU.scr.value.set(o.W, o.H); fxU.dpr.value = o.DPR; fxU.nearZ.value = near; fxU.zA.value = -e[10]; fxU.zB.value = e[14];
   const sky = o.world && o.world.sky;
-  worldMat.uniforms.light.value.set(o.light[0], o.light[1], o.light[2]); worldMat.uniforms.camPos.value.copy(camera.position); worldMat.uniforms.sync.value = o.syncMix || 0;
+  worldMat.uniforms.light.value.set(o.light[0], o.light[1], o.light[2]); worldMat.uniforms.camPos.value.copy(camera.position); worldMat.uniforms.sync.value = 0; // SYNC is AOI's state, the plant keeps its colours
   const L = new THREE.Vector3(o.light[0], o.light[1], o.light[2]);
   for (const I of o.insts) {
     if (I.hidden || !I.style) continue;
