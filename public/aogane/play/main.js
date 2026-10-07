@@ -822,9 +822,11 @@ function worldLine3D(x0,y0,z0,x1,y1,z1,viewYaw,viewPitch,color='103,255,209',alp
 // Night palette, shared by the Canvas and WebGL renderers. Unlit surfaces are dim teal-grey, not black:
 // silhouettes and depth read without a lamp, and the neon still carries the frame.
 const WORLD_CEL={top:[60,88,90],lit:[40,63,66],shade:[24,39,43],ink:'#010404'};
-const NIGHT={sky:['#071015','#0b171b','#111f20','#142321'],ground:'#0b1514'};
+// SECTOR 01 is on the Moon: a black sky (no air to light it), and the last stop is what far solids fade into,
+// the dark grey of regolith out past the lamps rather than an air haze. WebGL adds stars, Earth and the regolith.
+const NIGHT={sky:['#020308','#03050b','#05070d','#15181e'],ground:'#0b1514'};
 // SKYDECK flies under a pre-dawn sky: deep blue, lighter toward the horizon, so a KITE reads against it.
-const SKYDECK_SKY=['#0a1424','#122036','#1c2c44','#27364a'];
+const SKYDECK_SKY=NIGHT.sky; // the deck is on the Moon too: black sky, stars and Earth (WebGL)
 // FREIGHT TUNNEL has no sky: this is only what far concrete fades into, a dark haze down the tube.
 const TUNNEL_SKY=['#06090a','#080c0d','#0b1011','#0e1415'];
 function skyStops(){return stage===2?TUNNEL_SKY:stage===3?SKYDECK_SKY:NIGHT.sky}
@@ -878,10 +880,11 @@ function worldRingXY(cx,cy,cz,rx,ry,viewYaw,viewPitch,alpha=.20,color='103,255,2
   if(any)ctx.stroke();ctx.restore();
 }
 function drawSky(viewYaw,pitch){
-  if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:skyStops().map(colRGB),ground:colRGB(NIGHT.ground),cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
+  if(worldRec){const hy=horizonY(pitch);worldRec.sky={hy,glowY0:hy-H*.12-H*.1*syncMix,glowY1:hy+H*.16,glowA:.06+.13*syncMix,glowCol:rgbOf(wc('35,151,118')),stops:skyStops().map(colRGB),ground:colRGB(NIGHT.ground),moon:stage===2?0:1,yaw:viewYaw,foc:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,cel:[WORLD_CEL.top,WORLD_CEL.lit,WORLD_CEL.shade]};return}
   const hy=horizonY(pitch),g=ctx.createLinearGradient(0,0,0,H);
   {const S=skyStops();g.addColorStop(0,S[0]);g.addColorStop(.42,S[1]);g.addColorStop(.70,S[2]);g.addColorStop(1,S[3])};
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(stage!==2)return; // no air on the Moon to carry a glow along the horizon
   // A very low, physical foundry glow on the horizon. It is not a HUD effect.
   const glow=ctx.createLinearGradient(0,hy-H*.12-H*.1*syncMix,0,hy+H*.16);glow.addColorStop(0,'rgba(29,112,91,0)');glow.addColorStop(.58,`rgba(${wc('35,151,118')},${(.06+.13*syncMix).toFixed(3)})`);glow.addColorStop(1,'rgba(21,79,66,0)');ctx.fillStyle=glow;ctx.fillRect(0,hy-H*.12,W,H*.28);
   ctx.save();ctx.strokeStyle='rgba(99,255,211,.065)';ctx.lineWidth=1;ctx.shadowBlur=5;ctx.shadowColor='#55ffd0';ctx.beginPath();ctx.moveTo(0,hy);ctx.lineTo(W,hy);ctx.stroke();ctx.restore();
@@ -2191,10 +2194,15 @@ function drawGunSight(viewYaw,viewPitch){
   ctx.save();ctx.lineCap='round';
   if(!p||p.x<20||p.x>W-20||p.y<20||p.y>H-20){ // gun is pointing outside the HMD view: a witness tick on the canopy edge
     const side=Math.sign(angleDiff(player.yaw+player.torso,viewYaw))||1;ctx.strokeStyle='#ffc75a';ctx.globalAlpha=.8;ctx.lineWidth=2;const x=side>0?W-40:40,y=H*.49;ctx.beginPath();ctx.moveTo(x-side*10,y-8);ctx.lineTo(x,y);ctx.lineTo(x-side*10,y+8);ctx.stroke();ctx.restore();return}
-  const maul=cockpit.shown==='MAUL',r=maul?20:14,gap=maul?.55:.3+(linked?0:.25);ctx.globalCompositeOperation='lighter';
+  const maul=cockpit.shown==='MAUL',r=maul?26:20,gap=maul?.55:.3+(linked?0:.25);
+  // With the head tracked the view moves under the gun, so the sight wanders across the screen: a dark halo keeps it
+  // readable over lit walls and blasts, and four outer ticks give the eye something to find from the corner of the view.
+  ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);for(let i=0;i<4;i++){const c=Math.cos(i*Math.PI/2),s=Math.sin(i*Math.PI/2);ctx.moveTo(p.x+c*(r+5),p.y+s*(r+5));ctx.lineTo(p.x+c*(r+13),p.y+s*(r+13))}ctx.stroke();
+  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(p.x-3.5,p.y-3.5,7,7);ctx.globalCompositeOperation='lighter';
+  ctx.strokeStyle=linked?'#8fffe0':'#ffc75a';ctx.globalAlpha=.9;ctx.lineWidth=2.2;ctx.beginPath();for(let i=0;i<4;i++){const c=Math.cos(i*Math.PI/2),s=Math.sin(i*Math.PI/2);ctx.moveTo(p.x+c*(r+5),p.y+s*(r+5));ctx.lineTo(p.x+c*(r+13),p.y+s*(r+13))}ctx.stroke();
   // Broken ring: gap = dispersion; the ring fills red with barrel heat.
-  for(let i=0;i<4;i++){const a0=i*Math.PI/2+Math.PI/4+gap/2,a1=a0+Math.PI/2-gap,hot=!maul&&heat>(i+1)/4.2;ctx.strokeStyle=maul?(i<player.rockets?'#ffe7b0':'#6a5130'):player.vent?'#ff4a2a':hot?'#ff8a3a':linked?'#8fffe0':'#ffc75a';ctx.globalAlpha=!maul&&player.vent?.5+.4*Math.sin(gameTime*22):.9;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(p.x,p.y,r,a0,a1);ctx.stroke()}
-  ctx.fillStyle='#fff3d0';ctx.globalAlpha=1;ctx.fillRect(p.x-1.5,p.y-1.5,3,3);
+  for(let i=0;i<4;i++){const a0=i*Math.PI/2+Math.PI/4+gap/2,a1=a0+Math.PI/2-gap,hot=!maul&&heat>(i+1)/4.2;ctx.strokeStyle=maul?(i<player.rockets?'#ffe7b0':'#6a5130'):player.vent?'#ff4a2a':hot?'#ff8a3a':linked?'#8fffe0':'#ffc75a';ctx.globalAlpha=!maul&&player.vent?.5+.4*Math.sin(gameTime*22):.9;ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(p.x,p.y,r,a0,a1);ctx.stroke()}
+  ctx.fillStyle='#fff3d0';ctx.globalAlpha=1;ctx.fillRect(p.x-2,p.y-2,4,4);
   if(player.hitMarkT>0){const k=player.hitMarkT/.09,d=r+4+6*(1-k);ctx.strokeStyle='#ffffff';ctx.globalAlpha=k;ctx.lineWidth=2;ctx.beginPath();for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ctx.moveTo(p.x+sx*d*.55,p.y+sy*d*.55);ctx.lineTo(p.x+sx*d,p.y+sy*d)}ctx.stroke()}
   if(player.vent){ctx.font='9px Consolas';ctx.textAlign='center';ctx.fillStyle='#ff6a48';ctx.fillText('VENT',p.x,p.y+r+14)}
   // Gun lock: amber brackets snap onto the target's real box.

@@ -422,9 +422,65 @@ const skyMat = new THREE.RawShaderMaterial({
   vertexShader: 'precision highp float;\nin vec3 position;\nvoid main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: /* glsl */`
     precision highp float;
-    uniform vec2 scr; uniform float dpr, hy, gy0, gy1, ga; uniform vec3 gc, c0, c1, c2, c3, gnd; out vec4 o;
+    uniform vec2 scr, ppos; uniform float dpr, hy, gy0, gy1, ga, moon, yaw, foc, camY; uniform vec3 gc, c0, c1, c2, c3, gnd; out vec4 o;
+    // SECTOR 01, the Moon: a black sky with stars, Earth hung low ahead, and regolith with craters out past the
+    // facility strip. Directions follow main.js project(): yaw-only camera, pitch as a lens shift (hy), so a pixel's
+    // azimuth is yaw + atan(dx / foc) and the tangent of its elevation is (hy - y) cos(rel) / foc.
+    const float PI2 = 6.2831853, EAZ = 0.08, EEL = 0.25, ER = 0.05;
+    float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+    float h31(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+    float n3(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(mix(h31(i), h31(i + vec3(1,0,0)), f.x), mix(h31(i + vec3(0,1,0)), h31(i + vec3(1,1,0)), f.x), f.y),
+                 mix(mix(h31(i + vec3(0,0,1)), h31(i + vec3(1,0,1)), f.x), mix(h31(i + vec3(0,1,1)), h31(i + vec3(1,1,1)), f.x), f.y), f.z); }
+    float fb3(vec3 p){ float a = 0.5, r = 0.0; for (int i = 0; i < 5; i++) { r += a * n3(p); p = p * 2.03 + 11.7; a *= 0.5; } return r; }
+    float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h21(i), h21(i + vec2(1,0)), f.x), mix(h21(i + vec2(0,1)), h21(i + vec2(1,1)), f.x), f.y); }
+    // one crater per cell at most; the wall that faces Earth (earthshine) is the lit one
+    float crater(vec2 w, float cell, float odds, vec2 L){
+      vec2 id = floor(w / cell), f = w / cell - id; float h = h21(id + cell);
+      if (h > odds) return 0.0;
+      float r = 0.18 + 0.27 * h21(id + 3.1); vec2 c = vec2(0.5) + (vec2(h21(id + 7.7), h21(id + 1.3)) - 0.5) * (0.98 - 2.0 * r);
+      vec2 v = f - c; float d = length(v) / r; if (d > 1.35) return 0.0;
+      float bowl = d < 1.0 ? (-0.55 * dot(normalize(v + 1e-4), L) * d - 0.18 * (1.0 - d * d)) : 0.0;
+      return bowl + 0.22 * exp(-pow((d - 1.02) * 7.0, 2.0)) * (0.6 + 0.4 * dot(normalize(v + 1e-4), L));
+    }
+    vec3 regolith(float dx, float dy){
+      float cz = camY * foc / max(dy, 0.35), cx = dx * cz / foc, sn = sin(yaw), cs = cos(yaw);
+      vec2 w = ppos + vec2(cx * cs + cz * sn, cx * sn - cz * cs);
+      if (abs(w.x) < 38.5 && abs(w.y) < 151.0) return gnd;
+      vec2 L = vec2(sin(EAZ), -cos(EAZ));
+      float k = clamp(1.0 - cz / 260.0, 0.0, 1.0), kf = clamp(1.0 - cz / 70.0, 0.0, 1.0);
+      float g = 0.82 + 0.3 * (n2(w * 0.045) - 0.5) + 0.22 * kf * (n2(w * 0.9) - 0.5);
+      g += k * (crater(w, 26.0, 0.55, L) + 0.8 * crater(w + 13.0, 9.0, 0.45, L)) + kf * 0.7 * crater(w + 5.0, 3.2, 0.4, L);
+      return vec3(52.0, 55.0, 63.0) / 255.0 * max(g, 0.25);
+    }
+    vec3 moonSky(float dx, float y){
+      float rel = atan(dx, foc), A = mod(yaw + rel, PI2), el = atan((hy - y) * cos(rel) / foc);
+      vec3 c = mix(vec3(1.0, 1.5, 3.0), vec3(3.0, 4.0, 7.0), clamp(1.0 - el / 0.5, 0.0, 1.0)) / 255.0;
+      // stars on a fixed azimuth / elevation lattice, so they hold still in the sky while the head turns
+      const float CS = PI2 / 900.0; vec2 sp = vec2(A, el) / CS, id = floor(sp); float h = h21(id + 0.5);
+      if (h < 0.075) { vec2 at = 0.2 + 0.6 * vec2(h21(id + 2.2), h21(id + 9.4)); vec2 dv = (sp - id - at) * CS * foc; dv.x *= cos(el);
+        float b = pow(h21(id + 4.4), 3.0), rad = 0.9 + 1.2 * b; c += mix(vec3(0.75, 0.82, 1.0), vec3(1.0, 0.93, 0.82), h21(id + 6.6)) * (0.55 + 0.75 * b) * smoothstep(rad, 0.0, length(dv)); }
+      // Earth: a gibbous disc lit from the right, oceans, land, cloud, a thin blue limb and a few city lights on the night side
+      float da = mod(A - EAZ + PI2 * 0.5, PI2) - PI2 * 0.5; vec2 q = vec2(da * cos(el), el - EEL) / ER; float r = length(q);
+      vec3 Ls = normalize(vec3(0.78, 0.22, 0.42));
+      if (r < 1.0) {
+        vec3 n = vec3(q, sqrt(1.0 - r * r)); float lam = dot(n, Ls), day = smoothstep(-0.06, 0.18, lam);
+        float land = smoothstep(0.5, 0.56, fb3(n * 2.3 + 4.0)), cl = smoothstep(0.52, 0.74, fb3(n * 4.2 + vec3(9.0, 2.0, 5.0)));
+        vec3 surf = mix(vec3(0.04, 0.13, 0.36), mix(vec3(0.20, 0.30, 0.13), vec3(0.50, 0.42, 0.28), n3(n * 6.0)), land);
+        surf = mix(surf, vec3(0.93, 0.95, 0.98), cl * 0.9);
+        vec3 e = surf * (0.03 + 1.15 * max(lam, 0.0)) * day + vec3(0.35, 0.6, 1.0) * pow(1.0 - n.z, 2.5) * 0.9 * day;
+        e += vec3(1.0, 0.62, 0.25) * land * (1.0 - day) * (1.0 - cl) * step(0.82, n3(n * 40.0)) * 0.35;
+        c = mix(c, e, smoothstep(1.0, 1.0 - 1.8 / (ER * foc), r));
+      } else {
+        float side = clamp(dot(q / r, Ls.xy / length(Ls.xy)) * 0.6 + 0.4, 0.0, 1.0);
+        c += vec3(0.3, 0.52, 1.0) * 0.22 * side * exp(-(r - 1.0) * 22.0);
+      }
+      return c;
+    }
     void main(){
       float y = scr.y - gl_FragCoord.y / dpr;
+      if (moon > 0.5) { float dx = gl_FragCoord.x / dpr - scr.x * 0.5; o = vec4(y >= hy ? regolith(dx, y - hy) : moonSky(dx, y), 1.0); return; }
       if (y >= hy) { o = vec4(gnd, 1.0); return; }
       float t = clamp(y / scr.y, 0.0, 1.0);
       vec3 c = t < 0.42 ? mix(c0, c1, t / 0.42) : t < 0.70 ? mix(c1, c2, (t - 0.42) / 0.28) : mix(c2, c3, (t - 0.70) / 0.30);
@@ -438,7 +494,7 @@ const skyMat = new THREE.RawShaderMaterial({
       c += vec3(85.0, 255.0, 208.0) / 255.0 * 0.03 * exp(-d * d / 12.5);
       o = vec4(c, 1.0);
     }`,
-  uniforms: { scr: fxU.scr, dpr: fxU.dpr, hy: { value: 0 }, gy0: { value: 0 }, gy1: { value: 1 }, ga: { value: 0 }, gc: { value: new THREE.Vector3() }, c0: { value: new THREE.Vector3() }, c1: { value: new THREE.Vector3() }, c2: { value: new THREE.Vector3() }, c3: { value: new THREE.Vector3() }, gnd: { value: new THREE.Vector3() } },
+  uniforms: { scr: fxU.scr, dpr: fxU.dpr, hy: { value: 0 }, gy0: { value: 0 }, gy1: { value: 1 }, ga: { value: 0 }, gc: { value: new THREE.Vector3() }, c0: { value: new THREE.Vector3() }, c1: { value: new THREE.Vector3() }, c2: { value: new THREE.Vector3() }, c3: { value: new THREE.Vector3() }, gnd: { value: new THREE.Vector3() }, moon: { value: 0 }, yaw: { value: 0 }, foc: { value: 1 }, camY: { value: 3.25 }, ppos: { value: new THREE.Vector2() } },
 });
 const skyScene = new THREE.Scene(); skyScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), skyMat));
 
@@ -554,6 +610,7 @@ function draw(o) {
   renderer.setRenderTarget(rtColor); renderer.setClearColor(0x000000, 0); renderer.clear();
   if (sky) { const u = skyMat.uniforms; u.hy.value = sky.hy; u.gy0.value = sky.glowY0; u.gy1.value = sky.glowY1; u.ga.value = sky.glowA; u.gc.value.set(sky.glowCol[0] / 255, sky.glowCol[1] / 255, sky.glowCol[2] / 255);
     const v3 = (t, c) => t.set(c[0] / 255, c[1] / 255, c[2] / 255); ['c0', 'c1', 'c2', 'c3'].forEach((k, i) => v3(u[k].value, sky.stops[i])); v3(u.gnd.value, sky.ground);
+    u.moon.value = sky.moon || 0; u.yaw.value = sky.yaw || 0; u.foc.value = sky.foc || 1; u.camY.value = sky.camY || 3.25; u.ppos.value.set(sky.px || 0, sky.pz || 0);
     const w = worldMat.uniforms; v3(w.celTop.value, sky.cel[0]); v3(w.celLit.value, sky.cel[1]); v3(w.celShade.value, sky.cel[2]); v3(w.haze.value, sky.stops[3]);
     renderer.render(skyScene, quadCam); }
   renderer.render(scene, camera);
