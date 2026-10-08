@@ -694,7 +694,9 @@ function draw(c,o={}){
     const b=box(L,M,kk);
     c.save();c.translate(L.x,L.y);c.rotate(L.rot);
     c.lineWidth=3.5*kk;c.strokeStyle='rgba(40,25,15,.22)';c.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
-    c.lineWidth=1.5*kk;c.strokeStyle='#fff';c.strokeRect(-b.w/2,-b.h/2,b.w,b.h);c.restore();
+    c.lineWidth=1.5*kk;c.strokeStyle='#fff';c.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
+    if(G.g?.mode==='wrap'){const w=L.vertical?b.w:G.g.w,h=L.vertical?G.g.w:b.h;c.setLineDash([6*kk,5*kk]);c.lineWidth=1.5*kk;c.strokeStyle='rgba(40,25,15,.55)';c.strokeRect(-w/2,-h/2,w,h);c.setLineDash([])}
+    c.restore();
     if(o.ui==='edit'){
       const h=handles(L,M,kk),dot=(x,y,r)=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();c.stroke()};
       c.save();c.fillStyle='#fff';c.strokeStyle='rgba(40,25,15,.3)';c.lineWidth=kk;c.shadowColor='rgba(40,25,15,.3)';c.shadowBlur=4;
@@ -753,7 +755,7 @@ function handles(L,M,kk){
   const below=b.h/2+34*kk,room=L.y+below*cs+18*kk<D.H;
   // a shape also stretches one way from the middle of each side
   // a line only lengthens from its ends; its thickness is set in the panel
-  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle'&&tool==='crop')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
+  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isText(L)?(L.vertical?{t:at(0,-b.h/2),b:at(0,b.h/2)}:{r:at(b.w/2,0),l:at(-b.w/2,0)}):(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle'&&tool==='crop')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
   return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
@@ -902,6 +904,18 @@ function frameDrag(L,g,p){
   if(!r){let lo=0,hi=want;r=fit(0);for(let i=0;i<24;i++){const m=(lo+hi)/2,q=fit(m);if(q){lo=m;r=q}else hi=m}}
   if(r)Object.assign(L,r);
 }
+// Pulling a side of a text sets how wide its lines may run (折り返し), as in Canva: the size stays, the words
+// re-flow, and the other side stays put. The dashed box shows the width being set; the text, evened out
+// line by line, sits in the middle of it.
+function wrapDrag(L,g,p){
+  const cs=Math.cos(g.rot),sn=Math.sin(g.rot),dx=p.x-g.p.x,dy=p.y-g.p.y,q=L.vertical?-dx*sn+dy*cs:dx*cs+dy*sn;
+  const far=g.e==='r'||g.e==='b',full=L.vertical?D.H:D.W,w=Math.max(L.size*1.2,Math.min(full,(far?q:-q)+g.w0));
+  const lo=far?-g.w0/2:g.w0/2-w,c=lo+w/2;
+  if(L.vertical){L.x=g.x0-c*sn;L.y=g.y0+c*cs}else{L.x=g.x0+c*cs;L.y=g.y0+c*sn}
+  L.wrap=w/full;g.w=w;
+  const r=bodyEl.querySelector('input[type=range][data-k="wrap"]'),v=bodyEl.querySelector('[data-v="wrap"]');
+  if(r)r.value=L.wrap;if(v)v[v.tagName==='INPUT'?'value':'textContent']=fmt('wrap')(L.wrap);
+}
 // Dragging a side of a shape: the opposite side stays put.
 function stretch(L,g,p){
   const dx=p.x-g.x0,dy=p.y-g.y0,cs=Math.cos(g.rot),sn=Math.sin(g.rot),q={x:dx*cs+dy*sn,y:-dx*sn+dy*cs};
@@ -960,6 +974,7 @@ cv.addEventListener('pointerdown',e=>{
     if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h,box:layerBox(L)};return}
     if(h&&h.startsWith('edge:')&&isImg(L)&&turned(L)&&L.photoId){G.g=frameStart(L,h.slice(5),p);return}
     if(h&&h.startsWith('edge:')&&isImg(L)){bakeView(L);const f=imgFrame(L);G.g={mode:'icrop',L,e:h.slice(5),p,x:L.x,y:L.y,fw:f.w,fh:f.h,rot:L.rot,crop:{...cropOf(L)}};return}
+    if(h&&h.startsWith('edge:')&&isText(L)){const m=G.M.get(L.id),w0=L.vertical?m.H:m.W;G.g={mode:'wrap',e:h.slice(5),p,x0:L.x,y0:L.y,rot:L.rot,w0,w:w0};return}
     if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
     if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
     if(inside(L)&&hitLayer(G.M,p,kE(),o=>o===L)){G.g={mode:'ipan',p,zx:L.zx,zy:L.zy};return} // トリミング open: a drag slides the photo in its frame
@@ -981,6 +996,7 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=snapAngle(g.rot+t.a-g.t.a,.1)}
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
+  else if(g.mode==='wrap'&&L){wrapDrag(L,g,p)}
   else if(g.mode==='icrop'&&L){cropDrag(L,g,p)}
   else if(g.mode==='iframe'&&L){frameDrag(L,g,p);syncInside(L)}
   else if(g.mode==='ipan'&&L)panInside(L,g,p);
