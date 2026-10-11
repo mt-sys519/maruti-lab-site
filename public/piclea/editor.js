@@ -99,14 +99,15 @@ function balance(p,max,m){
   return greedy(p,hi,m);
 }
 function wrapLines(c,L,f){
-  const key=[f.fam,f.w,L.size,L.ls,L.wrap,L.vertical,D.W,D.H,L.text].join('|');
+  const key=[f.fam,f.w,L.size,L.ls,L.wrap,L.bem,L.vertical,D.W,D.H,L.text].join('|');
   if(wrapCache.has(key))return wrapCache.get(key);
   const sp=L.size*L.ls/100,paras=L.text.split('\n');
   let out=paras;
-  if(L.wrap){
-    const max=L.wrap*(L.vertical?D.H:D.W),adv=L.size+sp;
-    const m=L.vertical?(s=>[...s].length*adv-sp):(s=>measure(c,s,sp));
-    out=paras.flatMap(p=>balance(p,max,m));
+  if(L.bem||L.wrap){
+    const adv=L.size+sp,m=L.vertical?(s=>[...s].length*adv-sp):(s=>measure(c,s,sp));
+    // a box pulled to a width (L.bem, in ems so it scales with the size) fills each line as far as it goes, as in
+    // Canva; otherwise 折り返し evens the lines out
+    out=L.bem?paras.flatMap(p=>greedy(p,L.bem*L.size,m)):paras.flatMap(p=>balance(p,L.wrap*(L.vertical?D.H:D.W),m));
   }
   if(wrapCache.size>800)wrapCache.clear();
   wrapCache.set(key,out);return out;
@@ -132,10 +133,10 @@ function layout(c,L,f){
   const s=L.size,sp=s*L.ls/100,lines=wrapLines(c,L,f);
   if(!L.vertical){
     const ws=lines.map(t=>measure(c,t,sp)),lh=s*L.lh;
-    return {lines,ws,sp,lh,W:Math.max(s*.3,...ws),H:lh*lines.length};
+    return {lines,ws,sp,lh,W:Math.max(s*.3,(L.bem||0)*s,...ws),H:lh*lines.length};
   }
   const cw=s*L.lh,adv=s+sp,hs=lines.map(t=>Math.max(0,[...t].length*adv-sp));
-  return {lines,hs,sp,cw,adv,W:cw*lines.length,H:Math.max(s,...hs)};
+  return {lines,hs,sp,cw,adv,W:cw*lines.length,H:Math.max(s,(L.bem||0)*s,...hs)};
 }
 function glyphs(c,L,f,m,stroke){
   const put=(ch,x,y)=>stroke?c.strokeText(ch,x,y):c.fillText(ch,x,y);
@@ -695,7 +696,6 @@ function draw(c,o={}){
     c.save();c.translate(L.x,L.y);c.rotate(L.rot);
     c.lineWidth=3.5*kk;c.strokeStyle='rgba(40,25,15,.22)';c.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
     c.lineWidth=1.5*kk;c.strokeStyle='#fff';c.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
-    if(G.g?.mode==='wrap'){const w=L.vertical?b.w:G.g.w,h=L.vertical?G.g.w:b.h;c.setLineDash([6*kk,5*kk]);c.lineWidth=1.5*kk;c.strokeStyle='rgba(40,25,15,.55)';c.strokeRect(-w/2,-h/2,w,h);c.setLineDash([])}
     c.restore();
     if(o.ui==='edit'){
       const h=handles(L,M,kk),dot=(x,y,r)=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();c.stroke()};
@@ -904,15 +904,14 @@ function frameDrag(L,g,p){
   if(!r){let lo=0,hi=want;r=fit(0);for(let i=0;i<24;i++){const m=(lo+hi)/2,q=fit(m);if(q){lo=m;r=q}else hi=m}}
   if(r)Object.assign(L,r);
 }
-// Pulling a side of a text sets how wide its lines may run (折り返し), as in Canva: the size stays, the words
-// re-flow, and the other side stays put. The dashed box shows the width being set; the text, evened out
-// line by line, sits in the middle of it.
+// Pulling a side of a text sets the width of its box, as in Canva: the size stays, the words re-flow to fill
+// each line, they keep their alignment inside the box, and the other side stays put.
 function wrapDrag(L,g,p){
   const cs=Math.cos(g.rot),sn=Math.sin(g.rot),dx=p.x-g.p.x,dy=p.y-g.p.y,q=L.vertical?-dx*sn+dy*cs:dx*cs+dy*sn;
   const far=g.e==='r'||g.e==='b',full=L.vertical?D.H:D.W,w=Math.max(L.size*1.2,Math.min(full,(far?q:-q)+g.w0));
   const lo=far?-g.w0/2:g.w0/2-w,c=lo+w/2;
   if(L.vertical){L.x=g.x0-c*sn;L.y=g.y0+c*cs}else{L.x=g.x0+c*cs;L.y=g.y0+c*sn}
-  L.wrap=w/full;g.w=w;
+  L.bem=w/L.size;L.wrap=Math.min(1,w/full);g.w=w;
   const r=bodyEl.querySelector('input[type=range][data-k="wrap"]'),v=bodyEl.querySelector('[data-v="wrap"]');
   if(r)r.value=L.wrap;if(v)v[v.tagName==='INPUT'?'value':'textContent']=fmt('wrap')(L.wrap);
 }
@@ -1388,6 +1387,7 @@ bodyEl.addEventListener('input',e=>{
   if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};t.parentElement.classList.add('on');paint();return}
   if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
+  if(t.dataset.k==='wrap')delete L.bem; // the slider evens the lines again, over a box pulled by hand
   put(L,t.dataset.k,t.type==='color'?t.value:+t.value);
   const v=bodyEl.querySelector(`[data-v="${t.dataset.k}"]`);if(v)v[v.tagName==='INPUT'?'value':'textContent']=fmt(t.dataset.k)(+t.value);
   if(t.type==='color'){t.closest('.pal').querySelectorAll('button').forEach(x=>x.classList.remove('on'));t.parentElement.classList.add('on');if(t.dataset.k==='color')$('#ebar .cdot')?.style.setProperty('background',t.value)}
