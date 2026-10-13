@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0a0f12">
   <title>蒼鉄 -AOGANE- | Maruti Lab</title>
-  <link rel="stylesheet" href="styles.css?v=53">
+  <link rel="stylesheet" href="styles.css?v=55">
 </head>
 <body>
 <main id="app">
@@ -31,7 +31,7 @@
       <div class="subActions">
         <button id="fx">発光：強</button>
         <button id="res">解像度：100%</button>
-        <button id="reset" data-i18n="reset">最初から</button>
+        <button id="fpsBtn">FPS表示：オフ</button>
         <button id="langBtn">文字 / Language：日本語</button>
         <button id="voiceLangBtn">ボイス：日本語</button>
       </div>
@@ -45,6 +45,7 @@
       <label><span data-i18n="tgain">トラッキングの感度</span><output id="gainout">1.00×</output><input id="gain" type="range" min="0.3" max="2.5" value="1" step="0.05"></label>
       <label><span data-i18n="tdead">トラッキングのデッドゾーン</span><output id="deadout">2.5°</output><input id="dead" type="range" min="0" max="8" value="2.5" step="0.5"></label>
       <label><span data-i18n="tsmooth">トラッキングの追従速度</span><output id="smoothout">1.00×</output><input id="smooth" type="range" min="-0.35" max="-0.04" value="-0.13" step="0.01"></label>
+      <button id="resetSettings" class="resetSettings" data-i18n="resetSettings">初期値に戻す</button>
       </div>
     </div>
 
@@ -76,7 +77,8 @@
     <div id="muzzleFlash"></div>
   </section>
 </main>
-<script src="main.js?v=99"></script>
+<div id="fpsMeter" class="fpsMeter hidden" aria-hidden="true"></div>
+<script src="main.js?v=103"></script>
 <!-- WebGL renderer; main.js draws with Canvas until it is ready, and keeps doing so without WebGL 2 -->
 <script type="importmap">{"imports":{"three":"./vendor/three.min.js?v=0.186.0"}}</script>
 <script type="module" src="three-cel.js?v=42"></script>

@@ -704,7 +704,7 @@ function staggerEnemy(e,power=20){
 function killEnemy(e,weapon='CANNON'){if(!e.alive)return;const wasDesignated=e.designated>0;e.alive=false;e.deadAt=gameTime;e.firePending=false;e.charge=0;e.lungeWindup=0;e.dashT=0;e.attackKind="";{const col=CLASS_STYLE[e.type].edge,cy=RIGS[e.type].hit.cy+eY(e),s=spatial(e.x,e.z);shatterEnemy(e);killWaves.push({x:e.x,z:e.z,t:gameTime});sparks(e.x,cy,e.z,44,col,16);sparks(e.x,cy,e.z,18,'#fff1d8',22);shockwave(e.x,cy,e.z,'#fff1d8',8,.36);shockwave(e.x,cy,e.z,col,15,.8);if(eY(e)<4)shockwave(e.x,.06,e.z,col,20,1.0,'ground');lightBurst(e.x,cy,e.z,'#ffd6b0',17,.36);sfx.kill(s.pan,e.type);if(e.type==='TITAN'){for(const y of [cy+4,cy-4,cy*.55,cy*.25])explode(e.x+(Math.random()-.5)*3,y,e.z+(Math.random()-.5)*3,true,false);shockwave(e.x,cy,e.z,'#ffd6b0',24,1.1);shockwave(e.x,.06,e.z,'#ff3a4a',42,1.4,'ground');player.shake=Math.max(player.shake,1.2)}}stats.kills++;hitStop=.055;const syncKill=player.syncTime>0;if(syncKill){player.syncChain++;player.syncTime=Math.min(5.4,player.syncTime+.42);player.fovKick=Math.max(player.fovKick,.62);}const refund=player.combo>0?22:18;player.boost=Math.min(100,player.boost+refund);player.heat=Math.max(0,player.heat-20);let reload=0;player.combo++;player.comboT=2.8;player.killPulse=1;player.fovKick=Math.max(player.fovKick,.42);player.shake=Math.max(player.shake,.52);stats.maxChain=Math.max(stats.maxChain,player.combo);addFlow(wasDesignated?26:12,wasDesignated?'DESIGNATE BREAK':'FRAME BREAK');plog(syncKill?'Sync':wasDesignated?'HMD':'Info',`-${etag(e)} broken.${syncKill?` Sync x${player.syncChain}.`:player.combo>1?` Chain ${player.combo}.`:''}${reload?' MSSL +1.':''}`);pilotReact(player.combo>=3||syncKill?'laugh':'smug',player.combo>=3?1.4:1.0,2);{const left=mode==='endurance'?9:enemies.filter(x=>x.alive).length;if(left===1)say('LAST_ONE');else if(left>1){if(syncKill)say('SYNC_BREAK');else if(wasDesignated)say('DESIGNATE_BREAK');else if(player.combo>=3)say('CHAIN');else say('KILL',.6)}}if(lastDesignatedId===e.id)lastDesignatedId=0;if(wasDesignated)tryHmdHandoff(e.id);if(mode!=='endurance'&&enemies.every(x=>!x.alive)){missionClear=true;player.boostTime=0;player.glideTime=0;sfx.clear();const fin=finalClear();if(mode==='sortie')campaign[stage]={time:missionTime,kills:stats.kills};plog('System',fin?'All sectors clean. Operation complete.':'Sector clean.');pilotCut('clear');if(!(fin&&say('FINAL')))say('CLEAR');if(fin){ending.t=0;ending.on=true}else setTimeout(()=>{if(missionClear)showResult(mode==='training'?'TRAINING COMPLETE':'SECTOR CLEAN')},650)}else combat.nextWake=Math.min(combat.nextWake,gameTime+.45)}
 
 // ---------- HEAD TRACKING ----------
-let headNeedCenter=false,manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,headPitch=0,headPitchTarget=0,basePitch=null,rawPitch=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
+let headNeedCenter=false,manualHead=0,headYaw=0,headTarget=0,headEnabled=false,headFound=false,baseline=null,rawYaw=0,headPitch=0,headPitchTarget=0,headSize=0,basePitch=null,rawPitch=0,stream=null,headWorker=null,lastFace=0,lastVT=-1;
 let headBusy=false,headGeneration=0,headSampleTime=-Infinity,headRequestTime=0,headInferenceMs=0;
 const HEAD_FRESH_MS=250;
 // The head is mainly left / right. Up / down only nudges the view (degrees, after the dead zone, capped):
@@ -727,6 +727,8 @@ function acceptHeadPose(data){
   headInferenceMs=data.inferenceMs||0;
   if(!data.found)return;
   headSampleTime=data.timestamp;rawYaw=data.yaw;rawPitch=data.pitch||0;
+  // A face turned away looks narrower, so its width is put back by the turn before it is smoothed.
+  if(data.size>0){const s=data.size/Math.max(.55,Math.cos(data.yaw*Math.PI/180));headSize=headSize>0?headSize+(s-headSize)*.15:s}
   if(baseline===null){baseline=rawYaw;headNeedCenter=true}if(basePitch===null)basePitch=rawPitch;
   const d=angleDiff(rawYaw*Math.PI/180,baseline*Math.PI/180)*180/Math.PI;
   headTarget=clamp(Math.sign(d)*Math.max(0,Math.abs(d)-(+dead.value))*(+gain.value),-60,60);
@@ -751,7 +753,7 @@ async function toggleHead(){
   btn.disabled=true;$('status').textContent=jt('顔認識を読み込み中…','Loading face tracking…');camUI('loading');
   try{
     if(!window.Worker||!window.createImageBitmap)throw new Error('Worker / ImageBitmap unavailable');
-    const worker=new Worker(((typeof window!=='undefined'&&window.HF_ASSET_BASE)||'')+'head-tracker.worker.js');headWorker=worker;
+    const worker=new Worker(((typeof window!=='undefined'&&window.HF_ASSET_BASE)||'')+'head-tracker.worker.js?v=2');headWorker=worker;
     await new Promise((resolve,reject)=>{
       const timeout=setTimeout(()=>reject(new Error('Tracker initialization timeout')),30000);
       worker.onerror=event=>{clearTimeout(timeout);reject(new Error(event.message||'Tracker Worker failed'));if(headEnabled)disableHead(jt('カメラが使えません　Q / E で視点を振れます','Camera unavailable — turn the view with Q / E'))};
@@ -772,7 +774,7 @@ async function toggleHead(){
   finally{btn.disabled=false}
 }
 function disableHead(status=jt('カメラ：オフ　Q / E で視点を振れます','Camera off — turn the view with Q / E'),why=null){
-  headGeneration++;headEnabled=false;headFound=false;headBusy=false;
+  headGeneration++;headEnabled=false;headFound=false;headBusy=false;headSize=0;
   headWorker?.terminate();headWorker=null;
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
   video.srcObject=null;manualHead=headYaw;headTarget=headYaw;headPitchTarget=0;
@@ -791,12 +793,16 @@ async function captureHeadFrame(now){
 }
 // When the face is lost for a moment, say why: a webcam picture too dark to find a face in (a dim room, a
 // window behind the player) or no face in it. Brightness is the mean of a 32x24 copy, twice a second.
-const CAM_DARK=65,camWarnEl=$('camWarn'),camLight={cv:null,luma:-1,t:0,lostSince:0,key:''};
-const CAM_WARN={dark:['暗くて顔が見えません。部屋を明るくするか、顔に正面から光を当ててください',"Too dark to see your face. Brighten the room, or light your face from the front"],noface:['顔が見つかりません。カメラの正面に顔を入れてください（暗い部屋や逆光だと見つけにくくなります）',"Can't find your face. Get it in front of the camera (a dark room or a light behind you makes it harder)"]};
+const CAM_DARK=65,camWarnEl=$('camWarn'),camLight={cv:null,luma:-1,t:0,lostSince:0,key:'',dist:'',distSince:0};
+// Distance as the face's share of the picture's width (see head-tracker.worker.js). Provisional values,
+// to be set from the FACE % readout next to FPS: too close and a turn or a lean leaves the frame.
+const CAM_NEAR=.42,CAM_FAR=.11;
+const CAM_WARN={near:['カメラに近すぎます。少し離れてください（近いと顔が映像からはみ出して見失いやすくなります）',"You're too close to the camera. Sit back a little (up close your face slips out of the picture)"],far:['カメラから遠すぎます。もう少し近づいてください',"You're too far from the camera. Move a little closer"],dark:['暗くて顔が見えません。部屋を明るくするか、顔に正面から光を当ててください',"Too dark to see your face. Brighten the room, or light your face from the front"],noface:['顔が見つかりません。カメラの正面に顔を入れてください（暗い部屋や逆光だと見つけにくくなります）',"Can't find your face. Get it in front of the camera (a dark room or a light behind you makes it harder)"]};
 function updateCamWarn(now){const L=camLight;
   if(headEnabled&&video.readyState>=2&&now-L.t>=500){L.t=now;if(!L.cv){L.cv=document.createElement('canvas');L.cv.width=32;L.cv.height=24}const g=L.cv.getContext('2d',{willReadFrequently:true});g.drawImage(video,0,0,32,24);const px=g.getImageData(0,0,32,24).data;let sum=0;for(let i=0;i<px.length;i+=4)sum+=px[i]*.299+px[i+1]*.587+px[i+2]*.114;L.luma=sum/(px.length/4)}
   const lost=headEnabled&&!headPoseFresh(now);if(!lost)L.lostSince=0;else if(!L.lostSince)L.lostSince=now;
-  const key=lost&&now-L.lostSince>1500?(L.luma>=0&&L.luma<CAM_DARK?'dark':'noface'):'';if(key===L.key)return;L.key=key;
+  const size=headEnabled&&!lost?headSize:0,dist=size>CAM_NEAR?'near':size>0&&size<CAM_FAR?'far':'';if(dist!==L.dist){L.dist=dist;L.distSince=now}
+  const key=lost&&now-L.lostSince>1500?(L.luma>=0&&L.luma<CAM_DARK?'dark':'noface'):dist&&now-L.distSince>1200?dist:'';if(key===L.key)return;L.key=key;
   camWarnEl.textContent=camText(CAM_WARN,key);camWarnEl.classList.toggle('hidden',!key);
   const note=$('camNote');note.classList.toggle('warn',!!key);if(headEnabled)note.textContent=camText(CAM_WARN,key)||camText(CAM_NOTE,'on')}
 function updateHead(now,dt){
@@ -2868,12 +2874,18 @@ const UNIFONT_HEX='0000000000000000000000000000000000000000080808080808080008080
 const PILOT_EXPR=['calm','closed','shout','cheer','smug','laugh','grit','glance'];
 const PILOT_BASE=(typeof window!=='undefined'&&window.HF_ASSET_BASE)||'';
 const pilotImg={};
-if(typeof Image!=='undefined')for(const k of [...PILOT_EXPR,'bust_shout','bust_cheer']){const im=new Image();im.decoding='async';im.src=PILOT_BASE+'assets/pilot/aoi_'+k+'.webp?v=5';pilotImg[k]=im}
+if(typeof Image!=='undefined')for(const k of [...PILOT_EXPR,'bust_shout','bust_cheer','gaze','gaze_eyes']){const im=new Image();im.decoding='async';im.src=PILOT_BASE+'assets/pilot/aoi_'+k+'.webp?v=5';pilotImg[k]=im}
 const pilotReady=k=>{const im=pilotImg[k];return !!(im&&im.complete&&im.naturalWidth)};
+// Trial: the resting face follows the view with its eyes. aoi_gaze is the calm plate rebuilt from a Veo clip
+// (same framing as calm); aoi_gaze_eyes holds eye patches cut from Veo clips (tools in MarutiLab/veo-aoi):
+// GAZE_CELLS[i] = where those eyes look (x -1 left .. 1 right on screen, y -1 up .. 0 level), then GAZE_BLINK
+// blink patches. GAZE_MIRROR 1: when the player looks right, AOI looks to the screen's right.
+const GAZE_CELLS=[[0,0],[-0.09,0],[0.1,0],[0.0,-0.14],[0.2,0],[0.0,-0.22],[0.16,-0.16],[-0.25,0],[0.33,0],[0.24,-0.24],[-0.36,0],[0.0,-0.37],[0.31,-0.31],[0.46,0],[0.0,-0.47],[-0.36,-0.36],[0.38,-0.38],[0.58,0],[0.0,-0.58],[-0.42,-0.42],[-0.49,-0.49],[0.0,-0.7],[0.72,0],[0.52,-0.52],[-0.56,-0.56],[0.0,-0.8],[-0.8,0],[0.82,0],[0.59,-0.59],[-0.88,0],[0.0,-0.88],[0.91,0],[-0.65,-0.65],[0.66,-0.66],[-0.97,0],[0.0,-0.97],[1.0,0],[-0.72,-0.72],[0.73,-0.73],[0.78,-0.78],[-0.79,-0.79],[-0.85,-0.85],[0.85,-0.85],[0.92,-0.92],[-0.92,-0.92],[-0.98,-0.98],[0.98,-0.98]],GAZE_BLINK=6,GAZE_PATCH={x:424,y:204,w:464,h:168},GAZE_COLS=6,GAZE_MIRROR=1,GAZE_BLINK_T=.25;
+const gazeReady=()=>pilotReady('gaze')&&pilotReady('gaze_eyes');
 // Per-expression framing on the 1280x760 plate (pupils at 520/760, y 300): x/y in eye-distance units from the eye midpoint, z = zoom.
 const PILOT_FRAME={calm:{x:0,y:0,z:1},shout:{x:0,y:.4,z:.45},cheer:{x:0,y:.2,z:.75},smug:{x:.2,y:.02,z:1.1},laugh:{x:0,y:.3,z:.62},grit:{x:-.12,y:-.05,z:1.2},glance:{x:.22,y:-.02,z:1.14},closed:{x:0,y:0,z:1}};
 const PILOT_TAG={AOI:'#a9c9de',Info:'#cfd2c4',System:'#cfd2c4',Caution:'#d8b46c',Warning:'#e47c62',HMD:'#8ed8c4',Sync:'#e6d08e'};
-const pilot={blinkT:3,blinking:0,glanceDir:1,entries:[],scroll:0,expr:'calm',prev:null,mix:1,fr:{x:0,y:0,z:1},hold:0,holdExpr:'calm',holdPrio:0,banner:null,cut:null,lostT:0,clearT:0,lagX:0,lastHead:0,boot:0,critLatch:false,wasPlaying:false};
+const pilot={blinkT:3,blinking:0,glanceDir:1,gx:0,gy:0,cell:0,entries:[],scroll:0,expr:'calm',prev:null,mix:1,fr:{x:0,y:0,z:1},hold:0,holdExpr:'calm',holdPrio:0,banner:null,cut:null,lostT:0,clearT:0,lagX:0,lastHead:0,boot:0,critLatch:false,wasPlaying:false};
 // cool: a repeating status line (inbound, venting, critical) is not re-logged within this many seconds.
 const plogSeen=new Map();
 function plog(tag,text,cool=0){const last=pilot.entries[pilot.entries.length-1];
@@ -2956,16 +2968,17 @@ const etag=e=>(RIGS[e.type]?.name||e.type)+' '+String(e.id).padStart(2,'0');
 function pilotTarget(){
   if(!player.alive)return pilot.expr;
   if(missionClear)return 'closed';
-  if(pilot.hold>0)return pilot.holdExpr;
+  if(pilot.hold>0)return pilot.holdExpr==='glance'&&gazeReady()?'calm':pilot.holdExpr;
   if(player.hp<30)return 'grit';
   if(player.syncTime>0)return 'cheer';
-  return pilot.blinking>0?'closed':'calm';
+  return pilot.blinking>0&&!gazeReady()?'closed':'calm';
 }
 function updatePilot(dt){
   if(!playing){pilot.boot=0;return}
   pilot.hold=Math.max(0,pilot.hold-dt);if(pilot.hold<=0)pilot.holdPrio=0;
   // Blink: only from the resting face, on its own random timer (never on the music).
-  pilot.blinking=Math.max(0,pilot.blinking-dt);pilot.blinkT-=dt;if(pilot.blinkT<=0){pilot.blinkT=2.6+Math.random()*3.8;if(pilot.expr==='calm'&&pilot.mix>=1)pilot.blinking=.13}
+  pilot.blinking=Math.max(0,pilot.blinking-dt);pilot.blinkT-=dt;if(pilot.blinkT<=0){pilot.blinkT=2.6+Math.random()*3.8;if(pilot.expr==='calm'&&pilot.mix>=1)pilot.blinking=gazeReady()?GAZE_BLINK_T:.13}
+  updateGaze(dt);
   const want=pilotTarget(),blinky=player.alive&&!missionClear,quick=blinky&&(want==='closed'||(pilot.expr==='closed'&&pilot.hold<=0));if(want!==pilot.expr&&(pilot.mix>.6||quick)){pilot.prev=pilot.expr;pilot.expr=want;pilot.mix=0}
   pilot.mix=Math.min(1,pilot.mix+dt/(quick?.05:.26));
   // Framing is part of the acting: SIGHT LINK pushes in on the aiming eye, danger crowds the frame.
@@ -2980,6 +2993,17 @@ function updatePilot(dt){
   if(pilot.cut)pilot.cut.t+=dt;
   pilot.lostT=player.alive?0:pilot.lostT+dt;pilot.clearT=missionClear&&player.alive?pilot.clearT+dt:0;
 }
+// Where AOI's eyes go: the head's turn (camera or Q / E) and the gun's swing off the body for left / right,
+// full at about 30 deg of face turn (the camera loses the face near 45). Up follows the face's real lift, not
+// the view's (HEAD_PITCH_GAIN keeps that tiny): full at about 14 deg, or the gun raised. A contact glance
+// throws them to that side.
+function updateGaze(dt){
+  const ads=Math.max(player.scope||0,player.ads||0),glance=pilot.hold>0&&pilot.holdExpr==='glance';
+  const tx=glance?pilot.glanceDir*.95:clamp(headYaw/28*(1-ads)+player.torso/.4,-1,1);
+  const lift=headEnabled&&basePitch!==null&&headPoseFresh(performance.now())?Math.max(0,rawPitch-basePitch-(+dead.value))/12:0;
+  const ty=glance?0:-clamp(Math.max(lift,player.pitch/.45),0,1),k=1-Math.exp(-dt*16);pilot.gx+=(tx*GAZE_MIRROR-pilot.gx)*k;pilot.gy+=(ty-pilot.gy)*k;
+  const d=i=>Math.hypot(GAZE_CELLS[i][0]-pilot.gx,GAZE_CELLS[i][1]-pilot.gy);let best=pilot.cell;
+  for(let i=0;i<GAZE_CELLS.length;i++)if(d(i)<d(best))best=i;if(d(best)+.04<d(pilot.cell))pilot.cell=best}
 // Bitmap text: each distinct string is rasterised once into a small canvas (1 font pixel = 1 canvas
 // pixel, with a dark drop shadow) and blitted with smoothing off.
 const pxCache=new Map();
@@ -3021,13 +3045,14 @@ function hudPanel(x,y,w,h,label,s,col=HUD.line){
 const faceLayer={c:null,key:''};
 function drawPilotFace(x,y,w,h,s){
   const f=pilot.fr,danger=player.alive&&player.hp<30,jit=danger?Math.floor(gameTime*14):0,grade=player.syncTime>0?1:danger?2:0;
-  const key=[pilot.glanceDir,pilot.expr,pilot.prev,pilot.mix.toFixed(2),f.x.toFixed(3),f.y.toFixed(3),f.z.toFixed(3),Math.round(headYaw*2),jit,grade,Math.round(w),Math.round(h),DPR,pilotReady(pilot.expr),pilotReady(pilot.prev||pilot.expr)].join('|');
+  const gazeCell=pilot.blinking>0?GAZE_CELLS.length+Math.min(GAZE_BLINK-1,Math.floor((GAZE_BLINK_T-pilot.blinking)/GAZE_BLINK_T*GAZE_BLINK)):pilot.cell;
+  const key=[gazeCell,pilot.glanceDir,pilot.expr,pilot.prev,pilot.mix.toFixed(2),f.x.toFixed(3),f.y.toFixed(3),f.z.toFixed(3),Math.round(headYaw*2),jit,grade,Math.round(w),Math.round(h),DPR,pilotReady(pilot.expr),pilotReady(pilot.prev||pilot.expr)].join('|');
   if(!faceLayer.c)faceLayer.c=makeCanvas();const L=faceLayer.c;if(!L)return;
   if(key!==faceLayer.key){faceLayer.key=key;const cw=Math.max(1,Math.round(w*DPR)),ch=Math.max(1,Math.round(h*DPR));if(L.width!==cw||L.height!==ch){L.width=cw;L.height=ch}
     const g=L.getContext('2d');g.setTransform(DPR,0,0,DPR,0,0);g.clearRect(0,0,w,h);
     const jr=k=>danger?(hash(jit*7+k)-.5):0,jx=jr(1)*2.4*s,jy=jr(2)*1.6*s;
     const draw=(k,a,dx)=>{if(!pilotReady(k)||a<=.01)return;const sc=w*1.62/960*f.z,px=640+f.x*240-headYaw*1.3,py=300+f.y*240;
-      g.globalAlpha=a;const X=w*.5-px*sc+dx+jx,Y=h*.46-py*sc+jy;if(k==='glance'&&pilot.glanceDir<0){g.save();g.translate(X+640*sc,0);g.scale(-1,1);g.drawImage(pilotImg[k],-640*sc,Y,1280*sc,760*sc);g.restore()}else g.drawImage(pilotImg[k],X,Y,1280*sc,760*sc)};
+      g.globalAlpha=a;const X=w*.5-px*sc+dx+jx,Y=h*.46-py*sc+jy;if(k==='calm'&&gazeReady()){const P=GAZE_PATCH,A=pilotImg.gaze_eyes;g.drawImage(pilotImg.gaze,X,Y,1280*sc,760*sc);g.drawImage(A,(gazeCell%GAZE_COLS)*P.w,Math.floor(gazeCell/GAZE_COLS)*P.h,P.w,P.h,X+P.x*sc,Y+P.y*sc,P.w*sc,P.h*sc)}else if(k==='glance'&&pilot.glanceDir<0){g.save();g.translate(X+640*sc,0);g.scale(-1,1);g.drawImage(pilotImg[k],-640*sc,Y,1280*sc,760*sc);g.restore()}else g.drawImage(pilotImg[k],X,Y,1280*sc,760*sc)};
     const m=pilot.mix,ghost=(1-m)*7*s;if(pilot.prev&&m<1)draw(pilot.prev,(1-m)*.86,ghost);draw(pilot.expr,(pilot.prev?m:1)*.86,-ghost);g.globalAlpha=1;
     // HMD grade: pull saturation down, sink it under a veil (teal / SYNC gold / danger red), then scanlines.
     g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,.55)';g.fillRect(0,0,w,h);
@@ -3312,6 +3337,11 @@ function applyBloom(){
   ctx.globalAlpha=filterOK?.80:.30;ctx.drawImage(bloomA,0,0,cw,ch);ctx.globalAlpha=filterOK?.70:.26;ctx.drawImage(bloomB,0,0,cw,ch);ctx.restore();
 }
 $('res').addEventListener('click',()=>{cycleRes();sfx.ui()});resLabel();
+// FPS表示 (設定): frames counted over half a second, shown in the top-right corner on the menu and in play. Kept in hf.fps.
+const fpsMeter={on:false,n:0,ms:0};try{fpsMeter.on=localStorage.getItem('hf.fps')==='on'}catch{}
+function fpsLabel(){$('fpsBtn').textContent=fpsMeter.on?jt('FPS表示：オン','FPS: on'):jt('FPS表示：オフ','FPS: off');$('fpsMeter').classList.toggle('hidden',!fpsMeter.on)}
+function fpsTick(raw){if(!fpsMeter.on||raw>500)return;fpsMeter.n++;fpsMeter.ms+=raw;if(fpsMeter.ms>=500){$('fpsMeter').textContent=Math.round(fpsMeter.n*1000/fpsMeter.ms)+' FPS'+(headEnabled&&headSize>0?'  FACE '+Math.round(headSize*100)+'%':'');fpsMeter.n=fpsMeter.ms=0}}
+$('fpsBtn').addEventListener('click',()=>{fpsMeter.on=!fpsMeter.on;fpsMeter.n=fpsMeter.ms=0;try{localStorage.setItem('hf.fps',fpsMeter.on?'on':'off')}catch{}fpsLabel();sfx.ui()});fpsLabel();
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?jt('発光：強','Glow: high'):jt('発光：弱','Glow: low')}
 function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,va=Math.max(sc,player.ads||0),viewYaw=lerp(player.yaw+head,player.yaw+player.torso,va)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,va);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc)*(1+ADS_ZOOM*(player.ads||0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
@@ -3321,7 +3351,7 @@ const frameErrors=new Map();
 function reportFrameError(err){const msg=String(err&&err.message||err);console.error(err);try{(window.__hfErrors=window.__hfErrors||[]).push({t:gameTime,msg,stack:String(err&&err.stack||'')})}catch{}
   try{ctx.restore();ctx.restore()}catch{}try{ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowBlur=0}catch{}lineBatch=null;
   if(!frameErrors.has(msg)){frameErrors.set(msg,1);try{plog('Warning','-ERR '+msg.slice(0,36))}catch{}}}
-function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent=jt('発光：弱（自動）','Glow: low (auto)');plog('System','Glow auto low.')}}else perf.t=0;pollPad(dt);updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
+function loop(now){try{const raw=now-last,dt=clamp(raw/1000,0,.05);last=now;fpsTick(raw);if(playing&&fxHigh&&perf.auto&&raw<200){perf.avg=lerp(perf.avg,raw,.02);perf.t+=dt;if(perf.t>3&&perf.avg>26){fxHigh=false;$('fx').textContent=jt('発光：弱（自動）','Glow: low (auto)');plog('System','Glow auto low.')}}else perf.t=0;pollPad(dt);updateHead(now,dt);music.menu=!playing;audioTick(dt);if(playing){if(hitStop>0)hitStop=Math.max(0,hitStop-dt);else{gameTime+=dt;update(dt)}}updatePilot(dt);updateVisorFX(playing&&hitStop<=0?dt:0);voxTick();if(canvas.width>0&&canvas.height>0)render()}catch(err){reportFrameError(err)}requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
 // ---------- CONTROLS ----------
@@ -3373,10 +3403,10 @@ document.addEventListener('mousedown',e=>{if(padDriven)setPadDriven(false);if(pl
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
 document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector();if((e.code==='Enter'||e.code==='NumpadEnter'||e.code==='Space')&&!e.repeat)skipEnding()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
-$('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('reset').addEventListener('click',()=>{stage=1;reset();$('status').textContent=jt('1面からやり直します','Restarting from Sector 1')});$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent=jt('全画面にできませんでした',"Couldn't go fullscreen")}});
+$('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent=jt('全画面にできませんでした',"Couldn't go fullscreen")}});
 // Static menu text: the Japanese is whatever index.html holds (kept the first time), the English is here.
-const I18N_EN={endure:'Survival<small>Fight until you fall</small>',settings:'Settings',full:'Fullscreen',toTitle:'Back to title',about:'About / How to play',reset:'Restart',
-  vol:'Master volume',music:'Music',voice:'Voice',se:'Sound effects',mouse:'Mouse sensitivity',stick:'Stick sensitivity',tgain:'Tracking sensitivity',tdead:'Tracking dead zone',tsmooth:'Tracking response',
+const I18N_EN={endure:'Survival<small>Fight until you fall</small>',settings:'Settings',full:'Fullscreen',toTitle:'Back to title',about:'About / How to play',
+  vol:'Master volume',music:'Music',voice:'Voice',se:'Sound effects',mouse:'Mouse sensitivity',stick:'Stick sensitivity',tgain:'Tracking sensitivity',tdead:'Tracking dead zone',tsmooth:'Tracking response',resetSettings:'Reset to defaults',
   caution:'Take care if you get motion sick easily.<br>If you start to feel unwell, stop and rest right away.',
   padKeys:'<span><b>Left stick</b> Move</span><span><b>Right stick</b> Aim gun</span><span><b>RT</b> Fire</span><span><b>LT</b> Aim / scope</span><span><b>A</b> Jump</span><span><b>B</b> Boost</span><span><b>X</b> Axe</span><span><b>Y</b> Switch weapon</span><span><b>LB / RB</b> Look left / right (no camera)</span><span><b>Right stick click</b> Recenter view</span><span><b>Menu button</b> Menu</span>',
   keyKeys:'<span><b>WASD</b> Move</span><span><b>SHIFT</b> Boost</span><span><b>SPACE</b> Jump</span><span><b>Mouse</b> Aim weapon</span><span><b>Left click</b> Fire</span><span><b>Right click</b> Aim / scope</span><span><b>Wheel / 1-3</b> Switch weapon</span><span><b>V</b> Axe</span><span><b>Q/E</b> Look left / right (no camera)</span><span><b>C</b> Recenter view</span><span><b>ESC</b> Menu</span><span><b>R</b> Redeploy</span>',
@@ -3386,11 +3416,13 @@ const I18N_EN={endure:'Survival<small>Fight until you fall</small>',settings:'Se
 const i18nEls=document.querySelectorAll?[...document.querySelectorAll('[data-i18n]')].map(el=>({el,ja:el.innerHTML})):[];
 function applyLang(){if(document.documentElement)document.documentElement.lang=lang;for(const {el,ja} of i18nEls)el.innerHTML=lang==='en'?I18N_EN[el.dataset.i18n]??ja:ja;
   $('langBtn').textContent=jt('文字 / Language：日本語','Language: English');$('voiceLangBtn').textContent=jt('ボイス：','Voice: ')+(voiceLang==='en'?jt('英語','English'):jt('日本語','Japanese'));
-  resLabel();setFx(fxHigh);camUI(camLast[0],camLast[1],true);$('playLabel').textContent=everStarted?jt('再開','Resume'):jt('ミッション','Mission');playLabel()}
+  resLabel();fpsLabel();setFx(fxHigh);camUI(camLast[0],camLast[1],true);$('playLabel').textContent=everStarted?jt('再開','Resume'):jt('ミッション','Mission');playLabel()}
 $('langBtn').addEventListener('click',()=>{lang=lang==='en'?'ja':'en';try{localStorage.setItem('hf.lang',lang)}catch{}applyLang();readyStatus();sfx.ui()});
 $('voiceLangBtn').addEventListener('click',()=>{voiceLang=voiceLang==='en'?'ja':'en';try{localStorage.setItem('hf.voiceLang',voiceLang)}catch{}applyLang();sfx.ui();if(vox.lines.length)voxLoadAudio()});
 applyLang();
 function bind(inp,out,suffix,digits){const f=()=>out.textContent=(+inp.value).toFixed(digits)+suffix;inp.addEventListener('input',f);f()}bind(mouseSens,$('sensout'),'×',2);bind($('padSens'),$('padsensout'),'×',2);bind(gain,$('gainout'),'×',2);bind(dead,$('deadout'),'°',1);{const f=()=>$('smoothout').textContent=(.13/headSmooth()).toFixed(2)+'×';smooth.addEventListener('input',f);f()}
+// Every slider back to the value written in index.html; the input event lets each one apply itself.
+$('resetSettings').addEventListener('click',()=>{for(const inp of document.querySelectorAll('.settings input[type=range]')){inp.value=inp.defaultValue;inp.dispatchEvent(new Event('input'));inp.dispatchEvent(new Event('change'))}sfx.ui()});
 addEventListener('blur',()=>{clearInput();if(playing)pause()});
 addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());headWorker?.terminate()});
 // ---------- GAMEPAD ----------

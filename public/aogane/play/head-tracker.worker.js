@@ -34,11 +34,15 @@ self.onmessage = async ({ data }) => {
   try {
     const result = tracker.detectForVideo(bitmap, data.timestamp);
     const matrix = result.facialTransformationMatrixes?.[0]?.data;
+    // Face width (cheek to cheek, landmarks 234 / 454) as a share of the picture's width: how close the
+    // player sits, in the terms that matter to tracking whatever the lens.
+    const lm = result.faceLandmarks?.[0];
+    const size = lm ? Math.hypot(lm[454].x - lm[234].x, (lm[454].y - lm[234].y) * bitmap.height / bitmap.width) : 0;
     self.postMessage({ type: 'pose', timestamp: data.timestamp, found: !!matrix,
       yaw: matrix ? -Math.atan2(matrix[8], matrix[10]) * 180 / Math.PI : 0,
       // + when the face tilts up: the face's forward axis gains height.
       pitch: matrix ? Math.atan2(matrix[9], Math.hypot(matrix[8], matrix[10])) * 180 / Math.PI : 0,
-      inferenceMs: performance.now() - start });
+      size, inferenceMs: performance.now() - start });
   } catch (error) {
     self.postMessage({ type: 'error', message: String(error?.message || error) });
   } finally {
