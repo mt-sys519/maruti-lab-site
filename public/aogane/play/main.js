@@ -389,10 +389,22 @@ let mode='sortie';
 // 難易度 (title menu, hf.diff). dmg: what hostiles' shots and contact take off; hp: hostile armour;
 // gap: time between a hostile's attacks; attackers: hostiles allowed to commit a main attack at once (the
 // director's primary slots; HARD survival climbs with the threat level, see attackers()); wake: sleeping hostiles woken together after a break; air: seconds between
-// KITE attack runs. Only chosen on the title screen, so one run never mixes two settings.
-const DIFFS={easy:{dmg:.6,hp:.8,gap:1.3,attackers:1,wake:1,air:1.4},normal:{dmg:1,hp:1,gap:1,attackers:1,wake:1,air:1.4},hard:{dmg:1.4,hp:1.5,gap:.8,attackers:2,wake:2,air:.8}};
+// KITE attack runs; move: how fast VANE sweeps and PIKE runs across the view. Only chosen on the title
+// screen, so one run never mixes two settings.
+const DIFFS={easy:{dmg:.6,hp:.8,gap:1.3,attackers:1,wake:1,air:1.4,move:1},normal:{dmg:1,hp:1,gap:1,attackers:1,wake:1,air:1.4,move:1},hard:{dmg:1.4,hp:1.5,gap:.8,attackers:2,wake:2,air:.8,move:1.25}};
 let difficulty='normal';try{const v=localStorage.getItem('hf.diff');if(DIFFS[v])difficulty=v}catch{}
 const DIFF=()=>DIFFS[difficulty];
+// ATLAS (2026-10-14, the user: shooting a 15 m walker that just stands there is dull). Its hull barely takes
+// a round (armor); the two shoulder launchers do, and they are what fire: each sends `salvo` missiles up
+// every `every` s, which climb, then turn onto the frame and can be shot down. Break both launchers and
+// the chest opens on the core; breaking the core brings ATLAS down. Hull hits go to the core at `armor`.
+// Once the core is open it fans `spread.count` energy rounds from it every `spread.every` s: they cannot be
+// shot down, only side-stepped. Inside `vulcan.range` a chin gun spins up and fires bursts, so closing in
+// to get under the launchers is punished.
+// VANE's sweep across the view, rad/s (~15 deg/s; x DIFF().move).
+const VANE_SWEEP=.26;
+const ATLAS={gun:180,core:260,armor:.1,every:6,salvo:3,missile:{dmg:4,rise:.55,speed:22,turn:2.8,life:7,r:1.5},
+  spread:{every:3.5,count:7,arc:1,speed:30,dmg:6},vulcan:{range:30,spin:.35,burst:1.2,rate:.08,cool:2.2,dmg:1.2,speed:75,spread:.05}};
 // HARD survival: two main attackers at threat 1-2, three at 3-4, four from 5.
 const attackers=()=>mode==='endurance'&&difficulty==='hard'?Math.min(4,2+Math.floor((endure.level-1)/2)):DIFF().attackers;
 // Survival bests are kept per difficulty; NORMAL keeps the original key.
@@ -408,19 +420,22 @@ const ATLAS_CHANCE=.16;
 function enduranceTarget(){return Math.min(6,2+endure.level)}
 function makeEnemy(x,z,type,id,i,k=1,dk=1){
     k*=DIFF().hp;dk*=DIFF().dmg;
-    const cfg=type==='KITE'?{hp:60,speed:26,desired:92,fire:5.2,dash:false,scale:1,damage:6}:type==='TITAN'?{hp:1100,speed:3.4,desired:70,fire:3.6,dash:false,scale:2,damage:10}:type==='SCOUT'?{hp:68,speed:9.0,desired:29,fire:1.25,dash:true,scale:.88,damage:5}:type==='HEAVY'?{hp:165,speed:3.7,desired:48,fire:1.35,dash:false,scale:1.18,damage:10}:{hp:105,speed:6.1,desired:38,fire:1.30,dash:true,scale:1,damage:7};
+    const cfg=type==='KITE'?{hp:60,speed:26,desired:92,fire:5.2,dash:false,scale:1,damage:6}:type==='TITAN'?{hp:ATLAS.gun*2+ATLAS.core,speed:3.4,desired:70,fire:ATLAS.every,dash:false,scale:2,damage:10}:type==='SCOUT'?{hp:68,speed:9.0,desired:29,fire:1.25,dash:true,scale:.88,damage:5}:type==='HEAVY'?{hp:165,speed:3.7,desired:48,fire:1.35,dash:false,scale:1.18,damage:10}:{hp:105,speed:6.1,desired:38,fire:1.30,dash:true,scale:1,damage:7};
     const p=[x,z];cfg.hp=Math.round(cfg.hp*k);cfg.damage=Math.round(cfg.damage*dk);
-    return {x:p[0],z:p[1],type,heavy:type==='HEAVY'||type==='TITAN',maxHp:cfg.hp,hp:cfg.hp,alive:true,id,dmgK:dk,yaw:0,phase:i*1.77,last:-i*.4,speed:cfg.speed,desired:cfg.desired,fireRate:cfg.fire*DIFF().gap,dashCap:cfg.dash,scale:cfg.scale,damage:cfg.damage,flash:0,muzzle:0,stun:0,dashCd:1.3+hash(i+8)*2.2,dashT:0,dashVX:0,dashVZ:0,lean:0,strafe:i%2?1:-1,marked:i<2?1.6:0,markLatch:false,focus:0,designated:0,awake:i<2,wakeT:0,charge:0,firePending:false,stagger:0,breakFlash:0,vx:0,vz:0,lungeCd:1.4+hash(i+22)*1.8,lungeWindup:0,lungeVX:0,lungeVZ:0,trail:[],trailTick:0,px:p[0],pz:p[1],flankSide:p[0]>=0?1:-1,recoverT:0,nextAttack:.95+i*.32,lastAttack:-i*.4,blockedT:0,dashPuffTime:0,attackKind:'',committedAim:null,chargeDuration:.62}}
+    const made={x:p[0],z:p[1],type,heavy:type==='HEAVY'||type==='TITAN',maxHp:cfg.hp,hp:cfg.hp,alive:true,id,dmgK:dk,yaw:0,phase:i*1.77,last:-i*.4,speed:cfg.speed,desired:cfg.desired,fireRate:cfg.fire*DIFF().gap,dashCap:cfg.dash,scale:cfg.scale,damage:cfg.damage,flash:0,muzzle:0,stun:0,dashCd:1.3+hash(i+8)*2.2,dashT:0,dashVX:0,dashVZ:0,lean:0,strafe:i%2?1:-1,marked:i<2?1.6:0,markLatch:false,focus:0,designated:0,awake:i<2,wakeT:0,charge:0,firePending:false,stagger:0,breakFlash:0,vx:0,vz:0,lungeCd:1.4+hash(i+22)*1.8,lungeWindup:0,lungeVX:0,lungeVZ:0,trail:[],trailTick:0,px:p[0],pz:p[1],flankSide:p[0]>=0?1:-1,recoverT:0,nextAttack:.95+i*.32,lastAttack:-i*.4,blockedT:0,dashPuffTime:0,attackKind:'',committedAim:null,chargeDuration:.62};
+    if(type==='TITAN')atlasParts(made,cfg.hp/(ATLAS.gun*2+ATLAS.core));
+    return made}
 function spawn(){
   enemies.length=0;
   const layout=[[0,38,'HEAVY'],[25,65,'SCOUT'],[-38,8,'LANCER'],[42,-18,'SCOUT'],[0,-62,'HEAVY'],[-44,-82,'LANCER']];
   if(mode!=='endurance'&&stage===3){
-    // SKYDECK: a few machines on the deck, and the KITE flights circling high over it.
-    const deck=[[0,-24,'HEAVY'],[-34,18,'SCOUT'],[36,-56,'SCOUT']];deck.forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));
+    // SKYDECK: a few machines on the deck, the KITE flights circling high over it, and ATLAS at the far end
+    // as the last fight (it wakes last: the nearest sleeper wakes first).
+    const deck=[[0,-24,'HEAVY'],[-34,18,'SCOUT'],[36,-56,'SCOUT'],[0,-90,'TITAN']];deck.forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));
     for(let i=0;i<5;i++)enemies.push(makeKite(i,deck.length+i+1));return}
   if(mode!=='endurance'&&stage===2){
-    // FREIGHT TUNNEL: walkers only. PIKEs and BASTIONs between the pillars, two ATLAS side by side at the far end.
-    [[14,24,'LANCER'],[-18,-20,'HEAVY'],[20,-62,'HEAVY'],[-16,-84,'LANCER'],[-13,-112,'TITAN'],[13,-112,'TITAN']].forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));return}
+    // FREIGHT TUNNEL: walkers only. PIKEs and BASTIONs between the pillars, one ATLAS at the far end.
+    [[14,24,'LANCER'],[-18,-20,'HEAVY'],[20,-62,'HEAVY'],[-16,-84,'LANCER'],[0,-112,'TITAN']].forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));return}
   if(mode==='training'){[[0,40,'HEAVY'],[24,54,'SCOUT']].forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));return}
   (mode==='endurance'?layout.slice(0,3):layout).forEach((p,i)=>enemies.push(makeEnemy(p[0],p[1],p[2],i+1,i)));
 }
@@ -466,7 +481,9 @@ function collide(x,z,r=1.2){if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;
 function movePlayer(dx,dz){let hit=false;const dist=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(dist/.55)),sx=dx/steps,sz=dz/steps;for(let i=0;i<steps;i++){const nx=player.x+sx,nz=player.z+sz;if(!collide(nx,player.z,1.25))player.x=nx;else{player.vx=0;hit=true}if(!collide(player.x,nz,1.25))player.z=nz;else{player.vz=0;hit=true}}return hit}
 // Ray-vs-hostile: the main hit cylinder, plus ATLAS's two legs. Returns the earliest t or null.
 function enemyHitT(e,x0,y0,z0,x1,y1,z1,pad=0){const R=RIGS[e.type],H=R.hit;let t=sweepCylinder(x0,y0,z0,x1,y1,z1,e,H.r+pad,H.cy+eY(e),H.hh+pad);
-  if(R.legHit){const L=R.legHit,r=right(e.yaw);for(const s of [-1,1]){const u=sweepCylinder(x0,y0,z0,x1,y1,z1,{x:e.x+r.x*L.off*s,z:e.z+r.z*L.off*s},L.r+pad,L.cy,L.hh);if(u!==null&&(t===null||u<t))t=u}}return t}
+  if(R.legHit){const L=R.legHit,r=right(e.yaw);for(const s of [-1,1]){const u=sweepCylinder(x0,y0,z0,x1,y1,z1,{x:e.x+r.x*L.off*s,z:e.z+r.z*L.off*s},L.r+pad,L.cy,L.hh);if(u!==null&&(t===null||u<t))t=u}}
+  if(e.guns)for(const g of atlasGuns(e))if(g.hp>0)for(const f of [.15,.5,.85]){const u=segSphereT(x0,y0,z0,x1,y1,z1,g.a[0]+(g.b[0]-g.a[0])*f,g.a[1]+(g.b[1]-g.a[1])*f,g.a[2]+(g.b[2]-g.a[2])*f,1.25+pad);if(u!==null&&(t===null||u<t))t=u}
+  return t}
 // Height to aim / look at: ATLAS's hull is ~10 m up, everyone else ~3 m.
 // ATLAS fights from ~70 m and is tall, so locks, designation and the attack director reach a little further.
 function reach(e){return e.type==='TITAN'?1.15:1}
@@ -641,7 +658,7 @@ function updateSwing(dt){const S=player.swing;if(!S)return;S.t+=dt;const B=BARDI
     for(const e of enemies){if(!e.alive||eY(e)>7.5)continue;const dx=e.x-player.x,dz=e.z-player.z,l=Math.hypot(dx,dz)||1,R=RIGS[e.type].hit.r;
       if(l-R>B.reach||Math.abs(angleDiff(Math.atan2(dx,-dz),ay))>B.arc/2&&l>R+2||segmentHitsWorld(player.x,2,player.z,e.x,2,e.z))continue;
       if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');any=true;pan=worldPan(e.x,e.z);const hx=e.x-dx/l*R,hz=e.z-dz/l*R,hy=Math.min(CAMERA_Y,RIGS[e.type].hit.cy+eY(e));
-      e.hp-=tutArmor(B.damage);e.flash=.24;e.hitPoint={x:hx,y:hy,z:hz};e.hitT=.2;sparks(hx,hy,hz,22,'#e8f4ff',14,'#ffffff');sparks(hx,hy,hz,10,'#6fa8ff',9);
+      hurtEnemy(e,tutArmor(B.damage),hx,hy,hz);e.flash=.24;e.hitPoint={x:hx,y:hy,z:hz};e.hitT=.2;sparks(hx,hy,hz,22,'#e8f4ff',14,'#ffffff');sparks(hx,hy,hz,10,'#6fa8ff',9);
       if(e.type!=='TITAN')moveEnemy(e,dx/l*B.knock,dz/l*B.knock);
       if(e.hp>0){chipArmor(e);staggerEnemy(e,B.stagger)}else killEnemy(e,'BARDICHE')}
     if(any){hitStop=Math.max(hitStop,.13);player.shake=Math.max(player.shake,.95);player.hitMarkT=.14;cockpit.heaveV-=3.4;sfx.axeHit(pan)}}
@@ -678,7 +695,7 @@ function fireMaul(){if(player.rocketCd>0)return;if(player.rockets<=0){if(gameTim
 function maulBlast(x,y,z,direct){
   explode(x,y,z,true,false);shockwave(x,y,z,'#ffe2a8',MAUL.radius*1.2,.5);shockwave(x,.06,z,'#ffb35c',MAUL.radius*1.6,.7,'ground');lightBurst(x,y,z,'#ffd6a0',18,.4);const s=spatial(x,z);sfx.maulBlast(s.pan,s.g);
   let hit=false;for(const e of enemies){if(!e.alive)continue;const H=RIGS[e.type].hit,dh=Math.max(0,Math.hypot(e.x-x,e.z-z)-H.r),dv=Math.max(0,Math.abs(y-H.cy-eY(e))-H.hh),d=Math.hypot(dh,dv),dir=e===direct;if(!dir&&d>MAUL.radius)continue;
-    const k=dir?1:1-d/MAUL.radius;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=tutArmor(dir?MAUL.direct:MAUL.splash*k);e.flash=.2;e.hitPoint={x,y,z};e.hitT=.16;stats.hits++;hit=true;
+    const k=dir?1:1-d/MAUL.radius;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');hurtEnemy(e,tutArmor(dir?MAUL.direct:MAUL.splash*k),x,y,z);e.flash=.2;e.hitPoint={x,y,z};e.hitT=.16;stats.hits++;hit=true;
     if(e.hp>0)chipArmor(e);staggerEnemy(e,MAUL.stagger*k);if(e.hp<=0){if(e.type==='TITAN')player.rockets=Math.min(MAUL.mag,player.rockets+2);killEnemy(e,'MAUL')}}
   if(hit)hitMark(s.pan);const pd=Math.hypot(player.x-x,player.z-z);if(pd<14)player.shake=Math.max(player.shake,.6*(1-pd/14))}
 function updateRockets(dt){
@@ -697,11 +714,76 @@ function fire(fresh=false){if(!playing||!player.alive||missionClear||cockpit.swa
 function getLock(maxAngle=.18){const ay=player.yaw+player.torso,ap=player.pitch;let best=null,bestScore=maxAngle;for(const e of enemies){if(!e.alive)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>130||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)+.2-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);if(score<bestScore){bestScore=score;best={e,dist,score}}}return best}
 function getHmdLock(){const e=enemies.find(x=>x.id===lastDesignatedId&&x.alive&&x.designated>0);if(!e)return null;const dist=Math.hypot(e.x-player.x,e.z-player.z);if(dist>135||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))return null;return{e,dist,score:0,hmd:true}}
 function getSightLink(maxAngle=.105){const h=getHmdLock();if(!h)return null;const e=h.e,ay=player.yaw+player.torso,ap=player.pitch,dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz)||1,ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);return score<maxAngle?{e,dist,score}:null}
-function wakeEnemy(e,label='CONTACT'){if(!e||!e.alive||e.awake||tutHold())return;e.awake=true;e.wakeT=.62;e.marked=Math.max(e.marked||0,1.8);e.flash=.18;sfx.contact(e);plog('Caution',`-${label==='HMD HANDOFF'?'Handoff contact':'Hostile contact'}. ${etag(e)}`);pilotGlance(e,.8,1);sayContact(e);shockwave(e.x,.06,e.z,'#ff7667',9,.62,'ground')}
+function wakeEnemy(e,label='CONTACT'){if(!e||!e.alive||e.awake||tutHold())return;e.awake=true;e.wakeT=.62;e.marked=Math.max(e.marked||0,1.8);e.flash=.18;sfx.contact(e);plog('Caution',`-${label==='HMD HANDOFF'?'Handoff contact':'Hostile contact'}. ${etag(e)}`);pilotGlance(e,.8,1);sayContact(e);shockwave(e.x,.06,e.z,'#ff7667',9,.62,'ground');if(e.guns)plog('HMD',`-${etag(e)} weak points: launcher x2.`)}
 function wakeNearestCold(){let best=null,bd=1e9;for(const e of enemies){if(!e.alive||e.awake)continue;const d=Math.hypot(e.x-player.x,e.z-player.z);if(d<bd){bd=d;best=e}}if(best)wakeEnemy(best,'NEW CONTACT')}
 function tryHmdHandoff(excludeId=0){const viewYaw=player.yaw+headYaw*Math.PI/180;let best=null,bestA=.30;for(const e of enemies){if(!e.alive||e.id===excludeId)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>120||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const a=Math.abs(angleDiff(Math.atan2(dx,-dz),viewYaw));if(a<bestA){bestA=a;best=e}}if(!best)return;best.focus=Math.max(best.focus||0,.17);best.marked=Math.max(best.marked||0,1.4);if(!best.awake)wakeEnemy(best,'HMD HANDOFF');plog('HMD',`-Handoff. ${etag(best)}`)}
-function enemyShoot(e,aim=null){const shots=e.type==='SCOUT'||e.type==='TITAN'?2:1,muzzles=enemyMuzzles(e);for(let n=0;n<shots;n++){const m=muzzles[n%muzzles.length],lead=e.type==='SCOUT'?.06:e.heavy?.18:.11,tx=(aim?.x??(player.x+player.vx*lead))-m[0],tz=(aim?.z??(player.z+player.vz*lead))-m[2],td=Math.hypot(tx,tz)||1,spread=(Math.random()-.5)*(e.heavy?.014:e.type==='SCOUT'?.05:.034),sp=e.type==='TITAN'?46:e.heavy?42:e.type==='SCOUT'?39:35;enemyBolts.push({x:m[0],y:m[1],z:m[2],px:m[0],py:m[1],pz:m[2],vx:(tx/td+spread)*sp,vy:((CAMERA_Y-m[1])/td)*sp,vz:(tz/td+spread)*sp,life:3.0,damage:e.type==='SCOUT'?Math.round(4*(e.dmgK||1)):e.damage,type:e.type,heavy:!!e.heavy,big:e.type==='TITAN',near:false,threatened:false,evadeCandidate:false})}e.muzzle=.11;if(e.anim){e.anim.recoil=1;e.anim.recoilSide=-(e.anim.recoilSide||1)}if(e.type==='TITAN')sfx.titanFire(e);else if(e.heavy)sfx.heavyFire(e);else sfx.hostile(e)}
+// ---------- ATLAS: launchers, core, missiles ----------
+function atlasParts(e,k){e.guns=[ATLAS.gun*k,ATLAS.gun*k];e.gunMax=ATLAS.gun*k;e.core=e.coreMax=ATLAS.core*k;e.coreOpen=false}
+// Each launcher as a segment from its mount to its muzzle, in world space.
+function atlasGuns(e){const pose=enemyPose(e);return pose.rig.muzzles.map(([bn,v],i)=>({i,bn,hp:e.guns[i],a:xfPoint(pose.X[bn],[0,0,0]),b:xfPoint(pose.X[bn],v)}))}
+function atlasCore(e){const p=enemyPose(e).parts.find(q=>q.P.name==='core'),c=[0,0,0];for(const v of p.wv){c[0]+=v[0];c[1]+=v[1];c[2]+=v[2]}return c.map(x=>x/p.wv.length)}
+function pointSegDist(x,y,z,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=dx*dx+dy*dy+dz*dz||1,t=clamp(((x-a[0])*dx+(y-a[1])*dy+(z-a[2])*dz)/l,0,1);return Math.hypot(a[0]+dx*t-x,a[1]+dy*t-y,a[2]+dz*t-z)}
+// Earliest t in [0,1] where the segment enters the sphere, or null.
+function segSphereT(x0,y0,z0,x1,y1,z1,cx,cy,cz,r){const dx=x1-x0,dy=y1-y0,dz=z1-z0,fx=x0-cx,fy=y0-cy,fz=z0-cz,a=dx*dx+dy*dy+dz*dz,b=2*(fx*dx+fy*dy+fz*dz),c=fx*fx+fy*fy+fz*fz-r*r;
+  if(c<=0)return 0;const disc=b*b-4*a*c;if(a<1e-9||disc<0)return null;const t=(-b-Math.sqrt(disc))/(2*a);return t>=0&&t<=1?t:null}
+// All damage to a hostile goes through here. ATLAS sends it to the launcher nearest the hit, else to the
+// core (in full once the chest is open and the hit lands on it, at ATLAS.armor through the hull).
+function hurtEnemy(e,dmg,x,y,z){if(!e.guns){e.hp-=dmg;return}
+  let part=null,best=1.9;for(const g of atlasGuns(e))if(g.hp>0){const d=pointSegDist(x,y,z,g.a,g.b);if(d<best){best=d;part=g.i}}
+  if(part!==null){e.guns[part]=Math.max(0,e.guns[part]-dmg);if(e.guns[part]<=0)breakGun(e,part)}
+  else{const c=atlasCore(e),open=e.coreOpen&&Math.hypot(x-c[0],y-c[1],z-c[2])<2.6;e.core=Math.max(0,e.core-dmg*(open?1:ATLAS.armor));if(!open)sparks(x,y,z,4,'#cfd8e0',5)}
+  e.hp=e.guns[0]+e.guns[1]+e.core}
+function breakGun(e,i){const pose=enemyPose(e),bn=pose.rig.muzzles[i][0],g=atlasGuns(e)[i];e.lost=e.lost||{};
+  for(const p of pose.parts)if(p.P.bone===bn&&!e.lost[p.i]){spawnDebris(e,p.i,.9,.9);e.lost[p.i]=true}
+  explode(g.a[0],g.a[1],g.a[2],true);lightBurst(g.a[0],g.a[1],g.a[2],'#ffd6b0',14,.35);player.shake=Math.max(player.shake,.35);
+  plog('HMD',`-${etag(e)} launcher ${i?'R':'L'} broken.`);addFlow(10,'LAUNCHER BREAK');staggerEnemy(e,999);if(e.guns.every(h=>h<=0))openCore(e)}
+// Both launchers gone: the cab plate blows off and the core shows; ATLAS fires the energy spread from it.
+function openCore(e){e.coreOpen=true;e.fireRate=ATLAS.spread.every*DIFF().gap;e.nextAttack=gameTime+2;e.firePending=false;e.charge=0;e.marked=Math.max(e.marked||0,3);
+  const pose=enemyPose(e);for(const p of pose.parts)if(p.P.name==='cab'&&!e.lost[p.i]){spawnDebris(e,p.i,1.2,1);e.lost[p.i]=true}
+  const c=atlasCore(e);sparks(c[0],c[1],c[2],30,'#ffe0d8',12);shockwave(c[0],c[1],c[2],'#ff6a52',7,.5);plog('HMD',`-${etag(e)} core exposed.`)}
+// One salvo: every standing launcher sends ATLAS.salvo missiles up and out in a fan, a beat apart.
+function launchMissiles(e){const guns=atlasGuns(e).filter(g=>g.hp>0);if(!guns.length)return;if(!e.toldMissiles){e.toldMissiles=true;plog('HMD','-Missiles inbound. Interceptable.')}const M=ATLAS.missile,f=forward(e.yaw),r=right(e.yaw);
+  for(const g of guns)for(let n=0;n<ATLAS.salvo;n++){const side=n-(ATLAS.salvo-1)/2,m=g.b,vx=f.x*7+r.x*(side*5+(g.i?2:-2))+(Math.random()-.5)*2,vz=f.z*7+r.z*(side*5+(g.i?2:-2))+(Math.random()-.5)*2;
+    enemyBolts.push({x:m[0],y:m[1],z:m[2],px:m[0],py:m[1],pz:m[2],vx,vy:9+Math.random()*3,vz,life:M.life,damage:Math.round(M.dmg*(e.dmgK||1)),type:'TITAN',heavy:true,big:false,missile:true,age:-n*.12,near:false,threatened:false,evadeCandidate:false});
+    puff(m[0],m[1],m[2],4,'#b8aca6',4)}
+  e.muzzle=.11;if(e.anim)e.anim.recoil=1;sfx.titanFire(e)}
+// A missile climbs for ATLAS.missile.rise s, then turns onto the frame at a capped rate, trailing smoke.
+function steerMissile(b,dt){const M=ATLAS.missile;b.age+=dt;
+  if(b.age<M.rise)b.vy-=9*dt;
+  else{const tx=player.x-b.x,ty=CAMERA_Y-b.y,tz=player.z-b.z,tl=Math.hypot(tx,ty,tz)||1,s=Math.hypot(b.vx,b.vy,b.vz)||1,k=Math.min(1,M.turn*dt);
+    const ux=lerp(b.vx/s,tx/tl,k),uy=lerp(b.vy/s,ty/tl,k),uz=lerp(b.vz/s,tz/tl,k),ul=Math.hypot(ux,uy,uz)||1,sp=Math.min(M.speed,s+30*dt);b.vx=ux/ul*sp;b.vy=uy/ul*sp;b.vz=uz/ul*sp}
+  b.trailT=(b.trailT||0)-dt;if(b.trailT<=0){b.trailT=.045;puff(b.x,b.y,b.z,1,'#8d8580',1.2)}}
+// HMD marks (the frame's own analysis, not anyone's orders): white diamonds with a bar on ATLAS's weak
+// points (the launchers, then the open core), amber diamonds on missiles that can be shot down.
+function hmdDiamond(p,r,col,a,fill=0,lw=1.5){ctx.globalAlpha=a;ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath();ctx.stroke();
+  if(fill){ctx.globalAlpha=a*fill;ctx.fillStyle=col;ctx.fill()}ctx.globalAlpha=a;ctx.fillStyle=col;ctx.fillRect(p.x-lw,p.y-lw,lw*2,lw*2)}
+function drawHmdMarks(viewYaw,viewPitch){if(!playing||!player.alive||missionClear)return;const pulse=.5+.5*Math.sin(gameTime*6),s=Math.max(1.45,H/600);ctx.save();
+  // Sized with the screen like the rest of the HUD (the first fixed 7 px ones were too small to read).
+  const mark=(w,k,label)=>{const p=screenPoint(project(w[0],w[1],w[2],viewYaw,viewPitch));if(!p)return;const r=10*s,bw=30*s,bh=Math.max(2,2*s);hmdDiamond(p,r,HUD.ink,.9,.08,Math.max(1.5,1.1*s));
+    ctx.globalAlpha=.35;ctx.fillStyle=HUD.ink;ctx.fillRect(p.x-bw/2,p.y+r+4*s,bw,bh);ctx.globalAlpha=.95;ctx.fillRect(p.x-bw/2,p.y+r+4*s,bw*clamp(k,0,1),bh);
+    hudText(label,p.x+r+5*s,p.y-3.5*s,6.5*s,HUD.ink,0,.2)};
+  for(const e of enemies){if(!e.alive||!e.guns||!e.awake)continue;
+    if(e.coreOpen)mark(atlasCore(e),e.core/e.coreMax,'CORE');
+    else for(const g of atlasGuns(e))if(g.hp>0){const f=.4;mark([g.a[0]+(g.b[0]-g.a[0])*f,g.a[1]+(g.b[1]-g.a[1])*f,g.a[2]+(g.b[2]-g.a[2])*f],g.hp/e.gunMax,'LNCHR')}}
+  for(const b of enemyBolts){if(!b.missile||b.life<=0)continue;const p=screenPoint(project(b.x,b.y,b.z,viewYaw,viewPitch));if(p)hmdDiamond(p,(7+pulse*2)*s,'#ffc45a',.9,.15,Math.max(1.5,1.1*s))}
+  ctx.restore();ctx.globalAlpha=1}
+// The energy spread: a flat fan from the core, centred on the frame.
+function spreadShot(e){const S=ATLAS.spread,c=atlasCore(e),base=Math.atan2(player.x-c[0],-(player.z-c[2])),d=Math.hypot(player.x-c[0],player.z-c[2])||1,vy=(CAMERA_Y-c[1])/d*S.speed;
+  for(let n=0;n<S.count;n++){const a=base+(n/(S.count-1)-.5)*S.arc;enemyBolts.push({x:c[0],y:c[1],z:c[2],px:c[0],py:c[1],pz:c[2],vx:Math.sin(a)*S.speed,vy,vz:-Math.cos(a)*S.speed,life:4,damage:Math.round(S.dmg*(e.dmgK||1)),type:'TITAN',heavy:true,big:false,energy:true,near:false,threatened:false,evadeCandidate:false})}
+  sparks(c[0],c[1],c[2],18,'#ff9ae8',10);lightBurst(c[0],c[1],c[2],'#ff9ae8',12,.3);sfx.titanFire(e)}
+// The chin gun: inside range with a clear line it spins up (the warning), fires a burst, then rests.
+function atlasVulcan(e,dt,dist,los){const V=ATLAS.vulcan;e.vulT=(e.vulT||0)-dt;
+  if(e.vulBurst>0){e.vulGap-=dt;if(e.vulGap>V.rate)return;e.vulBurst-=dt;while(e.vulGap<=0&&e.vulBurst>0){e.vulGap+=V.rate;vulcanRound(e)}if(e.vulBurst<=0){e.vulBurst=0;e.vulT=V.cool}}
+  else if(e.vulT<=0&&dist<V.range&&los){e.vulBurst=V.burst;e.vulGap=V.spin+V.rate;sfx.contact(e);plog('Caution',`-${etag(e)} close-in gun.`,4)}}
+function vulcanRound(e){const V=ATLAS.vulcan,c=atlasCore(e),o=[c[0],c[1]-1.8,c[2]],tx=player.x+player.vx*.12-o[0],tz=player.z+player.vz*.12-o[2],td=Math.hypot(tx,tz)||1,s=(Math.random()-.5)*V.spread,u=(Math.random()-.5)*V.spread;
+  enemyBolts.push({x:o[0],y:o[1],z:o[2],px:o[0],py:o[1],pz:o[2],vx:(tx/td+s)*V.speed,vy:((CAMERA_Y-o[1])/td+u)*V.speed,vz:(tz/td-s)*V.speed,life:1.6,damage:V.dmg*(e.dmgK||1),type:'TITAN',heavy:false,big:false,near:false,threatened:false,evadeCandidate:false});
+  e.vulN=(e.vulN||0)+1;if(e.vulN%3===0)sfx.hostile(e)}
+function interceptMissile(m){m.life=0;sparks(m.x,m.y,m.z,16,'#ffd08a',9);shockwave(m.x,m.y,m.z,'#ffd08a',3,.3);const pan=worldPan(m.x,m.z);sfx.chip(pan);hitMark(pan);addFlow(4,'INTERCEPT')}
+function enemyShoot(e,aim=null){if(e.guns){if(e.coreOpen)spreadShot(e);else launchMissiles(e);return}const shots=e.type==='SCOUT'||e.type==='TITAN'?2:1,muzzles=enemyMuzzles(e);for(let n=0;n<shots;n++){const m=muzzles[n%muzzles.length],lead=e.type==='SCOUT'?.06:e.heavy?.18:.11,tx=(aim?.x??(player.x+player.vx*lead))-m[0],tz=(aim?.z??(player.z+player.vz*lead))-m[2],td=Math.hypot(tx,tz)||1,spread=(Math.random()-.5)*(e.heavy?.014:e.type==='SCOUT'?.05:.034),sp=e.type==='TITAN'?46:e.heavy?42:e.type==='SCOUT'?39:35;enemyBolts.push({x:m[0],y:m[1],z:m[2],px:m[0],py:m[1],pz:m[2],vx:(tx/td+spread)*sp,vy:((CAMERA_Y-m[1])/td)*sp,vz:(tz/td+spread)*sp,life:3.0,damage:e.type==='SCOUT'?Math.round(4*(e.dmgK||1)):e.damage,type:e.type,heavy:!!e.heavy,big:e.type==='TITAN',near:false,threatened:false,evadeCandidate:false})}e.muzzle=.11;if(e.anim){e.anim.recoil=1;e.anim.recoilSide=-(e.anim.recoilSide||1)}if(e.type==='TITAN')sfx.titanFire(e);else if(e.heavy)sfx.heavyFire(e);else sfx.hostile(e)}
 function staggerEnemy(e,power=20){
+  // ATLAS shrugs off ordinary rounds (HALBERD kept it reeling and it never fired); only heavy blows count:
+  // ARBALEST, BARDICHE, missiles, MAUL, and a launcher breaking.
+  if(e.type==='TITAN'&&power<40)return;
   e.stagger=(e.stagger||0)+power;
   const threshold=e.type==='TITAN'?200:e.heavy?72:e.type==='SCOUT'?36:48;
   if(e.stagger<threshold)return;
@@ -1541,6 +1623,7 @@ const RIGS={
       B('hull',hexa([[-1.35,-.45,-1.45],[1.35,-.45,-1.45],[1.2,-.45,1.55],[-1.2,-.45,1.55],[-1.2,.95,-1.3],[1.2,.95,-1.3],[.95,.82,1.2],[-.95,.82,1.2]],{lines:3,lineArea:.5,name:'hull'}));
       B('hull',hexa([[-.95,-.2,1.5],[.95,-.2,1.5],[.7,-.1,2.05],[-.7,-.1,2.05],[-.9,.62,1.25],[.9,.62,1.25],[.62,.5,1.82],[-.62,.5,1.82]],{lines:1,chip:true,name:'cab'}));
       B('hull',box(0,.32,1.98,1.0,.12,.05,{mat:'glow',glow:'eye'}));
+      B('hull',box(0,.22,1.42,.86,.56,.1,{mat:'glow',glow:'core',name:'core'}));
       for(const s of [-1,1]){B('hull',hexa([[s*1.38-.08,-.5,-1.2],[s*1.38+.08,-.5,-1.2],[s*1.38+.08,-.5,1.3],[s*1.38-.08,-.5,1.3],[s*1.3-.07,.7,-1.1],[s*1.3+.07,.7,-1.1],[s*1.3+.07,.7,1.0],[s*1.3-.07,.7,1.0]],{lines:2,chip:true,name:'flank'}))}
       B('hull',box(0,.98,-.4,.36,.06,1.9,{mat:'accent'}));
       B('turret',hexa([[-1.45,0,-1.15],[1.45,0,-1.15],[1.3,0,1.05],[-1.3,0,1.05],[-1.15,.72,-1.0],[1.15,.72,-1.0],[.95,.66,.8],[-.95,.66,.8]],{lines:2,name:'turret'}));
@@ -1757,8 +1840,8 @@ function drawEnemy(e,viewYaw,viewPitch){
   const reveal=e.wakeT>0?1-e.wakeT/.62:1,revealY=reveal<1?reveal*(rig.height+.4):null,pulse=.5+.5*Math.sin(gameTime*2.1+e.phase);
   // A dormant hostile is solid like any other (a see-through one read as standing behind a wall); it is
   // asleep because its lights are out: eyes, vents and thrusters at a tenth.
-  const sleep=e.awake?1:.1,glow={eye:.75+.25*pulse+A.prep*.6,tip:.55+.3*pulse+A.prep*.8+A.dash*.6,thrust:.35+A.dash*1.3+A.speed*.04+A.prep*.3,hover:.55+.2*Math.sin(gameTime*9+e.phase),core:.6+.4*pulse,blade:A.prep*1.2+A.dash,vent:A.prep*1.3+A.dash*.8,heat:.35+A.prep*.9+A.recoil*.8,muzzle:A.prep*1.3+A.recoil};if(sleep<1)for(const k in glow)glow[k]*=sleep;
-  const insts=pose.parts.map(p=>({P:p.P,wv:p.wv,R:p.X.R,hidden:e.lost?.[p.i]}));
+  const sleep=e.awake?1:.1,glow={eye:.75+.25*pulse+A.prep*.6,tip:.55+.3*pulse+A.prep*.8+A.dash*.6,thrust:.35+A.dash*1.3+A.speed*.04+A.prep*.3,hover:.55+.2*Math.sin(gameTime*9+e.phase),core:.6+.4*pulse+A.prep*1.4,blade:A.prep*1.2+A.dash,vent:A.prep*1.3+A.dash*.8,heat:.35+A.prep*.9+A.recoil*.8,muzzle:A.prep*1.3+A.recoil};if(sleep<1)for(const k in glow)glow[k]*=sleep;
+  const insts=pose.parts.map(p=>({P:p.P,wv:p.wv,R:p.X.R,hidden:e.lost?.[p.i]||p.P.name==='core'&&!e.coreOpen}));
   // WebGL: hostiles are batched and drawn after the sorted pass (buildings occlude them through depth);
   // the ground contact and the hostile effects are recorded into the same pass.
   if(threeEnemy(e)){enemyBatch.push({e,insts,S,hot,glow,ghost:0,revealY});drawEnemyGround(e,viewYaw,viewPitch);enemyFXQueue.push(e);return}
@@ -1849,7 +1932,7 @@ function recordBolts(viewYaw,viewPitch){
     const tail=clamp(34/p.depth*24,10,58),dx=p.x-a.x,dy=p.y-a.y,len=Math.hypot(dx,dy)||1,t={x:p.x-dx/len*tail,y:p.y-dy/len*tail,depth:a.depth},linked=!!b.syncId,col=linked?'#67ffd1':'#ffb347',w=clamp((linked?14:12)/p.depth*18,2.6,linked?8:7.5);
     recSeg(t,p,col,.18,w*2.3);recSeg(t,p,col,.85,w);recSeg(t,p,linked?'#e6fff7':'#fff6dc',1,Math.max(1.2,w*.36));recDisc(p,clamp((linked?8:7)/p.depth*18,1.6,6),'#ffffff',1)}
   for(const b of enemyBolts){const a=project(b.px,b.py,b.pz,viewYaw,viewPitch),p=project(b.x,b.y,b.z,viewYaw,viewPitch);if(!a||!p)continue;
-    const heavy=b.heavy,col=b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.big?.9:heavy?.55:.38)*p.f,2.2,b.big?34:heavy?26:18),t={x:p.x-(p.x-a.x)*3,y:p.y-(p.y-a.y)*3,depth:a.depth};
+    const heavy=b.heavy,col=b.missile?'#ffc45a':b.energy?'#ff7ae0':b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.missile?.7:b.energy?.85:b.big?.9:heavy?.55:.38)*p.f,2.2,b.big?34:heavy?26:18),t={x:p.x-(p.x-a.x)*3,y:p.y-(p.y-a.y)*3,depth:a.depth};
     recSeg(t,p,col,.35,r*1.3);recSeg(t,p,'#ffb09a',.9,r*.45);recDisc(p,r*1.9,col,.22);recDisc(p,r*.75,col,.95);recDisc(p,r*.36,'#fff1ea',.95)}
   // exhaust ribbon from the flight history: segment alpha aK*k, width clamp(wk*f)*(w0+(1-w0)*k), hot colour past hotK
   const trail=(m,col,hotCol,hotK,aK,wk,wmin,wmax,w0,r,haloK,haloCol,haloA)=>{const pts=m.hist.map(h=>project(h.x,h.y,h.z,viewYaw,viewPitch));pts.push(project(m.x,m.y,m.z,viewYaw,viewPitch));
@@ -1902,7 +1985,7 @@ function drawBolts(viewYaw,viewPitch){
     ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(p.x,p.y,clamp((linked?8:7)/p.depth*18,1.6,6),0,TAU);ctx.fill()}
   // Hostile shots: hot red/orange orbs with a short wake; readable as danger against cyan architecture.
   for(const b of enemyBolts){const a=project(b.px,b.py,b.pz,viewYaw,viewPitch),p=project(b.x,b.y,b.z,viewYaw,viewPitch);if(!a||!p)continue;
-    const heavy=b.heavy,col=b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.big?.9:heavy?.55:.38)*p.f,2.2,b.big?34:heavy?26:18),dx=p.x-a.x,dy=p.y-a.y;
+    const heavy=b.heavy,col=b.missile?'#ffc45a':b.energy?'#ff7ae0':b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.missile?.7:b.energy?.85:b.big?.9:heavy?.55:.38)*p.f,2.2,b.big?34:heavy?26:18),dx=p.x-a.x,dy=p.y-a.y;
     ctx.beginPath();ctx.moveTo(p.x-dx*3,p.y-dy*3);ctx.lineTo(p.x,p.y);ctx.globalAlpha=.35;ctx.strokeStyle=col;ctx.lineWidth=r*1.3;ctx.stroke();ctx.globalAlpha=.9;ctx.lineWidth=r*.45;ctx.strokeStyle='#ffb09a';ctx.stroke();
     ctx.globalAlpha=.22;ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,r*1.9,0,TAU);ctx.fill();
     ctx.globalAlpha=.95;ctx.beginPath();ctx.arc(p.x,p.y,r*.75,0,TAU);ctx.fill();ctx.fillStyle='#fff1ea';ctx.beginPath();ctx.arc(p.x,p.y,r*.36,0,TAU);ctx.fill()}
@@ -2594,7 +2677,11 @@ function updateKite(e,dt){
   updateEnemyAnim(e,dt);
   if((e.marked>0||e.designated>0)&&e.trailTick<=0){e.trailTick=.075;e.trail.push({x:e.x,y:2.7+eY(e),z:e.z,life:.65});if(e.trail.length>9)e.trail.shift()}
 }
+// After a shot BASTION picks a spot 12-18 m to one side (the other if that is blocked) and moves there.
+function bastionRelocate(e){if(tut.on)return;const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz)||1,first=Math.random()<.5?-1:1,off=12+Math.random()*6;
+  for(const s of [first,-first]){const x=clamp(e.x+dz/d*off*s,-WORLD+8,WORLD-8),z=clamp(e.z-dx/d*off*s,-WORLD+8,WORLD-8);if(!collide(x,z,2.5)&&!segmentHitsWorld(e.x,1.5,e.z,x,1.5,z)){e.reloc={x,z,until:gameTime+4.5};return}}}
 function finishEnemyAttack(e){
+  if(e.type==='HEAVY')bastionRelocate(e);
   e.recoverT=e.type==='TITAN'?1.4:e.heavy?.85:e.type==='LANCER'?.75:.38;
   e.nextAttack=gameTime+e.fireRate+hash(e.id+Math.floor(gameTime))*.35;
   e.attackKind='';e.committedAim=null;e.firePending=false;e.charge=0;
@@ -2626,6 +2713,7 @@ function updateEnemies(dt){
     const dx=player.x-e.x,dz=player.z-e.z,dist=Math.hypot(dx,dz)||1,los=!segmentHitsWorld(e.x,losY(e),e.z,player.x,CAMERA_Y,player.z);
     e.yaw=Math.atan2(dx,-dz);
     if(!player.alive||missionClear||!e.awake||e.wakeT>0||e.stun>0){e.vx=e.vz=0;continue}
+    if(e.guns)atlasVulcan(e,dt,dist,los);
     if(e.recoverT>0){e.vx=e.vz=0;continue}
     if(e.lungeWindup>0){
       e.lungeWindup=Math.max(0,e.lungeWindup-dt);e.vx=e.vz=0;e.lean=-e.strafe*.18;
@@ -2650,20 +2738,32 @@ function updateEnemies(dt){
         finishEnemyAttack(e);
       }
     }else{
-      let mx,mz;
+      // Movement is what gives the head something to follow (2026-10-14): VANE sweeps across the view and
+      // back, PIKE runs sideways and cuts back, BASTION moves to a new spot after each shot.
+      let mx,mz,sp=e.speed;
       if(e.type==='SCOUT'){
-        const bearing=player.yaw+e.flankSide*.82,radius=e.desired+Math.sin(gameTime*.55+e.phase)*4;
-        const tx=player.x+Math.sin(bearing)*radius,tz=player.z-Math.cos(bearing)*radius;
+        // VANE holds a bearing of its own (not one tied to the frame's facing) and swings it at ~15 deg/s,
+        // turning back at 70 deg off the frame's nose or every few seconds.
+        if(e.orb==null){e.orb=Math.atan2(e.x-player.x,-(e.z-player.z));e.orbDir=e.flankSide||1;e.orbFlip=2.5+hash(e.id)*2.5}
+        e.orbFlip-=dt;if(e.orbFlip<=0||angleDiff(e.orb,player.yaw)*e.orbDir>1.22){e.orbDir*=-1;e.orbFlip=2.5+Math.random()*2.5}
+        e.orb+=e.orbDir*VANE_SWEEP*DIFF().move*dt;sp*=1.3*DIFF().move;
+        const radius=e.desired+Math.sin(gameTime*.55+e.phase)*4,tx=player.x+Math.sin(e.orb)*radius,tz=player.z-Math.cos(e.orb)*radius;
         mx=tx-e.x;mz=tz-e.z;const n=Math.hypot(mx,mz);if(n>1){mx/=n;mz/=n}else{mx=0;mz=0}
+      }else if(e.reloc){
+        // BASTION relocating: straight to the new spot, then a beat planted before it may charge again.
+        mx=e.reloc.x-e.x;mz=e.reloc.z-e.z;const n=Math.hypot(mx,mz);sp*=1.7;
+        if(n<2||gameTime>e.reloc.until){e.reloc=null;e.nextAttack=Math.max(e.nextAttack,gameTime+.8);mx=mz=0}else{mx/=n;mz/=n}
       }else{
-        const desired=e.desired+Math.sin(gameTime*.55+e.phase)*5,radial=clamp((dist-desired)/18,-1,1),side=e.strafe*(los?.32:.45);
-        mx=dx/dist*radial+dz/dist*side;mz=dz/dist*radial-dx/dist*side;
+        const desired=e.desired+Math.sin(gameTime*.55+e.phase)*5,radial=clamp((dist-desired)/18,-1,1);let side=e.strafe*(los?.32:.45),rw=1;
+        // PIKE runs across for 2-3 s, then cuts back.
+        if(e.type==='LANCER'){e.runT=(e.runT??1+hash(e.id)*2)-dt;if(e.runT<=0){e.strafe*=-1;e.runT=2+Math.random()}side=e.strafe;rw=.35;sp*=1.35*DIFF().move}
+        mx=dx/dist*radial*rw+dz/dist*side;mz=dz/dist*radial*rw-dx/dist*side;
         const n=Math.hypot(mx,mz)||1;mx/=n;mz/=n;
       }
-      moveEnemy(e,mx*e.speed*dt,mz*e.speed*dt);
+      moveEnemy(e,mx*sp*dt,mz*sp*dt);
       const slot=combat.extra.find(s=>s.id===e.id),primary=e.id===combat.primaryId||!!slot,pressure=e.id===combat.pressureId;
       const gate=slot?slot.gate:primary?combat.primaryGate:combat.pressureGate;
-      if((primary||pressure)&&los&&dist<(e.type==='TITAN'?110:96)&&gameTime>=e.nextAttack&&gameTime>=gate){
+      if((primary||pressure)&&!e.reloc&&los&&dist<(e.type==='TITAN'?110:96)&&gameTime>=e.nextAttack&&gameTime>=gate){
         e.lastAttack=gameTime;
         if(e.type==='LANCER'&&dist>16&&dist<70){
           const ux=dx/dist,uz=dz/dist,sx=uz*e.strafe,sz=-ux*e.strafe;
@@ -2798,13 +2898,15 @@ function update(dt){
       const t=enemyHitT(e,b.x,b.y,b.z,nx,ny,nz);
       if(t!==null&&(!impact||t<impact.t))impact={t,e};
     }
+    for(const m of enemyBolts){if(!m.missile||m.life<=0)continue;const t=segSphereT(b.x,b.y,b.z,nx,ny,nz,m.x,m.y,m.z,ATLAS.missile.r);if(t!==null&&(!impact||t<impact.t))impact={t,m}}
     if(!impact){b.x=nx;b.y=ny;b.z=nz;continue}
     placeImpact(b,nx,ny,nz,impact.t);b.life=0;
+    if(impact.m){interceptMissile(impact.m);stats.hits++;continue}
     if(impact.b){sparks(b.x,b.y,b.z,7,'#8fffe0',6,'#e8fff8');shockwave(b.x,b.y,b.z,'#8fffe0',1.2,.18);continue}
     const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');
     // FLAIL pellets lose their bite with the distance they have flown; one hit mark per shell.
     const dmg=b.pellet?b.damage*clamp(1-(Math.hypot(b.x-b.ox,b.z-b.oz)-FLAIL.near)/(FLAIL.far-FLAIL.near)*.67,.33,1):b.damage;
-    e.hp-=tutArmor(dmg);e.flash=.10;e.hitPoint={x:b.x,y:b.y,z:b.z};e.hitT=.12;if(e.hp>0)chipArmor(e);
+    hurtEnemy(e,tutArmor(dmg),b.x,b.y,b.z);e.flash=.10;e.hitPoint={x:b.x,y:b.y,z:b.z};e.hitT=.12;if(e.hp>0)chipArmor(e);
     const syncHit=b.syncId===e.id;stats.hits++;staggerEnemy(e,dmg+(syncHit?9:0));if(!b.shot||!b.shot.hit){if(b.shot)b.shot.hit=true;hitMark(worldPan(e.x,e.z))}
     sparks(b.x,b.y,b.z,syncHit?16:11,syncHit?'#ffe08a':'#ffc467',syncHit?11:8.5);sparks(b.x,b.y,b.z,4,CLASS_STYLE[e.type].edge,6);shockwave(b.x,b.y,b.z,syncHit?'#ffe08a':'#ffd7a0',syncHit?2.2:1.5,.16);
     if(syncHit){player.heat=Math.max(0,player.heat-1.5);addFlow(player.syncTime>0?4:8);e.breakFlash=Math.max(e.breakFlash,.16)}
@@ -2821,7 +2923,7 @@ function update(dt){
     if(m.target?.alive){const t=enemyHitT(m.target,m.x,m.y,m.z,nx,ny,nz,.35);if(t!==null&&(!impact||t<impact.t))impact={t,e:m.target}}
     if(impact){
       placeImpact(m,nx,ny,nz,impact.t);m.life=0;
-      if(impact.e){const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');e.hp-=tutArmor(62);e.flash=.18;e.hitPoint={x:m.x,y:m.y,z:m.z};e.hitT=.14;if(e.hp>0)chipArmor(e);staggerEnemy(e,54);explode(e.x,2.8+eY(e),e.z,false);if(e.hp<=0)killEnemy(e,'MISSILE')}
+      if(impact.e){const e=impact.e;if(!e.awake)wakeEnemy(e,'IMPACT CONTACT');hurtEnemy(e,tutArmor(62),m.x,m.y,m.z);e.flash=.18;e.hitPoint={x:m.x,y:m.y,z:m.z};e.hitT=.14;if(e.hp>0)chipArmor(e);staggerEnemy(e,54);explode(e.x,2.8+eY(e),e.z,false);if(e.hp<=0)killEnemy(e,'MISSILE')}
       else explode(m.x,m.y,m.z,false);
     }else{m.x=nx;m.y=ny;m.z=nz}
     if(m.life>0&&m.trail<=0){m.trail=.03;particles.push({x:m.x,y:m.y,z:m.z,px:m.x,py:m.y,pz:m.z,vx:(Math.random()-.5)*1.5,vy:.3,vz:(Math.random()-.5)*1.5,life:.28,max:.28,color:'#ffd16f',size:.3,g:0})}
@@ -2830,7 +2932,7 @@ function update(dt){
   updateRockets(dt);updateSwing(dt);
   // hostile bolts
   for(const b of enemyBolts){
-    b.px=b.x;b.py=b.y;b.pz=b.z;
+    b.px=b.x;b.py=b.y;b.pz=b.z;if(b.missile)steerMissile(b,dt);
     const q=threatMetric(b);if(q.t>.025&&q.d<1.8&&b.life>q.t)b.threatened=true;
     const nx=b.x+b.vx*dt,ny=b.y+b.vy*dt,nz=b.z+b.vz*dt;
     let impact=worldImpact(b.x,b.y,b.z,nx,ny,nz);
@@ -3370,7 +3472,7 @@ function diffLabel(){$('diffBtn').textContent=jt('難易度：','Difficulty: ')+
 $('diffBtn').addEventListener('click',()=>{const k=Object.keys(DIFFS);difficulty=k[(k.indexOf(difficulty)+1)%k.length];try{localStorage.setItem('hf.diff',difficulty)}catch{}loadBest();diffLabel();sfx.ui()});diffLabel();
 $('fpsBtn').addEventListener('click',()=>{fpsMeter.on=!fpsMeter.on;fpsMeter.n=fpsMeter.ms=0;try{localStorage.setItem('hf.fps',fpsMeter.on?'on':'off')}catch{}fpsLabel();sfx.ui()});fpsLabel();
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?jt('発光：強','Glow: high'):jt('発光：弱','Glow: low')}
-function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,va=Math.max(sc,player.ads||0),viewYaw=lerp(player.yaw+head,player.yaw+player.torso,va)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,va);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc)*(1+ADS_ZOOM*(player.ads||0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
+function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,va=Math.max(sc,player.ads||0),viewYaw=lerp(player.yaw+head,player.yaw+player.torso,va)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,va);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc)*(1+ADS_ZOOM*(player.ads||0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawHmdMarks(viewYaw,viewPitch);drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
 // canvas state reset, and the error goes to the console, window.__hfErrors and once per message to the LOG.
