@@ -1114,10 +1114,10 @@ const BAR={
   multi:()=>[['done','完了',I.done],...(tinted().length?[['mcolor','色',colorIc(tinted()[0])]]:[]),['mgroup',grouped(msel())?'グループ解除':'グループ化',I.group],['mdup','複製',I.dup],['mdel','削除',I.del]],
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
-  shape:L=>[['done','完了',I.done],['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
+  shape:L=>[['done','完了',I.done],...(isLine(L)?[]:[['stext','文字',I.text]]),['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
   image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','トリミング',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
 };
-const ACT=new Set(['done','addtext','addimg','addshape','design','edit','swap','mgroup','mdup','mdel']);
+const ACT=new Set(['done','addtext','stext','addimg','addshape','design','edit','swap','mgroup','mdup','mdel']);
 
 const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const put=(o,p,v)=>{const ks=p.split('.'),last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v};
@@ -1146,7 +1146,7 @@ function syncPos(){
   const L=sel();if(!L)return;const v=posVals(L);
   bodyEl.querySelectorAll('[data-pos]').forEach(i=>{if(document.activeElement!==i)i.value=v[i.dataset.pos]});
 }
-const pal=key=>{const v=get(sel(),key);return `<div class="pal" data-k="${key}">${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(v)?'':' on'}" aria-label="ほかの色"><input type="color" data-k="${key}" value="${v}"></label></div>`};
+const pal=key=>{const v=get(sel(),key);return `<div class="pal" data-k="${key}">${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-k="${key}" value="${v}"></div>`};
 const toggle=(key,label)=>`<h4>${label}<button class="tg${get(sel(),key)?' on':''}" data-tg="${key}" aria-label="${label}"></button></h4>`;
 const segs=(key,opts)=>`<div class="eseg" data-set="${key}">${opts.map(([v,l])=>`<button data-v="${v}" class="${get(sel(),key)===v?'on':''}">${l}</button>`).join('')}</div>`;
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -1162,11 +1162,11 @@ function weightRow(L){
   return `<h5 class="esub">太さ</h5><div class="wrow">${ws.map(w=>`<button class="wbtn${w===L.w?' on':''}" data-wt="${w}" aria-label="${WNAME[w]||w}"><span style='font-family:${L.fam},sans-serif;font-weight:${w}'>${a}</span><small>${WNAME[w]||w}</small></button>`).join('')}</div>`;
 }
 const DRAW={
-  mcolor:()=>{const v=tinted()[0]?.color||'#ffffff';return `<div class="pal" data-mc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(v)?'':' on'}" aria-label="ほかの色"><input type="color" data-mcolor value="${v}"></label></div>
+  mcolor:()=>{const v=tinted()[0]?.color||'#ffffff';return `<div class="pal" data-mc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-mcolor value="${v}"></div>
     <p class="enote">選んだ文字と図形の色を、まとめて同じ色にします。写真は変わりません。</p>`},
   bg:()=>{
     const bg=bgOf(D);
-    const body=bg.type==='color'?`<div class="pal" data-bgc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===bg.color?'on':''}" aria-label="${c}"></button>`).join('')}<label class="custom${PALETTE.includes(bg.color)?'':' on'}" aria-label="ほかの色"><input type="color" data-bgcolor value="${bg.color}"></label></div>`
+    const body=bg.type==='color'?`<div class="pal" data-bgc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===bg.color?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-bgcolor value="${bg.color}"></div>`
       :bg.type==='grad'?`<div class="pal grads" data-bgg>${GRADS.map(([a,b],i)=>`<button style="--c:linear-gradient(160deg,${a},${b})" data-g="${i}" class="${i===bg.grad?'on':''}" aria-label="グラデーション${i+1}"></button>`).join('')}</div>`
       :`<label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
         <label class="erow"><span class="el">傾き</span><input type="range" data-ptilt min="-45" max="45" step=".5" value="${D.photo.a||0}"><span class="ev" data-v="ptilt">${D.photo.a||0}°</span></label>
@@ -1349,6 +1349,7 @@ function panel(){
     const on=row.querySelector('.fbtn.on');if(on)row.scrollLeft=on.offsetLeft-row.clientWidth/2+on.clientWidth/2;
   }
   if(tool==='font'){showWeight();filterFonts()}
+  syncRecolor();
   if(tool==='font')bodyEl.querySelectorAll('.wbtn').forEach(b=>loadFace(L.fam,+b.dataset.wt,b.firstChild.textContent).then(()=>b.classList.add('ready'),()=>{}));
   if(tool==='pages')renderStrip();
   renderPill();
@@ -1360,6 +1361,7 @@ $('#ebar').addEventListener('click',e=>{
   switch(b.dataset.tool){
     case 'done':deselect();return;
     case 'addtext':addLayer(null);commit();panel();refresh();openText(true);return;
+    case 'stext':textInShape(sel());return;
     case 'addimg':$('#eimg').click();return;
     case 'addshape':openShapes();return;
     case 'design':openDesign();return;
@@ -1377,20 +1379,66 @@ function addLayer(from){
     shadow:clone(base.shadow||{...SHADOW,on:false}),size:(base.size||96)*.6,vertical:!!base.vertical,y:D.H*[.5,.8,.2,.65,.35][D.layers.length%5]});
   D.layers.push(n);D.sel=n.id;return n;
 }
+// 文字 on a shape: words set inside it, as wide as its inside, in a colour that reads on its fill, grouped with
+// it so they move together, ready to type.
+function textInShape(S){
+  if(!S||!isShape(S))return;
+  const round=S.kind==='circle'||S.kind==='ellipse'||RIBBON.has(S.kind),iw=S.w*(round?.68:.8),ih=S.h*(round?.6:.75);
+  const base=D.layers.filter(isText).at(-1)||{},size=Math.max(12,Math.min(ih*.42,iw/4.4));
+  const n=newLayer({text:'テキスト',fam:base.fam||'"Zen Maru Gothic"',w:base.w||500,name:base.name||'Zen Maru Gothic',color:lightFill(S)?INK:'#ffffff',
+    shadow:{...SHADOW,on:false},size,x:S.x,y:S.y,rot:S.rot,align:'center',bem:iw/size});
+  const g=S.grp||newId('g');S.grp=g;n.grp=g;
+  D.layers.push(n);D.sel=n.id;MS=[];tool=null;commit();panel();refresh();openText(true);
+}
+function lightFill(S){
+  if((S.nofill&&FILLABLE(S))||S.mat==='glass')return true; // nothing of its own behind the words: dark reads on most photos' light spots
+  const n=parseInt((S.color||'#ffffff').slice(1),16),l=(.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255;
+  return l>.6;
+}
+// 同じ色をまとめて: after a thing's colour is changed, every other place in the work still wearing the colour
+// it had (words, shapes, bands, rims, lines, photo rims, plain backgrounds; shadows are left alone) can follow.
+let RC=null;
+const RCK=[['color',L=>isText(L)||(isShape(L)&&!(L.nofill&&FILLABLE(L)))],['band.color',L=>isText(L)&&L.band?.on],['band.line.color',L=>isText(L)&&L.band?.on&&L.band.line?.on],
+  ['stroke.color',L=>isText(L)&&L.stroke?.on],['line.color',L=>isShape(L)&&L.line?.on],['border.color',L=>isImg(L)&&L.border?.on]];
+function noteRC(L,k){if(L&&(!RC||RC.id!==L.id||RC.key!==k))RC={id:L.id,key:k,from:String(get(L,k)).toLowerCase()}}
+function spots(from){
+  const out=[],me=sel();
+  P.pages.forEach((pg,i)=>{
+    const d=i===P.cur?D:pg;
+    if(d.bg?.type==='color'&&String(d.bg.color).toLowerCase()===from)out.push([d.bg,'color']);
+    for(const L of d.layers)for(const [k,shown] of RCK)if(shown(L)&&!(L===me&&k===RC.key)&&String(get(L,k)).toLowerCase()===from)out.push([L,k]);
+  });
+  return out;
+}
+function syncRecolor(){
+  bodyEl.querySelector('.rcbar')?.remove();
+  const L=sel();if(!RC||!L||RC.id!==L.id){RC=null;return}
+  const to=String(get(L,RC.key)).toLowerCase(),pal=bodyEl.querySelector(`.pal[data-k="${RC.key}"]`);
+  if(to===RC.from||!pal)return;
+  const n=spots(RC.from).length;if(!n)return;
+  pal.insertAdjacentHTML('beforebegin',`<div class="rcbar"><i style="--c:${RC.from}"></i><span>→</span><i style="--c:${to}"></i><button class="eb" data-act="recolor">同じ色の${n}か所もこの色に</button></div>`);
+}
+function applyRecolor(){
+  const L=sel();if(!RC||!L)return;
+  const to=get(L,RC.key),sp=spots(RC.from);
+  for(const [o,k] of sp)put(o,k,to);
+  RC.from=String(to).toLowerCase();commit();renderStrip();paint();syncRecolor();toast(`${sp.length}か所を同じ色にしました`);
+}
 function removeLayer(L){D.layers=D.layers.filter(x=>x.id!==L.id);if(D.sel===L.id)D.sel=null}
 bodyEl.addEventListener('input',e=>{
   const L=sel(),t=e.target;
   if(t.classList.contains('fsearch')){fontQ=t.value;filterFonts();bodyEl.querySelector('.fontrow').scrollLeft=0;return}
   if(t.dataset.photo!=null){D.photo.s=+t.value;paint();return}
   if(t.dataset.ptilt!=null){D.photo.a=+t.value;bodyEl.querySelector('[data-v="ptilt"]').textContent=t.value+'°';paint();return}
-  if(t.dataset.mcolor!=null){setTint(t.value);t.parentElement.classList.add('on');$('#ebar .cdot')?.style.setProperty('background',t.value);paint();return}
-  if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};t.parentElement.classList.add('on');paint();return}
+  if(t.dataset.mcolor!=null){setTint(t.value);$('#ebar .cdot')?.style.setProperty('background',t.value);paint();return}
+  if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};paint();return}
   if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
   if(t.dataset.k==='wrap')delete L.bem; // the slider evens the lines again, over a box pulled by hand
+  if(t.type==='color')noteRC(L,t.dataset.k);
   put(L,t.dataset.k,t.type==='color'?t.value:+t.value);
   const v=bodyEl.querySelector(`[data-v="${t.dataset.k}"]`);if(v)v[v.tagName==='INPUT'?'value':'textContent']=fmt(t.dataset.k)(+t.value);
-  if(t.type==='color'){t.closest('.pal').querySelectorAll('button').forEach(x=>x.classList.remove('on'));t.parentElement.classList.add('on');if(t.dataset.k==='color')$('#ebar .cdot')?.style.setProperty('background',t.value)}
+  if(t.type==='color'){t.closest('.pal').querySelectorAll('button').forEach(x=>x.classList.remove('on'));if(t.dataset.k==='color')$('#ebar .cdot')?.style.setProperty('background',t.value)}
   paint();
 });
 bodyEl.addEventListener('change',e=>{
@@ -1407,6 +1455,7 @@ bodyEl.addEventListener('change',e=>{
     showAlign(L);fadeAlign();commit();paint();syncPos();return;
   }
   if(adjLive){adjLive=false;paint()}commit();
+  if(t.type==='color')syncRecolor();
 });
 bodyEl.addEventListener('focusin',e=>{if(e.target.classList.contains('num'))setTimeout(()=>e.target.select(),0)});
 bodyEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('num')){e.preventDefault();e.target.blur()}});
@@ -1439,6 +1488,7 @@ bodyEl.addEventListener('click',e=>{
   if(act==='prot'){D.photo.r=((D.photo.r||0)+1)%4;commit();paint();return}
   if(act==='adjreset'){delete (L||D).adj;commit();panel();paint();return}
   if(act==='adjall'){syncCur();for(const pg of P.pages)pg.adj=clone(D.adj||{});commit();toast(`${P.pages.length}ページの背景を同じ調整にしました`);return}
+  if(act==='recolor'){applyRecolor();return}
   if(act==='irot'&&isImg(L)){L.ir=((L.ir||0)+1)%4;commit();paint();return}
   if(act==='uncrop'&&isImg(L)){delete L.crop;L.zs=1;L.zx=L.zy=0;commit();panel();paint();return}
   if(act==='dup'&&L){dupSel();return}
@@ -1464,7 +1514,7 @@ bodyEl.addEventListener('click',e=>{
     // turning a box into a line (or back) gives it a sensible thickness (or height) instead of the old one
     if(sg.dataset.set==='kind'&&isShape(L)){const was=isLine(L),to=LINEISH.has(v);if(to&&!was)L.h=Math.max(2,Math.round(D.W/120));else if(was&&!to)L.h=Math.round(L.w*.25);if(v==='dots'){L.gap??=250;L.dstyle??='dot'}if(v==='circle')L.w=L.h=Math.round(Math.min(L.w,L.h))}
     put(L,sg.dataset.set,v==='true'?true:v==='false'?false:/^-?\d+(\.\d+)?$/.test(v)?+v:v);commit();panel();refresh();return}
-  const p=t.closest('.pal');if(p&&t.dataset.c){put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
+  const p=t.closest('.pal');if(p&&t.dataset.c){noteRC(L,p.dataset.k);put(L,p.dataset.k,t.dataset.c);commit();panel();paint();return}
   if(t.dataset.f!=null){
     setFont(L,(fontLang==='ja'?JA:EN)[+t.dataset.f]);bodyEl.querySelectorAll('.fbtn').forEach(x=>x.classList.toggle('on',x===t));
     // swap only the weight row (a full redraw would blink the font buttons)
