@@ -259,6 +259,9 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .pal .custom input{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;padding:0;cursor:pointer}
 .pal .on{box-shadow:0 0 0 2px var(--milk),0 0 0 3.5px var(--ink)}
 /* the colour picker under a palette, マイカラー and 同じ色をまとめて (picker.js, editor.js) */
+/* a long press on the tools must not select the page's words (iOS then selects the lot); typing still selects */
+.editor,.grid,.dock,.sheet,.ssheet,.cpop,.finder{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.editor input,.editor textarea,.ssheet input,.ssheet textarea,.finder input,.finder textarea,.cpop input,.sheet input,.sheet textarea{-webkit-user-select:text;user-select:text}
 .pal-gap{width:1px;height:22px;align-self:center;background:var(--line);margin:0 2px}
 .cpk{width:min(300px,100%);margin:0 0 14px}
 .cpk-sv{position:relative;height:120px;border-radius:12px;touch-action:none;cursor:crosshair;box-shadow:inset 0 0 0 1px rgba(75,63,58,.14)}
