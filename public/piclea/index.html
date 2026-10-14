@@ -366,9 +366,13 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .ebtn svg{width:22px;height:22px}
 .ebtn:disabled{opacity:.28}
 .etop .pill{padding:9px 18px;margin-left:4px;flex:none;white-space:nowrap} /* on a 390px phone the title used to squeeze 保存 onto two lines */
-.estage{position:relative;flex:1;min-height:0;touch-action:none}
+.estage{position:relative;flex:1;min-height:0;touch-action:none;overflow:hidden}
+.ezoom{position:absolute;right:10px;top:8px;z-index:3;display:flex;align-items:center;border-radius:999px;background:rgba(255,252,249,.72);box-shadow:0 1px 6px rgba(60,40,30,.14);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.ezoom button{min-width:34px;height:30px;font:500 15px/1 var(--ui);color:var(--ink)}
+.ezoom .zv{min-width:44px;font:500 11px/1 Jost,var(--ui);letter-spacing:.04em;color:var(--mocha)}
+.ezoom.on .zv{color:var(--ink)}
 .efit{position:absolute;inset:8px 12px 10px;display:flex;align-items:center;justify-content:center;pointer-events:none}
-#ecanvas{max-width:100%;max-height:100%;border-radius:2px;box-shadow:0 1px 2px rgba(60,40,30,.12),0 12px 32px rgba(60,40,30,.16);touch-action:none;background:#d8cfc4;pointer-events:auto}
+#ecanvas{transform-origin:0 0;max-width:100%;max-height:100%;border-radius:2px;box-shadow:0 1px 2px rgba(60,40,30,.12),0 12px 32px rgba(60,40,30,.16);touch-action:none;background:#d8cfc4;pointer-events:auto}
 .epill{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);padding:5px 12px;border-radius:999px;background:rgba(40,28,22,.62);color:#fff;font:500 11.5px Jost,var(--ui);letter-spacing:.08em;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .epill[hidden]{display:none}
 .efloat{position:absolute;left:0;top:0;z-index:2;display:flex;background:#fffdfb;border-radius:12px;padding:3px;box-shadow:0 1px 2px rgba(60,40,30,.12),0 6px 18px rgba(60,40,30,.18);white-space:nowrap}
@@ -605,7 +609,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <button class="ebtn" id="eredo" aria-label="やり直す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 13.5L20 9l-4.5-4.5"/><path d="M19.5 9h-10a5.5 5.5 0 000 11H13"/></svg></button>
     <button class="pill dark" id="esave">保存</button>
   </div>
-  <div class="estage" id="estage"><div class="efit"><canvas id="ecanvas"></canvas></div><button class="epill" id="epill" hidden></button><div class="efloat" id="efloat" hidden></div></div>
+  <div class="estage" id="estage"><div class="efit"><canvas id="ecanvas"></canvas></div><div class="ezoom" id="ezoom"><button data-zm="-1" aria-label="縮小">−</button><button data-zm="0" class="zv" aria-label="拡大をもとに戻す">100%</button><button data-zm="1" aria-label="拡大">＋</button></div><button class="epill" id="epill" hidden></button><div class="efloat" id="efloat" hidden></div></div>
   <div class="edock">
     <div class="edrawer" id="edrawer" hidden><div class="ebody" id="ebody"></div></div>
     <nav class="ebar" id="ebar" aria-label="編集の道具"></nav>

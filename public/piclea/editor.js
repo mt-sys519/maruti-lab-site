@@ -747,7 +747,13 @@ function rotIcon(c,x,y,kk){
 }
 // Shapes and photos carry their handles on their own edges (as in Canva), so a handle laid on a line puts
 // the edge there; words keep a little air around them.
-function box(L,M,kk){const m=M.get(L.id),f=isText(L)&&L.band.on?frameSize(L,m):{w:m.W,h:m.H},p=isText(L)?10*kk:0;return {w:f.w+2*p,h:f.h+2*p}}
+// Round a text the frame hugs the letters: the line gap above the first line and below the last is left out.
+function box(L,M,kk){
+  const m=M.get(L.id);if(!isText(L))return {w:m.W,h:m.H};
+  if(L.band.on){const f=frameSize(L,m);return {w:f.w+20*kk,h:f.h+20*kk}}
+  const lead=Math.max(0,(L.lh-1)*L.size),p=5*kk;
+  return L.vertical?{w:Math.max(L.size,m.W-lead)+2*p,h:m.H+2*p}:{w:m.W+2*p,h:Math.max(L.size,m.H-lead)+2*p};
+}
 // Any corner scales; the round handle under the frame rotates. All are pulled back inside the picture.
 function handles(L,M,kk){
   const b=box(L,M,kk),cs=Math.cos(L.rot),sn=Math.sin(L.rot),m=12*kk;
@@ -828,13 +834,42 @@ async function missingFaces(){
 const cv=$('#ecanvas'),ctx=cv.getContext('2d');
 const G={ptrs:new Map(),g:null,guides:null,M:new Map()};
 let tool=null,fontLang='ja',decoSub='stroke',textTimer;
-const kE=()=>D.W/(cv.clientWidth||D.W); // output px per screen px
-function sizeCanvas(){if(cv.width!==D.W)cv.width=D.W;if(cv.height!==D.H)cv.height=D.H}
+const kE=()=>D.W/((cv.clientWidth||D.W)*V.z); // output px per screen px
+// 拡大: the picture can be looked at closer (pinch with nothing held, the wheel, or the ＋/− in the corner) and
+// slid about with a finger on an empty spot. It is only a view: the canvas is scaled on screen, the work is not.
+const V={z:1,x:0,y:0},ZS=[1,1.5,2,3,4];
+function applyView(){
+  if(V.z<=1.001){V.z=1;V.x=V.y=0}
+  else{
+    const r=cv.getBoundingClientRect(),s=$('#estage').getBoundingClientRect(),lx=r.left-V.x,ly=r.top-V.y,w=cv.clientWidth*V.z,h=cv.clientHeight*V.z;
+    const fit=(l,len,sl,slen,cur)=>len<=slen?sl+(slen-len)/2-l:Math.min(sl-l,Math.max(sl+slen-len-l,cur));
+    V.x=fit(lx,w,s.left,s.width,V.x);V.y=fit(ly,h,s.top,s.height,V.y);
+  }
+  cv.style.transform=V.z===1?'':`translate(${V.x}px,${V.y}px) scale(${V.z})`;
+  const zv=$('#ezoom .zv');if(zv)zv.textContent=Math.round(V.z*100)+'%';$('#ezoom')?.classList.toggle('on',V.z>1);
+  paint();
+}
+function zoomAt(z,cx,cy,from=V){ // z about the screen point (cx,cy), starting from the view 'from'
+  const r=cv.getBoundingClientRect(),lx=r.left-V.x,ly=r.top-V.y,u=(cx-lx-from.x)/from.z,v=(cy-ly-from.y)/from.z;
+  z=Math.max(1,Math.min(4,z));V.x=cx-lx-u*z;V.y=cy-ly-v*z;V.z=z;applyView();
+}
+function resetView(){V.z=1;V.x=V.y=0;cv.style.transform='';const zv=$('#ezoom .zv');if(zv)zv.textContent='100%';$('#ezoom')?.classList.remove('on')}
+function sizeCanvas(){if(cv.width!==D.W)cv.width=D.W;if(cv.height!==D.H)cv.height=D.H;resetView()}
 let raf=0;
 function paint(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;if(!$('#editor').hidden){G.M=draw(ctx,{ui:tool==='bg'?null:'edit',kk:kE()});placeFloat();syncPos()}})}
 function refresh(){paint();ensureFonts().then(paint)}
 on('fonts',()=>paint());
-new ResizeObserver(()=>paint()).observe($('#estage'));
+new ResizeObserver(()=>{if(V.z>1)applyView();else paint()}).observe($('#estage'));
+const CP=new Map(); // where each finger is on the screen, for the view's own pinch
+cv.addEventListener('pointerdown',e=>CP.set(e.pointerId,{x:e.clientX,y:e.clientY}),true);
+cv.addEventListener('pointermove',e=>{if(CP.has(e.pointerId))CP.set(e.pointerId,{x:e.clientX,y:e.clientY})},true);
+for(const t of ['pointerup','pointercancel'])cv.addEventListener(t,e=>CP.delete(e.pointerId),true);
+const ctwo=()=>{const [a,b]=[...CP.values()];return {d:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),x:(a.x+b.x)/2,y:(a.y+b.y)/2}};
+$('#ezoom').addEventListener('click',e=>{
+  const b=e.target.closest('[data-zm]');if(!b)return;const s=$('#estage').getBoundingClientRect(),k=+b.dataset.zm;
+  const z=k>0?ZS.find(z=>z>V.z+.01)??4:k<0?[...ZS].reverse().find(z=>z<V.z-.01)??1:1;
+  zoomAt(z,s.left+s.width/2,s.top+s.height/2);
+});
 
 function pt(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*D.W,y:(e.clientY-r.top)/r.height*D.H}}
 function hitHandle(L,p){
@@ -960,6 +995,7 @@ cv.addEventListener('pointerdown',e=>{
     else if(many){const u=ubox(msel());G.g={mode:'mpinch',t,c:{x:u.cx,y:u.cy},st:states()}}
     else if(inside(L))G.g={mode:'izoom',t,zs:L.zs};
     else if(L)G.g={mode:'pinch',t,size:L[SZ(L)],h:L.h,rot:L.rot};
+    else if(CP.size===2)G.g={mode:'vzoom',c:ctwo(),from:{...V}};
     return;
   }
   if(tool==='bg'){if(photoBg(D))G.g={mode:'pan',p,ox:D.photo.ox,oy:D.photo.oy};return}
@@ -983,6 +1019,7 @@ cv.addEventListener('pointerdown',e=>{
   if(!H&&many){const u=ubox(msel());if(p.x>=u.x0&&p.x<=u.x1&&p.y>=u.y0&&p.y<=u.y1){G.g={mode:'mmove',p,st:states(),u,tap:null,moved:false};return}} // the gaps inside the box drag the lot too
   if(H&&many&&MS.includes(H.id)){G.g={mode:'mmove',p,st:states(),u:ubox(msel()),tap:H.id,moved:false};paint();return}
   if(H&&mates(H).length>1){MS=mates(H).map(o=>o.id);D.sel=null;tool=null;G.g={mode:'mmove',p,st:states(),u:ubox(msel()),tap:null,moved:false};panel();paint();return}
+  if(!H&&V.z>1&&!(e.shiftKey||addMode)){G.g={mode:'vpan',cx:e.clientX,cy:e.clientY,x:V.x,y:V.y,moved:false};return}
   if(H){const was=D.sel===H.id;if(many)MS=[];D.sel=H.id;G.g={mode:'move',p,x:H.x,y:H.y,was,moved:false};if(!was||many)panel()}
   else if(e.pointerType==='mouse'){if(D.sel||MS.length)deselect();G.g={mode:'marq',p,q:p}} // a mouse drag on nothing draws a box round what to take
   else{G.g=null;if(D.sel||MS.length)deselect()}
@@ -995,6 +1032,8 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=snapAngle(g.rot+t.a-g.t.a,.1)}
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
+  else if(g.mode==='vzoom'){if(CP.size===2){const t=ctwo();zoomAt(g.from.z*t.d/g.c.d,g.c.x,g.c.y,g.from);V.x+=t.x-g.c.x;V.y+=t.y-g.c.y;applyView()}return}
+  else if(g.mode==='vpan'){if(!g.moved&&Math.hypot(e.clientX-g.cx,e.clientY-g.cy)<6)return;g.moved=true;V.x=g.x+e.clientX-g.cx;V.y=g.y+e.clientY-g.cy;applyView();return}
   else if(g.mode==='wrap'&&L){wrapDrag(L,g,p)}
   else if(g.mode==='icrop'&&L){cropDrag(L,g,p)}
   else if(g.mode==='iframe'&&L){frameDrag(L,g,p);syncInside(L)}
@@ -1064,6 +1103,7 @@ function endPtr(e){
   if(!G.ptrs.has(e.pointerId))return;G.ptrs.delete(e.pointerId);
   if(G.ptrs.size)return;
   const g=G.g;
+  if(g?.mode==='vpan'||g?.mode==='vzoom'){G.g=null;if(g.mode==='vpan'&&!g.moved&&(D.sel||MS.length))deselect();return}
   if(g?.mode==='marq'){ // everything whose middle is inside the box, with its group
     const x0=Math.min(g.p.x,g.q.x),x1=Math.max(g.p.x,g.q.x),y0=Math.min(g.p.y,g.q.y),y1=Math.max(g.p.y,g.q.y),ids=[];
     if((x1-x0)/kE()>4||(y1-y0)/kE()>4)for(const o of D.layers)if(G.M.has(o.id)&&o.x>=x0&&o.x<=x1&&o.y>=y0&&o.y<=y1)for(const m of mates(o))if(!ids.includes(m.id))ids.push(m.id);
@@ -1079,12 +1119,13 @@ function endPtr(e){
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{
   e.preventDefault();const L=sel(),f=Math.exp(-e.deltaY/400);
+  if(e.ctrlKey||(!L&&!multi()&&tool!=='bg')){zoomAt(V.z*f,e.clientX,e.clientY);return} // a trackpad pinch, or nothing held: the view
   if(tool==='bg')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(inside(L)){L.zs=Math.max(1,Math.min(3,L.zs*f));syncInside(L)}else if(L)scaleBy(L,{size:L[SZ(L)],h:L.h},f);else return;
   paint();clearTimeout(textTimer);textTimer=setTimeout(commit,300);
 },{passive:false});
 // Off the picture (the grey around it): let go of the selection, or close the open tool.
 $('#estage').addEventListener('pointerdown',e=>{
-  if(e.target===cv||e.target.closest('#epill,#efloat'))return;
+  if(e.target===cv||e.target.closest('#epill,#efloat,#ezoom'))return;
   if(D.sel)deselect();else if(tool){tool=null;panel();paint()}
 });
 
@@ -1111,7 +1152,7 @@ const I={
 };
 const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
-  multi:()=>[['done','完了',I.done],...(tinted().length?[['mcolor','色',colorIc(tinted()[0])]]:[]),['mgroup',grouped(msel())?'グループ解除':'グループ化',I.group],['mdup','複製',I.dup],['mdel','削除',I.del]],
+  multi:()=>[['done','完了',I.done],...(tinted().length?[['mcolor','色',colorIc(tinted()[0])]]:[]),['mgroup',grouped(msel())?'グループ解除':'グループ化',I.group],['mdup','複製',I.dup],['mmore','レイヤー',I.more],['mdel','削除',I.del]],
   none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
   shape:L=>[['done','完了',I.done],...(isLine(L)?[]:[['stext','文字',I.text]]),['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
@@ -1143,6 +1184,7 @@ function posBlock(L){
     <div class="pfs">${f('x','X')}${f('y','Y')}${f('rot','角度','°')}</div></div>`;
 }
 function syncPos(){
+  if(multi()){const v=mext(msel());bodyEl.querySelectorAll('[data-mpos]').forEach(i=>{if(document.activeElement!==i)i.value=v[i.dataset.mpos]});return}
   const L=sel();if(!L)return;const v=posVals(L);
   bodyEl.querySelectorAll('[data-pos]').forEach(i=>{if(document.activeElement!==i)i.value=v[i.dataset.pos]});
 }
@@ -1161,7 +1203,25 @@ function weightRow(L){
   const a=JA.includes(f)?'あ':'Aa';
   return `<h5 class="esub">太さ</h5><div class="wrow">${ws.map(w=>`<button class="wbtn${w===L.w?' on':''}" data-wt="${w}" aria-label="${WNAME[w]||w}"><span style='font-family:${L.fam},sans-serif;font-weight:${w}'>${a}</span><small>${WNAME[w]||w}</small></button>`).join('')}</div>`;
 }
+// Several held: where they sit together (the top-left of what they cover), nudged or typed, and front/back.
+function mext(Ls){
+  let x0=1e9,y0=1e9;
+  for(const L of Ls){const b=layerBox(L),cs=Math.cos(L.rot),sn=Math.sin(L.rot);
+    for(const [i,j] of [[-1,-1],[1,-1],[1,1],[-1,1]]){x0=Math.min(x0,L.x+i*b.w/2*cs-j*b.h/2*sn);y0=Math.min(y0,L.y+i*b.w/2*sn+j*b.h/2*cs)}}
+  return {x:Math.round(x0),y:Math.round(y0)};
+}
+function mposBlock(){
+  const v=mext(msel()),f=(k,l)=>`<label class="pf"><span>${l}</span><input class="num" data-mpos="${k}" inputmode="decimal" enterkeyhint="done" value="${v[k]}" aria-label="${l}"></label>`;
+  return `<h5 class="esub">位置</h5><div class="epos"><div class="nudge">${[['u','↑',0,-1],['l','←',-1,0],['d','↓',0,1],['r','→',1,0]].map(([k,a,dx,dy])=>`<button class="nb nb-${k}" data-nudge="${dx},${dy}" aria-label="${a}">${a}</button>`).join('')}</div>
+    <div class="pfs">${f('x','X')}${f('y','Y')}</div></div>`;
+}
+function zMulti(up){ // each held layer one step, keeping their order among themselves
+  const A=D.layers,on=L=>MS.includes(L.id);
+  if(up){for(let i=A.length-2;i>=0;i--)if(on(A[i])&&!on(A[i+1]))[A[i],A[i+1]]=[A[i+1],A[i]]}
+  else for(let i=1;i<A.length;i++)if(on(A[i])&&!on(A[i-1]))[A[i],A[i-1]]=[A[i-1],A[i]];
+}
 const DRAW={
+  mmore:()=>btns([['mfront','前へ'],['mback','後ろへ']])+mposBlock(),
   mcolor:()=>{const v=tinted()[0]?.color||'#ffffff';return `<div class="pal" data-mc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-mcolor value="${v}"></div>
     <p class="enote">選んだ文字と図形の色を、まとめて同じ色にします。写真は変わりません。</p>`},
   bg:()=>{
@@ -1449,6 +1509,11 @@ bodyEl.addEventListener('change',e=>{
     t.value=fmt(k)(v);const r=bodyEl.querySelector(`input[type=range][data-k="${k}"]`);if(r)r.value=v;
     commit();refresh();return;
   }
+  if(t.dataset.mpos&&multi()){
+    const v=parseFloat(t.value.replace(/[^\d.\-]/g,'')),o=mext(msel());
+    if(!isNaN(v)){const d=v-o[t.dataset.mpos];for(const M of msel())M[t.dataset.mpos]+=d}
+    commit();paint();syncPos();return;
+  }
   if(L&&t.dataset.pos){
     const v=parseFloat(t.value.replace(/[^\d.\-]/g,'')),b=layerBox(L);
     if(!isNaN(v)){if(t.dataset.pos==='x')L.x=v+b.w/2;else if(t.dataset.pos==='y')L.y=v+b.h/2;else L.rot=v*Math.PI/180}
@@ -1470,9 +1535,9 @@ function showAlign(L){
 const fadeAlign=()=>{clearTimeout(alignT);alignT=setTimeout(()=>{G.guides=null;paint()},900)};
 let nudgeT=0;
 bodyEl.addEventListener('pointerdown',e=>{
-  const b=e.target.closest('[data-nudge]'),L=sel();if(!b||!L)return;e.preventDefault();
+  const b=e.target.closest('[data-nudge]'),L=sel(),Ls=multi()?msel():L?[L]:[];if(!b||!Ls.length)return;e.preventDefault();
   const [dx,dy]=b.dataset.nudge.split(',').map(Number);let n=0;
-  const step=()=>{const k=n++<20?1:5;L.x+=dx*k;L.y+=dy*k;showAlign(L);paint()};
+  const step=()=>{const k=n++<20?1:5;for(const o of Ls){o.x+=dx*k;o.y+=dy*k}if(L)showAlign(L);paint()};
   step();clearTimeout(nudgeT);
   const go=()=>{step();nudgeT=setTimeout(go,50)};nudgeT=setTimeout(go,400);
   const stop=()=>{clearTimeout(nudgeT);fadeAlign();commit();removeEventListener('pointerup',stop);removeEventListener('pointercancel',stop)};
@@ -1489,6 +1554,7 @@ bodyEl.addEventListener('click',e=>{
   if(act==='adjreset'){delete (L||D).adj;commit();panel();paint();return}
   if(act==='adjall'){syncCur();for(const pg of P.pages)pg.adj=clone(D.adj||{});commit();toast(`${P.pages.length}ページの背景を同じ調整にしました`);return}
   if(act==='recolor'){applyRecolor();return}
+  if((act==='mfront'||act==='mback')&&multi()){zMulti(act==='mfront');commit();paint();return}
   if(act==='irot'&&isImg(L)){L.ir=((L.ir||0)+1)%4;commit();paint();return}
   if(act==='uncrop'&&isImg(L)){delete L.crop;L.zs=1;L.zx=L.zy=0;commit();panel();paint();return}
   if(act==='dup'&&L){dupSel();return}
