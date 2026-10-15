@@ -262,6 +262,11 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 /* a long press on the tools must not select the page's words (iOS then selects the lot); typing still selects */
 .editor,.grid,.dock,.sheet,.ssheet,.cpop,.finder{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .editor input,.editor textarea,.ssheet input,.ssheet textarea,.finder input,.finder textarea,.cpop input,.sheet input,.sheet textarea{-webkit-user-select:text;user-select:text}
+.glays{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:8px;margin-bottom:14px}
+.glays button{padding:5px;border-radius:10px;background:rgba(75,63,58,.05)}
+.glays svg{display:block;width:100%;height:auto;fill:rgba(75,63,58,.32)}
+.glays .on{background:rgba(75,63,58,.12);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.glays .on svg{fill:var(--ink)}
 .pal-gap{width:1px;height:22px;align-self:center;background:var(--line);margin:0 2px}
 .cpk{width:min(300px,100%);margin:0 0 14px}
 .cpk-sv{position:relative;height:120px;border-radius:12px;touch-action:none;cursor:crosshair;box-shadow:inset 0 0 0 1px rgba(75,63,58,.14)}

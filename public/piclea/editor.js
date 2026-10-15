@@ -656,10 +656,21 @@ function shapePath(c,L){
     for(let i=0;i<=n;i++){const x=-len/2+len*i/n;c.moveTo(x+r,0);c.arc(x,0,r,0,Math.PI*2)}
   }
   else if(L.kind==='line')c.rect(-L.w/2,-L.h/2,L.w,L.h);
-  else if(L.kind==='ellipse'||L.kind==='circle')c.ellipse(0,0,L.w/2,L.h/2,0,0,Math.PI*2);
+  else if(L.kind==='ellipse'||L.kind==='circle'||L.kind==='soft')c.ellipse(0,0,L.w/2,L.h/2,0,0,Math.PI*2);
   else c.roundRect(-L.w/2,-L.h/2,L.w,L.h,L.kind==='round'?Math.min(L.w,L.h)/2*L.r/100:0);
 }
+// ぼかし丸: solid in the middle, fading smoothly to nothing at its edge over L.soft of the way out; laid under
+// words as a soft shadow or a glow, or scattered as bokeh.
+function drawSoft(c,L){
+  c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;c.scale(1,L.h/Math.max(1,L.w));
+  const R=L.w/2,f=Math.max(.02,Math.min(1,L.soft??.8)),g=c.createRadialGradient(0,0,0,0,0,R);
+  g.addColorStop(0,rgba(L.color,L.a));g.addColorStop(1-f,rgba(L.color,L.a));
+  for(let i=1;i<=10;i++){const t=i/10,e=t*t*(3-2*t);g.addColorStop(1-f+f*t,rgba(L.color,L.a*(1-e)))}
+  c.fillStyle=g;c.beginPath();c.arc(0,0,R,0,Math.PI*2);c.fill();c.restore();
+  return {W:L.w,H:L.h};
+}
 function drawShape(c,L){
+  if(L.kind==='soft')return drawSoft(c,L);
   if(L.kind==='circle')L.h=L.w; // a circle keeps one size, whatever handle or slider moved
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
   const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
@@ -1148,12 +1159,13 @@ const I={
   group:ic('<rect x="3.5" y="3.5" width="17" height="17" rx="2.5" stroke-dasharray="2.6 2.4"/><rect x="7" y="7" width="6.5" height="6.5" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/>'),
   dup:ic('<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 00-1.5-1.5H6A1.5 1.5 0 004.5 6v8A1.5 1.5 0 006 15.5h2.5"/>'),
   del:ic('<path d="M5 7h14M10 7V5h4v2M7 7l1 12.5h8L17 7"/>'),
+  grid:ic('<rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M12 3.5v17M3.5 12H12"/>'),
   crop:ic('<path d="M12 3.5v17M3.5 12h17M9.3 6.2L12 3.5l2.7 2.7M9.3 17.8l2.7 2.7 2.7-2.7M6.2 9.3L3.5 12l2.7 2.7M17.8 9.3l2.7 2.7-2.7 2.7"/>'),
 };
 const colorIc=L=>`<i class="cdot" style="background:${L.color}"></i>`;
 const BAR={
   multi:()=>[['done','完了',I.done],...(tinted().length?[['mcolor','色',colorIc(tinted()[0])]]:[]),['mgroup',grouped(msel())?'グループ解除':'グループ化',I.group],['mdup','複製',I.dup],['mmore','レイヤー',I.more],['mdel','削除',I.del]],
-  none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
+  none:()=>[['addtext','文字',I.text],['addimg','写真',I.image],['grid','グリッド',I.grid],['addshape','図形',I.shape],['bg','背景',I.bg],['adj','調整',I.adj],['pages','ページ',I.pages],['design','型',I.tpl]],
   text:L=>[['done','完了',I.done],['edit','編集',I.edit],['font','書体',I.font],['color','色',colorIc(L)],['deco','飾り',I.deco],['layout','配置',I.layout],['more','レイヤー',I.more]],
   shape:L=>[['done','完了',I.done],...(isLine(L)?[]:[['stext','文字',I.text]]),['scolor','色',colorIc(L)],['sform','形',I.shape],['sdeco',isLine(L)||PENNED.has(L.kind)?'影':'線・影',I.deco],['more','レイヤー',I.more]],
   image:L=>[['done','完了',I.done],['swap',L.photoId?'差し替え':'はめる',I.image],['shape','形',I.shape],['crop','トリミング',I.crop],['adj','調整',I.adj],['deco','フチ・影',I.deco],['more','レイヤー',I.more]],
@@ -1220,7 +1232,49 @@ function zMulti(up){ // each held layer one step, keeping their order among them
   if(up){for(let i=A.length-2;i>=0;i--)if(on(A[i])&&!on(A[i+1]))[A[i],A[i+1]]=[A[i+1],A[i]]}
   else for(let i=1;i<A.length;i++)if(on(A[i])&&!on(A[i-1]))[A[i],A[i-1]]=[A[i-1],A[i]];
 }
+// グリッド (as Canva's grids): the page laid out in cells of empty photo frames, each filled by a tap or all
+// in turn from 写真. Cells are [x,y,w,h] as parts of the page; the gap between them (and round the edge) and
+// the corners are the page's (D.grid), and the cells (L.gc = their number) follow when those change.
+const GRIDS={
+  g2v:[[0,0,.5,1],[.5,0,.5,1]],g2h:[[0,0,1,.5],[0,.5,1,.5]],
+  g3v:[[0,0,1/3,1],[1/3,0,1/3,1],[2/3,0,1/3,1]],g3h:[[0,0,1,1/3],[0,1/3,1,1/3],[0,2/3,1,1/3]],
+  g4:[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]],
+  t12:[[0,0,1,.6],[0,.6,.5,.4],[.5,.6,.5,.4]],t21:[[0,0,.5,.4],[.5,0,.5,.4],[0,.4,1,.6]],
+  l12:[[0,0,.6,1],[.6,0,.4,.5],[.6,.5,.4,.5]],r12:[[0,0,.4,.5],[0,.5,.4,.5],[.4,0,.6,1]],
+  t13:[[0,0,1,.62],[0,.62,1/3,.38],[1/3,.62,1/3,.38],[2/3,.62,1/3,.38]],
+  m5:[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,1/3,.5],[1/3,.5,1/3,.5],[2/3,.5,1/3,.5]],
+  g6:[[0,0,.5,1/3],[.5,0,.5,1/3],[0,1/3,.5,1/3],[.5,1/3,.5,1/3],[0,2/3,.5,1/3],[.5,2/3,.5,1/3]],
+  g9:[0,1,2].flatMap(r=>[0,1,2].map(c=>[c/3,r/3,1/3,1/3])),
+};
+const gridCells=()=>D.layers.filter(L=>isImg(L)&&L.gc!=null).sort((a,b)=>a.gc-b.gc);
+function layoutGrid(){
+  const g=D.grid,cells=g&&GRIDS[g.lay];if(!cells)return;
+  const G=g.gap*D.W,e=1e-6,side=(a,lo)=>a<e||a>1-e?G:G/2;
+  for(const L of gridCells()){
+    const c=cells[L.gc];if(!c)continue;const [x,y,w,h]=c;
+    const l=x*D.W+side(x),r=(x+w)*D.W-side(x+w),t=y*D.H+side(y),b=(y+h)*D.H-side(y+h);
+    Object.assign(L,{w:Math.max(8,r-l),ar:Math.max(8,r-l)/Math.max(8,b-t),x:(l+r)/2,y:(t+b)/2,rot:0,shape:'round',r:g.r});
+  }
+}
+function applyGrid(lay){
+  const old=gridCells(),keep=['photoId','zs','zx','zy','ir','ia','crop','adj'];
+  const shots=old.filter(L=>L.photoId).map(L=>Object.fromEntries(keep.filter(k=>L[k]!==undefined).map(k=>[k,clone(L[k])])));
+  D.layers=D.layers.filter(L=>!old.includes(L));
+  D.grid={lay,gap:D.grid?.gap??.02,r:D.grid?.r??0};
+  const cells=GRIDS[lay].map((_,i)=>({id:uid++,type:'image',photoId:null,gc:i,x:0,y:0,w:1,ar:1,rot:0,shape:'round',r:0,zs:1,zx:0,zy:0,opacity:1,
+    border:{on:false,color:'#ffffff',w:2.5},shadow:{on:false,color:'#28190f',a:.28,x:0,y:1.5,blur:6},...(shots[i]||{})}));
+  for(const sh of shots.slice(cells.length)){const L=addImage(sh.photoId);Object.assign(L,sh)} // more photos than cells: they stay, laid over
+  D.layers.unshift(...cells);layoutGrid();D.sel=null;MS=[];commit();panel();refresh();
+}
 const DRAW={
+  grid:()=>{
+    const g=D.grid,ar=D.H/D.W,vb=`0 0 40 ${Math.round(40*ar)}`;
+    const pic=cs=>`<svg viewBox="${vb}">${cs.map(([x,y,w,h])=>`<rect x="${(x*40+1.2).toFixed(1)}" y="${(y*40*ar+1.2).toFixed(1)}" width="${(w*40-2.4).toFixed(1)}" height="${(h*40*ar-2.4).toFixed(1)}" rx="1.5"/>`).join('')}</svg>`;
+    return `<p class="enote">並びを選ぶと、ページに写真の枠が敷かれます。枠をタップするか、「写真」で何枚か選ぶと順にはまります。</p>
+      <div class="glays">${Object.entries(GRIDS).map(([k,cs])=>`<button data-glay="${k}" class="${g?.lay===k?'on':''}" aria-label="${cs.length}枚の並び">${pic(cs)}</button>`).join('')}</div>
+      ${g?`<label class="erow"><span class="el">余白</span><input type="range" data-gk="gap" min="0" max=".08" step=".001" value="${g.gap}"><span class="ev" data-gv="gap">${Math.round(g.gap*1000)/10}%</span></label>
+      <label class="erow"><span class="el">角丸</span><input type="range" data-gk="r" min="0" max="50" step="1" value="${g.r}"><span class="ev" data-gv="r">${g.r}</span></label>`+btns([['gridoff','グリッドを外す']]):''}`;
+  },
   mmore:()=>btns([['mfront','前へ'],['mback','後ろへ']])+mposBlock(),
   mcolor:()=>{const v=tinted()[0]?.color||'#ffffff';return `<div class="pal" data-mc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===v?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-mcolor value="${v}"></div>
     <p class="enote">選んだ文字と図形の色を、まとめて同じ色にします。写真は変わりません。</p>`},
@@ -1238,6 +1292,7 @@ const DRAW={
   scolor:L=>{
     // lines and dots are too thin for glass to show; jelly turns them into a gummy strip or a row of beads
     if((isLine(L)||NOGLASS.has(L.kind))&&L.mat!=='jelly')L.mat='color';
+    if(L.kind==='soft'){L.soft??=.8;return pal('color')+slider('濃さ','a',0,1,.01)+slider('ぼかし','soft',.05,1,.01)+'<p class="enote">文字の後ろに敷くと影や光に、小さくして散らすと玉ボケになります。</p>'}
     // 中を塗らない: an outline only, drawn by 線 (turned on with it)
     const nfRow=FILLABLE(L)?`<div class="sec">${toggle('nofill','中を塗らない')}</div>`:'';
     if(L.nofill&&FILLABLE(L))return nfRow+'<p class="enote">枠の線だけになります。線の色と太さは「線・影」で変えられます。</p>';
@@ -1251,9 +1306,10 @@ const DRAW={
     ${L.kind==='dots'?(L.dstyle??='dot',`<div class="erow"><span class="el">種類</span>${segs('dstyle',[['dot','点'],['dash','線']])}</div>`):''}
     ${isLine(L)?slider('長さ','w',6,3000,1)+slider('太さ','h',1,80,.5)+(L.kind==='dots'?slider('間隔','gap',120,600,10):'')
       :RIBBON.has(L.kind)?slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.lw??=8,slider('太さ','lw',1,80,.5))
+      :L.kind==='soft'?slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+slider('ぼかし','soft',.05,1,.01)
       :L.kind==='circle'?slider('大きさ','w',6,3000,1):slider('幅','w',6,3000,1)+slider('高さ','h',6,3000,1)+(L.kind==='round'?slider('角丸','r',0,100,1):'')}
     ${btns(isLine(L)||L.kind==='circle'?[['fullw','横幅いっぱい'],['center','真ん中へ']]:[['fullw','横幅いっぱい'],['fullh','縦いっぱい'],['center','真ん中へ']])}`,
-  sdeco:L=>`${isLine(L)||PENNED.has(L.kind)?'':`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>`}
+  sdeco:L=>L.kind==='soft'?'<p class="enote">ぼかし丸には線と影はありません。色・濃さ・ぼかしは「色」で変えられます。</p>':`${isLine(L)||PENNED.has(L.kind)?'':`<div class="sec">${toggle('line.on','線')}${L.line.on?pal('line.color')+slider('太さ','line.w',1,40,.5):''}</div>`}
     <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,.5)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`,
   pages:()=>`<div class="pstrip" id="pstrip"></div>
     ${btns([['pleft','← 前へ'],['pright','後ろへ →'],['pdel','このページを外す']])}`,
@@ -1314,16 +1370,16 @@ function addImage(photoId,i=0){
   D.sel=L.id;return L;
 }
 // A shape only changes 形 within its own group, so w and h keep their meaning (a box's height, a pen's width).
-const SHAPES=[[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円']],[['line','線'],['dots','点線']],[['notch','吹き出しの下']],
+const SHAPES=[[['rect','四角'],['round','角丸'],['circle','丸'],['ellipse','だ円'],['soft','ぼかし丸']],[['line','線'],['dots','点線']],[['notch','吹き出しの下']],
   [['bubble','丸'],['bubbler','角丸'],['cloud','もくもく'],['spiky','ギザギザ']],[['arrow','まっすぐ'],['arrowc','カーブ'],['arrowl','くるっと']],[['scribble','丸囲み'],['scribble2','ぐりぐり']],
   [['sparkle','きらきら'],['flower','お花'],['blob','ふにゃ'],['heart','ハート'],['arch','アーチ']],[['swirl','うずまき'],['coil','くるくる'],['wave','なみなみ']]];
 const groupOf=k=>SHAPES.find(ks=>ks.some(([v])=>v===k))||SHAPES[0];
 // The 図形 sheet is laid out by look instead: clean ones for bands and backings, hand-drawn ones for decoration.
 const SHEET=[['基本',[['',SHAPES[0].concat(SHAPES[1])]]],['手書き',[['吹き出し',SHAPES[3].concat(SHAPES[2])],['矢印',SHAPES[4]],['囲み',SHAPES[5]]]],['飾り',[['かたち',SHAPES[6]],['線',SHAPES[7]]]]];
-const FILLABLE=L=>isShape(L)&&!isLine(L)&&!PENNED.has(L.kind);
+const FILLABLE=L=>isShape(L)&&!isLine(L)&&!PENNED.has(L.kind)&&L.kind!=='soft';
 function shapeDefaults(kind){
   const W=D.W,rim={on:true,color:INK,w:5};
-  return ({rect:{w:W,h:D.H*.2,a:.85},round:{w:W*.8,h:D.H*.2,a:.85},circle:{w:W*.4,h:W*.4,a:.85},ellipse:{w:W*.52,h:W*.35,a:.85},
+  return ({rect:{w:W,h:D.H*.2,a:.85},round:{w:W*.8,h:D.H*.2,a:.85},circle:{w:W*.4,h:W*.4,a:.85},ellipse:{w:W*.52,h:W*.35,a:.85},soft:{w:W*.5,h:W*.5,a:.45,soft:.8,color:'#28190f'},
     line:{w:W*.7,h:Math.max(2,Math.round(W/120)),a:1},dots:{w:W*.7,h:14,gap:250,dstyle:'dot',a:1},notch:{w:W*.7,h:6,a:1},
     arrow:{w:W*.4,h:10,a:1},arrowc:{w:W*.42,h:10,a:1},arrowl:{w:W*.46,h:10,a:1},
     bubble:{w:W*.52,h:W*.4,a:1,line:rim},bubbler:{w:W*.56,h:W*.37,a:1,line:rim},cloud:{w:W*.56,h:W*.39,a:1,line:rim},spiky:{w:W*.54,h:W*.41,a:1,line:rim},
@@ -1443,7 +1499,7 @@ function addLayer(from){
 // it so they move together, ready to type.
 function textInShape(S){
   if(!S||!isShape(S))return;
-  const round=S.kind==='circle'||S.kind==='ellipse'||RIBBON.has(S.kind),iw=S.w*(round?.68:.8),ih=S.h*(round?.6:.75);
+  const round=S.kind==='circle'||S.kind==='ellipse'||S.kind==='soft'||RIBBON.has(S.kind),iw=S.w*(round?.68:.8),ih=S.h*(round?.6:.75);
   const base=D.layers.filter(isText).at(-1)||{},size=Math.max(12,Math.min(ih*.42,iw/4.4));
   const n=newLayer({text:'テキスト',fam:base.fam||'"Zen Maru Gothic"',w:base.w||500,name:base.name||'Zen Maru Gothic',color:lightFill(S)?INK:'#ffffff',
     shadow:{...SHADOW,on:false},size,x:S.x,y:S.y,rot:S.rot,align:'center',bem:iw/size});
@@ -1489,6 +1545,7 @@ bodyEl.addEventListener('input',e=>{
   const L=sel(),t=e.target;
   if(t.classList.contains('fsearch')){fontQ=t.value;filterFonts();bodyEl.querySelector('.fontrow').scrollLeft=0;return}
   if(t.dataset.photo!=null){D.photo.s=+t.value;paint();return}
+  if(t.dataset.gk&&D.grid){D.grid[t.dataset.gk]=+t.value;const v=bodyEl.querySelector(`[data-gv="${t.dataset.gk}"]`);if(v)v.textContent=t.dataset.gk==='gap'?Math.round(+t.value*1000)/10+'%':t.value;layoutGrid();paint();return}
   if(t.dataset.ptilt!=null){D.photo.a=+t.value;bodyEl.querySelector('[data-v="ptilt"]').textContent=t.value+'°';paint();return}
   if(t.dataset.mcolor!=null){setTint(t.value);$('#ebar .cdot')?.style.setProperty('background',t.value);paint();return}
   if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};paint();return}
@@ -1554,6 +1611,7 @@ bodyEl.addEventListener('click',e=>{
   if(act==='adjreset'){delete (L||D).adj;commit();panel();paint();return}
   if(act==='adjall'){syncCur();for(const pg of P.pages)pg.adj=clone(D.adj||{});commit();toast(`${P.pages.length}ページの背景を同じ調整にしました`);return}
   if(act==='recolor'){applyRecolor();return}
+  if(act==='gridoff'){const empty=gridCells().filter(L=>!L.photoId);D.layers=D.layers.filter(L=>!empty.includes(L));for(const L of gridCells())delete L.gc;delete D.grid;commit();panel();refresh();toast('グリッドを外しました。はまっていた写真はそのまま残ります');return}
   if((act==='mfront'||act==='mback')&&multi()){zMulti(act==='mfront');commit();paint();return}
   if(act==='irot'&&isImg(L)){L.ir=((L.ir||0)+1)%4;commit();paint();return}
   if(act==='uncrop'&&isImg(L)){delete L.crop;L.zs=1;L.zx=L.zy=0;commit();panel();paint();return}
@@ -1564,6 +1622,7 @@ bodyEl.addEventListener('click',e=>{
   if(t.closest('[data-bgtype]')){const v=t.dataset.v,old=bgOf(D);D.bg=v==='color'?{type:v,color:old.color||'#f3e9dc'}:v==='grad'?{type:v,grad:old.grad||0}:{type:'photo'};commit();panel();paint();return}
   if(t.closest('[data-mc]')&&t.dataset.c){setTint(t.dataset.c);commit();panel();paint();return}
   if(t.closest('[data-bgc]')&&t.dataset.c){D.bg={type:'color',color:t.dataset.c};commit();panel();paint();return}
+  if(t.closest('[data-glay]')){applyGrid(t.closest('[data-glay]').dataset.glay);return}
   if(t.closest('[data-bgg]')){D.bg={type:'grad',grad:+t.dataset.g};commit();panel();paint();return}
   if(L&&isShape(L)&&(act==='fullw'||act==='fullh'||act==='center')){
     if(act==='fullw')Object.assign(L,{w:D.W,x:D.W/2,rot:0});else if(act==='fullh')Object.assign(L,{h:D.H,y:D.H/2,rot:0});else Object.assign(L,{x:D.W/2,y:D.H/2});
@@ -1667,7 +1726,11 @@ bodyEl.addEventListener('click',e=>{
 });
 $('#eimg').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
-  try{const urls=await Promise.all(fs.map(f=>loadPhoto(f,true)));for(const [i,u] of urls.entries())addImage(await makePhoto(u),i);tool=null;commit();panel();refresh()}
+  try{
+    const urls=await Promise.all(fs.map(f=>loadPhoto(f,true))),empty=D.layers.filter(L=>isImg(L)&&!L.photoId).sort((a,b)=>(a.gc??1e9)-(b.gc??1e9));
+    let i=0,filled=0;for(const u of urls){const id=await makePhoto(u),L=empty.shift();if(L){L.photoId=id;Object.assign(L,{zs:1,zx:0,zy:0,ir:0,ia:0});delete L.crop;filled++}else addImage(id,i++)}
+    if(filled&&!i)D.sel=null;tool=null;commit();panel();refresh();
+  }
   catch{toast('読み込めない画像がありました')}
 });
 $('#eimgswap').addEventListener('change',async e=>{
