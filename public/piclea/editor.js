@@ -717,6 +717,7 @@ function draw(c,o={}){
       rotIcon(c,h.rot.x,h.rot.y,kk);
     }
   }
+  if(o.ui==='edit'&&G.g?.target!=null){const T=D.layers.find(x=>x.id===G.g.target);if(T){const f=imgFrame(T);c.save();c.translate(T.x,T.y);c.rotate(T.rot);c.lineWidth=4*kk;c.strokeStyle='#fff';c.shadowColor='rgba(40,25,15,.45)';c.shadowBlur=6*kk;imgPath(c,T,f);c.stroke();c.restore()}}
   if(o.ui==='edit')drawMulti(c,M,kk);
   return M;
 }
@@ -1062,6 +1063,11 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='mscale')applyT(g,Math.max(.05,Math.hypot(p.x-g.c.x,p.y-g.c.y)/g.d),0);
   else if(g.mode==='mrot')applyT(g,1,snapAngle(Math.atan2(p.y-g.c.y,p.x-g.c.x)-g.a));
   else if(g.mode==='mpinch'&&G.ptrs.size===2){const t=two();applyT(g,Math.max(.05,t.d/g.t.d),snapAngle(t.a-g.t.a,.1))}
+  else if(g.mode==='move'&&L&&isImg(L)&&L.gc!=null&&D.grid){
+    if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;
+    if(!g.moved){g.moved=true;g.at=D.layers.indexOf(L);D.layers.splice(g.at,1);D.layers.push(L)} // above the other cells while it travels
+    L.x=g.x+p.x-g.p.x;L.y=g.y+p.y-g.p.y;g.target=cellAt(p,L)?.id??null;
+  }
   else if(g.mode==='move'&&L){
     if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;g.moved=true;
     const r=snapBox(L,g.x+p.x-g.p.x,g.y+p.y-g.p.y,SNAP*kE());L.x=r.x;L.y=r.y;G.guides=r.guides;
@@ -1122,6 +1128,11 @@ function endPtr(e){
   }
   if(g?.mode==='icrop'||g?.mode==='iframe'){G.g=null;commit();panel();paint();return} // 「トリミングを戻す」 appears once something is trimmed
   if(g?.mode==='mmove'&&!g.moved&&g.tap!=null){MS=[];D.sel=g.tap;G.g=null;panel();paint();return} // a tap on one of them: that one alone
+  if(g?.mode==='move'&&g.moved&&g.at!=null){ // a grid cell let go: back in its place, its photo swapped with the one it was dropped on
+    const L=sel();D.layers.splice(D.layers.indexOf(L),1);D.layers.splice(g.at,0,L);
+    const T=D.layers.find(o=>o.id===g.target);if(T)swapPhotos(L,T);
+    layoutGrid();G.g=null;commit();paint();return;
+  }
   const tap=G.g&&G.g.mode==='move'&&!G.g.moved,was=tap&&G.g.was,L=sel();
   G.g=null;G.guides=null;commit();paint();
   if(tap&&isImg(L)&&!L.photoId)$('#eimgswap').click(); // an empty frame: one tap to fill it
@@ -1247,6 +1258,18 @@ const GRIDS={
   g9:[0,1,2].flatMap(r=>[0,1,2].map(c=>[c/3,r/3,1/3,1/3])),
 };
 const gridCells=()=>D.layers.filter(L=>isImg(L)&&L.gc!=null).sort((a,b)=>a.gc-b.gc);
+// The grid cell (or empty frame) under a point, not counting 'not'.
+function cellAt(p,not){
+  for(let i=D.layers.length-1;i>=0;i--){
+    const L=D.layers[i];if(L===not||!isImg(L)||(L.gc==null&&L.photoId))continue;
+    const f=imgFrame(L),q=local(L,p);if(Math.abs(q.x)<=f.w/2&&Math.abs(q.y)<=f.h/2)return L;
+  }
+  return null;
+}
+const PHOTO_KEYS=['photoId','zs','zx','zy','ir','ia','crop','adj'];
+function swapPhotos(A,B){
+  for(const k of PHOTO_KEYS){const a=A[k],b=B[k];if(b===undefined)delete A[k];else A[k]=b;if(a===undefined)delete B[k];else B[k]=a}
+}
 function layoutGrid(){
   const g=D.grid,cells=g&&GRIDS[g.lay];if(!cells)return;
   const G=g.gap*D.W,e=1e-6,side=(a,lo)=>a<e||a>1-e?G:G/2;
@@ -1732,6 +1755,27 @@ $('#eimg').addEventListener('change',async e=>{
     if(filled&&!i)D.sel=null;tool=null;commit();panel();refresh();
   }
   catch{toast('読み込めない画像がありました')}
+});
+// Dropped on an empty frame or a grid cell, the first photo goes into it; the rest fill the empty frames in
+// turn and then lie over the picture where they were dropped.
+const isImageFile=f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(f.name); // HEIC from a computer often has no type
+async function dropPhotos(fs,p){
+  const imgs=[...fs].filter(isImageFile);if(!imgs.length)return;
+  try{
+    const urls=await Promise.all(imgs.map(f=>loadPhoto(f,true))),ids=[];for(const u of urls)ids.push(await makePhoto(u));
+    const T=p&&cellAt(p,null);let i=0;
+    if(T){T.photoId=ids.shift();Object.assign(T,{zs:1,zx:0,zy:0,ir:0,ia:0});delete T.crop}
+    const empty=D.layers.filter(L=>isImg(L)&&!L.photoId).sort((a,b)=>(a.gc??1e9)-(b.gc??1e9));
+    for(const id of ids){const L=empty.shift();if(L){L.photoId=id;Object.assign(L,{zs:1,zx:0,zy:0,ir:0,ia:0});delete L.crop}else{const n=addImage(id,i++);if(p){n.x=p.x+D.W*.04*(i-1);n.y=p.y+D.W*.04*(i-1)}}}
+    if(T||!p)D.sel=null;tool=null;commit();panel();refresh();
+  }catch{toast('読み込めない画像がありました')}
+}
+const hasFiles=e=>[...(e.dataTransfer?.types||[])].includes('Files');
+$('#editor').addEventListener('dragover',e=>{if(!hasFiles(e))return;e.preventDefault();e.dataTransfer.dropEffect='copy'});
+$('#editor').addEventListener('drop',e=>{
+  if(!hasFiles(e))return;e.preventDefault();
+  const r=cv.getBoundingClientRect(),on=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+  dropPhotos(e.dataTransfer.files,on?pt(e):null);
 });
 $('#eimgswap').addEventListener('change',async e=>{
   const f=e.target.files[0];e.target.value='';const L=sel();if(!f||!isImg(L))return;

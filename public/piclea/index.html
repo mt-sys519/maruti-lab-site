@@ -980,6 +980,14 @@ $('#size').addEventListener('change',()=>app.commit());
 /* ---------- photo (shrunk in catalog.js; nothing leaves the browser) ---------- */
 let pendingEdit=false;
 document.addEventListener('click',e=>{if(e.target.closest('[data-pick]'))$('#file').click()});
+// A picture dropped on the first page (from a computer's folder) starts like one chosen with the button.
+addEventListener('dragover',e=>{if([...(e.dataTransfer?.types||[])].includes('Files'))e.preventDefault()});
+addEventListener('drop',e=>{
+  if(![...(e.dataTransfer?.types||[])].includes('Files'))return;e.preventDefault();
+  if(!$('#editor').hidden)return; // the editor places it itself
+  const f=[...e.dataTransfer.files].find(f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(f.name));if(!f)return;
+  const dt=new DataTransfer();dt.items.add(f);$('#file').files=dt.files;$('#file').dispatchEvent(new Event('change'));
+});
 $('#file').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length){pendingEdit=false;return}
   try{const urls=await Promise.all(fs.map(loadPhoto));await app.setPhoto(urls[0]);if(urls.length>1)await app.addPhotos(urls.slice(1))}
