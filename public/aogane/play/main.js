@@ -636,16 +636,122 @@ const DASH={spin:.06,cost:24,air:34};
 const LEGS={on:!new URLSearchParams(location.search).has('classic'),max:Math.PI/2,rate:5.5,soft:.4};
 let legHead=0;
 function viewHead(){return LEGS.on?0:headYaw}
+// Third person (2026-10-20, the standard: V switches, ?fps / ?tps; the quick axe swing V had went, the user: the axe is little used, it stays on 3). The camera rides behind the frame's right shoulder and
+// follows the body (which the head turns) a little late; the frame is the Blender model (tools/blender/frame_game.py:
+// chassis on the legs' heading, torso on the body's, both arms on the gun's), the held weapon in its right hand, and
+// the gun sight goes where the gun's line meets the world. WebGL only; with the ARBALEST scope up the view goes back
+// inside. Only the drawing moves: render() puts the eye at the camera for the frame and puts it back after, so
+// shots, hits and sight lines still start from the frame. Pivots in frame-local game axes, from frame_game.py.
+// the jet flames' colours: a white core in a pale blue haze, as a rocket burns in vacuum (no air to keep it burning
+// orange; the user's call after an orange try)
+const JET_PLUME={glow:'#5f9dff'},JET_CORE={glow:'#eef6ff'};
+// third person is the standard (2026-10-20, the user); V switches and the choice is kept (hf.view); ?fps / ?tps force one
+const TPS={on:(()=>{const q=new URLSearchParams(location.search);if(q.has('fps'))return false;if(q.has('tps'))return true;try{return localStorage.getItem('hf.view')!=='fps'}catch{return true}})(),yaw:null,t:0,dist:11.5,side:2.6,up:4.5,lag:6,pitch:-.07,gunK:1.7,gunKs:{BARDICHE:1.3},real:null,sink:0,spin:0,burn:0,airK:0,nose:0,hit:null,downAt:null,fxT:0,ventT:0,
+  torso:[0,2.456,.08],armR:[1.056,3.651,.314],armL:[-1.056,3.651,.314],handR:[.115,-1.001,.69],wheelR:.448,
+  // each leg: its hip and its axle on the chassis
+  legs:{'Fore.L':[[-.64,1.8,.36],[-1.44,.448,1.68]],'Fore.R':[[.64,1.8,.36],[1.44,.448,1.68]],'Hind.L':[[-.624,1.8,-.68],[-1.424,.448,-1.92]],'Hind.R':[[.624,1.8,-.68],[1.424,.448,-1.92]]},
+  // the jet pack's nozzles on the chassis: exit, the way the flame goes (the big pair's turned back from their -40 deg
+  // axis, so the flame trails behind the frame where the camera sees it, not into the deck), size
+  jets:[[[-.32,1.57,-1.762],[0,-.45,-.89],1],[[.32,1.57,-1.762],[0,-.45,-.89],1],[[-.544,2.36,-1.616],[0,0,-1],.5],[[.544,2.36,-1.616],[0,0,-1],.5]]};
+function tpsModel(){const T3=typeof window!=='undefined'&&window.HF_THREE;if(!(T3&&T3.active))return null;T3.loadModel?.('FRAME');return modelOf('FRAME')}
+function tpsLive(){return TPS.on&&(player.scope||0)<.5&&!!tpsModel()}
+function toggleTps(){TPS.on=!TPS.on;TPS.yaw=null;try{localStorage.setItem('hf.view',TPS.on?'tps':'fps')}catch{}plog('System',TPS.on?'View: third person.':'View: first person.')}
+function tpsCamera(viewYaw,viewPitch){const now=performance.now(),dt=clamp((now-(TPS.t||now))/1000,0,.1);TPS.t=now;
+  if(TPS.yaw===null)TPS.yaw=viewYaw;TPS.yaw+=angleDiff(viewYaw,TPS.yaw)*(1-Math.exp(-TPS.lag*dt));
+  const ads=player.ads||0,D=lerp(TPS.dist,6.5,ads),sd=lerp(TPS.side,1.6,ads),f=forward(TPS.yaw),r=right(TPS.yaw),px=player.x,pz=player.z;
+  let ex=px-f.x*D+r.x*sd,ez=pz-f.z*D+r.z*sd,ey=TPS.up+player.jy*.8;
+  // a wall or the tunnel roof between the frame and the camera pulls the camera in
+  const hit=worldImpact(px,3.6,pz,ex,ey,ez);if(hit){const t=Math.max(.12,hit.t-.06);ex=px+(ex-px)*t;ez=pz+(ez-pz)*t;ey=3.6+(ey-3.6)*t}
+  TPS.real={x:px,z:pz,y:CAMERA_Y};player.x=ex;player.z=ez;CAMERA_Y=ey;return{yaw:TPS.yaw,pitch:viewPitch+TPS.pitch}}
+function tpsRestore(){const R=TPS.real;if(R){player.x=R.x;player.z=R.z;CAMERA_Y=R.y}TPS.real=null}
+// what the frame itself senses (locks, sight links, cover) is asked from the frame, not from the camera
+function tpsTrue(f){return function(...a){const R=TPS.real;if(!R)return f.apply(this,a);const ex=player.x,ez=player.z,ey=CAMERA_Y;player.x=R.x;player.z=R.z;CAMERA_Y=R.y;try{return f.apply(this,a)}finally{player.x=ex;player.z=ez;CAMERA_Y=ey}}}
+getLock=tpsTrue(getLock);getSightLink=tpsTrue(getSightLink);getHmdLock=tpsTrue(getHmdLock);getVisualTarget=tpsTrue(getVisualTarget);enemyOccluded=tpsTrue(enemyOccluded);
+const tpsMv=(R,v)=>[R[0]*v[0]+R[1]*v[1]+R[2]*v[2],R[3]*v[0]+R[4]*v[1]+R[5]*v[2],R[6]*v[0]+R[7]*v[1]+R[8]*v[2]],tpsAdd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],
+  tpsRy=y=>{const f=forward(y),r=right(y);return[r.x,0,f.x,0,1,0,r.z,0,f.z]},tpsRx=p=>{const c=Math.cos(p),s=Math.sin(p);return[1,0,0,0,c,s,0,-s,c]},
+  tpsRz=a=>{const c=Math.cos(a),s=Math.sin(a);return[c,-s,0,s,c,0,0,0,1]};
+// The chassis on its suspension: it sinks on landing (the cockpit's heave), crouches a little on BURST, dips its
+// nose under braking, and in the air hangs a little higher on the legs. x, z: where the frame is.
+function tpsChassis(x,z){const nose=TPS.nose,R=M3.mul(tpsRy(player.yaw+player.legs),tpsRx(-nose));
+  return{R,t:[x,player.jy-TPS.sink,z],nose}}
+// Damage on the frame (third person). A hit flashes the armour where it lands and throws sparks, which fall slow in
+// the low gravity; under 60% the joints spark now and then, under 30% gas vents from the back in short white puffs
+// (vacuum: no fire, no smoke that hangs); when the frame is lost it powers down (tpsInsts: the visor flickers out, the
+// legs give, the body slumps, the arms drop).
+function tpsSparks(w,n,dir,sp=5){for(let i=0;i<n;i++){const v=sp*(.5+Math.random()),j=()=>(Math.random()-.5)*v*1.2;
+  particles.push({x:w[0],y:w[1],z:w[2],px:w[0],py:w[1],pz:w[2],vx:dir[0]*v+j(),vy:dir[1]*v+Math.random()*v*.8,vz:dir[2]*v+j(),g:1.6,life:.35+Math.random()*.6,max:.95,color:Math.random()<.4?'#fff3c8':'#ffc35a',size:.12+Math.random()*.2})}}
+function tpsVent(w,dir){for(let i=0;i<7;i++){const v=4+Math.random()*4,j=()=>(Math.random()-.5)*2;
+  particles.push({x:w[0],y:w[1],z:w[2],px:w[0],py:w[1],pz:w[2],vx:dir[0]*v+j(),vy:dir[1]*v+j(),vz:dir[2]*v+j(),g:0,life:.18+Math.random()*.2,max:.38,color:'#e8f0f4',size:.5+Math.random()*.5})}}
+function tpsHit(dirWorld,dmg){if(!TPS.on||!tpsModel())return;const f=forward(dirWorld),w=[player.x+f.x*1.3,2.3+Math.random()*1.5,player.z+f.z*1.3];
+  TPS.hit={t:performance.now(),pos:w};tpsSparks(w,Math.min(28,6+Math.round(dmg*1.4)),[f.x,.3,f.z],4+Math.min(4,dmg*.3))}
+// a joint's place in the world: the hips on the chassis, the shoulders on the turned body
+function tpsJoint(C){const ks=Object.keys(TPS.legs),i=Math.floor(Math.random()*(ks.length+2));
+  if(i<ks.length)return tpsAdd(C.t,tpsMv(C.R,TPS.legs[ks[i]][0]));const T=tpsAdd(C.t,tpsMv(C.R,TPS.torso));return tpsAdd(T,tpsMv(tpsRy(player.yaw),vsub(i===ks.length?TPS.armR:TPS.armL,TPS.torso)))}
+function tpsWear(dt){const C=tpsChassis(player.x,player.z),hp=player.hp;
+  if(!player.alive){if(TPS.downAt===null){TPS.downAt=performance.now();const T=tpsAdd(C.t,tpsMv(C.R,TPS.torso));tpsSparks([T[0],T[1]+1,T[2]],40,[0,.6,0],6);
+      const b=forward(player.yaw);tpsVent(tpsAdd(T,[-b.x*.8,1.1,-b.z*.8]),[-b.x,.3,-b.z])}
+    TPS.fxT-=dt;if(TPS.fxT<=0&&performance.now()-TPS.downAt<9000){TPS.fxT=.4+Math.random()*.9;tpsSparks(tpsJoint(C),5+Math.floor(Math.random()*6),[0,.4,0],3)}return}
+  TPS.downAt=null;if(hp>=60)return;
+  TPS.fxT-=dt;if(TPS.fxT<=0){TPS.fxT=(hp<30?.25:.6)+Math.random()*(hp<30?.5:1.2);tpsSparks(tpsJoint(C),4+Math.floor(Math.random()*5),[0,.3,0],3)}
+  if(hp<30){TPS.ventT-=dt;if(TPS.ventT<=0){TPS.ventT=.9+Math.random()*1.4;const T=tpsAdd(C.t,tpsMv(C.R,TPS.torso)),b=forward(player.yaw),r=right(player.yaw),sd=Math.random()<.5?-1:1;
+    tpsVent(tpsAdd(T,[-b.x*.8+r.x*sd*.4,1.0,-b.z*.8+r.z*sd*.4]),[-b.x*.6+r.x*sd*.5,.5,-b.z*.6+r.z*sd*.5])}}}
+// The suspension, in the sim's step: how far the body has sunk, the wheels' roll, the jets' flame.
+function updateTps(dt){if(!TPS.on)return;if(tpsModel())tpsWear(dt);TPS.airK+=((player.jy>0?1:0)-TPS.airK)*(1-Math.exp(-6*dt));const air=TPS.airK,
+    ground=clamp(-cockpit.heave*1.1,-.25,.42)+(player.boostTime>0?.12:0),want=player.alive?lerp(ground,-.16,air):.5;
+  TPS.sink+=(want-TPS.sink)*(1-Math.exp(-(player.alive?lerp(14,4,air):2.5)*dt));TPS.nose+=(clamp(player.inertiaPitch*4,-.12,.12)*(1-air)-TPS.nose)*(1-Math.exp(-8*dt));
+  const f=forward(player.yaw+player.legs);TPS.spin-=(player.vx*f.x+player.vz*f.z)*dt/TPS.wheelR;
+  // the jet pack fires on BURST and on the air dash and glide (a jump is the legs, in the Moon's low gravity)
+  const fire=player.alive?(player.boostTime>0?1:player.glideTime>0?.8:0):0;TPS.burn+=(fire-TPS.burn)*(1-Math.exp(-(fire>TPS.burn?30:7)*dt));
+  const burn=fire;if(!burn||!tpsModel())return;
+  const C=tpsChassis(player.x,player.z);for(const [o,d,k] of TPS.jets){const w=tpsAdd(C.t,tpsMv(C.R,o)),u=tpsMv(C.R,d),n=Math.random()<burn*dt*60*(k<1?.6:1.2)?1:0;
+    for(let i=0;i<n;i++){const sp=(6+Math.random()*5)*burn,j=()=>(Math.random()-.5)*2.2;
+      particles.push({x:w[0],y:w[1],z:w[2],px:w[0],py:w[1],pz:w[2],vx:u[0]*sp+j()+player.vx*.6,vy:u[1]*sp+j(),vz:u[2]*sp+j()+player.vz*.6,life:.08+Math.random()*.1,max:.18,color:Math.random()<.5?'#9cc6ff':'#f2f8ff',size:(.25+Math.random()*.3)*k})}}}
+// the turn that brings an arm's line (R's z) back inside what the right arm can reach without crossing the body:
+// from a little left of straight ahead round to the right side, not down into the legs
+function tpsReach(R){const d=[R[2],R[5],R[8]],f=forward(player.yaw),r=right(player.yaw),lx=d[0]*r.x+d[2]*r.z,lz=d[0]*f.x+d[2]*f.z,
+  yaw=Math.atan2(lx,lz),pit=Math.asin(clamp(d[1],-1,1)),y2=clamp(yaw,-.22,1.1),p2=clamp(pit,-.7,1.15);if(y2===yaw&&p2===pit)return[1,0,0,0,1,0,0,0,1];
+  const cp=Math.cos(p2),e=[(f.x*Math.cos(y2)+r.x*Math.sin(y2))*cp,Math.sin(p2),(f.z*Math.cos(y2)+r.z*Math.sin(y2))*cp],v=vcross(d,e),c=d[0]*e[0]+d[1]*e[1]+d[2]*e[2],k=1/(1+Math.max(c,-.999));
+  const K=[0,-v[2],v[1],v[2],0,-v[0],-v[1],v[0],0],K2=M3.mul(K,K);return[0,1,2,3,4,5,6,7,8].map(i=>(i%4===0?1:0)+K[i]+K2[i]*k)}
+// powering down, the arms go from wherever they were to hanging forward of the body (the first-person arm's own
+// drop out of view is not followed: added to it, the gun swung up behind)
+function tpsSlump(R,k){if(k<=0)return R;const d=[R[2],R[5],R[8]],y0=Math.atan2(d[0],-d[2]),p0=Math.asin(clamp(d[1],-1,1));
+  return M3.mul(tpsRy(y0+angleDiff(player.yaw,y0)*k),tpsRx(lerp(p0,-1.05,k)))}
+function tpsInsts(out){const M=tpsModel(),R0=TPS.real;if(!M||!R0)return;const C=cockpit,mv=tpsMv,add=tpsAdd,Ch=tpsChassis(R0.x,R0.z),Rc=Ch.R,
+  // the arms follow the held weapon's own frame (aim, kick, the axe's cut), dropped through the weapon swap
+  now=performance.now(),dk=TPS.downAt===null?0:clamp((now-TPS.downAt)/1600,0,1),down=dk*dk*(3-2*dk),
+  hk=TPS.hit?clamp(1-(now-TPS.hit.t)/150,0,1):0,hp=hk>0?TPS.hit.pos:null,
+  X=cockpitXf(cockpitPose()),Rsw=tpsRx(-.8*(C.swapK||0)),G=X.gun.R,Q=tpsReach(M3.mul(G,Rsw)),Ra=tpsSlump(M3.mul(Q,M3.mul(G,Rsw)),down),D=M3.mul(Ra,[G[0],G[3],G[6],G[1],G[4],G[7],G[2],G[5],G[8]]),
+  Rb=M3.mul(tpsRy(player.yaw),tpsRx(-Ch.nose-.24*down)),tT=add(Ch.t,mv(Rc,TPS.torso)),arm=k=>add(tT,mv(Rb,vsub(TPS[k],TPS.torso))),aR=arm('armR'),
+  F={chassis:{R:Rc,t:Ch.t},torso:{R:Rb,t:tT},'arm.R':{R:Ra,t:aR},'arm.L':{R:Ra,t:arm('armL')}},dim=lerp(1,.45,down),  // the wear shows as sparks and venting, not as a darker frame (the first-person arm's dimming made the whole frame murky)
+  
+  // the visor's light: on, then on the power-down a few stutters and out
+  eye=down<=0?1:dk<.7?(Math.sin(now*.05)>.3?.9:.15)*(1-dk):0;
+  // each leg swings out about its hip until its wheels are back on the deck (the body sinks, the legs open)
+  for(const [n,[hip,axle]] of Object.entries(TPS.legs)){const sx=Math.sign(hip[0]),dx=Math.abs(axle[0]-hip[0]),dy=axle[1]-TPS.wheelR-hip[1],drop=TPS.sink+hip[2]*Math.sin(Ch.nose);
+    let th=drop/dx;for(let i=0;i<3;i++){const f=dx*Math.sin(th)+dy*(Math.cos(th)-1)-drop,df=dx*Math.cos(th)-dy*Math.sin(th);th-=f/(df||1)}th=clamp(th,-.3,.6);
+    const RL=M3.mul(Rc,tpsRz(sx*th)),tL=add(Ch.t,mv(Rc,hip));F['leg.'+n]={R:RL,t:tL};F['wheel.'+n]={R:M3.mul(RL,tpsRx(TPS.spin)),t:add(tL,mv(RL,vsub(axle,hip)))}}
+  for(const g of M.groups){const f=F[g.bone];if(f)out.push({model:g,M,R:f.R,t:f.t,style:ARM_STYLE,key:'tf:'+g.name,dim,hot:C.flashW*.3,hitT:hk,hitPos:hp,glowK:g.glow==='visor'?eye:1})}
+  const fl=TPS.burn;if(fl>.02&&M.byName)TPS.jets.forEach(([o,dd,s],i)=>{const w=add(Ch.t,mv(Rc,o)),z=mv(Rc,dd),a=Math.abs(z[1])>.9?[1,0,0]:[0,1,0],x0=vcross(a,z),xl=vlen(x0)||1,x=x0.map(v=>v/xl),y=vcross(z,x),
+    L=(1.3+Math.random()*.35)*fl*Math.sqrt(s),W=(.3+Math.random()*.04)*s*(.75+.25*fl);
+    for(const [nm,st,wk,lk] of [['flame|base|plume',JET_PLUME,1,1],['flame|base|core',JET_CORE,.55,.6]]){const g=M.byName[nm];if(g)out.push({model:g,M,R:[x[0]*W*wk,y[0]*W*wk,z[0]*L*lk,x[1]*W*wk,y[1]*W*wk,z[1]*L*lk,x[2]*W*wk,y[2]*W*wk,z[2]*L*lk],t:w,style:st,key:'tj'+i+nm,glowK:fl})}})
+  // the held weapon: the first-person gun as posed, grown to the frame's size about its grip and moved so the grip
+  // sits in the right hand (the muzzle with it; the first-person gun is made for the eye, small next to the frame)
+  const MW=modelOf(C.shown),hand=add(aR,mv(Ra,TPS.handR)),Xh=HAND_XF[C.shown]?xfMul(X.gun,HAND_XF[C.shown]):X.gun,k=TPS.gunKs[C.shown]||TPS.gunK,at=v=>{const q=mv(D,vsub(v,Xh.t));return[hand[0]+q[0]*k,hand[1]+q[1]*k,hand[2]+q[2]*k]};
+  C.muzzle=at(cockpitMuzzle(X));
+  if(MW)for(const g of MW.groups){const f=X[g.bone];if(f)out.push({model:g,M:MW,R:M3.mul(D,f.R).map(v=>v*k),t:at(f.t),style:GUN_STYLE,key:'tw'+C.shown+':'+g.name,hot:C.flashW})}}
+// where the gun's line from the muzzle meets the world or the deck (else 85 m out), for the third-person sight
+function tpsAimPoint(a){if(!TPS.real||!cockpit.muzzle)return null;const m=cockpit.muzzle,L=140,hit=worldImpact(m[0],m[1],m[2],m[0]+a.x*L,m[1]+a.y*L,m[2]+a.z*L),tg=a.y<0?-m[1]/(a.y*L):2;
+  let t=Math.min(hit?hit.t:2,tg);if(t>1)t=85/L;return[m[0]+a.x*L*t,m[1]+a.y*L*t,m[2]+a.z*L*t]}
 // The head's turn since the last step, in rad, handed to the body.
 // Aiming steadies it to ADS_HEAD of the pull, as the head's aim did before.
 function headTurn(){const d=(headYaw-legHead)*Math.PI/180*lerp(1,ADS_HEAD,player.ads||0);legHead=headYaw;return d}
-function alignLegs(){if(!LEGS.on||!playing||!player.alive||missionClear||player.jy>0||player.legAlign)return;player.legAligns=(player.legAligns||0)+1;
+function alignLegs(){if(!LEGS.on||!playing||!player.alive||missionClear||player.legAlign)return;player.legAligns=(player.legAligns||0)+1;
   if(Math.abs(player.legs)<.04){player.legs=0;legLock();return}
   const dir=Math.sign(player.legs),d=Math.abs(player.legs)/LEGS.rate;player.legAlign=true;player.roll=dir*.06;player.shake=Math.max(player.shake,.35);cockpit.heaveV-=1.4;sfx.legSpin(d,dir*.35);
-  for(let i=0;i<18;i++){const a=Math.random()*TAU;particles.push({x:player.x+Math.sin(a)*1.6,y:.15,z:player.z-Math.cos(a)*1.6,px:player.x,py:.1,pz:player.z,vx:Math.cos(a)*(3+Math.random()*5)*dir,vy:.3+Math.random()*1.2,vz:Math.sin(a)*(3+Math.random()*5)*dir,life:.25+Math.random()*.3,max:.55,color:i%3?'#c8b89d':'#8a8478',size:.3+Math.random()*.7})}}
+  if(player.jy<=0)for(let i=0;i<18;i++){const a=Math.random()*TAU;particles.push({x:player.x+Math.sin(a)*1.6,y:.15,z:player.z-Math.cos(a)*1.6,px:player.x,py:.1,pz:player.z,vx:Math.cos(a)*(3+Math.random()*5)*dir,vy:.3+Math.random()*1.2,vz:Math.sin(a)*(3+Math.random()*5)*dir,life:.25+Math.random()*.3,max:.55,color:i%3?'#c8b89d':'#8a8478',size:.3+Math.random()*.7})}}
 // The legs come square under the body: a drop onto the hips, a clank, a ring on the deck, the compass mark lights.
 function legLock(){player.legLockT=.45;player.shake=Math.max(player.shake,.5);cockpit.heaveV+=2.6;player.fovKick=Math.max(player.fovKick,.18);player.roll=0;sfx.legLock();
-  waves.push({x:player.x,y:.06,z:player.z,color:'#8fffe0',size:9,life:.4,max:.4,kind:'ground'})}
+  if(player.jy<=0)waves.push({x:player.x,y:.06,z:player.z,color:'#8fffe0',size:9,life:.4,max:.4,kind:'ground'})}
 function updateLegs(dt){player.legLockT=Math.max(0,(player.legLockT||0)-dt);if(!player.legAlign)return;const step=LEGS.rate*dt;if(Math.abs(player.legs)<=step){player.legs=0;player.legAlign=false;legLock();return}player.legs-=Math.sign(player.legs)*step}
 function doBoost(){const d=inputDir();if(!playing||missionClear||(Math.abs(d.sx)+Math.abs(d.sz))<.1||player.boostCool>0||!player.alive)return;const air=player.jy>0;
   if(air?(player.airDashed||player.boost<DASH.air):player.boost<DASH.cost)return;player.boost-=air?DASH.air:DASH.cost;player.boostCool=.18;player.regenDelay=.75;player.glideTime=0;player.boostTrailClock=0;player.roll=clamp(-d.sx*.065,-.065,.065);
@@ -1994,6 +2100,7 @@ function flushThreeEnemies(viewYaw,viewPitch){
   if(!enemyBatch.length&&!worldRec)return;const T3=window.HF_THREE,insts=[];
   for(const B of enemyBatch){const e=B.e,hitT=e.hitT>0?clamp(e.hitT/.12,0,1):0,M=modelOf(e.type);if(M){modelInsts(M,B,hitT,hitT>0&&e.hitPoint?[e.hitPoint.x,e.hitPoint.y,e.hitPoint.z]:null,insts);continue}B.insts.forEach((I,i)=>{if(I.hidden)return;insts.push({P:I.P,wv:I.wv,R:I.R,style:B.S,key:'e'+e.type+e.id+':'+i,hot:B.hot,ghost:B.ghost,revealY:B.revealY,glowK:I.P.mat==='glow'?(B.glow[I.P.glow]??1):1,hitPos:hitT>0&&e.hitPoint?[e.hitPoint.x,e.hitPoint.y,e.hitPoint.z]:null,hitT})})}
   // with the world in WebGL the hostile effects (reveal, afterimages, muzzles) go into the same pass
+  if(TPS.real)tpsInsts(insts);
   if(worldRec){for(const e of enemyFXQueue)drawEnemyFX(e,viewYaw,viewPitch);enemyFXQueue.length=0}
   const W3=worldRec;worldRec=null;
   // with the world in WebGL, broken components join the same depth pass (they tumble behind buildings too)
@@ -2388,7 +2495,7 @@ function cockpitXf(pz){
   return X;
 }
 function cockpitHit(dirWorld,dmg){
-  const C=cockpit,rel=angleDiff(dirWorld,player.yaw);C.jolt=1;C.joltX=-Math.sin(rel);C.joltY=(Math.random()-.5)*2;C.rimHit=1;C.rimHitDir=rel;
+  tpsHit(dirWorld,dmg);const C=cockpit,rel=angleDiff(dirWorld,player.yaw);C.jolt=1;C.joltX=-Math.sin(rel);C.joltY=(Math.random()-.5)*2;C.rimHit=1;C.rimHitDir=rel;
   feedHit(dirWorld,dmg);
   visorFX.glitch=Math.max(visorFX.glitch,.2+clamp(dmg/40,0,.15));visorFX.glitchK=Math.max(visorFX.glitchK,clamp(dmg/10,.45,1.2)*(player.hp<30?1.3:1));
 }
@@ -2464,6 +2571,7 @@ function armIK(X,Xhand){
   const ik0=mk(S,E,.22,.22,{mat:'dark'}),ik1=mk(E,Wr,.2,.17,{mat:'dark'});ik0.P.dyn='ik0';ik1.P.dyn='ik1';
   return[ik0,ik1,...place(S,uz.map(v=>v/ul),ARM_PARTS.U,'armU'),...place(E,fu,ARM_PARTS.F,'armF')];
 }
+function cockpitMuzzle(X){const s=cockpit.shown;return s==='FLAIL'?xfPoint(X.gun,[0,-.02,2.15]):s==='BARDICHE'?xfPoint(X.gun,[-.5,-.2,2.7]):s==='MAUL'?xfPoint(X.gun,[0,.1,3.2]):s==='ARBALEST'?xfPoint(X.gun,[0,0,3.75]):xfPoint(X.barrel,[0,0,2.95])}
 function drawCockpit(speed,viewYaw,viewPitch){
   const C=cockpit,pz=cockpitPose(),X=cockpitXf(pz);
   // SYNC DRIVE re-lights the frame itself: the capsule's edges go gold with the world.
@@ -2515,7 +2623,7 @@ function drawCockpit(speed,viewYaw,viewPitch){
     if(T.length>1){ctx.save();ctx.globalCompositeOperation='lighter';for(let i=1;i<T.length;i++){const A=T[i-1],Bq=T[i],q=[A.a,Bq.a,Bq.b,A.b].map(v=>project(v[0],v[1],v[2],viewYaw,viewPitch));if(q.some(v=>!v))continue;
       const k=1-(gameTime-Bq.t)/.11;ctx.globalAlpha=.32*k;ctx.fillStyle='#bcd8ff';ctx.beginPath();q.forEach((v,j)=>j?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));ctx.closePath();ctx.fill();
       ctx.globalAlpha=.85*k;ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(q[2].x,q[2].y);ctx.lineTo(q[3].x,q[3].y);ctx.stroke()}ctx.restore()}}
-  C.muzzle=C.shown==='FLAIL'?xfPoint(X.gun,[0,-.02,2.15]):C.shown==='BARDICHE'?xfPoint(X.gun,[-.5,-.2,2.7]):C.shown==='MAUL'?xfPoint(X.gun,[0,.1,3.2]):C.shown==='ARBALEST'?xfPoint(X.gun,[0,0,3.75]):xfPoint(X.barrel,[0,0,2.95]);
+  C.muzzle=cockpitMuzzle(X);
 }
 // Yellow/ink hazard stripes laid along a strip of the capsule (a->b length, a->c width).
 function hazard(P3,a,b,c,n){ctx.save();for(let i=0;i<n;i++){const t0=i/n,t1=(i+.5)/n,k=.5/n,q=[[t0,0],[t1,0],[t1+k,1],[t0+k,1]].map(([t,w])=>P3('frame',[lerp(a[0],b[0],t)+(c[0]-a[0])*w,lerp(a[1],b[1],t)+(c[1]-a[1])*w,lerp(a[2],b[2],t)+(c[2]-a[2])*w]));if(q.some(v=>!v))continue;ctx.globalAlpha=.9;ctx.fillStyle='#e8c34a';ctx.beginPath();q.forEach((p,j)=>j?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fill()}ctx.restore()}
@@ -2583,7 +2691,7 @@ function drawAdsFrame(){const k=player.ads||0;if(k<.01||(player.scope||0)>.05)re
   const t=gameTime-(player.adsT??-9);if(t>=0&&t<.32){const y=lerp(y0,y1,t/.32),gr=ctx.createLinearGradient(0,y-18*s,0,y);gr.addColorStop(0,'rgba(142,216,196,0)');gr.addColorStop(1,'rgba(142,216,196,.5)');ctx.globalAlpha=.7*(1-t/.32);ctx.fillStyle=gr;ctx.fillRect(x0,y-18*s,x1-x0,18*s);ctx.fillStyle=HUD.teal;ctx.fillRect(x0,y,x1-x0,Math.max(1,1.2*s))}
   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=k;hudText('GUN CAM  //  HALBERD',x0+2*s,y0-14*s,7*s,HUD.teal,0,.3);hudText('×1.25',x1-2*s,y1+6*s,7*s,HUD.teal,1,.2);ctx.restore()}
 function drawGunSight(viewYaw,viewPitch){
-  const a=aimVector(),p=project(player.x+a.x*85,CAMERA_Y+a.y*85,player.z+a.z*85,viewYaw,viewPitch);
+  const a=aimVector(),q=tpsAimPoint(a),p=q?project(q[0],q[1],q[2],viewYaw,viewPitch):project(player.x+a.x*85,CAMERA_Y+a.y*85,player.z+a.z*85,viewYaw,viewPitch);
   const linked=getSightLink(),lock=getLock(.24),heat=player.heat/100;
   ctx.save();ctx.lineCap='round';
   if(!p||p.x<20||p.x>W-20||p.y<20||p.y>H-20){ // gun is pointing outside the HMD view: a witness tick on the canopy edge
@@ -2777,7 +2885,7 @@ function drawSightLinkCue(viewYaw,viewPitch){
   ctx.shadowBlur=3;ctx.font='7px Consolas';ctx.textAlign='left';ctx.fillText('LINK',x1+g+l+4,cy+3);ctx.restore();
 }
 function drawKillPulse(){if(player.killPulse<=0)return;const k=1-player.killPulse,rr=Math.min(W,H)*(.08+k*.36),a=player.killPulse;ctx.save();ctx.strokeStyle=`rgba(255,220,135,${.48*a})`;ctx.shadowBlur=18;ctx.shadowColor='#ffd16f';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W/2,H*.49,rr,0,TAU);ctx.stroke();ctx.globalAlpha=.16*a;ctx.fillStyle='#fff0b5';ctx.fillRect(0,H*.49-1,W,2);ctx.restore()}
-function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;bootFrame();drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);recordSunShadows();bootRing();if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(bootK(x.o.x,x.o.z)&&(!enemyOccluded(x.o)||threeEnemy(x.o)))drawEnemy(x.o,viewYaw,viewPitch)}bootR=1e9;if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawAdsFrame();drawScope(viewYaw,viewPitch)}
+function drawWorld(viewYaw,viewPitch){worldRec=threeWorldOn()?{boxes:[],cyls:[],lines:[],dots:[],segsN:[],segsA:[],discsN:[],discsA:[],glows:[],quads:[],ground1:[],ground2:[],groundQ1:[],groundQ2:[],sky:null}:null;threeWorldFrame=false;bootFrame();drawSky(viewYaw,viewPitch);drawGround(viewYaw,viewPitch);recordSunShadows();bootRing();if(stage===3)drawSkydeck(viewYaw,viewPitch);else if(stage===2)drawTunnel(viewYaw,viewPitch);else drawDistantDistrict(viewYaw,viewPitch);if(stage===1){drawTrunkLine(viewYaw,viewPitch);drawFoundryMachines(viewYaw,viewPitch);drawGantries(viewYaw,viewPitch);drawStreetLights(viewYaw,viewPitch)}for(const e of enemies)if(e.alive)drawVectorEcho(e,viewYaw,viewPitch);const draw=[];for(const b of buildings){const dx=b.x-player.x,dz=b.z-player.z;draw.push({d:dx*dx+dz*dz,t:0,o:b})}for(const e of enemies)if(e.alive){const dx=e.x-player.x,dz=e.z-player.z;draw.push({d:dx*dx+dz*dz,t:1,o:e})}draw.sort((a,b)=>b.d-a.d);for(const x of draw){if(!x.t)drawBuilding(x.o,viewYaw,viewPitch);else if(bootK(x.o.x,x.o.z)&&(!enemyOccluded(x.o)||threeEnemy(x.o)))drawEnemy(x.o,viewYaw,viewPitch)}bootR=1e9;if(worldRec){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}flushThreeEnemies(viewYaw,viewPitch);for(const e of enemies)if(e.alive&&enemyOccluded(e))drawOccludedContact(e,viewYaw,viewPitch);drawLancerCommit(viewYaw,viewPitch);drawHeavyAimLines(viewYaw,viewPitch);drawThreatLanes(viewYaw,viewPitch);if(!threeWorldFrame){drawBolts(viewYaw,viewPitch);drawWaves(viewYaw,viewPitch);drawDebris(viewYaw,viewPitch);drawShards(viewYaw,viewPitch);drawParticles(viewYaw,viewPitch);drawGroundRush(viewYaw,viewPitch)}drawSpeedFX(Math.hypot(player.vx,player.vz));drawScanCue(visualContact,viewYaw,viewPitch);drawLeadCue(viewYaw,viewPitch);drawSightLinkCue(viewYaw,viewPitch);drawKillPulse();if((player.scope||0)<.6){if(!TPS.real)drawCockpit(Math.hypot(player.vx,player.vz),viewYaw,viewPitch);drawGunSight(viewYaw,viewPitch)}else cockpit.muzzle=null;drawHmdBoresight();drawAdsFrame();drawScope(viewYaw,viewPitch)}
 
 // One primary attack and one light pressure attack may commit at a time (HARD: more primaries, see attackers()).
 function updateCombatDirector(){
@@ -2945,7 +3053,7 @@ function updateEnemies(dt){
 }
 
 // ---------- UPDATE ----------
-function downPlayer(){player.alive=false;plog('Warning','Frame lost.');pilotCut('down');say('DOWN');player.vx=player.vz=0;player.boostTime=player.glideTime=0;mouseButtons.clear();sfx.down();lightBurst(player.x,CAMERA_Y-1,player.z,'#ff6359',14,.6);setTimeout(()=>{if(!player.alive)showResult('FRAME DOWN')},700)}
+function downPlayer(){player.alive=false;plog('Warning','Frame lost.');pilotCut('down');say('DOWN');player.vx=player.vz=0;player.boostTime=player.glideTime=0;mouseButtons.clear();sfx.down();lightBurst(player.x,CAMERA_Y-1,player.z,'#ff6359',14,.6);setTimeout(()=>{if(!player.alive)showResult('FRAME DOWN')},tpsLive()?2400:700)} // third person: the card waits for the frame to power down and slump (1.6 s)
 function fmtTime(t){return String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0')}
 function showResult(title){const r=$('result');if(!r)return;if(!title){r.classList.add('hidden');return}
   const acc=stats.shots?Math.round(stats.hits/stats.shots*100):0,down=/^FRAME DOWN/.test(title);let rows,sector;
@@ -3026,7 +3134,7 @@ function update(dt){
   const soft=LEGS.on?LEGS.soft:.24,desiredTurn=Math.abs(player.aimYawTarget)>soft?clamp(Math.sign(player.aimYawTarget)*(Math.abs(player.aimYawTarget)-soft)*2.35,-.92,.92):0;
   const angularAccel=Math.abs(desiredTurn)>Math.abs(player.yawVelocity)?2.6:4.2;player.yawVelocity+=clamp(desiredTurn-player.yawVelocity,-angularAccel*dt,angularAccel*dt);
   const turn=player.yawVelocity*dt;player.yaw+=turn;player.aimYawTarget-=turn;player.torso-=turn;
-  if(LEGS.on){const ht=headTurn();player.yaw+=ht;player.legs=clamp(player.legs-turn-ht,-LEGS.max,LEGS.max);updateLegs(dt)}
+  if(LEGS.on){const ht=headTurn();player.yaw+=ht;player.legs=clamp(player.legs-turn-ht,-LEGS.max,LEGS.max);updateLegs(dt)}updateTps(dt);
   player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.56);
   {const want=player.alive&&!missionClear&&player.scopeOn&&cockpit.shown==='ARBALEST'&&cockpit.swapT<=0?1:0;player.scope=(player.scope||0)+(want-(player.scope||0))*(1-Math.exp(-(want?10:14)*dt));if(player.scope<.002)player.scope=0}
   {const want=player.alive&&!missionClear&&player.scopeOn&&cockpit.shown==='HALBERD'&&cockpit.swapT<=0?1:0;player.ads=(player.ads||0)+(want-(player.ads||0))*(1-Math.exp(-(want?12:14)*dt));if(player.ads<.002)player.ads=0}
@@ -3208,7 +3316,7 @@ function tutHold(){return tut.on&&TUT_STEPS[tut.i]?.id!=='designate'}
 // The story is written, not staged: a short briefing the first time SECTOR 01 opens, and a closing card on the
 // last clear (the sunrise deck, AOI's FINAL line, three lines, then OPERATION COMPLETE). Enter / A / a click
 // after the first line goes straight to the result.
-const BRIEF={en:'BRIEFING',lines:{ja:['月面送電施設の管理AIが暴走。施設の作業機も警備機も、すべて乗っ取られた','有人操作に切り替えられる旧式の機体・蒼鉄で、AIの中枢へ向かう'],
+const BRIEF={en:'BRIEFING',len:7,lines:{ja:['月面送電施設の管理AIが暴走。施設の作業機も警備機も、すべて乗っ取られた','有人操作に切り替えられる旧式の機体・蒼鉄で、AIの中枢へ向かう'],
   en:["The lunar power relay's control AI has gone rogue and seized every work and security machine","Take AOGANE, an old frame that can switch to manned control, to the AI's core"]}};
 const brief={t:-1,shown:false};
 const ENDING_LINES={ja:['AIの中枢は押さえた。施設の機械が、ひとつずつ動きを止めていく','夜明けの発着場に、迎えの船が降りてくる','蒼鉄は役目を終えた。AOI は、地球へ帰る'],
@@ -3216,15 +3324,16 @@ const ENDING_LINES={ja:['AIの中枢は押さえた。施設の機械が、ひ�
 const ENDING_LEN=12.5;const ending={on:false,t:0};
 function updateStory(dt){
   if(playing&&mode==='sortie'&&stage===1&&!brief.shown&&!missionClear&&player.alive){brief.shown=true;brief.t=0}
-  if(brief.t>=0){brief.t+=dt;if(brief.t>9)brief.t=-1}
+  if(brief.t>=0){brief.t+=dt;if(brief.t>BRIEF.len)brief.t=-1}
   if(ending.on){ending.t+=dt;if(ending.t>=ENDING_LEN)endEnding()}}
 function endEnding(){if(!ending.on)return;ending.on=false;if(missionClear&&player.alive)showResult('OPERATION COMPLETE')}
 function skipEnding(){if(ending.on&&ending.t>2.6)endEnding()}
 function drawStory(s){
   const cal=headNeedCenter&&headEnabled&&headFound&&playing;
-  if(brief.t>=0&&!cal&&!tut.on){const t=brief.t,a=Math.min(clamp(t/.5,0,1),clamp((9-t)/.8,0,1)),w=Math.min(W*.8,520*s),h=62*s,x=W/2-w/2,y=H*.17;
-    ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.62)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const k=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,k);ctx.fillRect(x,y+h-k,w,k);
-    hudText('BRIEFING',W/2,y+7*s,6.5*s,'#e3a957',.5,.3);hudText(BRIEF.lines[lang][0],W/2,y+21*s,9.5*s,'#eef2f0',.5,.04,500);hudText(BRIEF.lines[lang][1],W/2,y+39*s,9.5*s,'#eef2f0',.5,.04,500);ctx.restore()}
+  // under the compass, over the sky: clear of the hostiles, the sight and (third person) the frame
+  if(brief.t>=0&&!cal&&!tut.on){const t=brief.t,a=Math.min(clamp(t/.5,0,1),clamp((BRIEF.len-t)/.8,0,1)),w=Math.min(W*.8,470*s),h=44*s,x=W/2-w/2,y=78*s;
+    ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(5,9,9,.45)';ctx.fillRect(x,y,w,h);ctx.fillStyle='#e3a957';const k=Math.max(1,Math.round(s*.6));ctx.fillRect(x,y,w,k);
+    hudText('BRIEFING',W/2,y+6*s,5.5*s,'#e3a957',.5,.3);hudText(BRIEF.lines[lang][0],W/2,y+17*s,8*s,'#eef2f0',.5,.04,500);hudText(BRIEF.lines[lang][1],W/2,y+31*s,8*s,'#eef2f0',.5,.04,500);ctx.restore()}
   if(ending.on){const t=ending.t,out=clamp((ENDING_LEN-t)/.8,0,1);
     ctx.save();
     ENDING_LINES[lang].forEach((line,i)=>{const t0=2.4+i*2.4,a=clamp((t-t0)/.9,0,1)*out;if(a<=0)return;ctx.globalAlpha=a;hudText(line,W/2,H*.36+i*20*s-(1-a)*4*s,11*s,'#f3efdf',.5,.06,400)});
@@ -3394,9 +3503,11 @@ function drawPilotLink(){
   const b=pilot.boot;if(b<=0)return;
   // type scale: never below ~11 px body / 8 px labels, so a small window keeps a readable strip
   // the HMD's size ignores 解像度 (hd is the screen's own pixel ratio)
-  const hd=DPR/resScale,sv=H*hd/1080*2.4,s=Math.max(1.45,Math.max(1,sv>=2?Math.round(sv):Math.round(sv*2)/2)/hd),lh=12.5*s,pad=6*s,fs=7.8*s,cap=5.6*s;
+  // third person: the strip goes smaller to the bottom right, clear of the frame (the camera's over the right shoulder,
+  // so the frame stands left of centre) and its jet pack
+  const hd=DPR/resScale,sv=H*hd/1080*2.4,s=Math.max(1.45,Math.max(1,sv>=2?Math.round(sv):Math.round(sv*2)/2)/hd)*(TPS.real?.85:1),lh=12.5*s,pad=6*s,fs=7.8*s,cap=5.6*s;
   const logW=Math.min(W*.5,330*s),logH=lh*4+pad*2,sideW=Math.max(70*s,logW*.24),sideH=logH,gap=10*s;
-  const total=sideW*2+logW+gap*2,ox=W/2-total/2+pilot.lagX+(Math.random()-.5)*player.shake*4,by=H-16*s-(1-b)*24*s+(Math.random()-.5)*player.shake*3;
+  const total=sideW*2+logW+gap*2,ox=(TPS.real?W-total-16*s:W/2-total/2)+pilot.lagX+(Math.random()-.5)*player.shake*4,by=H-16*s-(1-b)*24*s+(Math.random()-.5)*player.shake*3;
   ctx.save();ctx.globalAlpha=b;
   const ly=by-logH,lx=ox+sideW+gap,sy=by-sideH;
   // LOG with AOI behind the text: one entry per line, the tag in small caps in its own column.
@@ -3637,7 +3748,7 @@ function diffLabel(){$('diffBtn').textContent=jt('難易度：','Difficulty: ')+
 $('diffBtn').addEventListener('click',()=>{const k=Object.keys(DIFFS);difficulty=k[(k.indexOf(difficulty)+1)%k.length];try{localStorage.setItem('hf.diff',difficulty)}catch{}loadBest();diffLabel();sfx.ui()});diffLabel();
 $('fpsBtn').addEventListener('click',()=>{fpsMeter.on=!fpsMeter.on;fpsMeter.n=fpsMeter.ms=0;try{localStorage.setItem('hf.fps',fpsMeter.on?'on':'off')}catch{}fpsLabel();sfx.ui()});fpsLabel();
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?jt('発光：強','Glow: high'):jt('発光：弱','Glow: low')}
-function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;if(!playing)legHead=headYaw;const head=viewHead()*Math.PI/180,sc=player.scope||0,va=Math.max(sc,player.ads||0),viewYaw=lerp(player.yaw+head,player.yaw+player.torso,va)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,va);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc)*(1+ADS_ZOOM*(player.ads||0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawHmdMarks(viewYaw,viewPitch);drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
+function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;if(!playing)legHead=headYaw;let head=viewHead()*Math.PI/180,sc=player.scope||0,va=Math.max(sc,player.ads||0),viewYaw=lerp(player.yaw+head,player.yaw+player.torso,va)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,va);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc)*(1+ADS_ZOOM*(player.ads||0));let tps=null;try{if(tpsLive()){tps=tpsCamera(viewYaw,viewPitch);viewYaw=tps.yaw;viewPitch=tps.pitch}ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawHmdMarks(viewYaw,viewPitch);drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}finally{if(tps)tpsRestore()}}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
 // canvas state reset, and the error goes to the console, window.__hfErrors and once per message to the LOG.
@@ -3695,7 +3806,7 @@ document.addEventListener('mousemove',e=>{if(padDriven&&Math.abs(e.movementX||0)
 document.addEventListener('mousedown',e=>{if(padDriven)setPadDriven(false);if(playing&&player.alive&&!missionClear&&e.target===canvas&&document.pointerLockElement!==canvas){try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}}mouseButtons.add(e.button);if(e.button===0){skipEnding();fire(true)}if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
-document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat){if(LEGS.on)alignLegs();else toggleScope()};if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector();if((e.code==='Enter'||e.code==='NumpadEnter'||e.code==='Space')&&!e.repeat)skipEnding()});
+document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)toggleTps();if(e.code==='KeyF'&&!e.repeat){if(LEGS.on)alignLegs();else toggleScope()};if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector();if((e.code==='Enter'||e.code==='NumpadEnter'||e.code==='Space')&&!e.repeat)skipEnding()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent=jt('全画面にできませんでした',"Couldn't go fullscreen")}});
 // Static menu text: the Japanese is whatever index.html holds (kept the first time), the English is here.
@@ -3703,7 +3814,7 @@ const I18N_EN={endure:'Survival<small>Fight until you fall</small>',settings:'Se
   vol:'Master volume',music:'Music',voice:'Voice',se:'Sound effects',mouse:'Mouse sensitivity',stick:'Stick sensitivity',tgain:'Tracking sensitivity',tdead:'Tracking dead zone',tsmooth:'Tracking response',resetSettings:'Reset to defaults',
   caution:'Take care if you get motion sick easily.<br>If you start to feel unwell, stop and rest right away.',
   padKeys:'<span><b>Left stick</b> Move</span><span><b>Right stick</b> Aim gun</span><span><b>RT</b> Fire</span><span><b>LT</b> Aim / scope</span><span><b>A</b> Jump</span><span><b>B</b> Boost</span><span><b>X</b> Axe</span><span><b>Y</b> Switch weapon</span><span><b>LB / RB</b> Look left / right (no camera)</span><span><b>Right stick click</b> Recenter view</span><span><b>Menu button</b> Menu</span>',
-  keyKeys:'<span><b>WASD</b> Move</span><span><b>SHIFT</b> Boost</span><span><b>SPACE</b> Jump</span><span><b>Mouse</b> Aim weapon</span><span><b>Left click</b> Fire</span><span><b>Right click</b> Aim / scope</span><span><b>Wheel / 1-3</b> Switch weapon</span><span><b>V</b> Axe</span><span><b>F</b> Square the legs under the body</span><span><b>Q/E</b> Look left / right (no camera)</span><span><b>C</b> Recenter view</span><span><b>ESC</b> Menu</span><span><b>R</b> Redeploy</span>',
+  keyKeys:'<span><b>WASD</b> Move</span><span><b>SHIFT</b> Boost</span><span><b>SPACE</b> Jump</span><span><b>Mouse</b> Aim weapon</span><span><b>Left click</b> Fire</span><span><b>Right click</b> Aim / scope</span><span><b>Wheel / 1-3</b> Switch weapon</span><span><b>V</b> Switch view</span><span><b>F</b> Square the legs under the body</span><span><b>Q/E</b> Look left / right (no camera)</span><span><b>C</b> Recenter view</span><span><b>ESC</b> Menu</span><span><b>R</b> Redeploy</span>',
   titleQ:'Return to the title?',titleLost:'Progress in this run will be lost.',titleYes:'Back to title',titleNo:'Keep playing',
   gateH:'You look around with your face',gateP:'Your webcam reads which way your head is turned, and the view follows your face. The gun is aimed with the mouse, apart from the view. Without a camera you can still play by turning the view with Q / E, but if you have one, please turn it on.',
   gateSmall:'The video is processed only on your device and is never sent anywhere.',gateCam:'Turn on camera and start',gateSkip:'Start without camera'};

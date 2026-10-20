@@ -171,12 +171,15 @@ function writeMesh(m, I) {
 // baked paint, wear and markings; the second UV set is per piece: u an id (the ink pass outlines each piece,
 // as the Canvas renderer outlines each part), v 1 on bare metal. main.js keeps its procedural parts as the
 // proxy (hits, screen boxes, Canvas) and draws a class with them until its model has loaded, or if it has none.
-const MODEL_V = 15;
+const MODEL_V = 20;
 const MODEL_FILES = { SCOUT: 'vane', LANCER: 'pike', HEAVY: 'bastion', TITAN: 'atlas', KITE: 'kite',
   HALBERD: 'halberd', FLAIL: 'flail', ARBALEST: 'arbalest', MAUL: 'maul', BARDICHE: 'bardiche', ARM: 'arm' };
 // The plant as Blender models (tools/blender/plant.py), on trial: only with ?plant, drawn in the HMD's own look
 // (world cel solids, cyan feature edges) in place of main.js's procedural blocks.
 if (query.has('plant')) Object.assign(MODEL_FILES, { PLANT1: 'plant-01', PLANT2: 'plant-02', PLANT3: 'plant-03' });
+// The player's frame for the third-person view (main.js TPS, tools/blender/frame_game.py, the standard view): loaded at
+// once, or on first use when the page opens in first person (?fps).
+MODEL_FILES.FRAME = 'frame-v12';
 const models = {};
 function parseGLB(buf) {
   const dv = new DataView(buf);
@@ -801,13 +804,18 @@ const skyScene = new THREE.Scene(); skyScene.add(new THREE.Mesh(new THREE.PlaneG
 
 // ---- composite: base colour + ink silhouette (outside only, like the Canvas contour) + creases ----
 const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), quadScene = new THREE.Scene();
+// The ink (2026-10-20): the outer outline as before (outside the silhouette, and where a thing stands over
+// something more than a metre behind it), the lines inside it thinner and dark grey, only at
+// real creases and depth steps, and a piece's own border faint (every bolt and plate of the Blender models was
+// ringed in thick black)
+const SOFT_INK = query.get('ink') !== 'hard';  // the standard since 2026-10-20 (the user chose it from stills); ?ink=hard is the old ink
 const compMat = new THREE.RawShaderMaterial({
   vertexShader: /* glsl */`
     precision highp float; attribute vec3 position; varying vec2 vUv;
     void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
   fragmentShader: /* glsl */`
     precision highp float;
-    uniform sampler2D tC, tN, tI, tA, tB; uniform vec2 px; uniform float r1, r2, thick0, byDepth, bloom; uniform vec3 ink;
+    uniform sampler2D tC, tN, tI, tA, tB; uniform vec2 px; uniform float r1, r2, thick0, byDepth, bloom, soft; uniform vec3 ink;
     // outline half-width for a surface at depth d (metres): like the Canvas renderer, thick when near,
     // thin from ~60 m on (byDepth), or the fixed r1 for the cockpit layer
     float halfW(float d){ return byDepth > 0.5 ? thick0 * (0.55 + 1.6 * clamp((60.0 - d) / 48.0, 0.0, 1.0)) : r1; }
@@ -815,25 +823,25 @@ const compMat = new THREE.RawShaderMaterial({
     vec3 glow(){ return bloom > 0.5 ? texture2D(tA, vUv).rgb * 0.8 + texture2D(tB, vUv).rgb * 0.7 : vec3(0.0); }
     void main(){
       vec4 c = texture2D(tC, vUv), n0 = texture2D(tN, vUv); vec2 idf = texture2D(tI, vUv).rg; float id0 = idf.r, fade0 = idf.g > 0.0 ? idf.g : 1.0;
-      float cov = step(0.0001, n0.a), sil = 0.0, inner = 0.0, cre = 0.0;
+      float cov = step(0.0001, n0.a), sil = 0.0, inner = 0.0, cre = 0.0, far = 0.0;
       for (int i = 0; i < 12; i++) {
         float a = float(i) * 0.5235988; vec2 d = vec2(cos(a), sin(a));
         for (int s = 1; s <= 3; s++) {
           vec4 n = texture2D(tN, vUv + d * r1 * float(s) / 3.0 * px);
           float cv = step(0.0001, n.a);
           if (cov < 0.5 && cv > 0.5 && r1 * float(s) / 3.0 <= halfW(n.a * 20.0) + 0.5) { vec2 nf = texture2D(tI, vUv + d * r1 * float(s) / 3.0 * px).rg; sil = max(sil, nf.g > 0.0 ? nf.g : 1.0); }
-          else if (cv > 0.5 && n0.a - n.a > 0.004 && s == 1) inner = 1.0;
+          else if (cv > 0.5 && n0.a - n.a > 0.004 && s == 1) { inner = 1.0; if (n0.a - n.a > 0.05) far = 1.0; }
         }
         vec2 uv2 = vUv + d * r2 * px; vec4 m = texture2D(tN, uv2);
         if (cov > 0.5 && m.a > 0.0) {
-          cre = max(cre, smoothstep(0.22, 0.4, 1.0 - dot(n0.rgb * 2.0 - 1.0, m.rgb * 2.0 - 1.0)));
-          if (abs(texture2D(tI, uv2).r - id0) > 0.0004 && m.a >= n0.a - 0.0005) cre = 1.0;
+          cre = max(cre, soft > 0.5 ? smoothstep(0.35, 0.55, 1.0 - dot(n0.rgb * 2.0 - 1.0, m.rgb * 2.0 - 1.0)) * 0.7 : smoothstep(0.22, 0.4, 1.0 - dot(n0.rgb * 2.0 - 1.0, m.rgb * 2.0 - 1.0)));
+          if (abs(texture2D(tI, uv2).r - id0) > 0.0004 && m.a >= n0.a - 0.0005) cre = soft > 0.5 ? max(cre, 0.45) : 1.0;
         }
       }
-      if (cov > 0.5) { cre *= mix(1.0, 0.45, clamp((n0.a * 20.0 - 35.0) / 70.0, 0.0, 1.0)); float a0 = c.a > 0.001 ? c.a : 1.0; vec3 base = c.a > 0.001 ? c.rgb / c.a : c.rgb; gl_FragColor = vec4(mix(base, ink, max(inner, cre * 0.8)) * a0 + glow(), a0); return; }
+      if (cov > 0.5) { cre *= mix(1.0, 0.45, clamp((n0.a * 20.0 - 35.0) / 70.0, 0.0, 1.0)); float a0 = c.a > 0.001 ? c.a : 1.0; vec3 base = c.a > 0.001 ? c.rgb / c.a : c.rgb; vec3 col = soft > 0.5 ? mix(mix(base, vec3(0.15, 0.16, 0.18), max(inner * 0.85, cre * 0.6)), ink, far) : mix(base, ink, max(inner, cre * 0.8)); gl_FragColor = vec4(col * a0 + glow(), a0); return; }
       gl_FragColor = vec4(ink * sil + c.rgb * (1.0 - sil) + glow(), max(sil, min(1.0, c.a)));
     }`,
-  uniforms: { bloom: { value: 0 }, tA: { value: null }, tB: { value: null }, thick0: { value: 1 }, byDepth: { value: 0 }, tC: { value: null }, tN: { value: null }, tI: { value: null }, px: { value: new THREE.Vector2() }, r1: { value: 3 }, r2: { value: 1.2 }, ink: { value: new THREE.Vector3(0.025, 0.03, 0.04) } },
+  uniforms: { soft: { value: 0 }, bloom: { value: 0 }, tA: { value: null }, tB: { value: null }, thick0: { value: 1 }, byDepth: { value: 0 }, tC: { value: null }, tN: { value: null }, tI: { value: null }, px: { value: new THREE.Vector2() }, r1: { value: 3 }, r2: { value: 1.2 }, ink: { value: new THREE.Vector3(0.025, 0.03, 0.04) } },
   depthTest: false, depthWrite: false,
 });
 quadScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), compMat));
@@ -936,15 +944,19 @@ function draw(o) {
   for (const h of hidden) h.visible = true;
   compMat.uniforms.tC.value = rtColor.texture; compMat.uniforms.tN.value = rtND.textures[0]; compMat.uniforms.tI.value = rtND.textures[1]; compMat.uniforms.px.value.set(1 / w, 1 / h);
   const enemiesLayer = o.layer === 'enemies';
-  compMat.uniforms.thick0.value = o.DPR * o.H / 720; compMat.uniforms.byDepth.value = enemiesLayer ? 1 : 0;
-  compMat.uniforms.r1.value = enemiesLayer ? o.DPR * o.H / 720 * 2.2 : o.inkW * o.DPR * 0.55; compMat.uniforms.r2.value = (enemiesLayer ? 1.1 : 1.3) * o.DPR;
+  compMat.uniforms.soft.value = SOFT_INK ? 1 : 0;
+  // the outer line under half as thick with the soft ink (the user, twice: too thick next to the Blender models' detail)
+  const inkK = SOFT_INK ? 0.45 : 1;
+  compMat.uniforms.thick0.value = o.DPR * o.H / 720 * inkK; compMat.uniforms.byDepth.value = enemiesLayer ? 1 : 0;
+  compMat.uniforms.r1.value = (enemiesLayer ? o.DPR * o.H / 720 * 2.2 : o.inkW * o.DPR * 0.55) * inkK; compMat.uniforms.r2.value = (enemiesLayer ? 1.1 : 1.3) * o.DPR;
   const bloom = enemiesLayer && o.bloom && !!sky; if (bloom) bloomPass(w, h); compMat.uniforms.bloom.value = bloom ? 1 : 0;
   renderer.setRenderTarget(null); renderer.clear(); renderer.render(quadScene, quadCam);
   return true;
 }
 
 const api = { canvas, active: !!renderer, enemies: true, world: true, draw, models };
-if (renderer && !query.has('proxy')) for (const k in MODEL_FILES) loadModel(k);
+if (renderer && !query.has('proxy')) for (const k in MODEL_FILES) if (k !== 'FRAME' || !query.has('fps')) loadModel(k);
+api.loadModel = k => { if (renderer && !query.has('proxy') && !models[k] && MODEL_FILES[k]) loadModel(k); };
 // a lost context falls back to Canvas for the rest of the session (three.js restores, but our targets would not be)
 canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); api.active = false; renderer = null; console.warn('AOGANE three: context lost, drawing with Canvas'); });
 if (query.has('dev')) {
