@@ -3,7 +3,7 @@ title: 蒼鉄-AOGANE-を4脚のロボットに作り直した
 date: 2026-10-21
 description: 月面で戦うロボットゲーム「蒼鉄-AOGANE-」の機体を、コードで組んだ形からBlenderに移し、4本脚で走るロボットに設計し直しました。速い戦車のように操る感触と、三人称視点にした話です。
 tags: [制作記, 蒼鉄]
-draft: true
+draft: false
 work: /aogane
 image: /og/blog/aogane-third-person.png
 ---
