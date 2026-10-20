@@ -15,11 +15,11 @@ export const metadata: Metadata = {
     siteName: "Maruti Lab",
     title: "蒼鉄 -AOGANE-｜WEBカメラ式ヘッドトラッキングFPS",
     description: "ウェブカメラで頭の動きを読み取り、機体に乗り込んだように周りを見回して戦うヘッドトラッキングFPS。",
-    images: [{ url: "https://marutilab.com/aogane/og.jpg", width: 1200, height: 630 }],
+    images: [{ url: "https://marutilab.com/aogane/og.jpg?v=2", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://marutilab.com/aogane/og.jpg"],
+    images: ["https://marutilab.com/aogane/og.jpg?v=2"],
   },
 };
 
@@ -116,8 +116,8 @@ export default function AoganePage() {
           <figure className="hfKey">
             {/* eslint-disable-next-line @next/next/no-img-element -- two fixed WebP sizes, served as is */}
             <img
-              src="/aogane/key-900.webp?v=3"
-              srcSet="/aogane/key-560.webp?v=3 560w, /aogane/key-900.webp?v=3 900w"
+              src="/aogane/key-900.webp?v=4"
+              srcSet="/aogane/key-560.webp?v=4 560w, /aogane/key-900.webp?v=4 900w"
               sizes="(max-width: 860px) 100vw, 420px"
               width={900}
               height={1350}
