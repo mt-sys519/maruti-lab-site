@@ -115,8 +115,8 @@ export default function AoganePage() {
           <figure className="hfKey">
             {/* eslint-disable-next-line @next/next/no-img-element -- two fixed WebP sizes, served as is */}
             <img
-              src="/aogane/key-900.webp?v=2"
-              srcSet="/aogane/key-560.webp?v=2 560w, /aogane/key-900.webp?v=2 900w"
+              src="/aogane/key-900.webp?v=3"
+              srcSet="/aogane/key-560.webp?v=3 560w, /aogane/key-900.webp?v=3 900w"
               sizes="(max-width: 860px) 100vw, 420px"
               width={900}
               height={1350}
