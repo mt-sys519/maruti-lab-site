@@ -405,6 +405,11 @@ const DIFF=()=>DIFFS[difficulty];
 const VANE_SWEEP=.26;
 const ATLAS={gun:180,core:260,armor:.1,every:6,salvo:3,missile:{dmg:4,rise:.55,speed:22,turn:2.8,life:7,r:1.5},
   spread:{every:3.5,count:7,arc:1,speed:30,dmg:6},vulcan:{range:30,spin:.35,burst:1.2,rate:.08,cool:2.2,dmg:1.2,speed:75,spread:.05}};
+// A missile that misses dives on past the frame and loops back; at MISSILE_FLOOR m it meets the deck and goes off
+// there (it used to skim through the floor and vanish). On screen it keeps growing as it closes, up to
+// renderFocal*MISSILE_CAP px (the old 26 px cap was reached ~45 m out, so a missile diving on the frame
+// looked like it hung in the air and then hit from nowhere).
+const MISSILE_FLOOR=.3,MISSILE_CAP=.06;
 // HARD survival: two main attackers at threat 1-2, three at 3-4, four from 5.
 const attackers=()=>mode==='endurance'&&difficulty==='hard'?Math.min(4,2+Math.floor((endure.level-1)/2)):DIFF().attackers;
 // Survival bests are kept per difficulty; NORMAL keeps the original key.
@@ -1932,7 +1937,7 @@ function recordBolts(viewYaw,viewPitch){
     const tail=clamp(34/p.depth*24,10,58),dx=p.x-a.x,dy=p.y-a.y,len=Math.hypot(dx,dy)||1,t={x:p.x-dx/len*tail,y:p.y-dy/len*tail,depth:a.depth},linked=!!b.syncId,col=linked?'#67ffd1':'#ffb347',w=clamp((linked?14:12)/p.depth*18,2.6,linked?8:7.5);
     recSeg(t,p,col,.18,w*2.3);recSeg(t,p,col,.85,w);recSeg(t,p,linked?'#e6fff7':'#fff6dc',1,Math.max(1.2,w*.36));recDisc(p,clamp((linked?8:7)/p.depth*18,1.6,6),'#ffffff',1)}
   for(const b of enemyBolts){const a=project(b.px,b.py,b.pz,viewYaw,viewPitch),p=project(b.x,b.y,b.z,viewYaw,viewPitch);if(!a||!p)continue;
-    const heavy=b.heavy,col=b.missile?'#ffc45a':b.energy?'#ff7ae0':b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.missile?.7:b.energy?.85:b.big?.9:heavy?.55:.38)*p.f,2.2,b.big?34:heavy?26:18),t={x:p.x-(p.x-a.x)*3,y:p.y-(p.y-a.y)*3,depth:a.depth};
+    const heavy=b.heavy,col=b.missile?'#ffc45a':b.energy?'#ff7ae0':b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.missile?.7:b.energy?.85:b.big?.9:heavy?.55:.38)*p.f,2.2,b.missile?renderFocal*MISSILE_CAP:b.big?34:heavy?26:18),t={x:p.x-(p.x-a.x)*3,y:p.y-(p.y-a.y)*3,depth:a.depth};
     recSeg(t,p,col,.35,r*1.3);recSeg(t,p,'#ffb09a',.9,r*.45);recDisc(p,r*1.9,col,.22);recDisc(p,r*.75,col,.95);recDisc(p,r*.36,'#fff1ea',.95)}
   // exhaust ribbon from the flight history: segment alpha aK*k, width clamp(wk*f)*(w0+(1-w0)*k), hot colour past hotK
   const trail=(m,col,hotCol,hotK,aK,wk,wmin,wmax,w0,r,haloK,haloCol,haloA)=>{const pts=m.hist.map(h=>project(h.x,h.y,h.z,viewYaw,viewPitch));pts.push(project(m.x,m.y,m.z,viewYaw,viewPitch));
@@ -1985,7 +1990,7 @@ function drawBolts(viewYaw,viewPitch){
     ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(p.x,p.y,clamp((linked?8:7)/p.depth*18,1.6,6),0,TAU);ctx.fill()}
   // Hostile shots: hot red/orange orbs with a short wake; readable as danger against cyan architecture.
   for(const b of enemyBolts){const a=project(b.px,b.py,b.pz,viewYaw,viewPitch),p=project(b.x,b.y,b.z,viewYaw,viewPitch);if(!a||!p)continue;
-    const heavy=b.heavy,col=b.missile?'#ffc45a':b.energy?'#ff7ae0':b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.missile?.7:b.energy?.85:b.big?.9:heavy?.55:.38)*p.f,2.2,b.big?34:heavy?26:18),dx=p.x-a.x,dy=p.y-a.y;
+    const heavy=b.heavy,col=b.missile?'#ffc45a':b.energy?'#ff7ae0':b.big?'#ff3a4a':heavy?'#ff8a4a':'#ff4b3a',r=clamp((b.missile?.7:b.energy?.85:b.big?.9:heavy?.55:.38)*p.f,2.2,b.missile?renderFocal*MISSILE_CAP:b.big?34:heavy?26:18),dx=p.x-a.x,dy=p.y-a.y;
     ctx.beginPath();ctx.moveTo(p.x-dx*3,p.y-dy*3);ctx.lineTo(p.x,p.y);ctx.globalAlpha=.35;ctx.strokeStyle=col;ctx.lineWidth=r*1.3;ctx.stroke();ctx.globalAlpha=.9;ctx.lineWidth=r*.45;ctx.strokeStyle='#ffb09a';ctx.stroke();
     ctx.globalAlpha=.22;ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,r*1.9,0,TAU);ctx.fill();
     ctx.globalAlpha=.95;ctx.beginPath();ctx.arc(p.x,p.y,r*.75,0,TAU);ctx.fill();ctx.fillStyle='#fff1ea';ctx.beginPath();ctx.arc(p.x,p.y,r*.36,0,TAU);ctx.fill()}
@@ -2725,7 +2730,7 @@ function updateEnemies(dt){
       if(e.heavy&&before>.18&&e.charge<=.18)e.committedAim={x:player.x+player.vx*.18,z:player.z+player.vz*.18};
       if(e.charge<=0){
         const aim=e.committedAim;
-        if(aim&&!segmentHitsWorld(e.x,3.15+eY(e),e.z,aim.x,CAMERA_Y,aim.z))enemyShoot(e,aim);
+        if(aim&&!segmentHitsWorld(e.x,losY(e),e.z,aim.x,CAMERA_Y,aim.z))enemyShoot(e,aim);
         finishEnemyAttack(e);
       }
       continue;
@@ -2936,12 +2941,13 @@ function update(dt){
     const q=threatMetric(b);if(q.t>.025&&q.d<1.8&&b.life>q.t)b.threatened=true;
     const nx=b.x+b.vx*dt,ny=b.y+b.vy*dt,nz=b.z+b.vz*dt;
     let impact=worldImpact(b.x,b.y,b.z,nx,ny,nz);
+    if(b.missile&&ny<MISSILE_FLOOR&&b.y>=MISSILE_FLOOR){const t=(b.y-MISSILE_FLOOR)/(b.y-ny);if(!impact||t<impact.t)impact={t,ground:true}}
     const t=player.alive?sweepCylinder(b.x,b.y,b.z,nx,ny,nz,player,1.55,CAMERA_Y,1.55):null;
     if(t!==null&&(!impact||t<impact.t))impact={t,player:true};
     b.life-=dt;
     if(impact){
       placeImpact(b,nx,ny,nz,impact.t);b.life=0;b.evadeCandidate=false;
-      if(impact.b){sparks(b.x,b.y,b.z,6,'#ff7a5c',5);continue}
+      if(impact.b||impact.ground){if(b.missile)explode(b.x,b.y,b.z,false);else sparks(b.x,b.y,b.z,6,'#ff7a5c',5);continue}
       player.hp=Math.max(0,player.hp-(b.damage||7));player.hitDir=Math.atan2(b.px-player.x,-(b.pz-player.z));player.hitDirT=.72;
       stats.damage+=b.damage||7;cockpitHit(Math.atan2(b.px-player.x,-(b.pz-player.z)),b.damage||7);flash('damageFlash',125);sfx.damage();player.shake=.72;
       if(player.hp<30)plog('Warning','Frame integrity critical.',5);pilotReact(player.hp<30?'shout':'grit',.9,3);if(player.hp>0){if(player.hp<30&&!pilot.critLatch){pilot.critLatch=true;pilotBanner('!FRAME CRITICAL!',jt('- 装甲危険域 -','- ARMOR IN THE RED -'),'#ff7a5c',1.6);say('CRITICAL')}else say('HIT')}if(player.hp<=0)downPlayer();
