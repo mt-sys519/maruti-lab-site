@@ -171,7 +171,7 @@ function writeMesh(m, I) {
 // baked paint, wear and markings; the second UV set is per piece: u an id (the ink pass outlines each piece,
 // as the Canvas renderer outlines each part), v 1 on bare metal. main.js keeps its procedural parts as the
 // proxy (hits, screen boxes, Canvas) and draws a class with them until its model has loaded, or if it has none.
-const MODEL_V = 20;
+const MODEL_V = 22;
 const MODEL_FILES = { SCOUT: 'vane', LANCER: 'pike', HEAVY: 'bastion', TITAN: 'atlas', KITE: 'kite',
   HALBERD: 'halberd', FLAIL: 'flail', ARBALEST: 'arbalest', MAUL: 'maul', BARDICHE: 'bardiche', ARM: 'arm' };
 // The plant as Blender models (tools/blender/plant.py), on trial: only with ?plant, drawn in the HMD's own look
@@ -548,6 +548,63 @@ const dotMat = new THREE.RawShaderMaterial({
     void main(){ float r = length(gl_PointCoord - 0.5) * 2.0; float k = 1.0 - smoothstep(0.55, 1.0, r); o = vec4(vC.rgb * vC.a * k, vC.a * k); }`,
   uniforms: { focal: { value: 800 }, dpr: { value: 1 } },
 });
+// ---- SURVIVAL's field: the ground with height (main.js FIELD / getFieldMesh) ---------------------------------------
+// One static mesh from main.js's height grid. The regolith in earthshine as the sky pass paints it past the plant (the
+// slopes toward Earth lit, cel bands), the apron's concrete slabs in the middle, and over it the HMD's reading of the
+// ground: a contour line every 2 m of height (brighter every 10 m) and a faint 40 m grid, fading with distance, cyan
+// (gold under SYNC). Depth only in the normal + depth pass, like the plant.
+const terrainMat = new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  vertexShader: 'precision highp float;\nin vec3 position; in vec3 normal; uniform mat4 projectionMatrix, viewMatrix; out vec3 vW; out vec3 vN;\nvoid main(){ vW = position; vN = normal; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }',
+  fragmentShader: /* glsl */`
+    precision highp float;
+    uniform vec3 camPos; uniform float sync, apron; in vec3 vW; in vec3 vN; out vec4 o;
+    float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+    float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h21(i), h21(i + vec2(1,0)), f.x), mix(h21(i + vec2(0,1)), h21(i + vec2(1,1)), f.x), f.y); }
+    float lineK(float v, float step_, float w){ float d = abs(fract(v / step_ + 0.5) - 0.5) * step_, fw = max(fwidth(v), 1e-4); return 1.0 - smoothstep(fw * w * 0.5, fw * w * 1.5, d); }
+    void main(){
+      vec3 n = normalize(vN); vec2 w = vW.xz; float dist = distance(vW.xz, camPos.xz);
+      // earthshine from Earth's side, a little higher than Earth hangs, so the far slopes are not black
+      vec3 L = normalize(vec3(sin(0.08) * cos(0.32), sin(0.32), -cos(0.08) * cos(0.32)));
+      float lam = dot(n, L), band = mix(0.5, mix(0.84, 1.22, smoothstep(0.42, 0.47, lam)), smoothstep(0.17, 0.22, lam)) * (0.86 + 0.4 * max(lam, 0.0));
+      float kf = clamp(1.0 - dist / 70.0, 0.0, 1.0), g = 0.82 + 0.3 * (n2(w * 0.045) - 0.5) + 0.2 * kf * (n2(w * 0.9) - 0.5) + 0.1 * (n2(w * 0.17) - 0.5);
+      vec3 c = vec3(52.0, 55.0, 63.0) / 255.0 * g * band;
+      // the apron: concrete slabs 6 m square, ink joints, a yellow edge
+      float ax = max(abs(w.x), abs(w.y));
+      if (ax < apron) {
+        vec2 id = floor(w / 6.0); vec3 slab = mod(id.x + id.y, 2.0) < 0.5 ? vec3(27.0, 40.0, 42.0) : vec3(24.0, 36.0, 38.0);
+        c = slab / 255.0 * (0.92 + 0.16 * h21(id + 3.0)) * band;
+        c = mix(c, vec3(0.004, 0.016, 0.016), max(lineK(w.x, 6.0, 1.2), lineK(w.y, 6.0, 1.2)) * 0.75 * clamp(1.0 - dist / 120.0, 0.0, 1.0));
+        c = mix(c, vec3(217.0, 180.0, 67.0) / 255.0, (1.0 - smoothstep(0.3, 0.3 + fwidth(ax) * 1.5, abs(ax - apron + 1.5))) * 0.55);
+      }
+      vec3 lc = mix(vec3(91.0, 240.0, 204.0), vec3(255.0, 212.0, 120.0), sync * 0.85) / 255.0;
+      float kc = clamp(1.0 - dist / 260.0, 0.0, 1.0), y = vW.y;
+      // contours at odd metres (the flat apron at 0 carries none), every fifth one stronger
+      float cl = lineK(y - 1.0, 2.0, 1.0) * step(0.4, abs(y)), cm = lineK(y - 5.0, 10.0, 1.6) * step(0.4, abs(y));
+      c += lc * (cl * 0.16 + cm * 0.24) * kc;
+      c += lc * max(lineK(w.x, 40.0, 1.0), lineK(w.y, 40.0, 1.0)) * 0.05 * clamp(1.0 - dist / 180.0, 0.0, 1.0);
+      o = vec4(c, 1.0);
+    }`,
+  uniforms: { camPos: { value: new THREE.Vector3() }, sync: { value: 0 }, apron: { value: 64 } },
+});
+// in the normal + depth pass: depth only as the plant, but flagged out of the bloom (its lit slopes are mid-grey,
+// which the bright pass lifts into a blue haze over the hills)
+const ndTerrainMat = new THREE.RawShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: ndDepthMat.vertexShader,
+  fragmentShader: 'precision highp float;\nlayout(location = 0) out vec4 oN; layout(location = 1) out vec4 oId;\nvoid main(){ oN = vec4(0.0); oId = vec4(0.0, 0.0, 1.0, 0.0); }' });
+let terrain = null, terrainSrc = null;
+function syncTerrain(T) {
+  if (T && T !== terrainSrc) {
+    terrainSrc = T; if (terrain) { scene.remove(terrain); terrain.geometry.dispose(); }
+    const n = T.n, pos = new Float32Array(n * n * 3), idx = new Uint32Array((n - 1) * (n - 1) * 6);
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const k = (j * n + i) * 3; pos[k] = T.x0 + i * T.step; pos[k + 1] = T.h[j * n + i]; pos[k + 2] = T.x0 + j * T.step; }
+    let q = 0; for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) { const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx[q++] = a; idx[q++] = c; idx[q++] = b; idx[q++] = b; idx[q++] = c; idx[q++] = d; }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setIndex(new THREE.BufferAttribute(idx, 1)); geo.computeVertexNormals();
+    terrain = new THREE.Mesh(geo, terrainMat); terrain.frustumCulled = false; terrain.renderOrder = -2; terrain.userData.world = true; scene.add(terrain);
+    terrainMat.uniforms.apron.value = T.apron;
+  }
+  if (terrain) terrain.visible = !!T;
+}
 const dotGeo = new THREE.BufferGeometry();
 const dots = new THREE.Points(dotGeo, dotMat); dots.frustumCulled = false; dots.userData.line = true; scene.add(dots);
 function syncWorld(W, o) {
@@ -718,7 +775,7 @@ const skyMat = new THREE.RawShaderMaterial({
   vertexShader: 'precision highp float;\nin vec3 position;\nvoid main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: /* glsl */`
     precision highp float;
-    uniform vec2 scr, ppos; uniform float dpr, hy, gy0, gy1, ga, moon, yaw, foc, camY, sun; uniform vec3 gc, c0, c1, c2, c3, gnd; out vec4 o;
+    uniform vec2 scr, ppos, strip; uniform float dpr, hy, gy0, gy1, ga, moon, yaw, foc, camY, sun; uniform vec3 gc, c0, c1, c2, c3, gnd; out vec4 o;
     // SECTOR 01, the Moon: a black sky with stars, Earth hung low ahead, and regolith with craters out past the
     // facility strip. Directions follow main.js project(): yaw-only camera, pitch as a lens shift (hy), so a pixel's
     // azimuth is yaw + atan(dx / foc) and the tangent of its elevation is (hy - y) cos(rel) / foc.
@@ -745,7 +802,7 @@ const skyMat = new THREE.RawShaderMaterial({
     vec3 regolith(float dx, float dy){
       float cz = camY * foc / max(dy, 0.35), cx = dx * cz / foc, sn = sin(yaw), cs = cos(yaw);
       vec2 w = ppos + vec2(cx * cs + cz * sn, cx * sn - cz * cs);
-      if (abs(w.x) < 38.5 && abs(w.y) < 151.0) return gnd;
+      if (abs(w.x) < strip.x && abs(w.y) < strip.y) return gnd;
       float sv = sunVis(); vec2 L = normalize(mix(vec2(sin(EAZ), -cos(EAZ)), vec2(sin(SAZ), -cos(SAZ)), sv));
       float k = clamp(1.0 - cz / 260.0, 0.0, 1.0), kf = clamp(1.0 - cz / 70.0, 0.0, 1.0);
       float g = 0.82 + 0.3 * (n2(w * 0.045) - 0.5) + 0.22 * kf * (n2(w * 0.9) - 0.5);
@@ -798,7 +855,7 @@ const skyMat = new THREE.RawShaderMaterial({
       c += vec3(85.0, 255.0, 208.0) / 255.0 * 0.03 * exp(-d * d / 12.5);
       o = vec4(c, 1.0);
     }`,
-  uniforms: { scr: fxU.scr, dpr: fxU.dpr, hy: { value: 0 }, gy0: { value: 0 }, gy1: { value: 1 }, ga: { value: 0 }, gc: { value: new THREE.Vector3() }, c0: { value: new THREE.Vector3() }, c1: { value: new THREE.Vector3() }, c2: { value: new THREE.Vector3() }, c3: { value: new THREE.Vector3() }, gnd: { value: new THREE.Vector3() }, moon: { value: 0 }, sun: { value: 0 }, yaw: { value: 0 }, foc: { value: 1 }, camY: { value: 3.25 }, ppos: { value: new THREE.Vector2() } },
+  uniforms: { scr: fxU.scr, dpr: fxU.dpr, hy: { value: 0 }, gy0: { value: 0 }, gy1: { value: 1 }, ga: { value: 0 }, gc: { value: new THREE.Vector3() }, c0: { value: new THREE.Vector3() }, c1: { value: new THREE.Vector3() }, c2: { value: new THREE.Vector3() }, c3: { value: new THREE.Vector3() }, gnd: { value: new THREE.Vector3() }, moon: { value: 0 }, sun: { value: 0 }, yaw: { value: 0 }, foc: { value: 1 }, camY: { value: 3.25 }, ppos: { value: new THREE.Vector2() }, strip: { value: new THREE.Vector2(38.5, 151) } },
 });
 const skyScene = new THREE.Scene(); skyScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), skyMat));
 
@@ -894,7 +951,7 @@ function draw(o) {
   ensureTargets(w, h);
   // camera = main.js project(): yaw-only rotation, pitch as a vertical lens shift, horizon at 0.49 H.
   camera.position.set(o.px, o.camY, o.pz); camera.rotation.set(0, -o.viewYaw, 0); camera.updateMatrixWorld(true);
-  const near = Math.max(0.02, o.near * 0.9), far = 400, f = o.focal, e = camera.projectionMatrix.elements;
+  const near = Math.max(0.02, o.near * 0.9), far = o.world && o.world.terrain ? 1000 : 400, f = o.focal, e = camera.projectionMatrix.elements;
   e.fill(0); e[0] = 2 * f / o.W; e[5] = 2 * f / o.H; e[9] = (Math.tan(o.viewPitch) * f - 0.01 * o.H) * 2 / o.H;
   e[10] = -(far + near) / (far - near); e[11] = -1; e[14] = -2 * far * near / (far - near);
   camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
@@ -905,10 +962,12 @@ function draw(o) {
   if (o.plant && models[o.plant] && models[o.plant].ready) drawPlant(models[o.plant], o);
   syncOccluders(o.occluders || []);
   syncWorld(o.world, o);
+  syncTerrain(o.world && o.world.terrain);
   syncStrokes(o.world);
   fxU.scr.value.set(o.W, o.H); fxU.dpr.value = o.DPR; fxU.nearZ.value = near; fxU.zA.value = -e[10]; fxU.zB.value = e[14];
   const sky = o.world && o.world.sky;
   worldMat.uniforms.light.value.set(o.light[0], o.light[1], o.light[2]); worldMat.uniforms.camPos.value.copy(camera.position); worldMat.uniforms.sync.value = o.syncMix || 0;
+  terrainMat.uniforms.camPos.value.copy(camera.position); terrainMat.uniforms.sync.value = o.syncMix || 0;
   const L = new THREE.Vector3(o.light[0], o.light[1], o.light[2]);
   for (const I of o.insts) {
     if (I.hidden || !I.style) continue;
@@ -924,7 +983,7 @@ function draw(o) {
   renderer.setRenderTarget(rtColor); renderer.setClearColor(0x000000, 0); renderer.clear();
   if (sky) { const u = skyMat.uniforms; u.hy.value = sky.hy; u.gy0.value = sky.glowY0; u.gy1.value = sky.glowY1; u.ga.value = sky.glowA; u.gc.value.set(sky.glowCol[0] / 255, sky.glowCol[1] / 255, sky.glowCol[2] / 255);
     const v3 = (t, c) => t.set(c[0] / 255, c[1] / 255, c[2] / 255); ['c0', 'c1', 'c2', 'c3'].forEach((k, i) => v3(u[k].value, sky.stops[i])); v3(u.gnd.value, sky.ground);
-    u.moon.value = sky.moon || 0; u.sun.value = sky.sun || 0; u.yaw.value = sky.yaw || 0; u.foc.value = sky.foc || 1; u.camY.value = sky.camY || 3.25; u.ppos.value.set(sky.px || 0, sky.pz || 0);
+    u.moon.value = sky.moon || 0; u.sun.value = sky.sun || 0; u.yaw.value = sky.yaw || 0; u.foc.value = sky.foc || 1; u.camY.value = sky.camY || 3.25; u.ppos.value.set(sky.px || 0, sky.pz || 0); u.strip.value.set(o.world.terrain ? 0 : 38.5, o.world.terrain ? 0 : 151);
     const w = worldMat.uniforms; v3(w.celTop.value, sky.cel[0]); v3(w.celLit.value, sky.cel[1]); v3(w.celShade.value, sky.cel[2]); v3(w.haze.value, sky.stops[3]);
     // sunrise on SKYDECK: the faces toward the low sun (left) go hard white, tops catch some of it, the light swings to it
     const sv = Math.min(1, Math.max(0, (-0.05 + 0.065 * (sky.sun || 0) + 0.006) / 0.016));
@@ -937,7 +996,7 @@ function draw(o) {
   for (const ch of scene.children) {
     if (!ch.visible || ch.userData.occluder) continue;
     if (ch.userData.line || ch.isLineSegments || ch.isPoints || ch.material?.userData?.glow) { ch.visible = false; hidden.push(ch); continue; }
-    if (ch.isMesh) { ch.userData.cm = ch.material; ch.material = ch.userData.world ? ndDepthMat : ch.userData.model ? ndModelMat : ndMat; swapped.push(ch); }
+    if (ch.isMesh) { ch.userData.cm = ch.material; ch.material = ch === terrain ? ndTerrainMat : ch.userData.world ? ndDepthMat : ch.userData.model ? ndModelMat : ndMat; swapped.push(ch); }
   }
   renderer.setRenderTarget(rtND); renderer.clear(); renderer.render(scene, camera);
   for (const ch of swapped) ch.material = ch.userData.cm;
