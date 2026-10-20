@@ -119,9 +119,9 @@ let frameNo = 0;
 function setPerMesh(renderer_, scene_, camera_, geometry, material) {
   const u = material.uniforms, d = this.userData; if (!u) return;
   if (u.partId) { u.partId.value = d.partId || 0; u.fade.value = d.fade ?? 1; u.hostile.value = d.world ? 0 : 1; material.uniformsNeedUpdate = true; return; }
-  if (u.wFade) { u.wFade.value = d.fade ?? 1; u.box.value = d.box || 0; u.seed.value = d.seed || 0; u.y0.value = d.y0 || 0; u.hgt.value = d.hgt || 1; u.ext.value.set(d.cx || 0, d.cz || 0, d.w || 1, d.d || 1); const wf = d.win || [0, 0, 0, 0]; u.win.value.set(wf[0], wf[1], wf[2], wf[3]); material.uniformsNeedUpdate = true; return; }
+  if (u.wFade) { if (u.eK) u.eK.value = d.eK ?? 1; u.wFade.value = d.fade ?? 1; u.box.value = d.box || 0; u.seed.value = d.seed || 0; u.y0.value = d.y0 || 0; u.hgt.value = d.hgt || 1; u.ext.value.set(d.cx || 0, d.cz || 0, d.w || 1, d.d || 1); const wf = d.win || [0, 0, 0, 0]; u.win.value.set(wf[0], wf[1], wf[2], wf[3]); material.uniformsNeedUpdate = true; return; }
   if (!u.hot) return;
-  u.hot.value = d.hot || 0; u.hitT.value = d.hitT || 0; u.glowK.value = d.glowK ?? 1; u.ghostA.value = d.ghost || 1; u.revealY.value = d.revealY ?? 1e6; if (d.hitPos) u.hitPos.value.set(d.hitPos[0], d.hitPos[1], d.hitPos[2]);
+  u.hot.value = d.hot || 0; u.hitT.value = d.hitT || 0; u.glowK.value = d.glowK ?? 1; u.ghostA.value = d.ghost || 1; u.revealY.value = d.revealY ?? 1e6; if (u.dim) u.dim.value = d.dim ?? 1; if (d.hitPos) u.hitPos.value.set(d.hitPos[0], d.hitPos[1], d.hitPos[2]);
   material.uniformsNeedUpdate = true;
 }
 const hashKey = k => { const s = typeof k === 'string' ? k : (k.__hid ??= Math.random().toString(36).slice(2)); let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return ((h >>> 0) % 4093 + 1) / 4096; };
@@ -163,6 +163,276 @@ function writeMesh(m, I) {
   }
 }
 
+// ---- models: meshes built in Blender (tools/blender/, assets/models/*.glb) --------------------------------
+// One GLB per hostile class / weapon. Each node is one group of pieces on one bone, named 'bone|group|glow':
+// group 'base' is the bone's body, 'chip:N' the plate that breaks off with proxy part N, 'part:core' ATLAS's
+// core; glow names the light key main.js drives (eye, thrust, ...). Vertices are bone-local, so a group is
+// placed by its bone's frame alone (main.js passes R, t) and its buffers never change. The texture holds the
+// baked paint, wear and markings; the second UV set is per piece: u an id (the ink pass outlines each piece,
+// as the Canvas renderer outlines each part), v 1 on bare metal. main.js keeps its procedural parts as the
+// proxy (hits, screen boxes, Canvas) and draws a class with them until its model has loaded, or if it has none.
+const MODEL_V = 15;
+const MODEL_FILES = { SCOUT: 'vane', LANCER: 'pike', HEAVY: 'bastion', TITAN: 'atlas', KITE: 'kite',
+  HALBERD: 'halberd', FLAIL: 'flail', ARBALEST: 'arbalest', MAUL: 'maul', BARDICHE: 'bardiche', ARM: 'arm' };
+// The plant as Blender models (tools/blender/plant.py), on trial: only with ?plant, drawn in the HMD's own look
+// (world cel solids, cyan feature edges) in place of main.js's procedural blocks.
+if (query.has('plant')) Object.assign(MODEL_FILES, { PLANT1: 'plant-01', PLANT2: 'plant-02', PLANT3: 'plant-03' });
+const models = {};
+function parseGLB(buf) {
+  const dv = new DataView(buf);
+  if (dv.getUint32(0, true) !== 0x46546C67) throw new Error('not a GLB');
+  const jlen = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jlen)));
+  const bin = 20 + jlen + 8, views = json.bufferViews;
+  const TYPES = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array, 5121: Uint8Array }, N = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+  const accessor = i => {
+    const a = json.accessors[i], v = views[a.bufferView], T = TYPES[a.componentType], n = N[a.type], off = bin + (v.byteOffset || 0) + (a.byteOffset || 0);
+    const stride = v.byteStride || 0, size = n * T.BYTES_PER_ELEMENT;
+    if (!stride || stride === size) return new T(buf.slice(off, off + a.count * size));
+    const out = new T(a.count * n);
+    for (let k = 0; k < a.count; k++) { const src = new T(buf, off + k * stride, n); for (let c = 0; c < n; c++) out[k * n + c] = src[c]; }
+    return out;
+  };
+  const image = (() => { const im = json.images && json.images[0]; if (!im) return null; const v = views[im.bufferView], off = bin + (v.byteOffset || 0); return new Blob([new Uint8Array(buf, off, v.byteLength)], { type: im.mimeType }); })();
+  const groups = [];
+  for (const node of json.nodes) {
+    if (node.mesh == null) continue;
+    const prim = json.meshes[node.mesh].primitives[0], at = prim.attributes, [bone, grp, glow] = (node.name || '').split('|'), lines = prim.mode === 1;
+    // glTF (Blender's Y up, -Z forward) to the game's bone space (+z forward): mirror z, so the winding turns too
+    const pos = accessor(at.POSITION), nor = at.NORMAL != null ? accessor(at.NORMAL) : null;
+    for (let k = 2; k < pos.length; k += 3) { pos[k] = -pos[k]; if (nor) nor[k] = -nor[k]; }
+    let idx = prim.indices != null ? accessor(prim.indices) : null;
+    if (idx && !lines) for (let k = 0; k < idx.length; k += 3) { const t = idx[k + 1]; idx[k + 1] = idx[k + 2]; idx[k + 2] = t; }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (nor) geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    if (at.TEXCOORD_0 != null) geo.setAttribute('uv', new THREE.BufferAttribute(accessor(at.TEXCOORD_0), 2));
+    if (at.TEXCOORD_1 != null) geo.setAttribute('uv1', new THREE.BufferAttribute(accessor(at.TEXCOORD_1), 2));
+    if (idx) geo.setIndex(new THREE.BufferAttribute(idx, 1));
+    const t = node.translation || [0, 0, 0];
+    groups.push({ name: node.name, bone, grp: grp || 'base', glow: glow || '', geo, lines, t: [t[0], t[1], -t[2]] });
+  }
+  return { groups, image };
+}
+async function loadModel(key) {
+  const M = models[key] = { key, ready: false, groups: [], texture: null };
+  try {
+    const base = (window.HF_ASSET_BASE || '') + 'assets/models/' + MODEL_FILES[key] + '.glb?v=' + MODEL_V;
+    const res = await fetch(base); if (!res.ok) return;
+    const { groups, image } = parseGLB(await res.arrayBuffer());
+    if (image) { const bmp = await createImageBitmap(image); const tex = new THREE.Texture(bmp); tex.flipY = false; tex.needsUpdate = true; M.texture = tex; }
+    M.groups = groups; M.byName = Object.fromEntries(groups.map(g => [g.name, g])); M.ready = true;
+  } catch (e) { console.warn('AOGANE three: model', key, e); }
+}
+const modelVert = /* glsl */`
+  precision highp float;
+  attribute vec3 position, normal; attribute vec2 uv, uv1;
+  uniform mat4 projectionMatrix, viewMatrix, modelMatrix;
+  varying vec3 vN, vW; varying vec2 vUv, vP;
+  void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = mat3(modelMatrix) * normal; vUv = uv; vP = uv1; gl_Position = projectionMatrix * viewMatrix * w; }`;
+// The Blender look: the baked colour lit in three bands (0.45 / 0.72 / 1 of it, as the Blender cel ramp's
+// 0.42 / 0.7 / 1), the band from the key light plus a facing term as on the procedural parts, screentone in the
+// darkest band, a toon highlight on bare metal, the cool rim, the hit flash.
+const modelFrag = /* glsl */`
+  precision highp float;
+  uniform sampler2D map; uniform vec3 light, camPos, glowCol, hitPos;
+  uniform float glow, hot, hitT, glowK, ghostA, revealY, dim;
+  varying vec3 vN, vW; varying vec2 vUv, vP;
+  void main(){
+    if (vW.y > revealY) discard;
+    if (glow > 0.0) { gl_FragColor = vec4(glowCol, clamp(0.12 + 0.6 * glowK, 0.0, 1.0) * ghostA); return; }
+    vec3 n = normalize(vN), V = normalize(camPos - vW);
+    float l = max(0.0, dot(n, light)) + 0.25 * max(0.0, dot(n, V));
+    float k1 = smoothstep(0.17, 0.21, l), k2 = smoothstep(0.47, 0.51, l);
+    vec3 alb = texture2D(map, vUv).rgb * dim;
+    vec3 c = alb * mix(mix(0.45, 0.72, k1), 1.0, k2);
+    vec2 q = mod(gl_FragCoord.xy, 4.0);
+    float d = min(length(q - vec2(1.0)), length(q - vec2(3.0)));
+    c *= 1.0 - 0.22 * (1.0 - smoothstep(0.6, 1.1, d)) * (1.0 - k1);
+    if (vP.y > 0.5) { vec3 h = normalize(light + V); c += smoothstep(0.55, 0.62, pow(max(0.0, dot(n, h)), 28.0)) * 0.3; }
+    c += pow(1.0 - max(0.0, dot(n, V)), 3.0) * 0.10 * vec3(0.55, 0.72, 1.0);
+    vec3 flashCol = vec3(1.0, 0.94, 0.84);
+    c = mix(c, flashCol, hot);
+    if (hitT > 0.0) c = mix(c, flashCol, hitT * (1.0 - smoothstep(0.6, 1.3, distance(vW, hitPos))));
+    gl_FragColor = vec4(c, ghostA);
+  }`;
+// normal + depth for model meshes: placed by their model matrix, the part id varied per piece (uv1.x)
+const ndModelMat = new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  vertexShader: /* glsl */`
+    precision highp float;
+    in vec3 position; in vec3 normal; in vec2 uv1;
+    uniform mat4 projectionMatrix, viewMatrix, modelMatrix;
+    out vec3 vN; out float vD; out float vPc;
+    void main(){ vec4 p = viewMatrix * modelMatrix * vec4(position, 1.0); vN = (viewMatrix * vec4(mat3(modelMatrix) * normal, 0.0)).xyz; vD = -p.z; vPc = uv1.x; gl_Position = projectionMatrix * p; }`,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    uniform float partId, fade, hostile;
+    in vec3 vN; in float vD; in float vPc;
+    layout(location = 0) out vec4 oN; layout(location = 1) out vec4 oId;
+    void main(){ oN = vec4(normalize(vN) * 0.5 + 0.5, vD / 20.0); oId = vec4(fract(partId + vPc * 0.618) * 0.98 + 0.01, fade, hostile, 1.0); }`,
+  uniforms: { partId: { value: 0 }, fade: { value: 1 }, hostile: { value: 0 } },
+});
+const modelMats = new Map();
+function modelMaterial(M, style, glow) {
+  const key = M.key + '|' + (glow ? 'glow' : 'solid');
+  let byStyle = modelMats.get(style); if (!byStyle) modelMats.set(style, byStyle = new Map());
+  let m = byStyle.get(key); if (m) return m;
+  m = new THREE.RawShaderMaterial({
+    vertexShader: modelVert, fragmentShader: modelFrag,
+    uniforms: {
+      map: { value: M.texture }, light: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() },
+      glowCol: { value: hex(style.glow || '#6fa8ff').lerp(new THREE.Vector3(1, 1, 1), 0.25) }, glow: { value: glow ? 1 : 0 },
+      hot: { value: 0 }, hitT: { value: 0 }, hitPos: { value: new THREE.Vector3() }, glowK: { value: 1 }, ghostA: { value: 1 }, revealY: { value: 1e6 }, dim: { value: 1 },
+    },
+  });
+  if (glow) { m.transparent = true; m.blending = THREE.AdditiveBlending; m.depthWrite = false; m.userData.glow = true; }
+  byStyle.set(key, m); return m;
+}
+const modelMeshes = new Map();
+function drawModelInst(I, L) {
+  const g = I.model, M = I.M; let m = modelMeshes.get(I.key);
+  if (!m || m.g !== g) {
+    if (m) scene.remove(m.mesh);
+    const mesh = new THREE.Mesh(g.geo); mesh.frustumCulled = false; mesh.matrixAutoUpdate = false; mesh.onBeforeRender = setPerMesh;
+    mesh.userData.partId = hashKey(I.key); mesh.userData.model = true; scene.add(mesh);
+    m = { mesh, g }; modelMeshes.set(I.key, m);
+  }
+  m.used = frameNo;
+  const R = I.R, t = I.t, mesh = m.mesh;
+  mesh.matrix.set(R[0], R[1], R[2], t[0], R[3], R[4], R[5], t[1], R[6], R[7], R[8], t[2], 0, 0, 0, 1);
+  mesh.matrixWorld.copy(mesh.matrix);
+  const mat = modelMaterial(M, I.style, !!g.glow); mat.uniforms.light.value.copy(L); mat.uniforms.camPos.value.copy(camera.position);
+  mesh.material = mat; mesh.visible = true;
+  const d = mesh.userData; d.hot = I.hot || 0; d.hitT = I.hitT || 0; d.glowK = I.glowK ?? 1; d.hitPos = I.hitPos || null; d.ghost = I.ghost || 0; d.revealY = I.revealY ?? 1e6; d.dim = I.dim ?? 1;
+}
+
+// the plant models: solids through worldMat (cel by face, haze with distance), feature edges as cyan lines that
+// fade with distance as the procedural ones do (and go gold under SYNC like the rest of the HMD's picture)
+const plantVert = `precision highp float; attribute vec3 position; uniform mat4 projectionMatrix, viewMatrix, modelMatrix; varying vec3 vW;
+    void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+// The HMD's scan: a thin band of light climbing the plant from the ground (9.5 m/s, every 8 s), a faint afterglow
+// below it on what it has just passed. Solids and lines both take it (plantScan, from the clock in drawPlant).
+const plantScan = { value: -100 };
+const scanGLSL = /* glsl */`
+  uniform float scanY;
+  float scanAt(float y, float w){ float d = y - scanY; return (exp(-d * d / (w * w)) + (d < 0.0 ? exp(d / 2.5) * 0.18 : 0.0)) * step(-60.0, scanY); }`;
+// The edges as screen-space lines of real width (the 1 px GL lines read as scratches): each group is one static
+// instanced batch of its segments in world space. How strong a line is depends on how near it is: the near plant
+// shows its small kit ('fine' groups, the old line03: rails, ladders, braces; line01, the lattice bars, at half), which fades out by ~110 m, where only
+// the outline is left; the outline lines grow brighter and wider as they come near. Made on first use: the stroke
+// helpers it shares (clipGLSL, fxU, CORNERS) are defined further down.
+let plantSegMat = null;
+const plantSegMaterial = () => plantSegMat ??= new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  vertexShader: /* glsl */`
+    precision highp float;
+    in vec2 position; in vec3 iA, iB;
+    ${clipGLSL}
+    uniform vec3 camPos; uniform float k, glowK, fine;
+    flat out vec2 dA, dB; flat out float vAl, vHw; out float vY;
+    void main(){
+      float dist = distance((iA.xz + iB.xz) * 0.5, camPos.xz), near = 1.0 - smoothstep(18.0, 110.0, dist), fade = clamp(1.0 - (dist - 60.0) / 220.0, 0.22, 1.0);
+      float nearT = 1.0 - smoothstep(8.0, 55.0, dist);   // the lattice bars (line01) only up close: further out their crossings scribble
+      vAl = (fine > 0.5 ? (k < 0.02 ? 0.12 * nearT * nearT : 0.2 * near * near) : k * fade * mix(1.0, 1.7, near)) * glowK;
+      vec4 vA = viewMatrix * vec4(iA, 1.0), vB = viewMatrix * vec4(iB, 1.0);
+      if (vAl < 0.004 || (vA.z > -nearZ && vB.z > -nearZ)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+      if (vA.z > -nearZ) vA = mix(vA, vB, (vA.z + nearZ) / (vA.z - vB.z));
+      else if (vB.z > -nearZ) vB = mix(vB, vA, (vB.z + nearZ) / (vB.z - vA.z));
+      vec4 cA = projectionMatrix * vA, cB = projectionMatrix * vB;
+      vec2 sA = devPx(cA), sB = devPx(cB), d = sB - sA; float L = length(d);
+      vec2 u = L > 1e-4 ? d / L : vec2(1.0, 0.0), nn = vec2(-u.y, u.x);
+      vHw = mix(1.0, fine > 0.5 ? 1.4 : 2.1, near) * dpr * 0.5; float hw = vHw + 1.0;
+      bool atA = position.x < 0.0;
+      gl_Position = atPx((atA ? sA - u * hw : sB + u * hw) + nn * position.y * hw, atA ? cA : cB);
+      dA = sA; dB = sB; vY = atA ? iA.y : iB.y;
+    }`,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    flat in vec2 dA, dB; flat in float vAl, vHw; in float vY; out vec4 o;
+    uniform float sync;
+    ${scanGLSL}
+    void main(){
+      vec2 p = gl_FragCoord.xy, d = dB - dA; float L2 = dot(d, d), t = L2 > 1e-6 ? clamp(dot(p - dA, d) / L2, 0.0, 1.0) : 0.0;
+      float a = clamp(vHw + 0.5 - length(p - (dA + d * t)), 0.0, 1.0) * vAl;
+      a = min(0.85, a * (1.0 + 1.6 * scanAt(vY, max(0.3, fwidth(vY) * 1.2))));
+      if (a < 0.002) discard;
+      o = vec4(mix(vec3(91.0, 240.0, 204.0), vec3(255.0, 212.0, 120.0), sync * 0.85) / 255.0 * a, a);
+    }`,
+  uniforms: { ...fxU, camPos: { value: new THREE.Vector3() }, sync: { value: 0 }, scanY: plantScan, k: { value: 0.16 }, glowK: { value: 1 }, fine: { value: 0 } },
+  transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
+});
+// each line group's brightness is in its name ('lineNN': NN hundredths, as main.js's recLine alphas), times the
+// block's glow (kill waves run through the plant); line03 is the small kit's group
+function setLineK() { const u = this.material.uniforms, d = this.userData; u.k.value = d.k; u.glowK.value = d.glowK ?? 1; u.fine.value = d.k < 0.1 ? 1 : 0; this.material.uniformsNeedUpdate = true; }
+function fatLines(g) {
+  const P = g.geo.attributes.position.array, I = g.geo.index && g.geo.index.array, n = I ? I.length / 2 : P.length / 6, A = new Float32Array(n * 6), [tx, ty, tz] = g.t;
+  for (let s = 0; s < n; s++) for (let e = 0; e < 2; e++) { const v = I ? I[s * 2 + e] : s * 2 + e, o = s * 6 + e * 3; A[o] = P[v * 3] + tx; A[o + 1] = P[v * 3 + 1] + ty; A[o + 2] = P[v * 3 + 2] + tz; }
+  const geo = new THREE.InstancedBufferGeometry(), buf = new THREE.InstancedInterleavedBuffer(A, 6);
+  geo.setAttribute('position', new THREE.BufferAttribute(CORNERS, 2)); geo.setAttribute('iA', new THREE.InterleavedBufferAttribute(buf, 3, 0)); geo.setAttribute('iB', new THREE.InterleavedBufferAttribute(buf, 3, 3));
+  geo.instanceCount = n; geo.boundingSphere = ALL;
+  return geo;
+}
+// lit windows and work lamps ('lamp') as faint cyan-white light that does not fade out with distance as fast
+const plantLampMat = new THREE.RawShaderMaterial({
+  vertexShader: plantVert,
+  fragmentShader: `precision highp float; uniform vec3 camPos; uniform float sync; varying vec3 vW;
+    void main(){ float d = distance(vW.xz, camPos.xz), a = clamp(1.0 - (d - 90.0) / 260.0, 0.45, 1.0) * 0.5;
+      vec3 c = mix(vec3(150.0, 240.0, 226.0), vec3(255.0, 220.0, 140.0), sync * 0.85) / 255.0; gl_FragColor = vec4(c * a, a); }`,
+  // added as c * a (three's AdditiveBlending would weigh it by a again: a far window at a .2 came out at .04)
+  uniforms: { camPos: { value: new THREE.Vector3() }, sync: { value: 0 } }, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+  blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
+});
+plantLampMat.userData.glow = true;
+// unlit windows: the dark panes of the facade grid, as the world shader paints them on the procedural blocks
+const plantDarkMat = new THREE.RawShaderMaterial({ vertexShader: plantVert, fragmentShader: `precision highp float; void main(){ gl_FragColor = vec4(vec3(2.0, 8.0, 10.0) / 255.0, 1.0); }`, side: THREE.DoubleSide });
+// the yellow stripe round the buildings' feet: flat paint, dimmed with distance like the walls it is on
+const plantHazardMat = new THREE.RawShaderMaterial({
+  vertexShader: plantVert,
+  fragmentShader: `precision highp float; uniform vec3 camPos; uniform float sync; varying vec3 vW;
+    void main(){ float d = distance(vW.xz, camPos.xz), a = clamp(1.0 - (d - 60.0) / 260.0, 0.55, 1.0) * 0.85;
+      gl_FragColor = vec4(vec3(217.0, 180.0, 67.0) / 255.0 * a, 1.0); }`,
+  uniforms: { camPos: { value: new THREE.Vector3() }, sync: { value: 0 } }, side: THREE.DoubleSide,
+});
+// the work lamps' light on the ground ('pool': a quad with 0..1 UVs): a soft fall-off, and the sensor's isolux
+// contours drawn over it, so the pool reads as measured light rather than a painted spot
+const plantPoolMat = new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  vertexShader: `precision highp float; in vec3 position; in vec2 uv; uniform mat4 projectionMatrix, viewMatrix, modelMatrix; out vec2 vUv;
+    void main(){ vUv = uv * 2.0 - 1.0; gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`precision highp float; in vec2 vUv; uniform float sync; out vec4 o;
+    float ring(float r, float r0){ return 1.0 - smoothstep(0.0, fwidth(r) * 1.3, abs(r - r0)); }
+    void main(){ float r = length(vUv); if (r > 1.0) discard;
+      float a = pow(1.0 - r * r, 2.2) * 0.26 + ring(r, 0.42) * 0.1 + ring(r, 0.68) * 0.07 + ring(r, 0.93) * 0.1;
+      o = vec4(mix(vec3(150.0, 240.0, 226.0), vec3(255.0, 220.0, 140.0), sync * 0.85) / 255.0 * a, a); }`,
+  uniforms: { sync: { value: 0 } }, transparent: true, depthWrite: false,
+  blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
+});
+const plantMeshes = new Map();
+function drawPlant(M, o) {
+  const t = performance.now() / 1000; plantScan.value = api.scanY ?? (t % 8) * 9.5 - 4;   // api.scanY holds it for stills
+  for (const L of [plantSegMaterial(), plantLampMat, plantHazardMat]) { L.uniforms.camPos.value.copy(camera.position); L.uniforms.sync.value = o.syncMix || 0; }
+  plantPoolMat.uniforms.sync.value = o.syncMix || 0;
+  plantSolidMat.uniforms.emap.value = M.texture || blackMap;
+  for (const g of M.groups) {
+    let m = plantMeshes.get(g);
+    if (!m) {
+      const paint = g.grp === 'lamp' || g.grp === 'hazard' || g.grp === 'dark' || g.grp === 'pool';
+      m = g.lines ? new THREE.Mesh(fatLines(g), plantSegMaterial()) : new THREE.Mesh(g.geo, g.grp === 'lamp' ? plantLampMat : g.grp === 'hazard' ? plantHazardMat : g.grp === 'dark' ? plantDarkMat : g.grp === 'pool' ? plantPoolMat : plantSolidMat);
+      m.frustumCulled = false; m.matrixAutoUpdate = false; if (!g.lines) { m.position.set(g.t[0], g.t[1], g.t[2]); m.updateMatrix(); } m.updateMatrixWorld(true);
+      if (g.lines) { m.userData.k = g.grp.startsWith('line') ? +g.grp.slice(4) / 100 : .4; m.onBeforeRender = setLineK; m.userData.line = true; }
+      else if (paint) { m.userData.line = true; if (g.grp === 'pool') m.renderOrder = -2.5; }   // paint and light: kept out of the ink pass; pools over the ground, under its strokes
+      else { m.onBeforeRender = setPerMesh; m.userData.world = true; m.renderOrder = -1; m.userData.partId = hashKey(g.name); }
+      m.userData.block = +String(g.bone).slice(1);
+      scene.add(m); plantMeshes.set(g, m);
+    }
+    // a block the HMD's boot scan has not reached yet (glow 0) is not drawn; at the scan front it is lit up
+    // (the near props, block 90 up, are not main.js's buildings: they take the scan from their own place)
+    const b = m.userData.block, bk = b >= 90 && o.plantBoot ? o.plantBoot(g.t[0], g.t[2]) : -1;
+    const k = bk >= 0 ? (bk ? 1.18 * (bk > 1 ? 2.2 : 1) : 0) : o.plantGlow && o.plantGlow[b]; m.visible = k !== 0; m.userData.glowK = k ?? 1.18; m.userData.eK = k ?? 1.18;
+    // the blocks fade into the haze as drawBuilding fades them; the static layers (block 100 up) do not, as main.js never faded them
+    if (!g.lines) m.userData.fade = b >= 100 ? 1 : Math.min(1, Math.max(0.22, 1 - (Math.hypot(g.t[0] - camera.position.x, g.t[2] - camera.position.z) - 60) / 220));
+  }
+}
+
 // ---- occluders: building envelopes written to depth only, so they hide what stands behind them ----
 const occMat = new THREE.MeshBasicMaterial({ colorWrite: false });
 const occBox = new THREE.BoxGeometry(1, 1, 1);
@@ -187,7 +457,7 @@ const worldMat = new THREE.RawShaderMaterial({
     void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(transpose(inverse(mat3(modelMatrix))) * normal); /* non-uniform scale: normals need the inverse transpose */ gl_Position = projectionMatrix * viewMatrix * w; }`,
   fragmentShader: /* glsl */`
     precision highp float;
-    uniform vec3 light, camPos, celTop, celLit, celShade, haze; uniform float sync, wFade, box, seed, y0, hgt; uniform vec4 ext, win;
+    uniform vec3 light, camPos, celTop, celLit, celShade, haze; uniform float sync, wFade, box, seed, y0, hgt, sunV; uniform vec4 ext, win;
     in vec3 vN; in vec3 vW; out vec4 o;
     float hsh(float n){ return fract(sin(n * 127.1 + 311.7) * 43758.5453); }
     vec3 cel(vec3 c){ float L = (c.r + c.g + c.b) / 3.0; return mix(c, vec3(L * 2.1 + 10.0 / 255.0, L * 1.45 + 4.0 / 255.0, L * 0.45), sync); }
@@ -205,7 +475,7 @@ const worldMat = new THREE.RawShaderMaterial({
           float seam = max(lineAt(v, 3.2, hgt), lineAt(u, 6.0, Wm));
           c = mix(c, vec3(0.004, 0.016, 0.016), seam * 0.7);
           if (hgt > 5.0 && win[int(fi)] > 0.5) {
-            float r = floor((v - 1.6) / 3.2 + 0.5), vc = 1.6 + r * 3.2, cols = max(0.0, floor((Wm - 1.0 - 1.4) / 2.4) + 1.0), cc = floor((u - 1.4) / 2.4 + 0.5), uc = 1.4 + cc * 2.4, idx = r * cols + cc;
+            float r = floor((v - 1.6) / 3.2 + 0.5), vc = 1.6 + r * 3.2, cols = max(0.0, floor((Wm - 1.0 - 1.5) / 3.0) + 1.0), cc = floor((u - 1.5) / 3.0 + 0.5), uc = 1.5 + cc * 3.0,   /* two to a 6 m panel: no seam through a window */ idx = r * cols + cc;
             if (r >= 0.0 && vc < hgt - 1.0 && cc >= 0.0 && uc < Wm - 1.0 && idx < 48.0 && abs(u - uc) < 0.45 && abs(v - vc) < 0.5) {
               bool lit = fract(sin(dot(vec2(idx + fi * 13.0, mod(seed, 97.0)), vec2(12.9898, 78.233))) * 43758.5453) > 0.62;
               c = lit ? mix(c, vec3(150.0, 240.0, 226.0) / 255.0, 0.55 * 0.8) : mix(c, vec3(2.0, 8.0, 10.0) / 255.0, 0.85 * 0.8);
@@ -218,15 +488,38 @@ const worldMat = new THREE.RawShaderMaterial({
           }
         }
       }
+      // SKYDECK's sunrise: the faces toward the sun are lit hard, but held under the bloom's knee (at the full .86
+      // white they burnt out to blank shapes)
+      c *= 1.0 - 0.55 * sunV;
       // distance fades a solid into the horizon haze but never makes it see-through: what it hides
       // must look like it is in the way
       o = vec4(mix(haze, c, wFade), 1.0);
     }`,
-  uniforms: { celTop: { value: new THREE.Vector3() }, celLit: { value: new THREE.Vector3() }, celShade: { value: new THREE.Vector3() }, light: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() }, sync: { value: 0 }, wFade: { value: 1 }, haze: { value: new THREE.Vector3() }, box: { value: 1 }, seed: { value: 0 }, y0: { value: 0 }, hgt: { value: 1 }, ext: { value: new THREE.Vector4() }, win: { value: new THREE.Vector4() } },
+  uniforms: { celTop: { value: new THREE.Vector3() }, celLit: { value: new THREE.Vector3() }, celShade: { value: new THREE.Vector3() }, light: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() }, sync: { value: 0 }, wFade: { value: 1 }, haze: { value: new THREE.Vector3() }, box: { value: 1 }, seed: { value: 0 }, y0: { value: 0 }, hgt: { value: 1 }, ext: { value: new THREE.Vector4() }, win: { value: new THREE.Vector4() }, sunV: { value: 0 } },
   polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2,
   // solids are opaque (alpha 1); the premultiplied blend is kept so nothing else changes
   blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
 });
+// the plant models' solids: the world shader plus their baked emission map (edge glow, lit windows, stripes)
+const plantSolidMat = new THREE.RawShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  vertexShader: worldMat.vertexShader.replace('in vec3 normal;', 'in vec3 normal; in vec2 uv; out vec2 vUv;').replace('void main(){', 'void main(){ vUv = uv;'),
+  // the model's many small up-facing faces (pipe tops, decks, basin rims) take the top colour only part way, or they
+  // read as glowing blue plates; the procedural blocks have one big roof each
+  // Over that, the HMD tracing what it reconstructs: a rim of cyan where a face turns away from the eye (so a dark
+  // mass reads as an outline the sensor follows, brighter in a kill wave), and the scan band climbing it.
+  fragmentShader: worldMat.fragmentShader.replace('in vec3 vN; in vec3 vW;', 'in vec3 vN; in vec3 vW; in vec2 vUv; uniform sampler2D emap; uniform float eK;' + scanGLSL)
+    .replace('vec3 c = n.y > 0.5 ? celTop :', 'vec3 c = n.y > 0.5 ? mix(celLit, celTop, 0.35) :')
+    .replace('o = vec4(mix(haze, c, wFade), 1.0);', `c += texture(emap, vUv).rgb * eK;
+      vec3 lc = mix(vec3(91.0, 240.0, 204.0), vec3(255.0, 212.0, 120.0), sync * 0.85) / 255.0; float dq = distance(vW.xz, camPos.xz);
+      float f = 1.0 - abs(dot(n, V)); c += lc * min(0.24, pow(f, 3.0) * (1.0 - pow(f, 10.0)) * 0.5) * (eK / 1.18) * (1.0 - sunV) * mix(1.0, 0.5, smoothstep(60.0, 260.0, dq));
+      c += mix(lc, vec3(0.85, 1.0, 0.97), 0.4) * scanAt(vW.y, max(0.22, fwidth(vW.y) * 1.2)) * 0.32;
+      o = vec4(mix(haze, c, wFade), 1.0);`),
+  uniforms: { ...worldMat.uniforms, emap: { value: null }, eK: { value: 1 }, scanY: plantScan },   // the same uniform objects: the frame's light, cel colours and haze reach both
+  polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2,
+  blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
+});
+const blackMap = (() => { const c = document.createElement('canvas'); c.width = c.height = 1; const g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, 1, 1); const t = new THREE.Texture(c); t.needsUpdate = true; return t; })();   // the vendor bundle has no DataTexture
 const boxGeo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
 const cylGeos = new Map();
 const cylGeo = ratio => { const k = Math.round(ratio * 50) / 50; let g = cylGeos.get(k); if (!g) { g = new THREE.CylinderGeometry(k, 1, 1, 24, 1, false).translate(0, 0.5, 0); g = g.toNonIndexed(); g.computeVertexNormals(); cylGeos.set(k, g); } return g; };
@@ -599,6 +892,9 @@ function draw(o) {
   camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
   frameNo++;
   for (const m of meshes.values()) { m.mesh.visible = false; if (m.lines) m.lines.visible = false; }
+  for (const m of modelMeshes.values()) m.mesh.visible = false;
+  for (const m of plantMeshes.values()) m.visible = false;
+  if (o.plant && models[o.plant] && models[o.plant].ready) drawPlant(models[o.plant], o);
   syncOccluders(o.occluders || []);
   syncWorld(o.world, o);
   syncStrokes(o.world);
@@ -608,6 +904,7 @@ function draw(o) {
   const L = new THREE.Vector3(o.light[0], o.light[1], o.light[2]);
   for (const I of o.insts) {
     if (I.hidden || !I.style) continue;
+    if (I.model) { drawModelInst(I, L); continue; }
     const m = meshFor(I); writeMesh(m, I);
     const mat = material(I.style, I.P.mat, I.ghost > 0); mat.uniforms.light.value.copy(L); mat.uniforms.camPos.value.copy(camera.position);
     m.mesh.material = mat; m.mesh.visible = true; if (m.lines) m.lines.visible = true;
@@ -615,6 +912,7 @@ function draw(o) {
   }
   // parts of broken hostiles leave the scene once unused for a while
   for (const [k, m] of meshes) if (typeof k === 'string' && k[0] === 'e' && frameNo - m.used > 120) { scene.remove(m.mesh); m.geo.dispose(); if (m.lines) { scene.remove(m.lines); m.lines.geometry.dispose(); } meshes.delete(k); }
+  for (const [k, m] of modelMeshes) if (frameNo - m.used > 120) { scene.remove(m.mesh); modelMeshes.delete(k); }
   renderer.setRenderTarget(rtColor); renderer.setClearColor(0x000000, 0); renderer.clear();
   if (sky) { const u = skyMat.uniforms; u.hy.value = sky.hy; u.gy0.value = sky.glowY0; u.gy1.value = sky.glowY1; u.ga.value = sky.glowA; u.gc.value.set(sky.glowCol[0] / 255, sky.glowCol[1] / 255, sky.glowCol[2] / 255);
     const v3 = (t, c) => t.set(c[0] / 255, c[1] / 255, c[2] / 255); ['c0', 'c1', 'c2', 'c3'].forEach((k, i) => v3(u[k].value, sky.stops[i])); v3(u.gnd.value, sky.ground);
@@ -622,6 +920,7 @@ function draw(o) {
     const w = worldMat.uniforms; v3(w.celTop.value, sky.cel[0]); v3(w.celLit.value, sky.cel[1]); v3(w.celShade.value, sky.cel[2]); v3(w.haze.value, sky.stops[3]);
     // sunrise on SKYDECK: the faces toward the low sun (left) go hard white, tops catch some of it, the light swings to it
     const sv = Math.min(1, Math.max(0, (-0.05 + 0.065 * (sky.sun || 0) + 0.006) / 0.016));
+    w.sunV.value = sv;
     if (sv > 0) { w.celLit.value.lerp(new THREE.Vector3(.86, .84, .80), sv); w.celTop.value.lerp(new THREE.Vector3(.55, .55, .56), sv * .6); w.light.value.lerp(new THREE.Vector3(Math.sin(-1.15), .05, -Math.cos(-1.15)), sv).normalize(); }
     renderer.render(skyScene, quadCam); }
   renderer.render(scene, camera);
@@ -630,7 +929,7 @@ function draw(o) {
   for (const ch of scene.children) {
     if (!ch.visible || ch.userData.occluder) continue;
     if (ch.userData.line || ch.isLineSegments || ch.isPoints || ch.material?.userData?.glow) { ch.visible = false; hidden.push(ch); continue; }
-    if (ch.isMesh) { ch.userData.cm = ch.material; ch.material = ch.userData.world ? ndDepthMat : ndMat; swapped.push(ch); }
+    if (ch.isMesh) { ch.userData.cm = ch.material; ch.material = ch.userData.world ? ndDepthMat : ch.userData.model ? ndModelMat : ndMat; swapped.push(ch); }
   }
   renderer.setRenderTarget(rtND); renderer.clear(); renderer.render(scene, camera);
   for (const ch of swapped) ch.material = ch.userData.cm;
@@ -644,7 +943,8 @@ function draw(o) {
   return true;
 }
 
-const api = { canvas, active: !!renderer, enemies: true, world: true, draw };
+const api = { canvas, active: !!renderer, enemies: true, world: true, draw, models };
+if (renderer && !query.has('proxy')) for (const k in MODEL_FILES) loadModel(k);
 // a lost context falls back to Canvas for the rest of the session (three.js restores, but our targets would not be)
 canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); api.active = false; renderer = null; console.warn('AOGANE three: context lost, drawing with Canvas'); });
 if (query.has('dev')) {

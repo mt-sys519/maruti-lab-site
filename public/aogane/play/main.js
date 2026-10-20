@@ -253,6 +253,11 @@ const sfx={
     tone({type:'sawtooth',f:180,f2:760,glide:.22,a:.01,d:.42,g:.05,lp:2400,pri:3});tone({type:'square',f:90,f2:380,glide:.22,a:.01,d:.38,g:.03,lp:1400});
     burst({bp:2300,bp2:1700,fd:.3,q:6,a:.01,d:.34,g:.13,pri:3});burst({bp:3100,bp2:2400,fd:.25,q:9,a:.02,d:.26,g:.06});
     burst({lp:420,lp2:180,fd:.3,d:.36,g:.2})},
+  // ?legs F: the wheels counter-rotate on the spot (rubber screech over a motor growl), then the hips lock.
+  legSpin(d=.3,pan=0){if(!ac)return;burst({bp:2600,bp2:1500,q:6,d:d+.08,g:.10,pan,pri:3});burst({pink:true,lp:900,lp2:400,d:d+.1,g:.12,pan});tone({f:62,f2:96,glide:d,d:d+.06,g:.22,crush:true,pri:3});tone({f:180,f2:290,glide:d,d:d,type:'sawtooth',lp:900,g:.025})},
+  legLock(){if(!ac)return;const now=ac.currentTime;tone({f:74,f2:36,glide:.12,d:.34,g:.5,crush:true,pri:3});burst({pink:true,lp:1200,lp2:240,d:.22,g:.2});
+    burst({bp:2900,q:5,d:.035,g:.11,pri:3});burst({t:now+.07,bp:3600,q:6,d:.03,g:.09});tone({t:now+.07,f:150,f2:100,glide:.05,d:.08,g:.12,crush:true});
+    for(const [f,g] of [[212,.024],[655,.014],[1240,.008]])tone({t:now+.02,f,d:.5,g,rev:.2})},
   bite(){if(!ac)return;tone({f:88,f2:44,glide:.12,d:.24,g:.36,crush:true,pri:3});burst({pink:true,lp:1600,lp2:300,fd:.25,d:.3,g:.18})},
   // BURST in the air is the backpack: a jet that keeps pushing.
   jet(){if(!ac)return;tone({f:92,f2:50,glide:.2,d:.34,g:.3,crush:true,pri:3});
@@ -302,6 +307,8 @@ const sfx={
   land(k=1){if(!ac)return;tone({f:96,f2:40,glide:.14,d:.36,g:.42*k,crush:true,pri:3});burst({pink:true,lp:900,d:.25,g:.16*k});burst({bp:2300,q:3,d:.05,g:.05*k});burst({t:ac.currentTime+.07,hp:4200,d:.2,g:.016*k})},
   // ATLAS: twin cannon report, deeper and longer than BASTION's, and a heavy footfall you hear coming.
   titanFire(e){if(!ac)return;const s=spatial(e.x,e.z);tone({f:120,f2:44,glide:.35,d:.55,g:.4*s.g,crush:true,pri:3});burst({pink:true,lp:1800,lp2:240,fd:.4,d:.5,g:.2*s.g,pan:s.pan,pri:3});burst({bp:650,bp2:160,q:1,d:.45,g:.12*s.g,pan:s.pan,rev:.2});tone({t:ac.currentTime+.09,f:110,f2:46,glide:.3,d:.4,g:.3*s.g,crush:true,pri:3})},
+  // BASTION (a 3.4 m quad loader since the Blender rebuild): a lighter footfall than ATLAS, a hydraulic sigh after it.
+  heavyStep(e){if(!ac)return;const s=spatial(e.x,e.z),r=.92+Math.random()*.16;tone({f:96*r,f2:58,glide:.07,d:.2,g:.15*s.g,crush:true,pan:s.pan,pri:1});burst({pink:true,lp:700,d:.14,g:.045*s.g,pan:s.pan});burst({t:ac.currentTime+.06,hp:2600,d:.12,g:.008*s.g,pan:s.pan})},
   titanStep(e){if(!ac)return;const s=spatial(e.x,e.z),r=.94+Math.random()*.1;tone({f:72*r,f2:44,glide:.12,d:.32,g:.34*s.g,crush:true,pan:s.pan,pri:2});burst({pink:true,lp:520,d:.25,g:.1*s.g,pan:s.pan});tone({f:240*r,type:'square',d:.04,g:.01*s.g,lp:900,pan:s.pan});burst({t:ac.currentTime+.08,hp:3200,d:.18,g:.012*s.g,pan:s.pan})},
   heavyFire(e){if(!ac)return;const s=spatial(e.x,e.z);tone({f:160,f2:54,glide:.25,d:.36,g:.34*s.g,crush:true,pri:3});burst({bp:800,bp2:200,q:1.2,d:.32,g:.14*s.g,pan:s.pan});tone({f:420,f2:90,type:'sawtooth',d:.26,g:.04*s.g,lp:1600,pan:s.pan,rev:.15})},
   contact(e){if(!ac)return;const pan=e?spatial(e.x,e.z).pan:0;tone({f:1320,d:.32,g:.026,dly:.35,rev:.3,pan});tone({f:1980,d:.18,g:.010,pan})},
@@ -338,13 +345,13 @@ musicVol.addEventListener('input',()=>{if(musicBus)musicBus.gain.setTargetAtTime
 // CAMERA_Y is the eye height: standing EYE_Y plus the jump height, refreshed every update, so drawing,
 // hit volumes, enemy aim and lines of sight all follow the frame into the air.
 const EYE_Y=3.25, WORLD=155;let CAMERA_Y=EYE_Y;
-const player={x:0,z:116,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:116,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0};
+const player={x:0,z:116,yaw:0,torso:0,legs:0,legAlign:false,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:116,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0};
 const buildings=[],enemies=[],playerBolts=[],enemyBolts=[],missiles=[],rockets=[],particles=[],shards=[],waves=[],debris=[],lights=[],keys=new Set(),mouseButtons=new Set();
 const wheelKnock=[];let playing=false,last=performance.now(),gameTime=0,lastFire=-Infinity,boostLatch=false,missionClear=false,lastLockedId=0,lastSightLinkId=0,lastDesignatedId=0,visualContact=null,hitStop=0,inboundCooldown=0,missionTime=0;
 const stats={shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0};
 const combat={primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,extra:[],nextWake:Infinity};
 let seed=17;function hash(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
-function addBuilding(x,z,w,d,h,type=0){buildings.push({x,z,w,d,h,type,seed:seed++})}
+function addBuilding(x,z,w,d,h,type=0){buildings.push({x,z,w,d,h,type,seed:seed++,i:buildings.length})}
 // Sparse, readable combat space: broad avenues with solid perimeter structures.
 const blocks=[
 // v29: an asymmetric transfer district, not a mirrored test arena. The central spine remains clear.
@@ -373,7 +380,20 @@ const TUNNEL_BLOCKS=(()=>{const out=[],{hw,len,ceil}=TUNNEL;
   for(let z=-128;z<=128;z+=32)for(const s of [-1,1])out.push([s*28,z,3.6,3.6,ceil,4]);
   out.push([-12,44,5.6,12,5.2,4],[13,-8,12,5.6,5.2,4],[-14,-52,5.6,12,5.2,4],[8,-92,12,5.6,5.2,4],[0,14,10,1.4,1.8,4],[-4,-122,10,1.4,1.8,4]);
   return out})();
-const SECTORS={1:{tag:'SECTOR 01',name:'TRANSFER DISTRICT',blocks},2:{tag:'SECTOR 02',name:'FREIGHT TUNNEL',blocks:TUNNEL_BLOCKS},3:{tag:'SECTOR 03',name:'SKYDECK',blocks:SKY_BLOCKS}};
+// ?plant (on trial): the near plant of SECTOR 01 that tools/blender/plant.py builds from this list, from the start to
+// the first crossing (the side streets open at z 60-86 left, 77-95 right, so the racks stop short of them): a pipe
+// bridge over the road [z, deck height, lamps' x], pipe racks down the shoulders [x, z0, z1, lamps' z] and junction
+// cabinets [x, z]; on SKYDECK, floodlight masts down both sides of the deck [x, z]. Their posts, towers, cabinets and
+// masts collide and stop shots (propSolids), only while the model that draws them is loaded.
+const NEAR_PROPS={1:{bridges:[[100,11,[-7,7]]],racks:[[-25,88,128,[92,110,124]],[25,96,126,[102,120]]],cabinets:[[-21.4,113],[21.4,119],[-21.4,85],[21.4,91]]},
+  3:{masts:[[-24,124],[24,124],[-24,84],[24,84],[-24,44],[24,44],[-24,4],[24,4]]}};
+function nearSolids(n){const P=NEAR_PROPS[n],out=[];if(!P)return out;const box=(x,z,w,d,h)=>out.push({x,z,w,d,h,type:5,prop:true});
+  for(const [z,h] of P.bridges||[])for(const s of [-1,1])box(s*21,z,3,3,h+1);
+  for(const [x,z0,z1] of P.racks||[])for(let z=z0;z<=z1+.01;z+=6)for(const s of [-1,1])box(x+s*1.2,z,.5,.5,6.2);
+  for(const [x,z] of P.cabinets||[])box(x,z,1,1.4,2);
+  for(const [x,z] of P.masts||[])box(x,z,2.4,2.4,20);
+  return out}
+const SECTORS={1:{tag:'SECTOR 01',name:'TRANSFER DISTRICT',blocks,near:NEAR_PROPS[1]},2:{tag:'SECTOR 02',name:'FREIGHT TUNNEL',blocks:TUNNEL_BLOCKS},3:{tag:'SECTOR 03',name:'SKYDECK',blocks:SKY_BLOCKS,near:NEAR_PROPS[3]}};
 const LAST_SECTOR=3;
 // The sortie is the three sectors in a row; clearing the last one ends it (OPERATION COMPLETE), and each
 // sector's clear time is kept for that final result. Starting SECTOR 01 again starts a new run.
@@ -457,7 +477,7 @@ function enduranceSpawn(){
     type=titan?'TITAN':r<heavy?'HEAVY':r<heavy+(1-heavy)*.45?'LANCER':'SCOUT';
   // From threat level 2 KITE flights join too, up to one fewer than the level and never more than three.
   if(!titan&&L>=2&&enemies.filter(e=>e.alive&&e.type==='KITE').length<Math.min(3,L-1)&&Math.random()<KITE_CHANCE)return enduranceKite(L);
-  const viewYaw=player.yaw+headYaw*Math.PI/180;let pick=null,fallback=null;
+  const viewYaw=player.yaw+viewHead()*Math.PI/180;let pick=null,fallback=null;
   for(let t=0;t<60&&!pick;t++){const a=Math.random()*TAU,d=titan?85+Math.random()*40:70+Math.random()*55,x=clamp(player.x+Math.sin(a)*d,-WORLD+8,WORLD-8),z=clamp(player.z-Math.cos(a)*d,-WORLD+8,WORLD-8);
     if(collide(x,z,titan?6:4)||enemies.some(e=>e.alive&&Math.hypot(e.x-x,e.z-z)<14))continue;const dd=Math.hypot(x-player.x,z-player.z);if(dd<60)continue;
     if(Math.abs(angleDiff(Math.atan2(x-player.x,-(z-player.z)),viewYaw))>.9)pick={x,z};else fallback=fallback||{x,z}}
@@ -465,7 +485,7 @@ function enduranceSpawn(){
   const k=Math.min(1.8,1+.1*(L-1)),dk=Math.min(1.5,1+.06*(L-1)),e=makeEnemy(at.x,at.z,type,endure.nextId++,enemies.length,k,dk);e.awake=false;e.marked=0;e.nextAttack=gameTime+1.6;e.lastAttack=gameTime;
   enemies.push(e);wakeEnemy(e,'NEW CONTACT');if(titan){plog('Warning',`-Heavy walker inbound. ${etag(e)}`);pilotGlance(e,1.2,2)}return e}
 const KITE_CHANCE=.24;
-function enduranceKite(L){const viewYaw=player.yaw+headYaw*Math.PI/180,a=viewYaw+Math.PI*(.6+Math.random()*.8),k=Math.min(1.8,1+.1*(L-1)),dk=Math.min(1.5,1+.06*(L-1)),e=makeKite(0,endure.nextId++),R=e.desired+10;
+function enduranceKite(L){const viewYaw=player.yaw+viewHead()*Math.PI/180,a=viewYaw+Math.PI*(.6+Math.random()*.8),k=Math.min(1.8,1+.1*(L-1)),dk=Math.min(1.5,1+.06*(L-1)),e=makeKite(0,endure.nextId++),R=e.desired+10;
   e.x=clamp(player.x+Math.sin(a)*R,-WORLD+8,WORLD-8);e.z=clamp(player.z-Math.cos(a)*R,-WORLD+8,WORLD-8);e.px=e.x;e.pz=e.z;e.fly.ang=a;e.yaw=a+e.orbitDir*Math.PI/2;
   e.maxHp=e.hp=Math.round(e.hp*k);e.damage=Math.round(e.damage*dk);e.dmgK=dk*DIFF().dmg;e.nextAttack=gameTime+3+Math.random()*2;e.lastAttack=gameTime;
   enemies.push(e);plog('Warning',`-Air contact inbound. ${etag(e)}`);sfx.contact(e);return e}
@@ -477,12 +497,12 @@ function updateEndurance(dt){
   endure.spawnT-=dt;const alive=enemies.filter(e=>e.alive).length;
   if(alive<enduranceTarget()&&endure.spawnT<=0){if(enduranceSpawn())endure.spawnT=alive+1<enduranceTarget()?1.2:Math.max(1.4,4.2-endure.level*.35);else endure.spawnT=.5}
 }
-function reset(){if(mode==='endurance')stage=1;if(mode==='sortie'&&stage===1)for(const k in campaign)delete campaign[k];buildSector(stage);Object.assign(player,{x:0,z:116,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:116,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,pumpT:-9,scope:0,scopeOn:false,ads:0,swing:null,dashSpin:0,dashJet:null,dashDir:null,dashSlide:false,airDashed:false,scrub:0,jointZ:null,jointX:null});wheelKnock.length=0;cockpit.axeTrail=[];rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;ending.on=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,extra:[],nextWake:Infinity,airGate:0});spawn();tutStart();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;if(playing)hmdBoot=performance.now();else bootPending=true;plog('System','-Combat mode activate.');plog('System','-Sensor reconstruction.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Freight tunnel. Walkers inbound.':stage===3?'-Sector 03: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.');if(secondArms().length)plog('System',`-Second arm${secondArms().length>1?'s':''}: ${secondArms().map(w=>w+(w==='ARBALEST'?' [scope]':'')).join(' / ')}.`)}
+function reset(){if(mode==='endurance')stage=1;if(mode==='sortie'&&stage===1)for(const k in campaign)delete campaign[k];buildSector(stage);Object.assign(player,{x:0,z:116,yaw:0,torso:0,pitch:0,aimYawTarget:0,aimPitchTarget:0,camPitch:0,vx:0,vz:0,hp:100,boost:100,heat:0,boostTime:0,boostCool:0,regenDelay:0,shake:0,roll:0,alive:true,missiles:6,missileCd:0,combo:0,comboT:0,fovKick:0,gunKick:0,barrel:1,killPulse:0,flow:0,syncTime:0,syncChain:0,inertiaRoll:0,inertiaPitch:0,suspV:0,prevVx:0,prevVz:0,hitDir:0,hitDirT:0,impactCd:0,glideTime:0,boostTrailClock:0,yawVelocity:0,px:0,pz:116,vent:false,absorb:0,lastStepBeat:0,jy:0,jvy:0,jumpCd:0,weapon:'HALBERD',rockets:MAUL.mag,rocketRegen:0,rocketCd:0,snipeT:-9,pumpT:-9,scope:0,scopeOn:false,ads:0,swing:null,dashSpin:0,dashJet:null,dashDir:null,dashSlide:false,airDashed:false,legs:0,legAlign:false,legLockT:0,legAligns:0,scrub:0,jointZ:null,jointX:null});wheelKnock.length=0;cockpit.axeTrail=[];rockets.length=0;cockpit.shown='HALBERD';cockpit.swapT=cockpit.swapK=cockpit.maulKick=0;playerBolts.length=enemyBolts.length=missiles.length=particles.length=shards.length=waves.length=debris.length=0;Object.assign(stats,{shots:0,hits:0,kills:0,maxChain:0,damage:0,designations:0});missionTime=0;killWaves.length=0;syncMix=0;cockpit.cracks.length=0;visorFX.errors.length=0;visorFX.glitch=visorFX.glitchK=0;visorFX.sparks.length=0;visorFX.smoke.length=0;visorFX.blocks.length=0;visorFX.flash=null;cockpit.jolt=0;cockpit.raise=0;showResult(null);missionClear=false;ending.on=false;gameTime=0;lastLockedId=0;lastSightLinkId=0;lastDesignatedId=0;visualContact=null;hitStop=0;inboundCooldown=0;lastFire=-Infinity;keys.clear();mouseButtons.clear();boostLatch=false;Object.assign(combat,{primaryId:0,pressureId:0,primaryHold:0,pressureHold:0,primaryGate:0,pressureGate:0,extra:[],nextWake:Infinity,airGate:0});spawn();tutStart();pilot.entries.length=0;plogSeen.clear();Object.assign(pilot,{scroll:0,expr:'calm',prev:null,mix:1,hold:0,holdPrio:0,banner:null,cut:null,critLatch:false});endure.level=1;endure.spawnT=2.5;endure.nextId=100;if(playing)hmdBoot=performance.now();else bootPending=true;plog('System','-Combat mode activate.');plog('System','-Sensor reconstruction.');plog('Info',mode==='endurance'?'-Endurance. Break until the frame fails.':stage===2?'-Sector 02: Freight tunnel. Walkers inbound.':stage===3?'-Sector 03: Skydeck. Flights overhead.':'-Sector: Vector Foundry 07.');if(secondArms().length)plog('System',`-Second arm${secondArms().length>1?'s':''}: ${secondArms().map(w=>w+(w==='ARBALEST'?' [scope]':'')).join(' / ')}.`)}
 spawn();
 function forward(y){return{x:Math.sin(y),z:-Math.cos(y)}}function right(y){return{x:Math.cos(y),z:Math.sin(y)}}
 function angleDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d}
-function worldPan(x,z){const a=angleDiff(Math.atan2(x-player.x,-(z-player.z)),player.yaw+headYaw*Math.PI/180);return clamp(Math.sin(a)*.82,-.82,.82)}
-function collide(x,z,r=1.2){if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;for(const b of buildings)if(Math.abs(x-b.x)<b.w/2+r&&Math.abs(z-b.z)<b.d/2+r)return true;return false}
+function worldPan(x,z){const a=angleDiff(Math.atan2(x-player.x,-(z-player.z)),player.yaw+viewHead()*Math.PI/180);return clamp(Math.sin(a)*.82,-.82,.82)}
+function collide(x,z,r=1.2){if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;for(const b of buildings){if(roundTower(b)){const R=towerR(b)+r;if((x-b.x)**2+(z-b.z)**2<R*R)return true;continue}if(Math.abs(x-b.x)<b.w/2+r&&Math.abs(z-b.z)<b.d/2+r)return true}for(const b of propSolids())if(Math.abs(x-b.x)<b.w/2+r&&Math.abs(z-b.z)<b.d/2+r)return true;return false}
 function movePlayer(dx,dz){let hit=false;const dist=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(dist/.55)),sx=dx/steps,sz=dz/steps;for(let i=0;i<steps;i++){const nx=player.x+sx,nz=player.z+sz;if(!collide(nx,player.z,1.25))player.x=nx;else{player.vx=0;hit=true}if(!collide(player.x,nz,1.25))player.z=nz;else{player.vz=0;hit=true}}return hit}
 // Ray-vs-hostile: the main hit cylinder, plus ATLAS's two legs. Returns the earliest t or null.
 function enemyHitT(e,x0,y0,z0,x1,y1,z1,pad=0){const R=RIGS[e.type],H=R.hit;let t=sweepCylinder(x0,y0,z0,x1,y1,z1,e,H.r+pad,H.cy+eY(e),H.hh+pad);
@@ -509,9 +529,16 @@ function segmentAABBTime(x0,y0,z0,x1,y1,z1,b){
   return t0;
 }
 function segmentAABB(...args){return segmentAABBTime(...args)!==null}
+// ?plant: a cooling tower is the round shell the model draws, not its square block (whose corners were walls of
+// nothing); a segment against an upright cylinder of radius R from the ground to H
+function segCylT(x0,y0,z0,x1,y1,z1,cx,cz,R,H){const dx=x1-x0,dz=z1-z0,fx=x0-cx,fz=z0-cz,a=dx*dx+dz*dz,bq=2*(fx*dx+fz*dz),c=fx*fx+fz*fz-R*R;let t;
+  if(c<=0)t=0;else{if(a<1e-9)return null;const D=bq*bq-4*a*c;if(D<0)return null;t=(-bq-Math.sqrt(D))/(2*a);if(t<0||t>1)return null}
+  const y=y0+(y1-y0)*t;return y>=0&&y<=H?t:null}
+function roundTower(b){return b.type===0&&plantKey()!==null}
+function towerR(b){return Math.min(b.w,b.d)*.46*1.04}   // the basin round the foot (plant.py cooling_tower)
 const TUNNEL_ROOF={x:0,z:0,w:2*TUNNEL.hw,d:2*TUNNEL.len,h:TUNNEL.ceil+3,type:4,roof:true};
 function worldImpact(x0,y0,z0,x1,y1,z1){
-  let result=null;for(const b of buildings){const t=segmentAABBTime(x0,y0,z0,x1,y1,z1,b);if(t!==null&&(!result||t<result.t))result={t,b}}
+  let result=null;for(const L of [buildings,propSolids()])for(const b of L){const t=roundTower(b)?segCylT(x0,y0,z0,x1,y1,z1,b.x,b.z,towerR(b),b.h*1.25):segmentAABBTime(x0,y0,z0,x1,y1,z1,b);if(t!==null&&(!result||t<result.t))result={t,b}}
   // FREIGHT TUNNEL: the ceiling stops whatever climbs through it.
   if(stage===2&&y1>TUNNEL.ceil&&y0<=TUNNEL.ceil){const t=(TUNNEL.ceil-y0)/(y1-y0);if(!result||t<result.t)result={t,b:TUNNEL_ROOF}}
   return result;
@@ -540,7 +567,7 @@ function closestPlayerPass(b){
   const t=clamp(-(rx*dx+rz*dz)/(dx*dx+dz*dz||1),0,1);
   return {d:Math.hypot(rx+dx*t,rz+dz*t),y:lerp(b.py,b.y,t)};
 }
-function inputDir(){let sx=0,sz=0;if(keys.has('KeyW'))sz++;if(keys.has('KeyS'))sz--;if(keys.has('KeyD'))sx++;if(keys.has('KeyA'))sx--;const n=Math.hypot(sx,sz)||1;sx/=n;sz/=n;if(!sx&&!sz&&(pad.lx||pad.ly)){sx=pad.lx;sz=-pad.ly}const f=forward(player.yaw),r=right(player.yaw);return{x:r.x*sx+f.x*sz,z:r.z*sx+f.z*sz,sx,sz}}
+function inputDir(){let sx=0,sz=0;if(keys.has('KeyW'))sz++;if(keys.has('KeyS'))sz--;if(keys.has('KeyD'))sx++;if(keys.has('KeyA'))sx--;const n=Math.hypot(sx,sz)||1;sx/=n;sz/=n;if(!sx&&!sz&&(pad.lx||pad.ly)){sx=pad.lx;sz=-pad.ly}const f=forward(player.yaw+player.legs),r=right(player.yaw+player.legs);return{x:r.x*sx+f.x*sz,z:r.z*sx+f.z*sz,sx,sz}}
 // Transient text now lives in the PILOT LINK log (see plog); the DOM keeps only clock / HMD loss / result.
 function hitMark(pan=0){player.hitMarkT=.09;player.shake=Math.max(player.shake,.12);sfx.hit(pan)}
 function flash(id,ms=70){const e=$(id);e.classList.add('on');setTimeout(()=>e.classList.remove('on'),ms)}
@@ -561,7 +588,7 @@ function spawnDebris(e,part,kick=1,life=null){
   const center=enemyCenter(e),ox=c[0]-center.x,oy=c[1]-center.y,oz=c[2]-center.z,on=Math.hypot(ox,oy,oz)||1,size=Math.max(...p.P.verts.map(v=>vlen(vsub(v,p.P.center))));
   const sp=(3+Math.random()*7)*kick/(.7+size*.5);
   debris.push({P:p.P,rel:p.wv.map(v=>vsub(v,c)),c,R0:p.X.R,D:[1,0,0,0,1,0,0,0,1],vx:ox/on*sp+(e.vx||0)*.4+(Math.random()-.5)*3,vy:2.5+Math.random()*5*kick+oy/on*sp*.4,vz:oz/on*sp+(e.vz||0)*.4+(Math.random()-.5)*3,
-    w:[(Math.random()-.5)*9/(.4+size),(Math.random()-.5)*9/(.4+size),(Math.random()-.5)*9/(.4+size)],age:0,life:life??(.42+Math.random()*.45+size*.12),type:e.type,size,mat:p.P.mat,lands:0,uid:++debrisUid});
+    w:[(Math.random()-.5)*9/(.4+size),(Math.random()-.5)*9/(.4+size),(Math.random()-.5)*9/(.4+size)],age:0,life:life??(.42+Math.random()*.45+size*.12),type:e.type,size,mat:p.P.mat,lands:0,uid:++debrisUid,pi:part,t0:p.X.t.slice(),c0:c.slice()});
 }
 function shatterEnemy(e){const pose=enemyPose(e);pose.parts.forEach((p,i)=>{if(!e.lost?.[i])spawnDebris(e,i,1)})}
 function debrisVerts(d){return d.rel.map(v=>{const q=M3.ap(d.D,v);return[q[0]+d.c[0],q[1]+d.c[1],q[2]+d.c[2]]})}
@@ -600,6 +627,26 @@ function updateJump(dt){player.jumpCd=Math.max(0,player.jumpCd-dt);
 // bite and throw the frame; a sideways burst slides a little at the end. In the air it is the backpack: one
 // push per jump, a little softer but held longer, a lift, more boost, the old jet sound.
 const DASH={spin:.06,cost:24,air:34};
+// Legs, body and arms (2026-10-20, standard since the same day; ?classic brings back the one-heading frame where
+// the head only looks). The user's picture: WASD the legs, the head the upper body, the mouse the arms, like
+// VR). The head turns the upper body (cockpit, view and the arms' base) instead of only the view; the mouse
+// swings the arms (the gun gimbal) and, past LEGS.soft off the body, drags the body round, which is also how a
+// player without a camera turns. The legs keep their own heading until the body is LEGS.max off them, then
+// they are dragged along; WASD and BURST drive along the legs. F spins the legs onto the body on the wheels.
+const LEGS={on:!new URLSearchParams(location.search).has('classic'),max:Math.PI/2,rate:5.5,soft:.4};
+let legHead=0;
+function viewHead(){return LEGS.on?0:headYaw}
+// The head's turn since the last step, in rad, handed to the body.
+// Aiming steadies it to ADS_HEAD of the pull, as the head's aim did before.
+function headTurn(){const d=(headYaw-legHead)*Math.PI/180*lerp(1,ADS_HEAD,player.ads||0);legHead=headYaw;return d}
+function alignLegs(){if(!LEGS.on||!playing||!player.alive||missionClear||player.jy>0||player.legAlign)return;player.legAligns=(player.legAligns||0)+1;
+  if(Math.abs(player.legs)<.04){player.legs=0;legLock();return}
+  const dir=Math.sign(player.legs),d=Math.abs(player.legs)/LEGS.rate;player.legAlign=true;player.roll=dir*.06;player.shake=Math.max(player.shake,.35);cockpit.heaveV-=1.4;sfx.legSpin(d,dir*.35);
+  for(let i=0;i<18;i++){const a=Math.random()*TAU;particles.push({x:player.x+Math.sin(a)*1.6,y:.15,z:player.z-Math.cos(a)*1.6,px:player.x,py:.1,pz:player.z,vx:Math.cos(a)*(3+Math.random()*5)*dir,vy:.3+Math.random()*1.2,vz:Math.sin(a)*(3+Math.random()*5)*dir,life:.25+Math.random()*.3,max:.55,color:i%3?'#c8b89d':'#8a8478',size:.3+Math.random()*.7})}}
+// The legs come square under the body: a drop onto the hips, a clank, a ring on the deck, the compass mark lights.
+function legLock(){player.legLockT=.45;player.shake=Math.max(player.shake,.5);cockpit.heaveV+=2.6;player.fovKick=Math.max(player.fovKick,.18);player.roll=0;sfx.legLock();
+  waves.push({x:player.x,y:.06,z:player.z,color:'#8fffe0',size:9,life:.4,max:.4,kind:'ground'})}
+function updateLegs(dt){player.legLockT=Math.max(0,(player.legLockT||0)-dt);if(!player.legAlign)return;const step=LEGS.rate*dt;if(Math.abs(player.legs)<=step){player.legs=0;player.legAlign=false;legLock();return}player.legs-=Math.sign(player.legs)*step}
 function doBoost(){const d=inputDir();if(!playing||missionClear||(Math.abs(d.sx)+Math.abs(d.sz))<.1||player.boostCool>0||!player.alive)return;const air=player.jy>0;
   if(air?(player.airDashed||player.boost<DASH.air):player.boost<DASH.cost)return;player.boost-=air?DASH.air:DASH.cost;player.boostCool=.18;player.regenDelay=.75;player.glideTime=0;player.boostTrailClock=0;player.roll=clamp(-d.sx*.065,-.065,.065);
   const side=Math.abs(d.sx)>.4,power=side?52:60;
@@ -721,7 +768,7 @@ function getHmdLock(){const e=enemies.find(x=>x.id===lastDesignatedId&&x.alive&&
 function getSightLink(maxAngle=.105){const h=getHmdLock();if(!h)return null;const e=h.e,ay=player.yaw+player.torso,ap=player.pitch,dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz)||1,ey=Math.atan2(dx,-dz),ep=Math.atan2(aimY(e)-CAMERA_Y,dist),score=Math.hypot(angleDiff(ey,ay),ep-ap);return score<maxAngle?{e,dist,score}:null}
 function wakeEnemy(e,label='CONTACT'){if(!e||!e.alive||e.awake||tutHold())return;e.awake=true;e.wakeT=.62;e.marked=Math.max(e.marked||0,1.8);e.flash=.18;sfx.contact(e);plog('Caution',`-${label==='HMD HANDOFF'?'Handoff contact':'Hostile contact'}. ${etag(e)}`);pilotGlance(e,.8,1);sayContact(e);shockwave(e.x,.06,e.z,'#ff7667',9,.62,'ground');if(e.guns)plog('HMD',`-${etag(e)} weak points: launcher x2.`)}
 function wakeNearestCold(){let best=null,bd=1e9;for(const e of enemies){if(!e.alive||e.awake)continue;const d=Math.hypot(e.x-player.x,e.z-player.z);if(d<bd){bd=d;best=e}}if(best)wakeEnemy(best,'NEW CONTACT')}
-function tryHmdHandoff(excludeId=0){const viewYaw=player.yaw+headYaw*Math.PI/180;let best=null,bestA=.30;for(const e of enemies){if(!e.alive||e.id===excludeId)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>120||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const a=Math.abs(angleDiff(Math.atan2(dx,-dz),viewYaw));if(a<bestA){bestA=a;best=e}}if(!best)return;best.focus=Math.max(best.focus||0,.17);best.marked=Math.max(best.marked||0,1.4);if(!best.awake)wakeEnemy(best,'HMD HANDOFF');plog('HMD',`-Handoff. ${etag(best)}`)}
+function tryHmdHandoff(excludeId=0){const viewYaw=player.yaw+viewHead()*Math.PI/180;let best=null,bestA=.30;for(const e of enemies){if(!e.alive||e.id===excludeId)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz);if(dist>120||segmentHitsWorld(player.x,CAMERA_Y,player.z,e.x,aimY(e),e.z))continue;const a=Math.abs(angleDiff(Math.atan2(dx,-dz),viewYaw));if(a<bestA){bestA=a;best=e}}if(!best)return;best.focus=Math.max(best.focus||0,.17);best.marked=Math.max(best.marked||0,1.4);if(!best.awake)wakeEnemy(best,'HMD HANDOFF');plog('HMD',`-Handoff. ${etag(best)}`)}
 // ---------- ATLAS: launchers, core, missiles ----------
 function atlasParts(e,k){e.guns=[ATLAS.gun*k,ATLAS.gun*k];e.gunMax=ATLAS.gun*k;e.core=e.coreMax=ATLAS.core*k;e.coreOpen=false}
 // Each launcher as a segment from its mount to its muzzle, in world space.
@@ -820,7 +867,7 @@ let headVel=0;
 function setHeadTarget(target,dt){const w=2.15/headSmooth(),n=Math.max(1,Math.ceil(dt*240)),h=dt/n;
   for(let i=0;i<n;i++){headVel+=(w*w*(target-headYaw)-2*w*headVel)*h;headVel=clamp(headVel,-450,450);headYaw+=headVel*h}}
 function headPoseFresh(now=performance.now()){return !headEnabled||(headFound&&now-headSampleTime<=HEAD_FRESH_MS)}
-function centerHead(){headNeedCenter=false;baseline=headPoseFresh()&&headFound?rawYaw:null;basePitch=baseline===null?null:rawPitch;headPitchTarget=0;headPitch=0;manualHead=0;headTarget=0;headYaw=0;headVel=0;plog('System','Head centered.');say('HEAD_CENTER')}
+function centerHead(){headNeedCenter=false;legHead=0;baseline=headPoseFresh()&&headFound?rawYaw:null;basePitch=baseline===null?null:rawPitch;headPitchTarget=0;headPitch=0;manualHead=0;headTarget=0;headYaw=0;headVel=0;plog('System','Head centered.');say('HEAD_CENTER')}
 function acceptHeadPose(data){
   if(data.timestamp<headSampleTime)return;
   headFound=!!data.found;
@@ -1049,7 +1096,8 @@ function worldBox3D(cx,cz,w,d,y0,y1,viewYaw,viewPitch,fill='rgba(1,8,9,.96)',edg
         fillQuads=()=>{for(const [col,L] of qs){ctx.fillStyle=col;ctx.beginPath();for(let i=0;i<L.length;i+=8){ctx.moveTo(L[i],L[i+1]);ctx.lineTo(L[i+2],L[i+3]);ctx.lineTo(L[i+4],L[i+5]);ctx.lineTo(L[i+6],L[i+7]);ctx.closePath()}ctx.fill()}qs.clear()};
       ctx.globalAlpha=.55;ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=.9;ctx.beginPath();
       for(let k=1;k*3.2<Hm;k++)seg(P(0,k*3.2/Hm),P(1,k*3.2/Hm));for(let k=1;k*6<Wm;k++)seg(P(k*6/Wm,0),P(k*6/Wm,1));ctx.stroke();
-      if(Hm>5&&hash(seed+i)>.4&&!boxPlain){let n=0;ctx.globalAlpha=.8;for(let v=1.6;v<Hm-1&&n<48;v+=3.2)for(let u=1.4;u<Wm-1&&n<48;u+=2.4,n++){const lit=hash(seed+i*31+n*7)>.62;quad((u-.45)/Wm,(u+.45)/Wm,(v-.5)/Hm,(v+.5)/Hm,lit?'rgba(150,240,226,.55)':'rgba(2,8,10,.85)')}fillQuads()}
+      // windows two to a 6 m panel (at 1.5 and 4.5 m), so no seam runs through one (they were every 2.4 m from 1.4)
+      if(Hm>5&&hash(seed+i)>.4&&!boxPlain){let n=0;ctx.globalAlpha=.8;for(let v=1.6;v<Hm-1&&n<48;v+=3.2)for(let u=1.5;u<Wm-1&&n<48;u+=3,n++){const lit=hash(seed+i*31+n*7)>.62;quad((u-.45)/Wm,(u+.45)/Wm,(v-.5)/Hm,(v+.5)/Hm,lit?'rgba(150,240,226,.55)':'rgba(2,8,10,.85)')}fillQuads()}
       if(y0<.1&&Hm>2){const n=Math.max(2,Math.round(Wm/1.1)),hb=Math.min(1,.9/Hm);ctx.globalAlpha=.85;for(let k=0;k<n;k+=2)quad(k/n,(k+1)/n,0,hb,'#d9b443');fillQuads();ctx.globalAlpha=.9;ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=1;ctx.beginPath();seg(P(0,hb),P(1,hb));ctx.stroke()}
       if(Hm>4&&CAMERA_Y<y1&&!boxPlain){const R2=(u,dy)=>project(lerp(A[0],B[0],u),y1+dy,lerp(A[1],B[1],u),viewYaw,viewPitch);ctx.globalAlpha=.8;ctx.strokeStyle=WORLD_CEL.ink;ctx.lineWidth=1.2;ctx.beginPath();seg(R2(0,1.1),R2(1,1.1));seg(R2(0,.55),R2(1,.55));for(let k=0;k<=Math.ceil(Wm/2);k++){const u=Math.min(1,k*2/Wm);seg(R2(u,0),R2(u,1.1))}ctx.stroke()}}}
   ctx.restore();
@@ -1109,41 +1157,41 @@ function drawMoonSky(viewYaw,hy){
 function drawDistantDistrict(viewYaw,viewPitch){
   // v30: the Foundry is a megastructure, not a street bordered by boxes. Multiple vertical layers,
   // silhouettes and operating infrastructure establish scale before the combat lane is read.
-  ctx.save();
+  ctx.save();const PS=plantStatic();   // ?plant: the model has the static part of all this (plant.py far_district)
   const skyline=[
     [-154,-236,42,54,0,72,.050],[-112,-246,28,38,0,42,.045],[-76,-238,52,44,0,62,.052],[-28,-252,56,62,0,50,.042],
     [34,-248,48,46,0,36,.038],[79,-240,38,44,0,67,.055],[124,-228,48,54,0,84,.062],[162,-214,34,44,0,54,.045]
   ];
-  for(const [x,z,w,d,y0,y1,a] of skyline)worldBox3D(x,z,w,d,y0,y1,viewYaw,viewPitch,'rgba(1,7,8,.97)',a);
+  if(!PS)for(const [x,z,w,d,y0,y1,a] of skyline)worldBox3D(x,z,w,d,y0,y1,viewYaw,viewPitch,'rgba(1,7,8,.97)',a);
 
   // LEFT LANDMARK: vector relay crown. The rotating inner ring makes the city feel operational.
-  worldBox3D(-84,-192,17,17,0,61,viewYaw,viewPitch,'rgba(1,7,8,.985)',.15);
+  if(!PS){worldBox3D(-84,-192,17,17,0,61,viewYaw,viewPitch,'rgba(1,7,8,.985)',.15);
   worldLine3D(-84,61,-192,-84,82,-192,viewYaw,viewPitch,'103,255,209',.30,1,7);
-  worldRingXY(-84,70,-192,13,13,viewYaw,viewPitch,.22,'103,255,209',1.05,0,48);
+  worldRingXY(-84,70,-192,13,13,viewYaw,viewPitch,.22,'103,255,209',1.05,0,48)}
   worldRingXY(-84,70,-192,8.2,8.2,viewYaw,viewPitch,.32,'129,255,221',1.15,gameTime*.18,32);
   for(let i=0;i<4;i++){const a=gameTime*.18+i*TAU/4;worldLine3D(-84+Math.cos(a)*8.2,70+Math.sin(a)*8.2,-192,-84+Math.cos(a)*12.6,70+Math.sin(a)*12.6,-192,viewYaw,viewPitch,'112,245,210',.18,.7)}
 
   // RIGHT LANDMARK: a forked thermal tower so left/right orientation remains readable during head turns.
-  worldBox3D(108,-206,24,20,0,54,viewYaw,viewPitch,'rgba(1,8,9,.985)',.12);
+  if(!PS){worldBox3D(108,-206,24,20,0,54,viewYaw,viewPitch,'rgba(1,8,9,.985)',.12);
   for(const x of [101,115]){
     worldBox3D(x,-207,7,8,46,82,viewYaw,viewPitch,'rgba(1,7,8,.98)',.12);
     for(const y of [57,68,79])worldRingXY(x,y,-207,4.2,1.7,viewYaw,viewPitch,.16,'98,236,202',.8,0,24);
   }
-  worldLine3D(101,73,-207,115,73,-207,viewYaw,viewPitch,'103,255,209',.17,.8);
+  worldLine3D(101,73,-207,115,73,-207,viewYaw,viewPitch,'103,255,209',.17,.8)}
 
   // A stacked transfer deck spans the background and a second service deck sits higher and farther back.
-  for(const [z,y,w,a] of [[-174,31,8,.14],[-218,49,5,.08]]){
+  if(!PS)for(const [z,y,w,a] of [[-174,31,8,.14],[-218,49,5,.08]]){
     if(worldRec){recLine(-168,y,z,168,y,z,'1,8,9',.96,w,1);recLine(-168,y,z,168,y,z,'103,255,209',a,.8);continue}
     const seg=projectSegment(-168,y,z,168,y,z,viewYaw,viewPitch);if(seg&&seg[0]&&seg[1]){ctx.strokeStyle='rgba(1,8,9,.96)';ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);ctx.lineTo(seg[1].x,seg[1].y);ctx.stroke();ctx.strokeStyle=`rgba(103,255,209,${a})`;ctx.lineWidth=.8;ctx.stroke()}
   }
   // Vertical hanging supports make the far deck read as enormous architecture rather than a screen line.
-  beginLines();for(const x of [-144,-96,-48,0,48,96,144]){worldLine3D(x,31,-174,x,0,-174,viewYaw,viewPitch,'87,222,190',.055,.55);worldLine3D(x,49,-218,x,28,-218,viewYaw,viewPitch,'87,222,190',.035,.5)}endLines();
+  if(!PS){beginLines();for(const x of [-144,-96,-48,0,48,96,144]){worldLine3D(x,31,-174,x,0,-174,viewYaw,viewPitch,'87,222,190',.055,.55);worldLine3D(x,49,-218,x,28,-218,viewYaw,viewPitch,'87,222,190',.035,.5)}endLines()}
 
   // Moving carrier pods on the far deck. Their tiny motion is deliberately slow: industrial scale, not traffic noise.
   for(let i=0;i<5;i++){const span=300,x=-150+((gameTime*5.5+i*63)%span);worldBox3D(x,-173,7.5,3.2,30,34.2,viewYaw,viewPitch,'rgba(4,18,16,.96)',.18);worldLine3D(x-2.5,32.2,-171.2,x+2.5,32.2,-171.2,viewYaw,viewPitch,'138,255,222',.34,.8,4)}
 
   // Exhaust / process stacks: repeated thin towers create vertical scale without filling the center with noise.
-  for(const [x,z,h] of [[-142,-204,46],[-130,-212,59],[142,-194,51],[154,-205,66],[-45,-226,34],[52,-230,42]]){
+  if(!PS)for(const [x,z,h] of [[-142,-204,46],[-130,-212,59],[142,-194,51],[154,-205,66],[-45,-226,34],[52,-230,42]]){
     worldBox3D(x,z,5.6,5.6,0,h,viewYaw,viewPitch,'rgba(1,7,8,.98)',.075);
     for(const y of [h*.38,h*.67,h*.90])worldRingXY(x,y,z,3.2,1.15,viewYaw,viewPitch,.08,'89,222,190',.65,0,18);
   }
@@ -1151,12 +1199,12 @@ function drawDistantDistrict(viewYaw,viewPitch){
   // Foundry throat: a huge asymmetric processing gate at the end of the district. Its silhouette is
   // deliberately rectilinear/angled so it cannot be mistaken for HMD symbology.
   const gateZ=-242,gx=18,gL=gx-38,gR=gx+38;
-  worldBox3D(gL,gateZ,10,16,0,58,viewYaw,viewPitch,'rgba(1,7,8,.99)',.11);
+  if(!PS){worldBox3D(gL,gateZ,10,16,0,58,viewYaw,viewPitch,'rgba(1,7,8,.99)',.11);
   worldBox3D(gR,gateZ,13,19,0,68,viewYaw,viewPitch,'rgba(1,7,8,.99)',.13);
   worldBox3D(gx,gateZ,70,15,48,57,viewYaw,viewPitch,'rgba(1,7,8,.99)',.12);
   worldLine3D(gL,52,gateZ,gx-14,57,gateZ,viewYaw,viewPitch,'103,255,209',.11,.75);
   worldLine3D(gR,62,gateZ,gx+14,57,gateZ,viewYaw,viewPitch,'103,255,209',.13,.82);
-  worldLine3D(gx-14,57,gateZ,gx+14,57,gateZ,viewYaw,viewPitch,'123,255,217',.17,.88,4);
+  worldLine3D(gx-14,57,gateZ,gx+14,57,gateZ,viewYaw,viewPitch,'123,255,217',.17,.88,4)}
   // Slow vertical freight elevators make the scale readable even when the player is stationary.
   const liftY=8+((gameTime*3.2)%38);worldBox3D(gR-1.8,gateZ-1,7.8,6.5,liftY,liftY+5.8,viewYaw,viewPitch,'rgba(3,16,14,.98)',.21);
   worldLine3D(gR-5,liftY+2.9,gateZ-4.3,gR+1.6,liftY+2.9,gateZ-4.3,viewYaw,viewPitch,'139,255,222',.34,.82,4);
@@ -1307,7 +1355,67 @@ function drawFoundryBlock(b,vy,vp,o){
   const sx=b.x>0?-1:1,x0=b.x+sx*b.w*.5,x1=x0+sx*9;worldLine3D(x0,4,b.z,x1,4,b.z,vy,vp,'91,240,204',.16*o.glow,1);worldLine3D(x0,3.2,b.z,x1,3.2,b.z,vy,vp,'91,240,204',.08*o.glow,.6);
   for(let k=0;k<3;k++){const t=((gameTime*.3+k/3+b.seed*.1)%1),x=lerp(x0,x1,t);worldBox3D(x,b.z,1.1,1.1,4,4.9,vy,vp,'rgba(2,12,11,.98)',.2*o.glow,wc('120,255,220'))}
 }
+// ?plant (on trial): the sector's blocks come from the Blender plant model (three-cel.js) instead of being drawn here;
+// they still collide, stop shots and hide hostiles as before.
+function plantKey(){const T3=typeof window!=='undefined'&&window.HF_THREE,k='PLANT'+builtStage,M=T3&&T3.active&&T3.models&&T3.models[k];return M&&M.ready?k:null}
+// the model may carry only some of the sector's blocks (plant.py types=): the rest stay drawn here
+function plantHas(b){const k=plantKey();if(!k)return false;const M=window.HF_THREE.models[k];M.blocks??=new Set(M.groups.map(g=>+String(g.bone).slice(1)));return M.blocks.has(b.i)}
+const plantGlowK=[];
+// the near props (block 90 up in the model) collide only while the model that draws them is there
+// and so do the static layers (block 100 up) and the parts of the blocks the model builds outside their envelopes:
+// one rule, whatever stands on the ground and looks solid stops the frame and shots (decks overhead do not)
+function propSolids(){const k=plantKey(),M=k&&window.HF_THREE.models[k];if(!M)return NO_SOLIDS;
+  return M.solids??=[...(M.groups.some(g=>g.bone==='b90')?nearSolids(builtStage):[]),...(M.groups.some(g=>g.bone==='b100')?staticSolids(builtStage):[])]}
+// SECTOR 01's static layers as plant.py builds them (pylons, portal piers, the high deck's towers, the west deck's
+// bents, the viaducts' columns, the bus masts, the exchangers and the switch yard) and what the blocks' models put
+// outside the block (a cooling tower's pump house and warm-water inlets, a process plant's rack to the road, a
+// foundry's conveyor)
+function staticSolids(n){const out=[],box=(x,z,w,d,h)=>out.push({x,z,w,d,h,type:5,prop:true});if(n!==1)return out;
+  for(const p of PYLONS)box(p.x,p.z,3.4,3.4,24);
+  for(const [z,top,wd] of [[58,11.8,36],[-18,14.2,39],[-96,17.2,42]])for(const s of [-1,1])for(const dx of [0,3.8])box(s*(wd-dx),z,1.1,1.6,top);
+  for(const s of [-1,1])box(s*62,-46,5,5,29.2);
+  for(let z=-104;z<=116;z+=44)for(const x of [-54,-46])box(x,z,.8,.8,15.5);
+  for(const s of [-1,1])for(let z=-132;z<=132;z+=30){box(s*42,z,.9,.9,6.2);box(s*45.8,z,.9,.9,6.2)}
+  for(const [z,y] of [[24,23],[-64,26]])for(const x of [-92,-46,46,92])box(x,z,2,2,y);
+  for(const [x,z,h] of [[-101,-42,28],[-109,-67,35],[-100,-92,24]])box(x,z,11.2,11.2,h+2.4);
+  box(100,-30,28,19,10);box(112,-50,16,18,22);box(97,-74,6,6,42);
+  for(const b of buildings){const side=b.x<0?1:-1;
+    if(b.type===0){const R0=Math.min(b.w,b.d)*.46;box(b.x+side*R0*1.32,b.z-R0*.95,7,6,4.6);box(b.x+side*R0*1.23,b.z,R0*.54,R0*.6+2,3.2)}
+    else if(b.type===1){const along=b.w>b.d;box(b.x+side*(b.w*.5+3),b.z+b.d*.38*(along?1:-1),6.4,4,7.6)}
+    else if(b.type===3)box(b.x+side*(b.w*.5+4.5),b.z,9,1.6,3.4)}
+  return out}
+const NO_SOLIDS=[];
+// the static layers of SECTOR 01 (block 100 up in the model: plant.py statics): with them loaded, drawDistantDistrict,
+// drawGantries, drawTrunkLine and drawFoundryMachines leave out what the model draws and keep what moves
+function plantStatic(){const k=plantKey(),M=k&&window.HF_THREE.models[k];return !!M&&(M.hasStatic??=M.groups.some(g=>g.bone==='b100'))}
+// What moves in the plant stays procedural over the model: heat rings over the cooling towers, the blinking aviation
+// lights (stack tops, the foundry chimney: plant.py puts the chimney at -w*.38, +d*.3, 1.5 h tall), the
+// substation's arcs, the foundry's travelling crane, furnace plasma and conveyor carriers.
+function plantLife(b,o){
+  const h=b.h,blink=(k,p=3.2)=>Math.sin(gameTime*p+k)>.2?.9:.15,red='255,74,58';
+  if(b.type===0){const R=Math.min(b.w,b.d)*.46,H=b.h*1.25,rTop=R*.78,phi=1.05,c1=wc('91,255,207'),c2=wc('120,255,220'),c3=wc('150,255,230');
+    // the tower's lattice and rings, line for line as drawCoolingTower draws them on the procedural tower
+    for(const fam of [1,-1])for(let i=0;i<30;i++){const a=i/30*TAU,a2=a+fam*phi;recLine(b.x+Math.cos(a)*R,0,b.z+Math.sin(a)*R,b.x+Math.cos(a2)*rTop,H,b.z+Math.sin(a2)*rTop,c1,Math.min(1,.17*o.glow),.6)}
+    for(const [y,r,a] of [[0,R,.25],[H*.62,R*Math.cos(phi/2)*.98,.22],[H,rTop,.45]])for(let i=0;i<40;i++){const t0=i/40*TAU,t1=(i+1)/40*TAU;recLine(b.x+Math.cos(t0)*r,y,b.z+Math.sin(t0)*r,b.x+Math.cos(t1)*r,y,b.z+Math.sin(t1)*r,c2,Math.min(1,a*o.glow),y===H?1.2:.8)}
+    for(let k=0;k<3;k++){const t=(gameTime*.12+k/3)%1,y=H+t*14,r=rTop*(1+t*.5);for(let i=0;i<24;i++){const t0=i/24*TAU,t1=(i+1)/24*TAU;recLine(b.x+Math.cos(t0)*r,y,b.z+Math.sin(t0)*r,b.x+Math.cos(t1)*r,y,b.z+Math.sin(t1)*r,c3,(1-t)*.08*o.glow,.8)}}}
+  else if(b.type===1){const along=b.w>b.d,off=(along?b.w:b.d)*.24,r=Math.min(b.w,b.d)*.22,c=wc('91,240,204'),ring=(x,z,rr,y,a,w)=>{for(let i=0;i<24;i++){const t0=i/24*TAU,t1=(i+1)/24*TAU;recLine(x+Math.cos(t0)*rr,y,z+Math.sin(t0)*rr,x+Math.cos(t1)*rr,y,z+Math.sin(t1)*rr,c,Math.min(1,a),w)}},P=[-1,1].map(s=>along?[b.x+s*off,b.z]:[b.x,b.z+s*off]);
+    // drawProcessStacks' lines: each stack's lip ring and the rings at its four deck heights, the two-level bridges
+    for(const [x,z] of P){ring(x,z,r*.86,h,.16*1.2*o.glow,.8);for(const f of [.25,.5,.75,.92])ring(x,z,lerp(r,r*.86,f),h*f,.16*.55*o.glow,.6);recDot(x,h+.6,z,red,blink(x),.25,1,4)}
+    for(const y of [h*.38,h*.7]){recLine(P[0][0],y,P[0][1],P[1][0],y,P[1][1],c,.2*o.glow,1.4);recLine(P[0][0],y+1.2,P[0][1],P[1][0],y+1.2,P[1][1],c,.1*o.glow,.7)}}
+  else if(b.type===2){const D2=b.d/2,hh=Math.min(h,24),pz=b.z+D2*.3,T=2.3+(b.seed%5)*.37,ph=(gameTime/T+hash(b.seed))%1,n=Math.floor(gameTime/T+hash(b.seed)),top=hh*.8,c=wc('91,240,204'),c2=wc('140,255,225');
+    // drawSubstation's lines on the model's gantry: the towers' legs, the beam's two chords, every insulator disc
+    for(const s of [-1,1]){const x=b.x+s*.4*b.w;for(const dx of [-.8,.8])recLine(x+dx,1.2,pz-.8,x+dx,top+.7,pz-.8,c,.2*o.glow,1.1)}
+    recLine(b.x-.4*b.w,top+.7,pz,b.x+.4*b.w,top+.7,pz,c,.25*o.glow,1.3);recLine(b.x-.4*b.w,top-.7,pz,b.x+.4*b.w,top-.7,pz,c,.12*o.glow,.8);
+    for(const k of [-.24,-.08,.08,.24])for(let j=0;j<6;j++){const x=b.x+k*b.w,y=top-1.2-j*.45;recLine(x-.45,y,pz,x+.45,y,pz,c2,.14*o.glow,.7)}
+    if(ph<.06){const x0=b.x-.08*b.w,x1=b.x+.08*b.w,y=hh*.8-1.2-6*.45;recCurve(t=>[lerp(x0,x1,t),y-Math.sin(t*Math.PI)*1.5+(t>0&&t<1?(hash(Math.round(t*8)+b.seed+n)-.5)*1.2:0),pz],8,wc('200,255,245'),(1-ph/.06)*.9,1.2)}}
+  else if(b.type===3){const ry=h*.86+.2,cxp=b.x-b.w*.4+((gameTime*1.6+b.seed*7)%(b.w*.66));
+    worldBox3D(cxp,b.z,1.6,b.d*.7,ry,ry+1.4,0,0,'rgba(2,12,11,.98)',.22*o.glow,wc('120,255,220'));recLine(cxp,ry,b.z,cxp,h*.62,b.z,wc('140,255,225'),.18*o.glow,.6);
+    const c=wc('190,250,255'),a=Math.min(1,(.22+.1*Math.sin(gameTime*2+b.seed))*o.glow),fz=b.z+b.d*.47+.65;for(let k=0;k<=6;k++){const y=lerp(1,h*.3,k/6);recLine(b.x-b.w*.2,y,fz,b.x+b.w*.05,y,fz,c,a,1)}
+    const sx=b.x>0?-1:1,x0=b.x+sx*b.w*.5,x1=x0+sx*9;for(let k=0;k<3;k++){const t=((gameTime*.3+k/3+b.seed*.1)%1),x=lerp(x0,x1,t);worldBox3D(x,b.z,1.1,1.1,3.25,4.15,0,0,'rgba(2,12,11,.98)',.2*o.glow,wc('120,255,220'))}
+    recDot(b.x-b.w*.38,h*1.5+.9,b.z+b.d*.3,red,blink(b.seed,2.8),.3,1,4)}
+}
 function drawBuilding(b,viewYaw,viewPitch){
+  if(worldRec&&plantHas(b)){const depth=Math.hypot(b.x-player.x,b.z-player.z),glow=plantGlow(b.x,b.z,depth),bk=bootK(b.x,b.z);plantGlowK[b.i]=bk?glow*(bk>1?2.2:1):0;if(!bk)return;ctx.save();ctx.globalAlpha=clamp(1-(depth-60)/220,.22,1);plantLife(b,{glow});ctx.restore();return}
   const c=project(b.x,b.h*.5,b.z,viewYaw,viewPitch),depth=c?.depth??Math.hypot(b.x-player.x,b.z-player.z);
   if(!c&&!project(b.x+b.w/2,0,b.z,viewYaw,viewPitch)&&!project(b.x-b.w/2,0,b.z,viewYaw,viewPitch)&&!project(b.x,0,b.z+b.d/2,viewYaw,viewPitch)&&!project(b.x,0,b.z-b.d/2,viewYaw,viewPitch))return;
   const motion=clamp(Math.hypot(player.vx,player.vz)/48+Math.abs(player.yawVelocity)*.58,0,1),alpha=clamp(1-(depth-60)/220,.22,1)*(1-.15*motion);
@@ -1343,22 +1451,22 @@ function drawSkydeck(viewYaw,viewPitch){
 // hazard chevrons and a red beacon on each end wall. Far concrete fades into TUNNEL_SKY like the
 // facilities do, so the tube reads long.
 function drawTunnel(viewYaw,viewPitch){
-  const {hw,len,ceil}=TUNNEL,fade=(x,z)=>clamp(1-(Math.hypot(x-player.x,z-player.z)-60)/220,.22,1);
+  const {hw,len,ceil}=TUNNEL,fade=(x,z)=>clamp(1-(Math.hypot(x-player.x,z-player.z)-60)/220,.22,1),PS=plantStatic();   // ?plant: ceiling, beams, lamp housings, wall pipes and doors are in the model (plant.py tunnel)
   ctx.save();boxPlain=true;
-  for(let z=-len;z<len;z+=20){ctx.globalAlpha=fade(0,z+10);worldBox3D(0,z+10,2*hw+16,20,ceil,ceil+3,viewYaw,viewPitch,'rgba(1,8,9,.97)',.05);
+  if(!PS)for(let z=-len;z<len;z+=20){ctx.globalAlpha=fade(0,z+10);worldBox3D(0,z+10,2*hw+16,20,ceil,ceil+3,viewYaw,viewPitch,'rgba(1,8,9,.97)',.05);
     if(z>-len)worldBox3D(0,z,2*hw,1.2,ceil-1.4,ceil,viewYaw,viewPitch,'rgba(1,8,9,.97)',.06)}
   boxPlain=false;
   const dot=(x,y,z,color,alpha,r,maxPx=3.4)=>{if(worldRec){recDot(x,y,z,color,alpha,r,1,maxPx);return}const p=project(x,y,z,viewYaw,viewPitch);if(!p||p.depth>320)return;
     const a=ctx.globalAlpha;ctx.globalAlpha=alpha*a;ctx.fillStyle=`rgb(${color})`;ctx.beginPath();ctx.arc(p.x,p.y,clamp(r/p.depth*renderFocal*.9,1,maxPx),0,TAU);ctx.fill();ctx.globalAlpha=a};
   for(let z=-len+10;z<len;z+=20)for(const x of [-12,12]){ctx.globalAlpha=fade(x,z);
-    worldBox3D(x,z,1.6,6.4,ceil-.7,ceil,viewYaw,viewPitch,'rgba(1,8,9,.97)',0);
+    if(!PS)worldBox3D(x,z,1.6,6.4,ceil-.7,ceil,viewYaw,viewPitch,'rgba(1,8,9,.97)',0);
     worldLine3D(x-.45,ceil-.75,z-2.9,x-.45,ceil-.75,z+2.9,viewYaw,viewPitch,'226,242,236',.95,2.6,8);worldLine3D(x+.45,ceil-.75,z-2.9,x+.45,ceil-.75,z+2.9,viewYaw,viewPitch,'226,242,236',.95,2.6,8)}
   ctx.globalAlpha=1;
   for(const s of [-1,1]){const x=s*(hw-.15);
-    for(const y of [9,9.7])worldLine3D(x,y,-len,x,y,len,viewYaw,viewPitch,'91,240,204',.12,1);
+    if(!PS)for(const y of [9,9.7])worldLine3D(x,y,-len,x,y,len,viewYaw,viewPitch,'91,240,204',.12,1);
     for(let z=-len+12;z<len;z+=24){ctx.globalAlpha=fade(x,z);dot(x,2.6,z,'110,255,150',.75,.2,3)}ctx.globalAlpha=1}
-  for(const e of [-1,1]){const z=e*(len-.1),hz='217,180,67';
-    for(const [x0,y0,x1,y1] of [[-18,0,-18,16],[18,0,18,16],[-18,16,18,16],[0,0,0,16]])worldLine3D(x0,y0,z,x1,y1,z,viewYaw,viewPitch,'150,190,184',.35,1.6);
+  for(const e of [-1,1]){const z=e*(len-(PS?.75:.1)),hz='217,180,67';   // in front of the model's door leaves
+    if(!PS)for(const [x0,y0,x1,y1] of [[-18,0,-18,16],[18,0,18,16],[-18,16,18,16],[0,0,0,16]])worldLine3D(x0,y0,z,x1,y1,z,viewYaw,viewPitch,'150,190,184',.35,1.6);
     for(let k=-17;k<=15;k+=4)worldLine3D(k,0,z,k+2,1.6,z,viewYaw,viewPitch,hz,.7,2.2);
     for(let k=-17;k<=15;k+=4)worldLine3D(k,14.4,z,k+2,16,z,viewYaw,viewPitch,hz,.55,2);
     ctx.globalAlpha=fade(0,z);if(Math.floor(gameTime*1.2+e*.5)%2===0)dot(0,18,z,'255,86,70',.9,.45,5);ctx.globalAlpha=1}
@@ -1367,11 +1475,11 @@ function drawTunnel(viewYaw,viewPitch){
 // Power trunk line: lattice pylons along the spine, cables carrying steady pulses toward the gate.
 const PYLONS=(()=>{const out=[];for(let z=128;z>=-136;z-=38)for(const s of [-1,1]){const x=s*33;if(!collide(x,z,3))out.push({x,z,s})}return out})();
 function drawTrunkLine(vy,vp){
-  ctx.save();ctx.lineCap='round';const H1=24,arm=5.5;
+  ctx.save();ctx.lineCap='round';const H1=24,arm=5.5,PS=plantStatic();   // ?plant: the pylons are in the model (plant.py pylons); the lights and cables stay here
   for(const p of PYLONS){const d=Math.hypot(p.x-player.x,p.z-player.z);if(d>230)continue;const a=clamp(1-(d-40)/200,.15,1);
-    beginLines();for(const [dx,dz] of [[-1.6,-1.6],[1.6,-1.6],[1.6,1.6],[-1.6,1.6]])worldLine3D(p.x+dx,0,p.z+dz,p.x+dx*.25,H1,p.z+dz*.25,vy,vp,'91,240,204',.3*a,1);
+    if(!PS){beginLines();for(const [dx,dz] of [[-1.6,-1.6],[1.6,-1.6],[1.6,1.6],[-1.6,1.6]])worldLine3D(p.x+dx,0,p.z+dz,p.x+dx*.25,H1,p.z+dz*.25,vy,vp,'91,240,204',.3*a,1);
     for(let k=1;k<5;k++){const y=k*H1/5,w=1.6*(1-y/H1*.75);worldLine3D(p.x-w,y,p.z-w,p.x+w,y,p.z+w,vy,vp,'91,240,204',.14*a,.6);worldLine3D(p.x+w,y,p.z-w,p.x-w,y,p.z+w,vy,vp,'91,240,204',.14*a,.6)}
-    worldLine3D(p.x-arm,H1*.82,p.z,p.x+arm,H1*.82,p.z,vy,vp,'91,240,204',.34*a,1.3);worldLine3D(p.x-arm*.7,H1,p.z,p.x+arm*.7,H1,p.z,vy,vp,'91,240,204',.26*a,1);endLines();
+    worldLine3D(p.x-arm,H1*.82,p.z,p.x+arm,H1*.82,p.z,vy,vp,'91,240,204',.34*a,1.3);worldLine3D(p.x-arm*.7,H1,p.z,p.x+arm*.7,H1,p.z,vy,vp,'91,240,204',.26*a,1);endLines()}
     if(worldRec){recDot(p.x,H1+1.2,p.z,'255,74,58',Math.sin(gameTime*2.4+p.z*.1)>0?.85*a:.2*a,.25,1,3.5);continue}
     const top=project(p.x,H1+1.2,p.z,vy,vp);if(top){ctx.globalAlpha=Math.sin(gameTime*2.4+p.z*.1)>0?.85*a:.2*a;ctx.fillStyle='#ff4a3a';ctx.beginPath();ctx.arc(top.x,top.y,clamp(top.f*.25,1,3.5),0,TAU);ctx.fill();ctx.globalAlpha=1}}
   // Catenary cables between consecutive pylons on each side + travelling pulses (steady, toward -z).
@@ -1722,6 +1830,8 @@ const RIGS={
 };
 // ATLAS turret yaw sign: maps a bearing to the turret bone's y rotation (checked by a test).
 const TITAN_TURRET_SIGN=1;
+// BASTION's pair of feet landing: heard up to ~60 m, felt in the seat only inside 30 m (a nudge, a tenth of ATLAS's).
+function heavyStep(e){const d=Math.hypot(e.x-player.x,e.z-player.z);if(d>60)return;sfx.heavyStep(e);if(d<30){const k=1-d/30;player.shake=Math.max(player.shake,.14*k);cockpit.heaveV-=.18*k}}
 function titanStep(e){const d=Math.hypot(e.x-player.x,e.z-player.z),o=RIGS.TITAN.legHit.off*(e.stepHalf%2?1:-1);sfx.titanStep(e);if(d<90){const k=1-d/90;player.shake=Math.max(player.shake,.42*k);cockpit.heaveV-=.7*k}
   const fx=e.x+right(e.yaw).x*o,fz=e.z+right(e.yaw).z*o;shockwave(fx,.06,fz,'#ff6a52',6,.55,'ground');for(let i=0;i<10;i++)particles.push({x:fx+(Math.random()-.5)*3,y:.2,z:fz+(Math.random()-.5)*3,px:fx,py:.1,pz:fz,vx:(Math.random()-.5)*6,vy:.8+Math.random()*2,vz:(Math.random()-.5)*6,life:.5+Math.random()*.5,max:1,color:'#c8b89d',size:.5+Math.random()*.8})}
 // Smoothed animation drivers, updated from AI state in updateEnemies.
@@ -1736,6 +1846,7 @@ function updateEnemyAnim(e,dt){
   A.recoil=Math.max(0,A.recoil-dt*2.8);A.stag=Math.max(0,A.stag-dt*1.7);
   if(e.type==='TITAN'){const want=clamp(angleDiff(Math.atan2(player.x-e.x,-(player.z-e.z)),e.yaw),-.9,.9)*TITAN_TURRET_SIGN;A.turret=lerp(A.turret||0,want,k(2.2));
     const half=Math.floor((e.gait||0)/Math.PI);if(e.awake&&e.alive&&A.speed>.4&&half!==e.stepHalf&&e.stepHalf!=null)titanStep(e);e.stepHalf=half}
+  if(e.type==='HEAVY'){const half=Math.floor((e.gait||0)/Math.PI);if(e.awake&&e.alive&&A.speed>.8&&half!==e.stepHalf&&e.stepHalf!=null)heavyStep(e);e.stepHalf=half}
   e.gait=(e.gait||0)+dt*(A.speed*(RIGS[e.type]?.gaitRate||1));
 }
 // Pose: bone transforms + world vertices for every part. Cached per render frame.
@@ -1856,19 +1967,38 @@ function drawEnemy(e,viewYaw,viewPitch){
 // Keep WebGL-drawn matte surfaces out of the bloom source, as renderMeshInstances does: front faces only
 // (back faces wind the other way and would punch holes in the nonzero-filled mask).
 function maskInstsFromBloom(insts,viewYaw,viewPitch){const ex=player.x,ey=CAMERA_Y,ez=player.z;
-  for(const I of insts){if(I.P.mat==='glow'||I.hidden)continue;const R=I.R;for(const F of I.P.faces){const n=F.n,nx=R[0]*n[0]+R[1]*n[1]+R[2]*n[2],ny=R[3]*n[0]+R[4]*n[1]+R[5]*n[2],nz=R[6]*n[0]+R[7]*n[1]+R[8]*n[2],v0=I.wv[F.idx[0]];
+  for(const I of insts){if(!I.P||I.P.mat==='glow'||I.hidden)continue;const R=I.R;for(const F of I.P.faces){const n=F.n,nx=R[0]*n[0]+R[1]*n[1]+R[2]*n[2],ny=R[3]*n[0]+R[4]*n[1]+R[5]*n[2],nz=R[6]*n[0]+R[7]*n[1]+R[8]*n[2],v0=I.wv[F.idx[0]];
     if(nx*(v0[0]-ex)+ny*(v0[1]-ey)+nz*(v0[2]-ez)>=0)continue;const q=F.idx.map(i=>{const v=I.wv[i];return project(v[0],v[1],v[2],viewYaw,viewPitch)});if(q.every(Boolean))bloomMask.push(q)}}}
 const enemyBatch=[],enemyFXQueue=[];
+// Blender models (three-cel.js loads assets/models/*.glb): a class whose model has loaded is drawn as the model's
+// groups on its posed bones. Its procedural parts stay the proxy: hits, screen boxes, debris physics, Canvas.
+// A group 'chip:N' goes with proxy part N, 'part:core' shows once the core is open, a bone's 'base' goes when
+// every proxy part on that bone has (ATLAS's broken launchers).
+function modelOf(type){const T3=typeof window!=='undefined'&&window.HF_THREE,M=T3&&T3.active&&T3.models&&T3.models[type];return M&&M.ready?M:null}
+function rigBoneParts(rig){return rig._boneParts||(rig._boneParts=Object.fromEntries(rig.bones.map(([n])=>[n,rig.parts.map((p,i)=>p.bone===n?i:-1).filter(i=>i>=0)])))}
+function groupHidden(e,rig,g){const k=g.grp;if(k.startsWith('chip:'))return !!e.lost?.[+k.slice(5)];if(k==='part:core')return !e.coreOpen;const ids=rigBoneParts(rig)[g.bone];return !!(ids&&ids.length&&ids.every(i=>e.lost?.[i]))}
+function modelInsts(M,B,hitT,hitPos,out){const e=B.e,pose=enemyPose(e);
+  for(const g of M.groups){const b=pose.X[g.bone];if(!b||groupHidden(e,pose.rig,g))continue;
+    out.push({model:g,M,R:b.R,t:b.t,style:B.S,key:'m'+e.type+e.id+':'+g.name,hot:B.hot,ghost:B.ghost,revealY:B.revealY,glowK:g.glow?(B.glow[g.glow]??1):1,hitPos,hitT})}}
+// A broken-off part carries its model group: a chip its plate, the core its core, and the first plain part of a
+// bone the bone's body (the bone's other parts are inside that body, so they carry nothing). False: no model
+// piece for it, draw the proxy.
+function debrisModel(M,d,out){const rig=RIGS[d.type],P=rig.parts[d.pi];if(!P||!d.t0)return false;let gs;
+  if(P.chip)gs=M.groups.filter(g=>g.grp==='chip:'+d.pi);else if(P.name==='core')gs=M.groups.filter(g=>g.grp==='part:core');
+  else{const lead=rigBoneParts(rig)[P.bone].find(i=>!rig.parts[i].chip&&rig.parts[i].name!=='core');gs=lead===d.pi?M.groups.filter(g=>g.bone===P.bone&&g.grp==='base'):[];if(!gs.length&&lead===d.pi)return false}
+  if(!gs.length&&(P.chip||P.name==='core'))return false;
+  const D=d.D,R=M3.mul(D,d.R0),q=vsub(d.t0,d.c0),t=[D[0]*q[0]+D[1]*q[1]+D[2]*q[2]+d.c[0],D[3]*q[0]+D[4]*q[1]+D[5]*q[2]+d.c[1],D[6]*q[0]+D[7]*q[1]+D[8]*q[2]+d.c[2]],k=d.age/d.life;
+  for(const g of gs)out.push({model:g,M,R,t,style:CLASS_STYLE[d.type],key:'md'+d.uid+':'+g.name,hot:Math.max(0,1-d.age/.22)*.9,glowK:g.glow?1-k:1});return true}
 function threeEnemy(e){const T3=typeof window!=='undefined'&&window.HF_THREE;if(!(T3&&T3.active))return false;if(T3.world)return true;return !!(T3.enemies!==false&&e.awake&&!(e.wakeT>0))}
 function flushThreeEnemies(viewYaw,viewPitch){
   if(!enemyBatch.length&&!worldRec)return;const T3=window.HF_THREE,insts=[];
-  for(const B of enemyBatch){const e=B.e,hitT=e.hitT>0?clamp(e.hitT/.12,0,1):0;B.insts.forEach((I,i)=>{if(I.hidden)return;insts.push({P:I.P,wv:I.wv,R:I.R,style:B.S,key:'e'+e.type+e.id+':'+i,hot:B.hot,ghost:B.ghost,revealY:B.revealY,glowK:I.P.mat==='glow'?(B.glow[I.P.glow]??1):1,hitPos:hitT>0&&e.hitPoint?[e.hitPoint.x,e.hitPoint.y,e.hitPoint.z]:null,hitT})})}
+  for(const B of enemyBatch){const e=B.e,hitT=e.hitT>0?clamp(e.hitT/.12,0,1):0,M=modelOf(e.type);if(M){modelInsts(M,B,hitT,hitT>0&&e.hitPoint?[e.hitPoint.x,e.hitPoint.y,e.hitPoint.z]:null,insts);continue}B.insts.forEach((I,i)=>{if(I.hidden)return;insts.push({P:I.P,wv:I.wv,R:I.R,style:B.S,key:'e'+e.type+e.id+':'+i,hot:B.hot,ghost:B.ghost,revealY:B.revealY,glowK:I.P.mat==='glow'?(B.glow[I.P.glow]??1):1,hitPos:hitT>0&&e.hitPoint?[e.hitPoint.x,e.hitPoint.y,e.hitPoint.z]:null,hitT})})}
   // with the world in WebGL the hostile effects (reveal, afterimages, muzzles) go into the same pass
   if(worldRec){for(const e of enemyFXQueue)drawEnemyFX(e,viewYaw,viewPitch);enemyFXQueue.length=0}
   const W3=worldRec;worldRec=null;
   // with the world in WebGL, broken components join the same depth pass (they tumble behind buildings too)
-  if(W3)for(const d of debris){const k=d.age/d.life;insts.push({P:d.P,wv:debrisVerts(d),R:M3.mul(d.D,d.R0),style:CLASS_STYLE[d.type],key:'ed'+d.uid,hot:Math.max(0,1-d.age/.22)*.9,glowK:1-k})}
-  const ok=T3.draw({layer:'enemies',bloom:fxHigh,insts,world:W3,occluders:W3?null:buildings,syncMix,viewYaw,viewPitch,W,H,DPR,focal:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,near:NEAR_Z,light:KEY_LIGHT,inkW:clamp(H/720*3,2,6)});
+  if(W3)for(const d of debris){const k=d.age/d.life,M=modelOf(d.type);if(M&&debrisModel(M,d,insts))continue;insts.push({P:d.P,wv:debrisVerts(d),R:M3.mul(d.D,d.R0),style:CLASS_STYLE[d.type],key:'ed'+d.uid,hot:Math.max(0,1-d.age/.22)*.9,glowK:1-k})}
+  const ok=T3.draw({layer:'enemies',bloom:fxHigh,insts,world:W3,plant:W3?plantKey():null,plantGlow:plantGlowK,plantBoot:bootK,occluders:W3?null:buildings,syncMix,viewYaw,viewPitch,W,H,DPR,focal:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,near:NEAR_Z,light:KEY_LIGHT,inkW:clamp(H/720*3,2,6)});
   if(ok){ctx.save();ctx.globalAlpha=1;ctx.drawImage(T3.canvas,0,0,W,H);ctx.restore();threeWorldFrame=!!W3;if(!W3)maskInstsFromBloom(insts,viewYaw,viewPitch)}
   else for(const B of enemyBatch)renderMeshInstances(B.insts,viewYaw,viewPitch,{style:B.S,inkW:3,alpha:1,silW:1.6,crW:.9,halo:.08,detail:true,creases:true,glow:B.glow});
   for(const e of enemyFXQueue)drawEnemyFX(e,viewYaw,viewPitch);enemyBatch.length=0;enemyFXQueue.length=0}
@@ -2210,13 +2340,20 @@ const COCKPIT=(()=>{
     A('gun',cyl(.03,-.2,3.2,.032,.36,'z',6,{mat:'metal'}))}
   return P;
 })();
-const CP_BONES=[['frame',null,[0,0,0]],['gun','frame',[.86,-.35,1.25]],['louverL','gun',[-.05,.09,.12]],['louverR','gun',[.05,.09,.12]],['barrel','gun',[0,0,0]],['pod','frame',[-1.1,-.46,2.35]]];
+const CP_BONES=[['frame',null,[0,0,0]],['gun','frame',[.86,-.35,1.25]],['louverL','gun',[-.05,.09,.12]],['louverR','gun',[.05,.09,.12]],['barrel','gun',[0,0,0]],['pod','frame',[-1.1,-.46,2.35]],
+  ['pump','gun',[0,-.17,1.05]],['bolt','gun',[.13,.02,.18]]];
+// Working the action after a shot, in time with the clacks sfx.flail / sfx.snipe already play (.34 / .46 s and
+// .28 / .5 s): FLAIL's fore-end runs back .16 m and returns; ARBALEST's bolt lifts, runs back
+// and closes. Only the Blender models have these parts on their own bones.
+const ease=u=>{u=clamp(u,0,1);return u*u*(3-2*u)};
+function pumpStroke(){const t=gameTime-(player.pumpT??-9);return .16*(ease((t-.29)/.07)-ease((t-.41)/.08))}
+function boltAction(){const t=gameTime-(player.snipeT??-9);return{lift:1.1*(ease((t-.17)/.08)-ease((t-.52)/.07)),slide:.13*(ease((t-.25)/.05)-ease((t-.45)/.06))}}
 function mixHex(a,b,t){const A=hexRGB(a),B=hexRGB(b);return'#'+A.map((v,i)=>Math.round(lerp(v,B[i],t)).toString(16).padStart(2,'0')).join('')}
 let syncStyleCache={q:-1,s:null};
 function syncStyle(){const q=Math.round(syncMix*16);if(syncStyleCache.q!==q){const t=q/16,s={...CP_STYLE,edge:mixHex(CP_STYLE.edge,'#ffc75a',t),core:mixHex(CP_STYLE.core,'#fff3d0',t),glow:mixHex(CP_STYLE.glow,'#ffd16f',t)};s.edgeRGB=null;syncStyleCache={q,s}}return syncStyleCache.s}
 const cockpit={shown:'HALBERD',swapT:0,swapK:0,maulKick:0,heave:0,heaveV:0,stepRoll:0,ventK:0,raise:0,podKick:0,flashW:0,bob:0,jolt:0,joltX:0,joltY:0,podYaw:0,podPitch:0,coreSpin:0,cracks:[],rimHit:0,rimHitDir:0,muzzle:null,prevStep:0};
 function cockpitPose(){
-  const C=cockpit,speed=Math.hypot(player.vx,player.vz),boost=player.boostTime>0?1:0,h=headYaw*Math.PI/180;
+  const C=cockpit,speed=Math.hypot(player.vx,player.vz),boost=player.boostTime>0?1:0,h=viewHead()*Math.PI/180;
   // Neck pivot: the eye sits 12 cm in front of the pivot, so turning the head translates it -> parallax.
   const neck=.12,eye=[Math.sin(h)*neck,0,(Math.cos(h)-1)*neck];
   const twist=clamp(player.yawVelocity*.035,-.03,.03),load=clamp(speed/62+boost*.4,0,1);
@@ -2229,7 +2366,8 @@ function cockpitPose(){
   if(C.shown==='BARDICHE'){const k=axePose();for(let i=0;i<3;i++){gun.p[i]+=k[i];gun.r[i]+=k[3+i]}}
   C.podYaw=lerp(C.podYaw,clamp(h,-.75,.75),.12);const podKick=C.podKick;C.podPitch=lerp(C.podPitch,player.camPitch*.6,.1);
   const pod={p:[0,-ease*.3,-podKick*.09],r:[C.podPitch-ease*.4+podKick*.05,C.podYaw*.9,0]};
-  return{frame,gun,barrel,pod,louverL:{r:[0,0,vent*.9+boost*.3]},louverR:{r:[0,0,-vent*.9-boost*.3]},load};
+  const ba=boltAction();
+  return{frame,gun,barrel,pod,louverL:{r:[0,0,vent*.9+boost*.3]},louverR:{r:[0,0,-vent*.9-boost*.3]},pump:{p:[0,0,-pumpStroke()]},bolt:{p:[0,0,-ba.slide],r:[0,0,ba.lift]},load};
 }
 // BARDICHE acting, added to the gun bone (its origin is the fist): held raised and canted at rest. The
 // swing is a person's diagonal chop: the fist comes up and in beside the helmet with the haft laid back over
@@ -2276,6 +2414,14 @@ function cockpitThreats(viewYaw){
 // fore-grip; the elbow is solved in the plane of a down-and-outboard pole, so aiming left / right /
 // up / down bends the elbow and swings the forearm from it.
 const ARM_IK={shoulder:[.55,-.55,.0],wrist:[.03,-.25,.97],L1:1.32,L2:1.32,pole:[.7,-1,-.15]};
+// With the Blender models the hand is the frame's own (arm.glb's 'hand' bone, 'fist' for BARDICHE) and holds the
+// weapon by its pistol grip, the index finger on the trigger: per weapon the grip's top, a point down it and the way
+// out of its front, in gun-bone space (tools/blender/weapons.py GRIPS / FIST). The bone's frame is the grip's (x
+// right, y up it, z out of its front); the wrist, where the forearm meets the hand, sits behind and right of it.
+const HAND_GRIP={HALBERD:[[0,-.12,-.1],[0,-.52,-.22],[0,0,1]],FLAIL:[[0,-.14,-.1],[0,-.54,-.22],[0,0,1]],ARBALEST:[[0,-.11,-.12],[0,-.51,-.24],[0,0,1]],
+  MAUL:[[0,-.07,.5],[0,-.47,.38],[0,0,1]],BARDICHE:[[.03,-.2,1.25],[.03,-.2,.8],[0,1,0]]},HAND_WRIST=[.09,-.13,-.3];
+const HAND_XF=Object.fromEntries(Object.entries(HAND_GRIP).map(([k,[a,b,h]])=>{const u=vsub(a,b),y=u.map(v=>v/vlen(u)),hd=h[0]*y[0]+h[1]*y[1]+h[2]*y[2],w=[h[0]-y[0]*hd,h[1]-y[1]*hd,h[2]-y[2]*hd],z=w.map(v=>v/vlen(w)),x=vcross(y,z);
+  return[k,{R:[x[0],y[0],z[0],x[1],y[1],z[1],x[2],y[2],z[2]],t:a}]}));
 // Arm armour in bone space: z runs along the bone (0 = shoulder / elbow end), +y is the bend side
 // (down-outboard), -y the top the pilot sees. Layered like the concept sheet: black frame core, white
 // plates stepped over it, grey side armour, brass hydraulics under the bone, blue light lines.
@@ -2304,19 +2450,19 @@ const ARM_PARTS=(()=>{const U=[],F=[],A=(L,p,st)=>{if(st)p.armStyle=st;L.push(p)
   A(F,cyl(0,.22,.55,.055,.6,'z',8,{mat:'metal'}),ARM_BRASS);A(F,cyl(0,.22,1.0,.03,.4,'z',8,{mat:'metal'}));
   A(F,cyl(0,0,Lf-.03,.2,.1,'z',10,{mat:'dark'}));A(F,cyl(0,0,Lf-.09,.215,.03,'z',10,{mat:'metal'}));
   return{U,F}})();
-function armIK(X){
-  const S=xfPoint(X.frame,ARM_IK.shoulder),Wr=xfPoint(X.gun,ARM_IK.wrist),F=X.frame.R,pole0=ARM_IK.pole,pole=[F[0]*pole0[0]+F[1]*pole0[1]+F[2]*pole0[2],F[3]*pole0[0]+F[4]*pole0[1]+F[5]*pole0[2],F[6]*pole0[0]+F[7]*pole0[1]+F[8]*pole0[2]];
+function armIK(X,Xhand){
+  const S=xfPoint(X.frame,ARM_IK.shoulder),Wr=Xhand?xfPoint(Xhand,HAND_WRIST):xfPoint(X.gun,ARM_IK.wrist),F=X.frame.R,pole0=ARM_IK.pole,pole=[F[0]*pole0[0]+F[1]*pole0[1]+F[2]*pole0[2],F[3]*pole0[0]+F[4]*pole0[1]+F[5]*pole0[2],F[6]*pole0[0]+F[7]*pole0[1]+F[8]*pole0[2]];
   const D=vsub(Wr,S),d=clamp(vlen(D),.05,ARM_IK.L1+ARM_IK.L2-1e-3),u=D.map(v=>v/(vlen(D)||1)),a=(ARM_IK.L1*ARM_IK.L1-ARM_IK.L2*ARM_IK.L2+d*d)/(2*d),h=Math.sqrt(Math.max(0,ARM_IK.L1*ARM_IK.L1-a*a));
   const pd=pole[0]*u[0]+pole[1]*u[1]+pole[2]*u[2];let n=[pole[0]-u[0]*pd,pole[1]-u[1]*pd,pole[2]-u[2]*pd];const nl=vlen(n)||1;n=n.map(v=>v/nl);
   const E=[S[0]+u[0]*a+n[0]*h,S[1]+u[1]*a+n[1]*h,S[2]+u[2]*a+n[2]*h];
   const fd=vsub(Wr,E),fl=vlen(fd)||1,fu=fd.map(v=>v/fl),side=vcross(fu,n),off=(P,k,m)=>[P[0]+n[0]*k+side[0]*m,P[1]+n[1]*k+side[1]*m,P[2]+n[2]*k+side[2]*m];
   const I=[1,0,0,0,1,0,0,0,1],mk=(A,B,wa,wb,o)=>{const P=beam(A,B,wa,wb,o,n);return{P,R:I,wv:P.verts,style:ARM_STYLE}};
   // Bone frames: Z along the bone, Y the bend side (pole, made perpendicular), X = Y x Z.
-  const place=(O,Z,list)=>{const pd2=n[0]*Z[0]+n[1]*Z[1]+n[2]*Z[2];let Y=[n[0]-Z[0]*pd2,n[1]-Z[1]*pd2,n[2]-Z[2]*pd2];const yl=vlen(Y)||1;Y=Y.map(v=>v/yl);const X=vcross(Y,Z),R=[X[0],Y[0],Z[0],X[1],Y[1],Z[1],X[2],Y[2],Z[2]];
+  const place=(O,Z,list,key)=>{const pd2=n[0]*Z[0]+n[1]*Z[1]+n[2]*Z[2];let Y=[n[0]-Z[0]*pd2,n[1]-Z[1]*pd2,n[2]-Z[2]*pd2];const yl=vlen(Y)||1;Y=Y.map(v=>v/yl);const X=vcross(Y,Z),R=[X[0],Y[0],Z[0],X[1],Y[1],Z[1],X[2],Y[2],Z[2]];if(key)(cockpit.armXf||(cockpit.armXf={}))[key]={R,t:O};
     return list.map(P=>({P,R,style:wornStyle(P.armStyle||ARM_STYLE),wv:P.verts.map(v=>[O[0]+X[0]*v[0]+Y[0]*v[1]+Z[0]*v[2],O[1]+X[1]*v[0]+Y[1]*v[1]+Z[1]*v[2],O[2]+X[2]*v[0]+Y[2]*v[1]+Z[2]*v[2]])}))};
   const uz=vsub(E,S),ul=vlen(uz)||1;cockpit.elbowW=E;cockpit.foreW=[(E[0]+Wr[0])/2,(E[1]+Wr[1])/2,(E[2]+Wr[2])/2];
   const ik0=mk(S,E,.22,.22,{mat:'dark'}),ik1=mk(E,Wr,.2,.17,{mat:'dark'});ik0.P.dyn='ik0';ik1.P.dyn='ik1';
-  return[ik0,ik1,...place(S,uz.map(v=>v/ul),ARM_PARTS.U),...place(E,fu,ARM_PARTS.F)];
+  return[ik0,ik1,...place(S,uz.map(v=>v/ul),ARM_PARTS.U,'armU'),...place(E,fu,ARM_PARTS.F,'armF')];
 }
 function drawCockpit(speed,viewYaw,viewPitch){
   const C=cockpit,pz=cockpitPose(),X=cockpitXf(pz);
@@ -2324,7 +2470,14 @@ function drawCockpit(speed,viewYaw,viewPitch){
   const cps=syncMix>.02?syncStyle():CP_STYLE;
   // Helmet view (Iron Man style): the frame/capsule geometry is not drawn; only HALBERD with its forearm
   // mount and the KESTREL pod remain in view. The machine itself is a concept sheet, not on screen.
-  const insts=COCKPIT.filter(P=>P.style===ARM_STYLE||P.style===GUN_STYLE&&P.weapon===C.shown).map(P=>({P,R:X[P.bone].R,wv:P.verts.map(v=>xfPoint(X[P.bone],v)),style:P.style===CP_STYLE?cps:wornStyle(P.style),hot:P.style.toon?C.flashW:0}));insts.push(...armIK(X));
+  // Blender models (assets/models): the held weapon and the arm (hand on the gun bone, upper arm and forearm in the
+  // IK frames armIK solves) replace their procedural parts once loaded; the arm dims as the frame wears.
+  const MW=modelOf(C.shown),MA=modelOf('ARM');
+  const insts=COCKPIT.filter(P=>P.style===ARM_STYLE&&!MA||P.style===GUN_STYLE&&P.weapon===C.shown&&!MW).map(P=>({P,R:X[P.bone].R,wv:P.verts.map(v=>xfPoint(X[P.bone],v)),style:P.style===CP_STYLE?cps:wornStyle(P.style),hot:P.style.toon?C.flashW:0}));
+  // the model hand closes on the shown weapon's grip (the proxy fist stays on the fore-grip, as the proxy arm reaches it)
+  const Xhand=MA&&HAND_XF[C.shown]?xfMul(X.gun,HAND_XF[C.shown]):null,handBone=C.shown==='BARDICHE'?'fist':'hand';
+  {const ik=armIK(X,Xhand);if(!MA)insts.push(...ik);else{const dim=[1,.82,.62][armWear()];for(const g of MA.groups){const f=g.bone==='hand'||g.bone==='fist'?(g.bone===handBone?Xhand:null):C.armXf&&C.armXf[g.bone];if(f)insts.push({model:g,M:MA,R:f.R,t:f.t,style:ARM_STYLE,key:'ca:'+g.name,hot:C.flashW,dim})}}}
+  if(MW)for(const g of MW.groups){const f=X[g.bone];if(f)insts.push({model:g,M:MW,R:f.R,t:f.t,style:GUN_STYLE,key:'cw'+C.shown+':'+g.name,hot:C.flashW})}
   const tubeGlow=player.boostTime>0?1:.25+player.boost/100*.4;
   NEAR_Z=.04;
   // WebGL: when window.HF_THREE is active, the arm and the held weapon are rendered by WebGL into its own
@@ -2333,10 +2486,11 @@ function drawCockpit(speed,viewYaw,viewPitch){
   const T3=typeof window!=='undefined'&&window.HF_THREE;
   if(T3&&T3.active&&T3.draw({insts,viewYaw,viewPitch,W,H,DPR,focal:renderFocal,camY:CAMERA_Y,px:player.x,pz:player.z,near:NEAR_Z,light:KEY_LIGHT,inkW:clamp(H/720*5.5,3.5,10)})){
     ctx.drawImage(T3.canvas,0,0,W,H);if(!threeWorldFrame)maskInstsFromBloom(insts,viewYaw,viewPitch)}
-  else renderMeshInstances(insts,viewYaw,viewPitch,{style:CP_STYLE,alpha:1,silW:1.6,crW:.85,halo:.05,detail:true,creases:true,glow:{hmd:.7},cockpit:true,inkW:clamp(H/720*5.5,3.5,10)});
+  else renderMeshInstances(insts.filter(I=>I.P),viewYaw,viewPitch,{style:CP_STYLE,alpha:1,silW:1.6,crW:.85,halo:.05,detail:true,creases:true,glow:{hmd:.7},cockpit:true,inkW:clamp(H/720*5.5,3.5,10)});
   const P3=(bone,v)=>{const w=xfPoint(X[bone],v);return project(w[0],w[1],w[2],viewYaw,viewPitch)};
   // Stencilled weapon names on the receiver side and the pod flank (affine-mapped bitmap text).
-  if(C.shown==='MAUL')stencil(P3,'gun','MAUL',[-.17,.17,2.3],[-.17,.17,1.6],[-.17,.04,2.3],'#c9d0da');
+  if(MW){}
+  else if(C.shown==='MAUL')stencil(P3,'gun','MAUL',[-.17,.17,2.3],[-.17,.17,1.6],[-.17,.04,2.3],'#c9d0da');
   else if(C.shown==='FLAIL')stencil(P3,'gun','FLAIL',[-.102,-.12,1.32],[-.102,-.12,.86],[-.102,-.215,1.32],'#c9d0da');
   else if(C.shown==='BARDICHE')stencil(P3,'gun','BARDICHE',[-.86,-.163,2.84],[-.2,-.163,2.84],[-.86,-.163,2.56],'#c9d0da');
   else if(C.shown==='ARBALEST')stencil(P3,'gun','ARBALEST',[-.08,.05,2.15],[-.08,.05,.85],[-.08,-.03,2.15],'#c9d0da');
@@ -2375,7 +2529,7 @@ function drawRadarScope(P3){
   const s=1/Math.max(1,Math.hypot(ax.x-o.x,ax.y-o.y));ctx.lineWidth=s*1.1;ctx.globalCompositeOperation='lighter';
   ctx.fillStyle='rgba(2,14,12,.9)';ctx.globalCompositeOperation='source-over';ctx.beginPath();ctx.arc(0,0,1,0,TAU);ctx.fill();ctx.globalCompositeOperation='lighter';
   ctx.strokeStyle='rgba(103,255,209,.35)';for(const r of [.33,.66,1]){ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke()}
-  const h=headYaw*Math.PI/180,g=player.torso;ctx.fillStyle='rgba(103,255,209,.12)';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,.95,-Math.PI/2+h-.2,-Math.PI/2+h+.2);ctx.closePath();ctx.fill();
+  const h=viewHead()*Math.PI/180,g=player.torso;ctx.fillStyle='rgba(103,255,209,.12)';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,.95,-Math.PI/2+h-.2,-Math.PI/2+h+.2);ctx.closePath();ctx.fill();
   ctx.strokeStyle='rgba(255,199,90,.8)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(g)*.85,-Math.cos(g)*.85);ctx.stroke();
   const sweep=(gameTime*2.2)%TAU;ctx.strokeStyle='rgba(103,255,209,.5)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(sweep),Math.sin(sweep));ctx.stroke();
   const range=110,cy=Math.cos(-player.yaw),sy=Math.sin(-player.yaw);
@@ -2388,7 +2542,7 @@ function drawRadarScope(P3){
 function drawVisor(viewYaw){
   const C=cockpit,cx=W/2,cy=H*.5;ctx.save();
   const g=ctx.createRadialGradient(cx,cy,Math.min(W,H)*.42,cx,cy,Math.hypot(W,H)*.56);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.72,'rgba(2,6,8,.55)');g.addColorStop(1,'rgba(1,3,4,.96)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  ctx.globalCompositeOperation='lighter';const sh=-headYaw*2.2;
+  ctx.globalCompositeOperation='lighter';const sh=-viewHead()*2.2;
   for(const [x0,y0,x1,y1,a] of [[.08,.1,.22,.32,.05],[.12,.08,.24,.26,.03],[.8,.62,.9,.84,.035]]){ctx.globalAlpha=a*(1+player.absorb*2);ctx.strokeStyle='#d8fff4';ctx.lineWidth=W*.012;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x0*W+sh,y0*H);ctx.lineTo(x1*W+sh,y1*H);ctx.stroke()}
   for(const t of cockpitThreats(viewYaw)){const back=Math.abs(t.rel)>Math.PI/2,ex=cx+clamp(Math.sin(t.rel)*1.6,-1,1)*W*.52,ey=back?H*.98:cy-H*.08,r=Math.min(W,H)*(.22+.18*t.k),pulse=t.charge?.65+.35*Math.sin(gameTime*26):1,q=ctx.createRadialGradient(ex,ey,0,ex,ey,r);
     q.addColorStop(0,t.hit?'rgba(255,210,196,.55)':'rgba(255,74,58,.5)');q.addColorStop(1,'rgba(255,40,30,0)');ctx.globalAlpha=clamp(t.k*pulse*.8,0,1);ctx.fillStyle=q;ctx.beginPath();ctx.arc(ex,ey,r,0,TAU);ctx.fill()}
@@ -2459,7 +2613,7 @@ function getVisualTarget(viewYaw,maxAngle=.13){
   return best;
 }
 function updateVisualDesignation(dt){
-  const viewYaw=player.yaw+headYaw*Math.PI/180,target=headPoseFresh()?getVisualTarget(viewYaw):null;
+  const viewYaw=player.yaw+viewHead()*Math.PI/180,target=headPoseFresh()?getVisualTarget(viewYaw):null;
   visualContact=target;
   for(const e of enemies){
     if(!e.alive)continue;
@@ -2516,8 +2670,10 @@ function truss(ax,az,bx,bz,y0,y1,depth,viewYaw,viewPitch,a=.16,bays=12){
 function drawGantries(viewYaw,viewPitch){
   // v30: transfer portals are architectural machines, not three floating bars.
   const beam=(x0,y0,z0,x1,y1,z1,a=.18,w=1,color='93,235,202',blur=0)=>worldLine3D(x0,y0,z0,x1,y1,z1,viewYaw,viewPitch,color,a,w,blur);
+  const PS=plantStatic();   // ?plant: the model has the decks, piers, trusses and rails (plant.py gantries); the carriers and pods stay here
   const portal=(z,height=12.5,width=35,phase=0)=>{
     const x0=-width,x1=width,top=height;
+    if(!PS){
     // heavy deck silhouette
     if(worldRec){recLine(x0,top,z,x1,top,z,'1,8,9',.96,10,1);recLine(x0,top,z,x1,top,z,'103,255,209',.24,1)}
     const d=worldRec?null:projectSegment(x0,top,z,x1,top,z,viewYaw,viewPitch);if(d&&d[0]&&d[1]){ctx.save();ctx.strokeStyle='rgba(1,8,9,.96)';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(d[0].x,d[0].y);ctx.lineTo(d[1].x,d[1].y);ctx.stroke();ctx.strokeStyle='rgba(103,255,209,.24)';ctx.lineWidth=1;ctx.stroke();ctx.restore()}
@@ -2528,18 +2684,18 @@ function drawGantries(viewYaw,viewPitch){
     }
     for(let i=0;i<6;i++){const a=i/6,xa=x0+8+a*(width*2-16),xb=xa+(i%2?9:-9);beam(xa,top,z,xb,top-4.6,z,.055,.55)}
     // underslung rail and animated carrier
-    beam(-width+6,top-2.2,z-1.1,width-6,top-2.2,z-1.1,.16,1.05,'128,255,220',4);
+    beam(-width+6,top-2.2,z-1.1,width-6,top-2.2,z-1.1,.16,1.05,'128,255,220',4)}
     const track=width*2-16,carrierX=-width+8+((gameTime*7+phase)%track);
     worldBox3D(carrierX,z-1.1,7.2,3.4,top-4.9,top-2.0,viewYaw,viewPitch,'rgba(2,14,13,.985)',.23);
     beam(carrierX-2.4,top-3.4,z-2.9,carrierX+2.4,top-3.4,z-2.9,.38,.9,'145,255,224',5);
   };
   ctx.save();
   // One massive high deck and one offset longitudinal deck establish a real upper city layer.
-  truss(-56,-46,56,-46,23.5,29,9,viewYaw,viewPitch,.17,14);
+  if(!PS){truss(-56,-46,56,-46,23.5,29,9,viewYaw,viewPitch,.17,14);
   for(const x of [-52,-26,0,26,52]){beam(x,22,-46,x,29,-46,.075,.62);beam(x-4,24,-42,x+4,29,-42,.045,.5)}
   beam(-48,27,-49,48,27,-49,.22,1.0,'123,255,217',4);
   truss(-50,-106,-50,130,15.5,20,8,viewYaw,viewPitch,.13,26);
-  for(let z=-104;z<=116;z+=44){beam(-54,0,z,-54,16,z,.055,.55);beam(-46,0,z,-46,16,z,.055,.55);beam(-54,16,z,-46,20,z,.045,.5)}
+  for(let z=-104;z<=116;z+=44){beam(-54,0,z,-54,16,z,.055,.55);beam(-46,0,z,-46,16,z,.055,.55);beam(-54,16,z,-46,20,z,.045,.5)}}
   // maintenance carrier under the high deck
   const deckCarrier=-48+((gameTime*8.5+96)%96);worldBox3D(deckCarrier,-45,8,4,20.2,23.8,viewYaw,viewPitch,'rgba(2,15,13,.99)',.20);beam(deckCarrier-2.8,21.9,-47,deckCarrier+2.8,21.9,-47,.36,.9,'145,255,224',5);
 
@@ -2548,8 +2704,8 @@ function drawGantries(viewYaw,viewPitch){
   // Longitudinal service viaducts give the district a second navigational layer above ground.
   for(const side of [-1,1]){
     const x=side*42;
-    beam(x,7.0,-148,x,7.0,148,.13,1.1);beam(x+side*3.8,7.0,-148,x+side*3.8,7.0,148,.055,.65);
-    for(let z=-132;z<=132;z+=30){beam(x,0,z,x,7,z,.10,.75);beam(x,7,z,x+side*3.8,7,z,.075,.65);beam(x,0,z,x+side*3.8,7,z,.045,.5)}
+    if(!PS){beam(x,7.0,-148,x,7.0,148,.13,1.1);beam(x+side*3.8,7.0,-148,x+side*3.8,7.0,148,.055,.65);
+    for(let z=-132;z<=132;z+=30){beam(x,0,z,x,7,z,.10,.75);beam(x,7,z,x+side*3.8,7,z,.075,.65);beam(x,0,z,x+side*3.8,7,z,.045,.5)}}
     // slow maintenance pods on side viaducts
     for(let i=0;i<2;i++){
       const span=272,z=-136+((gameTime*(side<0?5.2:4.6)+i*137+136)%span);
@@ -2559,7 +2715,7 @@ function drawGantries(viewYaw,viewPitch){
   }
 
   // Cross-district high pipes / energy bus. They deliberately do not line up with every portal.
-  for(const [z,y] of [[24,23],[-64,26]]){
+  if(!PS)for(const [z,y] of [[24,23],[-64,26]]){
     for(const off of [-1.5,1.5])beam(-112,y+off*.12,z+off,112,y+off*.12,z+off,.095,.9,'77,214,181');
     for(const x of [-92,-46,0,46,92]){beam(x,y-7,z,x,y,z,.055,.55);beam(x-4,y,z,x+4,y,z,.07,.55)}
   }
@@ -2569,7 +2725,7 @@ function drawFoundryMachines(viewYaw,viewPitch){
   // Large process hardware sits outside the combat spine. It is readable at oblique head angles
   // and supplies the scale that v29 lacked.
   const pipe=(pts,a=.10,w=1,color='80,222,190')=>{for(let i=1;i<pts.length;i++)worldLine3D(...pts[i-1],...pts[i],viewYaw,viewPitch,color,a,w)};
-  ctx.save();
+  ctx.save();if(!plantStatic()){   // ?plant: the model has these (plant.py machines); the cables stay here
   // Left exchanger bank: stacked rings and manifolds.
   for(const [cx,cz,h] of [[-101,-42,28],[-109,-67,35],[-100,-92,24]]){
     worldBox3D(cx,cz,12,12,0,h,viewYaw,viewPitch,'rgba(1,8,8,.985)',.105);
@@ -2583,7 +2739,7 @@ function drawFoundryMachines(viewYaw,viewPitch){
   worldBox3D(112,-50,16,18,0,22,viewYaw,viewPitch,'rgba(1,8,8,.985)',.11);
   worldBox3D(97,-74,10,10,0,42,viewYaw,viewPitch,'rgba(1,8,8,.985)',.13);
   for(const y of [13,24,35])worldLine3D(92,y,-74,102,y,-74,viewYaw,viewPitch,'104,245,208',.12,.75)
-  pipe([[112,16,-50],[124,16,-50],[124,10,-30],[114,10,-30]],.09,1.0);
+  pipe([[112,16,-50],[124,16,-50],[124,10,-30],[114,10,-30]],.09,1.0)}
 
   // Suspended cable bundles. They use long broken arcs between real support points.
   const cable=(x0,z0,x1,z1,y=18,sag=5,a=.050)=>{
@@ -2864,12 +3020,13 @@ function update(dt){
   {const target=clamp(-fwdA*.0008,-.03,.03);player.suspV+=(90*(target-player.inertiaPitch)-11*player.suspV)*dt;player.inertiaPitch+=player.suspV*dt}player.prevVx=player.vx;player.prevVz=player.vz;
   // Mouse commands the weapon gimbal. Chassis catches up slowly; camera does not snap to the mouse.
   player.aimYawTarget=clamp(player.aimYawTarget,-.62,.62);player.aimPitchTarget=clamp(player.aimPitchTarget,-.46,.56);
-  const ak=player.ads||0,hk=ak*ADS_HEAD*Math.PI/180,yT=clamp(player.aimYawTarget+headYaw*hk,-.58,.58),pT=clamp(player.aimPitchTarget+headPitch*hk,-.46,.56);
+  const ak=player.ads||0,hk=ak*ADS_HEAD*Math.PI/180,yT=clamp(player.aimYawTarget+viewHead()*hk,-.58,.58),pT=clamp(player.aimPitchTarget+headPitch*hk,-.46,.56);
   const yawStep=lerp(player.syncTime>0?3.10:2.65,12,ak)*dt,yd=yT-player.torso;player.torso+=clamp(yd,-yawStep,yawStep);
   const pitchStep=lerp(player.syncTime>0?3.20:2.80,12,ak)*dt,pd=pT-player.pitch;player.pitch+=clamp(pd,-pitchStep,pitchStep);
-  const soft=.24,desiredTurn=Math.abs(player.aimYawTarget)>soft?clamp(Math.sign(player.aimYawTarget)*(Math.abs(player.aimYawTarget)-soft)*2.35,-.92,.92):0;
+  const soft=LEGS.on?LEGS.soft:.24,desiredTurn=Math.abs(player.aimYawTarget)>soft?clamp(Math.sign(player.aimYawTarget)*(Math.abs(player.aimYawTarget)-soft)*2.35,-.92,.92):0;
   const angularAccel=Math.abs(desiredTurn)>Math.abs(player.yawVelocity)?2.6:4.2;player.yawVelocity+=clamp(desiredTurn-player.yawVelocity,-angularAccel*dt,angularAccel*dt);
   const turn=player.yawVelocity*dt;player.yaw+=turn;player.aimYawTarget-=turn;player.torso-=turn;
+  if(LEGS.on){const ht=headTurn();player.yaw+=ht;player.legs=clamp(player.legs-turn-ht,-LEGS.max,LEGS.max);updateLegs(dt)}
   player.torso=clamp(player.torso,-.58,.58);player.pitch=clamp(player.pitch,-.46,.56);
   {const want=player.alive&&!missionClear&&player.scopeOn&&cockpit.shown==='ARBALEST'&&cockpit.swapT<=0?1:0;player.scope=(player.scope||0)+(want-(player.scope||0))*(1-Math.exp(-(want?10:14)*dt));if(player.scope<.002)player.scope=0}
   {const want=player.alive&&!missionClear&&player.scopeOn&&cockpit.shown==='HALBERD'&&cockpit.swapT<=0?1:0;player.ads=(player.ads||0)+(want-(player.ads||0))*(1-Math.exp(-(want?12:14)*dt));if(player.ads<.002)player.ads=0}
@@ -2888,7 +3045,7 @@ function update(dt){
   // Scrub: sideways acceleration of the velocity (a change of direction) plus the chassis turning while it rolls.
   {const ax=(player.vx-player.prevVx)/Math.max(dt,1e-3),az=(player.vz-player.prevVz)/Math.max(dt,1e-3),l=speed||1,lat=Math.abs(ax*(-player.vz/l)+az*(player.vx/l));
     player.scrub=lerp(player.scrub||0,speed>3&&player.boostTime<=0?clamp(lat/55+Math.abs(player.yawVelocity)*speed/40,0,1):0,1-Math.exp(-dt*12))}
-  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,player.jy<=0&&(speed>.55||player.boostTime>0||player.glideTime>0),player.scrub);
+  updateEngine(speed,player.boostTime>0,player.syncTime>0,player.yawVelocity,player.aimYawTarget-player.torso,player.jy<=0&&(speed>.55||player.boostTime>0||player.glideTime>0||player.legAlign),player.legAlign?1:player.scrub);
   {let awakeN=0,committed=false;for(const e of enemies)if(e.alive&&e.awake){awakeN++;if(e.firePending||e.lungeWindup>0)committed=true}music.target=!player.alive?0:missionClear?.1:clamp(.2+awakeN*.16+(committed?.12:0)+(player.syncTime>0?.6:0),0,1)}
   updateCockpit(dt);
   updateVisualDesignation(dt);
@@ -3027,7 +3184,7 @@ function plog(tag,text,cool=0){const last=pilot.entries[pilot.entries.length-1];
   pilot.entries.push({tag,text,t:gameTime});if(pilot.entries.length>16)pilot.entries.splice(0,pilot.entries.length-16);pilot.scroll=Math.min(3,pilot.scroll+1)}
 function pilotReact(expr,dur,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)return;pilot.holdExpr=expr;pilot.hold=dur;pilot.holdPrio=prio}
 // Side-eye toward a hostile: the plate looks to screen-right, so it is mirrored for targets on the left of the view.
-function pilotGlance(e,dur=.9,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)return;const a=angleDiff(Math.atan2(e.x-player.x,-(e.z-player.z)),player.yaw+headYaw*Math.PI/180);pilot.glanceDir=a<0?-1:1;pilotReact('glance',dur,prio)}
+function pilotGlance(e,dur=.9,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)return;const a=angleDiff(Math.atan2(e.x-player.x,-(e.z-player.z)),player.yaw+viewHead()*Math.PI/180);pilot.glanceDir=a<0?-1:1;pilotReact('glance',dur,prio)}
 // ---------- FIRST-SORTIE TUTORIAL ----------
 // The first SECTOR 01 sortie walks through the controls one at a time on the HMD (move, burst, fire, head,
 // designate); each step ends when the player does it, and the hostiles sleep until the designation step
@@ -3038,15 +3195,16 @@ function pilotGlance(e,dur=.9,prio=1){if(pilot.hold>0&&prio<pilot.holdPrio)retur
 const TUT_STEPS=[
   {id:'move',en:'MOVE',jp:['WASD で移動','Move with WASD'],pjp:['左スティックで移動','Move with the left stick'],sub:['機体は車輪で走ります','The frame runs on wheels']},
   {id:'burst',en:'BURST',jp:['移動しながら SHIFT でブースト','Press SHIFT while moving to boost'],pjp:['移動しながら B でブースト','Press B while moving to boost'],sub:['空中ではバックパックの噴射になります','In the air it fires the backpack jet']},
-  {id:'fire',en:'FIRE',jp:['マウスで銃を向けて、左クリックで撃つ','Aim with the mouse, left-click to fire'],pjp:['右スティックで銃を向けて、RT で撃つ','Aim with the right stick, RT to fire'],sub:['機体は銃の向きへ遅れてついてきます','The frame turns after the gun, a beat behind']},
-  {id:'head',en:'LOOK',jp:null,sub:['視点は銃と別に動きます。周りは顔を向けて見る','The view moves apart from the gun. Look around with your face']},
+  {id:'fire',en:'FIRE',jp:['マウスで銃を向けて、左クリックで撃つ','Aim with the mouse, left-click to fire'],pjp:['右スティックで銃を向けて、RT で撃つ','Aim with the right stick, RT to fire'],sub:LEGS.on?['銃を端まで振ると、胴が引っぱられて回ります','Swing the gun to its stop and it drags the body round']:['機体は銃の向きへ遅れてついてきます','The frame turns after the gun, a beat behind']},
+  {id:'head',en:'LOOK',jp:null,sub:LEGS.on?['顔を向けると胴ごと回り、銃もついてきます','Turn your face and the body turns with it, gun and all']:['視点は銃と別に動きます。周りは顔を向けて見る','The view moves apart from the gun. Look around with your face']},
+  {id:'legs',en:'ALIGN',legs:true,jp:['F で脚を胴の向きにそろえる','Press F to swing the legs under the body'],pjp:['L3（左スティック押し込み）で脚を胴の向きにそろえる','Click the left stick to swing the legs under the body'],sub:['WASD は脚の向きに進みます。胴とずれたら F','WASD drives where the legs point. When they part from the body, press F']},
   {id:'designate',en:'DESIGNATE',jp:['敵を見つめて HMD で指定する','Look at an enemy to mark it with the HMD'],sub:['顔を向けた先の敵に印が付きます','The enemy you face gets marked']},
-];
+].filter(st=>!st.legs||LEGS.on);
 const tut={on:false,i:0,t:0,base:null,doneT:0};
 let tutDone=false;try{tutDone=localStorage.getItem('hf.tutorial')==='done'}catch{}
 function tutStart(){Object.assign(tut,{on:mode==='training',i:0,t:0,base:null,doneT:0});if(tut.on)for(const e of enemies)e.awake=false} // the two forward machines usually start awake
 // hostiles stay asleep and undesignated until the designation step
-function tutHold(){return tut.on&&tut.i<4}
+function tutHold(){return tut.on&&TUT_STEPS[tut.i]?.id!=='designate'}
 // The story is written, not staged: a short briefing the first time SECTOR 01 opens, and a closing card on the
 // last clear (the sunrise deck, AOI's FINAL line, three lines, then OPERATION COMPLETE). Enter / A / a click
 // after the first line goes straight to the result.
@@ -3080,8 +3238,8 @@ function tutAdvance(){sfx.ui();tut.i++;tut.t=0;tut.base=null;if(tut.i>=TUT_STEPS
 function updateTutorial(dt){
   if(tut.doneT>0)tut.doneT=Math.max(0,tut.doneT-dt);
   const st=tutStep();if(!st||!playing||!player.alive||headNeedCenter&&headEnabled&&headFound)return;tut.t+=dt;
-  if(!tut.base)tut.base={x:player.x,z:player.z,shots:stats.shots,des:stats.designations};
-  const b=tut.base,ok=st.id==='move'?Math.hypot(player.x-b.x,player.z-b.z)>6:st.id==='burst'?player.boostTime>0:st.id==='fire'?stats.shots-b.shots>=3:st.id==='head'?Math.abs(headYaw)>=(headEnabled?8:20):stats.designations>b.des;
+  if(!tut.base)tut.base={x:player.x,z:player.z,shots:stats.shots,des:stats.designations,aligns:player.legAligns||0};
+  const b=tut.base,ok=st.id==='move'?Math.hypot(player.x-b.x,player.z-b.z)>6:st.id==='burst'?player.boostTime>0:st.id==='fire'?stats.shots-b.shots>=3:st.id==='head'?Math.abs(headYaw)>=(headEnabled?8:20):st.id==='legs'?player.legAligns>b.aligns&&!player.legAlign:stats.designations>b.des;
   if(ok&&tut.t>.6)tutAdvance()}
 function skipTraining(){sfx.ui();tut.on=false;tut.doneT=0;setMode('sortie');saySortie()}
 function drawTutorial(s){
@@ -3283,7 +3441,7 @@ function drawPilotLink(){
 // a chevron at that end.
 const SONAR={range:90},COMPASS_SPAN=Math.PI/2;
 function drawCompass(s){
-  const B=clamp(pilot.boot,0,1),viewYaw=player.yaw+headYaw*Math.PI/180,w=Math.min(W*.5,300*s),cx=W/2,x0=cx-w/2,h=10*s,y=46+h*.6,X=a=>cx+a/COMPASS_SPAN*w/2,u=s*.7;
+  const B=clamp(pilot.boot,0,1),viewYaw=player.yaw+viewHead()*Math.PI/180,w=Math.min(W*.5,300*s),cx=W/2,x0=cx-w/2,h=10*s,y=46+h*.6,X=a=>cx+a/COMPASS_SPAN*w/2,u=s*.7;
   ctx.save();ctx.globalAlpha=B;
   ctx.fillStyle=HUD.veil;ctx.fillRect(x0,y-h*.6,w,h*1.6);
   const fov=Math.min(COMPASS_SPAN,Math.atan(W/2/renderFocal));ctx.fillStyle='rgba(103,255,209,.10)';ctx.fillRect(X(-fov),y-h*.6,X(fov)-X(-fov),h*1.6);
@@ -3291,6 +3449,7 @@ function drawCompass(s){
   for(let d=-90;d<=90;d+=15){const x=X(d*Math.PI/180),k=d%45===0?.55:.3;ctx.moveTo(x,y+h*.5);ctx.lineTo(x,y+h*(.5-k))}ctx.stroke();
   ctx.fillStyle=HUD.ink;ctx.beginPath();ctx.moveTo(cx,y+h*.5+1);ctx.lineTo(cx-3*u,y+h*.5+4*u);ctx.lineTo(cx+3*u,y+h*.5+4*u);ctx.closePath();ctx.fill();
   const g=angleDiff(player.yaw+player.torso,viewYaw);if(Math.abs(g)<=COMPASS_SPAN){ctx.strokeStyle='rgba(255,199,90,.9)';ctx.lineWidth=Math.max(1,s);ctx.beginPath();ctx.moveTo(X(g),y-h*.55);ctx.lineTo(X(g),y+h*.5);ctx.stroke()}
+  if(LEGS.on){const a=angleDiff(player.yaw+player.legs,viewYaw),x=X(clamp(a,-COMPASS_SPAN,COMPASS_SPAN)),y1=y+h*.5+6*u;const L=player.legLockT/.45;ctx.fillStyle=L>0?'#f2fffb':'#8fffe0';ctx.globalAlpha=B*.9;if(L>0){ctx.globalAlpha=B*L*.5;ctx.fillRect(x-8*u,y1-2*u,16*u,8*u);ctx.globalAlpha=B}ctx.fillRect(x-5*u,y1,3*u,4*u);ctx.fillRect(x+2*u,y1,3*u,4*u);ctx.fillRect(x-5*u,y1+1.5*u,10*u,u);ctx.globalAlpha=B}
   const behind={'-1':null,'1':null};
   for(const e of enemies){if(!e.alive)continue;const dx=e.x-player.x,dz=e.z-player.z,dist=Math.hypot(dx,dz),a=angleDiff(Math.atan2(dx,-dz),viewYaw),col=CLASS_STYLE[e.type].edge;
     if(Math.abs(a)>COMPASS_SPAN){const k=a<0?'-1':'1';if(!behind[k]||dist<behind[k].dist)behind[k]={dist,col};continue}
@@ -3313,7 +3472,7 @@ const visorFX={glitch:0,glitchK:0,nextGlitch:0,errors:[],nextErr:0,alarmT:0,puls
 const VISOR_ALARM=1.13;
 const VISOR_ERRORS=['ERR 0x3F HYD PRESS LOW','ACTUATOR L2 FAULT','COOLANT LEAK // BAY 3','SENSOR DESYNC','ARMOR BREACH 04','SERVO STALL // R-KNEE','PWR BUS 2 OFFLINE','GYRO DRIFT +3.1','ERR 0xC0 FCS RESET','HULL INTEGRITY < 30','REACTOR TEMP HIGH','HMD BUS ERROR'];
 function feedHit(dirWorld,dmg){
-  const V=visorFX,rel=angleDiff(dirWorld,player.yaw+headYaw*Math.PI/180),sx=Math.sin(rel),back=Math.abs(rel)>Math.PI/2;
+  const V=visorFX,rel=angleDiff(dirWorld,player.yaw+viewHead()*Math.PI/180),sx=Math.sin(rel),back=Math.abs(rel)>Math.PI/2;
   // Entry point on the frame edge: sides for side hits, the bottom (hull under the sensors) for front / rear.
   const side=Math.abs(sx)>.5,x=side?(sx>0?.99:.01):clamp(.5+sx*.6+(Math.random()-.5)*.2,.08,.92),y=side?.5+Math.random()*.4:(back?.99:.97);
   V.flash={x,y,t:0,k:clamp(dmg/10,.6,1.4)};const n=Math.round(16+dmg*1.6);
@@ -3478,7 +3637,7 @@ function diffLabel(){$('diffBtn').textContent=jt('難易度：','Difficulty: ')+
 $('diffBtn').addEventListener('click',()=>{const k=Object.keys(DIFFS);difficulty=k[(k.indexOf(difficulty)+1)%k.length];try{localStorage.setItem('hf.diff',difficulty)}catch{}loadBest();diffLabel();sfx.ui()});diffLabel();
 $('fpsBtn').addEventListener('click',()=>{fpsMeter.on=!fpsMeter.on;fpsMeter.n=fpsMeter.ms=0;try{localStorage.setItem('hf.fps',fpsMeter.on?'on':'off')}catch{}fpsLabel();sfx.ui()});fpsLabel();
 function setFx(high){fxHigh=high;try{localStorage.setItem('hf.fx',high?'high':'low')}catch{}$('fx').textContent=high?jt('発光：強','Glow: high'):jt('発光：弱','Glow: low')}
-function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;const head=headYaw*Math.PI/180,sc=player.scope||0,va=Math.max(sc,player.ads||0),viewYaw=lerp(player.yaw+head,player.yaw+player.torso,va)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,va);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc)*(1+ADS_ZOOM*(player.ads||0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawHmdMarks(viewYaw,viewPitch);drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
+function render(){poseFrame++;bloomMask.length=0;worldGlow=1+syncMix*.6;if(!playing)legHead=headYaw;const head=viewHead()*Math.PI/180,sc=player.scope||0,va=Math.max(sc,player.ads||0),viewYaw=lerp(player.yaw+head,player.yaw+player.torso,va)+axeSway(),viewPitch=lerp(player.camPitch+player.inertiaPitch+headPitch*Math.PI/180,player.pitch,va);renderFocal=W*(.88-.12*player.fovKick-.08*(player.boostTime>0?1:0))*(1+(ARBALEST.zoom-1)*sc)*(1+ADS_ZOOM*(player.ads||0));ctx.save();const shake=player.shake,dx=(Math.random()-.5)*shake*10,dy=(Math.random()-.5)*shake*7;Object.assign(viewTransform,{dx,dy,roll:player.roll+player.inertiaRoll-axeSway()*.5});ctx.translate(dx,dy);ctx.translate(W/2,H/2);ctx.rotate(viewTransform.roll);ctx.translate(-W/2,-H/2);drawWorld(viewYaw,viewPitch);ctx.restore();applyBloom();drawHmdMarks(viewYaw,viewPitch);drawFeedDamage();drawPilotCut();drawPilotLink();drawSignalFX();updateHud(viewYaw,viewPitch)}
 const perf={avg:16.7,t:0,auto:!new URLSearchParams(location.search).has('noautofx')};
 // A single exception must never stop the frame loop (that is a hard freeze): the frame is dropped, the
 // canvas state reset, and the error goes to the console, window.__hfErrors and once per message to the LOG.
@@ -3536,7 +3695,7 @@ document.addEventListener('mousemove',e=>{if(padDriven&&Math.abs(e.movementX||0)
 document.addEventListener('mousedown',e=>{if(padDriven)setPadDriven(false);if(playing&&player.alive&&!missionClear&&e.target===canvas&&document.pointerLockElement!==canvas){try{canvas.requestPointerLock?.()?.catch?.(()=>{})}catch{}}mouseButtons.add(e.button);if(e.button===0){skipEnding();fire(true)}if(e.button===1||e.button===2){e.preventDefault?.();toggleScope()}});document.addEventListener('mouseup',e=>mouseButtons.delete(e.button));document.addEventListener('contextmenu',e=>e.preventDefault());
 // One wheel gesture = one swap (touchpads send a burst of wheel events).
 document.addEventListener('wheel',e=>{if(!playing||Math.abs(e.deltaY)<1)return;const now=performance.now();if(now-wheelT<350)return;wheelT=now;switchWeapon('other')},{passive:true});
-document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat)toggleScope();if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector();if((e.code==='Enter'||e.code==='NumpadEnter'||e.code==='Space')&&!e.repeat)skipEnding()});
+document.addEventListener('keydown',e=>{if(padDriven)setPadDriven(false);if(e.code==='Tab'&&playing&&mode==='training'){e.preventDefault?.();skipTraining();return}if(e.code==='Escape'){if(playing){pause();document.exitPointerLock?.()}else if(!$('titleConfirm').classList.contains('hidden'))askTitle(false);return}if(!playing&&e.code!=='KeyC'&&e.code!=='KeyR')return;keys.add(e.code);if(e.code==='Space'){e.preventDefault?.();if(!e.repeat)doJump()}if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!boostLatch){boostLatch=true;doBoost()}if(e.code==='KeyC'&&!e.repeat)centerHead();if(!e.repeat&&(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'))switchWeapon(e.code==='Digit1'?'HALBERD':e.code==='Digit2'?'second':'BARDICHE');if(e.code==='KeyV'&&!e.repeat)swingAxe(true);if(e.code==='KeyF'&&!e.repeat){if(LEGS.on)alignLegs();else toggleScope()};if(e.code==='KeyX'&&!e.repeat)switchWeapon('other');if(e.code==='KeyR'&&!e.repeat&&(!player.alive||missionClear)){reset();say('REDEPLOY')}if((e.code==='Enter'||e.code==='NumpadEnter')&&!e.repeat&&missionClear&&player.alive&&mode==='sortie'&&stage<LAST_SECTOR)nextSector();if((e.code==='Enter'||e.code==='NumpadEnter'||e.code==='Space')&&!e.repeat)skipEnding()});
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='ShiftLeft'||e.code==='ShiftRight')boostLatch=false});
 $('settingsBtn').addEventListener('click',()=>{const p=$('settingsPanel'),open=p.classList.toggle('hidden')===false;$('settingsBtn').setAttribute('aria-expanded',open);$('settingsBtn').classList.toggle('on',open);sfx.ui()});$('head').addEventListener('click',toggleHead);$('fx').addEventListener('click',()=>{setFx(!fxHigh);sfx.ui()});setFx(fxHigh);$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{$('status').textContent=jt('全画面にできませんでした',"Couldn't go fullscreen")}});
 // Static menu text: the Japanese is whatever index.html holds (kept the first time), the English is here.
@@ -3544,7 +3703,7 @@ const I18N_EN={endure:'Survival<small>Fight until you fall</small>',settings:'Se
   vol:'Master volume',music:'Music',voice:'Voice',se:'Sound effects',mouse:'Mouse sensitivity',stick:'Stick sensitivity',tgain:'Tracking sensitivity',tdead:'Tracking dead zone',tsmooth:'Tracking response',resetSettings:'Reset to defaults',
   caution:'Take care if you get motion sick easily.<br>If you start to feel unwell, stop and rest right away.',
   padKeys:'<span><b>Left stick</b> Move</span><span><b>Right stick</b> Aim gun</span><span><b>RT</b> Fire</span><span><b>LT</b> Aim / scope</span><span><b>A</b> Jump</span><span><b>B</b> Boost</span><span><b>X</b> Axe</span><span><b>Y</b> Switch weapon</span><span><b>LB / RB</b> Look left / right (no camera)</span><span><b>Right stick click</b> Recenter view</span><span><b>Menu button</b> Menu</span>',
-  keyKeys:'<span><b>WASD</b> Move</span><span><b>SHIFT</b> Boost</span><span><b>SPACE</b> Jump</span><span><b>Mouse</b> Aim weapon</span><span><b>Left click</b> Fire</span><span><b>Right click</b> Aim / scope</span><span><b>Wheel / 1-3</b> Switch weapon</span><span><b>V</b> Axe</span><span><b>Q/E</b> Look left / right (no camera)</span><span><b>C</b> Recenter view</span><span><b>ESC</b> Menu</span><span><b>R</b> Redeploy</span>',
+  keyKeys:'<span><b>WASD</b> Move</span><span><b>SHIFT</b> Boost</span><span><b>SPACE</b> Jump</span><span><b>Mouse</b> Aim weapon</span><span><b>Left click</b> Fire</span><span><b>Right click</b> Aim / scope</span><span><b>Wheel / 1-3</b> Switch weapon</span><span><b>V</b> Axe</span><span><b>F</b> Square the legs under the body</span><span><b>Q/E</b> Look left / right (no camera)</span><span><b>C</b> Recenter view</span><span><b>ESC</b> Menu</span><span><b>R</b> Redeploy</span>',
   titleQ:'Return to the title?',titleLost:'Progress in this run will be lost.',titleYes:'Back to title',titleNo:'Keep playing',
   gateH:'You look around with your face',gateP:'Your webcam reads which way your head is turned, and the view follows your face. The gun is aimed with the mouse, apart from the view. Without a camera you can still play by turning the view with Q / E, but if you have one, please turn it on.',
   gateSmall:'The video is processed only on your device and is never sent anywhere.',gateCam:'Turn on camera and start',gateSkip:'Start without camera'};
@@ -3599,7 +3758,7 @@ function pollPad(dt){
   if(hit(0))skipEnding();
   if(hit(9)){pause();document.exitPointerLock?.();return}
   if(hit(8)&&mode==='training')skipTraining();
-  if(hit(7))fire(true);if(hit(6))toggleScope();if(hit(0))doJump();if(hit(1))doBoost();if(hit(2))swingAxe(true);if(hit(3))switchWeapon('other');if(hit(11))centerHead();
+  if(hit(7))fire(true);if(hit(6))toggleScope();if(hit(0))doJump();if(hit(1))doBoost();if(hit(2))swingAxe(true);if(hit(3))switchWeapon('other');if(hit(11))centerHead();if(hit(10))alignLegs();
   if(!player.alive)return;
   pad.full=Math.hypot(pad.rx,pad.ry)>.95?pad.full+dt:0;
   const curve=v=>Math.sign(v)*v*v,boost=1+Math.min(.6,Math.max(0,pad.full-.2)*1.5),ms=+$('padSens').value*boost/(1+(ARBALEST.zoom-1)*(player.scope||0))/(1+ADS_ZOOM*(player.ads||0));
