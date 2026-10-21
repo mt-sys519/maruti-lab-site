@@ -82,7 +82,7 @@ export default async function BlogPost({ params }: Props) {
             build time, so there is no third-party HTML in here. */}
         <div className="postBody" dangerouslySetInnerHTML={{ __html: post.html }} />
       </article>
-      <PrAds kind="amazon" />
+      <PrAds kind="rakuten" />
       {others.length > 0 && (
         <nav className="postFooter" aria-label="ほかの記事">
           <p className="eyebrow">OTHER LABNOTES</p>

@@ -190,7 +190,7 @@ footer a{color:inherit;text-underline-offset:3px}
 footer .by{font:400 14px Marcellus,serif;letter-spacing:.3em;text-transform:uppercase;color:var(--ink)}
 footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;margin:4px 0 10px;font-size:12px}
 /* why piclea: what it is good at, for people and for search */
-.pr{width:min(100% - 32px,640px);margin:40px auto 0;text-align:center}.pr-k{font:400 11px Marcellus,serif;letter-spacing:.3em;color:var(--mocha);margin:0 0 10px}.pr a,.pr img{display:block}@media(max-width:559px){.pr a{width:min(100%,360px);margin:0 auto}}.pr img{width:100%;height:auto;border-radius:14px;box-shadow:0 6px 18px rgba(110,84,70,.12)}
+.pr{width:min(100% - 32px,640px);margin:40px auto 0;text-align:center}.pr-k{font:400 11px Marcellus,serif;letter-spacing:.3em;color:var(--mocha);margin:0 0 10px}.pr-w{height:200px}.pr-w iframe{display:block;margin:0 auto;border:0}@media(max-width:639px){.pr-w{height:250px}}
 .why{max-width:1000px;margin:40px auto 0;padding:0 20px}
 .why-k{font:400 11px Marcellus,serif;letter-spacing:.3em;color:var(--mocha);text-align:center;margin:0 0 12px}
 .why h2{font-family:"Shippori Mincho",serif;font-weight:500;font-size:clamp(22px,5.6vw,30px);line-height:1.6;letter-spacing:.1em;text-align:center;margin:0 0 16px}
@@ -536,12 +536,13 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 <main class="grid" id="grid"></main>
 </div>
 
-<!-- PR: a sale banner that takes itself down at data-until (Japan time); the same banner as app/adBanners.ts -->
-<aside class="pr" id="pr" aria-label="広告" data-until="2026-10-19T23:59:59+09:00">
+<!-- PR: the Rakuten widget, framed from /ads/rakuten.html as on the rest of the site (app/PrAds.tsx):
+     600x200 where it fits, 300x250 below 640px. The block goes if the widget cannot load. -->
+<aside class="pr" id="pr" aria-label="広告">
   <p class="pr-k">PR</p>
-  <a href="https://link.amazon/B00H0sLsT" target="_blank" rel="nofollow sponsored noopener noreferrer"><picture><source media="(max-width: 559px)" srcset="/ads/amazon-prime-thanks-2026-square.webp" width="600" height="500"><img src="/ads/amazon-prime-thanks-2026-wide.webp" width="1029" height="375" alt="Amazon プライム感謝祭 10/16（金）〜10/19（月）" loading="lazy" decoding="async" onerror="this.closest('aside').hidden=true"></picture></a>
+  <div class="pr-w"></div>
 </aside>
-<script>(()=>{const a=document.getElementById('pr'),t=Date.parse(a.dataset.until)-Date.now();if(t<=0)a.hidden=true;else setTimeout(()=>a.hidden=true,Math.min(t,2**31-1))})()</script>
+<script>(()=>{const a=document.getElementById('pr'),w=a.querySelector('.pr-w'),n=matchMedia('(max-width: 639px)').matches,f=document.createElement('iframe');f.src='/ads/rakuten.html?s='+(n?'300x250':'600x200');f.width=n?300:600;f.height=n?250:200;f.title='楽天市場の広告';f.loading='lazy';f.addEventListener('adgone',()=>a.hidden=true);w.append(f)})()</script>
 
 <section class="why" aria-labelledby="why-title">
   <p class="why-k">WHY PICLEA</p>
@@ -572,7 +573,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <div class="by">piclea</div>
   <nav class="fnav" aria-label="piclea と Maruti Lab"><a href="guide/" target="piclea-info">使い方</a><a href="faq/" target="piclea-info">よくある質問</a><a href="licenses.html" target="piclea-info">フォントとライセンス</a><a href="/" target="piclea-info">Maruti Lab</a><a href="/about" target="piclea-info">運営者について</a><a href="/privacy" target="piclea-info">プライバシーポリシー</a><a href="/terms" target="piclea-info">利用規約</a><a href="/contact" target="piclea-info">お問い合わせ</a></nav>
   写真はブラウザの中だけで処理され、サーバーには送信されません。<br>
-  このページには広告（アフィリエイトリンク）が含まれます。Amazonのアソシエイトとして、Maruti Labは適格販売により収入を得ています。<br>
+  このページには広告（アフィリエイトリンク）が含まれます。<br>
   フォントは Google Fonts・源暎フォント（おたもん）・自家製フォント工房・モトヤ・瀬戸フォント（瀬戸のぞみ）・851フォント（8:51:22 pm）・ふい字（ふい） から、各ライセンスに従って使用しています。<a href="licenses.html" target="piclea-info">フォントとライセンスの一覧</a><br>
   （<a href="https://openfontlicense.org/" rel="noopener">SIL Open Font License 1.1</a>／モトヤLシーダ・マルベリは <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener">Apache License 2.0</a>、851手書き雑フォントとふい字は作者の利用規約。著作権表示は各フォントファイルに含まれています）
 </footer>

@@ -132,7 +132,7 @@ export default function HalloTerraPage() {
           </p>
         </aside>
       </article>
-        <PrAds kind="amazon" />
+        <PrAds kind="rakuten" />
         <SiteFooter />
       </section>
     </>

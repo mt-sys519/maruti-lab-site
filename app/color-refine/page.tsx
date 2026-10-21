@@ -133,7 +133,7 @@ export default function ColorRefinePage() {
         </p>
       </section>
 
-      <PrAds kind="amazon" />
+      <PrAds kind="rakuten" />
       <SiteFooter extra={[{ href: "/color-refine/licenses", label: "Licenses" }]} />
     </main>
   );

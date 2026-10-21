@@ -148,7 +148,7 @@ export default function FourTrackPage() {
         <div><span>FORMAT</span><p>書き出しは16bit・端末のオーディオ設定に準じたサンプリングレート(多くの場合44.1kHzか48kHz)のWAVです。カセットは見た目のモチーフで、LO-FIエフェクトをONにしない限り音質は変わりません。</p></div>
       </aside>
 
-      <PrAds kind="amazon" />
+      <PrAds kind="rakuten" />
       <SiteFooter className={styles.footer} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />

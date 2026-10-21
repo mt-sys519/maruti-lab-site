@@ -80,7 +80,7 @@ export function NoteIndex({ page }: { page: number }) {
           )}
         </div>
       </div>
-      <PrAds kind="amazon" />
+      <PrAds kind="rakuten" />
       <SiteFooter />
     </main>
   );

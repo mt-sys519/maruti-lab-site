@@ -1,6 +1,5 @@
 // The affiliate banners shown under the games and tools. The A8.net tags are used as A8 issues
 // them (link, 120×60 banner and the 1×1 image that counts views), only split into fields.
-// public/piclea/index.html carries its own copy of the Amazon banner, since it is a static page.
 
 export type A8Banner = { name: string; href: string; img: string; pixel: string };
 
@@ -11,16 +10,13 @@ export const a8Banners: A8Banner[] = [
   { name: "Audible", href: "https://px.a8.net/svt/ejp?a8mat=4BE68L+929O56+5TB0+5ZU29", img: "https://www29.a8.net/svt/bgt?aid=261001749548&wid=006&eno=01&mid=s00000027126001007000&mc=1", pixel: "https://www19.a8.net/0.gif?a8mat=4BE68L+929O56+5TB0+5ZU29" },
 ];
 
-// A sale banner comes down by itself at the end of `until` (Japan time), so a finished sale is never left up.
-// Two of Amazon's sizes: the wide strip on computers, the near-square one on phones (below 560px),
-// where the strip's small lines would be too small to read.
-type Pic = { src: string; width: number; height: number };
-export type AmazonBanner = { href: string; wide: Pic; narrow: Pic; alt: string; until: string };
-
-export const amazonBanner: AmazonBanner = {
-  href: "https://link.amazon/B00H0sLsT",
-  wide: { src: "/ads/amazon-prime-thanks-2026-wide.webp", width: 1029, height: 375 },
-  narrow: { src: "/ads/amazon-prime-thanks-2026-square.webp", width: 600, height: 500 },
-  alt: "Amazon プライム感謝祭 10/16（金）〜10/19（月）",
-  until: "2026-10-19T23:59:59+09:00",
+// The Rakuten widget (もしもアフィリエイト) is framed from public/ads/rakuten.html, which holds
+// the tag. Its two sizes: the wide one where it fits in the 640px slot, the near-square one on
+// narrower screens. public/piclea/index.html frames the same file.
+export const rakutenWidget = {
+  src: "/ads/rakuten.html",
+  wide: { s: "600x200", width: 600, height: 200 },
+  narrow: { s: "300x250", width: 300, height: 250 },
+  /** Below this width the wide one would overflow the slot. */
+  narrowQuery: "(max-width: 639px)",
 };

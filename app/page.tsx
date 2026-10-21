@@ -231,7 +231,7 @@ export default function Home() {
         <a className="refinedLink" href="https://buymeacoffee.com/marutilab" target="_blank" rel="noreferrer"><span>コーヒーをおごる</span></a>
       </section>
 
-      <PrAds kind="amazon" />
+      <PrAds kind="rakuten" />
       <SiteFooter />
     </main>
   );

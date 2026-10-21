@@ -13,15 +13,15 @@
   opacity: 0.55;
 }
 
-.amazon {
-  display: block;
+/* The widget's own size, held before it loads; 300x250 below 640px (adBanners.ts). */
+.rakuten {
+  height: 200px;
 }
 
-.amazon img {
+.rakuten iframe {
   display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 10px;
+  margin: 0 auto;
+  border: 0;
 }
 
 .a8 {
@@ -55,12 +55,13 @@
   pointer-events: none;
 }
 
-@media (max-width: 559px) {
-  .amazon {
-    width: min(100%, 360px);
-    margin: 0 auto;
+@media (max-width: 639px) {
+  .rakuten {
+    height: 250px;
   }
+}
 
+@media (max-width: 559px) {
   .a8 {
     grid-template-columns: repeat(2, 120px);
   }

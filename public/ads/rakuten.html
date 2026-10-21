@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>PR</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style>
+</head>
+<body>
+<!-- The Rakuten widget from MAF (もしもアフィリエイト), in a page of its own: its script writes
+     into the document as it loads, which a React page cannot take after the fact. The pages
+     frame this file at ?s=600x200 (wide) or ?s=300x250 (phones): app/PrAds.tsx, public/piclea.
+     If the script does not load (an ad blocker, no connection) the frame tells its parent with
+     an "adgone" event, so the PR block can go instead of leaving an empty box. -->
+<script>
+var size = new URLSearchParams(location.search).get("s") === "300x250" ? "300x250" : "600x200";
+MafRakutenWidgetParam = function () { return { size: size, design: "slide", recommend: "on", auto_mode: "on", a_id: "5826827", border: "off" }; };
+function gone() { try { frameElement.dispatchEvent(new Event("adgone")); } catch (e) {} }
+</script>
+<script src="https://dn.msmstatic.com/site/rakuten/widget.js" onerror="gone()"></script>
+</body>
+</html>

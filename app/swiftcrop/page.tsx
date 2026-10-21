@@ -168,7 +168,7 @@ export default function SwiftCropPage() {
         </p>
       </section>
 
-      <PrAds kind="amazon" />
+      <PrAds kind="rakuten" />
       <SiteFooter />
     </main>
   );
