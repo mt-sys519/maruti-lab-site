@@ -372,6 +372,11 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .ebtn:disabled{opacity:.28}
 .etop .pill{padding:9px 18px;margin-left:4px;flex:none;white-space:nowrap} /* on a 390px phone the title used to squeeze 保存 onto two lines */
 .estage{position:relative;flex:1;min-height:0;touch-action:none;overflow:hidden}
+.epaste{position:absolute;left:10px;top:8px;z-index:3;height:30px;padding:0 14px;border-radius:999px;background:rgba(40,28,22,.72);color:#fff;font:500 12.5px/1 var(--ui);box-shadow:0 1px 6px rgba(60,40,30,.2)}
+.epaste[hidden],.edpad[hidden]{display:none}
+.edpad{position:absolute;right:10px;bottom:12px;z-index:3;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);touch-action:none;-webkit-user-select:none;user-select:none}
+.edpad button{border-radius:12px;background:rgba(255,252,249,.82);box-shadow:0 1px 6px rgba(60,40,30,.18);color:var(--ink);font-size:13px;touch-action:none}
+.edpad .u{grid-area:1/2}.edpad .l{grid-area:2/1}.edpad .r{grid-area:2/3}.edpad .d{grid-area:3/2}
 .ezoom{position:absolute;right:10px;top:8px;z-index:3;display:flex;align-items:center;border-radius:999px;background:rgba(255,252,249,.72);box-shadow:0 1px 6px rgba(60,40,30,.14);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .ezoom button{min-width:34px;height:30px;font:500 15px/1 var(--ui);color:var(--ink)}
 .ezoom .zv{min-width:44px;font:500 11px/1 Jost,var(--ui);letter-spacing:.04em;color:var(--mocha)}
@@ -398,10 +403,11 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .ebar button.done{color:var(--ink)}
 .ebar button:active{background:rgba(75,63,58,.07)}
 .cdot{width:20px;height:20px;margin:1px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(75,63,58,.25),0 0 0 2px #fff,0 0 0 3px rgba(75,63,58,.14)}
-.etedit{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:rgba(36,26,20,.34);padding:calc(10px + env(safe-area-inset-top,0px)) 18px 18px;animation:fade .15s both}
+.etedit{position:absolute;inset:0;z-index:5;padding:calc(10px + env(safe-area-inset-top,0px)) 18px 18px}
 .etedit[hidden]{display:none}
 .etedit-top{display:flex;justify-content:flex-end}
-.etedit textarea{margin-top:18px;width:100%;min-height:30vh;resize:none;border:0;outline:none;background:none;color:#fff;font:500 24px/1.55 var(--ui);text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.25);caret-color:#fff}
+.etedit textarea{position:absolute;margin:0;padding:0;resize:none;border:0;outline:1.5px dashed rgba(40,25,15,.45);outline-offset:4px;background:rgba(255,255,255,.18);overflow:hidden;transform-origin:50% 50%;caret-color:currentColor;white-space:pre-wrap;word-break:break-all}
+.etedit-top{position:relative;z-index:1}
 .erow{display:flex;align-items:center;gap:12px;margin:0 0 8px}
 .el{width:52px;flex:none;font-size:12px;color:var(--mocha)}
 .erow.wl .el{width:74px}
@@ -615,7 +621,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <button class="ebtn" id="eredo" aria-label="やり直す" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 13.5L20 9l-4.5-4.5"/><path d="M19.5 9h-10a5.5 5.5 0 000 11H13"/></svg></button>
     <button class="pill dark" id="esave">保存</button>
   </div>
-  <div class="estage" id="estage"><div class="efit"><canvas id="ecanvas"></canvas></div><div class="ezoom" id="ezoom"><button data-zm="-1" aria-label="縮小">−</button><button data-zm="0" class="zv" aria-label="拡大をもとに戻す">100%</button><button data-zm="1" aria-label="拡大">＋</button></div><button class="epill" id="epill" hidden></button><div class="efloat" id="efloat" hidden></div></div>
+  <div class="estage" id="estage"><div class="efit"><canvas id="ecanvas"></canvas></div><div class="ezoom" id="ezoom"><button data-zm="-1" aria-label="縮小">−</button><button data-zm="0" class="zv" aria-label="拡大をもとに戻す">100%</button><button data-zm="1" aria-label="拡大">＋</button></div><button class="epill" id="epill" hidden></button><button class="epaste" id="epaste" hidden>貼り付け</button>
+    <div class="edpad" id="edpad" hidden aria-label="十字キー"><button data-nudge="0,-1" class="u" aria-label="上へ">▲</button><button data-nudge="-1,0" class="l" aria-label="左へ">◀</button><button data-nudge="1,0" class="r" aria-label="右へ">▶</button><button data-nudge="0,1" class="d" aria-label="下へ">▼</button></div><div class="efloat" id="efloat" hidden></div></div>
   <div class="edock">
     <div class="edrawer" id="edrawer" hidden><div class="ebody" id="ebody"></div></div>
     <nav class="ebar" id="ebar" aria-label="編集の道具"></nav>

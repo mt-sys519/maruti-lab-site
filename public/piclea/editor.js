@@ -509,7 +509,7 @@ function wobbly(pts,amp,seed){ // soft low-frequency shake across a polyline
   return pts.map(([x,y],i)=>{const t=i/(pts.length-1||1);return [x,y+amp*(Math.sin(f[2]*t*Math.PI*2+f[0])*.6+Math.sin(f[3]*t*Math.PI*2+f[1])*.4)]});
 }
 function polyTo(c,pts){c.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)c.lineTo(pts[i][0],pts[i][1])}
-const notchSize=L=>{const nw=Math.min(L.w*.3,Math.max(L.h*6,L.w*.07));return [nw,nw*.55]};
+const notchSize=L=>{const nw=Math.min(L.w*.34,Math.max(L.h*10,L.w*.12));return [nw,nw*.72]};
 const arrowHead=L=>Math.max(L.h*4.5,L.w*.1);
 // How far a penned shape reaches round its middle (for its box, hit area and jelly).
 function shapeExt(L){
@@ -521,15 +521,27 @@ function shapeExt(L){
   if(RIBBON.has(L.kind))return {w:w+(L.lw||8)*2,h:h+(L.lw||8)*2};
   return {w,h};
 }
+// 吹き出しの下, drawn by hand: the run sags a little and both ends turn up like a smile; the tail is a plump
+// curved horn leaning to one side with a rounded tip, and the pen goes in and lifts off thin (see ribbon).
+function notchPts(L){
+  const w=L.w,h=L.h,sd=L.seed||L.id||1,[nw,nd]=notchSize(L),y=-nd/2,r=rng(sd),dir=r()<.5?-1:1,lean=dir*nw*(.22+r()*.1);
+  const cb=(P0,P1,P2,P3,t)=>{const u=1-t;return [u*u*u*P0[0]+3*u*u*t*P1[0]+3*u*t*t*P2[0]+t*t*t*P3[0],u*u*u*P0[1]+3*u*u*t*P1[1]+3*u*t*t*P2[1]+t*t*t*P3[1]]};
+  const A=[-nw/2,y],B=[nw/2,y],T=[lean,y+nd*(.96+r()*.08)];
+  // each side leaves the line level and swoops down to the tip; the side the tail leans to is the fuller one
+  const S1=[A,[A[0]+nw*.42,y],[T[0]-dir*nw*.06-nw*.04,T[1]-nd*.42],T],S2=[T,[T[0]+nw*.1,T[1]-nd*.5],[B[0]-nw*.4,y],B];
+  const pts=[],run=(x0,x1)=>{const n=Math.max(2,Math.round(Math.abs(x1-x0)/(w/70)));for(let i=1;i<=n;i++)pts.push([x0+(x1-x0)*i/n,y])};
+  pts.push([-w/2,y]);run(-w/2,A[0]);
+  for(let i=1;i<=18;i++)pts.push(cb(...S1,i/18*.9));
+  const a=cb(...S1,.9),b=cb(...S2,.1);pts.push([(a[0]+b[0])/2+(T[0]-(a[0]+b[0])/2)*.6,(a[1]+b[1])/2+(T[1]-(a[1]+b[1])/2)*.6]); // the rounded tip
+  for(let i=1;i<=18;i++)pts.push(cb(...S2,.1+i/18*.9));
+  run(B[0],w/2);
+  const lift=nd*.36,half=w/2; // both ends turn up a little, like a smile
+  return wobbly(pts.map(([x,y0])=>{const u=Math.max(0,(Math.abs(x)-nw/2)/(half-nw/2));return [x,y0-lift*u*u]}),h*.1+w*.003,sd);
+}
 // The pen paths. Arrows point right; turn the layer to aim them.
 function penPath(c,L){
   const w=L.w,h=L.h,sd=L.seed||L.id||1;
-  if(L.kind==='notch'){ // drawn by hand too: the run and the V shake a little, the V a touch lopsided
-    const [nw,nd]=notchSize(L),y=-nd/2,r=rng(sd),vx=(r()-.5)*nw*.12,key=[[-w/2,y],[-nw/2,y],[vx,y+nd*(.95+r()*.1)],[nw/2,y],[w/2,y]],pts=[];
-    for(let i=0;i<4;i++){const [ax,ay]=key[i],[bx,by]=key[i+1],n=Math.max(2,Math.round(Math.hypot(bx-ax,by-ay)/(w/60)));for(let j=i?1:0;j<=n;j++)pts.push([ax+(bx-ax)*j/n,ay+(by-ay)*j/n])}
-    const lift=nd*.45,half=w/2; // both ends turn up a little, like a smile
-    polyTo(c,wobbly(pts.map(([x,y])=>{const u=Math.max(0,(Math.abs(x)-nw/2)/(half-nw/2));return [x,y-lift*u*u]}),h*.15+w*.005,sd));return;
-  }
+  if(L.kind==='notch'){polyTo(c,notchPts(L));return}
   if(RIBBON.has(L.kind)){polyTo(c,ribbonPts(L));return}
   let pts=[];
   if(L.kind==='arrow'){for(let i=0;i<=24;i++)pts.push([-w/2+w*i/24,0]);pts=wobbly(pts,h*.12+w*.006,sd)}
@@ -580,11 +592,13 @@ function ribbon(c,pts,lw,seed){
     L.push([pts[i][0]-dy/l*hw,pts[i][1]+dx/l*hw]);R.push([pts[i][0]+dy/l*hw,pts[i][1]-dx/l*hw]);
   }
   polyTo(c,L.concat(R.reverse()));c.closePath();
+  c.fill();c.beginPath(); // the round ends go in a path of their own: wound against the ribbon they would cut holes
   for(const i of [0,n-1]){const [x,y]=pts[i],rr=lw*.3/2;c.moveTo(x+rr,y);c.arc(x,y,rr,0,Math.PI*2)}
 }
 // Fill or pen, whichever the shape is: used for the shape itself, its shadow and its jelly mask.
 function paintShape(c,L){
   if(RIBBON.has(L.kind)){c.beginPath();ribbon(c,ribbonPts(L),L.lw||8,(L.seed||L.id||1)+1);c.fill();return}
+  if(L.kind==='notch'){const pts=notchPts(L),tip=pts.reduce((a,b)=>b[1]>a[1]?b:a);c.beginPath();ribbon(c,pts,L.h*1.5,(L.seed||L.id||1)+3);c.fill();c.beginPath();c.moveTo(tip[0]+L.h*.6,tip[1]-L.h*.2);c.arc(tip[0],tip[1]-L.h*.2,L.h*.6,0,Math.PI*2);c.fill();return} // a round tip
   if(PENNED.has(L.kind)){c.beginPath();penPath(c,L);c.lineWidth=L.h;c.lineCap=c.lineJoin='round';c.strokeStyle=c.fillStyle;c.stroke()}
   else{shapePath(c,L);c.fill()}
 }
@@ -685,6 +699,7 @@ function drawShape(c,L){
   return {W:ex.w,H:ex.h};
 }
 // o: {ov:{id,font}, grad:index, thumb:bool, ui:'edit'|'mark', kk: output px per screen px}. Returns metrics per layer id.
+const HUSH=document.createElement('canvas').getContext('2d'); // where a text being typed is 'drawn': measured, not seen
 function draw(c,o={}){
   glassFast=!!(o.ui&&(G.g||adjLive));
   c.clearRect(0,0,D.W,D.H);
@@ -693,7 +708,7 @@ function draw(c,o={}){
   if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H)}
   else if(bg.type==='photo'&&src)drawPhoto(c,adjusted(ph,src,D.adj));
   else{const [a,b]=GRADS[(bg.type==='grad'?bg.grad:o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
-  const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
+  const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(o.ui&&L.id===typingId?HUSH:c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
   const L=sel(),kk=o.kk||1;
   if(o.ui==='edit'&&G.guides){
     c.save();c.strokeStyle='#c49a90';c.lineWidth=1.5*kk;
@@ -701,7 +716,7 @@ function draw(c,o={}){
     if(G.guides.y!=null){c.beginPath();c.moveTo(0,G.guides.y);c.lineTo(D.W,G.guides.y);c.stroke()}
     c.restore();
   }
-  if(o.ui&&L&&M.get(L.id)){
+  if(o.ui&&L&&M.get(L.id)&&L.id!==typingId){
     // a thin white frame with a soft dark edge reads on light and dark photos alike
     const b=box(L,M,kk);
     c.save();c.translate(L.x,L.y);c.rotate(L.rot);
@@ -1614,15 +1629,18 @@ function showAlign(L){
 }
 const fadeAlign=()=>{clearTimeout(alignT);alignT=setTimeout(()=>{G.guides=null;paint()},900)};
 let nudgeT=0;
-bodyEl.addEventListener('pointerdown',e=>{
-  const b=e.target.closest('[data-nudge]'),L=sel(),Ls=multi()?msel():L?[L]:[];if(!b||!Ls.length)return;e.preventDefault();
+// unit: how far one press goes (the 十字キー moves a screen pixel at a time, the panel's arrows a picture pixel)
+function startNudge(b,e,unit=1){
+  const L=sel(),Ls=multi()?msel():L?[L]:[];if(!b||!Ls.length)return;e.preventDefault();
   const [dx,dy]=b.dataset.nudge.split(',').map(Number);let n=0;
-  const step=()=>{const k=n++<20?1:5;for(const o of Ls){o.x+=dx*k;o.y+=dy*k}if(L)showAlign(L);paint()};
+  const step=()=>{const k=(n++<20?1:5)*unit;for(const o of Ls){o.x+=dx*k;o.y+=dy*k}if(L)showAlign(L);paint()};
   step();clearTimeout(nudgeT);
   const go=()=>{step();nudgeT=setTimeout(go,50)};nudgeT=setTimeout(go,400);
   const stop=()=>{clearTimeout(nudgeT);fadeAlign();commit();removeEventListener('pointerup',stop);removeEventListener('pointercancel',stop)};
   addEventListener('pointerup',stop);addEventListener('pointercancel',stop);
-});
+}
+bodyEl.addEventListener('pointerdown',e=>startNudge(e.target.closest('[data-nudge]'),e));
+$('#edpad').addEventListener('pointerdown',e=>startNudge(e.target.closest('[data-nudge]'),e,Math.max(1,Math.round(kE()))));
 bodyEl.addEventListener('click',e=>{
   const L=sel(),t=e.target.closest('button');if(!t)return;
   if(t.id==='ephoto'){$('#efile').click();return}
@@ -1681,14 +1699,28 @@ function dupSel(){const L=sel();if(!L)return;const n=Object.assign(clone(L),{id:
 
 /* ---------- the little bar over the selection (like Canva's): the way in to typing is right there ---------- */
 const flo=$('#efloat');
+// Something small on screen is hard to drag under a finger: a 十字キー shows in the corner to move it.
+// With nothing held and something copied, 貼り付け shows instead.
+function placePads(){
+  const L=sel(),many=multi(),pad=$('#edpad'),pst=$('#epaste');
+  let small=false;
+  if((L||many)&&tool!=='bg'&&tedit.hidden&&(!L||G.M.has(L.id))){
+    const u=many?ubox(msel()):(()=>{const b=box(L,G.M,kE());return {x0:0,y0:0,x1:b.w,y1:b.h}})();
+    small=Math.max(u.x1-u.x0,u.y1-u.y0)/kE()<72;
+  }
+  pad.hidden=!small;
+  pst.hidden=!(CLIP&&!L&&!many&&tedit.hidden&&tool!=='bg');
+  if(!pst.hidden)pst.textContent=`貼り付け（${CLIP.layers.length}）`;
+}
 function placeFloat(){
+  placePads();
   const L=sel(),many=multi(),busy=G.g&&((G.g.mode!=='move'&&G.g.mode!=='mmove')||G.g.moved);
   if((!L&&!many)||tool==='bg'||!tedit.hidden||busy||(L&&!G.M.has(L.id))){flo.hidden=true;return}
   const key=many?(grouped(msel())?'mg':'m'):(isText(L)?'t':isShape(L)?'s':L.photoId?'i':'e')+(addMode?'+':'');
   if(flo.dataset.key!==key){
     flo.dataset.key=key;
-    flo.innerHTML=many?`<button data-fl="group">${key==='mg'?'グループ解除':'グループ化'}</button><button data-fl="mdup">複製</button><button data-fl="mdel">削除</button>`
-      :(key[0]==='t'?'<button data-fl="edit">編集</button>':key[0]==='s'?'':`<button data-fl="swap">${key[0]==='i'?'差し替え':'はめる'}</button>`)+`<button data-fl="dup">複製</button><button data-fl="del">削除</button><button data-fl="add"${addMode?' class="on"':''}>選択を追加</button>`;
+    flo.innerHTML=many?`<button data-fl="group">${key==='mg'?'グループ解除':'グループ化'}</button><button data-fl="copy">コピー</button><button data-fl="mdup">複製</button><button data-fl="mdel">削除</button>`
+      :(key[0]==='t'?'<button data-fl="edit">編集</button>':key[0]==='s'?'':`<button data-fl="swap">${key[0]==='i'?'差し替え':'はめる'}</button>`)+`<button data-fl="copy">コピー</button><button data-fl="dup">複製</button><button data-fl="del">削除</button><button data-fl="add"${addMode?' class="on"':''}>選択を追加</button>`;
   }
   flo.hidden=false;
   const h=many?mhandles(ubox(msel()),kE()):handles(L,G.M,kE()),xs=h.corners.map(q=>q.x),ys=h.corners.map(q=>q.y);
@@ -1701,19 +1733,52 @@ function placeFloat(){
   const x=Math.max(6,Math.min(sr.width-fw-6,cr.left-sr.left+(Math.min(...xs)+Math.max(...xs))/2*k-fw/2));
   flo.style.transform=`translate(${Math.round(x)}px,${Math.round(y)}px)`;
 }
+// コピー keeps what is held (as parts of the page, so it fits a page of another ratio too); 貼り付け puts it on
+// whatever page is open, in the same place, as new layers held together. Kept for this visit only.
+let CLIP=null;
+function copySel(){
+  const Ls=multi()?msel():sel()?[sel()]:[];if(!Ls.length)return;
+  const order=new Map(D.layers.map((L,i)=>[L.id,i]));
+  CLIP={layers:[...Ls].sort((a,b)=>order.get(a.id)-order.get(b.id)).map(L=>normL(L,D.W,D.H))};
+  toast(`${Ls.length>1?Ls.length+'つ':''}コピーしました。貼りたいページで何も選ばずに「貼り付け」を押してください`);placeFloat();
+}
+function pasteClip(){
+  if(!CLIP)return;const gm=new Map(),ids=[];
+  for(const n of clone(CLIP.layers)){
+    const L=denormL(n,D.W,D.H);if(L.grp){if(!gm.has(L.grp))gm.set(L.grp,newId('g'));L.grp=gm.get(L.grp)}
+    delete L.gc;D.layers.push(L);ids.push(L.id);
+  }
+  if(ids.length>1){MS=ids;D.sel=null}else{MS=[];D.sel=ids[0]}
+  tool=null;commit();panel();refresh();toast('貼り付けました');
+}
+$('#epaste').onclick=pasteClip;
 flo.addEventListener('click',e=>{
   const b=e.target.closest('[data-fl]');if(!b)return;
-  ({edit:()=>openText(),swap:()=>$('#eimgswap').click(),dup:dupSel,del:removeSelected,group:groupToggle,mdup:dupMulti,mdel:removeMulti,
+  ({edit:()=>openText(),swap:()=>$('#eimgswap').click(),dup:dupSel,del:removeSelected,group:groupToggle,mdup:dupMulti,mdel:removeMulti,copy:copySel,
     add:()=>{addMode=!addMode;if(addMode)toast('ほかに選びたいものをタップしてください');placeFloat()}})[b.dataset.fl]();
 });
 
 const tedit=$('#etedit'),tarea=$('#etxt');
+// The words are typed right where they sit: a text box laid over the text in its own font, size, colour,
+// spacing, alignment, direction and turn, the drawn text hidden meanwhile. Rims, bands and glass come back
+// when typing is done.
+let typingId=null;
+function fitTextBox(){
+  const L=sel();if(!isText(L)||tedit.hidden)return;
+  const cr=cv.getBoundingClientRect(),er=tedit.getBoundingClientRect(),k=cr.width/D.W,m=G.M.get(L.id);
+  const full=L.vertical?D.H:D.W,span=(L.bem?L.bem*L.size:L.wrap?L.wrap*full:Math.max(m?(L.vertical?m.H:m.W):0,L.size*4))+L.size*.6;
+  Object.assign(tarea.style,{font:`${L.w} ${L.size*k}px ${L.fam}, sans-serif`,lineHeight:L.lh,letterSpacing:L.ls/100+'em',color:L.color,textAlign:L.align,
+    writingMode:L.vertical?'vertical-rl':'horizontal-tb',left:cr.left-er.left+L.x*k+'px',top:cr.top-er.top+L.y*k+'px',
+    transform:`translate(-50%,-50%) rotate(${L.rot}rad)`});
+  if(L.vertical){tarea.style.height=span*k+'px';tarea.style.width='auto';tarea.style.width=Math.max(L.size*k*1.2,tarea.scrollWidth)+'px'}
+  else{tarea.style.width=span*k+'px';tarea.style.height='auto';tarea.style.height=Math.max(L.size*k*L.lh,tarea.scrollHeight)+'px'}
+}
 function openText(all){
   const L=sel();if(!isText(L))return;
-  tarea.value=L.text;tedit.hidden=false;flo.hidden=true;tarea.focus();if(all)tarea.select();
+  typingId=L.id;tarea.rows=1;tarea.value=L.text;tedit.hidden=false;flo.hidden=true;placePads();paint();fitTextBox();tarea.focus();if(all)tarea.select();
 }
-function closeText(){if(tedit.hidden)return;tedit.hidden=true;tarea.blur();clearTimeout(textTimer);commit();panel();paint()}
-tarea.addEventListener('input',()=>{const L=sel();if(!isText(L))return;L.text=tarea.value;refresh();clearTimeout(textTimer);textTimer=setTimeout(commit,600)});
+function closeText(){if(tedit.hidden)return;tedit.hidden=true;typingId=null;tarea.blur();clearTimeout(textTimer);commit();panel();paint()}
+tarea.addEventListener('input',()=>{const L=sel();if(!isText(L))return;L.text=tarea.value;fitTextBox();refresh();clearTimeout(textTimer);textTimer=setTimeout(commit,600)});
 $('#etdone').onclick=closeText;
 tedit.addEventListener('pointerdown',e=>{if(e.target===tedit)closeText()});
 
@@ -2147,6 +2212,8 @@ document.addEventListener('keydown',e=>{
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'&&!typing){e.preventDefault();redoIt()}
   else if((e.key==='Delete'||e.key==='Backspace')&&!typing&&multi()){e.preventDefault();removeMulti()}
   else if((e.key==='Delete'||e.key==='Backspace')&&!typing&&sel()){e.preventDefault();removeSelected()}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='c'&&!typing&&(sel()||multi())){e.preventDefault();copySel()}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='v'&&!typing&&CLIP){e.preventDefault();pasteClip()}
   else if(e.key==='Escape'){if(!tedit.hidden)closeText();else if(sel()||MS.length)deselect()}
 });
 $('#efile').addEventListener('change',async e=>{
