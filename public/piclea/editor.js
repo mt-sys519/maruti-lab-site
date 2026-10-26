@@ -509,39 +509,43 @@ function wobbly(pts,amp,seed){ // soft low-frequency shake across a polyline
   return pts.map(([x,y],i)=>{const t=i/(pts.length-1||1);return [x,y+amp*(Math.sin(f[2]*t*Math.PI*2+f[0])*.6+Math.sin(f[3]*t*Math.PI*2+f[1])*.4)]});
 }
 function polyTo(c,pts){c.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)c.lineTo(pts[i][0],pts[i][1])}
-const notchSize=L=>{const nw=Math.min(L.w*.34,Math.max(L.h*10,L.w*.12));return [nw,nw*.72]};
+const notchSize=L=>{const nw=Math.min(L.w*.3,Math.max(L.h*10,L.w*.22));return [nw,nw*.22]};
 const arrowHead=L=>Math.max(L.h*4.5,L.w*.1);
 // How far a penned shape reaches round its middle (for its box, hit area and jelly).
 function shapeExt(L){
   const w=L.w,h=L.h;
-  if(L.kind==='notch')return {w:w+h,h:notchSize(L)[1]*1.9+h};
+  if(L.kind==='notch')return {w:w+h,h:notchSize(L)[1]*2.9+h};
   if(L.kind==='arrow')return {w:w+h,h:arrowHead(L)*1.05+h*2};
   if(L.kind==='arrowc')return {w:w+h,h:w*.3+arrowHead(L)*.6+h*2};
   if(L.kind==='arrowl')return {w:w+h,h:w*.3+arrowHead(L)+h*2};
   if(RIBBON.has(L.kind))return {w:w+(L.lw||8)*2,h:h+(L.lw||8)*2};
   return {w,h};
 }
-// 吹き出しの下, drawn by hand: the run sags a little and both ends turn up like a smile; the tail is a plump
-// curved horn leaning to one side with a rounded tip, and the pen goes in and lifts off thin (see ribbon).
+// 吹き出しの下, a quick sketch of a lying brace ︸ in two thin strokes that meet at a point a little off the
+// middle: the first runs in and dives past the point, the second sets off from just beside it and runs out.
+// One end sweeps up high, the other only flicks up.
 function notchPts(L){
-  const w=L.w,h=L.h,sd=L.seed||L.id||1,[nw,nd]=notchSize(L),y=-nd/2,r=rng(sd),dir=r()<.5?-1:1,lean=dir*nw*(.22+r()*.1);
-  const cb=(P0,P1,P2,P3,t)=>{const u=1-t;return [u*u*u*P0[0]+3*u*u*t*P1[0]+3*u*t*t*P2[0]+t*t*t*P3[0],u*u*u*P0[1]+3*u*u*t*P1[1]+3*u*t*t*P2[1]+t*t*t*P3[1]]};
-  const A=[-nw/2,y],B=[nw/2,y],T=[lean,y+nd*(.96+r()*.08)];
-  // each side leaves the line level and swoops down to the tip; the side the tail leans to is the fuller one
-  const S1=[A,[A[0]+nw*.42,y],[T[0]-dir*nw*.06-nw*.04,T[1]-nd*.42],T],S2=[T,[T[0]+nw*.1,T[1]-nd*.5],[B[0]-nw*.4,y],B];
-  const pts=[],run=(x0,x1)=>{const n=Math.max(2,Math.round(Math.abs(x1-x0)/(w/70)));for(let i=1;i<=n;i++)pts.push([x0+(x1-x0)*i/n,y])};
-  pts.push([-w/2,y]);run(-w/2,A[0]);
-  for(let i=1;i<=18;i++)pts.push(cb(...S1,i/18*.9));
-  const a=cb(...S1,.9),b=cb(...S2,.1);pts.push([(a[0]+b[0])/2+(T[0]-(a[0]+b[0])/2)*.6,(a[1]+b[1])/2+(T[1]-(a[1]+b[1])/2)*.6]); // the rounded tip
-  for(let i=1;i<=18;i++)pts.push(cb(...S2,.1+i/18*.9));
-  run(B[0],w/2);
-  const lift=nd*.36,half=w/2; // both ends turn up a little, like a smile
-  return wobbly(pts.map(([x,y0])=>{const u=Math.max(0,(Math.abs(x)-nw/2)/(half-nw/2));return [x,y0-lift*u*u]}),h*.1+w*.003,sd);
+  const w=L.w,h=L.h,sd=L.seed||L.id||1,[nw,nd]=notchSize(L),r=rng(sd),dir=r()<.5?-1:1; // dir: the side that sweeps up high
+  const cx=-dir*w*(.04+r()*.04),hi=nd*(1.6+r()*.3),lo=nd*(.45+r()*.2),y0=(hi-nd)/2,pts=[];
+  const at=(x,side)=>{
+    const d=Math.abs(x-cx),span=Math.abs(side*w/2-cx),s=nw/2*(side===dir?1.2:1.8),u=d/span;
+    let y=d<s?nd*(1-d/s)**3:0; // the dive, easing out of the line with no shoulder
+    // the high side keeps climbing to its end; the low side bows up a little, sags and flicks up at the very end
+    y-=side===dir?hi*u**2.4:nd*.3*Math.sin(Math.PI*u)+lo*u**8;
+    return [x,y+y0];
+  };
+  const a=[],b=[];
+  for(let i=60;i>=0;i--)a.push(at(cx+(-w/2-cx)*(i/60)**1.6,-1)); // closer together near the point
+  for(let i=0;i<=60;i++)b.push(at(cx+(w/2-cx)*(i/60)**1.6,1));
+  const [px,py]=a.at(-1),[qx,qy]=a.at(-3),l=Math.hypot(px-qx,py-qy)||1,ov=nd*(.12+r()*.1);
+  a.push([px+(px-qx)/l*ov,py+(py-qy)/l*ov]); // the first stroke runs on a hair past the point
+  const off=[h*(.3+r()*.4),-h*(.2+r()*.4)];b.forEach((p,i)=>{const k=1-i/b.length;p[0]+=off[0]*k;p[1]+=off[1]*k}); // the second sets off beside it
+  return [wobbly(a,h*.08+w*.002,sd),wobbly(b,h*.08+w*.002,sd+7)];
 }
 // The pen paths. Arrows point right; turn the layer to aim them.
 function penPath(c,L){
   const w=L.w,h=L.h,sd=L.seed||L.id||1;
-  if(L.kind==='notch'){polyTo(c,notchPts(L));return}
+  if(L.kind==='notch'){for(const s of notchPts(L))polyTo(c,s);return}
   if(RIBBON.has(L.kind)){polyTo(c,ribbonPts(L));return}
   let pts=[];
   if(L.kind==='arrow'){for(let i=0;i<=24;i++)pts.push([-w/2+w*i/24,0]);pts=wobbly(pts,h*.12+w*.006,sd)}
@@ -598,7 +602,7 @@ function ribbon(c,pts,lw,seed){
 // Fill or pen, whichever the shape is: used for the shape itself, its shadow and its jelly mask.
 function paintShape(c,L){
   if(RIBBON.has(L.kind)){c.beginPath();ribbon(c,ribbonPts(L),L.lw||8,(L.seed||L.id||1)+1);c.fill();return}
-  if(L.kind==='notch'){const pts=notchPts(L),tip=pts.reduce((a,b)=>b[1]>a[1]?b:a);c.beginPath();ribbon(c,pts,L.h*1.5,(L.seed||L.id||1)+3);c.fill();c.beginPath();c.moveTo(tip[0]+L.h*.6,tip[1]-L.h*.2);c.arc(tip[0],tip[1]-L.h*.2,L.h*.6,0,Math.PI*2);c.fill();return} // a round tip
+  if(L.kind==='notch'){notchPts(L).forEach((s,i)=>{c.beginPath();ribbon(c,s,L.h*.55,(L.seed||L.id||1)+3+i);c.fill()});return}
   if(PENNED.has(L.kind)){c.beginPath();penPath(c,L);c.lineWidth=L.h;c.lineCap=c.lineJoin='round';c.strokeStyle=c.fillStyle;c.stroke()}
   else{shapePath(c,L);c.fill()}
 }
