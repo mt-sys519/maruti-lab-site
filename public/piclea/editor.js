@@ -697,19 +697,45 @@ function drawShape(c,L){
   if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,nf?()=>{shapePath(c,L);c.lineWidth=L.line.w;c.lineJoin='round';c.strokeStyle='#000';c.stroke()}:()=>{c.fillStyle=gl||jl?'#fff':rgba(L.color,Math.max(L.a,.01));paintShape(c,L)});
   if(gl)glassPaint(c,A,L.kind==='ellipse'||L.kind==='circle'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]);
   else if(jl)maskPaint(c,L,A,'jelly',mc=>paintShape(mc,L));
-  else if(!nf){c.fillStyle=rgba(L.color,L.a);paintShape(c,L)}
+  else if(!nf){c.fillStyle=rgba(L.color,L.a);paintShape(c,L);if(L.pat&&FILLABLE(L)){c.save();shapePath(c,L);c.clip();drawPat(c,L.pat,-ex.w/2,-ex.h/2,ex.w,ex.h);c.restore()}}
   if(L.line.on&&!isLine(L)&&!PENNED.has(L.kind)){shapePath(c,L);c.lineWidth=L.line.w;c.lineJoin='round';c.strokeStyle=L.line.color;c.stroke()}
   c.restore();
   return {W:ex.w,H:ex.h};
 }
 // o: {ov:{id,font}, grad:index, thumb:bool, ui:'edit'|'mark', kk: output px per screen px}. Returns metrics per layer id.
+// A pattern over a plain background, like a blog thumbnail's ground: graph paper, polka dots or slanted stripes.
+// gap is a % of the width and size a ‰ of it, so the pattern keeps its look across ratios and export sizes.
+const PATS=[['grid','方眼'],['dots','ドット'],['slant','ななめ']];
+const patFor=color=>{ // starts a shade off the ground: darker on a light one, lighter on a dark one
+  const n=parseInt(String(color).slice(1),16)||0,rgb=[16,8,0].map(s=>n>>s&255),dark=rgb[0]*.3+rgb[1]*.59+rgb[2]*.11<110;
+  const [r,g,b]=rgb.map(v=>Math.round(dark?v+(255-v)*.15:v*.9));return {kind:'grid',color:'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1),gap:5,size:3};
+};
+// Picks a pattern for a background or a shape ('' takes it off). An untouched size changes with the kind:
+// dots want to be bigger than lines are thick.
+function repat(o,color,v){
+  const p=o.pat||patFor(color),sz0=k=>k==='dots'?8:3;
+  if(!v)delete o.pat;else o.pat={...p,kind:v,size:p.size===sz0(p.kind)?sz0(v):p.size};
+}
+function setBgColor(color){ // a pattern still in its starting shade follows the ground to the new colour
+  const old=bgOf(D),p=old.pat&&{...old.pat};if(p&&p.color===patFor(old.color).color)p.color=patFor(color).color;
+  D.bg={type:'color',color,...(p&&{pat:p})};
+}
+// Over the box x0,y0,w,h (the whole picture, or a shape's own box), evened out round its middle.
+function drawPat(c,p,x0=0,y0=0,w=D.W,h=D.H){
+  const g=D.W*p.gap/100,s=D.W*p.size/1000,ox=x0+(w%g)/2,oy=y0+(h%g)/2,x1=x0+w,y1=y0+h;
+  c.save();c.fillStyle=c.strokeStyle=p.color;c.lineWidth=s;c.beginPath();
+  if(p.kind==='dots'){let row=0;for(let y=oy;y<=y1+g;y+=g*.87,row++)for(let x=ox+(row%2?g/2:0)-g;x<=x1+g;x+=g){c.moveTo(x+s,y);c.arc(x,y,s,0,Math.PI*2)}c.fill()}
+  else if(p.kind==='slant'){for(let x=x0-h;x<=x1+g;x+=g*1.4){c.moveTo(x,y1);c.lineTo(x+h,y0)}c.stroke()}
+  else{for(let x=ox;x<=x1;x+=g){c.moveTo(x,y0);c.lineTo(x,y1)}for(let y=oy;y<=y1;y+=g){c.moveTo(x0,y);c.lineTo(x1,y)}c.stroke()}
+  c.restore();
+}
 const HUSH=document.createElement('canvas').getContext('2d'); // where a text being typed is 'drawn': measured, not seen
 function draw(c,o={}){
   glassFast=!!(o.ui&&(G.g||adjLive));
   c.clearRect(0,0,D.W,D.H);
-  // The background is the photo, one colour, or a soft gradient. The photo stays kept while it is not shown.
+  // The background is the photo, one colour (maybe with a pattern on it), or a soft gradient. The photo stays kept while it is not shown.
   const bg=bgOf(D),ph=cur(),src=ph&&(o.thumb?ph.small:ph.img);
-  if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H)}
+  if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H);if(bg.pat)drawPat(c,bg.pat)}
   else if(bg.type==='photo'&&src)drawPhoto(c,adjusted(ph,src,D.adj));
   else{const [a,b]=GRADS[(bg.type==='grad'?bg.grad:o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
   const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(o.ui&&L.id===typingId?HUSH:c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
@@ -1234,6 +1260,9 @@ const pal=key=>{const v=get(sel(),key);return `<div class="pal" data-k="${key}">
 const toggle=(key,label)=>`<h4>${label}<button class="tg${get(sel(),key)?' on':''}" data-tg="${key}" aria-label="${label}"></button></h4>`;
 const segs=(key,opts)=>`<div class="eseg" data-set="${key}">${opts.map(([v,l])=>`<button data-v="${v}" class="${get(sel(),key)===v?'on':''}">${l}</button>`).join('')}</div>`;
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+// A shape's 柄, the same patterns the background has: 濃さ 0% leaves the pattern alone on the picture.
+const patRows=L=>`<h5 class="esub">柄</h5><div class="eseg wide" data-spat>${[['','なし'],...PATS].map(([k,l])=>`<button data-v="${k}" class="${(L.pat?.kind||'')===k?'on':''}">${l}</button>`).join('')}</div>
+  ${L.pat?pal('pat.color')+slider('間隔','pat.gap',2,12,.1)+slider(L.pat.kind==='dots'?'大きさ':'太さ','pat.size',.5,L.pat.kind==='dots'?20:12,.1):''}`;
 const btns=list=>`<div class="ebtns">${list.map(([a,l,dark])=>`<button class="eb${dark?' dark':''}" data-act="${a}">${l}</button>`).join('')}</div>`;
 
 // Only the weights the family really has; a family with one weight shows no row at all.
@@ -1322,7 +1351,11 @@ const DRAW={
     <p class="enote">選んだ文字と図形の色を、まとめて同じ色にします。写真は変わりません。</p>`},
   bg:()=>{
     const bg=bgOf(D);
-    const body=bg.type==='color'?`<div class="pal" data-bgc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===bg.color?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-bgcolor value="${bg.color}"></div>`
+    const p=bg.pat,body=bg.type==='color'?`<div class="pal" data-bgc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===bg.color?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-bgcolor value="${bg.color}"></div>
+        <h5 class="esub">柄</h5><div class="eseg wide" data-bgpat>${[['','なし'],...PATS].map(([k,l])=>`<button data-v="${k}" class="${(p?.kind||'')===k?'on':''}">${l}</button>`).join('')}</div>
+        ${p?`<div class="pal" data-bgpc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===p.color?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-bgpcolor value="${p.color}"></div>
+        <label class="erow"><span class="el">間隔</span><input type="range" data-bgpk="gap" min="2" max="12" step=".1" value="${p.gap}"></label>
+        <label class="erow"><span class="el">${p.kind==='dots'?'大きさ':'太さ'}</span><input type="range" data-bgpk="size" min=".5" max="${p.kind==='dots'?20:12}" step=".1" value="${p.size}"></label>`:''}`
       :bg.type==='grad'?`<div class="pal grads" data-bgg>${GRADS.map(([a,b],i)=>`<button style="--c:linear-gradient(160deg,${a},${b})" data-g="${i}" class="${i===bg.grad?'on':''}" aria-label="グラデーション${i+1}"></button>`).join('')}</div>`
       :`<label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
         <label class="erow"><span class="el">傾き</span><input type="range" data-ptilt min="-45" max="45" step=".5" value="${D.photo.a||0}"><span class="ev" data-v="ptilt">${D.photo.a||0}°</span></label>
@@ -1341,7 +1374,7 @@ const DRAW={
     L.mat??=L.glass?'glass':'color';
     const body=L.mat==='glass'?(L.gta??=0,pal('color')+slider('色の濃さ','gta',0,1,.01)+'<p class="enote">下の写真が縁で曲がって見えるガラス。色の濃さ0%で透明、上げると色つきのガラスに。</p>')
       :L.mat==='jelly'?(L.gd??=1,pal('color')+slider('厚み','gd',.3,3,.05)+'<p class="enote">ぷるんとしたゼリー。真ん中ほど色が濃く、縁は透けて下の写真が大きく曲がって見えます。</p>')
-      :pal('color')+slider('濃さ','a',0,1,.01);
+      :pal('color')+slider('濃さ','a',0,1,.01)+(FILLABLE(L)?patRows(L):'');
     return `${nfRow}<div class="eseg wide" data-set="mat">${(isLine(L)||NOGLASS.has(L.kind)?[['color','色'],['jelly','ゼリー']]:[['color','色'],['glass','ガラス'],['jelly','ゼリー']]).map(([v,l])=>`<button data-v="${v}" class="${L.mat===v?'on':''}">${l}</button>`).join('')}</div>${body}`;
   },
   sform:L=>`${groupOf(L.kind).length>1?segs('kind',groupOf(L.kind)):''}
@@ -1590,7 +1623,9 @@ bodyEl.addEventListener('input',e=>{
   if(t.dataset.gk&&D.grid){D.grid[t.dataset.gk]=+t.value;const v=bodyEl.querySelector(`[data-gv="${t.dataset.gk}"]`);if(v)v.textContent=t.dataset.gk==='gap'?Math.round(+t.value*1000)/10+'%':t.value;layoutGrid();paint();return}
   if(t.dataset.ptilt!=null){D.photo.a=+t.value;bodyEl.querySelector('[data-v="ptilt"]').textContent=t.value+'°';paint();return}
   if(t.dataset.mcolor!=null){setTint(t.value);$('#ebar .cdot')?.style.setProperty('background',t.value);paint();return}
-  if(t.dataset.bgcolor!=null){D.bg={type:'color',color:t.value};paint();return}
+  if(t.dataset.bgcolor!=null){setBgColor(t.value);paint();return}
+  if(t.dataset.bgpcolor!=null&&D.bg.pat){D.bg.pat.color=t.value;paint();return}
+  if(t.dataset.bgpk&&D.bg.pat){D.bg.pat[t.dataset.bgpk]=+t.value;paint();return}
   if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
   if(t.dataset.k==='wrap')delete L.bem; // the slider evens the lines again, over a box pulled by hand
@@ -1666,7 +1701,9 @@ bodyEl.addEventListener('click',e=>{
   if(act==='back'&&L){const i=D.layers.indexOf(L);if(i>0){D.layers.splice(i,1);D.layers.splice(i-1,0,L);commit();paint()}return}
   if(t.closest('[data-bgtype]')){const v=t.dataset.v,old=bgOf(D);D.bg=v==='color'?{type:v,color:old.color||'#f3e9dc'}:v==='grad'?{type:v,grad:old.grad||0}:{type:'photo'};commit();panel();paint();return}
   if(t.closest('[data-mc]')&&t.dataset.c){setTint(t.dataset.c);commit();panel();paint();return}
-  if(t.closest('[data-bgc]')&&t.dataset.c){D.bg={type:'color',color:t.dataset.c};commit();panel();paint();return}
+  if(t.closest('[data-bgc]')&&t.dataset.c){setBgColor(t.dataset.c);commit();panel();paint();return}
+  if(t.closest('[data-bgpat]')&&t.dataset.v!=null){repat(D.bg,D.bg.color,t.dataset.v);commit();panel();paint();return}
+  if(t.closest('[data-bgpc]')&&t.dataset.c&&D.bg.pat){D.bg.pat.color=t.dataset.c;commit();panel();paint();return}
   if(t.closest('[data-glay]')){applyGrid(t.closest('[data-glay]').dataset.glay);return}
   if(t.closest('[data-bgg]')){D.bg={type:'grad',grad:+t.dataset.g};commit();panel();paint();return}
   if(L&&isShape(L)&&(act==='fullw'||act==='fullh'||act==='center')){
@@ -1677,6 +1714,7 @@ bodyEl.addEventListener('click',e=>{
   if(t.closest('[data-lang]')){fontLang=t.dataset.v;panel();return}
   if(t.closest('[data-deco]')){decoSub=t.dataset.v;panel();return}
   if(!L)return;
+  if(t.closest('[data-spat]')&&t.dataset.v!=null){repat(L,L.color,t.dataset.v);commit();panel();paint();return}
   if(t.dataset.tg){const k=t.dataset.tg;put(L,k,!get(L,k));
     if(k==='nofill'&&L.nofill)L.line.on=true;
     if(isText(L)){if((k==='band.glass'||k==='band.line.on')&&get(L,k))L.band.on=true;if(k==='band.on'&&!L.band.on)L.band.glass=L.band.line.on=false}commit();panel();refresh();return}
