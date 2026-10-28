@@ -9,11 +9,11 @@ import { InputRainGame } from "../InputRainGame";
 import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
-  title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
-  description: "PromptTermの端末入力を、文字が落ちきる前に打ち込むタイピング／フリック入力ゲーム。初級・中級・上級・PROの4段階。",
+  title: { absolute: "落ちてくる文字を打つタイピングゲーム｜INPUT RAIN" },
+  description: "落ちてくる文字を、落ちきる前に打ち込むタイピングゲーム。スマホはフリック入力で遊べます。初級・中級・上級・PROの4段階。",
   alternates: { canonical: "/bit/input-rain" },
   openGraph: {
-    title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
+    title: "落ちてくる文字を打つタイピングゲーム｜INPUT RAIN",
     description: "落下する端末入力を処理する、PromptTermのタイピング／フリック入力ゲーム。",
     url: "/bit/input-rain",
     images: [
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarutiBit — INPUT RAIN（タイピング／フリック入力ゲーム）",
+    title: "落ちてくる文字を打つタイピングゲーム｜INPUT RAIN",
     description: "落下する端末入力を処理する、PromptTermのタイピング／フリック入力ゲーム。",
     images: ["/og/bit/input-rain.png"],
   },

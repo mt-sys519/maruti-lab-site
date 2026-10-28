@@ -3,13 +3,13 @@ import { HyperPropRetro } from "./HyperPropRetro";
 import "../hyperProp.css";
 import "../retro/retro.css";
 
-const title = "MarutiBit — HYPER PROP（人力飛行ゲーム）";
-const description = "高台から機体を抱えて走り、飛び乗って、漕いで空へ。湖から砂漠、夜の街へと飛んでいく、ペダル連打の人力飛行ゲーム。無料、登録不要。";
+const title = "人力飛行機のペダル連打ゲーム｜HYPER PROP";
+const description = "人力飛行機をペダル連打で漕いで飛ぶゲーム。高台から機体を抱えて走り、飛び乗って、漕いで空へ。湖から砂漠、夜の街へと飛んでいく。無料、登録不要。";
 
 // On test while it is played on real phones: kept out of search, the sitemap and
 // every shelf and nav (it is not in games.ts yet), so only the address reaches it.
 export const metadata: Metadata = {
-  title,
+  title: { absolute: title },
   description,
   alternates: { canonical: "/bit/hyperprop" },
   openGraph: {

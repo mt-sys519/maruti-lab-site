@@ -8,11 +8,11 @@ import { BitSeriesNav } from "../BitSeriesNav";
 import { NeonBreakGame } from "../NeonBreakGame";
 import { PrAds } from "../../PrAds";
 
-const title = "MarutiBit — NEON BREAK（ナインボール）";
-const description = "ネオンの台で9番を狙うナインボール。ひとりで詰めるSOLO、AIKAと撞くVS CPU、一打勝負のSTAGE。";
+const title = "ブラウザで遊べるナインボール｜NEON BREAK";
+const description = "ブラウザで遊べるビリヤードのナインボール。ネオンの台で9番を狙う。ひとりで詰めるSOLO、AIKAと撞くVS CPU、一打勝負のSTAGE。";
 
 export const metadata: Metadata = {
-  title,
+  title: { absolute: title },
   description,
   alternates: { canonical: "/bit/neonbreak" },
   openGraph: {

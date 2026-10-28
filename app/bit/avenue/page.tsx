@@ -8,11 +8,11 @@ import { BitSeriesNav } from "../BitSeriesNav";
 import { RainChimeGame } from "../RainChimeGame";
 import { PrAds } from "../../PrAds";
 
-const title = "MarutiBit — AVENUE（ピクセルアート・アンビエント）";
-const description = "1996年のニューヨーク。雨、ウインドチャイム、Steel Tongue Drumを眺めて聴くピクセルアート・アンビエント。";
+const title = "雨音とチャイムのヒーリングアンビエント｜AVENUE";
+const description = "雨音とウインドチャイムで癒やされるヒーリングアンビエント。1996年のニューヨークの部屋で、雨とSteel Tongue Drumを眺めて聴くピクセルアート。";
 
 export const metadata: Metadata = {
-  title,
+  title: { absolute: title },
   description,
   alternates: { canonical: "/bit/avenue" },
   openGraph: {

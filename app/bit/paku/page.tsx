@@ -11,12 +11,12 @@ import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
-  title: "MarutiBit — PAKU（エサやりゲーム）",
-  description: "水槽の熱帯魚にタップで餌をあげるエサやりゲーム。",
+  title: { absolute: "熱帯魚にエサをあげるゲーム｜PAKU" },
+  description: "水槽の熱帯魚にタップでエサをあげるエサやりゲーム。ブラウザだけで遊べます。",
   alternates: { canonical: "/bit/paku" },
   openGraph: {
-    title: "MarutiBit — PAKU（エサやりゲーム）",
-    description: "水槽の熱帯魚にタップで餌をあげるエサやりゲーム。",
+    title: "熱帯魚にエサをあげるゲーム｜PAKU",
+    description: "水槽の熱帯魚にタップでエサをあげるエサやりゲーム。ブラウザだけで遊べます。",
     url: "/bit/paku",
     images: [
       { url: "/og/bit/paku.png", width: 1200, height: 630, alt: "MarutiBit PAKU" },
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarutiBit — PAKU（エサやりゲーム）",
-    description: "水槽の熱帯魚にタップで餌をあげるエサやりゲーム。",
+    title: "熱帯魚にエサをあげるゲーム｜PAKU",
+    description: "水槽の熱帯魚にタップでエサをあげるエサやりゲーム。ブラウザだけで遊べます。",
     images: ["/og/bit/paku.png"],
   },
 };

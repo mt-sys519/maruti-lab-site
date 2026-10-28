@@ -9,11 +9,11 @@ import { BitSeriesNav } from "../BitSeriesNav";
 import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
-  title: "MarutiBit — BLANK（空欄補完ゲーム）",
-  description: "四則演算の空欄を逆算して埋める空欄補完ゲーム。全5問の計算パズル、初級・中級・上級の3段階。",
+  title: { absolute: "四則演算の穴埋めパズル｜BLANK" },
+  description: "四則演算の空欄を逆算して埋める穴埋め計算パズル。全5問、初級・中級・上級の3段階。",
   alternates: { canonical: "/bit/blank" },
   openGraph: {
-    title: "MarutiBit — BLANK（空欄補完ゲーム）",
+    title: "四則演算の穴埋めパズル｜BLANK",
     description: "四則演算の空欄を逆算して埋める空欄補完ゲーム。全5問の計算パズル。",
     url: "/bit/blank",
     images: [
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarutiBit — BLANK（空欄補完ゲーム）",
+    title: "四則演算の穴埋めパズル｜BLANK",
     description: "四則演算の空欄を逆算して埋める空欄補完ゲーム。全5問の計算パズル。",
     images: ["/og/bit/blank.png"],
   },

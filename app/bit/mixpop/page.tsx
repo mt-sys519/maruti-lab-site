@@ -9,12 +9,12 @@ import { MixPopGame } from "../MixPopGame";
 import "../mixPop.css";
 import { PrAds } from "../../PrAds";
 
-const title = "MarutiBit — MIX POP（ドリンク調合トイ）";
+const title = "ドリンクバーを混ぜるゲーム｜MIX POP";
 const description =
-  "六つのジュースを好きなだけ混ぜて、氷を入れて、自分の一杯に名前をつける。注ぐ音も飲む音も本物の録音。無料、登録不要。";
+  "ドリンクバーみたいにジュースを混ぜて遊ぶゲーム。六つのジュースを好きなだけ混ぜて、氷を入れて、自分の一杯に名前をつける。注ぐ音も飲む音も本物の録音。無料、登録不要。";
 
 export const metadata: Metadata = {
-  title,
+  title: { absolute: title },
   description,
   alternates: { canonical: "/bit/mixpop" },
   openGraph: {

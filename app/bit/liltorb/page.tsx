@@ -10,12 +10,12 @@ import { BitSeriesNav } from "../BitSeriesNav";
 import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
-  title: "MarutiBit — LILT ORB（粒子操作トイ）",
-  description: "触れると粒子が集まる、癒しと刺激の球体トイ。",
+  title: { absolute: "触ると動く粒子のおもちゃ｜LILT ORB" },
+  description: "触ると粒子が集まって動く、癒しと刺激の球体のおもちゃ。ブラウザだけで遊べます。",
   alternates: { canonical: "/bit/liltorb" },
   openGraph: {
-    title: "MarutiBit — LILT ORB（粒子操作トイ）",
-    description: "触れると粒子が集まる、癒しと刺激の球体トイ。",
+    title: "触ると動く粒子のおもちゃ｜LILT ORB",
+    description: "触ると粒子が集まって動く、癒しと刺激の球体のおもちゃ。ブラウザだけで遊べます。",
     url: "/bit/liltorb",
     images: [
       { url: "/og/bit/liltorb.png", width: 1200, height: 630, alt: "MarutiBit LILT ORB" },
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarutiBit — LILT ORB（粒子操作トイ）",
-    description: "触れると粒子が集まる、癒しと刺激の球体トイ。",
+    title: "触ると動く粒子のおもちゃ｜LILT ORB",
+    description: "触ると粒子が集まって動く、癒しと刺激の球体のおもちゃ。ブラウザだけで遊べます。",
     images: ["/og/bit/liltorb.png"],
   },
 };
