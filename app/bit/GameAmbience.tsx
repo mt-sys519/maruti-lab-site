@@ -79,6 +79,14 @@ const scenes: Record<string, ReactNode> = {
       <circle className={styles.ball} stroke="" cx="50" cy="60" r="4" />
     </svg>
   ),
+  magnetboard: (
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <rect stroke="" x="14" y="18" width="72" height="52" rx="6" />
+      <path className={styles.sketch} stroke="" pathLength="100" d="M26 52c6-16 12-16 16 0s12 15 17 0 10-12 15-4" />
+      <path stroke="" d="M20 84 H80" />
+      <rect className={styles.knob} data-fill="" x="20" y="80" width="12" height="8" rx="2" />
+    </svg>
+  ),
   neonbreak: (
     <svg viewBox="0 0 100 100" aria-hidden="true">
       <rect stroke="" x="12" y="30" width="76" height="40" rx="6" />

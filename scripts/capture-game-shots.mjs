@@ -24,6 +24,9 @@ const chrome = [
 ].find((path) => existsSync(path));
 if (!chrome) throw new Error("No Chrome or Edge found to capture with.");
 
+// magnetboard is left out of the full run: its photograph has a cat drawn on
+// the board with real pointer strokes, and a plain capture is an empty screen
+// that would overwrite it. Ask for it by name only if a blank board is wanted.
 const ids = ["angle", "blank", "sequence", "input-rain", "paku", "liltorb", "avenue", "neonbreak", "mixpop"];
 const args = process.argv.slice(2);
 const portFlag = args.indexOf("--port");

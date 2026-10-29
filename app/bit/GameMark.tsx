@@ -105,6 +105,17 @@ export function GameMark({ id }: { id: BitGameId }) {
         </svg>
       </span>
     );
+  if (id === "magnetboard")
+    return (
+      <span className={`${styles.mark} ${styles.stroke}`} aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+          <path d="M6.5 12.6c1.2-3.4 2.6-3.4 3.6 0s2.6 3.2 3.8 0 2.2-2.6 3.6-.8" />
+          <path d="M5.5 20.4h13" />
+          <circle className={styles.dot} cx="9" cy="20.4" r="1.2" />
+        </svg>
+      </span>
+    );
   // Deliberately empty rather than a fallback picture: a game added without a
   // mark should show a gap, not another game's artwork.
   return <span className={styles.mark} aria-hidden="true" />;

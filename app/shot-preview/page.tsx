@@ -4,6 +4,7 @@ import { AngleGame } from "../bit/AngleGame";
 import { BlankGame } from "../bit/BlankGame";
 import { InputRainGame } from "../bit/InputRainGame";
 import { LiltOrbGame } from "../bit/LiltOrbGame";
+import { MagnetBoardGame } from "../bit/MagnetBoardGame";
 import { MixPopGame } from "../bit/MixPopGame";
 import { NeonBreakGame } from "../bit/NeonBreakGame";
 import { PakuGame } from "../bit/PakuGame";
@@ -11,6 +12,8 @@ import { RainChimeGame } from "../bit/RainChimeGame";
 import { SequenceGame } from "../bit/SequenceGame";
 import { bitGames } from "../bit/games";
 import styles from "./shotPreview.module.css";
+// The board brings its stylesheet in from its page rather than its component.
+import "../bit/magnetBoard.css";
 
 // One game on its own, filling the window, so headless Chrome can photograph
 // it without the header, the series nav and the how-to-play underneath it.
@@ -38,6 +41,7 @@ const games = {
   avenue: RainChimeGame,
   neonbreak: NeonBreakGame,
   mixpop: MixPopGame,
+  magnetboard: MagnetBoardGame,
 } as const;
 
 export default function ShotPreviewPage({ searchParams }: { searchParams?: Record<string, string> }) {

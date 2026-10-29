@@ -1,0 +1,305 @@
+/* MAGNET BOARD. Everything is scoped under .mbPanel so none of it reaches the
+   other games. The red board is a frame of its own, so it stands on the page
+   bare; only the controls under it sit on the shop's card - 2.5px of black, a
+   9px corner, a hard shadow. */
+
+.mbPanel {
+  width: min(1760px, calc(100% - 40px));
+  margin: clamp(24px, 3.4vw, 48px) auto clamp(24px, 4vw, 48px);
+}
+
+.mbStage {
+  --mb-frame: #e4473c;
+  --mb-kana: "Klee One", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  margin: 0 auto;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* --mb-u is set by the engine from the screen's width (1 at 420px), so the
+   plastic keeps its proportions from a phone up to a desk */
+.mbFrame {
+  --u: var(--mb-u, 1);
+  background: var(--mb-frame);
+  border-radius: calc(30px * var(--u));
+  padding: calc(12px * var(--u)) calc(18px * var(--u)) calc(16px * var(--u));
+  box-shadow:
+    inset 0 calc(3px * var(--u)) 0 rgba(255, 255, 255, 0.32),
+    inset 0 calc(-5px * var(--u)) 0 rgba(0, 0, 0, 0.16),
+    0 14px 30px rgba(60, 40, 20, 0.2);
+  transition: background 0.25s;
+}
+.mbTop {
+  height: calc(34px * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 calc(4px * var(--u)) calc(6px * var(--u));
+}
+.mbLogo {
+  color: #fff;
+  font: 900 calc(17px * var(--u)) "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+}
+.mbControls { display: flex; align-items: center; gap: calc(8px * var(--u)); }
+.mbDot {
+  width: calc(18px * var(--u));
+  height: calc(18px * var(--u));
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.mbDot[aria-pressed="true"] { outline: 2px solid #fff; outline-offset: 2px; }
+.mbSound {
+  width: calc(28px * var(--u));
+  height: calc(28px * var(--u));
+  margin-left: calc(4px * var(--u));
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.mbSound svg { width: calc(16px * var(--u)); height: calc(16px * var(--u)); }
+.mbSound .mbSoundOn { display: none; }
+.mbSound[aria-pressed="true"] .mbSoundOn { display: block; }
+.mbSound[aria-pressed="true"] .mbSoundOff { display: none; }
+
+.mbScreen {
+  position: relative;
+  border-radius: calc(10px * var(--u));
+  overflow: hidden;
+  background: #e6e5df;
+  box-shadow: 0 0 0 calc(3px * var(--u)) rgba(0, 0, 0, 0.1);
+}
+.mbScreen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.22), inset 0 -2px 4px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 40%);
+}
+.mbScreen canvas { display: block; touch-action: none; cursor: crosshair; }
+
+.mbSlider { position: relative; height: calc(46px * var(--u)); margin-top: calc(8px * var(--u)); touch-action: none; }
+.mbGroove {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: calc(12px * var(--u));
+  transform: translateY(-50%);
+  border-radius: calc(6px * var(--u));
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.mbArrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: calc(11px * var(--u));
+  letter-spacing: 0.3em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.mbKnob {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: calc(52px * var(--u));
+  height: calc(34px * var(--u));
+  margin-top: calc(-17px * var(--u));
+  border-radius: calc(10px * var(--u));
+  background: linear-gradient(#fbfaf6, #dcd9d0);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.28), inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(4px * var(--u));
+}
+.mbKnob:focus-visible { box-shadow: 0 0 0 3px #fff, 0 3px 5px rgba(0, 0, 0, 0.28); }
+.mbKnob:active { cursor: grabbing; }
+.mbKnob i { width: calc(3px * var(--u)); height: calc(16px * var(--u)); border-radius: 2px; background: rgba(0, 0, 0, 0.16); }
+
+.mbBottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 12px;
+  border: 2.5px solid #232323;
+  border-radius: 9px;
+  background: #faf6f1;
+  box-shadow: 5px 5px 0 #232323;
+}
+/* on the card the pills only need to read as wells, not to float */
+.mbTray,
+.mbLesson,
+.mbKana {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px #e4e0d6;
+}
+.mbTray {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 20px;
+  border-radius: 28px;
+}
+.mbEnd { flex: none; border-radius: 50%; background: #55575d; }
+.mbWidth {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 200px;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+.mbWidth::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: #e4e1d8; }
+.mbWidth::-moz-range-track { height: 6px; border-radius: 3px; background: #e4e1d8; }
+.mbWidth::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: var(--mb-frame);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.mbWidth::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--mb-frame);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mbLesson {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 56px;
+  padding: 0 8px;
+  border-radius: 28px;
+}
+.mbMode,
+.mbNext {
+  height: 40px;
+  border: 0;
+  border-radius: 20px;
+  cursor: pointer;
+  font: 600 16px var(--mb-kana);
+}
+.mbMode { min-width: 56px; padding: 0 10px; background: transparent; color: #66686e; }
+.mbMode[aria-pressed="true"] { background: var(--mb-frame); color: #fff; }
+.mbNext { min-width: 84px; margin-left: 4px; padding: 0 16px; background: #2b2d33; color: #fff; }
+.mbNext:disabled { opacity: 0.2; cursor: default; }
+
+.mbKanaWrap { flex-basis: 100%; display: flex; justify-content: center; }
+.mbKanaWrap[hidden] { display: none; }
+.mbKana {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px 10px;
+  border-radius: 18px;
+}
+.mbGyou,
+.mbDan { display: flex; justify-content: center; gap: 3px; }
+.mbKana button {
+  min-width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 4px;
+  cursor: pointer;
+  background: #f1eee6;
+  color: #3c3e44;
+  font: 600 18px var(--mb-kana);
+}
+.mbDan button { min-width: 44px; }
+.mbKana button[aria-current="true"] { background: var(--mb-frame); color: #fff; }
+
+/* wide screens: the control card stands beside the board, as tall as the frame,
+   and its buttons grow with the board (--mb-u) so neither dwarfs the other */
+.mbStage.mbSide { flex-direction: row; align-items: stretch; justify-content: center; gap: 28px; }
+.mbSide .mbFrame { align-self: flex-start; }
+.mbSide .mbBottom {
+  --s: var(--mb-u, 1);
+  flex: none;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: calc(12px * var(--s));
+  padding: calc(14px * var(--s));
+}
+.mbSide .mbTray { height: calc(56px * var(--s)); padding: 0 calc(18px * var(--s)); border-radius: calc(28px * var(--s)); }
+.mbSide .mbWidth { flex: 1; width: auto; min-width: 0; }
+/* the mode tiles take whatever height is left, so the card is never hollow */
+.mbSide .mbLesson {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr minmax(calc(50px * var(--s)), 0.6fr);
+  gap: calc(8px * var(--s));
+  padding: calc(10px * var(--s));
+  border-radius: calc(26px * var(--s));
+}
+.mbSide .mbMode,
+.mbSide .mbNext { height: 100%; min-height: calc(50px * var(--s)); border-radius: calc(18px * var(--s)); font-size: calc(24px * var(--s)); }
+.mbSide .mbMode { min-width: 0; padding: 0; background: #f1eee6; color: #4a4c52; }
+.mbSide .mbMode[aria-pressed="true"] { background: var(--mb-frame); color: #fff; }
+.mbSide .mbNext { grid-column: 1 / -1; margin: 0; }
+.mbSide .mbKanaWrap { flex-basis: auto; }
+.mbSide .mbKana { width: 100%; gap: calc(6px * var(--s)); padding: calc(10px * var(--s)); border-radius: calc(20px * var(--s)); }
+.mbSide .mbGyou,
+.mbSide .mbDan { display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(5px * var(--s)); }
+.mbSide .mbKana button { min-width: 0; height: calc(38px * var(--s)); border-radius: calc(9px * var(--s)); font-size: calc(19px * var(--s)); }
+
+@media (max-width: 640px) {
+  .mbPanel { width: calc(100% - 32px); }
+  .mbStage { gap: 18px; }
+  .mbBottom { gap: 8px; padding: 10px 8px; }
+  .mbTray { height: 50px; padding: 0 14px; gap: 10px; }
+  .mbWidth { width: 140px; }
+  .mbLesson { height: 50px; padding: 0 6px; gap: 2px; }
+  .mbMode,
+  .mbNext { height: 38px; font-size: 15px; }
+  .mbMode { min-width: 48px; padding: 0 8px; }
+  .mbNext { min-width: 72px; padding: 0 12px; }
+  /* ten 行 have to fit across a phone inside the card */
+  .mbKanaWrap { min-width: 0; }
+  .mbKana { padding: 6px; gap: 4px; max-width: 100%; }
+  .mbGyou,
+  .mbDan { gap: 2px; }
+  .mbKana button { min-width: 0; width: 28px; height: 32px; padding: 0; font-size: 16px; }
+  .mbDan button { width: 44px; }
+}

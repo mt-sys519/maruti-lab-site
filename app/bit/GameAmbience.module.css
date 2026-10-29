@@ -79,6 +79,19 @@
 .ball { animation: roll 7s cubic-bezier(.42, 0, .58, 1) infinite; }
 @keyframes roll { 0%, 100% { transform: translateX(-32px); } 50% { transform: translateX(34px); } }
 
+/* 010 MAGNET BOARD - a line is drawn on the screen, then the knob slides
+   across underneath and wipes it. The line is drawn by its dash, and a dash
+   only follows pathLength without the non-scaling stroke, so it takes a
+   thinner width in the drawing's own units instead. */
+.sketch { vector-effect: none !important; stroke-width: 1.1 !important; stroke-dasharray: 100; animation: sketch 7s ease-in-out infinite; }
+@keyframes sketch {
+  0% { stroke-dashoffset: 100; opacity: 1; }
+  45%, 62% { stroke-dashoffset: 0; opacity: 1; }
+  78%, 100% { stroke-dashoffset: 0; opacity: 0; }
+}
+.knob { animation: wipe 7s ease-in-out infinite; }
+@keyframes wipe { 0%, 60% { transform: translateX(0); } 78% { transform: translateX(48px); } 92%, 100% { transform: translateX(0); } }
+
 /* Narrow enough and the hero has no spare column to put this in - and a
    phone has better uses for the battery. */
 @media (max-width: 900px) {

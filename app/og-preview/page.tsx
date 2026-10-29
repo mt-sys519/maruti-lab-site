@@ -40,6 +40,13 @@ const copy: Record<string, Card> = {
     sub: "ジュースを好きにまぜて、好きなだけ飲めるドリンクバー",
     art: "/bit/mixpop/machine.webp",
   },
+  magnetboard: {
+    lead: "磁気お絵かきボード。",
+    sub: "砂鉄で描いて、つまみでシャーッと消す。",
+    // The board itself with a cat drawn on it in its own iron sand, taken from
+    // the real game with real pointer strokes rather than painted over.
+    art: "/bit/magnetboard/board.webp",
+  },
   neonbreak: {
     lead: "ネオンの台のナインボール。",
     sub: "台につくのは、三人のオペレーター。",
