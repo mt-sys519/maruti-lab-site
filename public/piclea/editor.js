@@ -59,7 +59,7 @@ const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n
 function newLayer(o){
   return Object.assign({id:uid++,text:'テキスト',fam:'"Zen Maru Gothic"',w:500,name:'Zen Maru Gothic',size:96,x:D.W/2,y:D.H/2,rot:0,
     color:INK,align:'center',ls:0,lh:1.45,vertical:false,opacity:1,wrap:.86,
-    stroke:{on:false,color:INK,w:8},shadow:{...SHADOW,on:false},band:{on:false,shape:'rect',color:'#ffffff',a:.75,pad:30,r:0,line:{on:false,color:INK,w:3}}},o);
+    stroke:{on:false,color:INK,w:8,out:{on:false,color:INK,w:6}},shadow:{...SHADOW,on:false},band:{on:false,shape:'rect',color:'#ffffff',a:.75,pad:30,r:0,line:{on:false,color:INK,w:3}}},o);
 }
 
 /* ---------- glyph support (for vertical forms) ---------- */
@@ -199,6 +199,8 @@ function drawLayer(c,L,ov){
   }
   const gm=L.glyph,GA=(gm==='glass'||gm==='jelly')&&glyphRead(c,L,m); // glass and jelly bend the picture as it was before their shadow
   c.globalAlpha=L.opacity;c.lineJoin='round';c.miterLimit=2;c.lineWidth=s*L.stroke.w/100*2;
+  // 二重のフチ: a second edge round the outside of 縁取り, as wide again as its own 太さ
+  const out=L.stroke.on&&L.stroke.out?.on?s*(L.stroke.w+L.stroke.out.w)/100*2:0;
   if(L.shadow.on){
     // Only the shadow: the letters go far off to the side and the offset brings their shadow back.
     // Drawn again for 濃さ over 100%, which deepens a wide soft shadow the way one pass cannot.
@@ -207,9 +209,11 @@ function drawLayer(c,L,ov){
     c.shadowColor=rgba(L.shadow.color,Math.min(1,L.shadow.a/n));c.shadowBlur=s*L.shadow.blur/100*k;
     c.shadowOffsetX=s*L.shadow.x/100*k+far*T.a;c.shadowOffsetY=s*L.shadow.y/100*k+far*T.b;
     c.fillStyle=c.strokeStyle='#000';
+    if(out)c.lineWidth=out;
     for(let i=0;i<n;i++){if(L.stroke.on)glyphs(c,L,f,m,true);glyphs(c,L,f,m,false)}
     c.restore();
   }
+  if(out){c.save();c.lineWidth=out;c.strokeStyle=L.stroke.out.color;glyphs(c,L,f,m,true);c.restore()}
   if(L.stroke.on){c.strokeStyle=L.stroke.color;glyphs(c,L,f,m,true)}
   if(gm==='glass')glyphPaint(c,L,f,m,GA,'glass');
   else if(gm==='jelly')glyphPaint(c,L,f,m,GA,'jelly');
@@ -718,7 +722,20 @@ function repat(o,color,v){
 }
 function setBgColor(color){ // a pattern still in its starting shade follows the ground to the new colour
   const old=bgOf(D),p=old.pat&&{...old.pat};if(p&&p.color===patFor(old.color).color)p.color=patFor(color).color;
-  D.bg={type:'color',color,...(p&&{pat:p})};
+  D.bg={type:'color',color,...(p&&{pat:p}),...(old.fade&&{fade:old.fade})};
+}
+// 濃淡 (bg.fade, 0–1): the middle lifts toward white and the corners sink a shade, and the pattern shows only
+// toward the edges, gone in the middle where the words go. The pattern is masked on a canvas of its own.
+const FADE=document.createElement('canvas');
+function drawFade(c,bg){
+  const k=bg.fade,cx=D.W/2,cy=D.H/2,R=Math.hypot(cx,cy),ring=(a,b)=>{const g=c.createRadialGradient(cx,cy,0,cx,cy,R);a.forEach(([t,col])=>g.addColorStop(t,col));return g};
+  c.fillStyle=ring([[0,rgba('#ffffff',.75*k)],[.3,rgba('#ffffff',.5*k)],[.75,rgba('#ffffff',0)]]);c.fillRect(0,0,D.W,D.H);
+  c.fillStyle=ring([[.45,rgba(patFor(bg.color).color,0)],[1,rgba(patFor(bg.color).color,.9*k)]]);c.fillRect(0,0,D.W,D.H);
+  if(!bg.pat)return;
+  FADE.width=D.W;FADE.height=D.H;const f=FADE.getContext('2d');drawPat(f,bg.pat);
+  f.globalCompositeOperation='destination-in';const g=f.createRadialGradient(cx,cy,0,cx,cy,R);
+  const clear=.2+.3*k;g.addColorStop(clear,'rgba(0,0,0,0)');g.addColorStop(Math.min(1,clear+.4),'#000');f.fillStyle=g;f.fillRect(0,0,D.W,D.H);
+  c.drawImage(FADE,0,0,D.W,D.H);
 }
 // Over the box x0,y0,w,h (the whole picture, or a shape's own box), evened out round its middle.
 function drawPat(c,p,x0=0,y0=0,w=D.W,h=D.H){
@@ -735,7 +752,7 @@ function draw(c,o={}){
   c.clearRect(0,0,D.W,D.H);
   // The background is the photo, one colour (maybe with a pattern on it), or a soft gradient. The photo stays kept while it is not shown.
   const bg=bgOf(D),ph=cur(),src=ph&&(o.thumb?ph.small:ph.img);
-  if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H);if(bg.pat)drawPat(c,bg.pat)}
+  if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H);bg.fade?drawFade(c,bg):bg.pat&&drawPat(c,bg.pat)}
   else if(bg.type==='photo'&&src)drawPhoto(c,adjusted(ph,src,D.adj));
   else{const [a,b]=GRADS[(bg.type==='grad'?bg.grad:o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
   const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(o.ui&&L.id===typingId?HUSH:c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
@@ -1355,7 +1372,9 @@ const DRAW={
         <h5 class="esub">柄</h5><div class="eseg wide" data-bgpat>${[['','なし'],...PATS].map(([k,l])=>`<button data-v="${k}" class="${(p?.kind||'')===k?'on':''}">${l}</button>`).join('')}</div>
         ${p?`<div class="pal" data-bgpc>${PALETTE.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===p.color?'on':''}" aria-label="${c}"></button>`).join('')}<input type="color" class="cval" hidden data-bgpcolor value="${p.color}"></div>
         <label class="erow"><span class="el">間隔</span><input type="range" data-bgpk="gap" min="2" max="12" step=".1" value="${p.gap}"></label>
-        <label class="erow"><span class="el">${p.kind==='dots'?'大きさ':'太さ'}</span><input type="range" data-bgpk="size" min=".5" max="${p.kind==='dots'?20:12}" step=".1" value="${p.size}"></label>`:''}`
+        <label class="erow"><span class="el">${p.kind==='dots'?'大きさ':'太さ'}</span><input type="range" data-bgpk="size" min=".5" max="${p.kind==='dots'?20:12}" step=".1" value="${p.size}"></label>`:''}
+        <label class="erow"><span class="el">濃淡</span><input type="range" data-bgfade min="0" max="1" step=".01" value="${bg.fade||0}"></label>
+        <p class="enote">濃淡を上げると、真ん中が明るく四隅が少し濃くなり、柄は外側にだけ残ります。</p>`
       :bg.type==='grad'?`<div class="pal grads" data-bgg>${GRADS.map(([a,b],i)=>`<button style="--c:linear-gradient(160deg,${a},${b})" data-g="${i}" class="${i===bg.grad?'on':''}" aria-label="グラデーション${i+1}"></button>`).join('')}</div>`
       :`<label class="erow"><span class="el">拡大</span><input type="range" data-photo min="1" max="4" step=".01" value="${D.photo.s}"></label>
         <label class="erow"><span class="el">傾き</span><input type="range" data-ptilt min="-45" max="45" step=".5" value="${D.photo.a||0}"><span class="ev" data-v="ptilt">${D.photo.a||0}°</span></label>
@@ -1407,7 +1426,9 @@ const DRAW={
   deco:L=>{
     if(!isText(L))return `<div class="sec">${toggle('border.on','フチ')}${L.border.on?pal('border.color')+slider('太さ','border.w',.5,10,.5):''}</div>
       <div class="sec">${toggle('shadow.on','影')}${L.shadow.on?slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,30,1)+slider('ずれ','shadow.y',-10,10,.5):''}</div>`;
-    const sub={stroke:`<div class="sec">${toggle('stroke.on','縁取り')}${L.stroke.on?pal('stroke.color')+slider('太さ','stroke.w',1,30,.5):''}</div>`,
+    L.stroke.out??={on:false,color:INK,w:6};
+    const sub={stroke:`<div class="sec">${toggle('stroke.on','縁取り')}${L.stroke.on?pal('stroke.color')+slider('太さ','stroke.w',1,30,.5):''}</div>
+        ${L.stroke.on?`<div class="sec">${toggle('stroke.out.on','外側のフチ')}${L.stroke.out.on?pal('stroke.out.color')+slider('太さ','stroke.out.w',1,30,.5):''}</div>`:''}`,
       shadow:`<div class="sec">${toggle('shadow.on','影')}${L.shadow.on?pal('shadow.color')+slider('濃さ','shadow.a',.05,3,.01)+slider('ぼかし','shadow.blur',0,100,1)+slider('横','shadow.x',-30,30,1)+slider('縦','shadow.y',-30,30,1):''}</div>`,
       // 枠, its glass and its line are all in sight from the start; any of them turns the frame on
       band:`<div class="sec"><div class="tgrow">${toggle('band.on','枠')}${toggle('band.glass','ガラス')}${toggle('band.line.on','枠の線')}</div>${L.band.on?segs('band.shape',[['rect','四角'],['pill','カプセル'],['circle','丸'],['ellipse','だ円']])+(L.band.glass?(L.band.gta??=0,pal('band.color')+slider('色の濃さ','band.gta',0,1,.01)):pal('band.color')+slider('濃さ','band.a',0,1,.01))+slider('余白','band.pad',0,120,1)+(L.band.shape==='rect'?slider('角丸','band.r',0,100,1):'')+
@@ -1590,7 +1611,7 @@ function lightFill(S){
 // it had (words, shapes, bands, rims, lines, photo rims, plain backgrounds; shadows are left alone) can follow.
 let RC=null;
 const RCK=[['color',L=>isText(L)||(isShape(L)&&!(L.nofill&&FILLABLE(L)))],['band.color',L=>isText(L)&&L.band?.on],['band.line.color',L=>isText(L)&&L.band?.on&&L.band.line?.on],
-  ['stroke.color',L=>isText(L)&&L.stroke?.on],['line.color',L=>isShape(L)&&L.line?.on],['border.color',L=>isImg(L)&&L.border?.on]];
+  ['stroke.color',L=>isText(L)&&L.stroke?.on],['stroke.out.color',L=>isText(L)&&L.stroke?.on&&L.stroke.out?.on],['line.color',L=>isShape(L)&&L.line?.on],['border.color',L=>isImg(L)&&L.border?.on]];
 function noteRC(L,k){if(L&&(!RC||RC.id!==L.id||RC.key!==k))RC={id:L.id,key:k,from:String(get(L,k)).toLowerCase()}}
 function spots(from){
   const out=[],me=sel();
@@ -1626,6 +1647,7 @@ bodyEl.addEventListener('input',e=>{
   if(t.dataset.bgcolor!=null){setBgColor(t.value);paint();return}
   if(t.dataset.bgpcolor!=null&&D.bg.pat){D.bg.pat.color=t.value;paint();return}
   if(t.dataset.bgpk&&D.bg.pat){D.bg.pat[t.dataset.bgpk]=+t.value;paint();return}
+  if(t.dataset.bgfade!=null){if(+t.value)D.bg.fade=+t.value;else delete D.bg.fade;paint();return}
   if(t.dataset.adj){(L||D).adj??={};(L||D).adj[t.dataset.adj]=+t.value;adjLive=true;bodyEl.querySelector(`[data-av="${t.dataset.adj}"]`).textContent=t.value;paint();return}
   if(!L||!t.dataset.k)return;
   if(t.dataset.k==='wrap')delete L.bem; // the slider evens the lines again, over a box pulled by hand
