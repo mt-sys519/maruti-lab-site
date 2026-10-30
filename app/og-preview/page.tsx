@@ -124,6 +124,7 @@ const noteArt: Record<string, string> = {
   paku: "/games/paku/tank.png",
   "mb-01-retro": "/blog/mb-01-retro-screen.png",
   "aogane-third-person": "/blog/aogane-key-art.jpg",
+  "magnet-board": "/bit/magnetboard/board.webp",
 };
 
 // The notes get the same treatment: a real page captured by the same script,
