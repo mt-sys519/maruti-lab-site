@@ -8,7 +8,7 @@ work: /bit/magnetboard
 image: /og/blog/magnet-board.png
 ---
 
-「MAGNET BOARD」は、砂鉄で絵を描いて、下のつまみを横に滑らせて消すのを再現した、磁気お絵かきボードのブラウザ版です。
+「[MAGNET BOARD](/bit/magnetboard)」は、砂鉄で絵を描いて、下のつまみを横に滑らせて消すのを再現した、磁気お絵かきボードのブラウザ版です。
 
 子どもの頃に一度は触ったことのある、あのボードです。今回はそれをWebで作るにあたって考えたことの開発小話です。
 
