@@ -25,10 +25,10 @@ export function mountMagnetBoard(root) {
   const screenEl = $('screen');
   const slider = $('slider');
   const knob = $('knob');
-  const widthInput = $('width');
+  const penBtns = [...root.querySelectorAll('[data-mb-width]')];
   const bottomEl = $('bottom');
 
-  let penR = +widthInput.value; // pen radius in css px
+  let penR = +(penBtns.find((b) => b.getAttribute('aria-pressed') === 'true') || penBtns[0]).dataset.mbWidth; // pen radius in css px
   const HEX_R = 3.5;            // css px, honeycomb cell circumradius
   const HAZE_R = 11;            // css px
 
@@ -61,19 +61,21 @@ export function mountMagnetBoard(root) {
     return steadyVH;
   }
   // The board takes all the room it is given - the whole width of the page, down to
-  // the bottom of the screen - and its shape follows that room, from 3:4 on a phone
+  // the bottom of the screen - and its shape follows that room, from 2:3 on a phone
   // held upright to 16:9 on a wide monitor.
-  function fit(bottomH) {
+  function fit() {
     const vh = viewHeight(), side = isSide();
     let u = 1, w = 0, h = 0;
     for (let k = 0; k < 3; k++) { // u and the screen size depend on each other; this settles in a pass or two
       const avail = root.clientWidth - (side ? sideW(u) + SIDE_GAP : 0);
       w = Math.min(avail - 36 * u, 1600);
-      // the frame's chrome (top bar 34, knob rail 54, padding 28) - and, stacked, the
-      // gap and the control card - have to fit on screen with the board once scrolled to it
-      const below = side ? 0 : 22 + bottomH + 16;
-      const maxH = Math.max(260, vh - (116 * u + below + 48));
-      h = Math.min(maxH, w / 0.75);
+      // the frame's chrome (top bar 34, knob rail 54, padding 28) has to fit on screen
+      // with the board once scrolled to it. Stacked, the control card is left to sit
+      // below the fold: keeping it on screen held a phone's board to a squat 3:4 with
+      // little room to draw, so the board gets the screen's height and the card is a
+      // scroll away.
+      const maxH = Math.max(260, vh - (116 * u + 48));
+      h = Math.min(maxH, w / (side ? 0.75 : 2 / 3));
       if (w / h > 1.78) w = h * 1.78; // a short, wide window: narrow the board rather than flatten it
       u = Math.min(1.5, Math.max(0.78, Math.min(w, h) / 420));
     }
@@ -87,20 +89,9 @@ export function mountMagnetBoard(root) {
     // stacked, the control card stands exactly as wide as the board's frame above it
     bottomEl.style.width = side ? sideW(u) + 'px' : Math.round(w + 36 * u) + 'px';
   }
-  // the card's height with the kana picker open, so opening it never shrinks the board
-  function bottomHeight() {
-    const kana = $('kana'), hidden = kana.hidden;
-    kana.hidden = false;
-    const bh = bottomEl.offsetHeight;
-    kana.hidden = hidden;
-    return bh;
-  }
   function layout() {
-    let f = fit(bottomHeight());
+    const f = fit();
     fitChrome(f);
-    const bh = bottomHeight(); // the card may wrap differently at its new width
-    const f2 = fit(bh);
-    if (f2.w !== f.w || f2.h !== f.h) { f = f2; fitChrome(f); }
     const { w, h } = f;
     // every pixel is composited by hand, so a big board on a sharp screen draws at a
     // coarser grain rather than letting a full-width wipe stutter
@@ -244,7 +235,11 @@ export function mountMagnetBoard(root) {
     }
   }
 
-  on(widthInput, 'input', () => { penR = +widthInput.value; });
+  penBtns.forEach((b) => on(b, 'click', () => {
+    penR = +b.dataset.mbWidth;
+    penBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    sfx.click();
+  }));
 
   let drawing = null;
   function toCanvas(e) {
@@ -781,7 +776,7 @@ export function mountMagnetBoard(root) {
     if (root.clientWidth !== seenWidth) { seenWidth = root.clientWidth; layout(); }
   }) : null;
   if (ro) { ro.observe(root); offs.push(() => ro.disconnect()); }
-  syncKana(); // filled from the start, so the room kept for the picker is its real height
+  syncKana(); // the picker is filled from the start, hidden until a kana sheet asks for it
   setMode('free');
   raf = requestAnimationFrame(frame);
 

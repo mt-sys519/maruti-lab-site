@@ -1,12 +1,23 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
 import { mountMagnetBoard } from "./magnetBoardEngine.js";
 
 const FRAME_COLORS = [
   { color: "#e4473c", label: "あか" },
   { color: "#2f7fd8", label: "あお" },
   { color: "#f0b72c", label: "きいろ" },
+];
+
+// Three pens instead of a slider: a small child did not read a slider as "how
+// thick", but taps a big dot or a small one. The dot is drawn at the size of the
+// line it makes, scaled up enough to aim a finger at. Radii in css px; the middle
+// one is the width the board always started with.
+const PENS = [
+  { r: 1.8, label: "ほそい" },
+  { r: 3.2, label: "ふつう" },
+  { r: 4.5, label: "ふとい" },
 ];
 
 const MODES = [
@@ -81,10 +92,13 @@ export function MagnetBoardGame() {
           </div>
         </div>
         <div className="mbBottom" data-mb="bottom">
-          <div className="mbTray">
-            <span className="mbEnd" style={{ width: 3, height: 3 }} />
-            <input className="mbWidth" data-mb="width" type="range" min="1.2" max="4.6" step="0.05" defaultValue="3.2" aria-label="ペンのふとさ" />
-            <span className="mbEnd" style={{ width: 9, height: 9 }} />
+          <div className="mbTray" role="group" aria-labelledby="mbPenLabel">
+            <span className="mbTrayLabel" id="mbPenLabel">せんのふとさ</span>
+            {PENS.map(({ r, label }) => (
+              <button key={r} className="mbPen" type="button" data-mb-width={r} aria-label={label} aria-pressed={r === 3.2}>
+                <i style={{ "--dot": `${r * 4.6}px` } as CSSProperties} />
+              </button>
+            ))}
           </div>
           <div className="mbLesson">
             {MODES.map(({ mode, label }) => (

@@ -55,7 +55,7 @@ export default function MagnetBoardPage() {
           aboutLead={<>砂鉄で描く<strong>磁気お絵かきボード</strong>。</>}
           aboutSub="ゆっくり引くと濃く、すばやく引くとかすれます。"
           playLead={<>画面を<strong>なぞって描き</strong>、下のつまみを動かして消す。</>}
-          playSub="つまみが通ったところだけ消えます。ペンの太さは下のスライダーで変えられます。"
+          playSub="つまみが通ったところだけ消えます。線の太さは下の丸で選べます。"
           rulesLead={<>勝ち負けは<strong>ありません</strong>。</>}
           rulesSub="「あいう」「1+2」「○△」で、ひらがな・たしざん・ひきざん・かたちのお手本が画面の下に出ます。"
         />
