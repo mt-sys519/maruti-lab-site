@@ -73,7 +73,8 @@ function hasGlyph(f,ch){
   const d=pc.getImageData(0,0,40,40).data;let ink=false;for(let i=3;i<d.length;i+=4)if(d[i]>40){ink=true;break}
   glyphCache.set(key,ink);return ink;
 }
-document.fonts.addEventListener('loadingdone',()=>{glyphCache=new Map();wrapCache.clear();emit('fonts')});
+let FONTV=0; // goes up whenever a font arrives, so anything drawn ahead of it is drawn again
+document.fonts.addEventListener('loadingdone',()=>{glyphCache=new Map();wrapCache.clear();FONTV++;emit('fonts')});
 
 /* ---------- wrapping ---------- */
 const wrapCache=new Map();
@@ -182,6 +183,25 @@ function framePath(c,L,m){
   if(sh==='circle'||sh==='ellipse')c.ellipse(0,0,f.w/2,f.h/2,0,0,Math.PI*2);
   else c.roundRect(-f.w/2,-f.h/2,f.w,f.h,sh==='pill'?Math.min(f.w,f.h)/2:Math.min(L.size*L.band.r/100,Math.min(f.w,f.h)/2));
 }
+// Kept pictures (a text's shadow, a background's 濃淡) live in plain memory: laid onto a picture that glass has
+// read back they cost a copy, where a GPU one would be read back itself on every frame.
+const KEEP={willReadFrequently:true};
+// A text's shadow is the slow part of drawing it (a wide blur, maybe several passes), so it is made into a
+// canvas of its own and kept on the layer until the words, their edge or the shadow change.
+// Only the shadow is drawn: the letters go far off to the side and the offset brings their shadow back.
+// Drawn again for 濃さ over 100%, which deepens a wide soft shadow the way one pass cannot.
+function shadowOf(c,L,f,m,k,lw){
+  const s=L.size,sh=L.shadow,key=[c.font,FONTV,k.toFixed(4),lw,sh.color,sh.a,sh.blur,L.stroke.on,L.vertical,L.align,JSON.stringify(m)].join('|');
+  if(L._sh?.key===key)return L._sh;
+  const pad=s*.6+lw/2+1.5*s*sh.blur/100+2/k,x0=-m.W/2-pad,y0=-m.H/2-pad,w=m.W+2*pad,h=m.H+2*pad;
+  const kk=Math.min(k,Math.sqrt(16e6/(w*h))),cv=document.createElement('canvas'),n=Math.ceil(sh.a),far=2*w;
+  cv.width=Math.ceil(w*kk);cv.height=Math.ceil(h*kk);
+  const x=cv.getContext('2d',KEEP);x.setTransform(kk,0,0,kk,(far-x0)*kk,-y0*kk);x.font=c.font;
+  x.lineJoin='round';x.miterLimit=2;x.lineWidth=lw;x.fillStyle=x.strokeStyle='#000';
+  x.shadowColor=rgba(sh.color,Math.min(1,sh.a/n));x.shadowBlur=s*sh.blur/100*kk;x.shadowOffsetX=-far*kk;
+  for(let i=0;i<n;i++){if(L.stroke.on)glyphs(x,L,f,m,true);glyphs(x,L,f,m,false)}
+  return L._sh={key,cv,x:x0,y:y0,w,h};
+}
 function drawLayer(c,L,ov){
   const f=face(L,ov),s=L.size;
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);
@@ -189,35 +209,29 @@ function drawLayer(c,L,ov){
   if(L.band.on){
     c.save();
     if(L.band.glass){
-      const sh=L.band.shape||'rect',f=frameSize(L,m),hx=f.w/2,hy=f.h/2;
-      glassPaint(c,glassRead(c,hx,hy),sh==='circle'||sh==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,sh==='pill'?Math.min(hx,hy):Math.min(L.size*L.band.r/100,hx,hy)),hx,hy,L.opacity,[L.band.color,L.band.gta]);
+      const sh=L.band.shape||'rect',fr=frameSize(L,m),hx=fr.w/2,hy=fr.h/2,pk=pxKey(c,L,c.font+FONTV),hit=pxGet(c,L,'b',pk);
+      if(hit)pxPut(c,hit);
+      else pxSet(c,L,'b',pk,glassPaint(c,glassRead(c,hx,hy),sh==='circle'||sh==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,sh==='pill'?Math.min(hx,hy):Math.min(L.size*L.band.r/100,hx,hy)),hx,hy,L.opacity,[L.band.color,L.band.gta]));
       framePath(c,L,m);
     }
     else{framePath(c,L,m);c.globalAlpha=L.opacity*L.band.a;c.fillStyle=L.band.color;c.fill()}
     const ln=L.band.line;if(ln?.on){c.globalAlpha=L.opacity;c.lineWidth=s*ln.w/100;c.strokeStyle=ln.color;c.stroke()}
     c.restore();
   }
-  const gm=L.glyph,GA=(gm==='glass'||gm==='jelly')&&glyphRead(c,L,m); // glass and jelly bend the picture as it was before their shadow
+  const gm=L.glyph,gk=(gm==='glass'||gm==='jelly'||gm==='carve')&&pxKey(c,L,c.font+FONTV),gh=gk&&pxGet(c,L,'g',gk);
+  const GA=!gh&&(gm==='glass'||gm==='jelly')&&glyphRead(c,L,m); // glass and jelly bend the picture as it was before their shadow
   c.globalAlpha=L.opacity;c.lineJoin='round';c.miterLimit=2;c.lineWidth=s*L.stroke.w/100*2;
   // 二重のフチ: a second edge round the outside of 縁取り, as wide again as its own 太さ
   const out=L.stroke.on&&L.stroke.out?.on?s*(L.stroke.w+L.stroke.out.w)/100*2:0;
-  if(L.shadow.on){
-    // Only the shadow: the letters go far off to the side and the offset brings their shadow back.
-    // Drawn again for 濃さ over 100%, which deepens a wide soft shadow the way one pass cannot.
-    const T=c.getTransform(),k=Math.hypot(T.a,T.b),far=3*(D.W+D.H),n=Math.ceil(L.shadow.a);
-    c.save();c.translate(-far,0);
-    c.shadowColor=rgba(L.shadow.color,Math.min(1,L.shadow.a/n));c.shadowBlur=s*L.shadow.blur/100*k;
-    c.shadowOffsetX=s*L.shadow.x/100*k+far*T.a;c.shadowOffsetY=s*L.shadow.y/100*k+far*T.b;
-    c.fillStyle=c.strokeStyle='#000';
-    if(out)c.lineWidth=out;
-    for(let i=0;i<n;i++){if(L.stroke.on)glyphs(c,L,f,m,true);glyphs(c,L,f,m,false)}
-    c.restore();
+  if(L.shadow.on){ // made once (see shadowOf) and laid down again; its offset stays upright on the picture
+    const T=c.getTransform(),k=Math.hypot(T.a,T.b),S=shadowOf(c,L,f,m,k,out||c.lineWidth);
+    c.save();c.setTransform(T.a,T.b,T.c,T.d,T.e+s*L.shadow.x/100*k,T.f+s*L.shadow.y/100*k);c.drawImage(S.cv,S.x,S.y,S.w,S.h);c.restore();
   }
   if(out){c.save();c.lineWidth=out;c.strokeStyle=L.stroke.out.color;glyphs(c,L,f,m,true);c.restore()}
   if(L.stroke.on){c.strokeStyle=L.stroke.color;glyphs(c,L,f,m,true)}
-  if(gm==='glass')glyphPaint(c,L,f,m,GA,'glass');
-  else if(gm==='jelly')glyphPaint(c,L,f,m,GA,'jelly');
-  else if(gm==='carve')glyphPaint(c,L,f,m,glyphRead(c,L,m),'carve');
+  if(gh)pxPut(c,gh);
+  else if(gm==='glass'||gm==='jelly')pxSet(c,L,'g',gk,glyphPaint(c,L,f,m,GA,gm));
+  else if(gm==='carve')pxSet(c,L,'g',gk,glyphPaint(c,L,f,m,glyphRead(c,L,m),'carve'));
   else{c.fillStyle=rgba(L.color,L.ca??1);glyphs(c,L,f,m,false)}
   c.restore();
   return m;
@@ -283,8 +297,22 @@ function glassPaint(c,A,sd,hx,hy,alpha,tint){
     const rt=ta?r*fr:r,gt=ta?g*fg:g,bt=ta?bl*fb:bl,R=rt+(255-rt)*lit,Gn=gt+(255-gt)*lit,B=bt+(255-bt)*lit;
     for(let jj=j,je=Math.min(h,j+st);jj<je;jj++)for(let ii=i,ie=Math.min(w,i+st);ii<ie;ii++){const n=(jj*w+ii)*4;o[n]+=(R-o[n])*a;o[n+1]+=(Gn-o[n+1])*a;o[n+2]+=(B-o[n+2])*a}
   }
-  c.putImageData(out,x0,y0);
+  c.putImageData(out,x0,y0);return {out,x0,y0};
 }
+// Glass, jelly and cut letters are worked out pixel by pixel from what is under them, so the result is kept on
+// the layer (per slot and scale) with a key for everything under it (UNDER, see draw) and the layer itself:
+// while neither changes (something above being dragged, a panel opening) it is put back as it was.
+// A half-size result made during a drag stands in only while something is still being dragged.
+let UNDER='';
+const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return (h>>>0).toString(36)};
+const layerKey=L=>JSON.stringify(L,(k,v)=>k.startsWith('_')?undefined:v);
+function pxKey(c,L,extra=''){const T=c.getTransform();return UNDER+'|'+[T.a,T.b,T.c,T.d,T.e,T.f].map(v=>v.toFixed(3)).join()+'|'+layerKey(L)+'|'+extra}
+const pxSlot=(c,slot)=>slot+Math.hypot(c.getTransform().a,c.getTransform().b).toFixed(3);
+function pxGet(c,L,slot,key){const C=L._px?.get(pxSlot(c,slot));return C&&C.key===key&&(C.fine||glassFast)?C:null}
+function pxSet(c,L,slot,key,r){
+  if(!r)return;const M=L._px??=new Map(),k=pxSlot(c,slot);M.delete(k);M.set(k,{key,fine:!glassFast,...r});while(M.size>4)M.delete(M.keys().next().value);
+}
+const pxPut=(c,C)=>c.putImageData(C.out,C.x0,C.y0);
 // Glass letters and letters cut into the picture. The letters are drawn as a white mask, blurred into a
 // height (own box blur, Safari's canvas has no filter), and the height's slope bends what is under them
 // and lights the rim: raised glass takes in the outside and shines top-left; a cut takes in the floor and
@@ -392,7 +420,7 @@ function maskPaint(c,L,A,mode,mask){
     }
     put(x,y,cov*L.opacity);
   }
-  c.putImageData(out,x0,y0);
+  c.putImageData(out,x0,y0);return {out,x0,y0};
 }
 const sameShadow=(c,x,y,blur,col,a,draw)=>{ // for shapes: stack passes the same way
   const n=Math.ceil(a);c.save();c.shadowColor=rgba(col,Math.min(1,a/n));c.shadowBlur=blur;c.shadowOffsetX=x;c.shadowOffsetY=y;for(let i=0;i<n;i++)draw();c.restore();
@@ -697,10 +725,12 @@ function drawShape(c,L){
   c.save();c.translate(L.x,L.y);c.rotate(L.rot);c.globalAlpha=L.opacity;
   const T=c.getTransform(),k=Math.hypot(T.a,T.b),u=Math.min(L.w,L.h,400)/100; // shadow sizes follow the shape, up to a point
   const nf=L.nofill&&FILLABLE(L),mat=nf?'color':isLine(L)||NOGLASS.has(L.kind)?(L.mat==='jelly'?'jelly':'color'):L.mat||(L.glass?'glass':'color'),gl=mat==='glass',jl=mat==='jelly',hx=L.w/2,hy=L.h/2,ex=shapeExt(L);
-  const A=gl?glassRead(c,hx,hy):jl?glassArea(c,ex.w/2+70,ex.h/2+70):null;if(jl&&A)A.bg=c.getImageData(A.x0,A.y0,A.w,A.h);
+  const pk=(gl||jl)&&pxKey(c,L),hit=pk&&pxGet(c,L,'s',pk);
+  const A=hit?null:gl?glassRead(c,hx,hy):jl?glassArea(c,ex.w/2+70,ex.h/2+70):null;if(jl&&A)A.bg=c.getImageData(A.x0,A.y0,A.w,A.h);
   if(L.shadow.on)sameShadow(c,L.shadow.x*u*k,L.shadow.y*u*k,L.shadow.blur*u*k,L.shadow.color,L.shadow.a,nf?()=>{shapePath(c,L);c.lineWidth=L.line.w;c.lineJoin='round';c.strokeStyle='#000';c.stroke()}:()=>{c.fillStyle=gl||jl?'#fff':rgba(L.color,Math.max(L.a,.01));paintShape(c,L)});
-  if(gl)glassPaint(c,A,L.kind==='ellipse'||L.kind==='circle'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]);
-  else if(jl)maskPaint(c,L,A,'jelly',mc=>paintShape(mc,L));
+  if(hit)pxPut(c,hit);
+  else if(gl)pxSet(c,L,'s',pk,glassPaint(c,A,L.kind==='ellipse'||L.kind==='circle'?sdEllipse(hx,hy):sdRect(hx,hy,L.kind==='round'?Math.min(hx,hy)*L.r/100:0),hx,hy,L.opacity,[L.color,L.gta]));
+  else if(jl)pxSet(c,L,'s',pk,maskPaint(c,L,A,'jelly',mc=>paintShape(mc,L)));
   else if(!nf){c.fillStyle=rgba(L.color,L.a);paintShape(c,L);if(L.pat&&FILLABLE(L)){c.save();shapePath(c,L);c.clip();drawPat(c,L.pat,-ex.w/2,-ex.h/2,ex.w,ex.h);c.restore()}}
   if(L.line.on&&!isLine(L)&&!PENNED.has(L.kind)){shapePath(c,L);c.lineWidth=L.line.w;c.lineJoin='round';c.strokeStyle=L.line.color;c.stroke()}
   c.restore();
@@ -725,17 +755,24 @@ function setBgColor(color){ // a pattern still in its starting shade follows the
   D.bg={type:'color',color,...(p&&{pat:p}),...(old.fade&&{fade:old.fade})};
 }
 // 濃淡 (bg.fade, 0–1): the middle lifts toward white and the corners sink a shade, and the pattern shows only
-// toward the edges, gone in the middle where the words go. The pattern is masked on a canvas of its own.
-const FADE=document.createElement('canvas');
+// toward the edges, gone in the middle where the words go. All of it is made once into a see-through canvas
+// (the pattern masked on one of its own) and kept until the background changes; a few are kept for other pages.
+const FADES=new Map();
 function drawFade(c,bg){
-  const k=bg.fade,cx=D.W/2,cy=D.H/2,R=Math.hypot(cx,cy),ring=(a,b)=>{const g=c.createRadialGradient(cx,cy,0,cx,cy,R);a.forEach(([t,col])=>g.addColorStop(t,col));return g};
-  c.fillStyle=ring([[0,rgba('#ffffff',.75*k)],[.3,rgba('#ffffff',.5*k)],[.75,rgba('#ffffff',0)]]);c.fillRect(0,0,D.W,D.H);
-  c.fillStyle=ring([[.45,rgba(patFor(bg.color).color,0)],[1,rgba(patFor(bg.color).color,.9*k)]]);c.fillRect(0,0,D.W,D.H);
-  if(!bg.pat)return;
-  FADE.width=D.W;FADE.height=D.H;const f=FADE.getContext('2d');drawPat(f,bg.pat);
-  f.globalCompositeOperation='destination-in';const g=f.createRadialGradient(cx,cy,0,cx,cy,R);
-  const clear=.2+.3*k;g.addColorStop(clear,'rgba(0,0,0,0)');g.addColorStop(Math.min(1,clear+.4),'#000');f.fillStyle=g;f.fillRect(0,0,D.W,D.H);
-  c.drawImage(FADE,0,0,D.W,D.H);
+  const key=JSON.stringify([bg.color,bg.fade,bg.pat,D.W,D.H]);let cv=FADES.get(key);
+  if(!cv){
+    const k=bg.fade,cx=D.W/2,cy=D.H/2,R=Math.hypot(cx,cy),x=(cv=document.createElement('canvas')).getContext('2d',KEEP);cv.width=D.W;cv.height=D.H;
+    const ring=(c,a)=>{const g=c.createRadialGradient(cx,cy,0,cx,cy,R);a.forEach(([t,col])=>g.addColorStop(t,col));return g};
+    x.fillStyle=ring(x,[[0,rgba('#ffffff',.75*k)],[.3,rgba('#ffffff',.5*k)],[.75,rgba('#ffffff',0)]]);x.fillRect(0,0,D.W,D.H);
+    x.fillStyle=ring(x,[[.45,rgba(patFor(bg.color).color,0)],[1,rgba(patFor(bg.color).color,.9*k)]]);x.fillRect(0,0,D.W,D.H);
+    if(bg.pat){
+      const pc=document.createElement('canvas');pc.width=D.W;pc.height=D.H;const f=pc.getContext('2d',KEEP);drawPat(f,bg.pat);
+      const clear=.2+.3*k;f.globalCompositeOperation='destination-in';f.fillStyle=ring(f,[[clear,'rgba(0,0,0,0)'],[Math.min(1,clear+.4),'#000']]);f.fillRect(0,0,D.W,D.H);
+      x.drawImage(pc,0,0);
+    }
+    FADES.set(key,cv);while(FADES.size>4)FADES.delete(FADES.keys().next().value);
+  }
+  c.drawImage(cv,0,0,D.W,D.H);
 }
 // Over the box x0,y0,w,h (the whole picture, or a shape's own box), evened out round its middle.
 function drawPat(c,p,x0=0,y0=0,w=D.W,h=D.H){
@@ -755,7 +792,14 @@ function draw(c,o={}){
   if(bg.type==='color'){c.fillStyle=bg.color;c.fillRect(0,0,D.W,D.H);bg.fade?drawFade(c,bg):bg.pat&&drawPat(c,bg.pat)}
   else if(bg.type==='photo'&&src)drawPhoto(c,adjusted(ph,src,D.adj));
   else{const [a,b]=GRADS[(bg.type==='grad'?bg.grad:o.grad||0)%GRADS.length],gr=c.createLinearGradient(0,0,D.W*.36,D.H);gr.addColorStop(0,a);gr.addColorStop(1,b);c.fillStyle=gr;c.fillRect(0,0,D.W,D.H)}
-  const M=new Map();for(const L of D.layers)M.set(L.id,isText(L)?drawLayer(o.ui&&L.id===typingId?HUSH:c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
+  // UNDER sums up what lies under each layer as it is drawn (see pxKey)
+  let U=hash([o.thumb?1:0,D.W,D.H,FONTV,adjLive?1:0,o.grad||0,JSON.stringify(bg),D.photoId,!!src,JSON.stringify(D.photo),JSON.stringify(D.adj||null)].join('|'));
+  const M=new Map();
+  for(const L of D.layers){
+    const hush=o.ui&&L.id===typingId;UNDER=U;
+    M.set(L.id,isText(L)?drawLayer(hush?HUSH:c,L,o.ov):isShape(L)?drawShape(c,L):drawImageLayer(c,L,o.thumb));
+    U=hash(U+layerKey(L)+(isImg(L)?photos.has(L.photoId):'')+(hush?'T':'')+(o.ov?.id===L.id?o.ov.font:''));
+  }
   const L=sel(),kk=o.kk||1;
   if(o.ui==='edit'&&G.guides){
     c.save();c.strokeStyle='#c49a90';c.lineWidth=1.5*kk;
