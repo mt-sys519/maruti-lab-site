@@ -7,16 +7,18 @@ type GamePauseOverlayProps = {
   onResume: () => void;
   onRestart?: () => void;
   onQuit?: () => void;
+  /** Extra classes for the portalled root, so a game can dress the overlay in its own skin. */
+  className?: string;
 };
 
-export function GamePauseOverlay({ active, onResume, onRestart, onQuit }: GamePauseOverlayProps) {
+export function GamePauseOverlay({ active, onResume, onRestart, onQuit, className }: GamePauseOverlayProps) {
   if (!active || typeof document === "undefined") return null;
 
   // Portalled straight to <body>: some mobile browsers (notably iOS Safari) still clip a
   // position:fixed descendant to an ancestor's overflow:hidden box, which left this panel
   // stuck inside .inputRainTerminal's clipped bounds instead of covering the screen.
   return createPortal(
-    <div className="bitPauseOverlay" role="dialog" aria-modal="true" aria-labelledby="bit-pause-title">
+    <div className={className ? `bitPauseOverlay ${className}` : "bitPauseOverlay"} role="dialog" aria-modal="true" aria-labelledby="bit-pause-title">
       <div className="bitPausePanel">
         <p>GAME SUSPENDED</p>
         <h2 id="bit-pause-title">PAUSED</h2>

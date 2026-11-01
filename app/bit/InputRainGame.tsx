@@ -6,9 +6,10 @@ import { GamePauseOverlay } from "./shared/GamePauseOverlay";
 import { ShareButton } from "./shared/ShareButton";
 import { useVisibilityPause } from "./shared/useVisibilityPause";
 import { XShareButton } from "./shared/XShareButton";
-import { inputRainPrompts, type InputRainDifficulty, type InputRainPrompt } from "./inputRainPrompts";
+import { inputRainGenreOrder, inputRainGenres, inputRainPrompts, type InputRainDifficulty, type InputRainGenre, type InputRainPrompt } from "./inputRainPrompts";
 import { useInputRainAudio } from "./useInputRainAudio";
-import { spawnDissolve, spawnMaterialize } from "./inputRainParticles";
+import { PARTICLE_GLYPHS, setParticleGlyphs, spawnDissolve, spawnMaterialize } from "./inputRainParticles";
+import { InputRainSky } from "./inputRainSky";
 import { InputRainFlickPad } from "./InputRainFlickPad";
 import { isReachableTowards, nextMutation } from "./inputRainFlickMap";
 import { SoundMark } from "./shared/SoundMark";
@@ -17,6 +18,7 @@ type Phase = "select" | "countdown" | "playing" | "complete";
 type InputMode = "keyboard" | "flick";
 type PromptFeedback = "idle" | "accepted" | "error" | "timeout";
 type Token = { kana: string; opts: string[] };
+type TrailEntry = { text: string; note?: string; term?: string; typed: boolean };
 type RunResult = {
   accepted: number;
   score: number;
@@ -28,20 +30,20 @@ type RunResult = {
 };
 
 const INPUT_MODE_STORAGE_KEY = "marutibit:input-rain:input-mode";
+const GENRE_STORAGE_KEY = "marutibit:input-rain:genre";
 const inputModeLabels: Record<InputMode, string> = { keyboard: "ローマ字入力", flick: "フリック入力" };
 
 const levels: Record<InputRainDifficulty, {
   label: string;
-  note: string;
   seconds: number;
   fallBase: number;
   fallPerChar: number;
   scoreFactor: number;
 }> = {
-  beginner: { label: "初級", note: "短い端末語", seconds: 20, fallBase: 4600, fallPerChar: 250, scoreFactor: 3 },
-  intermediate: { label: "中級", note: "短い操作文", seconds: 40, fallBase: 6000, fallPerChar: 210, scoreFactor: 1.6 },
-  advanced: { label: "上級", note: "端末ログ", seconds: 60, fallBase: 9000, fallPerChar: 170, scoreFactor: 1 },
-  pro: { label: "PRO", note: "長文ログ", seconds: 180, fallBase: 15500, fallPerChar: 150, scoreFactor: 1 / 3 },
+  beginner: { label: "初級", seconds: 20, fallBase: 4600, fallPerChar: 250, scoreFactor: 3 },
+  intermediate: { label: "中級", seconds: 40, fallBase: 6000, fallPerChar: 210, scoreFactor: 1.6 },
+  advanced: { label: "上級", seconds: 60, fallBase: 9000, fallPerChar: 170, scoreFactor: 1 },
+  pro: { label: "PRO", seconds: 180, fallBase: 15500, fallPerChar: 150, scoreFactor: 1 / 3 },
 };
 
 const romaji: Record<string, string[]> = {
@@ -74,6 +76,7 @@ const digraphs: Record<string, string[]> = {
   びゃ: ["bya"], びゅ: ["byu"], びょ: ["byo"], ぴゃ: ["pya"], ぴゅ: ["pyu"], ぴょ: ["pyo"],
   ふぁ: ["fa", "fwa"], ふぃ: ["fi", "fwi"], ふぇ: ["fe", "fwe"], ふぉ: ["fo", "fwo"],
   てぃ: ["thi", "ti"], でぃ: ["dhi", "di"], うぃ: ["wi"], うぇ: ["we"], うぉ: ["who", "wo"],
+  しぇ: ["she", "sye"], ちぇ: ["che", "tye"], じぇ: ["je", "jye", "zye"],
 };
 
 function hiragana(value: string) {
@@ -189,7 +192,13 @@ export function InputRainGame() {
   const phaseRef = useRef<Phase>("select");
   const promptBagRef = useRef<number[]>([]);
   const statsRef = useRef({ ...emptyStats });
+  const skyRef = useRef<InputRainSky | null>(null);
+  const genreRef = useRef<InputRainGenre>("daily");
+  const feedbackRef = useRef<PromptFeedback>("idle");
+  const fallDurationRef = useRef(0);
+  const trailRef = useRef<TrailEntry[]>([]);
 
+  const [genre, setGenre] = useState<InputRainGenre>("daily");
   const [difficulty, setDifficulty] = useState<InputRainDifficulty>("beginner");
   const [phase, setPhase] = useState<Phase>("select");
   const [inputMode, setInputMode] = useState<InputMode>("keyboard");
@@ -205,23 +214,30 @@ export function InputRainGame() {
   const [result, setResult] = useState<RunResult>(emptyResult);
   const [shareCard, setShareCard] = useState<File | null>(null);
   const [shareStatus, setShareStatus] = useState("");
+  const [trail, setTrail] = useState<TrailEntry[]>([]);
+  const [lastMeaning, setLastMeaning] = useState<{ term: string; note: string } | null>(null);
   const { paused: pagePaused, resume: resumePage } = useVisibilityPause(phase === "playing" || phase === "countdown");
   const paused = manualPaused || pagePaused;
   const {
     enabled: soundEnabled,
     toggle: toggleSound,
+    prime: primeSound,
     playTypeKey,
     playTypeFlick,
     playBackspace,
     playAccept,
     playMiss,
+    playTimeout,
     playCountdownTick,
     playGo,
+    resetPhrase,
+    setRainStrength,
     startBgm,
     startResultBgm,
     stopAllLoops,
-  } = useInputRainAudio(paused || phase === "select");
+  } = useInputRainAudio(paused || phase === "select", genre);
 
+  const genreInfo = inputRainGenres[genre];
   const level = levels[difficulty];
   const tokens = useMemo(() => current ? tokenize(current.reading) : [], [current]);
   const romanGuide = useMemo(() => preferredRoman(tokens, typed), [tokens, typed]);
@@ -230,7 +246,15 @@ export function InputRainGame() {
   const fallDuration = current ? Math.min(15000, level.fallBase + cleanCharacterCount(current.reading) * level.fallPerChar) : level.fallBase;
 
   useEffect(() => {
+    fallDurationRef.current = fallDuration;
+  }, [fallDuration]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
+      try {
+        const savedGenre = localStorage.getItem(GENRE_STORAGE_KEY);
+        if (savedGenre && savedGenre in inputRainGenres) setGenre(savedGenre as InputRainGenre);
+      } catch { /* Start on the everyday genre. */ }
       try {
         const saved = localStorage.getItem(INPUT_MODE_STORAGE_KEY);
         if (saved === "keyboard" || saved === "flick") {
@@ -249,35 +273,103 @@ export function InputRainGame() {
     try { localStorage.setItem(INPUT_MODE_STORAGE_KEY, mode); } catch { /* Optional. */ }
   }, []);
 
+  const chooseGenre = useCallback((next: InputRainGenre) => {
+    setGenre(next);
+    try { localStorage.setItem(GENRE_STORAGE_KEY, next); } catch { /* Optional. */ }
+  }, []);
+
   useEffect(() => {
     phaseRef.current = phase;
   }, [phase]);
+
+  useEffect(() => {
+    genreRef.current = genre;
+    gameShellRef.current?.closest(".inputRainPage")?.setAttribute("data-ir-genre", genre);
+    setParticleGlyphs(PARTICLE_GLYPHS[genre]);
+    skyRef.current?.setGenre(genre);
+  }, [genre]);
+
+  useEffect(() => {
+    feedbackRef.current = feedback;
+  }, [feedback]);
+
+  // Where the prompt is in its fall, for the warning ripples gathering under it. Read from
+  // refs every frame by the sky, so it needs no re-render to stay current.
+  const dangerSource = useCallback(() => {
+    if (phaseRef.current !== "playing" || feedbackRef.current === "accepted" || feedbackRef.current === "timeout") return null;
+    const deadline = fallDeadlineRef.current;
+    const duration = fallDurationRef.current;
+    const canvas = skyRef.current ? particleLayerRef.current : null;
+    const glyphs = promptGlyphsRef.current;
+    if (!deadline || !duration || !canvas || !glyphs) return null;
+    const now = fallPauseStartedRef.current || performance.now();
+    const progress = Math.max(0, Math.min(1, 1 - (deadline - now) / duration));
+    const laneRect = canvas.getBoundingClientRect();
+    const glyphRect = glyphs.getBoundingClientRect();
+    return { x: glyphRect.left + glyphRect.width / 2 - laneRect.left, progress };
+  }, []);
+
+  // A callback ref: the select preview, the countdown and the lane each mount their own
+  // canvas, and whichever is on screen gets the one running sky.
+  const attachSky = useCallback((canvas: HTMLCanvasElement | null) => {
+    skyRef.current?.destroy();
+    skyRef.current = null;
+    if (!canvas) return;
+    const sky = new InputRainSky(canvas, genreRef.current);
+    sky.setIdle(phaseRef.current === "select" ? 0.42 : phaseRef.current === "complete" ? 0.12 : 0.16);
+    sky.setDangerSource(dangerSource);
+    sky.start();
+    skyRef.current = sky;
+  }, [dangerSource]);
+
+  useEffect(() => {
+    skyRef.current?.setInputScale(inputMode === "flick" ? 1.9 : 3.4);
+  }, [inputMode, phase]);
+
+  useEffect(() => {
+    skyRef.current?.setPaused(paused);
+  }, [paused, phase]);
+
+  useEffect(() => () => skyRef.current?.destroy(), []);
+
+  // The rain hiss under the music follows the same strength as the rain on screen.
+  useEffect(() => {
+    if (phase !== "playing" || paused) return;
+    const timer = window.setInterval(() => {
+      const sky = skyRef.current;
+      if (sky) setRainStrength(sky.strength());
+    }, 200);
+    return () => window.clearInterval(timer);
+  }, [paused, phase, setRainStrength]);
 
   useEffect(() => () => {
     if (completionTimerRef.current !== null) window.clearTimeout(completionTimerRef.current);
   }, []);
 
+  // v2: one shuffled bag per genre and difficulty, so every list is played through before repeating.
+  const bagKey = `marutibit:input-rain:v2:${genre}:${difficulty}`;
+
   const storeBag = useCallback((next: number[]) => {
-    try { localStorage.setItem(`marutibit:input-rain:v1:${difficulty}`, JSON.stringify(next)); } catch { /* Optional. */ }
-  }, [difficulty]);
+    try { localStorage.setItem(bagKey, JSON.stringify(next)); } catch { /* Optional. */ }
+  }, [bagKey]);
 
   const loadBag = useCallback(() => {
-    const pool = inputRainPrompts[difficulty];
+    const pool = inputRainPrompts[genre][difficulty];
     try {
-      const saved = JSON.parse(localStorage.getItem(`marutibit:input-rain:v1:${difficulty}`) || "null");
-      if (Array.isArray(saved) && saved.every((value) => Number.isInteger(value) && value >= 0 && value < pool.length) && new Set(saved).size === saved.length) return saved as number[];
+      const saved = JSON.parse(localStorage.getItem(bagKey) || "null");
+      if (Array.isArray(saved) && saved.length && saved.every((value) => Number.isInteger(value) && value >= 0 && value < pool.length) && new Set(saved).size === saved.length) return saved as number[];
     } catch { /* Build a fresh bag. */ }
     return shuffle(pool.length);
-  }, [difficulty]);
+  }, [bagKey, difficulty, genre]);
 
   const pickPrompt = useCallback(() => {
-    const pool = inputRainPrompts[difficulty];
+    const pool = inputRainPrompts[genre][difficulty];
     if (!promptBagRef.current.length) promptBagRef.current = loadBag();
     if (!promptBagRef.current.length) promptBagRef.current = shuffle(pool.length);
     const index = promptBagRef.current.pop() ?? 0;
     storeBag(promptBagRef.current);
     return pool[index];
-  }, [difficulty, loadBag, storeBag]);
+  }, [difficulty, genre, loadBag, storeBag]);
 
   const nextPrompt = useCallback(() => {
     setCurrent(pickPrompt());
@@ -285,21 +377,28 @@ export function InputRainGame() {
     setTyped("");
     setMobileTyped("");
     setFeedback("idle");
+    resetPhrase();
     fallDeadlineRef.current = 0;
     fallPauseStartedRef.current = 0;
-  }, [pickPrompt]);
+  }, [pickPrompt, resetPhrase]);
+
+  const recordTrail = useCallback((prompt: InputRainPrompt, typedOut: boolean) => {
+    trailRef.current = [...trailRef.current, { text: prompt.text, note: prompt.note, term: prompt.term, typed: typedOut }];
+  }, []);
 
   const finishRun = useCallback(() => {
     if (phaseRef.current !== "playing") return;
     phaseRef.current = "complete";
     setPhase("complete");
     setManualPaused(false);
-    startResultBgm();
     const stats = statsRef.current;
     const speed = Math.round(stats.correctChars / (level.seconds / 60));
     const accuracy = stats.correctChars + stats.misses ? stats.correctChars / (stats.correctChars + stats.misses) * 100 : 0;
-    const finalResult = { accepted: stats.accepted, score: stats.score, speed, accuracy, maxCombo: stats.maxCombo, rank: computeRank(stats.score, accuracy, stats.misses), inputMode };
+    const rank = computeRank(stats.score, accuracy, stats.misses);
+    startResultBgm(["SSS", "SS", "S", "A"].includes(rank) ? "excellent" : rank === "B" || rank === "C" ? "good" : "retry");
+    const finalResult = { accepted: stats.accepted, score: stats.score, speed, accuracy, maxCombo: stats.maxCombo, rank, inputMode };
     setResult(finalResult);
+    setTrail(trailRef.current);
     setShareCard(null);
     setShareStatus("");
   }, [inputMode, level.seconds, startResultBgm]);
@@ -323,7 +422,7 @@ export function InputRainGame() {
   // displayed countdown number, not whenever an unrelated dependency changes.
   useEffect(() => {
     if (phase !== "countdown") return;
-    playCountdownTick();
+    playCountdownTick(countdown);
   }, [phase, countdown, playCountdownTick]);
 
   useEffect(() => {
@@ -374,16 +473,16 @@ export function InputRainGame() {
       series: "MarutiBit",
       gameNumber: "GAME 004",
       gameTitle: "INPUT RAIN",
-      gameDescription: "落下する端末入力を処理",
+      gameDescription: "落ちてくる言葉を打ち込む",
       questions: result.accepted,
       countLabel: "INPUTS",
-      level: level.label,
+      level: `${genreInfo.label} ${level.label}`,
       score: result.score,
       correct: `${result.accepted} INPUTS`,
       time: `${level.seconds} SEC`,
       url,
     }).then((file) => setShareCard(file));
-  }, [level.label, level.seconds, phase, result]);
+  }, [genreInfo.label, level.label, level.seconds, phase, result]);
 
   // Skips the scroll entirely when the shell already fits on screen (common on a wide
   // desktop viewport) - forcing a scroll there ate up what little scroll range the page
@@ -408,13 +507,17 @@ export function InputRainGame() {
     setCountdown(3);
     setFeedback("idle");
     setManualPaused(false);
+    trailRef.current = [];
+    setTrail([]);
+    setLastMeaning(null);
     promptBagRef.current = loadBag();
     phaseRef.current = "countdown";
     setPhase("countdown");
     resumePage();
     stopAllLoops();
+    primeSound();
     scrollShellIntoView("start");
-  }, [level.seconds, loadBag, resumePage, scrollShellIntoView, stopAllLoops]);
+  }, [level.seconds, loadBag, primeSound, resumePage, scrollShellIntoView, stopAllLoops]);
 
   // The flick pad only mounts once "playing" starts (the countdown screen doesn't show
   // it), so the shell is still its short, pad-less height when startRun's own scroll
@@ -433,6 +536,7 @@ export function InputRainGame() {
     setDisplayStats({ ...statsRef.current });
     setFeedback("error");
     playMiss();
+    skyRef.current?.damp();
     window.setTimeout(() => setFeedback((value) => value === "error" ? "idle" : value), 180);
   }, [feedback, playMiss]);
 
@@ -451,12 +555,17 @@ export function InputRainGame() {
     statsRef.current.score += Math.round(count * 100 * level.scoreFactor * multiplier);
     setDisplayStats({ ...statsRef.current });
     spawnDissolve(particleLayerRef.current, promptGlyphsRef.current?.querySelectorAll(".inputRainGlyph") ?? [], "accept");
+    const layer = particleLayerRef.current?.getBoundingClientRect();
+    const glyphs = promptGlyphsRef.current?.getBoundingClientRect();
+    if (layer && glyphs) skyRef.current?.splash(glyphs.left + glyphs.width / 2 - layer.left, glyphs.top + glyphs.height / 2 - layer.top);
+    recordTrail(current, true);
+    if (current.note) setLastMeaning({ term: current.term || current.text, note: current.note });
     setFeedback("accepted");
     playAccept();
     completionTimerRef.current = window.setTimeout(() => {
       if (phaseRef.current === "playing") nextPrompt();
     }, 190);
-  }, [current, feedback, level.scoreFactor, nextPrompt, playAccept]);
+  }, [current, feedback, level.scoreFactor, nextPrompt, playAccept, recordTrail]);
 
   const handleTimeout = useCallback(() => {
     if (phaseRef.current !== "playing" || paused || feedback === "accepted" || feedback === "timeout") return;
@@ -464,12 +573,17 @@ export function InputRainGame() {
     statsRef.current.combo = 0;
     setDisplayStats({ ...statsRef.current });
     spawnDissolve(particleLayerRef.current, promptGlyphsRef.current?.querySelectorAll(".inputRainGlyph") ?? [], "miss");
+    if (current) {
+      recordTrail(current, false);
+      if (current.note) setLastMeaning({ term: current.term || current.text, note: current.note });
+    }
     setFeedback("timeout");
-    playMiss();
+    playTimeout();
+    skyRef.current?.damp();
     completionTimerRef.current = window.setTimeout(() => {
       if (phaseRef.current === "playing") nextPrompt();
     }, 360);
-  }, [feedback, nextPrompt, paused, playMiss]);
+  }, [current, feedback, nextPrompt, paused, playTimeout, recordTrail]);
 
   // Backstop for the fall timeout: some mobile browsers don't reliably fire
   // animationend on a CSS animation that was paused (backgrounded) mid-flight, which
@@ -526,6 +640,7 @@ export function InputRainGame() {
       if (feedback === "error") setFeedback("idle");
       setTyped(candidate);
       playTypeKey();
+      skyRef.current?.pulse();
       if (status.complete) completePrompt();
     };
     window.addEventListener("keydown", onKeyDown, { passive: false });
@@ -570,6 +685,7 @@ export function InputRainGame() {
     const value = mobileTyped + char;
     if (feedback === "error") setFeedback("idle");
     playTypeFlick();
+    skyRef.current?.pulse();
     setMobileTyped(value);
     if (value === target) completePrompt();
   }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playTypeFlick, registerInputError]);
@@ -595,6 +711,7 @@ export function InputRainGame() {
     const candidate = mobileTyped.slice(0, -1) + mutated;
     if (feedback === "error") setFeedback("idle");
     playTypeFlick();
+    skyRef.current?.pulse(0.5);
     setMobileTyped(candidate);
     if (candidate === target) completePrompt();
   }, [completePrompt, current, feedback, inputMode, mobileTyped, paused, playTypeFlick, registerInputError]);
@@ -617,7 +734,7 @@ export function InputRainGame() {
   const shareResult = useCallback(async () => {
     const url = "https://marutilab.com/bit/input-rain";
     const title = "MarutiBit — INPUT RAIN";
-    const text = `PromptTermの端末入力を、文字が落ちきる前に打ち込むタイピングゲーム「INPUT RAIN」。\n${level.label} / ${result.accepted} INPUTS / SCORE ${result.score.toLocaleString()} / RANK ${result.rank}`;
+    const text = `落ちてくる言葉を、落ちきる前に打ち込むタイピングゲーム「INPUT RAIN」。\n${genreInfo.label}・${level.label} / ${result.accepted} INPUTS / SCORE ${result.score.toLocaleString()} / RANK ${result.rank}`;
     const shareText = `${text}\n${url}`;
     try {
       if (shareCard && navigator.canShare?.({ files: [shareCard] })) {
@@ -633,7 +750,7 @@ export function InputRainGame() {
     } catch (error) {
       if ((error as DOMException).name !== "AbortError") setShareStatus("共有できませんでした");
     }
-  }, [level.label, result, shareCard]);
+  }, [genreInfo.label, level.label, result, shareCard]);
 
   // Drops a few noise particles into the freshly-rendered prompt glyphs, echoing the fall.
   // A short timeout (rather than requestAnimationFrame) waits for layout without depending
@@ -649,9 +766,12 @@ export function InputRainGame() {
   const glyphs = current ? [...current.text] : [];
   const isTopRank = result.rank === "SSS" || result.rank === "SS" || result.rank === "S" || result.rank === "A";
   const resultMood = isTopRank ? "is-excellent" : result.rank === "B" || result.rank === "C" ? "is-good" : "is-retry";
+  const isTerminal = genre === "terminal";
+  const entryMark = isTerminal ? "PT>" : "▸";
+  const typedCount = trail.filter((entry) => entry.typed).length;
 
   return (
-    <section ref={gameShellRef} className="bitGameShell inputRainGameShell" data-card-ready={shareCard ? "true" : "false"}>
+    <section ref={gameShellRef} className={`bitGameShell inputRainGameShell inputRainSkin is-${genre}`} data-card-ready={shareCard ? "true" : "false"}>
       <div className="bitGameControls">
         <button type="button" className={`bitSound${soundEnabled ? " isOn" : ""}`} onClick={() => void toggleSound()} aria-pressed={soundEnabled}>
           <SoundMark />SOUND <strong>{soundEnabled ? "ON" : "OFF"}</strong>
@@ -661,15 +781,32 @@ export function InputRainGame() {
 
       {phase === "select" && (
         <>
-          <div className="bitSelectHead"><span>SELECT LEVEL</span><strong>{Object.keys(levels).length} MODES</strong></div>
-          <div className="inputRainTerminal inputRainTerminalPreview" aria-label="ゲーム説明">
-            <div className="inputRainChrome"><b>Pt</b><span>PROMPTTERM / INPUT CHANNEL</span><small>STANDBY</small></div>
+          <div className="bitSelectHead"><span>SELECT GENRE</span><strong>{inputRainGenreOrder.length} GENRES</strong></div>
+          <div className={`inputRainTerminal inputRainTerminalPreview is-${genre}`} aria-label="ゲーム説明">
+            <div className="inputRainChrome"><b>{genreInfo.badge}</b><span>{genreInfo.chrome}</span><small>STANDBY</small></div>
             <div className="inputRainReady">
-              <span className="inputRainPromptMark" aria-hidden="true"><i /><i /><i /></span>
-              <p>PT&gt; INPUT CHANNEL ARMED<span className="inputRainCursor">▋</span></p>
-              <small>表示された日本語を、文字が落ちきる前に入力。</small>
+              <canvas ref={attachSky} className="inputRainSky" aria-hidden="true" />
+              {isTerminal ? (
+                <>
+                  <span className="inputRainPromptMark" aria-hidden="true"><i /><i /><i /></span>
+                  <p>PT&gt; INPUT CHANNEL ARMED<span className="inputRainCursor">▋</span></p>
+                </>
+              ) : (
+                <>
+                  <span className="inputRainSampleReading">{genreInfo.sampleReading}</span>
+                  <p className="inputRainSample">{genreInfo.sample}</p>
+                </>
+              )}
+              <small>表示された日本語を、文字が落ちきる前に入力。速く打つほど雨が強くなります。</small>
             </div>
-            <div className="inputRainStatus"><span>MODE / AUTO</span><span>RAIN / GLYPH ONLY</span><span>READY</span></div>
+            <div className="inputRainStatus"><span>GENRE / {genreInfo.label}</span><span>{genreInfo.scene}</span><span>READY</span></div>
+          </div>
+          <div className="bitModeSelect inputRainGenreSelect">
+            {inputRainGenreOrder.map((key) => (
+              <button key={key} type="button" className={`is-${key}${genre === key ? " isActive" : ""}`} onClick={() => chooseGenre(key)}>
+                {inputRainGenres[key].label}<small>{inputRainGenres[key].scene}</small>
+              </button>
+            ))}
           </div>
           <div className="bitModeSelect inputRainInputToggle">
             <button type="button" className={inputMode === "keyboard" ? "isActive" : undefined} onClick={() => chooseInputMode("keyboard")}>
@@ -682,22 +819,22 @@ export function InputRainGame() {
           <div className="bitModeSelect inputRainDifficultySelect">
             {(Object.keys(levels) as InputRainDifficulty[]).map((key) => (
               <button key={key} type="button" className={difficulty === key ? "isActive" : undefined} onClick={() => setDifficulty(key)}>
-                {levels[key].label}<small>{levels[key].seconds} SEC / {levels[key].note}</small>
+                {levels[key].label}<small>{levels[key].seconds} SEC / {genreInfo.notes[key]}</small>
               </button>
             ))}
           </div>
           <button type="button" className="bitStart" onClick={startRun}>START<small className="inputRainSpaceHint">SPACE TO START</small></button>
-          <p className="bitRule">入力方式はこの端末に記憶され、次回も同じ設定で始まります。物理キーボードを接続した場合は「キーボード」を選んでください。</p>
+          <p className="bitRule">ジャンルと入力方式はこの端末に記憶され、次回も同じ設定で始まります。物理キーボードを接続した場合は「キーボード」を選んでください。</p>
           <div className="bitPakuShareRow">
-            <ShareButton title="MarutiBit「INPUT RAIN」" text="PromptTermの端末入力を、文字が落ちきる前に打ち込むタイピング／フリック入力ゲーム" url="https://marutilab.com/bit/input-rain" />
-            <XShareButton variant="compact" text={"MarutiBit「INPUT RAIN」\nPromptTermの端末入力を、文字が落ちきる前に打ち込むタイピング／フリック入力ゲーム"} url="https://marutilab.com/bit/input-rain" />
+            <ShareButton title="MarutiBit「INPUT RAIN」" text="落ちてくる言葉を、落ちきる前に打ち込むタイピング／フリック入力ゲーム。日常・四字熟語・ビジネス・端末の4ジャンル" url="https://marutilab.com/bit/input-rain" />
+            <XShareButton variant="compact" text={"MarutiBit「INPUT RAIN」\n落ちてくる言葉を、落ちきる前に打ち込むタイピング／フリック入力ゲーム。日常・四字熟語・ビジネス・端末の4ジャンル"} url="https://marutilab.com/bit/input-rain" />
           </div>
         </>
       )}
 
       {(phase === "countdown" || phase === "playing") && (
-        <div className={`inputRainTerminal${paused ? " isPaused" : ""}${feedback === "error" ? " isError" : ""}${difficulty === "pro" ? " isPro" : ""}`}>
-          <div className="inputRainChrome"><b>Pt</b><span>PROMPTTERM / INPUT RAIN</span><small>{phase === "countdown" ? "SYNC" : level.label}</small></div>
+        <div className={`inputRainTerminal is-${genre}${paused ? " isPaused" : ""}${feedback === "error" ? " isError" : ""}${difficulty === "pro" ? " isPro" : ""}`}>
+          <div className="inputRainChrome"><b>{genreInfo.badge}</b><span>{genreInfo.chrome}</span><small>{phase === "countdown" ? "SYNC" : level.label}</small></div>
           <div className="inputRainHud">
             <span>TIME <strong>{remaining.toFixed(1).padStart(4, "0")}</strong></span>
             <span>SCORE <strong>{String(displayStats.score).padStart(5, "0")}</strong></span>
@@ -705,10 +842,14 @@ export function InputRainGame() {
             <span>MISS <strong>{displayStats.misses}</strong></span>
           </div>
           {phase === "countdown" ? (
-            <div className="inputRainCountdown"><span>{countdown}</span><small>INPUT CHANNEL SYNC</small></div>
+            <div className="inputRainCountdown">
+              <canvas ref={attachSky} className="inputRainSky" aria-hidden="true" />
+              <span>{countdown}</span><small>{isTerminal ? "INPUT CHANNEL SYNC" : `${genreInfo.label} / ${level.label}`}</small>
+            </div>
           ) : (
             <>
               <div className="inputRainLane">
+                <canvas ref={attachSky} className="inputRainSky" aria-hidden="true" />
                 <div key={promptId} className={`inputRainDrop is-${feedback}`} style={{ "--fall-duration": `${fallDuration}ms` } as React.CSSProperties} onAnimationEnd={(event) => { if (event.target === event.currentTarget && event.animationName === "inputRainFall") handleTimeout(); }}>
                   {inputMode === "keyboard" && <div className="inputRainFurigana">{current?.reading}</div>}
                   <div ref={promptGlyphsRef} className="inputRainPrompt" aria-live="polite">
@@ -719,11 +860,17 @@ export function InputRainGame() {
                 <div ref={particleLayerRef} className="inputRainParticleLayer" aria-hidden="true" />
               </div>
               <div className="inputRainEntry">
-                <span>PT&gt;</span>
+                <span>{entryMark}</span>
                 <p>{inputMode === "keyboard" ? typed : mobileTyped}<i>▋</i></p>
                 <small>{inputMode === "keyboard" ? "KEYBOARD" : "FLICK / KANA"}</small>
               </div>
-              <div className="inputRainStatus"><span>INPUT / {inputMode === "keyboard" ? "ROMAJI" : "KANA"}</span><span>ACCEPT / LIVE</span><span>{feedback === "accepted" ? "ACCEPTED" : feedback === "error" ? "REJECTED" : feedback === "timeout" ? "LOST" : "READY"}</span></div>
+              {genre === "yoji" ? (
+                <div className="inputRainMeaning" aria-live="polite">
+                  {lastMeaning ? <><b>{lastMeaning.term}</b><span>{lastMeaning.note}</span></> : <span className="isHint">打ち終えた熟語の意味が、ここに出ます。</span>}
+                </div>
+              ) : (
+                <div className="inputRainStatus"><span>INPUT / {inputMode === "keyboard" ? "ROMAJI" : "KANA"}</span><span>{genreInfo.label} / {level.label}</span><span>{isTerminal ? (feedback === "accepted" ? "ACCEPTED" : feedback === "error" ? "REJECTED" : feedback === "timeout" ? "LOST" : "READY") : (feedback === "accepted" ? "OK" : feedback === "error" ? "MISS" : feedback === "timeout" ? "落ちた" : "入力中")}</span></div>
+              )}
               {inputMode === "flick" && (
                 <InputRainFlickPad
                   onCommit={appendFlickChar}
@@ -733,18 +880,19 @@ export function InputRainGame() {
               )}
             </>
           )}
-          <GamePauseOverlay active={paused} onResume={resumeGame} onRestart={startRun} onQuit={quitRun} />
+          <GamePauseOverlay active={paused} onResume={resumeGame} onRestart={startRun} onQuit={quitRun} className={`inputRainSkin is-${genre}`} />
         </div>
       )}
 
       {phase === "complete" && (
         <div className="bitResult inputRainResult">
+          <canvas ref={attachSky} className="inputRainSky" aria-hidden="true" />
           <div className={`bitCelebration ${resultMood}`}>
             <div className="bitResultBurst" />
             <div className="bitParticles" aria-hidden="true">{Array.from({ length: 20 }, (_, index) => <i key={index} />)}</div>
-            <span className="bitCelebrationMark">{result.rank === "SSS" ? "LEGENDARY CLEAR" : isTopRank ? "CHANNEL CLEARED" : result.rank === "D" ? "RETRY ADVISED" : "RUN COMPLETE"}</span>
+            <span className="bitCelebrationMark">{result.rank === "SSS" ? "LEGENDARY CLEAR" : isTopRank ? (isTerminal ? "CHANNEL CLEARED" : "CLEAN RUN") : result.rank === "D" ? "RETRY ADVISED" : "RUN COMPLETE"}</span>
           </div>
-          <p className="bitResultOverline">INPUT RAIN / {level.label} / {inputModeLabels[result.inputMode]}</p>
+          <p className="bitResultOverline">INPUT RAIN / {genreInfo.label} / {level.label} / {inputModeLabels[result.inputMode]}</p>
           <div className={`inputRainRankMark ${resultMood}${result.rank === "SSS" ? " is-legendary" : ""}`}>{result.rank}</div>
           <p className="inputRainRankCaption">RANK</p>
           <h2 className="inputRainScoreValue">{result.score.toLocaleString()}</h2>
@@ -755,11 +903,24 @@ export function InputRainGame() {
             <div><span>ACCURACY</span><strong>{result.accuracy.toFixed(1)}%</strong></div>
             <div><span>MAX CHAIN</span><strong>{result.maxCombo}</strong></div>
           </div>
-          <button type="button" className="bitRetry" onClick={startRun}>同じ難易度でもう一度</button>
+          <button type="button" className="bitRetry" onClick={startRun}>同じ設定でもう一度</button>
           <button type="button" className="bitShare" onClick={() => void shareResult()}>結果をシェア</button>
-          <XShareButton text={`MarutiBit「INPUT RAIN」\n${level.label} / SCORE ${result.score.toLocaleString()} / RANK ${result.rank} / ${result.accepted} INPUTS / ACCURACY ${result.accuracy.toFixed(1)}%`} url="https://marutilab.com/bit/input-rain" />
-          <button type="button" className="bitChange" onClick={quitRun}>難易度を変える</button>
+          <XShareButton text={`MarutiBit「INPUT RAIN」\n${genreInfo.label}・${level.label} / SCORE ${result.score.toLocaleString()} / RANK ${result.rank} / ${result.accepted} INPUTS / ACCURACY ${result.accuracy.toFixed(1)}%`} url="https://marutilab.com/bit/input-rain" />
+          <button type="button" className="bitChange" onClick={quitRun}>ジャンル・難易度を変える</button>
           <p className="bitShareStatus" aria-live="polite">{shareStatus}</p>
+          {trail.length > 0 && (
+            <section className={`inputRainTrail is-${genre}`} aria-label="今回の言葉">
+              <header><span>今回の言葉</span><small>{typedCount} / {trail.length}</small></header>
+              <ol>
+                {trail.map((entry, index) => (
+                  <li key={index} className={entry.typed ? "isTyped" : "isLost"}>
+                    <strong>{entry.text}</strong>
+                    {entry.note && <small>{entry.term && entry.term !== entry.text ? `${entry.term}：` : ""}{entry.note}</small>}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
         </div>
       )}
     </section>

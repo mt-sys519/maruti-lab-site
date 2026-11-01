@@ -7,8 +7,22 @@
 
 const NOISE_GLYPHS = ["ﾊ", "ﾐ", "ﾋ", "ｳ", "ｼ", "ﾅ", "ﾓ", "ﾆ", "ｻ", "ﾜ", "ﾂ", "ｵ", "ﾘ", "ｱ", "ﾎ", "ﾃ", "ﾏ", "ｹ", "ﾒ", "ｴ", "ｶ", "ｷ", "ﾑ", "ﾕ", "ﾗ", "ｾ", "ﾈ", "ｽ", "ﾀ", "ﾇ", "ﾍ", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
+/** The terminal sheds noise glyphs; the other skins shed plain droplets (or ink dots). */
+export const PARTICLE_GLYPHS = {
+  terminal: NOISE_GLYPHS,
+  daily: ["・", "・", "∘", "°"],
+  business: ["・", "·", "∘"],
+  yoji: ["、", "丶", "・", "・"],
+};
+
+let activeGlyphs: string[] = NOISE_GLYPHS;
+
+export function setParticleGlyphs(glyphs: string[]) {
+  activeGlyphs = glyphs;
+}
+
 function randomGlyph() {
-  return NOISE_GLYPHS[Math.floor(Math.random() * NOISE_GLYPHS.length)];
+  return activeGlyphs[Math.floor(Math.random() * activeGlyphs.length)];
 }
 
 function prefersReducedMotion() {

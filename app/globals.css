@@ -434,63 +434,148 @@ footer{padding-top:34px;padding-bottom:34px}
 .inputRainTitleMark i,.inputRainPromptMark i{position:absolute;top:18%;width:1px;height:28%;background:currentColor;opacity:.68}
 .inputRainTitleMark i:nth-child(1),.inputRainPromptMark i:nth-child(1){left:29%}.inputRainTitleMark i:nth-child(2),.inputRainPromptMark i:nth-child(2){left:50%;height:42%}.inputRainTitleMark i:nth-child(3),.inputRainPromptMark i:nth-child(3){left:71%;height:56%}
 .inputRainGameShell{max-width:1040px}
-.inputRainTerminal{--pt-green:#86f15a;--pt-muted:#557761;position:relative;overflow:hidden;min-height:570px;border:1px solid #294233;background:#030806;color:#cde1d2;box-shadow:inset 0 0 55px rgba(60,150,73,.055),0 12px 35px rgba(12,28,20,.13);font-family:"Cascadia Mono","Consolas","Yu Gothic UI",monospace}
+/* The page dresses in the chosen genre too (same idea as .bitPageDark), switched live by the game. */
+.inputRainPage[data-ir-genre="daily"]{--pg-paper:#1c2539;--pg-ink:#eef1f7;--pg-sub:#aab5cb;--pg-band:#141b2b;--pg-line:#34405a;--pg-card:#222c42;--pg-card-line:#3a4763;--pg-tint:rgba(186,200,228,.06);--pg-accent:#ffc98e}
+.inputRainPage[data-ir-genre="business"]{--pg-paper:#0d1322;--pg-ink:#eaf0f8;--pg-sub:#9fb0c8;--pg-band:#0a0f1b;--pg-line:#24314a;--pg-card:#131b2c;--pg-card-line:#2a3956;--pg-tint:rgba(127,178,255,.05);--pg-accent:#7fb2ff}
+.inputRainPage[data-ir-genre="yoji"]{--pg-paper:#efe7d4;--pg-ink:#2a241d;--pg-sub:#6d5f50;--pg-band:#f6f0e2;--pg-line:#cdbf9f;--pg-card:#f7f1e3;--pg-card-line:rgba(60,45,30,.55);--pg-tint:rgba(120,95,60,.07);--pg-accent:#b8372b}
+.inputRainPage[data-ir-genre="terminal"]{--pg-paper:#050a07;--pg-ink:#dbe7dd;--pg-sub:#7fa88c;--pg-band:#08100c;--pg-line:#213329;--pg-card:#0b140f;--pg-card-line:#2b4535;--pg-tint:rgba(134,241,90,.045);--pg-accent:#86f15a}
+.inputRainPage[data-ir-genre]{--bit-paper:var(--pg-paper);--bit-ink:var(--pg-ink);color:var(--pg-ink);background-image:linear-gradient(var(--pg-tint) 1px,transparent 1px),linear-gradient(90deg,var(--pg-tint) 1px,transparent 1px);transition:background-color .4s ease}
+.inputRainPage[data-ir-genre] .bitIntro{background:var(--pg-band);border-bottom-color:var(--pg-line);border-left-color:var(--pg-accent)}
+.inputRainPage[data-ir-genre] .bitIntro h1,.inputRainPage[data-ir-genre] .bitIntro>p:last-child strong{color:var(--pg-ink)}
+.inputRainPage[data-ir-genre] .bitIntro p,.inputRainPage[data-ir-genre] .bitIntroSub{color:var(--pg-sub)}
+.inputRainPage[data-ir-genre] .bitSerial,.inputRainPage[data-ir-genre] .inputRainTitleMark{color:var(--pg-accent)}
+.inputRainPage[data-ir-genre] .bitHowToPlayCard,.inputRainPage[data-ir-genre] .bitNotesCard{background:var(--pg-card);border-color:var(--pg-card-line);box-shadow:5px 5px 0 rgba(0,0,0,.22);color:var(--pg-sub)}
+.inputRainPage[data-ir-genre] .bitHowToPlayCard h3,.inputRainPage[data-ir-genre] .bitHowToPlayLead,.inputRainPage[data-ir-genre] .bitNotesCard strong{color:var(--pg-ink)}
+.inputRainPage[data-ir-genre] .bitHowToPlaySub,.inputRainPage[data-ir-genre] .bitNotesLead,.inputRainPage[data-ir-genre] .bitNotesCard p{color:var(--pg-sub)}
+.inputRainPage[data-ir-genre] .bitHowToPlayNum{opacity:.2}
+.inputRainPage[data-ir-genre] .bitHowToPlayChips span{background:transparent;border-color:var(--pg-card-line);color:var(--pg-ink)}
+.inputRainTerminal,.inputRainSkin{--pt-green:#86f15a;--ir-accent:var(--pt-green);--ir-bg:#030806;--ir-text:#cde1d2;--ir-ink:var(--pt-green);--ir-glow:rgba(134,241,90,.22);--ir-line:#213329;--ir-chrome-bg:#08100c;--ir-chrome-text:#dbe7dd;--ir-badge-text:#041006;--ir-hud-bg:rgba(4,10,7,.88);--ir-muted:#54715e;--ir-value:#aec5b3;--ir-sub:#7fa88c;--ir-guide:#557761;--ir-guide-done:#a8cdb0;--ir-guide-label:#3f5d49;--ir-entry-bg:#07100b;--ir-entry-text:#d5e5d8;--ir-key-bg:#0b1811;--ir-key-active:#132b1c;--ir-key-text:var(--pt-green);--ir-key-sub:#9fb5a6;--ir-hint:#4c6b57;--ir-popup:rgba(4,10,7,.96);--ir-miss:255,122,92;--ir-mono:"Cascadia Mono","Consolas",monospace;--ir-face:"Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;--ir-weight:500;--ir-shadow:inset 0 0 55px rgba(60,150,73,.055),0 12px 35px rgba(12,28,20,.13);}
+.inputRainTerminal{position:relative;overflow:hidden;min-height:570px;border:1px solid var(--ir-line);background:var(--ir-bg);color:var(--ir-text);box-shadow:var(--ir-shadow);font-family:var(--ir-mono)}
 .inputRainTerminal:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(134,241,90,.018) 0,rgba(134,241,90,.018) 1px,transparent 1px,transparent 4px)}
 .inputRainTerminal>*{position:relative;z-index:1}
-.inputRainChrome{height:50px;padding:0 16px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;border-bottom:1px solid #26382e;background:#08100c}
-.inputRainChrome b{display:grid;place-items:center;width:27px;height:27px;border-radius:4px;background:var(--pt-green);color:#041006;font:800 15px/1 "Yu Gothic UI",sans-serif;box-shadow:0 0 14px rgba(134,241,90,.22)}
-.inputRainChrome span{font:600 10px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.12em;color:#dbe7dd}.inputRainChrome small{font:600 8px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.15em;color:var(--pt-green)}
+.inputRainSky{position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none}
+.inputRainChrome{height:50px;padding:0 16px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;border-bottom:1px solid var(--ir-line);background:var(--ir-chrome-bg)}
+.inputRainChrome b{display:grid;place-items:center;min-width:27px;height:27px;padding:0 4px;border-radius:4px;background:var(--ir-accent);color:var(--ir-badge-text);font:800 15px/1 var(--ir-face);box-shadow:0 0 14px var(--ir-glow)}
+.inputRainChrome span{font:600 10px/1 var(--ir-mono);letter-spacing:.12em;color:var(--ir-chrome-text)}.inputRainChrome small{font:600 8px/1 var(--ir-mono);letter-spacing:.15em;color:var(--ir-accent)}
 .inputRainTerminalPreview{min-height:390px;margin-top:24px}
-.inputRainReady{min-height:294px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
-.inputRainReady .inputRainPromptMark{width:54px;height:56px;margin-bottom:30px;color:var(--pt-green);font-size:54px}
-.inputRainReady p{margin:0;color:var(--pt-green);font:500 clamp(16px,2.3vw,24px)/1.4 "Cascadia Mono","Consolas","Yu Gothic UI",monospace;letter-spacing:.05em;text-shadow:0 0 13px rgba(134,241,90,.22)}
-.inputRainReady small{margin-top:18px;color:#789080;font:400 10px/1.8 "Yu Gothic UI",sans-serif;letter-spacing:.08em}
+.inputRainReady{min-height:294px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;overflow:hidden}
+.inputRainReady>*:not(canvas){position:relative;z-index:1}
+.inputRainReady .inputRainPromptMark{width:54px;height:56px;margin-bottom:30px;color:var(--ir-accent);font-size:54px}
+.inputRainReady p{margin:0;color:var(--ir-ink);font:500 clamp(16px,2.3vw,24px)/1.4 var(--ir-mono),"Yu Gothic UI",monospace;letter-spacing:.05em;text-shadow:0 0 13px var(--ir-glow)}
+.inputRainReady .inputRainSample{font:var(--ir-weight) clamp(30px,5vw,52px)/1.3 var(--ir-face);letter-spacing:.07em;text-shadow:0 0 16px var(--ir-glow)}
+.inputRainSampleReading{margin-bottom:8px;color:var(--ir-sub);font:500 clamp(11px,1.6vw,14px)/1.4 var(--ir-face);letter-spacing:.14em}
+.inputRainReady small{margin-top:20px;color:var(--ir-muted);font:400 10px/1.8 "Yu Gothic UI",sans-serif;letter-spacing:.08em}
 .inputRainCursor{animation:inputRainCursor .85s steps(1,end) infinite}
-.inputRainHud{height:54px;padding:0 clamp(10px,2vw,22px);display:grid;grid-template-columns:repeat(4,1fr);align-items:center;border-bottom:1px solid #213329;background:rgba(4,10,7,.88)}
-.inputRainHud span{padding:0 13px;border-right:1px solid #213329;color:#54715e;font:600 8px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.12em}.inputRainHud span:last-child{border:0}.inputRainHud strong{float:right;color:#aec5b3;font-size:11px;letter-spacing:.03em;font-variant-numeric:tabular-nums}
-.inputRainLane{position:relative;height:388px;overflow:hidden;border-bottom:1px solid #213329;background:radial-gradient(circle at 50% 44%,rgba(57,111,64,.07),transparent 52%)}
+.inputRainHud{height:54px;padding:0 clamp(10px,2vw,22px);display:grid;grid-template-columns:repeat(4,1fr);align-items:center;border-bottom:1px solid var(--ir-line);background:var(--ir-hud-bg)}
+.inputRainHud span{padding:0 13px;border-right:1px solid var(--ir-line);color:var(--ir-muted);font:600 8px/1 var(--ir-mono);letter-spacing:.12em}.inputRainHud span:last-child{border:0}.inputRainHud strong{float:right;color:var(--ir-value);font-size:11px;letter-spacing:.03em;font-variant-numeric:tabular-nums}
+.inputRainLane{position:relative;height:388px;overflow:hidden;border-bottom:1px solid var(--ir-line);background:radial-gradient(circle at 50% 44%,rgba(57,111,64,.07),transparent 52%)}
 .inputRainParticleLayer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
-.inputRainParticle{position:absolute;font:700 15px/1 "Cascadia Mono","Consolas",monospace;color:var(--pt-green);text-shadow:0 0 9px rgba(134,241,90,.85),0 0 2px rgba(134,241,90,.9);will-change:transform,opacity,filter}
-.inputRainParticle.isMiss{color:#ff8a7a;text-shadow:0 0 9px rgba(255,90,70,.85),0 0 2px rgba(255,90,70,.9)}
-.inputRainParticle.isForm{color:#e7fff0;text-shadow:0 0 10px rgba(134,241,90,.9),0 0 2px rgba(200,255,220,.95)}
-.inputRainLane:before,.inputRainLane:after{content:"";position:absolute;left:6%;right:6%;height:1px;background:linear-gradient(90deg,transparent,rgba(134,241,90,.11),transparent)}.inputRainLane:before{top:25%}.inputRainLane:after{top:72%}
-.inputRainDrop{--fall-duration:6000ms;position:absolute;left:4%;right:4%;top:22px;text-align:center;animation:inputRainFall var(--fall-duration) linear forwards;will-change:transform}
+.inputRainParticle{position:absolute;font:700 15px/1 var(--ir-mono);color:var(--ir-ink);text-shadow:0 0 9px var(--ir-glow),0 0 2px var(--ir-glow);will-change:transform,opacity,filter}
+.inputRainParticle.isMiss{color:rgb(var(--ir-miss));text-shadow:0 0 9px rgba(var(--ir-miss),.85),0 0 2px rgba(var(--ir-miss),.9)}
+.inputRainParticle.isForm{color:var(--ir-ink);opacity:.9}
+.inputRainTerminal.is-terminal .inputRainParticle.isForm{color:#e7fff0;text-shadow:0 0 10px rgba(134,241,90,.9),0 0 2px rgba(200,255,220,.95)}
+.inputRainTerminal.is-terminal .inputRainLane:before,.inputRainTerminal.is-terminal .inputRainLane:after{content:"";position:absolute;left:6%;right:6%;height:1px;background:linear-gradient(90deg,transparent,rgba(134,241,90,.11),transparent)}.inputRainTerminal.is-terminal .inputRainLane:before{top:25%}.inputRainTerminal.is-terminal .inputRainLane:after{top:72%}
+.inputRainDrop{--fall-duration:6000ms;position:absolute;left:4%;right:4%;top:22px;z-index:2;text-align:center;animation:inputRainFall var(--fall-duration) linear forwards;will-change:transform}
 .inputRainTerminal.isPaused .inputRainDrop,.inputRainTerminal.isPaused .inputRainGlyph:before,.inputRainTerminal.isPaused .inputRainGlyph:after{animation-play-state:paused!important}
-.inputRainFurigana{text-align:center;padding:0 12px;color:#7fa88c;font:500 clamp(11px,1.8vw,15px)/1.4 "Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;letter-spacing:.08em}
-.inputRainPrompt{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%;padding:0 12px;color:var(--pt-green);font:500 clamp(24px,4.4vw,46px)/1.28 "Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;letter-spacing:.06em;text-shadow:0 0 12px rgba(134,241,90,.22)}
+.inputRainFurigana{text-align:center;padding:0 12px;color:var(--ir-sub);font:500 clamp(11px,1.8vw,15px)/1.4 var(--ir-face);letter-spacing:.08em}
+.inputRainPrompt{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%;padding:0 12px;color:var(--ir-ink);font:var(--ir-weight) clamp(24px,4.4vw,46px)/1.28 var(--ir-face);letter-spacing:.06em;text-shadow:0 0 12px var(--ir-glow)}
 .inputRainTerminal.isPro .inputRainPrompt{font-size:clamp(15px,2.6vw,25px)}
-.inputRainGlyph{--glyph-index:0;position:relative;display:inline-block;animation:inputRainGlyphForm .46s cubic-bezier(.16,.84,.32,1) both;animation-delay:calc(var(--glyph-index) * 30ms)}.inputRainGlyph:before,.inputRainGlyph:after{content:attr(data-glyph);position:absolute;inset:0;z-index:-1;color:var(--pt-green);pointer-events:none;opacity:.08;animation:inputGlyphEcho 1.9s ease-in-out infinite;animation-delay:calc(var(--glyph-index) * -95ms);text-shadow:none}.inputRainGlyph:after{opacity:.035;animation-delay:calc(var(--glyph-index) * -95ms - .55s)}
+.inputRainGlyph{--glyph-index:0;position:relative;display:inline-block;animation:inputRainGlyphForm .46s cubic-bezier(.16,.84,.32,1) both;animation-delay:calc(var(--glyph-index) * 30ms)}.inputRainGlyph:before,.inputRainGlyph:after{content:attr(data-glyph);position:absolute;inset:0;z-index:-1;color:var(--ir-ink);pointer-events:none;opacity:.08;animation:inputGlyphEcho 1.9s ease-in-out infinite;animation-delay:calc(var(--glyph-index) * -95ms);text-shadow:none}.inputRainGlyph:after{opacity:.035;animation-delay:calc(var(--glyph-index) * -95ms - .55s)}
 @keyframes inputRainGlyphForm{0%{opacity:0;filter:blur(7px) brightness(2.2);transform:translateY(-8px) scale(1.06)}50%{opacity:.88;filter:blur(2px) brightness(1.5)}100%{opacity:1;filter:blur(0) brightness(1);transform:translateY(0) scale(1)}}
-.inputRainGuide{min-height:32px;margin-top:8px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;padding:0 12px;color:#557761;font:500 clamp(9px,1.4vw,12px)/1.45 "Cascadia Mono","Consolas",monospace;letter-spacing:.04em}.inputRainGuide small{margin-right:9px;font-size:7px;letter-spacing:.15em;color:#3f5d49}.inputRainGuide .isDone{color:#a8cdb0}.inputRainGuide i{color:var(--pt-green);font-style:normal;animation:inputRainCursor .85s steps(1,end) infinite}
+.inputRainGuide{min-height:32px;margin-top:8px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;padding:0 12px;color:var(--ir-guide);font:500 clamp(9px,1.4vw,12px)/1.45 var(--ir-mono);letter-spacing:.04em}.inputRainGuide small{margin-right:9px;font-size:7px;letter-spacing:.15em;color:var(--ir-guide-label)}.inputRainGuide .isDone{color:var(--ir-guide-done)}.inputRainGuide i{color:var(--ir-accent);font-style:normal;animation:inputRainCursor .85s steps(1,end) infinite}
 .inputRainGuide.isRomaji{font-size:clamp(13px,2.2vw,18px)}
 .inputRainDrop.is-accepted{animation-play-state:paused}.inputRainDrop.is-accepted .inputRainPrompt{animation:inputRainAccept .19s ease-out both}.inputRainDrop.is-accepted .inputRainGlyph:before,.inputRainDrop.is-accepted .inputRainGlyph:after{display:none}
 .inputRainDrop.is-timeout{animation:none;transform:translateY(292px)}.inputRainDrop.is-timeout .inputRainGlyph{animation:inputRainDissolve .34s ease-in forwards;animation-delay:calc(var(--glyph-index) * 18ms)}.inputRainDrop.is-timeout .inputRainGuide{opacity:0}
-.inputRainTerminal.isError .inputRainLane{animation:inputRainReject .17s steps(2,end)}.inputRainTerminal.isError .inputRainPrompt{text-shadow:-2px 0 rgba(255,122,92,.7),2px 0 rgba(134,241,90,.32)}
-.inputRainEntry{position:relative;height:62px;padding:0 clamp(14px,2.4vw,25px);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;background:#07100b}.inputRainEntry>span{color:var(--pt-green);font:700 10px/1 "Cascadia Mono","Consolas",monospace}.inputRainEntry p{min-width:0;margin:0;overflow:hidden;white-space:nowrap;color:#d5e5d8;font:500 15px/1 "Cascadia Mono","Consolas","Yu Gothic UI",monospace;letter-spacing:.03em}.inputRainEntry p i{color:var(--pt-green);font-style:normal;animation:inputRainCursor .85s steps(1,end) infinite}.inputRainEntry>small{color:#4c6b57;font:600 7px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.12em}
-.inputRainFlickPad{display:flex;align-items:stretch;gap:8px;padding:12px clamp(14px,2.4vw,25px) 16px;background:#07100b;border-top:1px solid #1d3025}
+.inputRainTerminal.isError .inputRainLane{animation:inputRainReject .17s steps(2,end)}.inputRainTerminal.isError .inputRainPrompt{text-shadow:-2px 0 rgba(var(--ir-miss),.7),2px 0 var(--ir-glow)}
+.inputRainEntry{position:relative;height:62px;padding:0 clamp(14px,2.4vw,25px);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;background:var(--ir-entry-bg)}.inputRainEntry>span{color:var(--ir-accent);font:700 10px/1 var(--ir-mono)}.inputRainEntry p{min-width:0;margin:0;overflow:hidden;white-space:nowrap;color:var(--ir-entry-text);font:500 15px/1 var(--ir-mono),"Yu Gothic UI",monospace;letter-spacing:.03em}.inputRainEntry p i{color:var(--ir-accent);font-style:normal;animation:inputRainCursor .85s steps(1,end) infinite}.inputRainEntry>small{color:var(--ir-hint);font:600 7px/1 var(--ir-mono);letter-spacing:.12em}
+.inputRainFlickPad{display:flex;align-items:stretch;gap:8px;padding:12px clamp(14px,2.4vw,25px) 16px;background:var(--ir-entry-bg);border-top:1px solid var(--ir-line)}
 .inputRainFlickGrid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:6px}
-.inputRainFlickKey{position:relative;min-height:52px;border:1px solid #26382e;border-radius:4px;background:#0b1811;color:var(--pt-green);font:600 19px/1 "Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-.inputRainFlickKey:active{background:#132b1c}
-.inputRainFlickKey.isMutate{font:600 12px/1.3 "Yu Gothic UI",sans-serif;letter-spacing:.04em;color:#9fb5a6}
+.inputRainFlickKey{position:relative;min-height:52px;border:1px solid var(--ir-line);border-radius:4px;background:var(--ir-key-bg);color:var(--ir-key-text);font:600 19px/1 var(--ir-face);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.inputRainFlickKey:active{background:var(--ir-key-active)}
+.inputRainFlickKey.isMutate{font:600 12px/1.3 "Yu Gothic UI",sans-serif;letter-spacing:.04em;color:var(--ir-key-sub)}
 .inputRainFlickKeyMain{position:relative;z-index:1}
-.inputRainFlickHint{position:absolute;inset:4px;pointer-events:none;font:500 8px/1 "Cascadia Mono","Consolas",monospace;color:#4c6b57}
+.inputRainFlickHint{position:absolute;inset:4px;pointer-events:none;font:500 8px/1 var(--ir-mono);color:var(--ir-hint)}
 .inputRainFlickHint i{position:absolute;font-style:normal}
 .inputRainFlickHint i.is-up{top:0;left:50%;transform:translateX(-50%)}
 .inputRainFlickHint i.is-right{top:50%;right:0;transform:translateY(-50%)}
 .inputRainFlickHint i.is-down{bottom:0;left:50%;transform:translateX(-50%)}
 .inputRainFlickHint i.is-left{top:50%;left:0;transform:translateY(-50%)}
-.inputRainFlickPopup{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);z-index:20;width:132px;height:132px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);background:rgba(4,10,7,.96);border:1px solid rgba(134,241,90,.4);border-radius:6px;box-shadow:0 10px 28px rgba(0,0,0,.5);pointer-events:none}
-.inputRainFlickCandidate{display:flex;align-items:center;justify-content:center;font:600 19px/1 "Yu Gothic UI",sans-serif;color:#4c6b57}
+.inputRainFlickPopup{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);z-index:20;width:132px;height:132px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);background:var(--ir-popup);border:1px solid var(--ir-accent);border-radius:6px;box-shadow:0 10px 28px rgba(0,0,0,.5);pointer-events:none}
+.inputRainFlickCandidate{display:flex;align-items:center;justify-content:center;font:600 19px/1 var(--ir-face);color:var(--ir-hint)}
 .inputRainFlickCandidate.isEmpty{visibility:hidden}
 .inputRainFlickCandidate.is-up{grid-column:2;grid-row:1}
 .inputRainFlickCandidate.is-left{grid-column:1;grid-row:2}
 .inputRainFlickCandidate.is-tap{grid-column:2;grid-row:2}
 .inputRainFlickCandidate.is-right{grid-column:3;grid-row:2}
 .inputRainFlickCandidate.is-down{grid-column:2;grid-row:3}
-.inputRainFlickCandidate.isActive{color:var(--pt-green);text-shadow:0 0 10px rgba(134,241,90,.75);transform:scale(1.28)}
+.inputRainFlickCandidate.isActive{color:var(--ir-key-text);text-shadow:0 0 10px var(--ir-glow);transform:scale(1.28)}
 @media(max-width:700px){.inputRainFlickPad{padding:10px 11px 14px}.inputRainFlickKey{min-height:46px;font-size:17px}.inputRainFlickPopup{width:112px;height:112px}.inputRainFlickCandidate{font-size:16px}}
-.inputRainStatus{height:36px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #1d3025;background:#08100c;color:#4e6b57;font:600 7px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.1em}.inputRainStatus span:last-child{color:var(--pt-green)}
-.inputRainCountdown{height:478px;display:flex;flex-direction:column;align-items:center;justify-content:center}.inputRainCountdown span{color:var(--pt-green);font:300 clamp(86px,16vw,154px)/.8 "Cascadia Mono","Consolas",monospace;text-shadow:0 0 24px rgba(134,241,90,.2);animation:inputRainCount .6s ease-out both}.inputRainCountdown small{margin-top:24px;color:#52715c;font:600 8px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.2em}
+.inputRainStatus{height:36px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--ir-line);background:var(--ir-chrome-bg);color:var(--ir-muted);font:600 7px/1 var(--ir-mono);letter-spacing:.1em}.inputRainStatus span:last-child{color:var(--ir-accent)}
+.inputRainMeaning{height:48px;padding:0 clamp(12px,2.4vw,22px);display:flex;align-items:center;gap:14px;overflow:hidden;border-top:1px solid var(--ir-line);background:var(--ir-chrome-bg);color:var(--ir-text);font:500 12px/1.45 var(--ir-face)}
+.inputRainMeaning b{flex:0 0 auto;padding:4px 7px 3px;border:1px solid var(--ir-accent);color:var(--ir-accent);font-size:13px;letter-spacing:.1em}
+.inputRainMeaning span{min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.inputRainMeaning .isHint{color:var(--ir-muted);font-size:11px}
+.inputRainCountdown{height:478px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}.inputRainCountdown>span,.inputRainCountdown>small{position:relative;z-index:1}.inputRainCountdown span{color:var(--ir-ink);font:300 clamp(86px,16vw,154px)/.8 var(--ir-mono);text-shadow:0 0 24px var(--ir-glow);animation:inputRainCount .6s ease-out both}.inputRainCountdown small{margin-top:24px;color:var(--ir-muted);font:600 9px/1 var(--ir-mono),"Yu Gothic UI",sans-serif;letter-spacing:.2em}
+
+/* Daily: a window seat at dusk, warm room light behind the glass. */
+.inputRainTerminal.is-daily,.inputRainSkin.is-daily{--ir-accent:#ffc98e;--ir-bg:linear-gradient(180deg,#1a2234 0%,#26324a 52%,#36435e 100%);--ir-text:#e8ecf4;--ir-ink:#f7f1e6;--ir-glow:rgba(255,206,150,.26);--ir-line:rgba(186,200,228,.15);--ir-chrome-bg:rgba(15,20,32,.94);--ir-chrome-text:#dfe5f1;--ir-badge-text:#2b1a07;--ir-hud-bg:rgba(17,23,37,.86);--ir-muted:#8591a8;--ir-value:#eef1f7;--ir-sub:#b9c4d9;--ir-guide:#8a96ae;--ir-guide-done:#ffe4c2;--ir-guide-label:#5f6b84;--ir-entry-bg:rgba(15,20,32,.96);--ir-entry-text:#eef1f7;--ir-key-bg:#1e273a;--ir-key-active:#2c3852;--ir-key-text:#f7f1e6;--ir-key-sub:#aab5c9;--ir-hint:#6c7891;--ir-popup:rgba(22,28,44,.97);--ir-miss:255,150,128;--ir-weight:600;--ir-shadow:inset 0 0 70px rgba(10,14,26,.5),0 12px 35px rgba(18,24,40,.22)}
+.inputRainTerminal.is-daily:before{background:radial-gradient(circle at 16% 78%,rgba(255,186,112,.2),transparent 24%),radial-gradient(circle at 84% 70%,rgba(255,218,160,.13),transparent 20%),radial-gradient(circle at 62% 92%,rgba(150,186,255,.12),transparent 22%),radial-gradient(ellipse at 50% 0%,rgba(140,160,210,.14),transparent 60%)}
+.inputRainTerminal.is-daily .inputRainLane,.inputRainTerminal.is-daily .inputRainReady,.inputRainTerminal.is-daily .inputRainCountdown{background:none;box-shadow:inset 0 0 0 7px rgba(12,16,27,.55),inset 0 0 0 8px rgba(190,205,235,.08)}
+
+/* Business: a 22nd-floor office window at night, the city out of focus below. */
+.inputRainTerminal.is-business,.inputRainSkin.is-business{--ir-accent:#7fb2ff;--ir-bg:linear-gradient(180deg,#0b111e 0%,#111a2b 58%,#18213a 100%);--ir-text:#dce4f0;--ir-ink:#ffffff;--ir-glow:rgba(140,185,255,.24);--ir-line:rgba(160,182,220,.14);--ir-chrome-bg:#0a0f1b;--ir-chrome-text:#d6deeb;--ir-badge-text:#06111f;--ir-hud-bg:rgba(10,15,27,.9);--ir-muted:#6f7f99;--ir-value:#eaf0f8;--ir-sub:#a3b3cb;--ir-guide:#7b8aa3;--ir-guide-done:#d4e4ff;--ir-guide-label:#54627b;--ir-entry-bg:#0b111d;--ir-entry-text:#eef3fa;--ir-key-bg:#141c2d;--ir-key-active:#1f2b44;--ir-key-text:#eef3fa;--ir-key-sub:#9fb0c8;--ir-hint:#5c6b85;--ir-popup:rgba(10,15,27,.97);--ir-miss:255,112,112;--ir-shadow:inset 0 0 60px rgba(0,0,0,.35),0 12px 35px rgba(10,16,30,.25)}
+.inputRainTerminal.is-business:before{background:radial-gradient(circle at 9% 90%,rgba(255,196,120,.5) 0 1.5px,transparent 2.5px),radial-gradient(circle at 21% 86%,rgba(255,232,190,.4) 0 1.5px,transparent 2.5px),radial-gradient(circle at 34% 92%,rgba(160,200,255,.45) 0 1.5px,transparent 2.5px),radial-gradient(circle at 47% 88%,rgba(255,210,150,.4) 0 1.2px,transparent 2.2px),radial-gradient(circle at 63% 91%,rgba(255,180,110,.45) 0 1.5px,transparent 2.5px),radial-gradient(circle at 76% 85%,rgba(180,210,255,.4) 0 1.2px,transparent 2.2px),radial-gradient(circle at 91% 89%,rgba(255,226,170,.45) 0 1.5px,transparent 2.5px),radial-gradient(circle at 28% 80%,rgba(255,190,120,.1),transparent 9%),radial-gradient(circle at 70% 78%,rgba(120,170,255,.11),transparent 11%),radial-gradient(circle at 52% 96%,rgba(255,170,100,.1),transparent 14%),repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),rgba(200,215,240,.06) calc(25% - 1px),rgba(200,215,240,.06) 25%)}
+.inputRainTerminal.is-business .inputRainLane,.inputRainTerminal.is-business .inputRainReady,.inputRainTerminal.is-business .inputRainCountdown{background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 30%)}
+.inputRainTerminal.is-business .inputRainPrompt{letter-spacing:.04em}
+
+/* Yoji: washi and sumi — the rain falls as fine diagonal brush lines, as in ukiyo-e. */
+.inputRainTerminal.is-yoji,.inputRainSkin.is-yoji{--ir-accent:#b8372b;--ir-bg:radial-gradient(circle at 18% 26%,rgba(170,138,92,.1),transparent 42%),radial-gradient(circle at 82% 74%,rgba(170,138,92,.08),transparent 46%),repeating-linear-gradient(97deg,rgba(120,95,60,.028) 0,rgba(120,95,60,.028) 1px,transparent 1px,transparent 7px),#f3ecdc;--ir-text:#2a241d;--ir-ink:#1b1612;--ir-glow:rgba(40,30,20,.12);--ir-line:rgba(70,52,34,.2);--ir-chrome-bg:#ebe2ce;--ir-chrome-text:#3b3127;--ir-badge-text:#fff6ea;--ir-hud-bg:rgba(236,227,207,.94);--ir-muted:#8a7a63;--ir-value:#2a241d;--ir-sub:#7a6a55;--ir-guide:#94846c;--ir-guide-done:#2a241d;--ir-guide-label:#b3a48b;--ir-entry-bg:#ece3cf;--ir-entry-text:#1f1a15;--ir-key-bg:#f1e9d7;--ir-key-active:#e2d6bc;--ir-key-text:#2a241d;--ir-key-sub:#6d5f50;--ir-hint:#a3937a;--ir-popup:rgba(247,241,228,.98);--ir-miss:192,57,43;--ir-face:"Yu Mincho","YuMincho","Hiragino Mincho ProN","Noto Serif JP","Noto Serif CJK JP",serif;--ir-weight:600;--ir-shadow:inset 0 0 50px rgba(120,90,50,.12),0 12px 30px rgba(60,45,25,.14)}
+.inputRainTerminal.is-yoji:before{background:none}
+.inputRainTerminal.is-yoji .inputRainLane{background:none}
+.inputRainTerminal.is-yoji .inputRainLane:after,.inputRainTerminal.is-yoji .inputRainReady:after{content:"雨";position:absolute;top:16px;right:18px;z-index:1;display:grid;place-items:center;width:30px;height:30px;border:2px solid rgba(184,55,43,.72);border-radius:3px;color:rgba(184,55,43,.78);font:700 17px/1 var(--ir-face);transform:rotate(-4deg);pointer-events:none}
+.inputRainTerminal.is-yoji .inputRainPrompt,.inputRainTerminal.is-yoji .inputRainReady .inputRainSample{text-shadow:0 0 1px rgba(27,22,18,.35)}
+.inputRainTerminal.is-yoji .inputRainParticle{text-shadow:none}
+.inputRainTerminal.is-yoji .inputRainChrome b{border-radius:2px;box-shadow:none}
+.inputRainTerminal.is-yoji .inputRainCountdown span{font-family:var(--ir-face);font-weight:600}
+
+/* The genre's world carries through the whole machine: select, pause and result too. */
+.inputRainGameShell.inputRainSkin{background:var(--ir-bg);border-color:var(--ir-line);color:var(--ir-text);transition:background .4s ease}
+.inputRainSkin .bitSelectHead{border-color:var(--ir-line);color:var(--ir-muted)}.inputRainSkin .bitSelectHead strong{color:var(--ir-text)}
+.inputRainSkin .bitSound{border-color:var(--ir-line);color:var(--ir-muted);background:transparent}.inputRainSkin .bitSound.isOn{border-color:var(--ir-accent);color:var(--ir-accent)}.inputRainSkin .bitSound strong,.inputRainSkin .bitSound.isOn strong{color:inherit}
+.inputRainSkin .bitQuit{color:var(--ir-text);border-color:var(--ir-line)}
+.inputRainSkin .bitModeSelect{background:var(--ir-line);border-color:var(--ir-line)}
+.inputRainSkin .bitModeSelect button{background:var(--ir-key-bg);color:var(--ir-text);font-family:var(--ir-face)}.inputRainSkin .bitModeSelect button small{color:var(--ir-muted)}
+.inputRainSkin .bitModeSelect button.isActive{background:var(--ir-accent);color:var(--ir-badge-text)}.inputRainSkin .bitModeSelect button.isActive small{color:var(--ir-badge-text);opacity:.72}
+.inputRainSkin .bitStart{border-color:var(--ir-accent);background:var(--ir-accent);color:var(--ir-badge-text);box-shadow:5px 5px 0 rgba(0,0,0,.35)}.inputRainSkin .bitStart:hover,.inputRainSkin .bitStart:focus-visible{box-shadow:7px 7px 0 rgba(0,0,0,.35)}
+.inputRainSkin .bitRule,.inputRainSkin .bitShareStatus{color:var(--ir-muted)}
+.inputRainSkin .bitPakuShareRow>*{border-color:var(--ir-line);background:transparent;color:var(--ir-text)}
+.bitPauseOverlay.inputRainSkin{background:rgba(6,10,18,.66)}.bitPauseOverlay.inputRainSkin.is-yoji{background:rgba(243,236,220,.82)}
+.inputRainSkin .bitPausePanel{border-color:var(--ir-line);background:var(--ir-chrome-bg);color:var(--ir-text);box-shadow:0 18px 40px rgba(0,0,0,.35)}.inputRainSkin .bitPausePanel h2{color:var(--ir-ink);font-family:var(--ir-face)}.inputRainSkin .bitPausePanel p,.inputRainSkin .bitPausePanel span{color:var(--ir-muted)}
+.inputRainSkin .bitPausePanel button{background:var(--ir-accent);color:var(--ir-badge-text);border-color:var(--ir-accent)}.inputRainSkin .bitPauseActions .isSecondary{background:transparent;color:var(--ir-text);border-color:var(--ir-line)}
+.inputRainSkin .inputRainResult{position:relative;overflow:hidden;padding-bottom:58px}.inputRainSkin .inputRainResult>*:not(canvas){position:relative;z-index:1}
+.inputRainSkin .bitCelebrationMark{border-color:var(--ir-accent);background:var(--ir-chrome-bg);color:var(--ir-accent);box-shadow:0 0 18px var(--ir-glow)}
+.inputRainSkin .bitResultOverline,.inputRainSkin .inputRainRankCaption,.inputRainSkin .bitScoreLabel{color:var(--ir-muted)}
+.inputRainSkin .inputRainResult h2{color:var(--ir-ink);text-shadow:0 0 18px var(--ir-glow)}
+.inputRainSkin .inputRainRankMark.is-excellent:not(.is-legendary){color:var(--ir-accent)}.inputRainSkin .inputRainRankMark.is-good{color:var(--ir-ink)}.inputRainSkin .inputRainRankMark.is-retry{color:var(--ir-muted)}
+.inputRainSkin .bitResultStats,.inputRainSkin .bitResultStats div{border-color:var(--ir-line)!important;background:transparent}.inputRainSkin .bitResultStats span{color:var(--ir-muted)}.inputRainSkin .bitResultStats strong{color:var(--ir-value)}
+.inputRainSkin .bitRetry{background:var(--ir-accent);border-color:var(--ir-accent);color:var(--ir-badge-text)}
+.inputRainSkin .bitShare,.inputRainSkin .inputRainResult .bitChange,.inputRainSkin .inputRainResult>a,.inputRainSkin .inputRainResult>button:not(.bitRetry){background:transparent;border-color:var(--ir-line);color:var(--ir-text)}
+.inputRainSkin .inputRainTrail{border-color:var(--ir-line);background:var(--ir-hud-bg)}.inputRainSkin .inputRainTrail header{border-color:var(--ir-line);color:var(--ir-text)}.inputRainSkin .inputRainTrail header small{color:var(--ir-muted)}
+.inputRainSkin .inputRainTrail li{border-color:var(--ir-line)}.inputRainSkin .inputRainTrail strong{color:var(--ir-ink);font-family:var(--ir-face)}.inputRainSkin .inputRainTrail small{color:var(--ir-sub)}.inputRainSkin .inputRainTrail li.isLost strong{color:var(--ir-muted)}.inputRainSkin .inputRainTrail li.isTyped:before{color:var(--ir-accent)}
+.inputRainSkin.is-yoji .bitStart,.inputRainSkin.is-yoji .bitRetry{box-shadow:5px 5px 0 rgba(60,40,20,.25)}
+.inputRainGenreSelect{grid-template-columns:repeat(4,1fr)}
+.inputRainGenreSelect button:before{content:"";display:block;width:26px;height:6px;margin:0 auto 10px;border:1px solid rgba(21,33,29,.25);background:var(--swatch)}
+.inputRainGenreSelect .is-daily{--swatch:linear-gradient(90deg,#26324a,#ffc98e)}.inputRainGenreSelect .is-yoji{--swatch:linear-gradient(90deg,#f3ecdc 60%,#b8372b 60%)}.inputRainGenreSelect .is-business{--swatch:linear-gradient(90deg,#0b111e,#7fb2ff)}.inputRainGenreSelect .is-terminal{--swatch:linear-gradient(90deg,#030806,#86f15a)}
+@media(max-width:700px){.inputRainReady .inputRainSample{font-size:clamp(20px,6.2vw,30px);letter-spacing:.04em}.inputRainGenreSelect{grid-template-columns:repeat(2,1fr)}.inputRainMeaning{height:52px;gap:10px;font-size:11px}.inputRainMeaning b{font-size:12px;padding:3px 5px 2px}}
+
+.inputRainTrail{margin:34px 0 0;text-align:left;border:1px solid rgba(21,33,29,.28);background:#f6f2e8}
+.inputRainTrail header{display:flex;align-items:baseline;justify-content:space-between;padding:13px 16px;border-bottom:1px solid rgba(21,33,29,.2);font:700 12px/1 "Yu Gothic UI",sans-serif;letter-spacing:.12em;color:var(--bit-ink)}.inputRainTrail header small{font:600 10px/1 "Cascadia Mono","Consolas",monospace;letter-spacing:.1em;color:#6b726d}
+.inputRainTrail ol{max-height:380px;margin:0;padding:4px 0;overflow:auto;list-style:none}
+.inputRainTrail li{position:relative;padding:10px 16px 10px 36px;border-bottom:1px dashed rgba(21,33,29,.14)}.inputRainTrail li:last-child{border-bottom:0}
+.inputRainTrail li:before{position:absolute;left:15px;top:12px;font:700 11px/1 "Yu Gothic UI",sans-serif}.inputRainTrail li.isTyped:before{content:"✓";color:var(--bit-teal)}.inputRainTrail li.isLost:before{content:"–";color:#a0a6a1}
+.inputRainTrail strong{display:block;color:var(--bit-ink);font:600 15px/1.5 "Yu Gothic UI","Hiragino Kaku Gothic ProN",sans-serif;letter-spacing:.04em}
+.inputRainTrail.is-yoji strong{font-family:"Yu Mincho","YuMincho","Hiragino Mincho ProN","Noto Serif JP",serif;font-size:16px}
+.inputRainTrail li.isLost strong{color:#9aa09b}
+.inputRainTrail small{display:block;margin-top:3px;color:#5f6762;font:500 11.5px/1.6 "Yu Gothic UI",sans-serif}
 .inputRainResult{margin:0 auto}.inputRainResultStats{grid-template-columns:repeat(4,1fr)}
 .inputRainResultStats div:nth-child(3){border-right:1px solid rgba(21,33,29,.25)}
 .inputRainInputToggle{grid-template-columns:repeat(2,1fr)}

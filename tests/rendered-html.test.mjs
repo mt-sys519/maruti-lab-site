@@ -282,29 +282,32 @@ test("renders the MarutiBit SEQUENCE game page", async () => {
   assert.match(html, /<a href="\/bit\/blank" style="[^"]*"><small>002<\/small>BLANK<\/a>/);
 });
 
-test("renders the MarutiBit INPUT RAIN typing game without Matrix-style background rain", async () => {
+test("renders the MarutiBit INPUT RAIN typing game with its four genres and no Matrix-style glyph rain", async () => {
   const response = await render("/bit/input-rain");
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /INPUT RAIN/);
   assert.match(html, /GAME 004/);
-  assert.match(html, /PromptTermの端末入力を、文字が落ちきる前に打ち込む/);
-  assert.match(html, /短い端末語/);
-  assert.match(html, /入力方式はこの端末に記憶され/);
+  assert.match(html, /落ちてくる言葉を、落ちきる前に打ち込む/);
+  assert.match(html, /四字熟語/);
+  assert.match(html, /身近なことば/);
+  assert.match(html, /ジャンルと入力方式はこの端末に記憶され/);
   assert.match(html, /フリック<small>スマホのかな入力<\/small>/);
   assert.doesNotMatch(html, /rain-col|buildRain|NODECACHEERRORRUN/);
 });
 
-test("keeps INPUT RAIN prompts authored and terminal-specific", async () => {
-  const source = await readFile(new URL("../app/bit/inputRainPrompts.ts", import.meta.url), "utf8");
+test("keeps INPUT RAIN prompts authored, with the terminal genre intact", async () => {
+  const source = await readFile(new URL("../app/bit/inputRainPromptsTerminal.ts", import.meta.url), "utf8");
+  const yojiSource = await readFile(new URL("../app/bit/inputRainPromptsYoji.ts", import.meta.url), "utf8");
   const gameSource = await readFile(new URL("../app/bit/InputRainGame.tsx", import.meta.url), "utf8");
   assert.match(source, /\["起動", "きどう"\]/);
   assert.match(source, /\["受信信号を照合しています。"/);
   assert.doesNotMatch(source, /Aログ|ログA|Aキー|キーA/);
+  assert.match(yojiSource, /\["一石二鳥", "いっせきにちょう", "/);
   assert.doesNotMatch(gameSource, /matrixGlyphs|NODECACHEERRORRUN|buildRain/);
   assert.match(gameSource, /inputRainGlyph/);
-  assert.match(gameSource, /marutibit:input-rain:v1/);
-  assert.match(gameSource, /PromptTermの端末入力を、文字が落ちきる前に打ち込むタイピングゲーム/);
+  assert.match(gameSource, /marutibit:input-rain:v2/);
+  assert.match(gameSource, /落ちてくる言葉を、落ちきる前に打ち込むタイピングゲーム/);
 });
 
 test("builds a score card and keeps the complete score and URL in the share payload", async () => {
