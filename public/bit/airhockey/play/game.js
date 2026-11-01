@@ -535,14 +535,6 @@ function fitFlat(w,h){
   flat.updateProjectionMatrix();flat.updateMatrixWorld();
   document.body.classList.toggle('land',land);
 }
-// 2P: the pause button sits on the left rail at the center line - off the playfield, in neither player's half,
-// in reach of both. Placed from the flat camera, so it follows the table in portrait and landscape alike
-function placePause(){
-  const b=document.getElementById('pause');
-  if(!twoP){b.style.left=b.style.top='';return}
-  const v=new THREE.Vector3(-(HW+RT/2),0.06,0).project(flat);
-  b.style.left=`${(v.x+1)/2*innerWidth}px`;b.style.top=`${(1-v.y)/2*innerHeight}px`;
-}
 let redraw=true;
 function fit(){
   redraw=true;
@@ -578,7 +570,6 @@ function fit(){
   const b=bounds(),cy=(b.y0+b.y1)/2;
   camera.setViewOffset(w,h,0,-cy*h/2,w,h);
   camBase.copy(camera.position);
-  placePause();
 }
 addEventListener('resize',fit);fit();
 
@@ -867,7 +858,7 @@ function finish(){
 function startGame(lv,two=false){
   sound.unlock();
   twoP=two;document.body.classList.toggle('two',two);quitBtn.hidden=!DEMO;
-  setPaused(false);pauseBtn.hidden=false;placePause();
+  setPaused(false);pauseBtn.hidden=false;
   for(const m of paintMats)m.envMapIntensity=two?PAINT_GLOSS.flat:1;
   fingers.clear();owner[0]=owner[1]=null;
   level=lv;score=[0,0];timers=[];multi=false;nextMulti=6;drawScore(0,0);
@@ -920,7 +911,7 @@ if(navigator.maxTouchPoints<2){
 document.getElementById('vs').addEventListener('click',()=>{win=pickedWin;startGame(1,true)});
 // both sides at the watching level: NORMAL's rallies were too tame, HARD's guard let almost nothing in
 document.getElementById('watch').addEventListener('click',()=>{DEMO=true;win=pickedWin;startGame(3)});
-// pause (every mode; in 2P a small button on the rail, placed by placePause). The audio context is suspended with it, so the music,
+// pause (every mode, top left, opposite the sound button). The audio context is suspended with it, so the music,
 // the blower and the glide all stop where they are
 let paused=false;
 const pauseBtn=document.getElementById('pause'),pauseMenu=document.getElementById('pausemenu');
