@@ -92,6 +92,16 @@
 .knob { animation: wipe 7s ease-in-out infinite; }
 @keyframes wipe { 0%, 60% { transform: translateX(0); } 78% { transform: translateX(48px); } 92%, 100% { transform: translateX(0); } }
 
+/* 011 AIR HOCKEY - the puck goes back and forth between the two mallets,
+   off a rail on the way. */
+.puck { animation: rally 3.6s linear infinite; }
+@keyframes rally {
+  0%, 100% { transform: translate(0, 18px); }
+  25% { transform: translate(22px, 0); }
+  50% { transform: translate(0, -18px); }
+  75% { transform: translate(-22px, 0); }
+}
+
 /* Narrow enough and the hero has no spare column to put this in - and a
    phone has better uses for the battery. */
 @media (max-width: 900px) {

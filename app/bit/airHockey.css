@@ -1,0 +1,38 @@
+/* AIR HOCKEY's page. It wears .bitPageDark like NEON BREAK, but the table
+   sits in a dark room under three tubes, not in neon, so the cyan cast that
+   class paints is taken back out: black paper, a faint white grid, and greys
+   for the copy. Only colours change here - the layout is the shelf's own. */
+.bitPageAirHockey{--bit-paper:#000;--bit-ink:#f4f1e8;--pkg-tint:rgba(255,255,255,.035)}
+.bitPageAirHockey .bitIntro{background:#0b0d12;border-bottom-color:#23262e}
+.bitPageAirHockey .bitIntro p,.bitPageAirHockey .bitIntroSub{color:#a9adb6}
+.bitPageAirHockey .bitHowToPlayCard,.bitPageAirHockey .bitNotesCard{background:#0d0f14;border-color:#2c3039;box-shadow:5px 5px 0 #15171c;color:#d8d6cf}
+.bitPageAirHockey .bitHowToPlaySub,.bitPageAirHockey .bitNotesLead,.bitPageAirHockey .bitNotesCard p{color:#a9adb6}
+
+/* Between the shelf's big band title (62px) and the 22px of a game that names
+   itself: the full size shouted over the table, the small one got lost. */
+.bitPageAirHockey .bitIntro h1{font-size:clamp(28px,2.7vw,38px)}
+.bitIntro h1 .ahLogo{width:.9em;height:.9em;fill:none;stroke:var(--pkg-color);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* The table fills the panel edge to edge with no frame round it (a frame
+   costs a phone its width). The game is black outside the table, so the
+   stage is too, and nothing flashes while the GLB loads. */
+.ahPanel{width:min(1120px,calc(100% - 40px));margin:clamp(20px,3vw,40px) auto}
+.ahStage{position:relative;aspect-ratio:16/10;max-height:calc(100svh - 120px);width:100%;background:#0b0d12;overflow:hidden}
+.ahFrame{display:block;width:100%;height:100%;border:0}
+.ahBar{display:flex;justify-content:flex-end;padding-top:10px}
+.ahFullscreen{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:transparent;color:#c9c6bd;font:700 12px/1 "Yu Gothic UI",sans-serif;letter-spacing:.06em;cursor:pointer}
+.ahFullscreen svg,.ahExitFullscreen svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ahFullscreen:hover,.ahFullscreen[aria-pressed="true"]{color:#fff;border-color:rgba(255,255,255,.5)}
+
+.ahStage:fullscreen,.ahStage:-webkit-full-screen,.ahStage.isPseudoFullscreen{position:fixed;inset:0;z-index:999;width:100%;height:100%;max-height:none;aspect-ratio:auto;margin:0}
+@supports (height:100dvh){.ahStage:fullscreen,.ahStage:-webkit-full-screen,.ahStage.isPseudoFullscreen{height:100dvh}}
+.ahExitFullscreen{position:absolute;z-index:2;bottom:max(10px,env(safe-area-inset-bottom));left:max(10px,env(safe-area-inset-left));display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(20,22,30,.7);color:#f4f1e8;cursor:pointer}
+
+/* A phone is held upright, and the game turns its camera to look down the
+   table from above when the window is tall - so the stage goes tall too,
+   leaving a strip of page under it to scroll by. */
+@media(max-width:700px){
+  .ahPanel{width:100%;margin:12px auto 20px}
+  .ahStage{aspect-ratio:auto;height:min(76svh,680px);max-height:none}
+  .ahBar{padding:10px 12px 0}
+}

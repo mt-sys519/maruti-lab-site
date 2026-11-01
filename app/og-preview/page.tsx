@@ -47,6 +47,13 @@ const copy: Record<string, Card> = {
     // the real game with real pointer strokes rather than painted over.
     art: "/bit/magnetboard/board.webp",
   },
+  airhockey: {
+    lead: "リアル志向のエアホッケー。",
+    sub: "ゲームセンターのあの台を、指一本で。",
+    // The real table mid-rally, from the game's own ?demo (CPU against CPU)
+    // in headless Chrome.
+    art: "/bit/airhockey/table.webp",
+  },
   neonbreak: {
     lead: "ネオンの台のナインボール。",
     sub: "台につくのは、三人のオペレーター。",

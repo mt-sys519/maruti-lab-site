@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>AIR HOCKEY</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="view"></canvas>
+<button id="sound" class="sound" aria-pressed="true">♪ ON</button>
+<button id="pause" class="pause" aria-label="ポーズ" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1.5" width="2.8" height="9" rx=".6"/><rect x="7.2" y="1.5" width="2.8" height="9" rx=".6"/></svg></button>
+<!-- 2P and watching: hold to end the match and go back to the menu -->
+<button id="quit" class="quit" hidden><span class="fill"></span><span class="label">長押しでやめる</span></button>
+<!-- call-outs: one per player; in 2P each sits in its player's half, turned to face them -->
+<div class="bslot s1"><div class="rot"><div id="banner" class="banner" aria-live="polite"></div></div></div>
+<div class="bslot s2"><div class="rot"><div id="banner2" class="banner"></div></div></div>
+
+<div id="menu" class="overlay">
+ <div class="card">
+  <h1>AIR HOCKEY</h1>
+  <p class="sub">CPU対戦</p>
+  <div class="modes">
+   <button data-win="7" class="on">7点先取</button>
+   <button data-win="15">15点先取</button>
+  </div>
+  <div class="levels">
+   <button data-level="0">EASY</button>
+   <button data-level="1" class="primary">NORMAL</button>
+   <button data-level="2">HARD</button>
+  </div>
+  <div id="vs-box" class="vs-box">
+   <button id="vs">2人対戦</button>
+   <p id="vs-hint" class="hint">1台を平らに置いて向かい合い、自分側の半分を指で操作</p>
+   <button id="watch" class="watch">CPU同士の対戦を見る</button>
+  </div>
+ </div>
+</div>
+
+<div id="pausemenu" class="overlay hidden">
+ <div class="card">
+  <h2>PAUSE</h2>
+  <div class="levels" style="margin-top:18px">
+   <button id="resume" class="primary">つづける</button>
+   <button id="pause-menu">メニューへ</button>
+  </div>
+ </div>
+</div>
+
+<div id="result" class="overlay hidden">
+ <div class="card">
+  <h2 id="result-title">YOU WIN</h2>
+  <p id="result-score" class="score"></p>
+  <div class="levels">
+   <button id="again" class="primary">もう一度</button>
+   <button id="back">難易度を選ぶ</button>
+   <button id="title">タイトルに戻る</button>
+  </div>
+ </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script type="module" src="game.js"></script>
+</body></html>

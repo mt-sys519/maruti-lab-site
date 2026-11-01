@@ -36,6 +36,7 @@ const pages = [
   "/bit/neonbreak",
   "/bit/mixpop",
   "/bit/magnetboard",
+  "/bit/airhockey",
   "/bit/hyperprop",
   "/blog",
   "/about",

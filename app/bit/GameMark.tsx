@@ -116,6 +116,17 @@ export function GameMark({ id }: { id: BitGameId }) {
         </svg>
       </span>
     );
+  if (id === "airhockey")
+    return (
+      <span className={`${styles.mark} ${styles.stroke}`} aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M6 2.5h12a3 3 0 0 1 3 3v13a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-13a3 3 0 0 1 3-3z" />
+          <path d="M3 12h18" />
+          <circle cx="12" cy="17" r="2.6" />
+          <circle className={styles.dot} cx="12" cy="7.4" r="1.4" />
+        </svg>
+      </span>
+    );
   // Deliberately empty rather than a fallback picture: a game added without a
   // mark should show a gap, not another game's artwork.
   return <span className={styles.mark} aria-hidden="true" />;

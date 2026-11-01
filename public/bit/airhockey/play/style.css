@@ -1,0 +1,86 @@
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0b0d12;color:#f4f1e8;overflow:hidden;
+ font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+ -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+ /* no double-tap zoom, no rubber-band, no long-press callout (Safari) */
+ touch-action:manipulation;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
+#view{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block;touch-action:none}
+
+.sound{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:5;
+ font:700 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;
+ color:#f4f1e8;background:rgba(20,22,30,.7);border:1px solid rgba(255,255,255,.18);
+ border-radius:999px;padding:8px 12px;cursor:pointer}
+.sound[aria-pressed="false"]{color:#8a8f9c}
+.pause{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;z-index:5;
+ font:800 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.02em;
+ color:#f4f1e8;background:rgba(20,22,30,.7);border:1px solid rgba(255,255,255,.18);
+ border-radius:999px;padding:7px 12px;cursor:pointer;line-height:0}
+.pause svg{width:15px;height:15px;fill:currentColor}
+.pause[hidden]{display:none}
+
+.overlay{position:fixed;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
+ padding:16px;background:rgba(6,7,11,.55)}
+.overlay.hidden{display:none}
+.card{width:min(340px,100%);text-align:center;padding:26px 20px 22px;border-radius:16px;
+ background:rgba(16,18,26,.92);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.5)}
+h1,h2{margin:0;font:900 34px/1.05 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;color:#ff4b3a;
+ text-shadow:0 0 14px rgba(255,75,58,.55)}
+h2{font-size:30px}
+.sub{margin:10px 0 18px;font-size:14px;color:#c9c4b6}
+.score{margin:10px 0 18px;font:800 26px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em}
+.levels{display:flex;flex-direction:column;gap:10px}
+.levels button{font:800 16px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;padding:14px;
+ border-radius:10px;border:2px solid #3a3f4d;background:#1d2029;color:#f4f1e8;cursor:pointer}
+.levels button.primary{background:#d8312b;border-color:#ff6a5a}
+.levels button:active{transform:translateY(1px)}
+.modes{display:flex;gap:8px;margin:0 0 12px}
+.modes button{flex:1;font:800 14px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;padding:11px 6px;
+ border-radius:10px;border:2px solid #3a3f4d;background:transparent;color:#8a8f9c;cursor:pointer}
+.modes button.on{color:#f4f1e8;border-color:#f4f1e8}
+
+/* 2P: hold to quit. On the center line at the screen's edge, in neither player's half; a press must be held
+   (0.8 s, the bar fills) so a stray finger or palm can't end the match */
+.quit{position:fixed;z-index:5;left:max(8px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);
+ overflow:hidden;font:700 11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#f4f1e8;
+ background:rgba(20,22,30,.75);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:8px 10px;
+ touch-action:none;-webkit-touch-callout:none;cursor:pointer}
+.quit[hidden]{display:none}
+.quit .fill{position:absolute;inset:0;background:#d8312b;transform:scaleX(0);transform-origin:left}
+.quit .label{position:relative}
+.quit.hold .fill{transform:scaleX(1);transition:transform .8s linear}
+body.land .quit{left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%)}
+
+/* 2P, on one device */
+.vs-box{margin:18px 0 0;padding:16px 0 0;border-top:1px solid rgba(255,255,255,.12)}
+.vs-box[hidden]{display:none}
+#vs{width:100%;font:800 16px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;padding:14px;
+ border-radius:10px;border:2px solid #f0b72a;background:#2a2410;color:#ffd968;cursor:pointer}
+.vs-box .hint{margin-top:10px}
+#vs:disabled{opacity:.4;cursor:default}
+/* CPU against CPU: offered beside 2P, quieter than it */
+.watch{width:100%;margin-top:14px;font:800 14px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;padding:12px;
+ border-radius:10px;border:2px solid #3a3f4d;background:transparent;color:#c9c4b6;cursor:pointer}
+
+/* countdown and MULTI PUCK call-outs. 1P: one, across the screen as before.
+   2P: one in each half, turned to its player (portrait: the far one upside down; landscape: each a quarter turn) */
+.bslot{position:fixed;inset:0;z-index:3;pointer-events:none}
+.s2{display:none}
+body.two .s2{display:flex}
+body.two .bslot{display:flex;align-items:center;justify-content:center;inset:auto;left:0;right:0}
+body.two .s1{bottom:0;height:50%}
+body.two .s2{top:0;height:50%}
+body.two .s2 .rot{transform:rotate(180deg)}
+body.two.land .s1{top:0;bottom:0;left:50%;right:0;height:auto}
+body.two.land .s2{top:0;bottom:0;left:0;right:50%;height:auto}
+body.two.land .s1 .rot{transform:rotate(-90deg)}
+body.two.land .s2 .rot{transform:rotate(90deg)}
+.rot{white-space:nowrap}
+body.two .bslot .banner{position:static}
+.banner{position:fixed;left:0;right:0;top:42%;z-index:3;text-align:center;pointer-events:none;
+ font:900 34px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;color:#ff4b3a;
+ text-shadow:0 0 18px rgba(255,75,58,.7),0 2px 0 #000;opacity:0;transform:scale(.8)}
+.banner.big{font-size:64px}
+.banner.show{animation:pop .18s ease-out forwards}
+@keyframes pop{from{opacity:0;transform:scale(1.4)}to{opacity:1;transform:scale(1)}}
+
+.hint{margin:16px 0 0;font-size:12px;color:#8a8f9c}

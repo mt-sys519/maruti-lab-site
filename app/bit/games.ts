@@ -18,6 +18,10 @@
 // shelf's blue, because the board also comes in blue (one of its three frame
 // colours). The other two periwinkles, sequence and avenue, sit three or
 // more machines away on either side.
+// airhockey, the eleventh, takes magnetboard's place between it and angle, so
+// periwinkle and coral are both out - and red would be the table's own colour
+// repeated as a second coral. It takes teal, which nothing near it wears:
+// paku, the other teal, is five machines away.
 export const bitGames = [
   { id: "angle", number: "001", name: "ANGLE", kana: "アングル", kind: "角度当てゲーム", href: "/bit/angle", description: "三角形を組み合わせ、示された角度から答えを導く。", featured: true, color: "#FF7A5C" },
   { id: "blank", number: "002", name: "BLANK", kana: "ブランク", kind: "空欄補完ゲーム", href: "/bit/blank", description: "四則演算の空欄に入る数字を逆算する。", featured: true, color: "#F4C430" },
@@ -29,6 +33,7 @@ export const bitGames = [
   { id: "neonbreak", number: "008", name: "NEON BREAK", kana: "ネオンブレイク", kind: "ナインボール", href: "/bit/neonbreak", description: "ネオンの台で9番を狙う、ナインボール。", featured: false, color: "#6B3FA0" },
   { id: "mixpop", number: "009", name: "MIX POP", kana: "ミックスポップ", kind: "ドリンク調合トイ", href: "/bit/mixpop", description: "六つのジュースを混ぜて、できた一杯に名前をつける。", featured: false, color: "#FE941A" },
   { id: "magnetboard", number: "010", name: "MAGNET BOARD", kana: "マグネットボード", kind: "磁気お絵かきボード", href: "/bit/magnetboard", description: "砂鉄で描いて、つまみでシャーッと消す磁気お絵かきボード。", featured: false, color: "#7B8CDE" },
+  { id: "airhockey", number: "011", name: "AIR HOCKEY", kana: "エアホッケー", kind: "エアホッケー", href: "/bit/airhockey", description: "カンッと打って、スーッと滑る。ゲームセンターのエアホッケー。", featured: false, color: "#2BB3A3" },
 ] as const;
 
 // The home hero only teases a handful of games (not the whole, ever-growing
@@ -57,4 +62,4 @@ export const retroGames = [
 // sticker that is on everything says nothing. Whatever is named here - a mini
 // game or a RETRO cartridge - wears the sticker, and nothing else does; the
 // next release moves it by changing this one word.
-export const newestRelease: string = "magnetboard";
+export const newestRelease: string = "airhockey";

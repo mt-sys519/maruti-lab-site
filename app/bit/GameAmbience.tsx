@@ -87,6 +87,15 @@ const scenes: Record<string, ReactNode> = {
       <rect className={styles.knob} data-fill="" x="20" y="80" width="12" height="8" rx="2" />
     </svg>
   ),
+  airhockey: (
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <rect stroke="" x="24" y="10" width="52" height="80" rx="8" />
+      <path stroke="" d="M24 50 H76" />
+      <circle stroke="" cx="50" cy="78" r="7" />
+      <circle stroke="" cx="50" cy="22" r="7" />
+      <circle className={styles.puck} data-fill="" cx="50" cy="50" r="3.5" />
+    </svg>
+  ),
   neonbreak: (
     <svg viewBox="0 0 100 100" aria-hidden="true">
       <rect stroke="" x="12" y="30" width="76" height="40" rx="6" />
