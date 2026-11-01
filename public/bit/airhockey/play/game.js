@@ -4,7 +4,7 @@ import {Sound} from './audio.js';
 
 // Table units: x across (-HW..HW), z along (-HL = CPU end, +HL = player end).
 const HW=0.5,HL=1.0,GW=0.16,PR=0.049,MR=0.056;
-const DAMP=0.08,WALL_E=0.86,HIT_E=0.88,MAX_PUCK=11,ME_SPEED=10,STEP=1/480;
+const DAMP=0.08,WALL_E=0.86,HIT_E=0.88,MAX_PUCK=11,ME_SPEED=18,STEP=1/480;
 // points to win: 7, or 15 with MULTI PUCK rounds
 let win=7;
 // counter: how near (table units) a fast incoming puck gets before the mallet steps forward and hits it back
@@ -953,9 +953,19 @@ function tablePoint(e){
   ray.setFromCamera(ndc,twoP?flat:camera);
   return ray.ray.intersectPlane(plane,hit)?{x:hit.x,z:hit.z}:null;
 }
+// by touch the mallet keeps the offset it had from the finger when the finger came down: put a finger on the
+// mallet and it moves right under it; put it anywhere else (off the table, below it) and the mallet stays where
+// it is and then moves as the finger moves, so it never has to hide under the finger. Touch is captured, so the
+// finger keeps steering past the table's edge and the window's. A mouse pointer is small: it sits on the mallet
+const grab={x:0,z:0};
 function aim(e){
   if(DEMO)return;
-  const p=tablePoint(e);if(p){me.tx=p.x;me.tz=p.z}
+  const p=tablePoint(e);if(!p)return;
+  const off=e.pointerType==='mouse'?{x:0,z:0}:grab;
+  me.tx=p.x+off.x;me.tz=p.z+off.z;
+}
+function takeHold(e){
+  const p=tablePoint(e);if(p){grab.x=me.x-p.x;grab.z=me.z-p.z}
 }
 // 2P: every finger belongs to the half it first touched. Each half's mallet follows one finger, the first down;
 // any more on that half (a third finger, a palm, a friend's hand) are only remembered, and when the leading
@@ -963,7 +973,12 @@ function aim(e){
 const fingers=new Map(),owner=[null,null],mallets=[me,cpu];
 function steer(id){
   const f=fingers.get(id);
-  for(const s of [0,1])if(owner[s]===id){mallets[s].tx=f.x;mallets[s].tz=f.z}
+  for(const s of [0,1])if(owner[s]===id){mallets[s].tx=f.x+f.ox;mallets[s].tz=f.z+f.oz}
+}
+// a finger that takes a mallet keeps its offset from it, as in 1P (the mallet is where the hand left it)
+function hold(id,s){
+  const f=fingers.get(id),m=mallets[s];owner[s]=id;
+  f.ox=m.x-f.x;f.oz=m.z-f.z;
 }
 function release(id){
   const f=fingers.get(id);if(!f)return;
@@ -971,8 +986,8 @@ function release(id){
   if(owner[f.side]!==id)return;
   let next=null;
   for(const [k,g] of fingers)if(g.side===f.side&&(next===null||g.t>fingers.get(next).t))next=k;
-  owner[f.side]=next;
-  if(next!==null)steer(next);
+  owner[f.side]=null;
+  if(next!==null){hold(next,f.side);steer(next)}
 }
 canvas.addEventListener('pointerdown',e=>{
   // (throws if the pointer is already gone, e.g. a very quick tap)
@@ -980,11 +995,11 @@ canvas.addEventListener('pointerdown',e=>{
   if(twoP){
     const p=tablePoint(e);if(!p)return;
     const side=p.z>=0?0:1;
-    fingers.set(e.pointerId,{...p,side,t:performance.now()});
-    if(owner[side]===null)owner[side]=e.pointerId;
+    fingers.set(e.pointerId,{...p,side,t:performance.now(),ox:0,oz:0});
+    if(owner[side]===null)hold(e.pointerId,side);
     steer(e.pointerId);return;
   }
-  touching=true;aim(e);
+  touching=true;if(e.pointerType!=='mouse')takeHold(e);aim(e);
 });
 canvas.addEventListener('pointermove',e=>{
   if(twoP){
@@ -1035,7 +1050,8 @@ function animPuck(p,dt){
 }
 // the mallet follows the hand at the hand's own speed: it covers this frame's gap in one frame, no faster
 function followHand(m,zMin,zMax,dt){
-  m.sx+=(m.tx-m.sx)*Math.min(1,dt/0.025);m.sz+=(m.tz-m.sz)*Math.min(1,dt/0.025);
+  // (it used to ease toward the hand over 25 ms, which read as the mallet trailing the finger)
+  m.sx=m.tx;m.sz=m.tz;
   m.maxV=Math.min(ME_SPEED,Math.hypot(clamp(m.sx,-HW+MR,HW-MR)-m.x,clamp(m.sz,zMin,zMax)-m.z)/Math.max(dt,1/240));
 }
 let last=performance.now(),acc=0;
@@ -1081,13 +1097,13 @@ function frame(now){
   if(mode==='play')pace(dt);
   requestAnimationFrame(frame);
 }
-// a phone that can't keep up at full resolution: frames running long through play (a 30 fps pace for over a
-// second) draw the table at fewer pixels, 2 -> 1.5 -> 1 times the CSS size, never back up. Nothing else changes,
+// a phone that can't keep up at full resolution: frames running long through play (under 45 fps for over a
+// second; each late frame is the mallet that much behind the finger) draw the table at fewer pixels, 2 -> 1.5 -> 1 times the CSS size, never back up. Nothing else changes,
 // and a device that keeps up never gets here
 let slowFor=0,paceWait=2;
 function pace(dt){
   if((paceWait-=dt)>0)return;
-  slowFor=dt>1/35?slowFor+dt:Math.max(0,slowFor-dt);
+  slowFor=dt>1/45?slowFor+dt:Math.max(0,slowFor-dt);
   const pr=renderer.getPixelRatio();
   if(slowFor>1.2&&pr>1){renderer.setPixelRatio(pr>1.5?1.5:1);fit();slowFor=0;paceWait=2}
 }
