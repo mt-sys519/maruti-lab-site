@@ -31,6 +31,13 @@ const sound=new Sound();
 const canvas=document.getElementById('view');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+// a phone that leaves the page in the background for a while can take the GPU's memory back. The WebGL context
+// is restored (three.js uploads every texture again from its source) but what was rendered into the env maps is
+// gone, and the 2D canvases the textures are drawn on come back blank: the field returned black, the chrome too.
+// Everything drawn or rendered is made again then, a canvas also when only it was lost
+const redraws=[];
+function keepDrawn(c,fn){redraws.push(fn);c?.addEventListener('contextrestored',fn)}
+canvas.addEventListener('webglcontextrestored',()=>{for(const fn of redraws)fn()});
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x0b0d12);
 const camera=new THREE.PerspectiveCamera(38,1,0.05,50);
@@ -54,7 +61,13 @@ const PAINT_GLOSS={flat:0},paintMats=[];
 // (1.25 left the whole table dark; at 1.9 a rail top is a little over its own red, still well short of clipping)
 const BAKE_GAIN=1.9;
 let envTex=null;
-if(V_B){
+// an env map rendered again (after a lost context) takes the old one's place on every material that mirrors it
+function swapEnv(old,neu){
+  scene.traverse(o=>{for(const m of [o.material].flat())if(m?.envMap===old)m.envMap=neu});
+  if(scene.environment===old)scene.environment=neu;
+  old.dispose();
+}
+function roomEnv(){
   const pm=new THREE.PMREMGenerator(renderer),env=new THREE.Scene();
   // a dim room under a lit ceiling (the same ceiling Blender lights the table with), so an up-facing chrome or
   // glossy face mirrors light, not black
@@ -67,17 +80,24 @@ if(V_B){
     const m=new THREE.Mesh(new THREE.PlaneGeometry(TUBES.w,TUBES.l),new THREE.MeshBasicMaterial({color:new THREE.Color(5,5,5)}));
     m.position.set(x,TUBES.y,0);m.rotation.x=Math.PI/2;env.add(m);
   }
-  envTex=pm.fromScene(env,0.02).texture;
+  const t=pm.fromScene(env,0.02).texture;pm.dispose();return t;
+}
+if(V_B){
+  envTex=roomEnv();
   scene.environment=envTex;scene.environmentIntensity=0.5;
+  keepDrawn(null,()=>{const old=envTex;envTex=roomEnv();swapEnv(old,envTex)});
 }
 
 function canvasTex(w,h,draw){
   const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
-  t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;
+  t.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  // (setting the width clears the canvas and its drawing state, so a redraw starts as the first draw did)
+  keepDrawn(c,()=>{c.width=w;draw(c.getContext('2d'),w,h);t.needsUpdate=true});
+  return t;
 }
 
-const surfaceTex=canvasTex(512,1024,(g,W,H)=>{
+function drawSurface(g,W,H){
   const px=W/(2*HW);
   g.fillStyle='#eceee6';g.fillRect(0,0,W,H);
   g.fillStyle='rgba(90,100,105,.38)';
@@ -104,7 +124,8 @@ const surfaceTex=canvasTex(512,1024,(g,W,H)=>{
   g.beginPath();g.arc(W/2,H/2,0.13*px,0,7);g.stroke();
   g.beginPath();g.arc(W/2,0,GW*1.5*px,0,Math.PI);g.stroke();
   g.beginPath();g.arc(W/2,H,GW*1.5*px,Math.PI,2*Math.PI);g.stroke();
-});
+}
+const surfaceTex=canvasTex(512,1024,drawSurface);
 // ?v=b goal: a low slot SLOT tall at the foot of the end rail
 const SLOT=0.024;
 const surface=new THREE.Mesh(new THREE.PlaneGeometry(2*HW,2*HL),
@@ -275,6 +296,7 @@ function drawScore(a,b,hide=-1){
 // ?v=b: no board overhead; after each goal the score glows up through the playfield, each side in its own half
 let fieldScore=null;
 drawScore(0,0);
+keepDrawn(scoreCanvas,()=>drawScore(score[0],score[1]));
 if(!V_B){
   const board=new THREE.Group();board.position.set(0,0.25,-HL-END-0.06);board.rotation.x=-0.38;scene.add(board);
   board.add(new THREE.Mesh(new THREE.BoxGeometry(0.64,0.22,0.04),railMat));
@@ -397,6 +419,7 @@ if(V_B){
       const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
       const m=new THREE.Mesh(new THREE.PlaneGeometry(2*HW,HL),new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0,depthWrite:false}));
       m.rotation.x=-Math.PI/2;m.position.set(0,0.0004,i===0?HL/2:-HL/2);scene.add(m);
+      c.addEventListener('contextrestored',()=>drawScore(score[0],score[1]));
       return {c,tex,m,show:0};
     }),
     draw(a,b,hide){
@@ -420,7 +443,7 @@ if(V_B){
   // the chrome's own room to mirror: a dim ceiling lined with bright tubes, light grey walls with a bright band
   // at eye height, a dark floor. Nothing in it is black where a trim's top or its field-side edge looks, so the
   // metal can be a sharp mirror (stronger than the red paint's gloss, as metal should be) without black patches
-  const chromeEnv=(()=>{
+  const chromeRoom=()=>{
     const pm=new THREE.PMREMGenerator(renderer),room=new THREE.Scene();
     room.background=new THREE.Color(0.42,0.43,0.46);
     const flat=(w,d,c,y)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({color:new THREE.Color(c,c,c),side:THREE.DoubleSide}));
@@ -431,8 +454,10 @@ if(V_B){
     const band=new THREE.Mesh(new THREE.CylinderGeometry(5,5,0.5,48,1,true),
       new THREE.MeshBasicMaterial({color:new THREE.Color(1.8,1.8,1.8),side:THREE.BackSide}));
     band.position.y=0.6;room.add(band);
-    return pm.fromScene(room,0.01).texture;
-  })();
+    const t=pm.fromScene(room,0.01).texture;pm.dispose();return t;
+  };
+  let chromeEnv=chromeRoom();
+  keepDrawn(null,()=>{const old=chromeEnv;chromeEnv=chromeRoom();swapEnv(old,chromeEnv)});
   const proxyMats=[railRed,cabRed,graphite,chromeMat,pitMat,blackMat];
   if(!location.search.includes('proxy')){
     new GLTFLoader().load('models/table.glb',gltf=>{
@@ -462,10 +487,13 @@ if(V_B){
     },undefined,e=>console.warn('table.glb:',e));
     // the playfield under the same lamps as the table: Blender's light on it (rail shadows and all) multiplied
     // into the field's canvas, shown as it is like the table; only a faint gloss comes from the scene
+    // (the field is drawn here afresh, not copied from surfaceTex's canvas, which may itself still be blank then)
     new THREE.ImageLoader().load('models/field-light.png',img=>{
-      const src=surfaceTex.image,c=document.createElement('canvas');c.width=src.width;c.height=src.height;
-      const g=c.getContext('2d');g.drawImage(src,0,0);g.globalCompositeOperation='multiply';g.drawImage(img,0,0,c.width,c.height);
+      const {width:W,height:H}=surfaceTex.image,c=document.createElement('canvas');
+      const bake=()=>{c.width=W;c.height=H;const g=c.getContext('2d');drawSurface(g,W,H);g.globalCompositeOperation='multiply';g.drawImage(img,0,0,W,H)};
+      bake();
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();
+      keepDrawn(c,()=>{bake();t.needsUpdate=true});
       // (lit in real time the field used to read a touch brighter than its own colour; 1.06 keeps that)
       const m=surface.material;m.emissiveMap=t;m.emissive.set(0xffffff);m.emissiveIntensity=1.06;m.color.set(0x000000);
       m.envMap=envTex;m.envMapIntensity=0.25;m.needsUpdate=true;
@@ -849,6 +877,7 @@ function finish(){
   if(twoP)banner(won?'WIN':'LOSE',2.2,true,won?'LOSE':'WIN');
   after(twoP?2.4:0.9,()=>{
     document.getElementById('result-title').textContent=twoP?(won?'BLUE WINS':'YELLOW WINS'):won?'YOU WIN':'YOU LOSE';
+    document.getElementById('result-mode').textContent=playedAs();
     document.getElementById('result-score').textContent=`${score[0]} - ${score[1]}`;
     document.getElementById('back').textContent=twoP?'メニューへ':'難易度を選ぶ';
     document.getElementById('title').hidden=twoP;
@@ -880,6 +909,17 @@ for(const b of document.querySelectorAll('#menu [data-win]'))b.addEventListener(
 });
 for(const b of document.querySelectorAll('#menu [data-level]'))b.addEventListener('click',()=>{win=pickedWin;startGame(+b.dataset.level)});
 document.getElementById('again').addEventListener('click',()=>startGame(level,twoP));
+// the result says what was played: the level (or 2P) and the points to win
+const playedAs=()=>`${twoP?'2人対戦':['EASY','NORMAL','HARD'][level]}・${win}点先取`;
+document.getElementById('share').addEventListener('click',()=>{
+  const text=`MarutiBit「AIR HOCKEY」\n${playedAs()} / ${document.getElementById('result-title').textContent} ${score[0]}-${score[1]}`;
+  const intent=`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://marutilab.com/bit/airhockey')}`;
+  // as the site's XShareButton: no feature string (noopener, or noreferrer, makes window.open return null even
+  // when the tab opened, and the fallback then took this page to the composer too). The page runs in the site's
+  // iframe, so a blocked popup sends the whole page there, not the frame
+  const w=window.open(intent,'_blank');
+  if(w)w.opener=null;else try{top.location.href=intent}catch{location.href=intent}
+});
 document.getElementById('back').addEventListener('click',()=>{
   document.getElementById('result').classList.add('hidden');
   document.getElementById('menu').classList.remove('hidden');
