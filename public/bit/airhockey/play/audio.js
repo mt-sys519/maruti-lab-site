@@ -72,9 +72,14 @@ const FEVER={
 };
 
 export class Sound{
-  constructor(){this.ctx=null;this.on=true}
+  constructor(){
+    this.ctx=null;this.on=true;
+    // a phone's small speaker brings the blower's hiss forward: it runs quieter there
+    this.blowerLevel=matchMedia('(pointer: coarse)').matches?0.6:1;
+  }
 
   unlock(){
+    if(this.stale&&this.ctx){this.rebuild();return}
     if(!this.ctx){
       const AC=window.AudioContext||window.webkitAudioContext;
       if(!AC)return;
@@ -85,6 +90,18 @@ export class Sound{
   }
 
   get ready(){return this.ctx&&this.ctx.state==='running'}
+
+  // iPhone Safari after the phone slept: the context says it is running again and plays nothing. The only cure
+  // is a new context, made inside a gesture (unlock), with the music and the blower picked up where they were
+  rebuild(){
+    const song=this.bgm?.name,blowing=this.blowing;
+    this.bgmStop();this.stale=false;
+    this.ctx.close().catch(()=>{});this.ctx=null;this.pulse=null;
+    this.unlock();
+    if(blowing)this.blowerOn(true);
+    // the music only starts on a running context, which a new one may not be until resume() settles
+    if(song){if(this.ready)this.bgmStart(song);else this.ctx?.resume().then(()=>this.bgmStart(song)).catch(()=>{})}
+  }
 
   setOn(on){
     this.on=on;
@@ -415,9 +432,9 @@ export class Sound{
 
   blowerOn(on,delay=0){
     if(!this.ctx)return;
-    const t=this.ctx.currentTime+delay;
+    const t=this.ctx.currentTime+delay;this.blowing=on;
     for(const p of [this.blower.gain,this.blowLP.frequency,this.motor.frequency])p.cancelScheduledValues(t);
-    this.blower.gain.setTargetAtTime(on?1:0,t,on?0.35:0.6);
+    this.blower.gain.setTargetAtTime(on?this.blowerLevel:0,t,on?0.35:0.6);
     this.blowLP.frequency.setTargetAtTime(on?650:120,t,on?0.4:0.7);
     this.motor.frequency.setTargetAtTime(on?100:25,t,on?0.45:0.8);
   }

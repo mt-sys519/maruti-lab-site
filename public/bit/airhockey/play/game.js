@@ -535,6 +535,14 @@ function fitFlat(w,h){
   flat.updateProjectionMatrix();flat.updateMatrixWorld();
   document.body.classList.toggle('land',land);
 }
+// 2P: the pause button sits on the left rail at the center line - off the playfield, in neither player's half,
+// in reach of both. Placed from the flat camera, so it follows the table in portrait and landscape alike
+function placePause(){
+  const b=document.getElementById('pause');
+  if(!twoP){b.style.left=b.style.top='';return}
+  const v=new THREE.Vector3(-(HW+RT/2),0.06,0).project(flat);
+  b.style.left=`${(v.x+1)/2*innerWidth}px`;b.style.top=`${(1-v.y)/2*innerHeight}px`;
+}
 let redraw=true;
 function fit(){
   redraw=true;
@@ -570,6 +578,7 @@ function fit(){
   const b=bounds(),cy=(b.y0+b.y1)/2;
   camera.setViewOffset(w,h,0,-cy*h/2,w,h);
   camBase.copy(camera.position);
+  placePause();
 }
 addEventListener('resize',fit);fit();
 
@@ -857,8 +866,8 @@ function finish(){
 }
 function startGame(lv,two=false){
   sound.unlock();
-  twoP=two;document.body.classList.toggle('two',two);quitBtn.hidden=!(two||DEMO);
-  setPaused(false);pauseBtn.hidden=two;
+  twoP=two;document.body.classList.toggle('two',two);quitBtn.hidden=!DEMO;
+  setPaused(false);pauseBtn.hidden=false;placePause();
   for(const m of paintMats)m.envMapIntensity=two?PAINT_GLOSS.flat:1;
   fingers.clear();owner[0]=owner[1]=null;
   level=lv;score=[0,0];timers=[];multi=false;nextMulti=6;drawScore(0,0);
@@ -885,7 +894,7 @@ document.getElementById('back').addEventListener('click',()=>{
   document.getElementById('menu').classList.remove('hidden');
   mode='menu';twoP=false;document.body.classList.remove('two');quitBtn.hidden=true;
 });
-// 2P: hold the quit button 0.8 s to end the match and go back to the menu
+// watching: hold the quit button 0.8 s to end it and go back to the menu
 const quitBtn=document.getElementById('quit');
 function toMenu(){
   setPaused(false);pauseBtn.hidden=true;
@@ -911,12 +920,12 @@ if(navigator.maxTouchPoints<2){
 document.getElementById('vs').addEventListener('click',()=>{win=pickedWin;startGame(1,true)});
 // both sides at the watching level: NORMAL's rallies were too tame, HARD's guard let almost nothing in
 document.getElementById('watch').addEventListener('click',()=>{DEMO=true;win=pickedWin;startGame(3)});
-// pause (1P and watching; 2P has its hold-to-quit). The audio context is suspended with it, so the music,
+// pause (every mode; in 2P a small button on the rail, placed by placePause). The audio context is suspended with it, so the music,
 // the blower and the glide all stop where they are
 let paused=false;
 const pauseBtn=document.getElementById('pause'),pauseMenu=document.getElementById('pausemenu');
 function setPaused(on){
-  paused=on;pauseMenu.classList.toggle('hidden',!on);
+  paused=on;pauseMenu.classList.toggle('hidden',!on);pauseBtn.style.visibility=on?'hidden':'';
   if(on){if(sound.ctx)sound.ctx.suspend().catch(()=>{})}else if(sound.ctx)sound.unlock();
 }
 pauseBtn.addEventListener('click',()=>setPaused(true));
@@ -935,11 +944,18 @@ soundBtn.addEventListener('click',()=>{
 });
 
 // audio needs a gesture to start, and to come back after the tab was hidden or restored from bfcache
-addEventListener('pointerup',()=>sound.unlock());
-addEventListener('touchend',()=>sound.unlock());
+// (not while paused: the pause holds the audio until "つづける")
+const wake=()=>{if(!paused)sound.unlock()};
+addEventListener('pointerup',wake);
+addEventListener('touchend',wake);
+// an iPhone that slept comes back with a context that runs silent: the next gesture makes a new one
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+let hiddenAt=0;
 document.addEventListener('visibilitychange',()=>{
   if(!sound.ctx)return;
-  if(document.hidden)sound.ctx.suspend();else sound.ctx.resume().catch(()=>{});
+  if(document.hidden){hiddenAt=performance.now();sound.ctx.suspend();return}
+  if(IOS&&performance.now()-hiddenAt>500)sound.stale=true;
+  else if(!paused)sound.ctx.resume().catch(()=>{});
 });
 addEventListener('pageshow',e=>{if(e.persisted&&sound.ctx)sound.ctx.resume().catch(()=>{})});
 

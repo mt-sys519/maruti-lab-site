@@ -30,9 +30,10 @@
 
 /* A phone is held upright, and the game turns its camera to look down the
    table from above when the window is tall - so the stage goes tall too,
-   leaving a strip of page under it to scroll by. */
+   leaving a strip of page under it to scroll by. The tall stage pushed the
+   fullscreen button below the first screen, so on a phone it sits above. */
 @media(max-width:700px){
-  .ahPanel{width:100%;margin:12px auto 20px}
+  .ahPanel{width:100%;margin:12px auto 20px;display:flex;flex-direction:column}
+  .ahBar{order:-1;padding:0 12px 8px}
   .ahStage{aspect-ratio:auto;height:min(76svh,680px);max-height:none}
-  .ahBar{padding:10px 12px 0}
 }
