@@ -38,17 +38,6 @@ h2{font-size:30px}
  border-radius:10px;border:2px solid #3a3f4d;background:transparent;color:#8a8f9c;cursor:pointer}
 .modes button.on{color:#f4f1e8;border-color:#f4f1e8}
 
-/* 2P: hold to quit. On the center line at the screen's edge, in neither player's half; a press must be held
-   (0.8 s, the bar fills) so a stray finger or palm can't end the match */
-.quit{position:fixed;z-index:5;left:max(8px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);
- overflow:hidden;font:700 11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#f4f1e8;
- background:rgba(20,22,30,.75);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:8px 10px;
- touch-action:none;-webkit-touch-callout:none;cursor:pointer}
-.quit[hidden]{display:none}
-.quit .fill{position:absolute;inset:0;background:#d8312b;transform:scaleX(0);transform-origin:left}
-.quit .label{position:relative}
-.quit.hold .fill{transform:scaleX(1);transition:transform .8s linear}
-body.land .quit{left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%)}
 
 /* 2P, on one device */
 .vs-box{margin:18px 0 0;padding:16px 0 0;border-top:1px solid rgba(255,255,255,.12)}

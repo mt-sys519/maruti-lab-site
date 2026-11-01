@@ -768,7 +768,7 @@ function aiStep(m,ai,flip,dt){
   m.tx=tx;m.tz=flip*tz;m.maxV=spd;
 }
 // ?demo or the menu's watch button: CPU against CPU, the near mallet played by a second AI; the match
-// restarts by itself until the quit button is held
+// restarts by itself until the pause card's "メニューへ"
 let DEMO=new URLSearchParams(location.search).has('demo');
 const aiMe={phase:'guard',t:0,aimX:0,sx:0,sz:0,target:null};
 
@@ -844,7 +844,7 @@ function finish(){
   sound.bgmStop();sound.end();
   pauseBtn.hidden=true;
   if(DEMO&&!twoP){after(3,()=>startGame(level));return}
-  const won=score[0]>score[1];quitBtn.hidden=true;
+  const won=score[0]>score[1];
   // 2P: each player is told face to face first, then the shared card
   if(twoP)banner(won?'WIN':'LOSE',2.2,true,won?'LOSE':'WIN');
   after(twoP?2.4:0.9,()=>{
@@ -857,7 +857,7 @@ function finish(){
 }
 function startGame(lv,two=false){
   sound.unlock();
-  twoP=two;document.body.classList.toggle('two',two);quitBtn.hidden=!DEMO;
+  twoP=two;document.body.classList.toggle('two',two);
   setPaused(false);pauseBtn.hidden=false;
   for(const m of paintMats)m.envMapIntensity=two?PAINT_GLOSS.flat:1;
   fingers.clear();owner[0]=owner[1]=null;
@@ -883,26 +883,16 @@ document.getElementById('again').addEventListener('click',()=>startGame(level,tw
 document.getElementById('back').addEventListener('click',()=>{
   document.getElementById('result').classList.add('hidden');
   document.getElementById('menu').classList.remove('hidden');
-  mode='menu';twoP=false;document.body.classList.remove('two');quitBtn.hidden=true;
+  mode='menu';twoP=false;document.body.classList.remove('two');
 });
-// watching: hold the quit button 0.8 s to end it and go back to the menu
-const quitBtn=document.getElementById('quit');
 function toMenu(){
   setPaused(false);pauseBtn.hidden=true;
   timers=[];mode='menu';sound.bgmStop();DEMO=false;
   for(const p of pucks){p.live=false;p.visible=false;p.anim=null}
-  twoP=false;document.body.classList.remove('two');quitBtn.hidden=true;quitBtn.classList.remove('hold');
+  twoP=false;document.body.classList.remove('two');
   document.getElementById('result').classList.add('hidden');
   document.getElementById('menu').classList.remove('hidden');
 }
-quitBtn.addEventListener('pointerdown',e=>{
-  try{quitBtn.setPointerCapture(e.pointerId)}catch{}
-  quitBtn.classList.add('hold');clearTimeout(quitBtn.t);quitBtn.t=setTimeout(toMenu,800);
-});
-for(const type of ['pointerup','pointercancel','lostpointercapture'])quitBtn.addEventListener(type,()=>{
-  clearTimeout(quitBtn.t);quitBtn.classList.remove('hold');
-});
-quitBtn.addEventListener('contextmenu',e=>e.preventDefault());
 // 2P needs two fingers at once: elsewhere the button stays in the menu, greyed out
 if(navigator.maxTouchPoints<2){
   document.getElementById('vs').disabled=true;
