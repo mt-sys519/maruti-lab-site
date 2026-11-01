@@ -535,7 +535,9 @@ function fitFlat(w,h){
   flat.updateProjectionMatrix();flat.updateMatrixWorld();
   document.body.classList.toggle('land',land);
 }
+let redraw=true;
 function fit(){
+  redraw=true;
   const w=innerWidth,h=innerHeight;
   renderer.setSize(w,h,false);
   fitFlat(w,h);
@@ -1038,8 +1040,9 @@ function followHand(m,zMin,zMax,dt){
 }
 let last=performance.now(),acc=0;
 function frame(now){
-  // paused: the table holds still (time, timers, physics and AI all wait); it is still drawn
-  if(paused){last=now;renderer.render(scene,twoP?flat:camera);requestAnimationFrame(frame);return}
+  // paused: the table holds still (time, timers, physics and AI all wait), so it is drawn again only when the
+  // window changes size (which clears the canvas)
+  if(paused){last=now;if(redraw){renderer.render(scene,twoP?flat:camera);redraw=false}requestAnimationFrame(frame);return}
   const dt=Math.min(0.05,(now-last)/1000);last=now;gameTime+=dt;
   const due=timers.filter(t=>t.t<=gameTime);
   if(due.length){timers=timers.filter(t=>t.t>gameTime);due.forEach(t=>t.fn())}
@@ -1075,6 +1078,17 @@ function frame(now){
   if(fieldScore)for(const S of fieldScore.sides){S.show=Math.max(0,S.show-dt);S.m.material.opacity=0.85*clamp(S.show/0.7,0,1)}
 
   renderer.render(scene,twoP?flat:camera);
+  if(mode==='play')pace(dt);
   requestAnimationFrame(frame);
+}
+// a phone that can't keep up at full resolution: frames running long through play (a 30 fps pace for over a
+// second) draw the table at fewer pixels, 2 -> 1.5 -> 1 times the CSS size, never back up. Nothing else changes,
+// and a device that keeps up never gets here
+let slowFor=0,paceWait=2;
+function pace(dt){
+  if((paceWait-=dt)>0)return;
+  slowFor=dt>1/35?slowFor+dt:Math.max(0,slowFor-dt);
+  const pr=renderer.getPixelRatio();
+  if(slowFor>1.2&&pr>1){renderer.setPixelRatio(pr>1.5?1.5:1);fit();slowFor=0;paceWait=2}
 }
 requestAnimationFrame(frame);

@@ -6,3 +6,12 @@
 # PICLEA: let phones keep the multi-MB fonts for a week.
 /piclea/fonts/*
   Cache-Control: public, max-age=604800
+
+# AIR HOCKEY: three.js never changes under the same name, so a week; the table's
+# model, light map and hit sounds might be redone, so a day.
+/bit/airhockey/play/vendor/*
+  Cache-Control: public, max-age=604800
+/bit/airhockey/play/models/*
+  Cache-Control: public, max-age=86400
+/bit/airhockey/play/sounds/*
+  Cache-Control: public, max-age=86400
