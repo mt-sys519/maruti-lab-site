@@ -6,7 +6,7 @@
 .bitPageAirHockey .bitIntro{background:#0b0d12;border-bottom-color:#23262e}
 .bitPageAirHockey .bitIntro p,.bitPageAirHockey .bitIntroSub{color:#a9adb6}
 .bitPageAirHockey .bitHowToPlayCard,.bitPageAirHockey .bitNotesCard{background:#0d0f14;border-color:#2c3039;box-shadow:5px 5px 0 #15171c;color:#d8d6cf}
-.bitPageAirHockey .bitHowToPlaySub,.bitPageAirHockey .bitNotesLead,.bitPageAirHockey .bitNotesCard p{color:#a9adb6}
+.bitPageAirHockey .bitHowToPlaySub,.bitPageAirHockey .bitNotesLead,.bitPageAirHockey .bitNotesCard p,.bitPageAirHockey .bitHowToPlayNote{color:#a9adb6}
 
 /* Between the shelf's big band title (62px) and the 22px of a game that names
    itself: the full size shouted over the table, the small one got lost. */

@@ -406,6 +406,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitHowToPlayChips span:nth-child(3n+1){background:#FF7A5C}
 .bitHowToPlayChips span:nth-child(3n+2){background:#F4C430}
 .bitHowToPlayChips span:nth-child(3n+3){background:#2BB3A3;color:#fff}
+.bitHowToPlayNote{margin:18px 0 0;font:400 12px/1.7 "Yu Gothic UI",sans-serif;color:#5c655e}
+.bitHowToPlayNote strong{color:#232323}
 @media(max-width:700px){.bitHowToPlay{width:calc(100% - 24px)}.bitHowToPlayGrid{grid-template-columns:1fr;gap:16px}.bitHowToPlayNum{font-size:56px}}
 .bitNotes{width:min(1120px,calc(100% - 40px));margin:0 auto clamp(24px,4vw,48px)}
 .bitNotesHead{margin:0 0 16px}
@@ -710,6 +712,8 @@ footer{padding-top:34px;padding-bottom:34px}
 .bitPageDark .bitHowToPlayCard h3,.bitPageDark .bitHowToPlayLead,.bitPageDark .bitNotesCard strong{color:var(--bit-ink)}
 .bitPageDark .bitHowToPlaySub,.bitPageDark .bitNotesLead,.bitPageDark .bitNotesCard p{color:#9fc4d6}
 .bitPageDark .bitHowToPlayNum{opacity:.2}
+.bitPageDark .bitHowToPlayNote{color:#9fc4d6}
+.bitPageDark .bitHowToPlayNote strong{color:var(--bit-ink)}
 
 /* The band was 150px of floor with 38px of air over the title and 28px under
    it, which on a desktop put a thumb's worth of nothing between the series

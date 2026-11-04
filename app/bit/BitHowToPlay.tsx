@@ -8,9 +8,11 @@ type BitHowToPlayProps = {
   rulesLead: ReactNode;
   rulesSub?: ReactNode;
   chips?: string[];
+  // a caution under everything, e.g. a game that tires the eyes
+  note?: ReactNode;
 };
 
-export function BitHowToPlay({ aboutLead, aboutSub, playLead, playSub, rulesLead, rulesSub, chips }: BitHowToPlayProps) {
+export function BitHowToPlay({ aboutLead, aboutSub, playLead, playSub, rulesLead, rulesSub, chips, note }: BitHowToPlayProps) {
   return (
     <section className="bitHowToPlay" aria-labelledby="bit-howtoplay-title">
       <h2 id="bit-howtoplay-title" className="srOnly">遊び方</h2>
@@ -48,6 +50,7 @@ export function BitHowToPlay({ aboutLead, aboutSub, playLead, playSub, rulesLead
           {chips.map((chip) => <span key={chip}>{chip}</span>)}
         </div>
       )}
+      {note && <p className="bitHowToPlayNote">{note}</p>}
     </section>
   );
 }
