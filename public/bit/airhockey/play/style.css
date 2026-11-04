@@ -38,6 +38,14 @@ h2{font-size:30px}
  #result .levels{gap:7px}
  #result .levels button{padding:10px}
  #result .share{margin-top:8px;padding:9px}
+ /* the menu's screens too: same order, less air */
+ #menu .card{padding:14px 20px 12px}
+ #menu h1{font-size:28px}
+ #menu .levels{margin-top:12px!important;gap:8px}
+ #menu .levels button,#vs{padding:10px}
+ #menu .vs-box{margin-top:10px;padding-top:10px}
+ #menu .watch{margin-top:8px;padding:9px}
+ #menu .back{margin-top:6px}
 }
 .score{margin:10px 0 18px;font:800 26px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em}
 .levels{display:flex;flex-direction:column;gap:10px}
@@ -49,6 +57,16 @@ h2{font-size:30px}
 .modes button{flex:1;font:800 14px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;padding:11px 6px;
  border-radius:10px;border:2px solid #3a3f4d;background:transparent;color:#8a8f9c;cursor:pointer}
 .modes button.on{color:#f4f1e8;border-color:#f4f1e8}
+/* the menu's screens: one card at a time */
+.card[hidden]{display:none}
+.card h2{margin-bottom:18px}
+.pick>div{flex:1;display:flex;flex-direction:column;gap:5px}
+.pick>div>button{width:100%}
+.note{margin:-4px 0 4px;font-size:11px;color:#8a8f9c}
+.levels .note{margin:-6px 0 2px}
+.vs-box .note{margin-top:6px}
+.back{margin-top:14px;background:none;border:0;padding:6px 4px;color:#8a8f9c;cursor:pointer;
+ font:700 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em}
 
 
 /* 2P, on one device */

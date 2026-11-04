@@ -14,23 +14,61 @@
 <div class="bslot s2"><div class="rot"><div id="banner2" class="banner"></div></div></div>
 
 <div id="menu" class="overlay">
- <div class="card">
+ <!-- one screen at a time: top, then a stage (CPU), then its level and points, then START -->
+ <div class="card" data-screen="top">
   <h1>AIR HOCKEY</h1>
-  <p class="sub">CPU対戦</p>
-  <div class="modes">
-   <button data-win="7" class="on">7点先取</button>
-   <button data-win="15">15点先取</button>
-  </div>
-  <div class="levels">
-   <button data-level="0">EASY</button>
-   <button data-level="1" class="primary">NORMAL</button>
-   <button data-level="2">HARD</button>
+  <div class="levels" style="margin-top:20px">
+   <button data-go="cpu">CPU対戦</button>
   </div>
   <div id="vs-box" class="vs-box">
    <button id="vs">2人対戦</button>
    <p id="vs-hint" class="hint">1台を平らに置いて向かい合い、自分側の半分を指で操作</p>
-   <button id="watch" class="watch">CPU同士の対戦を見る</button>
+   <button id="watch" class="watch">エキシビジョンマッチ</button>
+   <p class="note">CPU同士の対戦を見る</p>
   </div>
+ </div>
+ <div class="card" data-screen="cpu" hidden>
+  <h2>CPU対戦</h2>
+  <div class="levels" style="margin-top:18px">
+   <button data-go="arcade">ARCADE</button>
+   <p class="note">ゲームセンターのあの台</p>
+   <button data-go="pro">PRO STAGE</button>
+   <p class="note">本物の球速、公式のルール</p>
+  </div>
+  <button class="back" data-go="top">← もどる</button>
+ </div>
+ <div class="card" data-screen="arcade" hidden>
+  <h2>ARCADE</h2>
+  <div class="modes pick" data-pick="level">
+   <button data-v="0">EASY</button><button data-v="1" class="on">NORMAL</button><button data-v="2">HARD</button>
+  </div>
+  <div class="modes pick" data-pick="win">
+   <div><button data-v="7" class="on">7点先取</button></div>
+   <div><button data-v="15">15点先取</button><p class="note">途中でパックが増える</p></div>
+  </div>
+  <div class="levels"><button class="primary" data-start="arcade">START</button></div>
+  <button class="back" data-go="cpu">← もどる</button>
+ </div>
+ <div class="card" data-screen="pro" hidden>
+  <h2>PRO STAGE</h2>
+  <div class="modes pick" data-pick="level">
+   <button data-v="4" class="on">ELITE</button><button data-v="5">CHAMPION</button><button data-v="6">LEGEND</button>
+  </div>
+  <div class="modes pick" data-pick="games">
+   <button data-v="1" class="on">1ゲーム</button><button data-v="4">公式ルール</button>
+  </div>
+  <p class="note" style="margin:-4px 0 12px">公式ルール＝7点×4ゲーム先取</p>
+  <div class="levels"><button class="primary" data-start="pro">START</button></div>
+  <button class="back" data-go="cpu">← もどる</button>
+ </div>
+ <div class="card" data-screen="two" hidden>
+  <h2>2人対戦</h2>
+  <div class="modes pick" data-pick="win">
+   <div><button data-v="7" class="on">7点先取</button></div>
+   <div><button data-v="15">15点先取</button><p class="note">途中でパックが増える</p></div>
+  </div>
+  <div class="levels"><button class="primary" data-start="two">START</button></div>
+  <button class="back" data-go="top">← もどる</button>
  </div>
 </div>
 
@@ -49,6 +87,7 @@
   <h2 id="result-title">YOU WIN</h2>
   <p id="result-mode" class="rmode"></p>
   <p id="result-score" class="score"></p>
+  <p id="result-sub" class="note" style="margin:-10px 0 14px" hidden></p>
   <div class="levels">
    <button id="again" class="primary">もう一度</button>
    <button id="back">難易度を選ぶ</button>

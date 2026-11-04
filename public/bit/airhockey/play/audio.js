@@ -71,6 +71,17 @@ const FEVER={
   ],
 };
 
+// pro: PRO STAGE. Solemn and tense: D harmonic minor at 120 BPM, Dm Dm B♭ A / Dm Dm Gm A. An organ-ish pad and a
+// low drone hold each bar, a kick beats like a heart (ドッ、ドッ), a quiet ticking hi-hat runs on every 16th,
+// a muted bass pulses in 8ths, and a bell tolls once every four bars
+const PRO_SONG={
+  bpm:120,bars:8,
+  chords:[[50,57,62,65],[50,57,62,65],[46,53,58,62],[45,52,57,61],[50,57,62,65],[50,57,62,65],[43,50,55,58],[45,52,57,61]],
+  bassRoot:[38,38,34,33,38,38,31,33],
+  // the bell: [bar, step, note]
+  bells:[[0,0,74],[3,8,73],[4,0,74],[7,8,76]],
+};
+
 export class Sound{
   constructor(){
     this.ctx=null;this.on=true;
@@ -328,8 +339,8 @@ export class Sound{
   bgmStart(name){
     if(!this.ready||this.bgm?.name===name)return;
     this.bgmStop();
-    const c=this.ctx,bus=c.createGain(),song=name==='fever'?FEVER:GROOVE;
-    bus.gain.setValueAtTime(0.0001,c.currentTime);bus.gain.setTargetAtTime(name==='fever'?0.55:0.34,c.currentTime,0.12);
+    const c=this.ctx,bus=c.createGain(),song={fever:FEVER,pro:PRO_SONG}[name]||GROOVE;
+    bus.gain.setValueAtTime(0.0001,c.currentTime);bus.gain.setTargetAtTime({fever:0.55,pro:0.42}[name]||0.34,c.currentTime,0.12);
     bus.connect(this.master);
     if(!this.pulse)this.pulse={q:this.pulseWave(0.25),e:this.pulseWave(0.125)};
     this.bgm={name,song,bus,step:0,next:c.currentTime+0.08};
@@ -346,7 +357,7 @@ export class Sound{
     const b=this.bgm;if(!b)return;
     const c=this.ctx,dt=60/b.song.bpm/4,len=b.song.bars*16;
     while(b.next<c.currentTime+0.12){
-      (b.name==='fever'?this.feverStep:this.grooveStep).call(this,b.step,b.next,dt,b.bus);
+      ({fever:this.feverStep,pro:this.proStep}[b.name]||this.grooveStep).call(this,b.step,b.next,dt,b.bus);
       b.step=(b.step+1)%len;b.next+=dt;
     }
   }
@@ -376,6 +387,28 @@ export class Sound{
     if(i===6||i===14)for(const n of G.chords[ch])this.blip(midi(n),t,dt*0.8,0.012,this.lp(1800,bus),this.pulse.q);
     const h=G.hook[bar][i];
     if(h)this.bell(midi(h),t,0.05,bus);
+  }
+  // a slow swell: a triangle and a soft sine an octave up, rising over `att` and falling away at the end
+  swell(f,t,dur,g,dest,att=0.5){
+    const v=this.ctx.createGain();
+    v.gain.setValueAtTime(0.0001,t);v.gain.linearRampToValueAtTime(g,t+att);
+    v.gain.setValueAtTime(g,t+dur-0.35);v.gain.linearRampToValueAtTime(0.0001,t+dur);
+    v.connect(dest);
+    this.tone('triangle',f,t,dur,v);
+    const o=this.ctx.createGain();o.gain.value=0.35;o.connect(v);this.tone('sine',f*2,t,dur,o);
+  }
+  proStep(s,t,dt,bus){
+    const P=PRO_SONG,i=s%16,bar=Math.floor(s/16);
+    if(i===0){
+      for(const n of P.chords[bar])this.swell(midi(n),t,dt*16+0.3,0.018,this.lp(1400,bus),0.6);
+      this.swell(midi(P.bassRoot[bar]),t,dt*16+0.3,0.07,this.lp(260,bus),0.3);
+    }
+    // the heartbeat
+    if(i===0||i===3)this.kick(t,i===0?0.34:0.22,bus);
+    if(i===8||i===11)this.kick(t,i===8?0.26:0.16,bus);
+    this.hat(t,i%4===2?0.024:0.009,0.018,bus,8000);
+    if(i%2===0)this.blip(midi(P.bassRoot[bar]+12),t,dt*0.7,0.045,this.lp(420,bus));
+    for(const [b,st,n] of P.bells)if(b===bar&&st===i){this.bell(midi(n),t,0.07,bus);this.bell(midi(n-12),t,0.05,bus)}
   }
   feverStep(s,t,dt,bus){
     const F=FEVER,i=s%16,bar=Math.floor(s/16),ch=bar%4;

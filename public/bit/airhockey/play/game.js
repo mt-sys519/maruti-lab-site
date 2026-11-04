@@ -3,8 +3,22 @@ import {GLTFLoader} from './vendor/addons/loaders/GLTFLoader.js';
 import {Sound} from './audio.js';
 
 // Table units: x across (-HW..HW), z along (-HL = CPU end, +HL = player end).
-const HW=0.5,HL=1.0,GW=0.16,PR=0.049,MR=0.056;
+const HW=0.5,HL=1.0,GW=0.16,PR0=0.049,MR0=0.056;
+// puck and mallet radius: ARCADE's (PR0, MR0, a little large) or PRO's (a tournament table's)
+let PR=PR0,MR=MR0;
 const DAMP=0.08,WALL_E=0.86,HIT_E=0.88,MAX_PUCK=11,ME_SPEED=18,STEP=1/480;
+// PRO: one set of physics for every PRO level (they differ only in the CPU). A puck up to ~100 km/h (26 units/s,
+// the table being ~2.2 m), and a soft touch that dies on the mallet: a hand drawn back with the puck stops it,
+// the pros' trap, at both ends alike (eRamp: the impact speed that gets the full bounce; at 3, as the other levels,
+// a hand easing back with the puck stopped it only now and then). Steps twice as fine, so a fast puck can't slip a mallet
+// A swing is a hand's: what the mallet puts into the puck builds up at most accel (~110 m/s²) up to malletMax
+// (~14 m/s), so a fast shot needs room to build up (moveMallet's swing). Elsewhere a flick of a few millimetres
+// on a phone was a swing at full arm's speed. Here 60 km/h takes a wind-up of ~35 cm on the table (at 150 m/s²
+// a 5 cm flick still sent 37 km/h)
+// The tournament table's puck is 3.5" (8.9 cm): 0.0405 units, the table being ~2.2 m (ARCADE's is 10.8 cm). No mallet
+// size turned up in a rule or a spec; 11 cm (0.05) keeps it about 1.25 times the puck
+const PRO={maxPuck:26,eMin:0.02,eRamp:5,step:1/960,accel:100,malletMax:13,puckR:0.0405,malletR:0.05};
+let maxPuck=MAX_PUCK,eMin=0.35,eRamp=3,step=STEP,accel=0;
 // points to win: 7, or 15 with MULTI PUCK rounds
 let win=7;
 // counter: how near (table units) a fast incoming puck gets before the mallet steps forward and hits it back
@@ -18,7 +32,20 @@ const LEVELS=[
   {speed:5.0,strike:5.4,reaction:0.05,aimErr:0.03,bank:0.45,counter:0.45,smash:0.4,smashSpeed:10},
   // watching only (CPU against CPU): HARD's shots, a slower guard so the points come
   {speed:3.6,strike:4.6,reaction:0.10,aimErr:0.04,bank:0.4,counter:0.5,smash:0.3,smashSpeed:9},
+  // PRO STAGE (aiPro, on PRO's physics, where a shot is only as hard as its wind-up). windup: how far it backs off
+  // behind the puck to swing; follow: how far past the puck it swings through; trapMax: the fastest puck it takes
+  // the pace off rather than only blocking; hold: how long it may line a shot up; shotMax: its shots' ceiling
+  // ELITE: traps, lines up straight and cut shots, swings from ~30 cm (~55 km/h); basic and triangle defense
+  {speed:8,smashSpeed:9,windup:0.3,follow:0.15,reaction:0.06,aimErr:0.03,bank:0,trapMax:6,hold:1.2,triangle:1,feint:0,shotMax:15},
+  // CHAMPION: and one-wall banks, ~45 cm (~70 km/h)
+  {speed:8,smashSpeed:11,windup:0.45,follow:0.15,reaction:0.055,aimErr:0.02,bank:1,trapMax:8,hold:1.4,triangle:1,feint:0,shotMax:20},
+  // LEGEND: and a feint (lines up one shot, then swings another from the same spot), ~60 cm (~85 km/h)
+  {speed:9,smashSpeed:13,windup:0.6,follow:0.15,reaction:0.04,aimErr:0.012,bank:1,trapMax:10,hold:1.6,triangle:1,feint:0.6,shotMax:26},
 ];
+const LEVEL_NAMES=['EASY','NORMAL','HARD','WATCH','ELITE','CHAMPION','LEGEND'];
+// stage: 'arcade' | 'pro' | 'two' | 'watch'. PRO's rules: 7 points a game, and 1 game or the official best of 7
+// (bestOf: the games to win, 4); games: the games each side has won
+let stage='arcade',bestOf=1,games=[0,0];
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 // ?v=b: the real-machine structure (center overhead score, wide one-piece rail, tapered cabinet) in our own plain red
 const V_B=new URLSearchParams(location.search).get('v')==='b';
@@ -97,7 +124,9 @@ function canvasTex(w,h,draw){
   return t;
 }
 
-function drawSurface(g,W,H){
+// pro: PRO STAGE's field, its lines and logo a plain grey instead of red
+function drawSurface(g,W,H,pro=false){
+  const ink=pro?'#8e949c':'#c8231c';
   const px=W/(2*HW);
   g.fillStyle='#eceee6';g.fillRect(0,0,W,H);
   g.fillStyle='rgba(90,100,105,.38)';
@@ -106,13 +135,13 @@ function drawSurface(g,W,H){
     // only red and a soft grey on the field, and the one logo across the center line
     g.strokeStyle='rgba(120,124,130,.35)';g.lineWidth=3;
     for(const y of [H*0.25,H*0.75]){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
-    g.strokeStyle='#c8231c';g.lineWidth=5;
+    g.strokeStyle=ink;g.lineWidth=5;
     // the logo is ~147 px wide; the line stops ~12 px (about a cap height) short of it on each side
     g.beginPath();g.moveTo(0,H/2);g.lineTo(W/2-86,H/2);g.moveTo(W/2+86,H/2);g.lineTo(W,H/2);g.stroke();
     g.lineWidth=3;
     g.beginPath();g.arc(W/2,0,GW*1.5*px,0,Math.PI);g.stroke();
     g.beginPath();g.arc(W/2,H,GW*1.5*px,Math.PI,2*Math.PI);g.stroke();
-    g.fillStyle='#c8231c';g.font='800 17px "Helvetica Neue",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+    g.fillStyle=ink;g.font='800 17px "Helvetica Neue",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
     g.letterSpacing='3px';g.fillText('AIR HOCKEY',W/2+1.5,H/2);
     return;
   }
@@ -312,6 +341,8 @@ if(!V_B){
 // the cabinet top is exactly the rail's outline, so nothing sticks out round the rail
 const CAB={w:2*(HW+RT),l:2*(HL+END),r:0.11+0.006,h:0.3,taper:0.86};
 let gate=null,endBoard=null;
+// which table is shown, 'arcade' or 'pro' (setLook switches; it does nothing for the code-built casing)
+let look='arcade',looks={},applyLook=()=>{},setLook=name=>{look=name};
 if(V_B){
   const railRed=new THREE.MeshStandardMaterial({color:0xc8231c,roughness:0.34,metalness:0.05});
   const cabRed=new THREE.MeshStandardMaterial({color:0x9e1a15,roughness:0.55});
@@ -459,8 +490,12 @@ if(V_B){
   let chromeEnv=chromeRoom();
   keepDrawn(null,()=>{const old=chromeEnv;chromeEnv=chromeRoom();swapEnv(old,chromeEnv)});
   const proxyMats=[railRed,cabRed,graphite,chromeMat,pitMat,blackMat];
-  if(!location.search.includes('proxy')){
-    new GLTFLoader().load('models/table.glb',gltf=>{
+  // the tables: ARCADE's red one, and PRO STAGE's, the same table in black (blender/table.py with AH_VARIANT=black
+  // AH_PAINT=1c1d21 AH_CAB=141518; navy and gunmetal were tried beside it), loaded the first time PRO STAGE is played
+  const PRO_FINISH='black';
+  const loadLook=(name,suffix,pro)=>{
+    const L=looks[name]={group:new THREE.Group(),tex:null,ready:false};L.group.visible=false;scene.add(L.group);
+    new GLTFLoader().load(`models/table${suffix}.glb`,gltf=>{
       for(const m of proxyMats)m.visible=false;
       // the atlas already holds the table lit by Blender's ceiling (bake.py: albedo x light), so it is shown as
       // it is (emissive) and the scene's lights add only gloss and reflections. Chrome keeps its baked silver
@@ -476,28 +511,41 @@ if(V_B){
           return;
         }
         m.emissiveMap=m.map;m.emissive.set(0xffffff);m.emissiveIntensity=BAKE_GAIN;m.color.set(0x000000);
-        // the red paint is glossy: the ceiling tubes run along the rail tops as thin white lines
+        // the paint is glossy: the ceiling tubes run along the rail tops as thin white lines
         if(/paint/.test(o.name)){m.roughness=0.1;m.envMap=envTex;m.envMapIntensity=twoP?PAINT_GLOSS.flat:1;paintMats.push(m)}
         m.needsUpdate=true;
       });
       for(const node of [...gltf.scene.children]){
-        const part=node.name.split(/[|_]/)[0];
-        (part==='gate'?gate:part==='endboard'?endBoard:scene).attach(node);
+        // (the scoreboard housings are still in the file, no longer shown)
+        if(/^(gate|endboard)/.test(node.name))node.visible=false;
+        L.group.attach(node);
       }
-    },undefined,e=>console.warn('table.glb:',e));
+      L.ready=true;applyLook();
+    },undefined,e=>console.warn(`table${suffix}.glb:`,e));
     // the playfield under the same lamps as the table: Blender's light on it (rail shadows and all) multiplied
     // into the field's canvas, shown as it is like the table; only a faint gloss comes from the scene
     // (the field is drawn here afresh, not copied from surfaceTex's canvas, which may itself still be blank then)
-    new THREE.ImageLoader().load('models/field-light.png',img=>{
+    new THREE.ImageLoader().load(`models/field-light${suffix}.png`,img=>{
       const {width:W,height:H}=surfaceTex.image,c=document.createElement('canvas');
-      const bake=()=>{c.width=W;c.height=H;const g=c.getContext('2d');drawSurface(g,W,H);g.globalCompositeOperation='multiply';g.drawImage(img,0,0,W,H)};
+      const bake=()=>{c.width=W;c.height=H;const g=c.getContext('2d');drawSurface(g,W,H,pro);g.globalCompositeOperation='multiply';g.drawImage(img,0,0,W,H)};
       bake();
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();
       keepDrawn(c,()=>{bake();t.needsUpdate=true});
-      // (lit in real time the field used to read a touch brighter than its own colour; 1.06 keeps that)
-      const m=surface.material;m.emissiveMap=t;m.emissive.set(0xffffff);m.emissiveIntensity=1.06;m.color.set(0x000000);
-      m.envMap=envTex;m.envMapIntensity=0.25;m.needsUpdate=true;
+      L.tex=t;applyLook();
     });
+  };
+  // the look shown: the one asked for once both its table and its field are in, the other until then
+  applyLook=()=>{
+    const want=looks[look]?.ready&&looks[look].tex?look:'arcade',L=looks[want];
+    for(const k in looks)looks[k].group.visible=k===want&&looks[k].ready;
+    if(!L?.tex)return;
+    // (lit in real time the field used to read a touch brighter than its own colour; 1.06 keeps that)
+    const m=surface.material;m.emissiveMap=L.tex;m.emissive.set(0xffffff);m.emissiveIntensity=1.06;m.color.set(0x000000);
+    m.envMap=envTex;m.envMapIntensity=0.25;m.needsUpdate=true;
+  };
+  if(!location.search.includes('proxy')){
+    loadLook('arcade','',false);
+    setLook=name=>{look=name;if(name==='pro'&&!looks.pro)loadLook('pro','-'+PRO_FINISH,true);applyLook()};
   }
 }
 
@@ -610,36 +658,208 @@ let multi=false,nextMulti=6;
 const after=(sec,fn)=>timers.push({t:gameTime+sec,fn});
 const livePucks=()=>pucks.filter(p=>p.live);
 
+// ---------- replay ----------
+// PRO STAGE's deciding goal is shown again from three cameras. Nothing is simulated again: through PRO's play the
+// puck and both mallets are written down every frame (the last 4 s), with the times of the hits and the goal, and
+// the replay puts them back where they were while only the camera moves. Slow motion steps between the frames
+// written; each hit is heard once, as it was, at its moment
+const tape=[],tapeEvents=[],TAPE_SEC=4;
+let replay=null,ending=null,replayAll=false;
+// ?debug: __ah.squareBlocks=true plays as before the stall fix below (the PV's PRO match was recorded so)
+let squareBlocks=false;
+const taping=()=>stage==='pro'&&!twoP&&(mode==='play'||mode==='goal');
+function tapeFrame(){
+  const p=puck;
+  tape.push([gameTime,p.x,p.z,p.y,p.tilt||0,p.shade??1,p.visible?1:0,me.x,me.z,cpu.x,cpu.z]);
+  while(tape.length&&tape[0][0]<gameTime-TAPE_SEC)tape.shift();
+}
+// f: 'hit' (sound.hit's v, x, kind, and who for a mallet) or 'goal' (sound.goal's x, v)
+function tapeSound(f,a,who){
+  if(!taping())return;
+  tapeEvents.push({t:gameTime,f,a,who});
+  while(tapeEvents.length&&tapeEvents[0].t<gameTime-TAPE_SEC)tapeEvents.shift();
+}
+// the table as it was at time t
+function tapeAt(t){
+  let i=0;while(i<tape.length-2&&tape[i+1][0]<t)i++;
+  const a=tape[i],b=tape[i+1]||a,k=b[0]>a[0]?clamp((t-a[0])/(b[0]-a[0]),0,1):0,l=j=>a[j]+(b[j]-a[j])*k;
+  Object.assign(puck,{x:l(1),z:l(2),y:l(3),tilt:l(4),shade:l(5),visible:!!a[6]});
+  me.x=l(7);me.z=l(8);cpu.x=l(9);cpu.z=l(10);
+}
+// a lens about 60° across, whichever way the screen is turned. On a tall screen what the camera looks at is moved
+// up by `up` of the height (centred, a third of the picture was the dark over the table's far end)
+function replayLens(up=0.14){
+  const w=innerWidth,h=innerHeight,A=w/h;
+  camera.up.set(0,1,0);
+  camera.fov=clamp(2*Math.atan(Math.tan(31*Math.PI/180)/A)*180/Math.PI,36,80);
+  if(A<1)camera.setViewOffset(w,h,0,h*up,w,h);else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+// where the puck was at tape time t (for the trail)
+function tapePuck(t){
+  let i=0;while(i<tape.length-2&&tape[i+1][0]<t)i++;
+  const a=tape[i],b=tape[i+1]||a,k=b[0]>a[0]?clamp((t-a[0])/(b[0]-a[0]),0,1):0,l=j=>a[j]+(b[j]-a[j])*k;
+  return {x:l(1),z:l(2),y:l(3),v:!!a[6]};
+}
+// the replay's trail (fainter further back) and its white flash. The trail's meshes are made on the first replay:
+// THREE's ids draw Math.random, and made at load they changed the PV's seeded matches from the serve on
+const ghosts=[];
+const makeGhosts=()=>{if(!ghosts.length)for(let i=0;i<6;i++){
+  const m=new THREE.Mesh(puckGeo,new THREE.MeshBasicMaterial({color:0xff5a4a,transparent:true,opacity:0.38*(1-i/6),depthWrite:false}));
+  m.visible=false;m.renderOrder=1;scene.add(m);ghosts.push(m);
+}};
+const flashEl=Object.assign(document.createElement('div'),{style:'position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5'});
+document.body.appendChild(flashEl);
+function startReplay(scorer,done){
+  const g=tapeEvents.findLast(e=>e.f==='goal');
+  if(!g||tape.length<2){done();return}
+  const hitE=tapeEvents.findLast(e=>e.f==='hit'&&e.a[2]==='mallet'&&e.who===scorer&&e.t<=g.t);
+  const t0=tape[0][0],hit=hitE?hitE.t:g.t-0.6,from=t=>Math.max(t0,t);
+  // 1: from behind the goal, as it came (1x, from before the shot). 2 is short, so its カシャン comes one beat (BEAT
+  // s) after 1's: alongside, slowed only as far as it still shows the shot (1/2 at most). 3 comes two beats after 2
+  // (2026-11-04: "just slower, no punch" at one beat and 1/4): by the goal mouth, very slow from just after the
+  // shot while the camera closes in, then 1x for the last moment, the camera there as the puck goes in
+  const BEAT=1.3,TAIL=0.45,lead=BEAT-TAIL,r2=clamp((g.t-hit+0.1)/lead,0.5,0.8);
+  // pass 3: slow (rate `slow`) until `fast` s of tape before the goal, ramping to 1x over RAMP s of tape; on the
+  // goal (SHY s of tape short of it) the picture stops for HOLD s, flashing white, and goes on with the カシャン (still two beats after 2's)
+  const FAST=0.14,RAMP=0.04,HOLD=0.15,SHY=0.03,pre=2*BEAT-TAIL-HOLD-SHY,slowReal=pre-RAMP/0.6-(FAST-RAMP-SHY);
+  const span=clamp(g.t-FAST-(hit+0.03),0.24,0.6),slow=span/slowReal;
+  const passes=[
+    {cam:'goal',from:from(hit-0.9),to:g.t+TAIL,rate:1},
+    {cam:'side',from:from(g.t-lead*r2),to:g.t+TAIL*r2,rate:r2},
+    {cam:'mouth',from:from(g.t-FAST-span),to:g.t+0.3,rate:slow,ramp:{at:g.t-FAST,len:RAMP,goal:g.t,pre,hold:HOLD,shy:SHY}},
+  ];
+  makeGhosts();
+  replay={scorer,passes,i:-1,done,dir:scorer===0?-1:1,gx:g.a[0],look:new THREE.Vector3(),side:0};
+  mode='replay';for(const q of pucks)if(q!==puck)q.visible=false;
+  // (the score in the playfield, just shown for this goal, would sit in the shot)
+  if(fieldScore)for(const S of fieldScore.sides)S.show=0;
+  sound.glide(0,0);
+  banner('REPLAY',0.9);
+  replayLens();nextPass();
+}
+function nextPass(){
+  const R=replay;
+  if(++R.i>=R.passes.length){endReplay();return}
+  const P=R.passes[R.i];
+  R.rt=P.from;R.pt=0;R.held=0;R.step=0;R.ev=tapeEvents.findIndex(e=>e.t>=P.from);if(R.ev<0)R.ev=tapeEvents.length;
+  tapeAt(R.rt);R.cut=true;
+}
+function endReplay(){
+  const R=replay;if(!R)return;
+  replay=null;mode='goal';
+  for(const m of ghosts)m.visible=false;flashEl.style.opacity=0;
+  fit();
+  R.done();
+}
+function replayStep(dt){
+  const R=replay,P=R.passes[R.i];
+  replayLens();
+  // a ramped pass: slow, up to 1x just before the goal, a little slow again after it
+  const Z=P.ramp;let rate=!Z?P.rate:R.rt<Z.at?P.rate:R.rt<Z.at+Z.len?P.rate+(1-P.rate)*(R.rt-Z.at)/Z.len:R.rt<Z.goal+0.06?1:0.3;
+  // the stop just before the goal (the puck still in sight, the カシャン not yet heard) for Z.hold s, with the flash
+  if(Z&&!R.held&&R.rt+dt*rate>=Z.goal-Z.shy){R.rt=Z.goal-Z.shy;R.held=Z.hold;R.flash=1}
+  if(R.held>0){rate=0;R.held-=dt;if(R.held<=0)R.held=-1}
+  R.rt+=dt*rate;R.pt+=dt;if(rate>0)R.step=dt*rate;
+  R.flash=Math.max(0,(R.flash||0)-dt/0.35);flashEl.style.opacity=(0.8*R.flash**1.5).toFixed(3);
+  while(R.ev<tapeEvents.length&&tapeEvents[R.ev].t<=R.rt){
+    const e=tapeEvents[R.ev++];
+    if(e.f==='goal')sound.goal(...e.a);else sound.hit(...e.a);
+  }
+  if(R.rt>=P.to){nextPass();if(!replay)return}
+  tapeAt(R.rt);
+  // a ramped pass: the puck trails where it was over the last frames shown (close behind while slow, a short streak at 1x,
+  // held still with the picture)
+  for(let i=0;i<ghosts.length;i++){
+    const st=Math.min(2*R.step,0.008),q=R.passes[R.i].ramp&&st>0&&R.pt>0.05?tapePuck(R.rt-(i+1)*st):null;const m=ghosts[i];
+    m.visible=!!q&&q.v;if(q)m.position.set(q.x,0.0006+q.y,q.z);
+  }
+  const Q=R.passes[R.i],d=R.dir,at=new THREE.Vector3(puck.x,0.01,puck.z);
+  // (a ramped pass looks more and more at the goal mouth: at 1x the puck outran the camera, half out of the picture)
+  if(Q.ramp)at.lerp(new THREE.Vector3(R.gx,0.01,d*(HL-0.06)),clamp(R.pt/Q.ramp.pre,0,1)**3);
+  // the camera follows the puck a little behind it, and is on it at once after a cut
+  if(R.cut){R.look.copy(at);R.side=puck.z;R.cut=false}
+  else{R.look.lerp(at,1-Math.exp(-dt*(Q.ramp?30:Q.cam==='mouth'?14:Q.rate<1?6:10)));R.side+=(puck.z-R.side)*(1-Math.exp(-dt*4))}
+  if(Q.cam==='goal')camera.position.set(R.look.x*0.3,0.4,d*(HL+END+0.32));
+  else if(Q.cam==='side')camera.position.set(HW+RT+0.28,0.3,R.side*0.85);
+  // the goal mouth from just outside the side rail by it, on the side the puck comes in by (from in front of the
+  // goal the defending mallet stood in the way)
+  // (a ramped pass starts drawn back, further out, higher and up the table, and closes in faster and faster)
+  else{const u=Q.ramp?1-clamp(R.pt/Q.ramp.pre,0,1)**2:0,s=R.gx>0?1:-1;
+    camera.position.set(s*(HW+0.12+0.22*u),0.24+0.16*u,d*(HL-0.12-0.45*u))}
+  camera.lookAt(R.look);
+}
+// the end of a PRO match, before the result: the camera comes down to the table. WIN: it circles the winner's
+// mallet, drawing back. LOSE: it looks up at the other side's mallet from low on the table, and holds there
+function startEnding(won){
+  ending={won,t:0};
+  replayLens();
+}
+// (the lens is set again every frame: a resize runs fit(), which puts the play camera's back)
+function endingStep(dt){
+  const E=ending;E.t+=dt;
+  replayLens(E.won?0.14:0.3);
+  const k=1-Math.pow(1-clamp(E.t/2.4,0,1),3);
+  if(E.won){
+    const a=-0.5+k*1.7,r=0.22+k*0.4,h=0.09+k*0.3;
+    camera.position.set(me.x+Math.sin(a)*r,h,me.z+Math.cos(a)*r);
+    camera.lookAt(me.x,0.03,me.z);
+  }else{
+    const r=0.7-k*0.25;
+    camera.position.set(cpu.x*0.7+0.05,0.05,cpu.z+r);
+    camera.lookAt(cpu.x,0.06+k*0.02,cpu.z);
+  }
+}
+
 // ---------- physics ----------
 const lastSnd={};
 function snd(key,v,x,kind){
   if(v<0.12)return;
   const t=performance.now();if(t-(lastSnd[key]||0)<45)return;lastSnd[key]=t;
-  sound.hit(v,x,kind);
+  sound.hit(v,x,kind);tapeSound('hit',[v,x,kind]);
 }
 function capPuck(p){
   const s=Math.hypot(p.vx,p.vz);
-  if(s>MAX_PUCK){p.vx*=MAX_PUCK/s;p.vz*=MAX_PUCK/s}
+  if(s>maxPuck){p.vx*=maxPuck/s;p.vz*=maxPuck/s}
 }
 function moveMallet(m,maxV,h,zMin,zMax){
   const tx=clamp(m.sx??m.tx,-HW+MR,HW-MR),tz=clamp(m.sz??m.tz,zMin,zMax);
   let dx=tx-m.x,dz=tz-m.z;const d=Math.hypot(dx,dz),lim=maxV*h;
   if(d>lim){dx*=lim/d;dz*=lim/d}
   m.vx=dx/h;m.vz=dz/h;m.x+=dx;m.z+=dz;
+  if(accel){
+    // PRO: the mallet stays right with the hand (holding it back to a hand's acceleration read as lag), but what
+    // it can put into the puck is a swing's: its swing speed is what a hand speeding up at accel would have over
+    // the way it has come (v² = 2·accel·distance), and starts again from nothing when it turns back, so a hard hit
+    // still needs the wind-up. (Built up over time instead, a mallet keeping up with a fast finger ran its whole
+    // wind-up before the swing had grown: every wind-up sent the same ~25 km/h)
+    const v=Math.hypot(m.vx,m.vz),ux=v>1e-6?m.vx/v:0,uz=v>1e-6?m.vz/v:0;
+    const kept=Math.max(0,(m.swing??0)*((m.ux??0)*ux+(m.uz??0)*uz));
+    m.swing=Math.min(v,PRO.malletMax,Math.sqrt(kept*kept+2*accel*v*h));m.ux=ux;m.uz=uz;
+  }
 }
 function collideMallet(m,who,p){
   const dx=p.x-m.x,dz=p.z-m.z,d=Math.hypot(dx,dz),min=PR+MR;
   if(d>=min)return;
   const nx=d>1e-6?dx/d:0,nz=d>1e-6?dz/d:(who===0?-1:1);
+  // (on PRO the mallet hits with its swing speed, not with how fast it is moving)
+  const mvx=accel?(m.ux??0)*(m.swing??0):m.vx,mvz=accel?(m.uz??0)*(m.swing??0):m.vz;
+  const vn=(p.vx-mvx)*nx+(p.vz-mvz)*nz;
+  // PRO: a mallet can't shove the puck along faster than its swing. Where the puck already leaves at least that
+  // fast, the mallet is held back behind it instead (carried along, the puck was hit again and again as the
+  // swing grew, and a 5 cm wind-up sent 59 km/h)
+  if(accel&&vn>=0){m.x=clamp(p.x-nx*min,-HW+MR,HW-MR);m.z=p.z-nz*min;return}
   p.x=m.x+nx*min;p.z=m.z+nz*min;
-  const vn=(p.vx-m.vx)*nx+(p.vz-m.vz)*nz;
   if(vn<0){
     // a gentle touch nudges the puck; only a real swing gets the full bounce
-    const e=0.35+(HIT_E-0.35)*clamp(-vn/3,0,1);
+    const e=eMin+(HIT_E-eMin)*clamp(-vn/eRamp,0,1);
     p.vx-=(1+e)*vn*nx;p.vz-=(1+e)*vn*nz;capPuck(p);
+    // the physics is the same for both ends; how hard the CPU sends it is its level's
+    const cap=who===1&&!twoP&&LEVELS[level].shotMax;
+    if(cap){const s=Math.hypot(p.vx,p.vz);if(s>cap){p.vx*=cap/s;p.vz*=cap/s}}
     const t=performance.now();
     if(!pinned(p)&&-vn>=0.12&&t-(lastSnd['m'+who]||0)>=45){
-      lastSnd['m'+who]=t;sound.hit(-vn,p.x,'mallet');
+      lastSnd['m'+who]=t;sound.hit(-vn,p.x,'mallet');tapeSound('hit',[-vn,p.x,'mallet'],who);
     }
     if(who===0&&-vn>0.8&&navigator.vibrate&&navigator.userActivation?.hasBeenActive)navigator.vibrate(Math.round(6+Math.min(1,-vn/5)*10));
   }
@@ -799,6 +1019,110 @@ function aiStep(m,ai,flip,dt){
 // restarts by itself until the pause card's "メニューへ"
 let DEMO=new URLSearchParams(location.search).has('demo');
 const aiMe={phase:'guard',t:0,aimX:0,sx:0,sz:0,target:null};
+// PRO's shot selection (the pros' shot groups): of the shots its level has (the two corners; with bank, also off
+// either rail into the far corner), the one that crosses the defender's line farthest from its mallet, with a
+// little chance in it. (Aimed anywhere in the goal at random, a defender sitting on its goal line in the middle
+// stopped nearly all of them: ELITE lost 2-0 and CHAMPION drew 0-0 in 40 s)
+function proAim(L,p,ox){
+  const c=GW-PR-0.01,shots=[-c,c],zd=HL-0.1;
+  if(L.bank)for(const s of [-1,1])shots.push(s*2*(HW-PR)+s*c);
+  const lo=-HW+PR,span=2*(HW-PR),fold=x=>{let u=(x-lo)%(2*span);if(u<0)u+=2*span;if(u>span)u=2*span-u;return lo+u};
+  let best=shots[0],bs=-1;
+  for(const x of shots){const sc=Math.abs(fold(p.x+(x-p.x)*(zd-p.z)/(HL-p.z))-ox)+Math.random()*0.1;if(sc>bs){bs=sc;best=x}}
+  return best+(Math.random()*2-1)*L.aimErr;
+}
+// PRO STAGE's CPU. On PRO's physics a shot is only as hard as the swing behind it, so it plays as the pros do:
+// takes the pace off a puck coming in (draws the mallet back with it), lines the puck up, backs off to wind up and
+// swings through it; in front of its goal it keeps to the basic defense. Seen from its own end (flip, as aiStep)
+function aiPro(m,ai,flip,dt){
+  const L=LEVELS[level],home=-HL+0.2,reach=PR+MR,back=-HL+MR+0.01,me2={x:m.x,z:flip*m.z};
+  let tx=0,tz=home,spd=L.speed;
+  const live=livePucks();
+  if(mode==='play'&&live.length){
+    const view=p=>({x:p.x,z:flip*p.z,vx:p.vx,vz:flip*p.vz});
+    const target=live.reduce((a,b)=>threat(view(b))>threat(view(a))?b:a);
+    if(target!==ai.target){ai.target=target;if(ai.phase!=='strike')ai.phase='guard'}
+    const p=view(perceived(target,L.reaction)),sp=Math.hypot(p.vx,p.vz);
+    // basic defense: ~20 cm out from the goal, square to the puck's line; against a puck headed for a corner
+    // (a bank) the triangle: fall back toward that corner of the goal
+    // A puck too fast to trap, blocked square, comes straight back: two CPUs did that to each other for good
+    // (LEGEND against LEGEND, from 29 s on, the puck going up and down the middle). After three blocks in a row
+    // it takes the puck on the mallet's edge instead, sending it off to the side, away from the middle
+    const glance=!squareBlocks&&(ai.blocks||0)>=3?(p.x>=0?-1:1)*reach*0.5:0;
+    const guard=()=>{
+      const gx=p.vz<0?predictX(p,home):p.x*0.4;
+      tx=clamp(gx+glance,-GW-reach*0.5,GW+reach*0.5);tz=home-(L.triangle?0.1*clamp(Math.abs(gx)/GW,0,1):0);
+    };
+    ai.t-=dt;
+    // after the swing it is straight back on guard, the puck in sight (a quarter second spent just walking home
+    // let a quick return off the opponent's mallet bank in: 7 of them in 40 s)
+    if(ai.phase==='strike'&&(ai.t<=0||p.z>0.02||p.vz>2))ai.phase='guard';
+    if(ai.phase==='strike'){tx=ai.sx;tz=ai.sz;spd=L.smashSpeed;ai.blocks=0}
+    else if(p.z>=0){ai.phase='guard';guard()}
+    else if(p.vz<-0.6&&p.z>me2.z){
+      // coming at the goal
+      ai.phase='guard';
+      if(sp<L.trapMax){
+        // the trap: step out to meet it on its line (well clear of the goal: a puck stopped deep leaves no room to
+        // wind up, and its shots came out at ~20 km/h), and as it arrives draw back with it a little slower
+        // Only a puck coming straight: one that will come off a rail first is met in front of the goal (stepped
+        // out to it, the bank went in behind the mallet)
+        const gap=p.z-me2.z-reach,meet=Math.min(-0.35,p.z-reach-0.05);
+        const straight=Math.abs(p.x+p.vx*(meet-p.z)/p.vz)<HW-PR;
+        if(gap<0.18){tx=clamp(predictX(p,me2.z),-HW+MR,HW-MR);tz=Math.max(back,me2.z-0.15);spd=sp*0.85}
+        else if(straight){tx=clamp(predictX(p,meet),-HW+MR,HW-MR);tz=meet;spd=L.speed}
+        else guard();
+      }else{ai.coming=true;guard()}
+    }else if(p.vz>1.2||sp>2.2){
+      // a fast one it met square on the way back out: one more block
+      if(ai.coming&&p.vz>1.2){ai.blocks=(ai.blocks||0)+1;ai.coming=false}
+      // on its way out already (a block, a trap that bounced), or sliding across too fast to line up (swung at,
+      // those were the misses): let it go, or wait on guard for it to slow
+      ai.phase='guard';guard();
+    }else{
+      // in our half and slow: line it up, back off behind it, swing through
+      // the defender: the other mallet (the player's, or in the exhibition the far CPU's)
+      const ox=(flip===1?me:cpu).x;
+      if(ai.phase!=='setup'){ai.phase='setup';ai.t=L.hold;ai.aimX=proAim(L,p,ox);ai.fakeX=Math.random()<L.feint?-ai.aimX:null;ai.easing=false}
+      // the feint: the first part of the hold it lines up a shot it won't hit
+      const faking=ai.fakeX!==null&&ai.t>L.hold*0.65;
+      // a puck still rolling (eased out, or a trap that didn't quite stop it) is led: lined up where it will be
+      // once the delay in seeing it and the swing are over (lined up where it was seen, half the swings missed)
+      {const lead=L.reaction+0.1;p.x=clamp(p.x+p.vx*lead,-HW+PR,HW-PR);p.z=Math.min(-PR,p.z+p.vz*lead)}
+      // the room to wind up behind the puck for a shot at x: as far as the own end and the side rails allow
+      const line=x=>{let dx=x-p.x,dz=HL-p.z;const dl=Math.hypot(dx,dz);dx/=dl;dz/=dl;
+        const rz=(p.z-back)/Math.max(dz,1e-3),rx=dx?((dx>0?p.x+HW-MR:HW-MR-p.x))/Math.abs(dx):9;
+        return {dx,dz,room:Math.max(0,Math.min(rz,rx)-reach)}};
+      let aimX=faking?ai.fakeX:ai.aimX,S=line(aimX);
+      // a puck too deep to wind up behind for that shot goes off a side rail instead, the side with the room
+      if(S.room<L.windup*0.6)for(const sd of [-1,1]){const x=sd*2*(HW-PR)-p.x*0.5,T=line(x);if(T.room>S.room){S=T;aimX=x;if(!faking)ai.aimX=x}}
+      let {dx,dz}=S;const w=Math.min(L.windup,S.room);
+      const bx=clamp(p.x-dx*(reach+w),-HW+MR,HW-MR),bz=Math.max(back,p.z-dz*(reach+w));
+      if(me2.z>p.z-reach*0.5){
+        // on the wrong side of the puck: go round it
+        let side=Math.sign(me2.x-p.x)||1;
+        if(Math.abs(p.x+side*(reach+0.07))>HW-MR)side=-side;
+        tx=p.x+side*(reach+0.07);tz=p.z-(reach+0.06);
+      }else if(S.room<L.windup*0.6&&!faking){
+        // too deep to wind up for its shot (a puck stopped at the goal's mouth sent ~20 km/h pokes): ease it out
+        // up the table first, from behind, to where its whole wind-up fits, as the pros drift it into place
+        let ex=-p.x*0.5,ez=Math.max(0.15,back+reach+L.windup*0.9-p.z);const el=Math.hypot(ex,ez)||1;ex/=el;ez/=el;
+        const hx=clamp(p.x-ex*(reach+0.02),-HW+MR,HW-MR),hz=Math.max(back,p.z-ez*(reach+0.02));
+        if(ai.easing||Math.hypot(me2.x-hx,me2.z-hz)<0.04){ai.easing=true;tx=p.x+ex*0.2;tz=p.z+ez*0.2;spd=1}
+        else{tx=hx;tz=hz}
+        ai.t=Math.max(ai.t,0.3);
+      }else{
+        tx=bx;tz=bz;
+        // it swings from the wound-up spot; only a hold long overrun swings from wherever it is (swinging when the
+        // hold ran out, half way there, sent half its shots off at 5-20 km/h)
+        if(!faking&&(Math.hypot(me2.x-bx,me2.z-bz)<0.03||ai.t<=-1)){
+          ai.phase='strike';ai.t=0.4;ai.sx=p.x+dx*L.follow;ai.sz=p.z+dz*L.follow;
+        }
+      }
+    }
+  }
+  m.tx=tx;m.tz=flip*tz;m.maxV=spd;
+}
 
 // ---------- game flow ----------
 const bannerEls=[document.getElementById('banner'),document.getElementById('banner2')];
@@ -811,8 +1135,8 @@ function banner(text,sec=0.6,big=false,text2=text){
   clearTimeout(banner.t);banner.t=setTimeout(()=>bannerEls.forEach(el=>el.classList.remove('show')),sec*1000);
 }
 function placeMallets(){
-  Object.assign(me,{x:0,z:HL-0.2,tx:0,tz:HL-0.2,sx:0,sz:HL-0.2,vx:0,vz:0});
-  Object.assign(cpu,{x:0,z:-HL+0.2,tx:0,tz:-HL+0.2,vx:0,vz:0});
+  Object.assign(me,{x:0,z:HL-0.2,tx:0,tz:HL-0.2,sx:0,sz:HL-0.2,vx:0,vz:0,swing:0});
+  Object.assign(cpu,{x:0,z:-HL+0.2,tx:0,tz:-HL+0.2,vx:0,vz:0,swing:0});
   // in 2P the far mallet follows a hand too (followHand); the CPU drives its target directly
   if(twoP)Object.assign(cpu,{sx:0,sz:-HL+0.2});else{delete cpu.sx;delete cpu.sz}
 }
@@ -823,7 +1147,7 @@ function putPuck(p,x,z,vx=0,vz=0){
 function serve(side){
   // the puck comes back on the side that conceded
   putPuck(puck,0,side===0?0.42:-0.42);
-  ai.phase='guard';aiMe.phase='guard';
+  ai.phase='guard';aiMe.phase='guard';ai.blocks=aiMe.blocks=0;
   sound.puckOut(0);
   mode='play';
 }
@@ -845,7 +1169,7 @@ function goal(scorer,p){
   const s=scorer===0?-1:1;
   p.live=false;
   p.anim={kind:'drop',t:0,s};
-  sound.goal(p.x,Math.hypot(p.vx,p.vz));
+  sound.goal(p.x,Math.hypot(p.vx,p.vz));tapeSound('goal',[p.x,Math.hypot(p.vx,p.vz)]);
   score[scorer]++;
   // the new number blinks in
   after(0.55,()=>{drawScore(score[0],score[1]);sound.beep();if(fieldScore)for(const S of fieldScore.sides)S.show=2.2});
@@ -861,25 +1185,39 @@ function goal(scorer,p){
   if(livePucks().length)return;
   mode='goal';
   if(multi){multi=false;sound.bgmStart('groove')}
-  after(1.7,()=>{
-    if(over)finish();
+  const next=()=>{
+    if(over)gameOver(scorer);
     else if(win>9&&score[0]+score[1]>=nextMulti){nextMulti+=6;serveMulti()}
     else serve(scorer===0?1:0);
-  });
+  };
+  if(stage==='pro'&&!twoP&&(replayAll||over&&games[scorer]+1>=bestOf)){after(1.3,()=>startReplay(scorer,next));return}
+  after(1.7,next);
+}
+function gameOver(scorer){
+  games[scorer]++;
+  if(games[scorer]>=bestOf){finish();return}
+  // official rules: the games so far, then the next game from 0-0, served by the side that lost this one
+  banner(`${games[0]} - ${games[1]}`,1.1,true);
+  after(1.3,()=>{banner(`GAME ${games[0]+games[1]+1}`,1,true);score=[0,0];drawScore(0,0)});
+  after(2.5,()=>serve(scorer===0?1:0));
 }
 function finish(){
   mode='over';for(const p of pucks)p.visible=false;
   sound.bgmStop();sound.end();
   pauseBtn.hidden=true;
-  if(DEMO&&!twoP){after(3,()=>startGame(level));return}
-  const won=score[0]>score[1];
+  const won=score[0]>score[1],pro=stage==='pro';
+  if(DEMO&&!twoP){if(pro)startEnding(won);after(3,()=>startGame(level));return}
   // 2P: each player is told face to face first, then the shared card
   if(twoP)banner(won?'WIN':'LOSE',2.2,true,won?'LOSE':'WIN');
-  after(twoP?2.4:0.9,()=>{
+  // PRO: the ending camera first (startEnding), and the card once it has come to rest
+  if(pro){startEnding(won);after(0.5,()=>banner(won?'YOU WIN':'YOU LOSE',2,true))}
+  after(twoP?2.4:pro?2.7:0.9,()=>{
     document.getElementById('result-title').textContent=twoP?(won?'BLUE WINS':'YELLOW WINS'):won?'YOU WIN':'YOU LOSE';
     document.getElementById('result-mode').textContent=playedAs();
-    document.getElementById('result-score').textContent=`${score[0]} - ${score[1]}`;
-    document.getElementById('back').textContent=twoP?'メニューへ':'難易度を選ぶ';
+    // official rules: the games, and the last game's points under them
+    document.getElementById('result-score').textContent=bestOf>1?`${games[0]} - ${games[1]}`:`${score[0]} - ${score[1]}`;
+    const sub=document.getElementById('result-sub');sub.hidden=bestOf<2;sub.textContent=`最終ゲーム ${score[0]} - ${score[1]}`;
+    document.getElementById('back').textContent=twoP?'メニューへ':'ステージを選ぶ';
     document.getElementById('title').hidden=twoP;
     document.getElementById('result').classList.remove('hidden');
   });
@@ -890,7 +1228,15 @@ function startGame(lv,two=false){
   setPaused(false);pauseBtn.hidden=false;
   for(const m of paintMats)m.envMapIntensity=two?PAINT_GLOSS.flat:1;
   fingers.clear();owner[0]=owner[1]=null;
+  const pro=stage==='pro';if(pro)win=7;else bestOf=1;games=[0,0];setLook(pro?'pro':'arcade');
+  // the meshes were built at ARCADE's size: PRO's are the same shapes, narrowed (heights unchanged)
+  PR=pro?PRO.puckR:PR0;MR=pro?PRO.malletR:MR0;
+  for(const p of pucks){p.mesh.scale.set(PR/PR0,1,PR/PR0);p.shadow.scale.set(PR/PR0,PR/PR0,1)}
+  for(const m of [meMesh,cpuMesh])m.scale.set(MR/MR0,1,MR/MR0);
+  for(const m of [meShadow,cpuShadow])m.scale.set(MR/MR0,MR/MR0,1);
+  maxPuck=pro?PRO.maxPuck:MAX_PUCK;eMin=pro?PRO.eMin:0.35;eRamp=pro?PRO.eRamp:3;accel=pro?PRO.accel:0;step=pro?PRO.step:STEP;
   level=lv;score=[0,0];timers=[];multi=false;nextMulti=6;drawScore(0,0);
+  tape.length=0;tapeEvents.length=0;replay=null;if(ending){ending=null;fit()}
   document.getElementById('menu').classList.add('hidden');
   document.getElementById('result').classList.add('hidden');
   placeMallets();
@@ -899,20 +1245,28 @@ function startGame(lv,two=false){
   sound.bgmStop();sound.coin();
   // ピッ・ピッ・ピッ・ピーン
   ['3','2','1'].forEach((n,i)=>after(0.9+i*0.42,()=>{banner(n,0.36,true);sound.count(i)}));
-  after(0.9+3*0.42,()=>{banner('GO!',0.5,true);sound.count(3);sound.bgmStart('groove');serve(0)});
+  after(0.9+3*0.42,()=>{banner('GO!',0.5,true);sound.count(3);sound.bgmStart(pro?'pro':'groove');serve(0)});
 }
 
-let pickedWin=7;
-for(const b of document.querySelectorAll('#menu [data-win]'))b.addEventListener('click',()=>{
-  pickedWin=+b.dataset.win;
-  for(const o of document.querySelectorAll('#menu [data-win]'))o.classList.toggle('on',o===b);
+// the menu: one screen at a time. data-go opens a screen, a data-pick row keeps one choice per screen,
+// data-start begins that screen's game with its choices
+const showScreen=name=>{for(const c of document.querySelectorAll('#menu [data-screen]'))c.hidden=c.dataset.screen!==name};
+for(const b of document.querySelectorAll('#menu [data-go]'))b.addEventListener('click',()=>showScreen(b.dataset.go));
+for(const row of document.querySelectorAll('#menu [data-pick]'))for(const b of row.querySelectorAll('button'))b.addEventListener('click',()=>{
+  for(const o of row.querySelectorAll('button'))o.classList.toggle('on',o===b);
 });
-for(const b of document.querySelectorAll('#menu [data-level]'))b.addEventListener('click',()=>{win=pickedWin;startGame(+b.dataset.level)});
+const picked=(screen,key)=>+document.querySelector(`#menu [data-screen="${screen}"] [data-pick="${key}"] .on`).dataset.v;
+for(const b of document.querySelectorAll('#menu [data-start]'))b.addEventListener('click',()=>{
+  stage=b.dataset.start;
+  if(stage==='two'){win=picked('two','win');startGame(1,true);return}
+  if(stage==='pro')bestOf=picked('pro','games');else win=picked('arcade','win');
+  startGame(picked(stage,'level'));
+});
 document.getElementById('again').addEventListener('click',()=>startGame(level,twoP));
-// the result says what was played: the level (or 2P) and the points to win
-const playedAs=()=>`${twoP?'2人対戦':['EASY','NORMAL','HARD'][level]}・${win}点先取`;
+// the result says what was played: the level (or 2P) and the points to win, or PRO's rules
+const playedAs=()=>stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
 document.getElementById('share').addEventListener('click',()=>{
-  const text=`MarutiBit「AIR HOCKEY」\n${playedAs()} / ${document.getElementById('result-title').textContent} ${score[0]}-${score[1]}`;
+  const text=`MarutiBit「AIR HOCKEY」\n${playedAs()} / ${document.getElementById('result-title').textContent} ${document.getElementById('result-score').textContent.replace(/ /g,'')}`;
   const intent=`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://marutilab.com/bit/airhockey')}`;
   // as the site's XShareButton: no feature string (noopener, or noreferrer, makes window.open return null even
   // when the tab opened, and the fallback then took this page to the composer too). The page runs in the site's
@@ -922,25 +1276,27 @@ document.getElementById('share').addEventListener('click',()=>{
 });
 document.getElementById('back').addEventListener('click',()=>{
   document.getElementById('result').classList.add('hidden');
-  document.getElementById('menu').classList.remove('hidden');
+  document.getElementById('menu').classList.remove('hidden');showScreen(twoP?'top':stage);
   mode='menu';twoP=false;document.body.classList.remove('two');
 });
 function toMenu(){
   setPaused(false);pauseBtn.hidden=true;
   timers=[];mode='menu';sound.bgmStop();DEMO=false;
+  replay=null;if(ending){ending=null;fit()}
   for(const p of pucks){p.live=false;p.visible=false;p.anim=null}
   twoP=false;document.body.classList.remove('two');
   document.getElementById('result').classList.add('hidden');
-  document.getElementById('menu').classList.remove('hidden');
+  document.getElementById('menu').classList.remove('hidden');showScreen('top');
 }
 // 2P needs two fingers at once: elsewhere the button stays in the menu, greyed out
 if(navigator.maxTouchPoints<2){
   document.getElementById('vs').disabled=true;
   document.getElementById('vs-hint').textContent='2人対戦はスマホ・タブレットで遊べます';
 }
-document.getElementById('vs').addEventListener('click',()=>{win=pickedWin;startGame(1,true)});
-// both sides at the watching level: NORMAL's rallies were too tame, HARD's guard let almost nothing in
-document.getElementById('watch').addEventListener('click',()=>{DEMO=true;win=pickedWin;startGame(3)});
+document.getElementById('vs').addEventListener('click',()=>showScreen('two'));
+// the exhibition: both sides at the watching level (NORMAL's rallies were too tame, HARD's guard let almost
+// nothing in). Still on ARCADE's table: ELITE against ELITE once PRO's CPU can play its own physics
+document.getElementById('watch').addEventListener('click',()=>{DEMO=true;stage='watch';win=7;startGame(3)});
 // pause (every mode, top left, opposite the sound button). The audio context is suspended with it, so the music,
 // the blower and the glide all stop where they are
 let paused=false;
@@ -1027,6 +1383,7 @@ function release(id){
   if(next!==null){hold(next,f.side);steer(next)}
 }
 canvas.addEventListener('pointerdown',e=>{
+  if(mode==='replay'){endReplay();return}
   // (throws if the pointer is already gone, e.g. a very quick tap)
   try{canvas.setPointerCapture(e.pointerId)}catch{}
   if(twoP){
@@ -1055,7 +1412,7 @@ for(const type of ['touchstart','touchmove'])document.addEventListener(type,e=>{
 for(const type of ['gesturestart','gesturechange','gestureend'])document.addEventListener(type,e=>e.preventDefault());
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-if(location.search.includes('debug'))window.__ah={scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},get win(){return win}};
+if(location.search.includes('debug'))window.__ah={scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},set score(v){score=v},get mode(){return mode},get replay(){return replay},get ending(){return ending},set replayAll(v){replayAll=v},set squareBlocks(v){squareBlocks=v},get win(){return win},PRO,ai,aiMe,aiStep,aiPro,get level(){return level},set level(v){level=v}};
 
 // ---------- loop ----------
 function animPuck(p,dt){
@@ -1100,19 +1457,24 @@ function frame(now){
   const due=timers.filter(t=>t.t<=gameTime);
   if(due.length){timers=timers.filter(t=>t.t>gameTime);due.forEach(t=>t.fn())}
 
-  for(const p of pucks){
-    p.hist.push({t:gameTime,x:p.x,z:p.z,vx:p.vx,vz:p.vz});
-    while(p.hist.length&&p.hist[0].t<gameTime-1)p.hist.shift();
+  // the replay puts the table where the tape says: nothing moves of itself
+  if(mode==='replay')replayStep(dt);
+  else{
+    for(const p of pucks){
+      p.hist.push({t:gameTime,x:p.x,z:p.z,vx:p.vx,vz:p.vz});
+      while(p.hist.length&&p.hist[0].t<gameTime-1)p.hist.shift();
+    }
+    if(twoP)followHand(cpu,-HL+MR,-MR,dt);else(stage==='pro'?aiPro:aiStep)(cpu,ai,1,dt);
+    // ?demo on PRO STAGE: the near CPU plays PRO's game too
+    if(DEMO&&!twoP){(stage==='pro'?aiPro:aiStep)(me,aiMe,-1,dt);me.sx=me.tx;me.sz=me.tz}
+    else followHand(me,MR,HL-MR,dt);
+    acc+=dt;
+    while(acc>=step){physics(step);acc-=step}
   }
-  if(twoP)followHand(cpu,-HL+MR,-MR,dt);else aiStep(cpu,ai,1,dt);
-  if(DEMO&&!twoP){aiStep(me,aiMe,-1,dt);me.sx=me.tx;me.sz=me.tz}
-  else followHand(me,MR,HL-MR,dt);
-  acc+=dt;
-  while(acc>=STEP){physics(STEP);acc-=STEP}
 
   let fastest=null,top=0;
   for(const p of pucks){
-    animPuck(p,dt);
+    if(mode!=='replay')animPuck(p,dt);
     const v=p.live&&mode==='play'?Math.hypot(p.vx,p.vz):0;
     if(v>top){top=v;fastest=p}
     p.mesh.visible=p.visible;
@@ -1123,10 +1485,11 @@ function frame(now){
     p.shadow.visible=p.visible&&p.y>=0;
   }
   sound.glide(top,fastest?fastest.x:0);
+  if(taping())tapeFrame();
 
   meMesh.position.set(me.x,0,me.z);cpuMesh.position.set(cpu.x,0,cpu.z);
   meShadow.position.set(me.x+0.006,0.0008,me.z+0.004);cpuShadow.position.set(cpu.x+0.006,0.0008,cpu.z+0.004);
-  camera.position.copy(camBase);
+  if(ending)endingStep(dt);else if(mode!=='replay')camera.position.copy(camBase);
   // the score only rises through the playfield after a goal: both numbers, held, then fading out
   if(fieldScore)for(const S of fieldScore.sides){S.show=Math.max(0,S.show-dt);S.m.material.opacity=0.85*clamp(S.show/0.7,0,1)}
 
