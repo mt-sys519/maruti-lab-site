@@ -819,8 +819,8 @@ function draw(c,o={}){
       c.save();c.fillStyle='#fff';c.strokeStyle='rgba(40,25,15,.3)';c.lineWidth=kk;c.shadowColor='rgba(40,25,15,.3)';c.shadowBlur=4;
       for(const q of h.corners)dot(q.x,q.y,6.5*kk);
       for(const q of Object.values(h.edges)){c.beginPath();c.roundRect(q.x-4.5*kk,q.y-4.5*kk,9*kk,9*kk,2.5*kk);c.fill();c.stroke()}
-      dot(h.rot.x,h.rot.y,13*kk);c.restore();
-      rotIcon(c,h.rot.x,h.rot.y,kk);
+      dot(h.rot.x,h.rot.y,13*kk);if(h.mv)dot(h.mv.x,h.mv.y,13*kk);c.restore();
+      rotIcon(c,h.rot.x,h.rot.y,kk);if(h.mv)moveIcon(c,h.mv.x,h.mv.y,kk);
     }
   }
   if(o.ui==='edit'&&G.g?.target!=null){const T=D.layers.find(x=>x.id===G.g.target);if(T){const f=imgFrame(T);c.save();c.translate(T.x,T.y);c.rotate(T.rot);c.lineWidth=4*kk;c.strokeStyle='#fff';c.shadowColor='rgba(40,25,15,.45)';c.shadowBlur=6*kk;imgPath(c,T,f);c.stroke();c.restore()}}
@@ -841,9 +841,16 @@ function ubox(Ls,M=G.M,kk=kE()){
     for(const [i,j] of [[-1,-1],[1,-1],[1,1],[-1,1]]){const x=L.x+i*b.w/2*cs-j*b.h/2*sn,y=L.y+i*b.w/2*sn+j*b.h/2*cs;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}}
   return {x0,y0,x1,y1,w:x1-x0,h:y1-y0,cx:(x0+x1)/2,cy:(y0+y1)/2};
 }
+// The rotate and move handles sit side by side under the frame (as in Canva) and are pulled back inside together.
+const HG=17; // screen px from the middle to each of the two
+function pair(qs,m){
+  const sh=(vs,len)=>Math.max(0,m-Math.min(...vs))-Math.max(0,Math.max(...vs)-(len-m)),dx=sh(qs.map(q=>q.x),D.W),dy=sh(qs.map(q=>q.y),D.H);
+  return qs.map(q=>({x:q.x+dx,y:q.y+dy}));
+}
 function mhandles(u,kk){
-  const m=12*kk,at=(x,y)=>({x:Math.max(m,Math.min(D.W-m,x)),y:Math.max(m,Math.min(D.H-m,y))}),room=u.y1+52*kk<D.H;
-  return {corners:[[u.x0,u.y0],[u.x1,u.y0],[u.x1,u.y1],[u.x0,u.y1]].map(([x,y])=>at(x,y)),rot:at(u.cx,room?u.y1+34*kk:u.y0-34*kk)};
+  const m=12*kk,at=(x,y)=>({x:Math.max(m,Math.min(D.W-m,x)),y:Math.max(m,Math.min(D.H-m,y))}),room=u.y1+52*kk<D.H,y=room?u.y1+34*kk:u.y0-34*kk;
+  const [rot,mv]=pair([{x:u.cx-HG*kk,y},{x:u.cx+HG*kk,y}],m+2*kk);
+  return {corners:[[u.x0,u.y0],[u.x1,u.y0],[u.x1,u.y1],[u.x0,u.y1]].map(([x,y])=>at(x,y)),rot,mv};
 }
 function drawMulti(c,M,kk){
   if(G.g?.mode==='marq'){const a=G.g.p,b=G.g.q;c.save();c.fillStyle='rgba(196,154,144,.14)';c.strokeStyle='#c49a90';c.lineWidth=1.2*kk;c.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);c.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);c.restore()}
@@ -854,13 +861,20 @@ function drawMulti(c,M,kk){
   c.lineWidth=3.5*kk;c.strokeStyle='rgba(40,25,15,.22)';c.strokeRect(u.x0,u.y0,u.w,u.h);c.lineWidth=1.5*kk;c.strokeStyle='#fff';c.strokeRect(u.x0,u.y0,u.w,u.h);
   const dot=(x,y,r)=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();c.stroke()};
   c.fillStyle='#fff';c.strokeStyle='rgba(40,25,15,.3)';c.lineWidth=kk;c.shadowColor='rgba(40,25,15,.3)';c.shadowBlur=4;
-  for(const q of h.corners)dot(q.x,q.y,6.5*kk);dot(h.rot.x,h.rot.y,13*kk);c.restore();rotIcon(c,h.rot.x,h.rot.y,kk);
+  for(const q of h.corners)dot(q.x,q.y,6.5*kk);dot(h.rot.x,h.rot.y,13*kk);dot(h.mv.x,h.mv.y,13*kk);c.restore();rotIcon(c,h.rot.x,h.rot.y,kk);moveIcon(c,h.mv.x,h.mv.y,kk);
 }
 function rotIcon(c,x,y,kk){
   const r=5.5*kk,a0=-Math.PI*.15,a1=Math.PI*1.35,s=3.4*kk,t=a1+Math.PI/2,px=x+r*Math.cos(a1),py=y+r*Math.sin(a1);
   c.save();c.strokeStyle=c.fillStyle=INK;c.lineWidth=1.6*kk;c.lineCap='round';
   c.beginPath();c.arc(x,y,r,a0,a1);c.stroke();
   c.beginPath();c.moveTo(px+Math.cos(t)*s,py+Math.sin(t)*s);c.lineTo(px+Math.cos(t+2.2)*s,py+Math.sin(t+2.2)*s);c.lineTo(px+Math.cos(t-2.2)*s,py+Math.sin(t-2.2)*s);c.closePath();c.fill();
+  c.restore();
+}
+function moveIcon(c,x,y,kk){
+  const r=6.2*kk,s=2.5*kk;
+  c.save();c.strokeStyle=c.fillStyle=INK;c.lineWidth=1.6*kk;c.lineCap='round';
+  c.beginPath();c.moveTo(x-r+s,y);c.lineTo(x+r-s,y);c.moveTo(x,y-r+s);c.lineTo(x,y+r-s);c.stroke();
+  for(const [cs,sn] of [[1,0],[0,1],[-1,0],[0,-1]]){const tx=x+r*cs,ty=y+r*sn,bx=tx-s*1.2*cs,by=ty-s*1.2*sn;c.beginPath();c.moveTo(tx,ty);c.lineTo(bx-s*sn,by+s*cs);c.lineTo(bx+s*sn,by-s*cs);c.closePath();c.fill()}
   c.restore();
 }
 // Shapes and photos carry their handles on their own edges (as in Canva), so a handle laid on a line puts
@@ -880,7 +894,10 @@ function handles(L,M,kk){
   // a shape also stretches one way from the middle of each side
   // a line only lengthens from its ends; its thickness is set in the panel
   const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isText(L)?(L.vertical?{t:at(0,-b.h/2),b:at(0,b.h/2)}:{r:at(b.w/2,0),l:at(-b.w/2,0)}):(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle'&&tool==='crop')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
-  return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot:at(0,room?below:-below)};
+  // a grid cell keeps its place (a drag swaps it with another), so it has no move handle
+  const yb=room?below:-below,w=(lx,ly)=>({x:L.x+lx*cs-ly*sn,y:L.y+lx*sn+ly*cs}),cell=isImg(L)&&L.gc!=null&&D.grid;
+  const [rot,mv]=cell?[at(0,yb),null]:pair([w(-HG*kk,yb),w(HG*kk,yb)],m+2*kk);
+  return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot,mv};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
 function hitLayer(M,p,kk,only){
@@ -977,7 +994,7 @@ let raf=0;
 function paint(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;if(!$('#editor').hidden){G.M=draw(ctx,{ui:tool==='bg'?null:'edit',kk:kE()});placeFloat();syncPos()}})}
 function refresh(){paint();ensureFonts().then(paint)}
 on('fonts',()=>paint());
-new ResizeObserver(()=>{if(V.z>1)applyView();else paint()}).observe($('#estage'));
+new ResizeObserver(()=>{if(V.z>1)applyView();else paint();if(!ovEl.hidden)overSoon()}).observe($('#estage'));
 const CP=new Map(); // where each finger is on the screen, for the view's own pinch
 cv.addEventListener('pointerdown',e=>CP.set(e.pointerId,{x:e.clientX,y:e.clientY}),true);
 cv.addEventListener('pointermove',e=>{if(CP.has(e.pointerId))CP.set(e.pointerId,{x:e.clientX,y:e.clientY})},true);
@@ -990,10 +1007,12 @@ $('#ezoom').addEventListener('click',e=>{
 });
 
 function pt(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*D.W,y:(e.clientY-r.top)/r.height*D.H}}
+// Of the rotate and move handles, the one nearer the finger (they are close enough for both to be in reach).
+function pick2(h,p,k){const d=q=>q?Math.hypot(p.x-q.x,p.y-q.y):Infinity,r=d(h.rot),m=d(h.mv);return Math.min(r,m)<22*k?(m<r?'mv':'rot'):null}
 function hitHandle(L,p){
   if(!L||!G.M.has(L.id))return null;
-  const h=handles(L,G.M,kE()),near=q=>Math.hypot(p.x-q.x,p.y-q.y)<22*kE();
-  if(near(h.rot))return 'rot';if(h.corners.some(near))return 'scale';
+  const h=handles(L,G.M,kE()),near=q=>Math.hypot(p.x-q.x,p.y-q.y)<22*kE(),two=pick2(h,p,kE());
+  if(two)return two;if(h.corners.some(near))return 'scale';
   const e=Object.entries(h.edges).find(([,q])=>Math.hypot(p.x-q.x,p.y-q.y)<18*kE());return e?'edge:'+e[0]:null;
 }
 // With トリミング open, the photo in its frame follows the finger (and two fingers or the wheel zoom it), the
@@ -1118,8 +1137,9 @@ cv.addEventListener('pointerdown',e=>{
   }
   if(tool==='bg'){if(photoBg(D))G.g={mode:'pan',p,ox:D.photo.ox,oy:D.photo.oy};return}
   if(many){
-    const u=ubox(msel()),mh=mhandles(u,kE()),near=q=>Math.hypot(p.x-q.x,p.y-q.y)<22*kE(),c={x:u.cx,y:u.cy};
-    if(near(mh.rot)){G.g={mode:'mrot',c,a:Math.atan2(p.y-c.y,p.x-c.x),st:states()};return}
+    const u=ubox(msel()),mh=mhandles(u,kE()),near=q=>Math.hypot(p.x-q.x,p.y-q.y)<22*kE(),c={x:u.cx,y:u.cy},two=pick2(mh,p,kE());
+    if(two==='mv'){G.g={mode:'mmove',p,st:states(),u,tap:null,moved:false};return}
+    if(two==='rot'){G.g={mode:'mrot',c,a:Math.atan2(p.y-c.y,p.x-c.x),st:states()};return}
     if(mh.corners.some(near)){G.g={mode:'mscale',c,d:Math.max(1,Math.hypot(p.x-c.x,p.y-c.y)),st:states()};return}
   }
   else{
@@ -1130,6 +1150,7 @@ cv.addEventListener('pointerdown',e=>{
     if(h&&h.startsWith('edge:')&&isText(L)){const m=G.M.get(L.id),w0=L.vertical?m.H:m.W;G.g={mode:'wrap',e:h.slice(5),p,x0:L.x,y0:L.y,rot:L.rot,w0,w:w0};return}
     if(h&&h.startsWith('edge:')){G.g={mode:'edge',e:h.slice(5),x0:L.x,y0:L.y,w0:L.w,h0:L.h,rot:L.rot,pad:0};return}
     if(h==='rot'){G.g={mode:'rot',a:Math.atan2(p.y-L.y,p.x-L.x),rot:L.rot};return}
+    if(h==='mv'){G.g={mode:'move',p,x:L.x,y:L.y,was:false,moved:false,hd:true};return} // the handle under the frame: a drag only, a tap does nothing
     if(inside(L)&&hitLayer(G.M,p,kE(),o=>o===L)){G.g={mode:'ipan',p,zx:L.zx,zy:L.zy};return} // トリミング open: a drag slides the photo in its frame
   }
   const H=hitLayer(G.M,p,kE());
@@ -1150,7 +1171,7 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='pinch'&&L&&G.ptrs.size===2){const t=two();scaleBy(L,g,t.d/g.t.d);L.rot=snapAngle(g.rot+t.a-g.t.a,.1)}
   else if(g.mode==='scale'&&L){scaleBy(L,g,Math.hypot(p.x-L.x,p.y-L.y)/g.d);snapScale(L,g)}
   else if(g.mode==='edge'&&L){stretch(L,g,p)}
-  else if(g.mode==='vzoom'){if(CP.size===2){const t=ctwo();zoomAt(g.from.z*t.d/g.c.d,g.c.x,g.c.y,g.from);V.x+=t.x-g.c.x;V.y+=t.y-g.c.y;applyView()}return}
+  else if(g.mode==='vzoom'){if(g.done)return;if(CP.size===2){const t=ctwo();if(g.from.z<=1.001&&t.d/g.c.d<.7){g.done=true;openOver();return}zoomAt(g.from.z*t.d/g.c.d,g.c.x,g.c.y,g.from);V.x+=t.x-g.c.x;V.y+=t.y-g.c.y;applyView()}return}
   else if(g.mode==='vpan'){if(!g.moved&&Math.hypot(e.clientX-g.cx,e.clientY-g.cy)<6)return;g.moved=true;V.x=g.x+e.clientX-g.cx;V.y=g.y+e.clientY-g.cy;applyView();return}
   else if(g.mode==='wrap'&&L){wrapDrag(L,g,p)}
   else if(g.mode==='icrop'&&L){cropDrag(L,g,p)}
@@ -1239,14 +1260,16 @@ function endPtr(e){
     const T=D.layers.find(o=>o.id===g.target);if(T)swapPhotos(L,T);
     layoutGrid();G.g=null;commit();paint();return;
   }
-  const tap=G.g&&G.g.mode==='move'&&!G.g.moved,was=tap&&G.g.was,L=sel();
+  const tap=G.g&&G.g.mode==='move'&&!G.g.moved&&!G.g.hd,was=tap&&G.g.was,L=sel();
   G.g=null;G.guides=null;commit();paint();
   if(tap&&isImg(L)&&!L.photoId)$('#eimgswap').click(); // an empty frame: one tap to fill it
   else if(was&&isText(L))openText();                          // a second tap on a text: type
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
+let wOut=1,wOutT=0;
 cv.addEventListener('wheel',e=>{
   e.preventDefault();const L=sel(),f=Math.exp(-e.deltaY/400);
+  if(e.ctrlKey&&V.z<=1.001&&f<1){wOut*=f;clearTimeout(wOutT);wOutT=setTimeout(()=>wOut=1,300);if(wOut<.7){wOut=1;openOver()}return} // a trackpad pinch in at 100%: the pages
   if(e.ctrlKey||(!L&&!multi()&&tool!=='bg')){zoomAt(V.z*f,e.clientX,e.clientY);return} // a trackpad pinch, or nothing held: the view
   if(tool==='bg')D.photo.s=Math.max(1,Math.min(4,D.photo.s*f));else if(inside(L)){L.zs=Math.max(1,Math.min(3,L.zs*f));syncInside(L)}else if(L)scaleBy(L,{size:L[SZ(L)],h:L.h},f);else return;
   paint();clearTimeout(textTimer);textTimer=setTimeout(commit,300);
@@ -1734,18 +1757,16 @@ function showAlign(L){
 }
 const fadeAlign=()=>{clearTimeout(alignT);alignT=setTimeout(()=>{G.guides=null;paint()},900)};
 let nudgeT=0;
-// unit: how far one press goes (the 十字キー moves a screen pixel at a time, the panel's arrows a picture pixel)
-function startNudge(b,e,unit=1){
+function startNudge(b,e){
   const L=sel(),Ls=multi()?msel():L?[L]:[];if(!b||!Ls.length)return;e.preventDefault();
   const [dx,dy]=b.dataset.nudge.split(',').map(Number);let n=0;
-  const step=()=>{const k=(n++<20?1:5)*unit;for(const o of Ls){o.x+=dx*k;o.y+=dy*k}if(L)showAlign(L);paint()};
+  const step=()=>{const k=n++<20?1:5;for(const o of Ls){o.x+=dx*k;o.y+=dy*k}if(L)showAlign(L);paint()};
   step();clearTimeout(nudgeT);
   const go=()=>{step();nudgeT=setTimeout(go,50)};nudgeT=setTimeout(go,400);
   const stop=()=>{clearTimeout(nudgeT);fadeAlign();commit();removeEventListener('pointerup',stop);removeEventListener('pointercancel',stop)};
   addEventListener('pointerup',stop);addEventListener('pointercancel',stop);
 }
 bodyEl.addEventListener('pointerdown',e=>startNudge(e.target.closest('[data-nudge]'),e));
-$('#edpad').addEventListener('pointerdown',e=>startNudge(e.target.closest('[data-nudge]'),e,Math.max(1,Math.round(kE()))));
 bodyEl.addEventListener('click',e=>{
   const L=sel(),t=e.target.closest('button');if(!t)return;
   if(t.id==='ephoto'){$('#efile').click();return}
@@ -1807,16 +1828,9 @@ function dupSel(){const L=sel();if(!L)return;const n=Object.assign(clone(L),{id:
 
 /* ---------- the little bar over the selection (like Canva's): the way in to typing is right there ---------- */
 const flo=$('#efloat');
-// Something small on screen is hard to drag under a finger: a 十字キー shows in the corner to move it.
-// With nothing held and something copied, 貼り付け shows instead.
+// With nothing held and something copied, 貼り付け shows in the corner.
 function placePads(){
-  const L=sel(),many=multi(),pad=$('#edpad'),pst=$('#epaste');
-  let small=false;
-  if((L||many)&&tool!=='bg'&&tedit.hidden&&(!L||G.M.has(L.id))){
-    const u=many?ubox(msel()):(()=>{const b=box(L,G.M,kE());return {x0:0,y0:0,x1:b.w,y1:b.h}})();
-    small=Math.max(u.x1-u.x0,u.y1-u.y0)/kE()<72;
-  }
-  pad.hidden=!small;
+  const L=sel(),many=multi(),pst=$('#epaste');
   pst.hidden=!(CLIP&&!L&&!many&&tedit.hidden&&tool!=='bg');
   if(!pst.hidden)pst.textContent=`貼り付け（${CLIP.layers.length}）`;
 }
@@ -1893,7 +1907,7 @@ tedit.addEventListener('pointerdown',e=>{if(e.target===tedit)closeText()});
 /* ---------- page strip (inside the ページ drawer) ---------- */
 const dprS=Math.min(2,devicePixelRatio||1);
 function renderStrip(){
-  syncCur();renderPill();const s=$('#pstrip');if(!s)return;
+  syncCur();renderPill();if(!ovEl.hidden)renderOver();const s=$('#pstrip');if(!s)return;
   s.innerHTML=P.pages.map((pg,i)=>`<button class="pg${i===P.cur?' on':''}" data-pg="${i}" aria-label="${i+1}枚目"><canvas></canvas><b>${i+1}</b>${i===P.cur&&P.pages.length>1?'<i class="pgx" data-pgdel aria-label="このページを消す">×</i>':''}</button>`).join('')+
     `<button class="pg add" id="padd" aria-label="写真を足す">＋</button>`;
   paintStrip();ensureAll().then(paintStrip);
@@ -1913,6 +1927,38 @@ function movePage(d){
   syncCur();const j=P.cur+d;if(j<0||j>=P.pages.length)return;
   [P.pages[P.cur],P.pages[j]]=[P.pages[j],P.pages[P.cur]];P.cur=j;loadInto(P.pages[j]);designChanged();
 }
+/* ---------- all the pages at once (as in Canva): pinch in at 100% with nothing held, spread or tap a page to go back ---------- */
+const ovEl=$('#eover');
+function openOver(){
+  if(!ovEl.hidden)return;D.sel=null;MS=[];addMode=false;tool=null;panel();paint();
+  ovEl.hidden=false;renderOver();ovEl.scrollTop=Math.max(0,(ovEl.querySelector('.ov.on')?.offsetTop||0)-ovEl.clientHeight/3);
+}
+function closeOver(){ovEl.hidden=true;ovEl.innerHTML=''}
+function renderOver(){
+  syncCur();
+  ovEl.innerHTML=P.pages.map((pg,i)=>`<button class="ov${i===P.cur?' on':''}" data-ov="${i}" aria-label="${i+1}枚目を開く"><canvas style="aspect-ratio:${pg.W}/${pg.H}"></canvas><b>${i+1}</b></button>`).join('')+
+    `<button class="ov add" data-ovadd aria-label="写真を足す"><span style="aspect-ratio:${D.W}/${D.H}">＋</span></button>`;
+  paintOver();ensureAll().then(paintOver);
+}
+function paintOver(){
+  syncCur();
+  ovEl.querySelectorAll('.ov canvas').forEach((c,i)=>{
+    const pg=P.pages[i];if(!pg)return;const w=Math.round(c.clientWidth*dprS),h=Math.round(w*pg.H/pg.W);if(!w)return;
+    c.width=w;c.height=h;const x=c.getContext('2d');x.setTransform(w/pg.W,0,0,h/pg.H,0,0);withPage(pg,()=>draw(x,{thumb:true,grad:i}));
+  });
+}
+let ovT=0;function overSoon(){clearTimeout(ovT);ovT=setTimeout(paintOver,150)}
+ovEl.addEventListener('click',e=>{
+  if(e.target.closest('[data-ovadd]')){$('#eadd').click();return}
+  const b=e.target.closest('[data-ov]');if(!b)return;closeOver();switchPage(+b.dataset.ov);
+});
+// two fingers spreading on the list: back to the page that was open
+let ovPinch=0;const tdist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+ovEl.addEventListener('touchstart',e=>{ovPinch=e.touches.length===2?tdist(e.touches):0},{passive:true});
+ovEl.addEventListener('touchmove',e=>{if(ovPinch&&e.touches.length===2&&tdist(e.touches)/ovPinch>1.3){ovPinch=0;closeOver()}},{passive:true});
+ovEl.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();if(e.deltaY<0)closeOver()}},{passive:false});
+$('#ebar').addEventListener('click',closeOver,true);
+on('closed',closeOver);
 bodyEl.addEventListener('click',e=>{
   if(!e.target.closest('#pstrip'))return;
   if(e.target.closest('[data-pgdel]')){removePage();return}
@@ -1956,7 +2002,7 @@ $('#eimgswap').addEventListener('change',async e=>{
 });
 $('#eadd').addEventListener('change',async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
-  try{await addPhotos(await Promise.all(fs.map(loadPhoto)));renderStrip();toast(`${fs.length}枚足しました。今のページのデザインが入っています`)}
+  try{await addPhotos(await Promise.all(fs.map(loadPhoto)));renderStrip();if(!ovEl.hidden)ovEl.scrollTop=ovEl.scrollHeight;toast(`${fs.length}枚足しました。今のページのデザインが入っています`)}
   catch{toast('読み込めない画像がありました')}
 });
 

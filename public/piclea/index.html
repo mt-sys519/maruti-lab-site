@@ -373,10 +373,15 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .etop .pill{padding:9px 18px;margin-left:4px;flex:none;white-space:nowrap} /* on a 390px phone the title used to squeeze 保存 onto two lines */
 .estage{position:relative;flex:1;min-height:0;touch-action:none;overflow:hidden}
 .epaste{position:absolute;left:10px;top:8px;z-index:3;height:30px;padding:0 14px;border-radius:999px;background:rgba(40,28,22,.72);color:#fff;font:500 12.5px/1 var(--ui);box-shadow:0 1px 6px rgba(60,40,30,.2)}
-.epaste[hidden],.edpad[hidden]{display:none}
-.edpad{position:absolute;right:10px;bottom:12px;z-index:3;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);touch-action:none;-webkit-user-select:none;user-select:none}
-.edpad button{border-radius:12px;background:rgba(255,252,249,.82);box-shadow:0 1px 6px rgba(60,40,30,.18);color:var(--ink);font-size:13px;touch-action:none}
-.edpad .u{grid-area:1/2}.edpad .l{grid-area:2/1}.edpad .r{grid-area:2/3}.edpad .d{grid-area:3/2}
+.epaste[hidden]{display:none}
+.eover{position:absolute;inset:0;z-index:4;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;background:var(--stage);display:grid;grid-template-columns:1fr 1fr;gap:18px 14px;align-content:start;padding:16px 16px 28px}
+.eover[hidden]{display:none}
+.ov{position:relative;padding:0;border-radius:8px;box-shadow:0 0 0 1px rgba(75,63,58,.12),0 2px 8px rgba(60,40,30,.1);background:#fff}
+.ov canvas{display:block;width:100%;border-radius:8px}
+.ov b{position:absolute;left:6px;top:6px;font:500 11px Jost,sans-serif;background:rgba(255,252,249,.9);border-radius:6px;padding:2px 7px}
+.ov.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
+.ov.add{background:rgba(75,63,58,.05);box-shadow:inset 0 0 0 1px rgba(75,63,58,.16)}
+.ov.add span{display:grid;place-items:center;width:100%;font-size:28px;color:var(--mocha)}
 .ezoom{position:absolute;right:10px;top:8px;z-index:3;display:flex;align-items:center;border-radius:999px;background:rgba(255,252,249,.72);box-shadow:0 1px 6px rgba(60,40,30,.14);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .ezoom button{min-width:34px;height:30px;font:500 15px/1 var(--ui);color:var(--ink)}
 .ezoom .zv{min-width:44px;font:500 11px/1 Jost,var(--ui);letter-spacing:.04em;color:var(--mocha)}
@@ -622,7 +627,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <button class="pill dark" id="esave">保存</button>
   </div>
   <div class="estage" id="estage"><div class="efit"><canvas id="ecanvas"></canvas></div><div class="ezoom" id="ezoom"><button data-zm="-1" aria-label="縮小">−</button><button data-zm="0" class="zv" aria-label="拡大をもとに戻す">100%</button><button data-zm="1" aria-label="拡大">＋</button></div><button class="epill" id="epill" hidden></button><button class="epaste" id="epaste" hidden>貼り付け</button>
-    <div class="edpad" id="edpad" hidden aria-label="十字キー"><button data-nudge="0,-1" class="u" aria-label="上へ">▲</button><button data-nudge="-1,0" class="l" aria-label="左へ">◀</button><button data-nudge="1,0" class="r" aria-label="右へ">▶</button><button data-nudge="0,1" class="d" aria-label="下へ">▼</button></div><div class="efloat" id="efloat" hidden></div></div>
+    <div class="efloat" id="efloat" hidden></div><div class="eover" id="eover" hidden></div></div>
   <div class="edock">
     <div class="edrawer" id="edrawer" hidden><div class="ebody" id="ebody"></div></div>
     <nav class="ebar" id="ebar" aria-label="編集の道具"></nav>
