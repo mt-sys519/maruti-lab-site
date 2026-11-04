@@ -11,7 +11,7 @@ import { PrAds } from "../../PrAds";
 
 const title = "ブラウザで遊べるエアホッケー｜AIR HOCKEY";
 const description =
-  "カンッと打って、スーッと滑る。ゲームセンターのエアホッケーをブラウザで。CPU対戦、途中でパックが増える15点先取、スマホやタブレット1台での2人対戦も。無料、登録不要。";
+  "カンッと打って、スーッと滑る。ゲームセンターのエアホッケーをブラウザで。途中でパックが増える15点先取、本物の球速と公式ルールで戦うPRO STAGE、スマホやタブレット1台での2人対戦も。無料、登録不要。";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -58,14 +58,15 @@ export default function AirHockeyPage() {
         aboutLead={<><strong>ゲームセンターのエアホッケー</strong>を、ブラウザで。</>}
         aboutSub="強く打てばカンッと速く、そっと当てればふわりと漂う。"
         playLead={<>指（マウス）で<strong>マレットを動かして</strong>、パックを打ち返す。</>}
-        playSub="動かしたまま当てると強く飛びます。音はゲーム画面の右上で切り替え。"
+        playSub="動かしたまま当てると強く飛びます。PRO STAGEでは、大きく振りかぶるほど速い球に。音はゲーム画面の右上で切り替え。"
         rulesLead={<>相手のゴールに入れて、<strong>先に7点</strong>取ったほうの勝ち。</>}
-        rulesSub="15点先取では、合計6点ごとにパックが2つ（どちらかが10点を取ると3つ）同時に出ます。"
+        rulesSub="15点先取では、合計6点ごとにパックが2つ（どちらかが10点を取ると3つ）同時に出ます。PRO STAGEの公式ルールは7点×4ゲーム先取です。"
         chips={[
-          "CPU対戦：EASY / NORMAL / HARD",
+          "ARCADE：EASY / NORMAL / HARD",
           "15点先取：途中でパックが増える",
+          "PRO STAGE：ELITE / CHAMPION / LEGEND",
           "2人対戦：スマホ・タブレットを平らに置いて向かい合う",
-          "観戦：CPU同士の対戦を見る",
+          "エキシビジョンマッチ：CPU同士の対戦を見る",
         ]}
       />
       <PrAds kind="a8" />
