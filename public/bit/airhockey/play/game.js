@@ -1270,7 +1270,8 @@ const resultCard=title=>twoP?(title==='BLUE WINS'?'2p-blue':'2p-yellow')
   :`${stage==='pro'?'pro':'arcade'}-${LEVEL_NAMES[level].toLowerCase()}-${title==='YOU WIN'?'win':'lose'}`;
 document.getElementById('share').addEventListener('click',()=>{
   const title=document.getElementById('result-title').textContent;
-  const text=`MarutiBit「AIR HOCKEY」\n${playedAs()} / ${title} ${document.getElementById('result-score').textContent.replace(/ /g,'')}`;
+  // a line each: the game, what was played (PRO's named, the result screen leaves it out), the result
+  const text=`MarutiBit「AIR HOCKEY」\n${stage==='pro'?'PRO STAGE・':''}${playedAs()}\n${title} ${document.getElementById('result-score').textContent.replace(/ /g,'')}`;
   const intent=`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(`https://marutilab.com/bit/airhockey?r=${resultCard(title)}`)}`;
   // as the site's XShareButton: no feature string (noopener, or noreferrer, makes window.open return null even
   // when the tab opened, and the fallback then took this page to the composer too). The page runs in the site's
