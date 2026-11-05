@@ -6,8 +6,11 @@ import sharp from "sharp";
 // (/bit/airhockey?r=<slug>, swapped in by worker/index.ts). The score stays in
 // the post's text, so a card only says the stage, the level and who won:
 // 14 of them, not one per score. The two tables are frames of the real game
-// (scripts/airhockey-og/*.jpg, the replay's camera on the deciding goal of a
-// PRO match, and the same view of the red table), the words laid over them.
+// (scripts/airhockey-og/*.jpg: the replay's camera on the CPU's end, the puck
+// set down on the table well inside the edge - a frame of the replay itself
+// caught it tipping into the goal, floating), the words laid over them. No URL
+// on the card: X prints the domain under it, and at a timeline's size it was
+// too small to read anyway.
 //
 //   node scripts/generate-airhockey-result-og.mjs
 const outputDir = path.resolve("public/og/bit/airhockey");
@@ -37,11 +40,10 @@ const overlay = ({ line, head, color }) => Buffer.from(`<svg xmlns="http://www.w
     <filter id="glow" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
   </defs>
   <rect width="${W}" height="${H}" fill="url(#shade)"/>
-  <text x="64" y="96" fill="#8a8f9c" font-family="${mono}" font-size="22" font-weight="700">MarutiBit  AIR HOCKEY</text>
-  <text x="64" y="168" fill="#e8e6df" font-family="${mono}" font-size="36" font-weight="700">${line}</text>
-  <text x="58" y="360" fill="${color}" opacity=".55" filter="url(#glow)" font-family="${mono}" font-size="112" font-weight="700">${head}</text>
-  <text x="58" y="360" fill="${color}" font-family="${mono}" font-size="112" font-weight="700">${head}</text>
-  <text x="64" y="560" fill="#8a8f9c" font-family="${mono}" font-size="22" font-weight="700">marutilab.com/bit/airhockey</text>
+  <text x="64" y="110" fill="#a3a8b4" font-family="${mono}" font-size="34" font-weight="700">MarutiBit  AIR HOCKEY</text>
+  <text x="64" y="184" fill="#e8e6df" font-family="${mono}" font-size="40" font-weight="700">${line}</text>
+  <text x="58" y="390" fill="${color}" opacity=".55" filter="url(#glow)" font-family="${mono}" font-size="112" font-weight="700">${head}</text>
+  <text x="58" y="390" fill="${color}" font-family="${mono}" font-size="112" font-weight="700">${head}</text>
 </svg>`);
 
 const bases = {};
