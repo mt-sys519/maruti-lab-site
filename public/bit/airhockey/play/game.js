@@ -1265,9 +1265,13 @@ for(const b of document.querySelectorAll('#menu [data-start]'))b.addEventListene
 document.getElementById('again').addEventListener('click',()=>startGame(level,twoP));
 // the result says what was played: the level (or 2P) and the points to win, or PRO's rules
 const playedAs=()=>stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
+// the shared page's ?r= picks the card X shows under the post (worker/index.ts): the stage, the level and who won
+const resultCard=title=>twoP?(title==='BLUE WINS'?'2p-blue':'2p-yellow')
+  :`${stage==='pro'?'pro':'arcade'}-${LEVEL_NAMES[level].toLowerCase()}-${title==='YOU WIN'?'win':'lose'}`;
 document.getElementById('share').addEventListener('click',()=>{
-  const text=`MarutiBit「AIR HOCKEY」\n${playedAs()} / ${document.getElementById('result-title').textContent} ${document.getElementById('result-score').textContent.replace(/ /g,'')}`;
-  const intent=`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://marutilab.com/bit/airhockey')}`;
+  const title=document.getElementById('result-title').textContent;
+  const text=`MarutiBit「AIR HOCKEY」\n${playedAs()} / ${title} ${document.getElementById('result-score').textContent.replace(/ /g,'')}`;
+  const intent=`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(`https://marutilab.com/bit/airhockey?r=${resultCard(title)}`)}`;
   // as the site's XShareButton: no feature string (noopener, or noreferrer, makes window.open return null even
   // when the tab opened, and the fallback then took this page to the composer too). The page runs in the site's
   // iframe, so a blocked popup sends the whole page there, not the frame
