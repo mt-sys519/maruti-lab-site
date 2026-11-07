@@ -39,6 +39,9 @@ image: /og/blog/vertical-text-photo.png
 
 切り替えると、並んでいる見本がまるごと縦書きになります。**縦書きにしたときにきれいな書体を、自分の写真の上で探せます。**
 
+![PICLEAで縦書きに切り替えた書体の一覧](/blog/piclea-vertical-tall.webp)
+*画面の下の「縦書き」を押すと、並んだ見本がまるごと縦書きになります（文字には「詳細」から縁取りを付けています）*
+
 <p class="postCta"><a href="/piclea/">PICLEAを開く</a></p>
 
 ## 縦書きには明朝体、きりっとさせたいならゴシック体
