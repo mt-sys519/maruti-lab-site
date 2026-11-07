@@ -6,156 +6,15 @@ import type { InputRainGenre } from "./inputRainPrompts";
 const SOUND_STORAGE_KEY = "marutibit:sound-enabled";
 const SOUND_CHANGE_EVENT = "marutibit:sound-change";
 
-const AUDIO_SRC = {
-  bgm: "/audio/input-rain/game-bgm.wav",
-  resultBgm: "/audio/input-rain/result-bgm.wav",
-  countdown: "/audio/input-rain/countdown.wav",
-  go: "/audio/input-rain/go.wav",
-  acceptRain: "/audio/input-rain/accept-rain.wav",
-};
-
 const TYPE_PC_FILES = [1, 2, 3, 4, 5].map((n) => `/audio/input-rain/type-pc-0${n}.wav`);
 const TYPE_FLICK_FILES = [1, 2, 3, 4].map((n) => `/audio/input-rain/type-flick-0${n}.wav`);
 const BACKSPACE_FILES = [1, 2].map((n) => `/audio/input-rain/backspace-0${n}.wav`);
 
-const LOOP_VOLUME = 0.48;
-const ONE_SHOT_VOLUME = 0.65;
-const ACCEPT_VOLUME = 0.52;
-const GO_VOLUME = 0.4;
 const TYPE_VOLUME = 0.68;
 const BACKSPACE_VOLUME = 0.58;
-const FADE_IN_MS = 650;
-const FADE_OUT_MS = 450;
-const BGM_BASS_CUT_DB = -9;
-const BGM_BASS_CUT_HZ = 140;
 
 function logPlayFailure(src: string, error: unknown) {
   console.warn(`[input-rain audio] play() failed for ${src}`, error);
-}
-
-/** A single loopable audio file with fade-in/out and pause-in-place support. */
-class LoopTrack {
-  private audio: HTMLAudioElement;
-  private fadeToken = 0;
-  private gainNode: GainNode | null = null;
-  private currentVolume = 0;
-
-  // tameBass routes playback through a lowshelf filter instead of straight to the
-  // element's own output, to knock down an overly punchy kick drum in the mix that
-  // plain HTMLMediaElement.volume can't selectively target (it's a flat attenuation).
-  constructor(src: string, loop: boolean, tameBass = false) {
-    this.audio = new Audio(src);
-    this.audio.loop = loop;
-    this.audio.preload = "auto";
-    this.audio.volume = 0;
-    if (tameBass) this.setupBassFilter();
-  }
-
-  private setupBassFilter() {
-    try {
-      const AudioContextConstructor = window.AudioContext
-        || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextConstructor) return;
-      const context = new AudioContextConstructor();
-      const source = context.createMediaElementSource(this.audio);
-      const bassCut = context.createBiquadFilter();
-      bassCut.type = "lowshelf";
-      bassCut.frequency.value = BGM_BASS_CUT_HZ;
-      bassCut.gain.value = BGM_BASS_CUT_DB;
-      const gainNode = context.createGain();
-      gainNode.gain.value = 0;
-      source.connect(bassCut).connect(gainNode).connect(context.destination);
-      this.audio.volume = 1;
-      this.gainNode = gainNode;
-    } catch (error) {
-      logPlayFailure(this.audio.src, error);
-    }
-  }
-
-  private getVolume() {
-    return this.currentVolume;
-  }
-
-  private setVolume(value: number) {
-    this.currentVolume = value;
-    if (this.gainNode) this.gainNode.gain.value = value;
-    else this.audio.volume = value;
-  }
-
-  // Driven by setInterval rather than requestAnimationFrame so the fade still runs
-  // (and stays audible) in a backgrounded/unfocused tab, where rAF can be throttled
-  // to a near-stop but timers keep firing.
-  private fadeTo(target: number, duration: number, onDone?: () => void) {
-    const token = (this.fadeToken += 1);
-    const start = this.getVolume();
-    const startTime = performance.now();
-    const STEP_MS = 30;
-    const timer = window.setInterval(() => {
-      if (token !== this.fadeToken) { window.clearInterval(timer); return; }
-      const t = duration <= 0 ? 1 : Math.min(1, (performance.now() - startTime) / duration);
-      this.setVolume(start + (target - start) * t);
-      if (t >= 1) { window.clearInterval(timer); onDone?.(); }
-    }, STEP_MS);
-  }
-
-  async playFromStart(volume: number) {
-    this.fadeToken += 1;
-    this.audio.currentTime = 0;
-    this.setVolume(0);
-    if (this.gainNode?.context.state === "suspended") await this.gainNode.context.resume();
-    try { await this.audio.play(); } catch (error) { logPlayFailure(this.audio.src, error); }
-    this.fadeTo(volume, FADE_IN_MS);
-  }
-
-  async resumeInPlace(volume: number) {
-    if (this.gainNode?.context.state === "suspended") await this.gainNode.context.resume();
-    if (this.audio.paused) {
-      try { await this.audio.play(); } catch (error) { logPlayFailure(this.audio.src, error); }
-    }
-    this.fadeTo(volume, FADE_IN_MS);
-  }
-
-  /** Fades out and pauses, keeping playback position for a later resumeInPlace(). */
-  pauseFaded() {
-    this.fadeTo(0, FADE_OUT_MS, () => this.audio.pause());
-  }
-
-  /** Fades out, pauses, and rewinds so the next playFromStart() begins clean. */
-  stopFaded() {
-    this.fadeTo(0, FADE_OUT_MS, () => {
-      this.audio.pause();
-      this.audio.currentTime = 0;
-    });
-  }
-
-  /** Immediately stops playback without tearing down the audio graph, so the track can
-   * still be resumed later (used when switching between the game and result loops). */
-  stop() {
-    this.fadeToken += 1;
-    this.audio.pause();
-  }
-
-  teardown() {
-    this.stop();
-    if (this.gainNode) void this.gainNode.context.close();
-  }
-}
-
-/** A short, non-looping cue that always restarts from the top when played. */
-class OneShot {
-  private audio: HTMLAudioElement;
-
-  constructor(src: string) {
-    this.audio = new Audio(src);
-    this.audio.preload = "auto";
-  }
-
-  play(volume: number) {
-    this.audio.pause();
-    this.audio.currentTime = 0;
-    this.audio.volume = volume;
-    void this.audio.play().catch((error) => logPlayFailure(this.audio.src, error));
-  }
 }
 
 /**
@@ -195,7 +54,7 @@ type RainMusic = {
   home: number;
   voice: Voice;
   reverb: number;
-  /** Ambient pad chords (MIDI), one per bar. Empty means the genre keeps its recorded BGM. */
+  /** Ambient pad chords (MIDI), one per bar. */
   chords: number[][];
   bar: number;
   /** How much of the synthesized rain bed sits under the music. */
@@ -203,8 +62,8 @@ type RainMusic = {
 };
 
 // Each genre types in its own scale: a major pentatonic for the everyday window, a quieter
-// one for the office, miyako-bushi (the koto's scale) for the idioms, and a minor
-// pentatonic that sits under the terminal's recorded loop. Pentatonics mean any run of
+// one for the office, miyako-bushi (the koto's scale) for the idioms, and F minor
+// pentatonic over a darker synth pad for the terminal. Pentatonics mean any run of
 // keystrokes lands as a phrase rather than a wrong note.
 const music: Record<InputRainGenre, RainMusic> = {
   daily: {
@@ -221,7 +80,7 @@ const music: Record<InputRainGenre, RainMusic> = {
   },
   terminal: {
     scale: [65, 68, 70, 72, 75, 77, 80, 82, 84, 87, 89], home: 5, voice: "blip", reverb: 0.12, bar: 4,
-    chords: [], rain: 0.45,
+    chords: [[41, 48, 56, 60, 63], [37, 44, 53, 56, 60], [39, 46, 55, 58, 63], [36, 43, 51, 55, 58]], rain: 1,
   },
 };
 
@@ -229,8 +88,8 @@ const midiToHz = (note: number) => 440 * 2 ** ((note - 69) / 12);
 
 /**
  * Everything INPUT RAIN synthesizes: the raindrop each correct keystroke plays, the chord
- * a finished prompt resolves to, the miss thud, and (for the genres without a recorded
- * loop) the ambient pad and rain bed. Unrelated to the authored BGM/stinger files.
+ * a finished prompt resolves to, the miss thud, the countdown, the ambient pad and rain
+ * bed, and the result phrase.
  */
 class RainSynth {
   private context: AudioContext | null = null;
@@ -460,7 +319,7 @@ class RainSynth {
     this.tone(70, 0.4, 0.05, "sine", 0.1);
   }
 
-  /** Countdown pips for the synthesized genres: three notes climbing to home. */
+  /** Countdown pips: three notes climbing to home. */
   countdown(remaining: number) {
     const { scale, home } = this.music;
     this.pluck(scale[Math.max(0, home - remaining)], 0.14);
@@ -597,7 +456,9 @@ class RainSynth {
     const gain = context.createGain();
     const filter = context.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = this.music.voice === "koto" ? 900 : 1300;
+    const voice = this.music.voice;
+    filter.frequency.value = voice === "koto" ? 900 : voice === "blip" ? 850 : 1300;
+    if (voice === "blip") level *= 0.6;
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.exponentialRampToValueAtTime(level, start + 1.3);
     gain.gain.setValueAtTime(level, start + length);
@@ -605,7 +466,7 @@ class RainSynth {
     filter.connect(gain).connect(this.ambientBus);
     [-4, 4].forEach((cents) => {
       const oscillator = context.createOscillator();
-      oscillator.type = this.music.voice === "marimba" ? "sine" : "triangle";
+      oscillator.type = voice === "marimba" ? "sine" : voice === "blip" ? "sawtooth" : "triangle";
       oscillator.frequency.value = frequency;
       oscillator.detune.value = cents;
       oscillator.connect(filter);
@@ -630,36 +491,19 @@ class RainSynth {
   }
 }
 
-type LoopKind = "bgm" | "resultBgm" | null;
-
 export function useInputRainAudio(paused = false, genre: InputRainGenre = "terminal") {
   const [enabled, setEnabled] = useState(false);
   const feedbackRef = useRef<RainSynth | null>(null);
   const genreRef = useRef(genre);
-  const synthGenre = music[genre].chords.length > 0;
-  const bgmRef = useRef<LoopTrack | null>(null);
-  const resultBgmRef = useRef<LoopTrack | null>(null);
-  const countdownRef = useRef<OneShot | null>(null);
-  const goRef = useRef<OneShot | null>(null);
-  const acceptRef = useRef<OneShot | null>(null);
   const typePcRef = useRef<VariantPool | null>(null);
   const typeFlickRef = useRef<VariantPool | null>(null);
   const backspaceRef = useRef<VariantPool | null>(null);
-  const activeLoopRef = useRef<LoopKind>(null);
+  const ambientActiveRef = useRef(false);
 
   useEffect(() => {
-    bgmRef.current = new LoopTrack(AUDIO_SRC.bgm, true, true);
-    resultBgmRef.current = new LoopTrack(AUDIO_SRC.resultBgm, false);
-    countdownRef.current = new OneShot(AUDIO_SRC.countdown);
-    goRef.current = new OneShot(AUDIO_SRC.go);
-    acceptRef.current = new OneShot(AUDIO_SRC.acceptRain);
     typePcRef.current = new VariantPool(TYPE_PC_FILES);
     typeFlickRef.current = new VariantPool(TYPE_FLICK_FILES);
     backspaceRef.current = new VariantPool(BACKSPACE_FILES);
-    return () => {
-      bgmRef.current?.teardown();
-      resultBgmRef.current?.teardown();
-    };
   }, []);
 
   useEffect(() => {
@@ -711,29 +555,17 @@ export function useInputRainAudio(paused = false, genre: InputRainGenre = "termi
   }, [ensureFeedback]);
 
   // The recorded key thock stays underneath as the tactile part; the raindrop note carries
-  // the music. The terminal keeps its original, louder thock.
-  const thockVolume = synthGenre ? TYPE_VOLUME * 0.42 : TYPE_VOLUME * 0.8;
+  // the music.
+  const thockVolume = TYPE_VOLUME * 0.42;
 
   const playMiss = useCallback(() => withSynth((engine) => engine.miss()), [withSynth]);
   const playTimeout = useCallback(() => withSynth((engine) => engine.timeout()), [withSynth]);
   const resetPhrase = useCallback(() => feedbackRef.current?.resetPhrase(), []);
   const setRainStrength = useCallback((strength: number) => feedbackRef.current?.setRain(strength), []);
 
-  const playAccept = useCallback(() => {
-    if (!enabled) return;
-    if (!synthGenre) acceptRef.current?.play(ACCEPT_VOLUME);
-    withSynth((engine) => engine.accept());
-  }, [enabled, synthGenre, withSynth]);
-  const playCountdownTick = useCallback((remaining: number) => {
-    if (!enabled) return;
-    if (synthGenre) withSynth((engine) => engine.countdown(remaining));
-    else countdownRef.current?.play(ONE_SHOT_VOLUME);
-  }, [enabled, synthGenre, withSynth]);
-  const playGo = useCallback(() => {
-    if (!enabled) return;
-    if (synthGenre) withSynth((engine) => engine.accept());
-    else goRef.current?.play(GO_VOLUME);
-  }, [enabled, synthGenre, withSynth]);
+  const playAccept = useCallback(() => withSynth((engine) => engine.accept()), [withSynth]);
+  const playCountdownTick = useCallback((remaining: number) => withSynth((engine) => engine.countdown(remaining)), [withSynth]);
+  const playGo = useCallback(() => withSynth((engine) => engine.accept()), [withSynth]);
   const playTypeKey = useCallback(() => {
     if (!enabled) return;
     typePcRef.current?.play(thockVolume);
@@ -747,53 +579,31 @@ export function useInputRainAudio(paused = false, genre: InputRainGenre = "termi
   const playBackspace = useCallback(() => { if (enabled) backspaceRef.current?.play(BACKSPACE_VOLUME); }, [enabled]);
 
   const startBgm = useCallback(() => {
-    activeLoopRef.current = "bgm";
-    resultBgmRef.current?.stop();
+    ambientActiveRef.current = true;
     if (!enabled || paused) return;
-    if (!synthGenre) void bgmRef.current?.playFromStart(LOOP_VOLUME);
     withSynth((engine) => engine.startAmbient());
-  }, [enabled, paused, synthGenre, withSynth]);
+  }, [enabled, paused, withSynth]);
 
-  // The synthesized genres stay in their own music for the result: the same pad carries
-  // on, the rain dies away, and a closing chord marks the end. The terminal keeps its
-  // recorded result stinger, which belongs with its recorded loop.
+  // The result stays in the genre's own music: the same pad carries on, the rain dies
+  // away, and a closing phrase marks the end.
   const startResultBgm = useCallback((mood: "excellent" | "good" | "retry" = "good") => {
-    bgmRef.current?.stop();
-    if (synthGenre) {
-      activeLoopRef.current = "bgm";
-      if (enabled && !paused) withSynth((engine) => { engine.setRain(0.04); engine.resultJingle(mood); engine.startAmbient(); });
-      return;
-    }
-    activeLoopRef.current = "resultBgm";
-    feedbackRef.current?.stopAmbient();
-    if (enabled && !paused) void resultBgmRef.current?.playFromStart(LOOP_VOLUME);
-  }, [enabled, paused, synthGenre, withSynth]);
+    ambientActiveRef.current = true;
+    if (enabled && !paused) withSynth((engine) => { engine.setRain(0.04); engine.resultJingle(mood); engine.startAmbient(); });
+  }, [enabled, paused, withSynth]);
 
   const stopAllLoops = useCallback(() => {
-    activeLoopRef.current = null;
-    bgmRef.current?.stopFaded();
-    resultBgmRef.current?.stopFaded();
+    ambientActiveRef.current = false;
     feedbackRef.current?.stopAmbient();
   }, []);
 
-  // Keep whichever loop is "active" in sync with the shared mute flag and the pause state,
-  // fading out (keeping position) on pause/mute and fading back in on resume/unmute.
+  // Keep the ambient music in sync with the shared mute flag and the pause state.
   useEffect(() => {
-    const active = activeLoopRef.current;
-    if (active === "bgm") {
-      if (!enabled || paused) {
-        bgmRef.current?.pauseFaded();
-        feedbackRef.current?.pauseAmbient();
-        return;
-      }
-      if (genreRef.current === "terminal") void bgmRef.current?.resumeInPlace(LOOP_VOLUME);
-      withSynth((engine) => engine.startAmbient());
+    if (!ambientActiveRef.current) return;
+    if (!enabled || paused) {
+      feedbackRef.current?.pauseAmbient();
       return;
     }
-    const track = active === "resultBgm" ? resultBgmRef.current : null;
-    if (!track) return;
-    if (!enabled || paused) track.pauseFaded();
-    else void track.resumeInPlace(LOOP_VOLUME);
+    withSynth((engine) => engine.startAmbient());
   }, [enabled, paused, withSynth]);
 
   useEffect(() => {
