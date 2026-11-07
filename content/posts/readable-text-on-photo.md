@@ -55,4 +55,7 @@ image: /og/blog/readable-text-on-photo.png
 
 無料ツール「PICLEA」では、**影や縁取りを付けたまま、全部の書体を自分の写真の上で見比べられます**。書体の選び方は「[写真に文字入れするなら書体は自分の写真で比べる](/blog/photo-text-fonts)」にまとめました。
 
+![PICLEAで文字の色と影を調整する引き出し](/blog/piclea-style-drawer-tall.webp)
+*文字の色や影は、写真を見ながら引き出しで調整できます*
+
 <p class="postCta"><a href="/piclea/">PICLEAで写真に文字を入れる</a></p>

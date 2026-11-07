@@ -32,6 +32,9 @@ image: /og/blog/brain-puzzles.png
 
 向かい合う角は同じ大きさになる「対頂角」は、中学校で習ったのに**意外と忘れている人が多い**ところです。
 
+![ANGLEの問題画面](/games/shots/angle.webp)
+*ANGLEは三角形の角度から「？」を求めます*
+
 <p class="postCta"><a href="/bit/angle">ANGLEで遊ぶ</a></p>
 
 ## BLANKは式の穴埋め、上級はカッコ入りの逆算
@@ -46,6 +49,9 @@ image: /og/blog/brain-puzzles.png
 
 **答えはすべて正の整数**なので、暗算でも解けます。
 
+![BLANKの問題画面](/games/shots/blank.webp)
+*BLANKは式の空欄を逆算します*
+
 <p class="postCta"><a href="/bit/blank">BLANKで遊ぶ</a></p>
 
 ## SEQUENCEは数列の規則当て、上級は2つの数列が交差する
@@ -59,6 +65,9 @@ image: /og/blog/brain-puzzles.png
 | 上級 | 差が変わる、2つの数列が交差する |
 
 ひらめいた瞬間の気持ちよさは、**3つの中でSEQUENCEが一番**です。
+
+![SEQUENCEの問題画面](/games/shots/sequence.webp)
+*SEQUENCEは数の並びの規則を見抜きます*
 
 <p class="postCta"><a href="/bit/sequence">SEQUENCEで遊ぶ</a></p>
 

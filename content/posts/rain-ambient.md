@@ -32,6 +32,9 @@ image: /og/blog/rain-ambient.png
 
 操作はありません。**SOUNDをONにしたら、あとは眺めて聞くだけ**です。
 
+![AVENUEの雨の部屋の画面](/games/shots/avenue.webp)
+*1996年のニューヨークの部屋で、窓の外に雨が降り続けます*
+
 <p class="postCta"><a href="/bit/avenue">AVENUEを開く</a></p>
 
 ## 別のタブで作業するなら、BACKGROUNDをONにする

@@ -47,6 +47,12 @@ AIがよく知っているものほど、自然な色になります。
 2. AIのデータの読み込みを待つ
 3. プリセットで色味を整えて保存する
 
+![カラー化する前の白黒の猫の写真](/color-refine-app/catsample.jpg)
+*カラー化する前の白黒写真*
+
+![COLOR RE:FINEでカラーにした猫の写真](/color-refine-app/catsamplecolor.jpg)
+*COLOR RE:FINEでカラーにしたもの*
+
 元の写真が上書きされることはありません。カラーにした写真は、新しい画像として保存されます。
 
 <p class="postCta"><a href="/color-refine">COLOR RE:FINEを開く</a></p>

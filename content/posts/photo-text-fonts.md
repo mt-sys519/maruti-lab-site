@@ -30,6 +30,9 @@ image: /og/blog/photo-text-fonts.png
 - タップで大きく開き、左右のスワイプで次の書体へ
 - 大きく開いた画面で、文字を指で動かして置きたい場所で比べられる
 
+![PICLEAで、選んだ写真の上に書体が並んだ一覧](/blog/piclea-font-grid-tall.webp)
+*選んだ写真と打った文章で、書体がずらりと並びます*
+
 <p class="postCta"><a href="/piclea/">PICLEAを開く</a></p>
 
 ## 使い方は4つ、写真を選ぶ・書体を比べる・整える・保存する
@@ -38,6 +41,9 @@ image: /og/blog/photo-text-fonts.png
 2. 入れたい文字を打って、並んだ書体を見比べる
 3. 気に入った書体で、色や大きさ、位置を整える
 4. 保存する
+
+![PICLEAで書体を大きく開いた画面](/blog/piclea-font-sheet-tall.webp)
+*タップすると大きく開き、スワイプで次の書体へ移れます*
 
 気になる書体は★でお気に入りに入れておくと、あとで★だけを並べて比べられます。詳しい手順は[PICLEAの使い方](/piclea/guide/)にまとめてあります。
 

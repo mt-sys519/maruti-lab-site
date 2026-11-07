@@ -21,6 +21,9 @@ image: /og/blog/two-player-air-hockey.png
 
 **2台用意したり、同じアプリを入れたりする必要はありません。**
 
+![AIR HOCKEYの台の画面](/games/shots/airhockey.webp)
+*AIR HOCKEYの台。2人対戦では真上から見た台になります*
+
 <p class="postCta"><a href="/bit/airhockey">AIR HOCKEYで遊ぶ</a></p>
 
 ## 2人対戦はスマホとタブレットだけ、ゆったり遊ぶならタブレット

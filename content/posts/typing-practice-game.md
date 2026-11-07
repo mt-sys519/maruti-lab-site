@@ -28,6 +28,9 @@ image: /og/blog/typing-practice-game.png
 
 速く正確に打つほど画面の雨が強くなり、雨粒の音が重なっていきます。手が止まると雨は弱まります。**うまく打てているかどうかが、音と景色でわかります。**
 
+![INPUT RAINのゲーム画面](/games/shots/input-rain.webp)
+*落ちてくる日本語を、落ちきる前に打ち込みます*
+
 <p class="postCta"><a href="/bit/input-rain">INPUT RAINで遊ぶ</a></p>
 
 ## お題は4ジャンル、制限時間は20秒から180秒まで4段階
