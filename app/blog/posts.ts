@@ -57,6 +57,24 @@ const list = (value: string | undefined) =>
 
 marked.setOptions({ gfm: true, breaks: false });
 
+// A note with three or more sections gets a table of contents just above the
+// first one, so a reader who skims can see every answer before scrolling. The
+// headings are written to be read on their own; the list is only them, linked.
+function withContents(html: string): string {
+  const headings: string[] = [];
+  const marked = html.replace(/<h2>([\s\S]*?)<\/h2>/g, (_, inner: string) => {
+    headings.push(inner);
+    return `<h2 id="s${headings.length}">${inner}</h2>`;
+  });
+  if (headings.length < 3) return html;
+  const items = headings
+    .map((inner, i) => `<li><a href="#s${i + 1}">${inner.replace(/<[^>]+>/g, "")}</a></li>`)
+    .join("");
+  const toc = `<nav class="postToc" aria-label="目次"><p class="postTocTitle">目次</p><ol>${items}</ol></nav>`;
+  const first = marked.indexOf("<h2");
+  return marked.slice(0, first) + toc + marked.slice(first);
+}
+
 function build(path: string, source: string): Post {
   const { data, body } = parseFrontMatter(source);
   const slug = data.slug || path.split("/").pop()!.replace(/\.md$/, "");
@@ -79,7 +97,7 @@ function build(path: string, source: string): Post {
     draft: data.draft === "true",
     image: data.image || undefined,
     work: data.work || undefined,
-    html: marked.parse(body) as string,
+    html: withContents(marked.parse(body) as string),
     // Japanese runs about 500 characters a minute; round up so a short note
     // never claims to take zero.
     minutes: Math.max(1, Math.round(text.replace(/\s/g, "").length / 500)),
