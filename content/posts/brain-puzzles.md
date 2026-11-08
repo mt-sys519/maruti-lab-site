@@ -80,3 +80,5 @@ image: /og/blog/brain-puzzles.png
 <div class="kome"><p>子どもと競うと、大人が本気で負けることもある。</p></div>
 
 どれもインストール不要で、スマホのブラウザからすぐ遊べます。
+
+それぞれの解き方は、「[三角形の角度の求め方は4つのきまりで足りる](/blog/triangle-angle-rules)」「[□に入る数を求める逆算は、計算と反対の順にほどく](/blog/reverse-calculation)」「[数列の規則の見つけ方は「となりとの差」から](/blog/number-sequence-rules)」にまとめました。

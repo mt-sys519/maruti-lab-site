@@ -72,4 +72,6 @@ INPUT RAINは、最初の画面で入力方法を選べます。
 
 <div class="point"><p class="pointTitle">INPUT RAINで練習するなら</p><ul><li>まずは「日常」の初級から</li><li>スマホならフリック、キーボードがあればキーボード</li><li>20秒を毎日1回、慣れたら中級へ</li></ul></div>
 
+スマホのフリック入力を速くしたいなら、「[フリック入力を速くするなら「フリックのみ」にする](/blog/flick-input-faster)」も読んでみてください。
+
 <p class="postCta"><a href="/bit/input-rain">INPUT RAINでタイピングを練習する</a></p>

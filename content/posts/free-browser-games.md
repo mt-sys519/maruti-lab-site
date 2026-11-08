@@ -55,4 +55,6 @@ MarutiBitのゲームは、**どれもブラウザで開くだけで、無料・
 
 <div class="kome"><p>思ってもみなかったゲームが、案外その日の気分に合うこともある。</p></div>
 
+触るだけのおもちゃは「[触るだけで気がまぎれるデジタルフィジェットトイ](/blog/touch-only-stress-toys)」、MIX POPの遊び方は「[ドリンクバーで混ぜて遊んだあの感じをブラウザで遊べるMIX POP](/blog/drink-bar-mix)」で紹介しています。
+
 <p class="postCta"><a href="/bit">MarutiBitのゲームを見る</a></p>
