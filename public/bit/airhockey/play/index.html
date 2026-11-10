@@ -9,6 +9,8 @@
 <canvas id="view"></canvas>
 <button id="sound" class="sound" aria-pressed="true">♪ ON</button>
 <button id="pause" class="pause" aria-label="ポーズ" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1.5" width="2.8" height="9" rx=".6"/><rect x="7.2" y="1.5" width="2.8" height="9" rx=".6"/></svg></button>
+<!-- PRO: the speed of the player's shot, and under it the last seconds of the official rules' 7 -->
+<div class="hud"><span id="speed"></span><span id="clock"></span></div>
 <!-- call-outs: one per player; in 2P each sits in its player's half, turned to face them -->
 <div class="bslot s1"><div class="rot"><div id="banner" class="banner" aria-live="polite"></div></div></div>
 <div class="bslot s2"><div class="rot"><div id="banner2" class="banner"></div></div></div>
@@ -57,7 +59,7 @@
   <div class="modes pick" data-pick="games">
    <button data-v="1" class="on">1ゲーム</button><button data-v="4">公式ルール</button>
   </div>
-  <p class="note" style="margin:-4px 0 12px">公式ルール＝7点×4ゲーム先取</p>
+  <p class="note" style="margin:-4px 0 12px">公式ルール＝7点×4ゲーム先取、自陣のパックは7秒以内に打ち返す</p>
   <div class="levels"><button class="primary" data-start="pro">START</button></div>
   <button class="back" data-go="cpu">← もどる</button>
  </div>
@@ -88,6 +90,7 @@
   <p id="result-mode" class="rmode"></p>
   <p id="result-score" class="score"></p>
   <p id="result-sub" class="note" style="margin:-10px 0 14px" hidden></p>
+  <p id="result-speed" class="rspeed" hidden></p>
   <div class="levels">
    <button id="again" class="primary">もう一度</button>
    <button id="back">難易度を選ぶ</button>

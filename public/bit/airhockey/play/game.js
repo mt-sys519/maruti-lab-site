@@ -29,7 +29,8 @@ const LEVELS=[
   // NORMAL: now and then a smash, but it waits for the puck
   {speed:3.3,strike:3.8,reaction:0.11,aimErr:0.08,bank:0.2,smash:0.12,smashSpeed:6.5},
   // HARD: meant to be hard to beat - quick to read, counters fast shots, smashes often and near the limit
-  {speed:5.0,strike:5.4,reaction:0.05,aimErr:0.03,bank:0.45,counter:0.45,smash:0.4,smashSpeed:10},
+  // (read: it aims at the corner of the goal away from the player's mallet, not anywhere in the goal)
+  {speed:5.0,strike:5.4,reaction:0.05,aimErr:0.03,bank:0.45,counter:0.45,smash:0.4,smashSpeed:10,read:1},
   // watching only (CPU against CPU): HARD's shots, a slower guard so the points come
   {speed:3.6,strike:4.6,reaction:0.10,aimErr:0.04,bank:0.4,counter:0.5,smash:0.3,smashSpeed:9},
   // PRO STAGE (aiPro, on PRO's physics, where a shot is only as hard as its wind-up). windup: how far it backs off
@@ -818,6 +819,38 @@ function snd(key,v,x,kind){
   const t=performance.now();if(t-(lastSnd[key]||0)<45)return;lastSnd[key]=t;
   sound.hit(v,x,kind);tapeSound('hit',[v,x,kind]);
 }
+// PRO: the speed the player's swing sent the puck at, read out at the top of the screen for a moment, and the
+// match's fastest for the result. The table is ~2.2 m long (2 units): 1 unit/s is 3.96 km/h. Only a swing counts
+// (a mallet held still in front of an 85 km/h shot sends most of it back: that was not the player's)
+const KMH=3.96,speedEl=document.getElementById('speed'),clockEl=document.getElementById('clock');
+let topKmh=0,speedT=-9,speedShown=0;
+function showSpeed(s){
+  const k=Math.round(s*KMH);
+  if(k<15)return;
+  if(k>topKmh)topKmh=k;
+  // a puck pushed along is hit several times in a row: the readout keeps the fastest of them
+  if(gameTime-speedT<0.3&&k<=speedShown)return;
+  speedT=gameTime;speedShown=k;speedEl.textContent=k+' km/h';speedEl.classList.add('show');
+}
+// the official rules' 7 seconds: a puck that has come into a half has to be sent back over the center line
+// within 7 seconds, or it goes to the other side. (Without it a player ahead could sit on the puck for good.)
+// The player's last 3 seconds are counted down under the speed readout
+let holdSide=0,holdT=0;
+const sevenSec=()=>stage==='pro'&&bestOf>1&&!twoP;
+function holdClock(dt){
+  let text='';
+  if(mode==='play'&&sevenSec()){
+    const side=puck.z>=0?0:1;
+    if(side!==holdSide){holdSide=side;holdT=0}
+    holdT+=dt;
+    if(holdT>=7){
+      mode='goal';puck.live=false;puck.visible=false;
+      banner('7 SECONDS',1.1);sound.beep();
+      after(1.3,()=>serve(1-side));
+    }else if(side===0&&holdT>=4&&!DEMO)text=String(Math.ceil(7-holdT));
+  }
+  if(clockEl.textContent!==text)clockEl.textContent=text;
+}
 function capPuck(p){
   const s=Math.hypot(p.vx,p.vz);
   if(s>maxPuck){p.vx*=maxPuck/s;p.vz*=maxPuck/s}
@@ -854,6 +887,7 @@ function collideMallet(m,who,p){
     // a gentle touch nudges the puck; only a real swing gets the full bounce
     const e=eMin+(HIT_E-eMin)*clamp(-vn/eRamp,0,1);
     p.vx-=(1+e)*vn*nx;p.vz-=(1+e)*vn*nz;capPuck(p);
+    if(who===0&&accel&&!twoP&&!DEMO&&mvx*nx+mvz*nz>2.5)showSpeed(Math.hypot(p.vx,p.vz));
     // the physics is the same for both ends; how hard the CPU sends it is its level's
     const cap=who===1&&!twoP&&LEVELS[level].shotMax;
     if(cap){const s=Math.hypot(p.vx,p.vz);if(s>cap){p.vx*=cap/s;p.vz*=cap/s}}
@@ -960,8 +994,12 @@ function predictX(p,zLine){
   let u=(p.x+p.vx*t-lo)%(2*span);if(u<0)u+=2*span;if(u>span)u=2*span-u;
   return lo+u;
 }
-function pickAim(L){
-  let x=(Math.random()*2-1)*(GW-0.04)+(Math.random()+Math.random()-1)*L.aimErr*2;
+// ox: where the defender's mallet is. A level that reads it (HARD) shoots for the corner of the goal on the other
+// side of it; the others anywhere in the goal (aimed at random, a mallet left in the middle of the goal line
+// stopped most of HARD's shots: all its difficulty was its speed)
+function pickAim(L,ox){
+  const c=GW-PR-0.01,side=Math.abs(ox)<0.03?(Math.random()<0.5?-1:1):ox>0?-1:1;
+  let x=(L.read?side*c:(Math.random()*2-1)*(GW-0.04))+(Math.random()+Math.random()-1)*L.aimErr*2;
   if(Math.random()<L.bank){const s=Math.random()<0.5?-1:1;x=s*2*(HW-PR)-x}
   return x;
 }
@@ -996,7 +1034,7 @@ function aiStep(m,ai,flip,dt){
       // the watching level hits back instead of only blocking: close enough, it steps into the puck's path at full swing
       if(L.counter&&p.z-cpu.z<L.counter){const meet=home+0.14;tx=predictX(p,meet);tz=meet+0.1;spd=L.strike}
     }else{
-      if(ai.phase!=='approach'){ai.phase='approach';ai.t=1.5;ai.aimX=pickAim(L)}
+      if(ai.phase!=='approach'){ai.phase='approach';ai.t=1.5;ai.aimX=pickAim(L,(flip===1?me:cpu).x)}
       let dx=ai.aimX-p.x,dz=HL-p.z;const dl=Math.hypot(dx,dz);dx/=dl;dz/=dl;
       const back=PR+MR+0.03,bx=p.x-dx*back,bz=Math.max(-HL+MR,p.z-dz*back);
       spd=L.speed;
@@ -1147,6 +1185,7 @@ function putPuck(p,x,z,vx=0,vz=0){
 function serve(side){
   // the puck comes back on the side that conceded
   putPuck(puck,0,side===0?0.42:-0.42);
+  holdSide=side;holdT=0;
   ai.phase='guard';aiMe.phase='guard';ai.blocks=aiMe.blocks=0;
   sound.puckOut(0);
   mode='play';
@@ -1217,6 +1256,7 @@ function finish(){
     // official rules: the games, and the last game's points under them
     document.getElementById('result-score').textContent=bestOf>1?`${games[0]} - ${games[1]}`:`${score[0]} - ${score[1]}`;
     const sub=document.getElementById('result-sub');sub.hidden=bestOf<2;sub.textContent=`最終ゲーム ${score[0]} - ${score[1]}`;
+    const sp=document.getElementById('result-speed');sp.hidden=!pro||twoP||!topKmh;sp.textContent=`最高球速 ${topKmh} km/h`;
     document.getElementById('back').textContent=twoP?'メニューへ':'ステージを選ぶ';
     document.getElementById('title').hidden=twoP;
     document.getElementById('result').classList.remove('hidden');
@@ -1235,6 +1275,7 @@ function startGame(lv,two=false){
   for(const m of [meMesh,cpuMesh])m.scale.set(MR/MR0,1,MR/MR0);
   for(const m of [meShadow,cpuShadow])m.scale.set(MR/MR0,MR/MR0,1);
   maxPuck=pro?PRO.maxPuck:MAX_PUCK;eMin=pro?PRO.eMin:0.35;eRamp=pro?PRO.eRamp:3;accel=pro?PRO.accel:0;step=pro?PRO.step:STEP;
+  topKmh=0;speedEl.classList.remove('show');clockEl.textContent='';
   level=lv;score=[0,0];timers=[];multi=false;nextMulti=6;drawScore(0,0);
   tape.length=0;tapeEvents.length=0;replay=null;if(ending){ending=null;fit()}
   document.getElementById('menu').classList.add('hidden');
@@ -1271,7 +1312,8 @@ const resultCard=title=>twoP?(title==='BLUE WINS'?'2p-blue':'2p-yellow')
 document.getElementById('share').addEventListener('click',()=>{
   const title=document.getElementById('result-title').textContent;
   // a line each: the game, what was played (PRO's named, the result screen leaves it out), the result
-  const text=`MarutiBit「AIR HOCKEY」\n${stage==='pro'?'PRO STAGE・':''}${playedAs()}\n${title} ${document.getElementById('result-score').textContent.replace(/ /g,'')}`;
+  const text=`MarutiBit「AIR HOCKEY」\n${stage==='pro'?'PRO STAGE・':''}${playedAs()}\n${title} ${document.getElementById('result-score').textContent.replace(/ /g,'')}${document.getElementById('result-speed').hidden?'':`
+最高球速 ${topKmh}km/h`}`;
   const intent=`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(`https://marutilab.com/bit/airhockey?r=${resultCard(title)}`)}`;
   // as the site's XShareButton: no feature string (noopener, or noreferrer, makes window.open return null even
   // when the tab opened, and the fallback then took this page to the composer too). The page runs in the site's
@@ -1475,6 +1517,8 @@ function frame(now){
     else followHand(me,MR,HL-MR,dt);
     acc+=dt;
     while(acc>=step){physics(step);acc-=step}
+    holdClock(dt);
+    if(gameTime-speedT>1.2)speedEl.classList.remove('show');
   }
 
   let fastest=null,top=0;

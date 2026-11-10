@@ -60,7 +60,7 @@ export default function AirHockeyPage() {
         playLead={<>指（マウス）で<strong>マレットを動かして</strong>、パックを打ち返す。</>}
         playSub="動かしたまま当てると強く飛びます。PRO STAGEでは、大きく振りかぶるほど速い球に。音はゲーム画面の右上で切り替え。"
         rulesLead={<>相手のゴールに入れて、<strong>先に7点</strong>取ったほうの勝ち。</>}
-        rulesSub="15点先取では、合計6点ごとにパックが2つ（どちらかが10点を取ると3つ）同時に出ます。PRO STAGEの公式ルールは7点×4ゲーム先取です。"
+        rulesSub="15点先取では、合計6点ごとにパックが2つ（どちらかが10点を取ると3つ）同時に出ます。PRO STAGEの公式ルールは7点×4ゲーム先取で、自陣に来たパックを7秒以内に打ち返さないと相手のパックになります。"
         chips={[
           "ARCADE：EASY / NORMAL / HARD",
           "15点先取：途中でパックが増える",
