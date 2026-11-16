@@ -4,7 +4,7 @@ import "../hyperProp.css";
 import "../retro/retro.css";
 
 const title = "人力飛行機のペダル連打ゲーム｜HYPER PROP";
-const description = "人力飛行機をペダル連打で漕いで飛ぶゲーム。高台から機体を抱えて走り、飛び乗って、漕いで空へ。湖から砂漠、夜の街へと飛んでいく。無料、登録不要。";
+const description = "人力飛行機をペダル連打で漕いで飛ぶゲーム。高台から機体を抱えて走り、飛び乗って、漕いで空へ。湖から砂漠、夜の街へと飛んでいく。無料、登録不要。A human-powered flight game: drum the pedals and fly. Free, no sign-up.";
 
 // On test while it is played on real phones: kept out of search, the sitemap and
 // every shelf and nav (it is not in games.ts yet), so only the address reaches it.
@@ -17,11 +17,11 @@ export const metadata: Metadata = {
     description,
     url: "/bit/hyperprop",
     images: [
-      { url: "/og/bit/hyperprop.png", width: 1200, height: 630, alt: "MarutiBit RETRO 01 HYPER PROP" },
-      { url: "/og/bit/hyperprop-square.png", width: 630, height: 630, alt: "MarutiBit RETRO 01 HYPER PROP" },
+      { url: "/og/bit/hyperprop-v2.png", width: 1200, height: 630, alt: "MarutiBit RETRO 01 HYPER PROP" },
+      { url: "/og/bit/hyperprop-v2-square.png", width: 630, height: 630, alt: "MarutiBit RETRO 01 HYPER PROP" },
     ],
   },
-  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/hyperprop.png"] },
+  twitter: { card: "summary_large_image", title, description, images: ["/og/bit/hyperprop-v2.png"] },
 };
 
 // The first RETRO cartridge. The page is the series' own world rather than MarutiBit's:

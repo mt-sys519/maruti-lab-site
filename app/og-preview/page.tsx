@@ -171,11 +171,11 @@ const retroCopy: Record<string, { serial: string; name: string; kind: string; li
   hyperprop: {
     serial: "RETRO 01",
     name: "HYPER PROP",
-    kind: "人力飛行ゲーム",
-    line: "その指で、空を飛べ。",
+    kind: "HUMAN-POWERED FLIGHT",
+    line: "その指で、空を飛べ。 Pedal into the sky.",
     label: "/bit/retro/hyperprop-label.jpg",
     // no stage count: stages get added, and a picture cannot be updated with them
-    spec: [["ジャンル", "人力飛行アクション"], ["プレイ人数", "1人"], ["対応機種", "MB-01 RETRO"], ["価格", "FREE"]],
+    spec: [["GENRE", "FLIGHT ACTION"], ["PLAYERS", "1"], ["SYSTEM", "MB-01 RETRO"], ["PRICE", "FREE"]],
   },
 };
 
