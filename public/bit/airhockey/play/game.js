@@ -998,6 +998,32 @@ function physics(h){
 // epoch counts the serves and hand-overs: a stream packet from before the last of them is out of date
 let net=null,online=false,own=false,epoch=0,ghostSlow=false,wantAgain=[false,false];
 const remote={x:0,z:-HL+0.2},r4=v=>Math.round(v*1e4)/1e4;
+// The other player's mallet. Its positions come in unevenly (a network holds packets back and then lets several go
+// at once): shown as they came, the mallet stood still and then jumped. So each is stamped with the sender's clock
+// and they are played back a little behind, at the pace they were sent, the mallet moving between two of them.
+// clockOff: the sender's clock against ours, from the packet that got here fastest; late: how far behind that the
+// slowest of the recent ones was (it fades), which is how far behind the playback has to run to have them all
+const rbuf=[];let clockOff=null,late=0,playBack=30;
+function remoteSample(ts,x,z){
+  const now=performance.now(),d=now-ts;
+  // (the fastest so far, let creep up slowly so two clocks drifting apart can't strand it)
+  clockOff=clockOff===null||d<clockOff?d:clockOff+0.002;
+  late=Math.max(late*0.985,Math.min(d-clockOff,120));
+  rbuf.push({t:ts+clockOff,x,z});
+  if(rbuf.length>40)rbuf.shift();
+}
+function remoteMallet(dt){
+  if(!rbuf.length)return;
+  // one packet's gap (twice that through the relay, which sends half as often) and the lateness seen lately
+  const want=clamp((net&&net.how==='relay'?45:22)+late,22,140);
+  playBack+=(want-playBack)*Math.min(1,dt*3);
+  const t=performance.now()-playBack;
+  let i=rbuf.length-1;while(i>0&&rbuf[i].t>t)i--;
+  const a=rbuf[i],b=rbuf[i+1];
+  if(!b||t<=a.t){remote.x=a.x;remote.z=a.z;return}
+  const k=(t-a.t)/(b.t-a.t||1);
+  remote.x=a.x+(b.x-a.x)*k;remote.z=a.z+(b.z-a.z)*k;
+}
 function ghostStep(p,h){
   const k=Math.exp(-DAMP*h);p.vx*=k;p.vz*=k;
   p.x+=p.vx*h;p.z+=p.vz*h;
@@ -1011,13 +1037,13 @@ function give(){
 function netFrame(dt){
   const k=Math.exp(-dt/0.12);puck.ox=(puck.ox||0)*k;puck.oz=(puck.oz||0)*k;
   if(!net)return;
-  const o={t:'s',m:[r4(me.x),r4(me.z)],e:epoch};
+  const o={t:'s',m:[r4(me.x),r4(me.z)],e:epoch,ts:Math.round(performance.now()*10)/10};
   if(own&&mode==='play'&&puck.live)o.p=[r4(puck.x),r4(puck.z),r4(puck.vx),r4(puck.vz)];
   net.stream(o);
 }
 function netMsg(m){
   if(m.t==='s'){
-    remote.x=-m.m[0];remote.z=-m.m[1];
+    remoteSample(m.ts,-m.m[0],-m.m[1]);
     if(m.p&&!own&&m.e===epoch&&mode==='play'&&puck.live){
       const dx=puck.x+(puck.ox||0),dz=puck.z+(puck.oz||0);
       puck.x=-m.p[0];puck.z=-m.p[1];puck.vx=-m.p[2];puck.vz=-m.p[3];
@@ -1042,6 +1068,7 @@ function rematch(){
 }
 function leaveOnline(){
   if(net){net.close();net=null}
+  rbuf.length=0;clockOff=null;late=0;playBack=30;
   online=false;own=false;
 }
 
@@ -1582,7 +1609,7 @@ for(const type of ['touchstart','touchmove'])document.addEventListener(type,e=>{
 for(const type of ['gesturestart','gesturechange','gestureend'])document.addEventListener(type,e=>e.preventDefault());
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-if(location.search.includes('debug'))window.__ah={frame:t=>frame(t),get net(){return net},get own(){return own},get online(){return online},get epoch(){return epoch},remote,scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},set score(v){score=v},get mode(){return mode},get replay(){return replay},get ending(){return ending},set replayAll(v){replayAll=v},set squareBlocks(v){squareBlocks=v},get win(){return win},PRO,ai,aiMe,aiStep,aiPro,get level(){return level},set level(v){level=v}};
+if(location.search.includes('debug'))window.__ah={frame:t=>frame(t),rbuf,get playBack(){return playBack},get late(){return late},get net(){return net},get own(){return own},get online(){return online},get epoch(){return epoch},remote,scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},set score(v){score=v},get mode(){return mode},get replay(){return replay},get ending(){return ending},set replayAll(v){replayAll=v},set squareBlocks(v){squareBlocks=v},get win(){return win},PRO,ai,aiMe,aiStep,aiPro,get level(){return level},set level(v){level=v}};
 
 // ---------- loop ----------
 function animPuck(p,dt){
@@ -1623,7 +1650,7 @@ function frame(now){
   // paused: the table holds still (time, timers, physics and AI all wait), so it is drawn again only when the
   // window changes size (which clears the canvas)
   if(paused){last=now;if(redraw){renderer.render(scene,twoP?flat:camera);redraw=false}requestAnimationFrame(frame);return}
-  const dt=Math.min(0.05,(now-last)/1000);last=now;gameTime+=dt;
+  const dt=clamp((now-last)/1000,0,0.05);last=now;gameTime+=dt;
   const due=timers.filter(t=>t.t<=gameTime);
   if(due.length){timers=timers.filter(t=>t.t>gameTime);due.forEach(t=>t.fn())}
 
@@ -1635,7 +1662,7 @@ function frame(now){
       while(p.hist.length&&p.hist[0].t<gameTime-1)p.hist.shift();
     }
     // online: the far mallet is where the other player's last was
-    if(online){cpu.tx=remote.x;cpu.tz=remote.z;cpu.maxV=40}
+    if(online){remoteMallet(dt);cpu.tx=remote.x;cpu.tz=remote.z;cpu.maxV=40}
     else if(twoP)followHand(cpu,-HL+MR,-MR,dt);else(stage==='pro'?aiPro:aiStep)(cpu,ai,1,dt);
     // ?demo on PRO STAGE: the near CPU plays PRO's game too
     if(DEMO&&!twoP){(stage==='pro'?aiPro:aiStep)(me,aiMe,-1,dt);me.sx=me.tx;me.sz=me.tz}
