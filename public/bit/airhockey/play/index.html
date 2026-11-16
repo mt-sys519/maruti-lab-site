@@ -23,8 +23,10 @@
    <button data-go="cpu">CPU対戦</button>
   </div>
   <div id="vs-box" class="vs-box">
-   <button id="vs">2人対戦</button>
+   <button id="vs">1台で2人対戦</button>
    <p id="vs-hint" class="hint">1台を平らに置いて向かい合い、自分側の半分を指で操作</p>
+   <button id="online" class="vs2" data-go="online">オンライン対戦</button>
+   <p class="hint">URLを送った相手と、それぞれの画面で対戦</p>
    <button id="watch" class="watch">エキシビジョンマッチ</button>
    <p class="note">CPU同士の対戦を見る</p>
   </div>
@@ -63,8 +65,19 @@
   <div class="levels"><button class="primary" data-start="pro">START</button></div>
   <button class="back" data-go="cpu">← もどる</button>
  </div>
+ <div class="card" data-screen="online" hidden>
+  <h2>オンライン対戦</h2>
+  <p id="on-state" class="hint on-state">部屋を作って、URLを相手に送ると始まります</p>
+  <div class="levels">
+   <button id="on-make" class="primary">部屋を作る</button>
+   <button id="on-copy" hidden>URLをコピー</button>
+  </div>
+  <p id="on-url" class="note on-url" hidden></p>
+  <p class="note" style="margin:14px 0 0">7点先取</p>
+  <button class="back" id="on-back">← もどる</button>
+ </div>
  <div class="card" data-screen="two" hidden>
-  <h2>2人対戦</h2>
+  <h2>1台で2人対戦</h2>
   <div class="modes pick" data-pick="win">
    <div><button data-v="7" class="on">7点先取</button></div>
    <div><button data-v="15">15点先取</button><p class="note">途中でパックが増える</p></div>

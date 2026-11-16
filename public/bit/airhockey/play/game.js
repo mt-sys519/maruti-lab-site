@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/addons/loaders/GLTFLoader.js';
 import {Sound} from './audio.js';
+import {Net} from './net.js';
 
 // Table units: x across (-HW..HW), z along (-HL = CPU end, +HL = player end).
 const HW=0.5,HL=1.0,GW=0.16,PR0=0.049,MR0=0.056;
@@ -894,6 +895,7 @@ function collideMallet(m,who,p){
     const t=performance.now();
     if(!pinned(p)&&-vn>=0.12&&t-(lastSnd['m'+who]||0)>=45){
       lastSnd['m'+who]=t;sound.hit(-vn,p.x,'mallet');tapeSound('hit',[-vn,p.x,'mallet'],who);
+      if(online&&net)net.send({t:'hit',v:r4(-vn),x:r4(p.x)});
     }
     if(who===0&&-vn>0.8&&navigator.vibrate&&navigator.userActivation?.hasBeenActive)navigator.vibrate(Math.round(6+Math.min(1,-vn/5)*10));
   }
@@ -969,6 +971,8 @@ function physics(h){
   moveMallet(me,me.maxV,h,MR,HL-MR);
   moveMallet(cpu,cpu.maxV,h,-HL+MR,-MR);
   if(mode!=='play')return;
+  // online, the puck in the other half is the other side's: here it only runs on between their reports
+  if(online&&!own){if(puck.live)ghostStep(puck,ghostSlow?h*0.5:h);return}
   const live=livePucks();
   // move the pucks first, then resolve any overlap with a mallet by moving the PUCK out and bouncing it.
   // (Checking before the move let a puck sink into a resting mallet; separate() then shoved the mallet back,
@@ -978,6 +982,67 @@ function physics(h){
   for(const p of live)if(p.live){collideMallet(me,0,p);collideMallet(cpu,1,p);if(railPuck(p))p.pinT=gameTime}
   // only a puck pinned against the rail is left overlapping: then the mallet gives way
   for(const p of live)if(p.live){separate(me,MR,HL-MR,p);separate(cpu,-HL+MR,-MR,p)}
+  // online: over the center line and going away, it is the other side's from here
+  if(online&&net&&puck.live&&puck.z<-0.02&&puck.vz<0)give();
+}
+
+// ---------- online ----------
+// Two players, each at the near end of their own screen (the other's table is this one turned half round: x and z
+// change sign). The puck is simulated by one side at a time, the side whose half it is in (own): there a hit is
+// as immediate as against the CPU, and a goal is judged by the one defending it, on what they saw. Past the center
+// line it is handed over (give) with the reliable channel; the receiver takes it as it comes, without guessing
+// ahead, so nothing jumps there. The side without the puck shows what the owner streams, a little late, and
+// between two of those lets it run on by itself (ghostStep: walls only). Just after giving it away there is no
+// stream yet (it takes a round trip to come): the puck runs on at half speed (ghostSlow), and what it is ahead by
+// when the stream picks up is let out smoothly (ox, oz), which reads as the puck easing a moment past the line.
+// epoch counts the serves and hand-overs: a stream packet from before the last of them is out of date
+let net=null,online=false,own=false,epoch=0,ghostSlow=false,wantAgain=[false,false];
+const remote={x:0,z:-HL+0.2},r4=v=>Math.round(v*1e4)/1e4;
+function ghostStep(p,h){
+  const k=Math.exp(-DAMP*h);p.vx*=k;p.vz*=k;
+  p.x+=p.vx*h;p.z+=p.vz*h;
+  railPuck(p);
+  const gz=HL+PR;if(Math.abs(p.z)>gz){p.z=Math.sign(p.z)*gz;p.vz=0}
+}
+function give(){
+  own=false;ghostSlow=true;epoch++;
+  net.send({t:'give',e:epoch,p:[puck.x,puck.z,puck.vx,puck.vz]});
+}
+function netFrame(dt){
+  const k=Math.exp(-dt/0.12);puck.ox=(puck.ox||0)*k;puck.oz=(puck.oz||0)*k;
+  if(!net)return;
+  const o={t:'s',m:[r4(me.x),r4(me.z)],e:epoch};
+  if(own&&mode==='play'&&puck.live)o.p=[r4(puck.x),r4(puck.z),r4(puck.vx),r4(puck.vz)];
+  net.stream(o);
+}
+function netMsg(m){
+  if(m.t==='s'){
+    remote.x=-m.m[0];remote.z=-m.m[1];
+    if(m.p&&!own&&m.e===epoch&&mode==='play'&&puck.live){
+      const dx=puck.x+(puck.ox||0),dz=puck.z+(puck.oz||0);
+      puck.x=-m.p[0];puck.z=-m.p[1];puck.vx=-m.p[2];puck.vz=-m.p[3];
+      if(ghostSlow){ghostSlow=false;puck.ox=dx-puck.x;puck.oz=dz-puck.z}
+    }
+  }
+  else if(m.t==='give'){
+    epoch=m.e;own=true;ghostSlow=false;
+    Object.assign(puck,{x:-m.p[0],z:-m.p[1],vx:-m.p[2],vz:-m.p[3],ox:0,oz:0});
+  }
+  else if(m.t==='serve'){serve(1);epoch=m.e}
+  else if(m.t==='goal'){
+    if(puck.live){Object.assign(puck,{x:-m.x,z:-(HL+PR),vx:0,vz:-m.v,ox:0,oz:0});goal(0,puck)}
+  }
+  else if(m.t==='hit')sound.hit(m.v,-m.x,'mallet');
+  else if(m.t==='start'){online=true;win=7;startGame(1)}
+  else if(m.t==='again'){wantAgain[1]=true;rematch()}
+}
+// both have to ask for another match; the one who made the room starts it
+function rematch(){
+  if(wantAgain[0]&&wantAgain[1]&&net&&net.role===0){net.send({t:'start'});startGame(1)}
+}
+function leaveOnline(){
+  if(net){net.close();net=null}
+  online=false;own=false;
 }
 
 // ---------- CPU ----------
@@ -1179,13 +1244,15 @@ function placeMallets(){
   if(twoP)Object.assign(cpu,{sx:0,sz:-HL+0.2});else{delete cpu.sx;delete cpu.sz}
 }
 function putPuck(p,x,z,vx=0,vz=0){
-  Object.assign(p,{x,z,vx,vz,y:0.06,tilt:0,shade:1,live:true,visible:true,anim:{kind:'out',t:0}});
+  Object.assign(p,{x,z,vx,vz,y:0.06,tilt:0,shade:1,live:true,visible:true,anim:{kind:'out',t:0},ox:0,oz:0});
   p.hist.length=0;
 }
 function serve(side){
   // the puck comes back on the side that conceded
   putPuck(puck,0,side===0?0.42:-0.42);
   holdSide=side;holdT=0;
+  // online: the side it is served to has it, and tells the other
+  if(online){own=side===0;ghostSlow=false;if(own&&net){epoch++;net.send({t:'serve',e:epoch})}}
   ai.phase='guard';aiMe.phase='guard';ai.blocks=aiMe.blocks=0;
   sound.puckOut(0);
   mode='play';
@@ -1206,6 +1273,8 @@ function serveMulti(){
 }
 function goal(scorer,p){
   const s=scorer===0?-1:1;
+  // online: the side that has the puck (the one scored on) is the one that saw it go in
+  if(online&&own&&net)net.send({t:'goal',x:r4(p.x),v:r4(Math.hypot(p.vx,p.vz))});
   p.live=false;
   p.anim={kind:'drop',t:0,s};
   sound.goal(p.x,Math.hypot(p.vx,p.vz));tapeSound('goal',[p.x,Math.hypot(p.vx,p.vz)]);
@@ -1226,6 +1295,8 @@ function goal(scorer,p){
   if(multi){multi=false;sound.bgmStart('groove')}
   const next=()=>{
     if(over)gameOver(scorer);
+    // online: the side scored on serves (and its serve tells the other)
+    else if(online){if(scorer===1)serve(0)}
     else if(win>9&&score[0]+score[1]>=nextMulti){nextMulti+=6;serveMulti()}
     else serve(scorer===0?1:0);
   };
@@ -1257,8 +1328,9 @@ function finish(){
     document.getElementById('result-score').textContent=bestOf>1?`${games[0]} - ${games[1]}`:`${score[0]} - ${score[1]}`;
     const sub=document.getElementById('result-sub');sub.hidden=bestOf<2;sub.textContent=`最終ゲーム ${score[0]} - ${score[1]}`;
     const sp=document.getElementById('result-speed');sp.hidden=!pro||twoP||!topKmh;sp.textContent=`最高球速 ${topKmh} km/h`;
-    document.getElementById('back').textContent=twoP?'メニューへ':'ステージを選ぶ';
-    document.getElementById('title').hidden=twoP;
+    document.getElementById('back').textContent=twoP||online?'メニューへ':'ステージを選ぶ';
+    document.getElementById('title').hidden=twoP||online;
+    document.getElementById('again').textContent='もう一度';
     document.getElementById('result').classList.remove('hidden');
   });
 }
@@ -1275,6 +1347,7 @@ function startGame(lv,two=false){
   for(const m of [meMesh,cpuMesh])m.scale.set(MR/MR0,1,MR/MR0);
   for(const m of [meShadow,cpuShadow])m.scale.set(MR/MR0,MR/MR0,1);
   maxPuck=pro?PRO.maxPuck:MAX_PUCK;eMin=pro?PRO.eMin:0.35;eRamp=pro?PRO.eRamp:3;accel=pro?PRO.accel:0;step=pro?PRO.step:STEP;
+  wantAgain=[false,false];
   topKmh=0;speedEl.classList.remove('show');clockEl.textContent='';
   level=lv;score=[0,0];timers=[];multi=false;nextMulti=6;drawScore(0,0);
   tape.length=0;tapeEvents.length=0;replay=null;if(ending){ending=null;fit()}
@@ -1286,7 +1359,7 @@ function startGame(lv,two=false){
   sound.bgmStop();sound.coin();
   // ピッ・ピッ・ピッ・ピーン
   ['3','2','1'].forEach((n,i)=>after(0.9+i*0.42,()=>{banner(n,0.36,true);sound.count(i)}));
-  after(0.9+3*0.42,()=>{banner('GO!',0.5,true);sound.count(3);sound.bgmStart(pro?'pro':'groove');serve(0)});
+  after(0.9+3*0.42,()=>{banner('GO!',0.5,true);sound.count(3);sound.bgmStart(pro?'pro':'groove');if(!online||net&&net.role===0)serve(0)});
 }
 
 // the menu: one screen at a time. data-go opens a screen, a data-pick row keeps one choice per screen,
@@ -1303,9 +1376,16 @@ for(const b of document.querySelectorAll('#menu [data-start]'))b.addEventListene
   if(stage==='pro')bestOf=picked('pro','games');else win=picked('arcade','win');
   startGame(picked(stage,'level'));
 });
-document.getElementById('again').addEventListener('click',()=>startGame(level,twoP));
+document.getElementById('again').addEventListener('click',()=>{
+  if(online){
+    if(!net||wantAgain[0])return;
+    wantAgain[0]=true;net.send({t:'again'});
+    document.getElementById('again').textContent='相手を待っています…';rematch();return;
+  }
+  startGame(level,twoP);
+});
 // the result says what was played: the level (or 2P) and the points to win, or PRO's rules
-const playedAs=()=>stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
+const playedAs=()=>online?'オンライン対戦・7点先取':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'1台で2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
 // the shared page's ?r= picks the card X shows under the post (worker/index.ts): the stage, the level and who won
 const resultCard=title=>twoP?(title==='BLUE WINS'?'2p-blue':'2p-yellow')
   :`${stage==='pro'?'pro':'arcade'}-${LEVEL_NAMES[level].toLowerCase()}-${title==='YOU WIN'?'win':'lose'}`;
@@ -1322,12 +1402,14 @@ document.getElementById('share').addEventListener('click',()=>{
   if(w)w.opener=null;else try{top.location.href=intent}catch{location.href=intent}
 });
 document.getElementById('back').addEventListener('click',()=>{
+  if(online){toMenu();return}
   document.getElementById('result').classList.add('hidden');
   document.getElementById('menu').classList.remove('hidden');showScreen(twoP?'top':stage);
   mode='menu';twoP=false;document.body.classList.remove('two');
 });
 function toMenu(){
   setPaused(false);pauseBtn.hidden=true;
+  leaveOnline();resetOnline();if(stage==='online')stage='arcade';
   timers=[];mode='menu';sound.bgmStop();DEMO=false;
   replay=null;if(ending){ending=null;fit()}
   for(const p of pucks){p.live=false;p.visible=false;p.anim=null}
@@ -1338,17 +1420,58 @@ function toMenu(){
 // 2P needs two fingers at once: elsewhere the button stays in the menu, greyed out
 if(navigator.maxTouchPoints<2){
   document.getElementById('vs').disabled=true;
-  document.getElementById('vs-hint').textContent='2人対戦はスマホ・タブレットで遊べます';
+  document.getElementById('vs-hint').textContent='1台で2人対戦はスマホ・タブレットで遊べます';
 }
 document.getElementById('vs').addEventListener('click',()=>showScreen('two'));
 // the exhibition: both sides at the watching level (NORMAL's rallies were too tame, HARD's guard let almost
 // nothing in). Still on ARCADE's table: ELITE against ELITE once PRO's CPU can play its own physics
 document.getElementById('watch').addEventListener('click',()=>{DEMO=true;stage='watch';win=7;startGame(3)});
+
+// online: a room is its code. The one who makes it gets a link to send; whoever opens the link (?room=) comes
+// straight in, and the match starts as soon as the two are connected. The room's server is a Worker of its own
+// (room/): locally `wrangler dev` on 8787, or ?roomserver=
+const Q=new URLSearchParams(location.search);
+// on the site the game sits in an iframe: the link to send is the page's, and whoever opens it has ?room= on the
+// page, not on the frame
+const pageUrl=()=>{try{return new URL(top.location.href)}catch{return new URL(location.href)}};
+const ROOM_CODE=Q.get('room')||pageUrl().searchParams.get('room')||'';
+const ROOM_SERVER=Q.get('roomserver')||(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'ws://localhost:8787':'wss://airhockey-room.mt-kiryu.workers.dev');
+const onState=document.getElementById('on-state'),onMake=document.getElementById('on-make'),onCopy=document.getElementById('on-copy'),onUrl=document.getElementById('on-url');
+const ON_HINT='部屋を作って、URLを相手に送ると始まります';
+const ON_STATE={waiting:'相手を待っています…',joining:'相手を待っています…',connecting:'つないでいます…'};
+const ON_WHY={full:'この部屋は満員です',busy:'いまは混んでいて、つなげませんでした',left:'相手が退出しました',lost:'相手との接続が切れました',closed:'部屋につながりませんでした',error:'部屋につながりませんでした'};
+function resetOnline(){
+  onState.textContent=ON_HINT;onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;onCopy.textContent='URLをコピー';
+}
+function joinRoom(code){
+  leaveOnline();stage='online';
+  net=new Net(`${ROOM_SERVER}/room/${code}`,{
+    state:s=>{onState.textContent=ON_STATE[s]||''},
+    // connected: the one who made the room starts the match
+    ready:role=>{online=true;win=7;if(role===0){net.send({t:'start'});startGame(1)}},
+    msg:netMsg,
+    left:why=>{net=null;toMenu();showScreen('online');onState.textContent=ON_WHY[why]||ON_WHY.lost},
+  },{relayOnly:Q.has('relay')});
+}
+onMake.addEventListener('click',()=>{
+  sound.unlock();
+  const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',code=Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>A[v%A.length]).join('');
+  const u=pageUrl();u.searchParams.set('room',code);
+  onUrl.textContent=u.href;onUrl.hidden=false;onCopy.hidden=false;onMake.hidden=true;
+  joinRoom(code);
+});
+onCopy.addEventListener('click',async()=>{
+  try{await navigator.clipboard.writeText(onUrl.textContent);onCopy.textContent='コピーしました'}catch{onCopy.textContent='下のURLを長押しでコピー'}
+});
+document.getElementById('on-back').addEventListener('click',()=>{leaveOnline();resetOnline();showScreen('top')});
+if(/^[A-Z0-9]{4,8}$/.test(ROOM_CODE)){showScreen('online');onMake.hidden=true;onState.textContent=ON_STATE.connecting;joinRoom(ROOM_CODE)}
 // pause (every mode, top left, opposite the sound button). The audio context is suspended with it, so the music,
 // the blower and the glide all stop where they are
 let paused=false;
 const pauseBtn=document.getElementById('pause'),pauseMenu=document.getElementById('pausemenu');
 function setPaused(on){
+  // online the match can't be held for one side: the card (to leave by) opens over a table that plays on
+  if(online){pauseMenu.classList.toggle('hidden',!on);pauseBtn.style.visibility=on?'hidden':'';return}
   paused=on;pauseMenu.classList.toggle('hidden',!on);pauseBtn.style.visibility=on?'hidden':'';
   if(on){if(sound.ctx)sound.ctx.suspend().catch(()=>{})}else if(sound.ctx)sound.unlock();
 }
@@ -1459,7 +1582,7 @@ for(const type of ['touchstart','touchmove'])document.addEventListener(type,e=>{
 for(const type of ['gesturestart','gesturechange','gestureend'])document.addEventListener(type,e=>e.preventDefault());
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-if(location.search.includes('debug'))window.__ah={scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},set score(v){score=v},get mode(){return mode},get replay(){return replay},get ending(){return ending},set replayAll(v){replayAll=v},set squareBlocks(v){squareBlocks=v},get win(){return win},PRO,ai,aiMe,aiStep,aiPro,get level(){return level},set level(v){level=v}};
+if(location.search.includes('debug'))window.__ah={frame:t=>frame(t),get net(){return net},get own(){return own},get online(){return online},get epoch(){return epoch},remote,scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},set score(v){score=v},get mode(){return mode},get replay(){return replay},get ending(){return ending},set replayAll(v){replayAll=v},set squareBlocks(v){squareBlocks=v},get win(){return win},PRO,ai,aiMe,aiStep,aiPro,get level(){return level},set level(v){level=v}};
 
 // ---------- loop ----------
 function animPuck(p,dt){
@@ -1511,13 +1634,16 @@ function frame(now){
       p.hist.push({t:gameTime,x:p.x,z:p.z,vx:p.vx,vz:p.vz});
       while(p.hist.length&&p.hist[0].t<gameTime-1)p.hist.shift();
     }
-    if(twoP)followHand(cpu,-HL+MR,-MR,dt);else(stage==='pro'?aiPro:aiStep)(cpu,ai,1,dt);
+    // online: the far mallet is where the other player's last was
+    if(online){cpu.tx=remote.x;cpu.tz=remote.z;cpu.maxV=40}
+    else if(twoP)followHand(cpu,-HL+MR,-MR,dt);else(stage==='pro'?aiPro:aiStep)(cpu,ai,1,dt);
     // ?demo on PRO STAGE: the near CPU plays PRO's game too
     if(DEMO&&!twoP){(stage==='pro'?aiPro:aiStep)(me,aiMe,-1,dt);me.sx=me.tx;me.sz=me.tz}
     else followHand(me,MR,HL-MR,dt);
     acc+=dt;
     while(acc>=step){physics(step);acc-=step}
     holdClock(dt);
+    if(online)netFrame(dt);
     if(gameTime-speedT>1.2)speedEl.classList.remove('show');
   }
 
@@ -1527,10 +1653,11 @@ function frame(now){
     const v=p.live&&mode==='play'?Math.hypot(p.vx,p.vz):0;
     if(v>top){top=v;fastest=p}
     p.mesh.visible=p.visible;
-    p.mesh.position.set(p.x,0.0006+p.y,p.z);
+    const dx=p.x+(p.ox||0),dz=p.z+(p.oz||0);
+    p.mesh.position.set(dx,0.0006+p.y,dz);
     p.mesh.rotation.x=p.tilt||0;
     p.mesh.material.color.copy(PUCK_RED).multiplyScalar(p.shade??1);
-    p.shadow.position.set(p.x+0.004,0.0008,p.z+0.003);
+    p.shadow.position.set(dx+0.004,0.0008,dz+0.003);
     p.shadow.visible=p.visible&&p.y>=0;
   }
   sound.glide(top,fastest?fastest.x:0);

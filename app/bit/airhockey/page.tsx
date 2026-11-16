@@ -11,7 +11,7 @@ import { PrAds } from "../../PrAds";
 
 const title = "ブラウザで遊べるエアホッケー｜AIR HOCKEY";
 const description =
-  "カンッと打って、スーッと滑る。ゲームセンターのエアホッケーをブラウザで。途中でパックが増える15点先取、本物の球速と公式ルールで戦うPRO STAGE、スマホやタブレット1台での2人対戦も。無料、登録不要。";
+  "カンッと打って、スーッと滑る。ゲームセンターのエアホッケーをブラウザで。途中でパックが増える15点先取、本物の球速と公式ルールで戦うPRO STAGE、スマホやタブレット1台での2人対戦も、URLを送るだけのオンライン対戦も。無料、登録不要。";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -65,7 +65,8 @@ export default function AirHockeyPage() {
           "ARCADE：EASY / NORMAL / HARD",
           "15点先取：途中でパックが増える",
           "PRO STAGE：ELITE / CHAMPION / LEGEND",
-          "2人対戦：スマホ・タブレットを平らに置いて向かい合う",
+          "1台で2人対戦：スマホ・タブレットを平らに置いて向かい合う",
+          "オンライン対戦：URLを送った相手と、それぞれの画面で対戦",
           "エキシビジョンマッチ：CPU同士の対戦を見る",
         ]}
         note={<><strong>速いパックを目で追い続けるので、目が疲れやすいゲームです。</strong>長い時間続けて遊ばず、ときどき目を休めてください。</>}
