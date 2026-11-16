@@ -19,11 +19,17 @@ export class Net{
   }
   wsSend(o){if(this.ws.readyState===1)this.ws.send(JSON.stringify(o))}
   room(m){
-    if(m.t==='role'){this.role=m.role;this.on.state?.(m.role===0?'waiting':'joining')}
+    if(m.t==='role'){this.role=m.role;this.on.state?.(m.role===0?'waiting':'joining');this.on.joined?.()}
     else if(m.t==='full')this.end('full');
     else if(m.t==='deny')this.end('busy');
     else if(m.t==='peer'){
-      if(!m.on){this.end('left');return}
+      if(!m.on){
+        // before the match the other may come back (a phone that went to another app to send the link drops its
+        // socket, and rejoins the same room): this side goes back to waiting
+        if(this.how){this.end('left');return}
+        clearTimeout(this.timer);try{this.pc?.close()}catch{}this.pc=this.r=this.u=null;
+        this.on.state?.('waiting');return;
+      }
       this.on.state?.('connecting');
       if(this.role===0){
         if(this.relayOnly)this.toRelay();

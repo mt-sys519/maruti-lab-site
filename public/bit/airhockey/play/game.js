@@ -46,7 +46,7 @@ const LEVELS=[
 ];
 const LEVEL_NAMES=['EASY','NORMAL','HARD','WATCH','ELITE','CHAMPION','LEGEND'];
 // stage: 'arcade' | 'pro' | 'two' | 'watch'. PRO's rules: 7 points a game, and 1 game or the official best of 7
-// (bestOf: the games to win, 4); games: the games each side has won
+// (bestOf: the games to win, 4; online play: 2); games: the games each side has won
 let stage='arcade',bestOf=1,games=[0,0];
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 // ?v=b: the real-machine structure (center overhead score, wide one-piece rail, tapered cabinet) in our own plain red
@@ -1336,7 +1336,8 @@ function gameOver(scorer){
   // official rules: the games so far, then the next game from 0-0, served by the side that lost this one
   banner(`${games[0]} - ${games[1]}`,1.1,true);
   after(1.3,()=>{banner(`GAME ${games[0]+games[1]+1}`,1,true);score=[0,0];drawScore(0,0)});
-  after(2.5,()=>serve(scorer===0?1:0));
+  // (online: the side that lost the game serves, and its serve tells the other)
+  after(2.5,()=>{if(online){if(scorer===1)serve(0)}else serve(scorer===0?1:0)});
 }
 function finish(){
   mode='over';for(const p of pucks)p.visible=false;
@@ -1367,7 +1368,7 @@ function startGame(lv,two=false){
   setPaused(false);pauseBtn.hidden=false;
   for(const m of paintMats)m.envMapIntensity=two?PAINT_GLOSS.flat:1;
   fingers.clear();owner[0]=owner[1]=null;
-  const pro=stage==='pro';if(pro)win=7;else bestOf=1;games=[0,0];setLook(pro?'pro':'arcade');
+  const pro=stage==='pro';if(pro)win=7;else bestOf=online?2:1;games=[0,0];setLook(pro?'pro':'arcade');
   // the meshes were built at ARCADE's size: PRO's are the same shapes, narrowed (heights unchanged)
   PR=pro?PRO.puckR:PR0;MR=pro?PRO.malletR:MR0;
   for(const p of pucks){p.mesh.scale.set(PR/PR0,1,PR/PR0);p.shadow.scale.set(PR/PR0,PR/PR0,1)}
@@ -1412,7 +1413,7 @@ document.getElementById('again').addEventListener('click',()=>{
   startGame(level,twoP);
 });
 // the result says what was played: the level (or 2P) and the points to win, or PRO's rules
-const playedAs=()=>online?'オンライン対戦・7点先取':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'1台で2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
+const playedAs=()=>online?'オンライン対戦・7点×2ゲーム先取':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'1台で2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
 // the shared page's ?r= picks the card X shows under the post (worker/index.ts): the stage, the level and who won
 const resultCard=title=>twoP?(title==='BLUE WINS'?'2p-blue':'2p-yellow')
   :`${stage==='pro'?'pro':'arcade'}-${LEVEL_NAMES[level].toLowerCase()}-${title==='YOU WIN'?'win':'lose'}`;
@@ -1467,19 +1468,45 @@ const onState=document.getElementById('on-state'),onMake=document.getElementById
 const ON_HINT='部屋を作って、URLを相手に送ると始まります';
 const ON_STATE={waiting:'相手を待っています…',joining:'相手を待っています…',connecting:'つないでいます…'};
 const ON_WHY={full:'この部屋は満員です',busy:'いまは混んでいて、つなげませんでした',left:'相手が退出しました',lost:'相手との接続が切れました',closed:'部屋につながりませんでした',error:'部屋につながりませんでした'};
+// a phone hands the link to its share sheet (LINE and the rest); elsewhere the button copies it
+const CAN_SHARE=!!navigator.share&&navigator.maxTouchPoints>0,ON_COPY=CAN_SHARE?'URLを送る':'URLをコピー';
+// the room this page is in before the match starts. Going to another app to send the link drops the room's
+// socket on a phone: while waiting, a dropped socket is joined again (the same room, a few tries), not reported
+let roomCode='',roomIn=false,roomTries=0,roomTimer=0;
+const ROOM_TRIES=6;
+onCopy.textContent=ON_COPY;
 function resetOnline(){
-  onState.textContent=ON_HINT;onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;onCopy.textContent='URLをコピー';
+  roomCode='';roomIn=false;roomTries=0;clearTimeout(roomTimer);
+  onState.textContent=ON_HINT;onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;onCopy.textContent=ON_COPY;
 }
 function joinRoom(code){
-  leaveOnline();stage='online';
+  leaveOnline();stage='online';clearTimeout(roomTimer);roomCode=code;
   net=new Net(`${ROOM_SERVER}/room/${code}`,{
     state:s=>{onState.textContent=ON_STATE[s]||''},
+    joined:()=>{roomIn=true;roomTries=0},
     // connected: the one who made the room starts the match
     ready:role=>{online=true;win=7;if(role===0){net.send({t:'start'});startGame(1)}},
     msg:netMsg,
-    left:why=>{net=null;toMenu();showScreen('online');onState.textContent=ON_WHY[why]||ON_WHY.lost},
+    left:why=>{
+      net=null;
+      // 'full' on the way back in: the room hasn't seen the old socket go yet
+      const again=!online&&roomCode&&(why==='closed'||why==='error'||(why==='full'&&roomIn));
+      if(again&&roomTries<ROOM_TRIES){
+        // hidden: timers barely run, so the page joins again when it comes back (below)
+        if(!document.hidden)roomTimer=setTimeout(()=>joinRoom(roomCode),Math.min(5000,400+1000*roomTries++));
+        return;
+      }
+      toMenu();showScreen('online');onState.textContent=ON_WHY[why]||ON_WHY.lost;
+    },
   },{relayOnly:Q.has('relay')});
 }
+// back from another app: if the room's socket went meanwhile, join again at once
+function rejoinRoom(){
+  if(document.hidden||online||!roomCode)return;
+  if(!net||net.ws.readyState>1){roomTries=0;joinRoom(roomCode)}
+}
+document.addEventListener('visibilitychange',rejoinRoom);
+addEventListener('pageshow',rejoinRoom);addEventListener('online',rejoinRoom);
 onMake.addEventListener('click',()=>{
   sound.unlock();
   const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',code=Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>A[v%A.length]).join('');
@@ -1488,7 +1515,12 @@ onMake.addEventListener('click',()=>{
   joinRoom(code);
 });
 onCopy.addEventListener('click',async()=>{
-  try{await navigator.clipboard.writeText(onUrl.textContent);onCopy.textContent='コピーしました'}catch{onCopy.textContent='下のURLを長押しでコピー'}
+  const url=onUrl.textContent;
+  if(CAN_SHARE){
+    try{await navigator.share({title:'AIR HOCKEY',url});return}
+    catch(e){if(e?.name==='AbortError')return}
+  }
+  try{await navigator.clipboard.writeText(url);onCopy.textContent='コピーしました'}catch{onCopy.textContent='下のURLを長押しでコピー'}
 });
 document.getElementById('on-back').addEventListener('click',()=>{leaveOnline();resetOnline();showScreen('top')});
 if(/^[A-Z0-9]{4,8}$/.test(ROOM_CODE)){showScreen('online');onMake.hidden=true;onState.textContent=ON_STATE.connecting;joinRoom(ROOM_CODE)}
@@ -1609,7 +1641,7 @@ for(const type of ['touchstart','touchmove'])document.addEventListener(type,e=>{
 for(const type of ['gesturestart','gesturechange','gestureend'])document.addEventListener(type,e=>e.preventDefault());
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-if(location.search.includes('debug'))window.__ah={frame:t=>frame(t),rbuf,get playBack(){return playBack},get late(){return late},get net(){return net},get own(){return own},get online(){return online},get epoch(){return epoch},remote,scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},set score(v){score=v},get mode(){return mode},get replay(){return replay},get ending(){return ending},set replayAll(v){replayAll=v},set squareBlocks(v){squareBlocks=v},get win(){return win},PRO,ai,aiMe,aiStep,aiPro,get level(){return level},set level(v){level=v}};
+if(location.search.includes('debug'))window.__ah={frame:t=>frame(t),rbuf,get playBack(){return playBack},get late(){return late},get net(){return net},get own(){return own},get online(){return online},get epoch(){return epoch},remote,scene,renderer,THREE,puck,pucks,me,cpu,goal,camera,serveMulti,sound,get score(){return score},get games(){return games},set score(v){score=v},get mode(){return mode},get replay(){return replay},get ending(){return ending},set replayAll(v){replayAll=v},set squareBlocks(v){squareBlocks=v},get win(){return win},PRO,ai,aiMe,aiStep,aiPro,get level(){return level},set level(v){level=v}};
 
 // ---------- loop ----------
 function animPuck(p,dt){
