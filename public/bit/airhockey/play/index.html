@@ -16,100 +16,84 @@
 <div class="bslot s2"><div class="rot"><div id="banner2" class="banner"></div></div></div>
 
 <div id="menu" class="overlay">
- <!-- one screen at a time: top, then a stage (CPU), then its level and points, then START -->
- <div class="card" data-screen="top">
-  <h1>AIR HOCKEY</h1>
-  <div class="levels" style="margin-top:20px">
-   <button data-go="cpu">CPU対戦</button>
-  </div>
-  <div id="vs-box" class="vs-box">
-   <button id="vs">1台で2人対戦</button>
-   <p id="vs-hint" class="hint">1台を平らに置いて向かい合い、自分側の半分を指で操作</p>
-   <button id="online" class="vs2" data-go="online">オンライン対戦</button>
-   <p class="hint">URLを送った相手と、それぞれの画面で対戦</p>
-   <button id="watch" class="watch">エキシビジョンマッチ</button>
-   <p class="note">CPU同士の対戦を見る</p>
+ <!-- one screen at a time, all in the same box: top, then a stage (CPU), then its level and points, then START.
+      A tile goes to another screen; a seg is a choice made here, with one line under it for the chosen part -->
+ <div class="panel" data-screen="top">
+  <h1 class="logo">AIR HOCKEY</h1>
+  <div class="tiles">
+   <button class="tile pri" data-go="cpu"><svg class="ic" viewBox="0 0 40 48" aria-hidden="true"><rect x="9" y="3" width="22" height="42" rx="4.5" fill="#0a0b10" stroke="#c9c4b6" stroke-width="1.6"/><line x1="12" x2="28" y1="24" y2="24" stroke="#5b606c"/><circle cx="20" cy="36" r="4.2" fill="#3d7df0"/><rect x="15.5" y="8" width="9" height="9" rx="1.6" fill="none" stroke="#8a8f9c" stroke-width="1.6"/><path d="M18 6v2M22 6v2M18 17v2M22 17v2M13.5 11h2M13.5 14h2M24.5 11h2M24.5 14h2" stroke="#8a8f9c" stroke-width="1.3"/></svg><span class="tx"><span class="nm">VS CPU</span><span class="ds">ひとりで、CPUと対戦</span></span><svg class="ch" viewBox="0 0 9 14" aria-hidden="true"><path d="M1.5 1.5 7.5 7l-6 5.5"/></svg></button>
+   <button class="tile" id="vs"><svg class="ic" viewBox="0 0 40 48" aria-hidden="true"><rect x="9" y="3" width="22" height="42" rx="4.5" fill="#0a0b10" stroke="#c9c4b6" stroke-width="1.6"/><line x1="12" x2="28" y1="24" y2="24" stroke="#5b606c"/><circle cx="20" cy="36" r="4.2" fill="#3d7df0"/><circle cx="20" cy="12" r="4.2" fill="#f0bb2a"/></svg><span class="tx"><span class="nm">LOCAL VS</span><span class="ds" id="vs-hint">1台を置いて、向かい合って対戦</span></span><svg class="ch" viewBox="0 0 9 14" aria-hidden="true"><path d="M1.5 1.5 7.5 7l-6 5.5"/></svg></button>
+   <button class="tile" id="online" data-go="online"><svg class="ic" viewBox="0 0 40 48" aria-hidden="true"><rect x="2" y="9" width="15" height="30" rx="4.5" fill="#0a0b10" stroke="#c9c4b6" stroke-width="1.6"/><line x1="5" x2="14" y1="24" y2="24" stroke="#5b606c"/><rect x="23" y="9" width="15" height="30" rx="4.5" fill="#0a0b10" stroke="#c9c4b6" stroke-width="1.6"/><line x1="26" x2="35" y1="24" y2="24" stroke="#5b606c"/><circle cx="9.5" cy="31" r="4.2" fill="#3d7df0"/><circle cx="30.5" cy="17" r="4.2" fill="#f0bb2a"/><path d="M17 24h6" stroke="#c9c4b6" stroke-width="1.6" stroke-dasharray="1.6 1.6"/></svg><span class="tx"><span class="nm">ONLINE VS</span><span class="ds">URLを送った相手と対戦</span></span><svg class="ch" viewBox="0 0 9 14" aria-hidden="true"><path d="M1.5 1.5 7.5 7l-6 5.5"/></svg></button>
+   <button class="tile" id="watch"><svg class="ic" viewBox="0 0 40 48" aria-hidden="true"><path d="M4 24c4.500-7 10-10.500 16-10.500S31.500 17 36 24c-4.500 7-10 10.500-16 10.500S8.500 31 4 24Z" fill="#0a0b10" stroke="#c9c4b6" stroke-width="1.6"/><circle cx="20" cy="24" r="5" fill="#8a8f9c"/></svg><span class="tx"><span class="nm">WATCH</span><span class="ds">CPU同士の対戦を見る</span></span><svg class="ch" viewBox="0 0 9 14" aria-hidden="true"><path d="M1.5 1.5 7.5 7l-6 5.5"/></svg></button>
   </div>
  </div>
- <div class="card" data-screen="cpu" hidden>
-  <h2>CPU対戦</h2>
-  <div class="levels" style="margin-top:18px">
-   <button data-go="arcade">ARCADE</button>
-   <p class="note">ゲームセンターのあの台</p>
-   <button data-go="pro">PRO STAGE</button>
-   <p class="note">本物の球速、公式のルール</p>
+ <div class="panel" data-screen="cpu" hidden>
+  <div class="hd"><button class="bk" data-go="top" aria-label="もどる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2.5 4.5 8l5.5 5.5"/></svg></button><h2>VS CPU</h2><span></span></div>
+  <div class="tiles">
+   <button class="tile tall" data-go="arcade"><svg class="ic" viewBox="0 0 44 76" aria-hidden="true"><rect x="1" y="1" width="42" height="74" rx="7" fill="#c8302a" stroke="rgba(255,255,255,.35)"/><rect x="6" y="6" width="32" height="64" rx="2.500" fill="#e9e7e1"/><line x1="6" x2="38" y1="38" y2="38" stroke="#c8302a" stroke-width="1.2"/><circle cx="22" cy="38" r="5.500" fill="none" stroke="#c8302a" stroke-width="1.2"/><path d="M14 6a8 8 0 0 0 16 0M14 70a8 8 0 0 1 16 0" fill="none" stroke="#c8302a" stroke-width="1.2"/><rect x="15" y="2.500" width="14" height="3" rx="1" fill="#111"/><rect x="15" y="70.500" width="14" height="3" rx="1" fill="#111"/></svg><span class="tx"><span class="nm">ARCADE</span><span class="ds">ゲームセンターのあの台</span></span><svg class="ch" viewBox="0 0 9 14" aria-hidden="true"><path d="M1.5 1.5 7.5 7l-6 5.5"/></svg></button>
+   <button class="tile tall" data-go="pro"><svg class="ic" viewBox="0 0 44 76" aria-hidden="true"><rect x="1" y="1" width="42" height="74" rx="7" fill="#17181c" stroke="rgba(255,255,255,.35)"/><rect x="6" y="6" width="32" height="64" rx="2.500" fill="#d9d9d6"/><line x1="6" x2="38" y1="38" y2="38" stroke="#8b8d92" stroke-width="1.2"/><circle cx="22" cy="38" r="5.500" fill="none" stroke="#8b8d92" stroke-width="1.2"/><path d="M14 6a8 8 0 0 0 16 0M14 70a8 8 0 0 1 16 0" fill="none" stroke="#8b8d92" stroke-width="1.2"/><rect x="15" y="2.500" width="14" height="3" rx="1" fill="#111"/><rect x="15" y="70.500" width="14" height="3" rx="1" fill="#111"/></svg><span class="tx"><span class="nm">PRO STAGE</span><span class="ds">本物の球速、公式のルール</span></span><svg class="ch" viewBox="0 0 9 14" aria-hidden="true"><path d="M1.5 1.5 7.5 7l-6 5.5"/></svg></button>
   </div>
-  <button class="back" data-go="top">← もどる</button>
  </div>
- <div class="card" data-screen="arcade" hidden>
-  <h2>ARCADE</h2>
-  <div class="modes pick" data-pick="level">
-   <button data-v="0">EASY</button><button data-v="1" class="on">NORMAL</button><button data-v="2">HARD</button>
-  </div>
-  <div class="modes pick" data-pick="win">
-   <div><button data-v="7" class="on">7点先取</button></div>
-   <div><button data-v="15">15点先取</button><p class="note">途中でパックが増える</p></div>
-  </div>
-  <div class="levels"><button class="primary" data-start="arcade">START</button></div>
-  <button class="back" data-go="cpu">← もどる</button>
+ <div class="panel" data-screen="arcade" hidden>
+  <div class="hd"><button class="bk" data-go="cpu" aria-label="もどる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2.5 4.5 8l5.5 5.5"/></svg></button><h2>ARCADE</h2><span></span></div>
+  <p class="lb">LEVEL</p>
+  <div class="seg" data-pick="level"><button data-v="0">EASY</button><button data-v="1" class="on">NORMAL</button><button data-v="2">HARD</button></div>
+  <p class="lb">POINTS</p>
+  <div class="seg" data-pick="win"><button data-v="7" class="on" data-note="7点先取">7 POINTS</button><button data-v="15" data-note="15点先取。途中でパックが増える">15 POINTS</button></div>
+  <p class="nt" data-note-of="win">7点先取</p>
+  <div class="sp"></div>
+  <button class="btn pri" data-start="arcade">START</button>
  </div>
- <div class="card" data-screen="pro" hidden>
-  <h2>PRO STAGE</h2>
-  <div class="modes pick" data-pick="level">
-   <button data-v="4" class="on">ELITE</button><button data-v="5">CHAMPION</button><button data-v="6">LEGEND</button>
-  </div>
-  <div class="modes pick" data-pick="games">
-   <button data-v="1" class="on">1ゲーム</button><button data-v="4">公式ルール</button>
-  </div>
-  <p class="note" style="margin:-4px 0 12px">公式ルール＝7点×4ゲーム先取、自陣のパックは7秒以内に打ち返す</p>
-  <div class="levels"><button class="primary" data-start="pro">START</button></div>
-  <button class="back" data-go="cpu">← もどる</button>
+ <div class="panel" data-screen="pro" hidden>
+  <div class="hd"><button class="bk" data-go="cpu" aria-label="もどる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2.5 4.5 8l5.5 5.5"/></svg></button><h2>PRO STAGE</h2><span></span></div>
+  <p class="lb">LEVEL</p>
+  <div class="seg" data-pick="level"><button data-v="4" class="on">ELITE</button><button data-v="5">CHAMPION</button><button data-v="6">LEGEND</button></div>
+  <p class="lb">RULE</p>
+  <div class="seg" data-pick="games"><button data-v="1" class="on" data-note="7点先取の1ゲーム">1 GAME</button><button data-v="4" data-note="7点×4ゲーム先取。自陣のパックは7秒以内に打ち返す">OFFICIAL</button></div>
+  <p class="nt two" data-note-of="games">7点先取の1ゲーム</p>
+  <div class="sp"></div>
+  <button class="btn pri" data-start="pro">START</button>
  </div>
- <div class="card" data-screen="online" hidden>
-  <h2>オンライン対戦</h2>
-  <p id="on-state" class="hint on-state">部屋を作って、URLを相手に送ると始まります</p>
-  <div class="levels">
-   <button id="on-make" class="primary">部屋を作る</button>
-   <button id="on-copy" hidden>URLをコピー</button>
-  </div>
-  <p id="on-url" class="note on-url" hidden></p>
-  <p class="note" style="margin:14px 0 0">7点×2ゲーム先取</p>
-  <button class="back" id="on-back">← もどる</button>
+ <div class="panel" data-screen="online" hidden>
+  <div class="hd"><button class="bk" id="on-back" aria-label="もどる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2.5 4.5 8l5.5 5.5"/></svg></button><h2>ONLINE VS</h2><span></span></div>
+  <p class="lb">7 POINTS × 2 GAMES</p>
+  <!-- who is in the room: you, and the other player's seat -->
+  <div class="seat"><i class="me"></i><b>YOU</b><span class="ln"></span><em id="on-seat">相手はまだいません</em><i class="op" id="on-op"></i></div>
+  <p id="on-url" class="url" hidden></p>
+  <p id="on-state" class="nt two">部屋を作って、URLを相手に送ると始まります</p>
+  <div class="sp"></div>
+  <button id="on-make" class="btn pri">CREATE ROOM</button>
+  <button id="on-copy" class="btn pri" hidden>SEND LINK</button>
  </div>
- <div class="card" data-screen="two" hidden>
-  <h2>1台で2人対戦</h2>
-  <div class="modes pick" data-pick="win">
-   <div><button data-v="7" class="on">7点先取</button></div>
-   <div><button data-v="15">15点先取</button><p class="note">途中でパックが増える</p></div>
-  </div>
-  <div class="levels"><button class="primary" data-start="two">START</button></div>
-  <button class="back" data-go="top">← もどる</button>
+ <div class="panel" data-screen="two" hidden>
+  <div class="hd"><button class="bk" data-go="top" aria-label="もどる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2.5 4.5 8l5.5 5.5"/></svg></button><h2>LOCAL VS</h2><span></span></div>
+  <p class="lb">POINTS</p>
+  <div class="seg" data-pick="win"><button data-v="7" class="on" data-note="7点先取">7 POINTS</button><button data-v="15" data-note="15点先取。途中でパックが増える">15 POINTS</button></div>
+  <p class="nt" data-note-of="win">7点先取</p>
+  <p class="nt two">1台を平らに置いて向かい合い、自分側の半分を指で操作します</p>
+  <div class="sp"></div>
+  <button class="btn pri" data-start="two">START</button>
  </div>
 </div>
 
 <div id="pausemenu" class="overlay hidden">
  <div class="card">
-  <h2>PAUSE</h2>
-  <div class="levels" style="margin-top:18px">
-   <button id="resume" class="primary">つづける</button>
-   <button id="pause-menu">メニューへ</button>
-  </div>
+  <h2 class="pt">PAUSE</h2>
+  <button id="resume" class="btn pri">RESUME</button>
+  <button id="pause-menu" class="btn">MENU</button>
  </div>
 </div>
 
 <div id="result" class="overlay hidden">
  <div class="card">
-  <h2 id="result-title">YOU WIN</h2>
-  <p id="result-mode" class="rmode"></p>
-  <p id="result-score" class="score"></p>
-  <p id="result-sub" class="note" style="margin:-10px 0 14px" hidden></p>
+  <h2 id="result-title" class="big">YOU WIN</h2>
+  <p id="result-mode" class="md"></p>
+  <p id="result-score" class="sc"></p>
+  <p id="result-sub" class="sb" hidden></p>
   <p id="result-speed" class="rspeed" hidden></p>
-  <div class="levels">
-   <button id="again" class="primary">もう一度</button>
-   <button id="back">難易度を選ぶ</button>
-   <button id="title">タイトルに戻る</button>
-  </div>
-  <button id="share" class="share">X SHARE</button>
+  <button id="again" class="btn pri">REMATCH</button>
+  <div class="row"><button id="back" class="btn sm">STAGE SELECT</button><button id="title" class="btn sm">TITLE</button></div>
+  <button id="share" class="btn sm line">X SHARE</button>
  </div>
 </div>
 

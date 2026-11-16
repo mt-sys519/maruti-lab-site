@@ -1,4 +1,10 @@
+/* the lettering: Barlow Condensed (SIL Open Font License, fonts/OFL.txt), kept with the game */
+@font-face{font-family:"Barlow Condensed";font-weight:600;font-display:swap;src:url(fonts/barlow-condensed-600.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;font-display:swap;src:url(fonts/barlow-condensed-700.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:800;font-display:swap;src:url(fonts/barlow-condensed-800.woff2) format("woff2")}
+:root{--en:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;height:100%;background:#0b0d12;color:#f4f1e8;overflow:hidden;
  font-family:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
@@ -7,82 +13,126 @@ html,body{margin:0;height:100%;background:#0b0d12;color:#f4f1e8;overflow:hidden;
 #view{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block;touch-action:none}
 
 .sound{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:5;
- font:700 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;
+ font:700 14px/1 var(--en);letter-spacing:.1em;
  color:#f4f1e8;background:rgba(20,22,30,.7);border:1px solid rgba(255,255,255,.18);
  border-radius:999px;padding:8px 12px;cursor:pointer}
 .sound[aria-pressed="false"]{color:#8a8f9c}
 .pause{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;z-index:5;
- font:800 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.02em;
  color:#f4f1e8;background:rgba(20,22,30,.7);border:1px solid rgba(255,255,255,.18);
  border-radius:999px;padding:7px 12px;cursor:pointer;line-height:0}
 .pause svg{width:15px;height:15px;fill:currentColor}
-.pause[hidden]{display:none}
 
 .overlay{position:fixed;inset:0;z-index:4;display:flex;align-items:safe center;justify-content:center;
  padding:16px;background:rgba(6,7,11,.55);overflow-y:auto}
 .overlay.hidden{display:none}
-.card{width:min(340px,100%);text-align:center;padding:26px 20px 22px;border-radius:16px;
- background:rgba(16,18,26,.92);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.5)}
-h1,h2{margin:0;font:900 34px/1.05 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;color:#ff4b3a;
- text-shadow:0 0 14px rgba(255,75,58,.55)}
-h2{font-size:30px}
-.sub{margin:10px 0 18px;font-size:14px;color:#c9c4b6}
+:where(.overlay) :where(h1,h2,p){margin:0}
+:where(.overlay) button{margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+
+/* ---- the menu: every screen is the same box, so nothing moves from one to the next.
+   The way back is top left, the button that starts is at the bottom ---- */
+.panel{flex:none;width:min(343px,100%);height:372px;padding:16px 16px 18px;display:flex;flex-direction:column;
+ background:linear-gradient(#171a22,#0e1016);border-radius:22px;border:1px solid rgba(255,255,255,.2);
+ box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.logo{flex:none;height:40px;margin-bottom:14px!important;padding-left:.14em;text-align:center;white-space:nowrap;
+ font:800 40px/40px var(--en);letter-spacing:.14em;color:#ff4b3a;text-shadow:0 0 16px rgba(255,75,58,.55)}
+.hd{flex:none;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;height:40px;margin-bottom:14px}
+.hd .bk{width:40px;height:40px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:#1b1e27;display:grid;place-items:center}
+.hd .bk svg{width:16px;height:16px;stroke:#f4f1e8;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hd h2{padding-left:.09em;text-align:center;font:700 24px/1 var(--en);letter-spacing:.09em;color:#f4f1e8}
+.sp{flex:1}
+
+/* a choice that goes to another screen: a picture, its name, what it is */
+.tiles{display:flex;flex-direction:column;gap:8px}
+.tile{display:flex;align-items:center;gap:13px;width:100%;height:64px;padding:0 14px 0 12px;text-align:left;
+ border-radius:14px;background:#1b1e27;border:1px solid rgba(255,255,255,.11);color:#f4f1e8}
+.tile .ic{flex:none;width:40px;height:48px}
+.tile .tx{display:flex;flex-direction:column;min-width:0}
+.tile .nm{font:700 23px/1 var(--en);letter-spacing:.09em}
+.tile .ds{margin-top:6px;font-size:11.5px;line-height:1.2;color:#a4a8b4}
+.tile .ch{flex:none;margin-left:auto;width:9px;height:14px;stroke:#7d8290;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tile.pri{background:#d8312b;border-color:#ff6a5a}
+.tile.pri .ds{color:rgba(255,255,255,.86)}
+.tile.pri .ch{stroke:#fff}
+.tile.tall{height:110px}
+.tile.tall .ic{width:44px;height:76px}
+.tile:disabled{opacity:.4;cursor:default}
+.tile:active:not(:disabled),.btn:active,.hd .bk:active{transform:translateY(1px)}
+
+/* a choice made here: one track of equal parts, and one line under it that says what the chosen part is */
+.lb{flex:none;margin:0 0 7px 2px!important;font:600 12px/1 var(--en);letter-spacing:.2em;color:#8a8f9c}
+.seg{flex:none;display:flex;height:44px;padding:3px;border-radius:12px;background:#0a0b10;border:1px solid rgba(255,255,255,.14)}
+.seg button{flex:1;padding:0;border:0;border-radius:9px;background:transparent;font:700 17px/1 var(--en);letter-spacing:.1em;color:#8a8f9c}
+.seg button.on{background:#f4f1e8;color:#0e1016}
+.seg+.lb{margin-top:13px!important}
+.nt{flex:none;margin:8px 2px 0!important;font-size:11.5px;line-height:1.35;color:#a4a8b4;min-height:1.35em}
+.nt.two{min-height:2.7em}
+
+.btn{flex:none;display:block;width:100%;height:54px;padding:0;border-radius:14px;font:700 21px/1 var(--en);letter-spacing:.16em;
+ background:#1b1e27;border:1px solid rgba(255,255,255,.16);color:#f4f1e8}
+.btn.pri{background:#d8312b;border-color:#ff6a5a}
+.btn.sm{height:46px;font-size:17px;letter-spacing:.12em}
+.btn.line{background:transparent}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+
+/* online: who is in the room (blue: you, yellow: the other player), and the link to send */
+.seat{flex:none;display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:12px;background:#0a0b10;border:1px solid rgba(255,255,255,.14)}
+.seat i{flex:none;width:16px;height:16px;border-radius:50%}
+.seat .me{background:#2f6fe0;box-shadow:inset 0 0 0 3px #7fa8f2}
+.seat .op{border:2px dashed #b88d1e}
+.seat .op.in{border:0;background:#e8b21e;box-shadow:inset 0 0 0 3px #f6d877}
+.seat b{font:700 15px/1 var(--en);letter-spacing:.14em}
+.seat em{font-style:normal;font-size:11.5px;color:#a4a8b4;white-space:nowrap}
+.seat .ln{flex:1;height:1px;background:rgba(255,255,255,.16)}
+.url{flex:none;display:flex;margin-top:8px!important;height:38px;padding:0 12px;border-radius:10px;border:1px dashed rgba(255,255,255,.22);
+ font:500 12px/36px ui-monospace,Menlo,Consolas,monospace;color:#c9c4b6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ -webkit-user-select:all;user-select:all}
+/* a narrow screen cuts the address short, never the room's code */
+.url span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.url b{flex:none;color:#f4f1e8}
+
+/* ---- the cards over a match: pause and the result ---- */
+.card{flex:none;width:min(327px,100%);padding:24px 18px 18px;display:flex;flex-direction:column;gap:8px;text-align:center;
+ background:linear-gradient(#171a22,#0e1016);border-radius:20px;border:1px solid rgba(255,255,255,.2);box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.card .pt{margin-bottom:10px;padding-left:.2em;font:800 26px/1 var(--en);letter-spacing:.2em;color:#f4f1e8}
+.card .big{padding-left:.12em;font:800 44px/1 var(--en);letter-spacing:.12em;color:#ff4b3a;text-shadow:0 0 16px rgba(255,75,58,.55)}
 /* the result's level and points to win, so a screenshot or a share says what was played */
-.rmode{margin:12px 0 0;font:800 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;color:#c9c4b6}
-.share{width:100%;margin-top:14px;font:800 14px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;padding:12px;
- border-radius:10px;border:2px solid #3a3f4d;background:transparent;color:#f4f1e8;cursor:pointer}
-/* a phone held sideways is ~360 px tall: the result card, share button and all, closes up to fit */
-@media (max-height:420px){
- #result .card{padding:16px 20px 14px}
- #result .score{margin:8px 0 12px}
- #result .levels{gap:7px}
- #result .levels button{padding:10px}
- #result .share{margin-top:8px;padding:9px}
- /* the menu's screens too: same order, less air */
- #menu .card{padding:14px 20px 12px}
- #menu h1{font-size:28px}
- #menu .levels{margin-top:12px!important;gap:8px}
- #menu .levels button,#vs,.vs2{padding:10px}
- .vs2{margin-top:8px}
- #menu .vs-box .hint{margin-top:5px}
- #menu .vs-box{margin-top:10px;padding-top:10px}
- #menu .watch{margin-top:8px;padding:9px}
- #menu .back{margin-top:6px}
+.card .md{margin-top:4px;padding-left:.2em;font:600 14px/1 var(--en);letter-spacing:.2em;color:#a4a8b4}
+.card .sc{margin:6px 0 10px;font:700 64px/1 var(--en);letter-spacing:.06em}
+.card .sb{margin:-8px 0 10px;font-size:12px;line-height:1.2;color:#a4a8b4}
+.rspeed{margin:-6px 0 10px!important;font:700 15px/1 var(--en);letter-spacing:.1em;color:#f4f1e8}
+
+/* a phone held sideways is ~360 px tall: the same box, everything in it a size down */
+@media (max-height:430px){
+ .overlay{padding:10px}
+ .panel{width:min(380px,100%);height:min(372px,calc(100vh - 20px));padding:12px 14px}
+ .logo{height:30px;margin-bottom:8px!important;font-size:30px;line-height:30px}
+ .hd{grid-template-columns:34px 1fr 34px;height:34px;margin-bottom:8px}
+ .hd .bk{width:34px;height:34px}
+ .hd h2{font-size:22px}
+ .tiles{gap:6px}
+ .tile{height:52px}
+ .tile .ic{width:32px;height:38px}
+ .tile .nm{font-size:20px}
+ .tile .ds{margin-top:4px}
+ .tile.tall{height:84px}
+ .tile.tall .ic{width:36px;height:62px}
+ .lb{margin-bottom:5px!important}
+ .seg{height:38px}
+ .seg+.lb{margin-top:8px!important}
+ .nt{margin-top:6px!important}
+ .btn{height:46px}
+ .seat{height:40px}
+ .url{height:32px;margin-top:6px!important;line-height:30px}
+ .card{padding:14px 16px 12px;gap:6px}
+ .card .pt{margin-bottom:6px}
+ .card .big{font-size:32px}
+ .card .sc{margin:2px 0 6px;font-size:44px}
+ .card .sb{margin:-4px 0 6px}
+ .rspeed{margin:-2px 0 6px!important}
+ .card .btn{height:42px}
+ .card .btn.sm{height:38px}
 }
-.score{margin:10px 0 18px;font:800 26px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em}
-.levels{display:flex;flex-direction:column;gap:10px}
-.levels button{font:800 16px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;padding:14px;
- border-radius:10px;border:2px solid #3a3f4d;background:#1d2029;color:#f4f1e8;cursor:pointer}
-.levels button.primary{background:#d8312b;border-color:#ff6a5a}
-.levels button:active{transform:translateY(1px)}
-.modes{display:flex;gap:8px;margin:0 0 12px}
-.modes button{flex:1;font:800 14px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;padding:11px 6px;
- border-radius:10px;border:2px solid #3a3f4d;background:transparent;color:#8a8f9c;cursor:pointer}
-.modes button.on{color:#f4f1e8;border-color:#f4f1e8}
-/* the menu's screens: one card at a time */
-.card[hidden]{display:none}
-.card h2{margin-bottom:18px}
-.pick>div{flex:1;display:flex;flex-direction:column;gap:5px}
-.pick>div>button{width:100%}
-.note{margin:-4px 0 4px;font-size:11px;color:#8a8f9c}
-.levels .note{margin:-6px 0 2px}
-.vs-box .note{margin-top:6px}
-.back{margin-top:14px;background:none;border:0;padding:6px 4px;color:#8a8f9c;cursor:pointer;
- font:700 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em}
-
-
-/* 2P, on one device */
-.vs-box{margin:18px 0 0;padding:16px 0 0;border-top:1px solid rgba(255,255,255,.12)}
-.vs-box[hidden]{display:none}
-#vs,.vs2{width:100%;font:800 16px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;padding:14px;
- border-radius:10px;border:2px solid #f0b72a;background:#2a2410;color:#ffd968;cursor:pointer}
-.vs-box .hint{margin-top:10px}
-/* the two ways to play a person: the second sits under the first's hint */
-.vs2{margin-top:14px}
-#vs:disabled{opacity:.4;cursor:default}
-/* CPU against CPU: offered beside 2P, quieter than it */
-.watch{width:100%;margin-top:14px;font:800 14px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;padding:12px;
- border-radius:10px;border:2px solid #3a3f4d;background:transparent;color:#c9c4b6;cursor:pointer}
 
 /* countdown and MULTI PUCK call-outs. 1P: one, across the screen as before.
    2P: one in each half, turned to its player (portrait: the far one upside down; landscape: each a quarter turn) */
@@ -99,24 +149,17 @@ body.two.land .s1 .rot{transform:rotate(-90deg)}
 body.two.land .s2 .rot{transform:rotate(90deg)}
 .rot{white-space:nowrap}
 body.two .bslot .banner{position:static}
-.banner{position:fixed;left:0;right:0;top:42%;z-index:3;text-align:center;pointer-events:none;
- font:900 34px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;color:#ff4b3a;
+.banner{position:fixed;left:0;right:0;top:42%;z-index:3;text-align:center;pointer-events:none;padding-left:.1em;
+ font:800 42px/1 var(--en);letter-spacing:.1em;color:#ff4b3a;
  text-shadow:0 0 18px rgba(255,75,58,.7),0 2px 0 #000;opacity:0;transform:scale(.8)}
-.banner.big{font-size:64px}
+.banner.big{font-size:84px}
 .banner.show{animation:pop .18s ease-out forwards}
 @keyframes pop{from{opacity:0;transform:scale(1.4)}to{opacity:1;transform:scale(1)}}
 
 /* PRO's readouts, top center between the pause and sound buttons: both lines keep their height when empty */
 .hud{position:fixed;top:max(18px,env(safe-area-inset-top));left:0;right:0;z-index:3;text-align:center;pointer-events:none;
- font:800 15px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;color:#f4f1e8;text-shadow:0 1px 3px #000}
-.hud span{display:block;height:15px}
+ font:700 18px/1 var(--en);letter-spacing:.1em;color:#f4f1e8;text-shadow:0 1px 3px #000}
+.hud span{display:block;height:18px}
 #speed{opacity:0;transition:opacity .4s}
 #speed.show{opacity:1;transition:none}
-#clock{margin-top:10px;height:26px;font-size:26px;color:#ff4b3a}
-.rspeed{margin:-6px 0 16px;font:800 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;color:#f4f1e8}
-.rspeed[hidden]{display:none}
-/* online: the state line keeps two lines' height, so the buttons under it stay put as it changes */
-.on-state{margin:0 0 14px!important;min-height:2.6em;line-height:1.3;font-size:13px!important;color:#c9c4b6!important}
-.on-url{margin:10px 0 0!important;word-break:break-all;-webkit-user-select:all;user-select:all}
-.levels button[hidden],.on-url[hidden]{display:none}
-.hint{margin:16px 0 0;font-size:12px;color:#8a8f9c}
+#clock{margin-top:8px;height:30px;font-size:30px;color:#ff4b3a}

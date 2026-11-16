@@ -1351,14 +1351,14 @@ function finish(){
   if(pro){startEnding(won);after(0.5,()=>banner(won?'YOU WIN':'YOU LOSE',2,true))}
   after(twoP?2.4:pro?2.7:0.9,()=>{
     document.getElementById('result-title').textContent=twoP?(won?'BLUE WINS':'YELLOW WINS'):won?'YOU WIN':'YOU LOSE';
-    document.getElementById('result-mode').textContent=playedAs();
+    document.getElementById('result-mode').textContent=playedCard();
     // official rules: the games, and the last game's points under them
     document.getElementById('result-score').textContent=bestOf>1?`${games[0]} - ${games[1]}`:`${score[0]} - ${score[1]}`;
     const sub=document.getElementById('result-sub');sub.hidden=bestOf<2;sub.textContent=`最終ゲーム ${score[0]} - ${score[1]}`;
     const sp=document.getElementById('result-speed');sp.hidden=!pro||twoP||!topKmh;sp.textContent=`最高球速 ${topKmh} km/h`;
-    document.getElementById('back').textContent=twoP||online?'メニューへ':'ステージを選ぶ';
+    document.getElementById('back').textContent=twoP||online?'MENU':'STAGE SELECT';
     document.getElementById('title').hidden=twoP||online;
-    document.getElementById('again').textContent='もう一度';
+    document.getElementById('again').textContent='REMATCH';
     document.getElementById('result').classList.remove('hidden');
   });
 }
@@ -1396,6 +1396,8 @@ const showScreen=name=>{for(const c of document.querySelectorAll('#menu [data-sc
 for(const b of document.querySelectorAll('#menu [data-go]'))b.addEventListener('click',()=>showScreen(b.dataset.go));
 for(const row of document.querySelectorAll('#menu [data-pick]'))for(const b of row.querySelectorAll('button'))b.addEventListener('click',()=>{
   for(const o of row.querySelectorAll('button'))o.classList.toggle('on',o===b);
+  // the line under the row says what the chosen one is
+  const note=row.parentElement.querySelector(`[data-note-of="${row.dataset.pick}"]`);if(note)note.textContent=b.dataset.note||'';
 });
 const picked=(screen,key)=>+document.querySelector(`#menu [data-screen="${screen}"] [data-pick="${key}"] .on`).dataset.v;
 for(const b of document.querySelectorAll('#menu [data-start]'))b.addEventListener('click',()=>{
@@ -1408,11 +1410,13 @@ document.getElementById('again').addEventListener('click',()=>{
   if(online){
     if(!net||wantAgain[0])return;
     wantAgain[0]=true;net.send({t:'again'});
-    document.getElementById('again').textContent='相手を待っています…';rematch();return;
+    document.getElementById('again').textContent='WAITING…';rematch();return;
   }
   startGame(level,twoP);
 });
 // the result says what was played: the level (or 2P) and the points to win, or PRO's rules
+// (playedCard: on the result card, in the menu's own names; playedAs: in the post to X, which is in Japanese)
+const playedCard=()=>online?'ONLINE VS・7 POINTS × 2 GAMES':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'OFFICIAL':'1 GAME'}`:`${twoP?'LOCAL VS':LEVEL_NAMES[level]}・${win} POINTS`;
 const playedAs=()=>online?'オンライン対戦・7点×2ゲーム先取':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'1台で2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
 // the shared page's ?r= picks the card X shows under the post (worker/index.ts): the stage, the level and who won
 const resultCard=title=>twoP?(title==='BLUE WINS'?'2p-blue':'2p-yellow')
@@ -1448,7 +1452,7 @@ function toMenu(){
 // 2P needs two fingers at once: elsewhere the button stays in the menu, greyed out
 if(navigator.maxTouchPoints<2){
   document.getElementById('vs').disabled=true;
-  document.getElementById('vs-hint').textContent='1台で2人対戦はスマホ・タブレットで遊べます';
+  document.getElementById('vs-hint').textContent='スマホ・タブレットで遊べます';
 }
 document.getElementById('vs').addEventListener('click',()=>showScreen('two'));
 // the exhibition: both sides at the watching level (NORMAL's rallies were too tame, HARD's guard let almost
@@ -1464,12 +1468,12 @@ const Q=new URLSearchParams(location.search);
 const pageUrl=()=>{try{return new URL(top.location.href)}catch{return new URL(location.href)}};
 const ROOM_CODE=Q.get('room')||pageUrl().searchParams.get('room')||'';
 const ROOM_SERVER=Q.get('roomserver')||(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'ws://localhost:8787':'wss://airhockey-room.mt-kiryu.workers.dev');
-const onState=document.getElementById('on-state'),onMake=document.getElementById('on-make'),onCopy=document.getElementById('on-copy'),onUrl=document.getElementById('on-url');
-const ON_HINT='部屋を作って、URLを相手に送ると始まります';
+const onState=document.getElementById('on-state'),onMake=document.getElementById('on-make'),onCopy=document.getElementById('on-copy'),onUrl=document.getElementById('on-url'),onSeat=document.getElementById('on-seat'),onOp=document.getElementById('on-op');
+const ON_HINT='部屋を作って、URLを相手に送ると始まります',ON_SENT='このURLを開いた人が相手になります',ON_EMPTY='相手はまだいません';
 const ON_STATE={waiting:'相手を待っています…',joining:'相手を待っています…',connecting:'つないでいます…'};
 const ON_WHY={full:'この部屋は満員です',busy:'いまは混んでいて、つなげませんでした',left:'相手が退出しました',lost:'相手との接続が切れました',closed:'部屋につながりませんでした',error:'部屋につながりませんでした'};
 // a phone hands the link to its share sheet (LINE and the rest); elsewhere the button copies it
-const CAN_SHARE=!!navigator.share&&navigator.maxTouchPoints>0,ON_COPY=CAN_SHARE?'URLを送る':'URLをコピー';
+const CAN_SHARE=!!navigator.share&&navigator.maxTouchPoints>0,ON_COPY=CAN_SHARE?'SEND LINK':'COPY LINK';
 // the room this page is in before the match starts. Going to another app to send the link drops the room's
 // socket on a phone: while waiting, a dropped socket is joined again (the same room, a few tries), not reported
 let roomCode='',roomIn=false,roomTries=0,roomTimer=0;
@@ -1477,12 +1481,14 @@ const ROOM_TRIES=6;
 onCopy.textContent=ON_COPY;
 function resetOnline(){
   roomCode='';roomIn=false;roomTries=0;clearTimeout(roomTimer);
-  onState.textContent=ON_HINT;onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;onCopy.textContent=ON_COPY;
+  onState.textContent=ON_HINT;onSeat.textContent=ON_EMPTY;onOp.classList.remove('in');
+  onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;onCopy.textContent=ON_COPY;
 }
 function joinRoom(code){
   leaveOnline();stage='online';clearTimeout(roomTimer);roomCode=code;
   net=new Net(`${ROOM_SERVER}/room/${code}`,{
-    state:s=>{onState.textContent=ON_STATE[s]||''},
+    // the seat row says where the other player is; the line under it, what to do meanwhile
+    state:s=>{onSeat.textContent=ON_STATE[s]||'';onOp.classList.toggle('in',s==='connecting');onState.textContent=s!=='connecting'&&!onUrl.hidden?ON_SENT:''},
     joined:()=>{roomIn=true;roomTries=0},
     // connected: the one who made the room starts the match
     ready:role=>{online=true;win=7;if(role===0){net.send({t:'start'});startGame(1)}},
@@ -1511,19 +1517,22 @@ onMake.addEventListener('click',()=>{
   sound.unlock();
   const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',code=Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>A[v%A.length]).join('');
   const u=pageUrl();u.searchParams.set('room',code);
-  onUrl.textContent=u.href;onUrl.hidden=false;onCopy.hidden=false;onMake.hidden=true;
+  // shown without the scheme, the room's code picked out; the whole link is kept for the button
+  const shown=u.href.replace(/^https?:\/\//,''),at=shown.lastIndexOf(code),b=document.createElement('b'),pre=document.createElement('span');
+  pre.textContent=shown.slice(0,at);b.textContent=code;onUrl.replaceChildren(pre,b);onUrl.dataset.link=u.href;
+  onUrl.hidden=false;onCopy.hidden=false;onMake.hidden=true;onState.textContent=ON_SENT;
   joinRoom(code);
 });
 onCopy.addEventListener('click',async()=>{
-  const url=onUrl.textContent;
+  const url=onUrl.dataset.link;
   if(CAN_SHARE){
     try{await navigator.share({title:'AIR HOCKEY',url});return}
     catch(e){if(e?.name==='AbortError')return}
   }
-  try{await navigator.clipboard.writeText(url);onCopy.textContent='コピーしました'}catch{onCopy.textContent='下のURLを長押しでコピー'}
+  try{await navigator.clipboard.writeText(url);onCopy.textContent='COPIED'}catch{onState.textContent='上のURLを長押しでコピーしてください'}
 });
 document.getElementById('on-back').addEventListener('click',()=>{leaveOnline();resetOnline();showScreen('top')});
-if(/^[A-Z0-9]{4,8}$/.test(ROOM_CODE)){showScreen('online');onMake.hidden=true;onState.textContent=ON_STATE.connecting;joinRoom(ROOM_CODE)}
+if(/^[A-Z0-9]{4,8}$/.test(ROOM_CODE)){showScreen('online');onMake.hidden=true;onState.textContent='';onSeat.textContent=ON_STATE.connecting;joinRoom(ROOM_CODE)}
 // pause (every mode, top left, opposite the sound button). The audio context is suspended with it, so the music,
 // the blower and the glide all stop where they are
 let paused=false;
