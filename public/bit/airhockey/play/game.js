@@ -994,10 +994,10 @@ function physics(h){
 // change sign). The puck is simulated by one side at a time, the side whose half it is in (own): there a hit is
 // as immediate as against the CPU, and a goal is judged by the one defending it, on what they saw. Past the center
 // line it is handed over (give) with the reliable channel; the receiver takes it as it comes, without guessing
-// ahead, so nothing jumps there. The side without the puck shows what the owner streams, a little late, and
-// between two of those lets it run on by itself (ghostStep: walls only). Just after giving it away there is no
-// stream yet (it takes a round trip to come): the puck runs on at half speed (ghostSlow), and what it is ahead by
-// when the stream picks up is let out smoothly (ox, oz), which reads as the puck easing a moment past the line.
+// ahead. The side without the puck shows what the owner streams, a little late, and between two of those lets it
+// run on by itself (ghostStep: walls only). Just after giving it away there is no stream yet (it takes a round trip
+// to come): the puck runs on at half speed (ghostSlow). Whenever the other side's word moves the puck (a stream
+// report, a hand-over), the gap to where it was shown is let out smoothly (ox, oz) instead of jumping across it.
 // epoch counts the serves and hand-overs: a stream packet from before the last of them is out of date
 let net=null,online=false,own=false,epoch=0,ghostSlow=false,wantAgain=[false,false];
 const remote={x:0,z:-HL+0.2},r4=v=>Math.round(v*1e4)/1e4;
@@ -1044,18 +1044,24 @@ function netFrame(dt){
   if(own&&mode==='play'&&puck.live)o.p=[r4(puck.x),r4(puck.z),r4(puck.vx),r4(puck.vz)];
   net.stream(o);
 }
+// the puck put where the other side says, where it is shown kept (and let out by netFrame)
+function takeShown(x,z,vx,vz){
+  const sx=puck.x+(puck.ox||0),sz=puck.z+(puck.oz||0);
+  Object.assign(puck,{x,z,vx,vz,ox:sx-x,oz:sz-z});
+}
 function netMsg(m){
   if(m.t==='s'){
     remoteSample(m.ts,-m.m[0],-m.m[1]);
+    // the owner's report is taken at once, but the puck as shown eases over to it (ox, oz): between two reports it
+    // ran on by itself, and on Wi-Fi a report held back and then let through put it 20-30 cm off, a jump on screen
     if(m.p&&!own&&m.e===epoch&&mode==='play'&&puck.live){
-      const dx=puck.x+(puck.ox||0),dz=puck.z+(puck.oz||0);
-      puck.x=-m.p[0];puck.z=-m.p[1];puck.vx=-m.p[2];puck.vz=-m.p[3];
-      if(ghostSlow){ghostSlow=false;puck.ox=dx-puck.x;puck.oz=dz-puck.z}
+      ghostSlow=false;
+      takeShown(-m.p[0],-m.p[1],-m.p[2],-m.p[3]);
     }
   }
   else if(m.t==='give'){
     epoch=m.e;own=true;ghostSlow=false;
-    Object.assign(puck,{x:-m.p[0],z:-m.p[1],vx:-m.p[2],vz:-m.p[3],ox:0,oz:0});
+    takeShown(-m.p[0],-m.p[1],-m.p[2],-m.p[3]);
   }
   else if(m.t==='serve'){serve(1);epoch=m.e}
   else if(m.t==='goal'){
