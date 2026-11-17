@@ -1494,7 +1494,7 @@ let kept=null,roomNote='';
 // which colour this side is in the room, set the first time it gets in and kept through a dropped connection
 let seatSwap=null;
 // RECONNECT (a room whose connection went) takes the main button's place; the link's button goes under it, smaller
-function setCut(on){onRe.hidden=!on;onCopy.className=on?'btn sm':'btn pri'}
+function setCut(on){onRe.hidden=!on;onCopy.className=on?'btn sm ico':'btn pri ico'}
 // the room this device was last in, for 15 minutes (as long as a room lasts): a closed tab finds its way back
 // without the link. Forgotten on leaving by hand
 const LAST_KEY='ah-room',LAST_MS=15*60e3;
@@ -1523,12 +1523,16 @@ function showLink(code){
   onUrl.hidden=false;onCopy.hidden=false;onMake.hidden=true;
 }
 const ROOM_TRIES=6;
-onCopy.textContent=ON_COPY;
+// the link's button with its icon: a tray with an arrow out of it (the share sheet), or two sheets (a copy)
+const ICO_SHARE='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 12.5V2.5M6.3 6 10 2.3 13.7 6"/><path d="M6.5 8.5H5A1.5 1.5 0 0 0 3.5 10v6A1.5 1.5 0 0 0 5 17.5h10a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 15 8.5h-1.5"/></svg>',
+  ICO_COPY='<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.8"/><path d="M13 4.5v-.2A1.3 1.3 0 0 0 11.7 3H4.3A1.3 1.3 0 0 0 3 4.3v7.4A1.3 1.3 0 0 0 4.3 13h.2"/></svg>';
+function copyLabel(t){onCopy.innerHTML=(CAN_SHARE?ICO_SHARE:ICO_COPY)+'<span></span>';onCopy.lastChild.textContent=t}
+copyLabel(ON_COPY);
 function resetOnline(){
   roomCode='';roomIn=false;roomTries=0;clearTimeout(roomTimer);kept=null;roomNote='';seatSwap=null;onSeat.parentNode.classList.remove('swap');
   const last=!!lastRoom();setCut(false);onLast.hidden=!last;
   onState.textContent=last?ON_LAST:ON_HINT;onSeat.textContent=ON_EMPTY;onOp.classList.remove('in');
-  onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;onCopy.textContent=ON_COPY;
+  onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;copyLabel(ON_COPY);
 }
 function joinRoom(code){
   leaveOnline();stage='online';clearTimeout(roomTimer);roomCode=code;
@@ -1591,7 +1595,7 @@ onCopy.addEventListener('click',async()=>{
     try{await navigator.share({title:'AIR HOCKEY',url});return}
     catch(e){if(e?.name==='AbortError')return}
   }
-  try{await navigator.clipboard.writeText(url);onCopy.textContent='COPIED'}catch{onState.textContent='上のURLを長押しでコピーしてください'}
+  try{await navigator.clipboard.writeText(url);copyLabel('COPIED')}catch{onState.textContent='上のURLを長押しでコピーしてください'}
 });
 document.getElementById('on-back').addEventListener('click',()=>{leaveOnline();resetOnline();showScreen('top')});
 if(/^[A-Z0-9]{4,8}$/.test(ROOM_CODE)){showScreen('online');onMake.hidden=true;onState.textContent='';onSeat.textContent=ON_STATE.connecting;joinRoom(ROOM_CODE)}
