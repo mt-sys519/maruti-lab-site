@@ -1141,6 +1141,19 @@ $('pause-menu').addEventListener('click',()=>{paused=false;toMenu()});
 $('again').addEventListener('click',()=>{if(ONLINE())onlineAgain();else startMatch(G.vs)});
 $('result-menu').addEventListener('click',toMenu);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.mode==='play'&&!ONLINE()){paused=true;sound.bgmStop();$('pausemenu').classList.remove('hidden')}});
+// the screen stays on through a match (it slept in full screen while the CPU thought, 2026-11-18), and is let go on
+// the menu, the result and the pause. Checked once a second rather than at every place the mode changes; the
+// browser drops the lock when the page is hidden, so it is asked for again on coming back
+let wake=null,wakeAsking=false;
+function syncWake(){
+  const want=G.mode==='play'&&!paused&&!document.hidden;
+  if(want&&!wake&&!wakeAsking&&navigator.wakeLock){
+    wakeAsking=true;
+    navigator.wakeLock.request('screen').then(l=>{wake=l;l.addEventListener('release',()=>{if(wake===l)wake=null})})
+      .catch(()=>{}).finally(()=>{wakeAsking=false});
+  }else if(!want&&wake){const l=wake;wake=null;l.release().catch(()=>{})}
+}
+setInterval(syncWake,1000);document.addEventListener('visibilitychange',syncWake);
 
 // ---------- online ----------
 // AIR HOCKEY's way (net.js, copied from it): a room by its code brings two together, the match runs peer to peer.
