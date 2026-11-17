@@ -14,6 +14,26 @@ document.body.classList.toggle('touch',TOUCH);
 // how big the pieces over the table are: a phone's size up to 560 px on the short side, then growing to 1.25x
 function fitUI(){document.documentElement.style.setProperty('--k',Math.min(1.25,Math.max(1,Math.min(innerWidth,innerHeight)/560)).toFixed(3))}
 fitUI();addEventListener('resize',fitUI);
+// the notch and the home bar: inside the site's iframe env(safe-area-inset-*) reads 0, so in full screen the top
+// row sat under the notch while the site's exit button (outside the frame) sat below it (2026-11-18). Framed, take
+// the page's own insets, less how far the frame is from that edge (--it / --ib in style.css)
+function fitInsets(){
+  const f=window.frameElement;if(!f)return;
+  try{
+    const pd=parent.document;let p=pd.getElementById('bl-insets');
+    if(!p){
+      p=pd.createElement('div');p.id='bl-insets';
+      p.style.cssText='position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;'+
+        'padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)';
+      pd.body.appendChild(p);
+    }
+    const cs=parent.getComputedStyle(p),r=f.getBoundingClientRect();
+    const t=Math.max(0,parseFloat(cs.paddingTop)-r.top),b=Math.max(0,parseFloat(cs.paddingBottom)-(parent.innerHeight-r.bottom));
+    const s=document.documentElement.style;s.setProperty('--it',t+'px');s.setProperty('--ib',b+'px');
+  }catch{}
+}
+fitInsets();addEventListener('resize',fitInsets);
+try{if(window.frameElement){parent.addEventListener('resize',fitInsets);parent.addEventListener('scroll',fitInsets,{passive:true});parent.document.addEventListener('fullscreenchange',fitInsets)}}catch{}
 
 // the table's build (metres): cushion depth to the rail, the wooden rail's width, heights over the cloth
 const RAIL=0.05,WOOD=0.115,CUSH_H=0.041,RAIL_H=0.046;

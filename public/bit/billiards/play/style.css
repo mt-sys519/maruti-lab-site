@@ -14,7 +14,7 @@ html,body{margin:0;height:100%;background:#0b0c10;color:var(--ink);overflow:hidd
 #view{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block;touch-action:none}
 
 /* the round buttons in the corners: all one height */
-.rbtn{position:fixed;z-index:5;height:34px;top:max(10px,env(safe-area-inset-top));
+.rbtn{position:fixed;z-index:5;height:34px;top:max(10px,var(--it));
  font:700 14px/1 var(--en);letter-spacing:.1em;color:var(--ink);background:rgba(20,22,30,.72);
  border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:0 12px;cursor:pointer}
 .sound{right:12px;width:70px}
@@ -24,7 +24,7 @@ html,body{margin:0;height:100%;background:#0b0c10;color:var(--ink);overflow:hidd
 /* everything over the table grows a little with the screen (--k, set by the game: 1 on a phone, up to 1.25 on a
    big monitor), each piece from the corner or edge it is pinned to. A full-screen PC showed them all at a phone's
    size; 1.7x then looked crude (2026-11-18) */
-:root{--k:1;--s:max(14px,env(safe-area-inset-bottom));--hintb:58px}
+:root{--it:env(safe-area-inset-top,0px);--ib:env(safe-area-inset-bottom,0px);--k:1;--s:max(14px,var(--ib));--hintb:58px}
 /* The bottom row (2026-11-18, second picture, after "うわ、ださ"): no boxes and no filled buttons over the table, just
    the pieces and their words, all on one line - the hit point left, MOVE in the middle when the ball is in hand,
    the view right. Touch has the aim dial one row above it; the line of help goes above that, and only until the
@@ -53,29 +53,36 @@ body.touch{--hintb:104px}
 .aimdial[hidden]+.aimmark{display:none}
 
 /* the scoreboard, top centre */
-.hud{position:fixed;top:max(10px,env(safe-area-inset-top));left:0;right:0;z-index:3;display:flex;justify-content:center;pointer-events:none}
-.board{display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;width:min(236px,calc(100vw - 180px));height:34px;
- background:rgba(14,16,22,.78);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:0 10px}
+/* it sits between the pause and the site's exit-full-screen button on the left (12 + 42 + 8 + 34, then a gap) and
+   the sound on the right, centred in what is left: on a phone the exit button sat on the board (2026-11-18). Each
+   side is as wide as its widest words (SHOTS 99) and shares what is over, so nothing is cut */
+.hud{position:fixed;top:max(10px,var(--it));left:0;right:0;z-index:3;display:flex;justify-content:center;pointer-events:none;
+ padding:0 calc(20px + 70px*var(--k)) 0 calc(28px + 76px*var(--k))}
+.board{display:grid;grid-template-columns:minmax(min-content,1fr) 54px minmax(min-content,1fr);align-items:center;width:min(236px,100%);height:34px;
+ background:rgba(14,16,22,.78);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:0 8px}
 .pl{display:flex;align-items:center;gap:6px;min-width:0;opacity:.45}
 .pl.r{justify-content:flex-end}
 .pl.turn{opacity:1}
 .pl i{flex:none;width:7px;height:7px;border-radius:50%;background:transparent;border:1px solid var(--mute)}
 .pl.turn i{background:var(--gold-hi);border-color:var(--gold-hi)}
-.pl b{font:700 15px/1 var(--en);letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl b{font:700 15px/1 var(--en);letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl b small{font-size:12px;color:var(--gold-hi);margin-left:4px}
 .on{display:flex;align-items:center;justify-content:center;gap:4px}
 .on .lbl{font:600 9px/1 var(--en);letter-spacing:.12em;color:var(--mute);width:22px;text-align:right}
 #ballon{width:24px;height:24px}
 /* 8-ball: the group by name in place of a ball, and each player's seven under their name. The board is one
    height for the whole match (the rows' room is kept while the table is open) */
-.ontx{font:700 10px/1 var(--en);letter-spacing:.08em;color:var(--ink);white-space:nowrap}
+.ontx{font:700 10px/1 var(--en);letter-spacing:.04em;color:var(--ink);white-space:nowrap}
 .mb{display:none}
-.board.eight{height:46px;grid-template-columns:1fr 76px 1fr;border-radius:18px}
+/* the seven shrink on a narrow phone (8 px from 412 px wide, 5 px at 360) so the board fits between the buttons */
+.board.eight{--mb:clamp(5px,calc((100vw - 300px)/12),8px);height:46px;grid-template-columns:minmax(min-content,1fr) 58px minmax(min-content,1fr);border-radius:18px}
 .board.eight .pl{flex-wrap:wrap;align-content:center;row-gap:5px}
-.board.eight .mb{display:flex;flex-basis:100%;gap:1px;height:8px}
+.board.eight .mb{display:flex;flex-basis:100%;gap:1px;height:var(--mb)}
 .pl.r .mb{justify-content:flex-end}
-.mb span{flex:none;width:8px;height:8px;border-radius:50%}
+.mb span{flex:none;width:var(--mb);height:var(--mb);border-radius:50%}
 .mb span.gone{opacity:.18}
+/* 360 px wide: SOLO's SHOTS 99 doesn't fit beside BALL ON's words, so the ball stands alone */
+@media (max-width:370px){.on .lbl{display:none}.board:not(.eight){grid-template-columns:minmax(min-content,1fr) 30px minmax(min-content,1fr)}}
 
 /* the power gauge: right edge, shown while the cue is drawn */
 .gauge{position:fixed;z-index:3;right:16px;top:50%;width:20px;height:min(240px,44vh);transform:translateY(-50%);
@@ -86,7 +93,7 @@ body.touch{--hintb:104px}
 .gauge .fill{border-radius:0 0 9px 9px}
 
 /* the hit point: the small cue ball shows it (tap: the big one opens), its name beside it, fixed width */
-.spin{position:fixed;z-index:3;left:14px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px}
+.spin{position:fixed;z-index:3;left:14px;bottom:max(14px,var(--ib));display:flex;align-items:center;gap:8px}
 .spin{height:var(--row);bottom:var(--s)!important;left:12px!important}
 .spin .face{position:relative;flex:none;width:44px;height:44px;padding:0;border-radius:50%;cursor:pointer;
  border:0;box-shadow:0 0 0 1.5px var(--gold),0 2px 8px rgba(0,0,0,.6);background:radial-gradient(circle at 38% 34%,#fffdf6,#e9e4d6 55%,#b9b3a4)}
@@ -203,7 +210,7 @@ body.touch{--hintb:104px}
 }
 
 /* the replay's label, under the scoreboard */
-.rlabel{position:fixed;z-index:3;left:0;right:0;top:calc(max(10px,env(safe-area-inset-top)) + 46px);display:flex;align-items:baseline;justify-content:center;gap:8px;
+.rlabel{position:fixed;z-index:3;left:0;right:0;top:calc(max(10px,var(--it)) + 46px);display:flex;align-items:baseline;justify-content:center;gap:8px;
  pointer-events:none;font:800 20px/1 var(--en);letter-spacing:.24em;color:var(--ink);text-shadow:0 1px 4px #000}
 .rlabel i{align-self:center;width:9px;height:9px;border-radius:50%;background:#d8312b}
 .rlabel small{font:500 11px/1 "Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;letter-spacing:0;color:var(--dim)}
