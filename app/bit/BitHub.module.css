@@ -18,6 +18,10 @@
 .catalog::before, .catalog::after { content: ""; position: absolute; pointer-events: none; }
 .catalog::before { top: 8%; left: 4%; width: 14px; height: 14px; border-radius: 50%; background: #F4C430; opacity: .5; }
 .catalog::after { bottom: 10%; right: 5%; width: 13px; height: 13px; background: #7B8CDE; opacity: .45; transform: rotate(18deg); }
+/* Everything but the shelf stops at 1280px and centres, so a wide screen gets
+   the same shop floor rather than the heading, the arrows and today's game
+   pulled to its two edges. The shelf alone still runs edge to edge. */
+.catalog > :not(.shelf) { max-width: 1280px; margin-inline: auto; }
 .catalog > header { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .steps { display: flex; align-items: center; gap: 14px; }
 .steps button { display: grid; place-items: center; width: 40px; height: 40px; border: 3px solid #232323; border-radius: 50%; background: #f1eee5; box-shadow: 4px 4px 0 #232323; color: #232323; font: 400 18px/1 "Inter", sans-serif; cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
@@ -96,7 +100,8 @@
   top: 50%;
   right: calc(-1 * clamp(20px, 6vw, 90px));
   transform: translateY(-50%);
-  width: min(62vw, 1000px);
+  /* the share of the row it has on a 1460px screen, kept on wider ones */
+  width: min(62vw, 1000px, 71%);
   margin: 0;
   z-index: 0;
   pointer-events: none;
@@ -134,7 +139,9 @@
 /* ---- the shop's sign and its two counters ---- */
 .hero {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(24px, 4vw, 64px); align-items: center;
-  padding: clamp(30px, 4vw, 56px) clamp(20px, 6vw, 90px) clamp(30px, 3.6vw, 50px);
+  /* Past 1280px of content the sides grow instead, so the sign and its two
+     counters stay together in the middle of a wide screen. */
+  padding: clamp(30px, 4vw, 56px) max(clamp(20px, 6vw, 90px), calc((100% - 1280px) / 2)) clamp(30px, 3.6vw, 50px);
   background-color: #F5EFE1;
   background-image: linear-gradient(rgba(24, 61, 85, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(24, 61, 85, .06) 1px, transparent 1px);
   background-size: 32px 32px, 32px 32px;
