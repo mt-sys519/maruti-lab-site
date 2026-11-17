@@ -73,6 +73,6 @@ image: /og/blog/triangle-angle-rules.png
 ![ANGLEの問題画面](/games/shots/angle.webp)
 *ANGLEは三角形の角度から「？」を求めます*
 
-**初級で内角の和、中級で対頂角**と、この記事のきまりを順に使う作りです。計算のBLANK、数列のSEQUENCEとあわせた紹介は「[大人の頭の体操に5問だけの計算と図形のパズル](/blog/brain-puzzles)」にまとめました。
+**初級で内角の和、中級で対頂角**と、この記事のきまりを順に使う作りです。計算のBLANK、数列のSEQUENCEとあわせた紹介は「[大人の頭の体操にちょうどいい5問だけの計算と図形のパズル](/blog/brain-puzzles)」にまとめました。
 
 <p class="postCta"><a href="/bit/angle">ANGLEで遊ぶ</a></p>

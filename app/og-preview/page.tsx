@@ -138,13 +138,20 @@ const noteArt: Record<string, string> = {
 // so a shared article looks like the site rather than like a default card.
 //
 //   node scripts/capture-note-ogp.mjs <slug>
+// Titles are written for search now, not to fit two lines, so a long one
+// steps down a size and the description gives up its third line to make room.
+// Width is counted the way the type sets it: half-width characters are half.
+const titleUnits = (title: string) =>
+  [...title].reduce((n, ch) => n + (/[\x20-\x7e]/.test(ch) ? 0.5 : 1), 0);
+
 function NoteCard({ slug, square }: { slug: string; square?: boolean }) {
   const post = posts.find((p) => p.slug === slug);
   if (!post) return null;
   const art = square ? undefined : noteArt[slug];
+  const long = titleUnits(post.title) > 28;
   return (
     <div
-      className={`${styles.card} ${styles.note} ${art ? styles.hasArt : ""} ${square ? styles.square : styles.wide}`}
+      className={`${styles.card} ${styles.note} ${art ? styles.hasArt : ""} ${long ? styles.longTitle : ""} ${square ? styles.square : styles.wide}`}
       id={square ? `${slug}-square` : slug}
     >
       <p className={styles.noteEyebrow}>LABNOTE / {formatDate(post.date)}</p>

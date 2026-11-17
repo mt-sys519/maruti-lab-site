@@ -252,6 +252,24 @@
   overflow: hidden;
 }
 
+.note.longTitle h1 {
+  font-size: 50px;
+  max-width: 18.6em;
+  word-break: auto-phrase;
+}
+.note.longTitle .noteDesc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.note.hasArt.longTitle h1 {
+  max-width: 11.6em;
+}
+.note.longTitle.square h1 {
+  font-size: 40px;
+}
+
 .note.square h1 {
   font-size: 46px;
   margin-top: 26px;

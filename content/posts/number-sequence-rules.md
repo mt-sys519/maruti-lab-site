@@ -75,6 +75,6 @@ image: /og/blog/number-sequence-rules.png
 ![SEQUENCEの問題画面](/games/shots/sequence.webp)
 *SEQUENCEは数の並びの規則を見抜きます*
 
-答えたあとには、どんな規則だったかの説明も出ます。**上級では、差が変わる型と交互の型がまざって出ます**。図形のANGLE、計算のBLANKとあわせた紹介は「[大人の頭の体操に5問だけの計算と図形のパズル](/blog/brain-puzzles)」にまとめました。
+答えたあとには、どんな規則だったかの説明も出ます。**上級では、差が変わる型と交互の型がまざって出ます**。図形のANGLE、計算のBLANKとあわせた紹介は「[大人の頭の体操にちょうどいい5問だけの計算と図形のパズル](/blog/brain-puzzles)」にまとめました。
 
 <p class="postCta"><a href="/bit/sequence">SEQUENCEで遊ぶ</a></p>

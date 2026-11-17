@@ -56,6 +56,6 @@ PRO STAGEは、競技と同じ大きさのパックとマレットで、**速い
 
 <div class="point"><p class="pointTitle">2人対戦の始め方</p><ul><li>スマホかタブレットを机に平らに置く</li><li>「2人対戦」を選び、7点か15点を選ぶ</li><li>自分側の半分を指で操作する</li></ul></div>
 
-開発の話は「[ゲームセンターのエアホッケーをブラウザで作った](/blog/air-hockey)」に書きました。
+開発の話は「[ブラウザで遊べるエアホッケーゲームを本物の台に近づけて作った](/blog/air-hockey)」に書きました。
 
 <p class="postCta"><a href="/bit/airhockey">AIR HOCKEYを2人で遊ぶ</a></p>

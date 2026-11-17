@@ -55,4 +55,4 @@ image: /og/blog/no-upload-tools.png
 | [SwiftCrop](/swiftcrop) | 画像をまとめて切り抜く・リサイズする |
 | [YURAMEKI](/yurameki) | イラストや写真を動かす |
 
-送らない作りにした理由は「[画像を外部に送信しないWebツールという選択。](/blog/browser-only)」に書きました。
+送らない作りにした理由は「[画像をアップロードせず端末の中だけで処理するWebツールを作った理由](/blog/browser-only)」に書きました。

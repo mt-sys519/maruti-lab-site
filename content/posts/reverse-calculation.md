@@ -75,6 +75,6 @@ image: /og/blog/reverse-calculation.png
 ![BLANKの問題画面](/games/shots/blank.webp)
 *BLANKは式の空欄を逆算します*
 
-この記事の例題は、BLANKの各段階の例題と同じ形です。**答えはすべて正の整数**なので、暗算でも解けます。1問ごとに、ほどき方の説明も出ます。図形のANGLE、数列のSEQUENCEとあわせた紹介は「[大人の頭の体操に5問だけの計算と図形のパズル](/blog/brain-puzzles)」にまとめました。
+この記事の例題は、BLANKの各段階の例題と同じ形です。**答えはすべて正の整数**なので、暗算でも解けます。1問ごとに、ほどき方の説明も出ます。図形のANGLE、数列のSEQUENCEとあわせた紹介は「[大人の頭の体操にちょうどいい5問だけの計算と図形のパズル](/blog/brain-puzzles)」にまとめました。
 
 <p class="postCta"><a href="/bit/blank">BLANKで遊ぶ</a></p>
