@@ -46,7 +46,7 @@ const LEVELS=[
 ];
 const LEVEL_NAMES=['EASY','NORMAL','HARD','WATCH','ELITE','CHAMPION','LEGEND'];
 // stage: 'arcade' | 'pro' | 'two' | 'watch'. PRO's rules: 7 points a game, and 1 game or the official best of 7
-// (bestOf: the games to win, 4; online play: 2); games: the games each side has won
+// (bestOf: the games to win, 4); games: the games each side has won
 let stage='arcade',bestOf=1,games=[0,0];
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 // ?v=b: the real-machine structure (center overhead score, wide one-piece rail, tapered cabinet) in our own plain red
@@ -1345,8 +1345,7 @@ function gameOver(scorer){
   // official rules: the games so far, then the next game from 0-0, served by the side that lost this one
   banner(`${games[0]} - ${games[1]}`,1.1,true);
   after(1.3,()=>{banner(`GAME ${games[0]+games[1]+1}`,1,true);score=[0,0];drawScore(0,0)});
-  // (online: the side that lost the game serves, and its serve tells the other)
-  after(2.5,()=>{if(online){if(scorer===1)serve(0)}else serve(scorer===0?1:0)});
+  after(2.5,()=>serve(scorer===0?1:0));
 }
 function finish(){
   mode='over';for(const p of pucks)p.visible=false;
@@ -1377,7 +1376,7 @@ function startGame(lv,two=false){
   setPaused(false);pauseBtn.hidden=false;
   for(const m of paintMats)m.envMapIntensity=two?PAINT_GLOSS.flat:1;
   fingers.clear();owner[0]=owner[1]=null;
-  const pro=stage==='pro';if(pro)win=7;else bestOf=online?2:1;games=[0,0];setLook(pro?'pro':'arcade');
+  const pro=stage==='pro';if(pro)win=7;else bestOf=1;games=[0,0];setLook(pro?'pro':'arcade');
   // the meshes were built at ARCADE's size: PRO's are the same shapes, narrowed (heights unchanged)
   PR=pro?PRO.puckR:PR0;MR=pro?PRO.malletR:MR0;
   for(const p of pucks){p.mesh.scale.set(PR/PR0,1,PR/PR0);p.shadow.scale.set(PR/PR0,PR/PR0,1)}
@@ -1426,8 +1425,8 @@ document.getElementById('again').addEventListener('click',()=>{
 });
 // the result says what was played: the level (or 2P) and the points to win, or PRO's rules
 // (playedCard: on the result card, in the menu's own names; playedAs: in the post to X, which is in Japanese)
-const playedCard=()=>online?'ONLINE VS・7 POINTS × 2 GAMES':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'OFFICIAL':'1 GAME'}`:`${twoP?'LOCAL VS':LEVEL_NAMES[level]}・${win} POINTS`;
-const playedAs=()=>online?'オンライン対戦・7点×2ゲーム先取':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'1台で2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
+const playedCard=()=>online?'ONLINE VS・7 POINTS':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'OFFICIAL':'1 GAME'}`:`${twoP?'LOCAL VS':LEVEL_NAMES[level]}・${win} POINTS`;
+const playedAs=()=>online?'オンライン対戦・7点先取':stage==='pro'?`${LEVEL_NAMES[level]}・${bestOf>1?'公式ルール':'1ゲーム'}`:`${twoP?'1台で2人対戦':LEVEL_NAMES[level]}・${win}点先取`;
 // the shared page's ?r= picks the card X shows under the post (worker/index.ts): the stage, the level and who won
 const resultCard=title=>twoP?(title==='BLUE WINS'?'2p-blue':'2p-yellow')
   :`${stage==='pro'?'pro':'arcade'}-${LEVEL_NAMES[level].toLowerCase()}-${title==='YOU WIN'?'win':'lose'}`;
