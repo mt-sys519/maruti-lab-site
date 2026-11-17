@@ -62,8 +62,11 @@
   <p id="on-url" class="url" hidden></p>
   <p id="on-state" class="nt two">部屋を作って、URLを相手に送ると始まります</p>
   <div class="sp"></div>
+  <!-- a room whose connection went: join it again by hand; the room this device was last in: go back to it -->
+  <button id="on-re" class="btn pri ico" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 10a6.500 6.500 0 1 1-1.900-4.600"/><path d="M16.800 2.800v3.800h-3.800"/></svg>RECONNECT</button>
   <button id="on-make" class="btn pri">CREATE ROOM</button>
   <button id="on-copy" class="btn pri" hidden>SEND LINK</button>
+  <button id="on-last" class="btn sm ico" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 10a6.500 6.500 0 1 1-1.900-4.600"/><path d="M16.800 2.800v3.800h-3.800"/></svg>REJOIN ROOM</button>
  </div>
  <div class="panel" data-screen="two" hidden>
   <div class="hd"><button class="bk" data-go="top" aria-label="もどる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2.5 4.5 8l5.5 5.5"/></svg></button><h2>LOCAL VS</h2><span></span></div>

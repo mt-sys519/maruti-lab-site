@@ -40,6 +40,8 @@ export class Net{
     else if(m.t==='ice'){if(this.pc&&m.d)this.pc.addIceCandidate(m.d).catch(()=>{})}
     else if(m.t==='relay'){if(!this.how)this.open('relay')}
     else if(m.t==='g')this.take(m.d);
+    // the other left on purpose (during a match: before it, their going just leaves this side waiting)
+    else if(m.t==='bye'){if(this.how)this.end('bye')}
   }
   toRelay(){this.wsSend({t:'relay'});this.open('relay')}
   peer(){
@@ -105,6 +107,7 @@ export class Net{
     try{this.pc?.close()}catch{}try{this.ws.close()}catch{}
     this.on.left?.(why);
   }
-  // leaving on purpose: nothing is reported back
-  close(){this.on={};this.end('bye')}
+  // leaving on purpose: the other is told so (a socket that just drops may come back, this one won't), and
+  // nothing is reported back here
+  close(){if(!this.dead)this.wsSend({t:'bye'});this.on={};this.end('bye')}
 }

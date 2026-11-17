@@ -573,7 +573,10 @@ function malletMesh(color){
     envMap:envTex,envMapIntensity:1}));
   scene.add(m);return m;
 }
-const meMesh=malletMesh(0x2d63d8),cpuMesh=malletMesh(0xf0b72a);
+const MALLET_BLUE=0x2d63d8,MALLET_YELLOW=0xf0b72a;
+const meMesh=malletMesh(MALLET_BLUE),cpuMesh=malletMesh(MALLET_YELLOW);
+// online, the one who made the room is blue and the one who came in is yellow, on both screens (seatSwap: this side is yellow)
+function paintMallets(swap){meMesh.material.color.setHex(swap?MALLET_YELLOW:MALLET_BLUE);cpuMesh.material.color.setHex(swap?MALLET_BLUE:MALLET_YELLOW)}
 const meShadow=blob(MR*2.8),cpuShadow=blob(MR*2.8);
 // puck: glossy red polycarbonate, chamfered edge and a shallow ring pressed into the top
 const PH=0.013,PUCK_RED=new THREE.Color(0xd8261f);
@@ -1059,7 +1062,13 @@ function netMsg(m){
     if(puck.live){Object.assign(puck,{x:-m.x,z:-(HL+PR),vx:0,vz:-m.v,ox:0,oz:0});goal(0,puck)}
   }
   else if(m.t==='hit')sound.hit(m.v,-m.x,'mallet');
-  else if(m.t==='start'){online=true;win=7;startGame(1)}
+  // (k: a match that was cut off goes on from its score, sent as the starting side sees it)
+  else if(m.t==='start'){
+    // (if only this side still has the score, a page opened afresh on the other, it is sent back)
+    const k=m.k?flipKept(m.k):kept;if(!m.k&&kept)net.send({t:'kept',k:kept});
+    online=true;win=7;startGame(1);takeKept(k);
+  }
+  else if(m.t==='kept')takeKept(flipKept(m.k))
   else if(m.t==='again'){wantAgain[1]=true;rematch()}
 }
 // both have to ask for another match; the one who made the room starts it
@@ -1373,6 +1382,7 @@ function startGame(lv,two=false){
   PR=pro?PRO.puckR:PR0;MR=pro?PRO.malletR:MR0;
   for(const p of pucks){p.mesh.scale.set(PR/PR0,1,PR/PR0);p.shadow.scale.set(PR/PR0,PR/PR0,1)}
   for(const m of [meMesh,cpuMesh])m.scale.set(MR/MR0,1,MR/MR0);
+  paintMallets(online&&seatSwap===true);
   for(const m of [meShadow,cpuShadow])m.scale.set(MR/MR0,MR/MR0,1);
   maxPuck=pro?PRO.maxPuck:MAX_PUCK;eMin=pro?PRO.eMin:0.35;eRamp=pro?PRO.eRamp:3;accel=pro?PRO.accel:0;step=pro?PRO.step:STEP;
   wantAgain=[false,false];
@@ -1468,30 +1478,66 @@ const Q=new URLSearchParams(location.search);
 const pageUrl=()=>{try{return new URL(top.location.href)}catch{return new URL(location.href)}};
 const ROOM_CODE=Q.get('room')||pageUrl().searchParams.get('room')||'';
 const ROOM_SERVER=Q.get('roomserver')||(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'ws://localhost:8787':'wss://airhockey-room.mt-kiryu.workers.dev');
-const onState=document.getElementById('on-state'),onMake=document.getElementById('on-make'),onCopy=document.getElementById('on-copy'),onUrl=document.getElementById('on-url'),onSeat=document.getElementById('on-seat'),onOp=document.getElementById('on-op');
+const onState=document.getElementById('on-state'),onMake=document.getElementById('on-make'),onCopy=document.getElementById('on-copy'),onUrl=document.getElementById('on-url'),onSeat=document.getElementById('on-seat'),onOp=document.getElementById('on-op'),onRe=document.getElementById('on-re'),onLast=document.getElementById('on-last');
 const ON_HINT='部屋を作って、URLを相手に送ると始まります',ON_SENT='このURLを開いた人が相手になります',ON_EMPTY='相手はまだいません';
 const ON_STATE={waiting:'相手を待っています…',joining:'相手を待っています…',connecting:'つないでいます…'};
-const ON_WHY={full:'この部屋は満員です',busy:'いまは混んでいて、つなげませんでした',left:'相手が退出しました',lost:'相手との接続が切れました',closed:'部屋につながりませんでした',error:'部屋につながりませんでした'};
+const ON_CUT='接続が切れました。つながり直すと、続きから始まります',ON_CUT0='接続が切れました。つながり直すと、もう一度始まります';
+const ON_GONE='つながりませんでした。RECONNECT で入り直せます',ON_LAST='部屋を作って、URLを相手に送ると始まります。さっきの部屋には REJOIN ROOM で戻れます';
+const ON_WHY={bye:'相手が退出しました',full:'この部屋は満員です',busy:'いまは混んでいて、つなげませんでした',left:'相手が退出しました',lost:'相手との接続が切れました',closed:'部屋につながりませんでした',error:'部屋につながりませんでした'};
 // a phone hands the link to its share sheet (LINE and the rest); elsewhere the button copies it
 const CAN_SHARE=!!navigator.share&&navigator.maxTouchPoints>0,ON_COPY=CAN_SHARE?'SEND LINK':'COPY LINK';
 // the room this page is in before the match starts. Going to another app to send the link drops the room's
 // socket on a phone: while waiting, a dropped socket is joined again (the same room, a few tries), not reported
 let roomCode='',roomIn=false,roomTries=0,roomTimer=0;
+// a match cut off by a dropped connection: its score (kept), and what the room's screen says meanwhile
+let kept=null,roomNote='';
+// which colour this side is in the room, set the first time it gets in and kept through a dropped connection
+let seatSwap=null;
+// RECONNECT (a room whose connection went) takes the main button's place; the link's button goes under it, smaller
+function setCut(on){onRe.hidden=!on;onCopy.className=on?'btn sm':'btn pri'}
+// the room this device was last in, for 15 minutes (as long as a room lasts): a closed tab finds its way back
+// without the link. Forgotten on leaving by hand
+const LAST_KEY='ah-room',LAST_MS=15*60e3;
+function lastRoom(){
+  try{const r=JSON.parse(localStorage.getItem(LAST_KEY));return r&&/^[A-Z0-9]{4,8}$/.test(r.c)&&Date.now()-r.t<LAST_MS?r:null}catch{return null}
+}
+function saveRoom(){try{const r=lastRoom();localStorage.setItem(LAST_KEY,JSON.stringify({c:roomCode,t:r&&r.c===roomCode?r.t:Date.now(),s:seatSwap}))}catch{}}
+function forgetRoom(){try{localStorage.removeItem(LAST_KEY)}catch{}}
+// back at the room's screen (toMenu clears the room): the room, its colours and its kept score stay, RECONNECT shows
+function backToRoom(){
+  const c=roomCode,k=kept,n=roomNote,s=seatSwap,i=roomIn;
+  toMenu();showScreen('online');
+  roomCode=c;kept=k;roomNote=n;seatSwap=s;roomIn=i;onSeat.parentNode.classList.toggle('swap',s===true);
+  showLink(c);setCut(true);onLast.hidden=true;onSeat.textContent=ON_STATE.waiting;
+}
+const flipKept=k=>({s:[k.s[1],k.s[0]],g:[k.g[1],k.g[0]]});
+function takeKept(k){
+  kept=null;if(!k)return;
+  score=[...k.s];games=[...k.g];drawScore(score[0],score[1]);
+}
+// the room's link, shown without the scheme, the room's code picked out; the whole link is kept for the button
+function showLink(code){
+  const u=pageUrl();u.searchParams.set('room',code);
+  const shown=u.href.replace(/^https?:\/\//,''),at=shown.lastIndexOf(code),b=document.createElement('b'),pre=document.createElement('span');
+  pre.textContent=shown.slice(0,at);b.textContent=code;onUrl.replaceChildren(pre,b);onUrl.dataset.link=u.href;
+  onUrl.hidden=false;onCopy.hidden=false;onMake.hidden=true;
+}
 const ROOM_TRIES=6;
 onCopy.textContent=ON_COPY;
 function resetOnline(){
-  roomCode='';roomIn=false;roomTries=0;clearTimeout(roomTimer);
-  onState.textContent=ON_HINT;onSeat.textContent=ON_EMPTY;onOp.classList.remove('in');
+  roomCode='';roomIn=false;roomTries=0;clearTimeout(roomTimer);kept=null;roomNote='';seatSwap=null;onSeat.parentNode.classList.remove('swap');
+  const last=!!lastRoom();setCut(false);onLast.hidden=!last;
+  onState.textContent=last?ON_LAST:ON_HINT;onSeat.textContent=ON_EMPTY;onOp.classList.remove('in');
   onMake.hidden=false;onCopy.hidden=true;onUrl.hidden=true;onCopy.textContent=ON_COPY;
 }
 function joinRoom(code){
   leaveOnline();stage='online';clearTimeout(roomTimer);roomCode=code;
   net=new Net(`${ROOM_SERVER}/room/${code}`,{
     // the seat row says where the other player is; the line under it, what to do meanwhile
-    state:s=>{onSeat.textContent=ON_STATE[s]||'';onOp.classList.toggle('in',s==='connecting');onState.textContent=s!=='connecting'&&!onUrl.hidden?ON_SENT:''},
-    joined:()=>{roomIn=true;roomTries=0},
+    state:s=>{onSeat.textContent=ON_STATE[s]||'';onOp.classList.toggle('in',s==='connecting');onState.textContent=s!=='connecting'&&!onUrl.hidden?roomNote||ON_SENT:''},
+    joined:()=>{roomIn=true;roomTries=0;if(seatSwap===null)seatSwap=net.role===1;onSeat.parentNode.classList.toggle('swap',seatSwap);saveRoom();if(!roomNote)setCut(false)},
     // connected: the one who made the room starts the match
-    ready:role=>{online=true;win=7;if(role===0){net.send({t:'start'});startGame(1)}},
+    ready:role=>{online=true;win=7;roomNote='';setCut(false);if(role===0){const k=kept;net.send({t:'start',k});startGame(1);takeKept(k)}},
     msg:netMsg,
     left:why=>{
       net=null;
@@ -1502,6 +1548,19 @@ function joinRoom(code){
         if(!document.hidden)roomTimer=setTimeout(()=>joinRoom(roomCode),Math.min(5000,400+1000*roomTries++));
         return;
       }
+      // a match cut off (the other's connection, or this one's): back to the same room, the score kept, and the
+      // match goes on when the two are together again. Leaving on purpose ('bye') ends it as before
+      if(online&&roomCode&&['left','lost','closed','error'].includes(why)){
+        const code=roomCode,k=mode==='over'?null:{s:[...score],g:[...games]};
+        backToRoom();
+        kept=k;roomNote=k?ON_CUT:ON_CUT0;onState.textContent=roomNote;
+        // (hidden: the page joins again when it comes back, as while waiting)
+        if(!document.hidden)joinRoom(code);
+        return;
+      }
+      // given up on a room this side was in: it stays on the screen, with RECONNECT to try again by hand
+      if(roomCode&&roomIn&&why!=='bye'){backToRoom();onState.textContent=ON_GONE;return}
+      if(why==='bye')forgetRoom();
       toMenu();showScreen('online');onState.textContent=ON_WHY[why]||ON_WHY.lost;
     },
   },{relayOnly:Q.has('relay')});
@@ -1516,13 +1575,16 @@ addEventListener('pageshow',rejoinRoom);addEventListener('online',rejoinRoom);
 onMake.addEventListener('click',()=>{
   sound.unlock();
   const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',code=Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>A[v%A.length]).join('');
-  const u=pageUrl();u.searchParams.set('room',code);
-  // shown without the scheme, the room's code picked out; the whole link is kept for the button
-  const shown=u.href.replace(/^https?:\/\//,''),at=shown.lastIndexOf(code),b=document.createElement('b'),pre=document.createElement('span');
-  pre.textContent=shown.slice(0,at);b.textContent=code;onUrl.replaceChildren(pre,b);onUrl.dataset.link=u.href;
-  onUrl.hidden=false;onCopy.hidden=false;onMake.hidden=true;onState.textContent=ON_SENT;
+  showLink(code);onState.textContent=ON_SENT;
   joinRoom(code);
 });
+onRe.addEventListener('click',()=>{sound.unlock();roomTries=0;onState.textContent=roomNote||ON_SENT;joinRoom(roomCode)});
+onLast.addEventListener('click',()=>{
+  sound.unlock();const r=lastRoom();if(!r){resetOnline();return}
+  seatSwap=r.s===true?true:r.s===false?false:null;onLast.hidden=true;showLink(r.c);onState.textContent=ON_SENT;joinRoom(r.c);
+});
+// leaving by hand: the room is not offered again
+for(const id of ['on-back','pause-menu','title','back'])document.getElementById(id).addEventListener('click',()=>{if(online||id==='on-back')forgetRoom()},true);
 onCopy.addEventListener('click',async()=>{
   const url=onUrl.dataset.link;
   if(CAN_SHARE){
@@ -1533,6 +1595,7 @@ onCopy.addEventListener('click',async()=>{
 });
 document.getElementById('on-back').addEventListener('click',()=>{leaveOnline();resetOnline();showScreen('top')});
 if(/^[A-Z0-9]{4,8}$/.test(ROOM_CODE)){showScreen('online');onMake.hidden=true;onState.textContent='';onSeat.textContent=ON_STATE.connecting;joinRoom(ROOM_CODE)}
+else resetOnline();
 // pause (every mode, top left, opposite the sound button). The audio context is suspended with it, so the music,
 // the blower and the glide all stop where they are
 let paused=false;

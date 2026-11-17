@@ -72,6 +72,9 @@ html,body{margin:0;height:100%;background:#0b0d12;color:#f4f1e8;overflow:hidden;
 .btn.pri{background:#d8312b;border-color:#ff6a5a}
 .btn.sm{height:46px;font-size:17px;letter-spacing:.12em}
 .btn.line{background:transparent}
+.btn.ico{display:flex;align-items:center;justify-content:center;gap:10px}
+.btn.ico svg{flex:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.panel .btn+.btn{margin-top:8px}
 .row{display:flex;gap:8px}
 .row>*{flex:1}
 
@@ -81,6 +84,9 @@ html,body{margin:0;height:100%;background:#0b0d12;color:#f4f1e8;overflow:hidden;
 .seat .me{background:#2f6fe0;box-shadow:inset 0 0 0 3px #7fa8f2}
 .seat .op{border:2px dashed #b88d1e}
 .seat .op.in{border:0;background:#e8b21e;box-shadow:inset 0 0 0 3px #f6d877}
+.seat.swap .me{background:#e8b21e;box-shadow:inset 0 0 0 3px #f6d877}
+.seat.swap .op{border-color:#3f6fc4}
+.seat.swap .op.in{border:0;background:#2f6fe0;box-shadow:inset 0 0 0 3px #7fa8f2}
 .seat b{font:700 15px/1 var(--en);letter-spacing:.14em}
 .seat em{font-style:normal;font-size:11.5px;color:#a4a8b4;white-space:nowrap}
 .seat .ln{flex:1;height:1px;background:rgba(255,255,255,.16)}
