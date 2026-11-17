@@ -127,6 +127,16 @@ export function GameMark({ id }: { id: BitGameId }) {
         </svg>
       </span>
     );
+  // a ball with its number's disc, as on the page's own title
+  if (id === "billiards")
+    return (
+      <span className={`${styles.mark} ${styles.stroke}`} aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <circle cx="12" cy="12" r="8.5" />
+          <circle className={styles.dot} cx="12" cy="12" r="3.2" />
+        </svg>
+      </span>
+    );
   // Deliberately empty rather than a fallback picture: a game added without a
   // mark should show a gap, not another game's artwork.
   return <span className={styles.mark} aria-hidden="true" />;

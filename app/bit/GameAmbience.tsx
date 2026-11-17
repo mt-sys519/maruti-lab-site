@@ -96,6 +96,13 @@ const scenes: Record<string, ReactNode> = {
       <circle className={styles.puck} data-fill="" cx="50" cy="50" r="3.5" />
     </svg>
   ),
+  billiards: (
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <rect stroke="" x="10" y="26" width="80" height="48" rx="6" />
+      <circle stroke="" cx="66" cy="50" r="6" />
+      <circle className={styles.ball} stroke="" cx="34" cy="50" r="6" />
+    </svg>
+  ),
   neonbreak: (
     <svg viewBox="0 0 100 100" aria-hidden="true">
       <rect stroke="" x="12" y="30" width="76" height="40" rx="6" />

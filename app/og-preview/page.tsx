@@ -54,6 +54,12 @@ const copy: Record<string, Card> = {
     // in headless Chrome.
     art: "/bit/airhockey/table.webp",
   },
+  billiards: {
+    lead: "リアル志向のビリヤード。",
+    sub: "7フィートの台で、ナインボールとエイトボールを。",
+    // The real table, rendered by the game itself with the GPU on.
+    art: "/bit/billiards/table.webp",
+  },
   neonbreak: {
     lead: "ネオンの台のナインボール。",
     sub: "台につくのは、三人のオペレーター。",

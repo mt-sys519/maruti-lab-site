@@ -29,7 +29,8 @@ if (!chrome) throw new Error("No Chrome or Edge found to capture with.");
 // that would overwrite it. Ask for it by name only if a blank board is wanted.
 // airhockey is left out too: it is a WebGL table in an iframe, and the
 // --disable-gpu capture below would photograph an empty frame. Its picture is
-// a frame of the game's own ?demo, taken mid-rally with the GPU on.
+// a frame of the game's own ?demo, taken mid-rally with the GPU on. billiards
+// likewise (WebGL in an iframe): its picture is the real table, taken with the GPU on.
 const ids = ["angle", "blank", "sequence", "input-rain", "paku", "liltorb", "avenue", "neonbreak", "mixpop"];
 const args = process.argv.slice(2);
 const portFlag = args.indexOf("--port");
