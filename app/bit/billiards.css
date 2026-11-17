@@ -25,7 +25,11 @@
 
 .blStage:fullscreen,.blStage:-webkit-full-screen,.blStage.isPseudoFullscreen{position:fixed;inset:0;z-index:999;width:100%;height:100%;max-height:none;aspect-ratio:auto;margin:0}
 @supports (height:100dvh){.blStage:fullscreen,.blStage:-webkit-full-screen,.blStage.isPseudoFullscreen{height:100dvh}}
-.blExitFullscreen{position:absolute;z-index:2;bottom:max(10px,env(safe-area-inset-bottom));left:max(10px,env(safe-area-inset-left));display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(20,22,30,.7);color:#f4f1e8;cursor:pointer}
+/* Top left, beside the game's own pause button: the bottom left corner is the hit point's (they sat on top of
+   each other, 2026-11-18). The game grows its buttons with the screen (x1 up to 560px on the short side, then up to
+   x1.25), so this one follows the same rule in vmin: 34px tall, after a 42px pause button and a gap */
+.blExitFullscreen{position:absolute;z-index:6;top:max(10px,env(safe-area-inset-top));left:calc(12px + clamp(42px,7.5vmin,52.5px) + 8px);display:grid;place-items:center;width:clamp(34px,6.07vmin,42.5px);height:clamp(34px,6.07vmin,42.5px);padding:0;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(20,22,30,.72);color:#f4f1e8;cursor:pointer}
+.blExitFullscreen svg{width:40%!important;height:40%!important}
 
 /* A phone is held upright, and the game turns its camera to look down the
    table from above when the window is tall - so the stage goes tall too,

@@ -8,6 +8,12 @@ const sound=new Sound();
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
 const $=id=>document.getElementById(id);
+// a finger (the aim dial below the table) or a mouse (the cue follows the pointer before the button goes down)
+const TOUCH=matchMedia('(pointer: coarse)').matches;
+document.body.classList.toggle('touch',TOUCH);
+// how big the pieces over the table are: a phone's size up to 560 px on the short side, then growing to 1.25x
+function fitUI(){document.documentElement.style.setProperty('--k',Math.min(1.25,Math.max(1,Math.min(innerWidth,innerHeight)/560)).toFixed(3))}
+fitUI();addEventListener('resize',fitUI);
 
 // the table's build (metres): cushion depth to the rail, the wooden rail's width, heights over the cloth
 const RAIL=0.05,WOOD=0.115,CUSH_H=0.041,RAIL_H=0.046;
@@ -310,6 +316,9 @@ function trace(th){
 }
 // how far the object ball's line and the cue ball's line reach: VS CPU by level, else NORMAL's
 const GUIDE_LEN=[[0.55,0.3],[0.4,0.22],[0.18,0.1]];
+// how far a ball's centre can go from (x,z) along (dx,dz) before a cushion: the lines stop there (the object
+// ball's line ran on through the cushion and off the table, 2026-11-18)
+const toWall=(x,z,dx,dz)=>Math.max(0,Math.min(dx>0?(HX-R-x)/dx:dx<0?(-HX+R-x)/dx:1e9,dz>0?(HZ-R-z)/dz:dz<0?(-HZ+R-z)/dz:1e9));
 function drawGuide(th){
   const c=ballN(0),dx=Math.cos(th),dz=Math.sin(th),tr=trace(th);
   const gx=c.x+dx*tr.t,gz=c.z+dz*tr.t;
@@ -319,14 +328,14 @@ function drawGuide(th){
   if(tr.ball){
     const nx=tr.ball.x-gx,nz=tr.ball.z-gz,nl=Math.hypot(nx,nz),ux=nx/nl,uz=nz/nl;
     const cosA=dx*ux+dz*uz;
-    setRibbon(gObj,tr.ball.x+ux*R,tr.ball.z+uz*R,ux,uz,lo*Math.max(0.25,cosA));
+    setRibbon(gObj,tr.ball.x+ux*R,tr.ball.z+uz*R,ux,uz,Math.min(lo*Math.max(0.25,cosA),toWall(tr.ball.x,tr.ball.z,ux,uz)));
     const tx=dx-cosA*ux,tz=dz-cosA*uz,tl=Math.hypot(tx,tz);
-    if(tl>0.02)setRibbon(gCue,gx+tx/tl*R,gz+tz/tl*R,tx/tl,tz/tl,lc*tl);else gCue.visible=false;
+    if(tl>0.02)setRibbon(gCue,gx+tx/tl*R,gz+tz/tl*R,tx/tl,tz/tl,Math.min(lc*tl,toWall(gx,gz,tx/tl,tz/tl)));else gCue.visible=false;
     gBounce.visible=false;
   }else{
     gObj.visible=gCue.visible=false;
     const bx=tr.wall==='x'?-dx:dx,bz=tr.wall==='z'?-dz:dz;
-    setRibbon(gBounce,gx+bx*R,gz+bz*R,bx,bz,lc);
+    setRibbon(gBounce,gx+bx*R,gz+bz*R,bx,bz,Math.min(lc,toWall(gx,gz,bx,bz)));
   }
 }
 
@@ -489,9 +498,11 @@ function hud(){
   $('move').hidden=!(mine&&G.inHand);
   const mv=$('move');mv.lastChild.textContent=G.phase==='place'?'SET':'MOVE';
   // online, the other's turn: the line under the table says so
-  const hint=$('hint'),theirs=ONLINE()&&G.phase==='remote';hint.hidden=!mine&&!theirs;
+  // (the how-to line: only until the match's first shot, and while placing the ball in hand)
+  const hint=$('hint'),theirs=ONLINE()&&G.phase==='remote';hint.hidden=!(theirs||(mine&&(G.phase==='place'||G.shots===0)));
   hint.textContent=theirs?'相手が狙っています':G.phase==='place'?(G.kitchen?'手玉をドラッグ。ヘッドラインの手前に置けます':'手玉をドラッグして、好きな所に置けます')
-    :'引くとゲージが動き、離すと打つ。横にずらすと向きが変わる';
+    :TOUCH?'ダイヤルで向き、引いて離すと撞く':'右ドラッグで向き、左で引いて離すと撞く';
+  $('aimdial').hidden=!(TOUCH&&mine&&G.phase==='aim');
 }
 
 // ---------- flow ----------
@@ -670,7 +681,7 @@ function finish(who){
   // 8-ball keeps a line for how a rack lost on the 8 ended (empty otherwise), so the card is one shape all game
   $('result-why').hidden=!EIGHT()||G.vs==='solo';$('result-why').textContent=G.vs==='solo'?'':G.why;
   $('result').classList.remove('hidden');
-  for(const id of ['spin','move','hint'])$(id).hidden=true;
+  for(const id of ['spin','move','hint','aimdial'])$(id).hidden=true;
 }
 
 // ---------- the CPU ----------
@@ -812,7 +823,7 @@ function startReplay(done){
   const hit=ev.find(e=>e.t==='hit'&&(e.a===winBall()||e.b===winBall()));
   replay={done,nine,hit:hit?hit.time:0};
   G.phase='replay';hideGuide();cueHold.visible=false;
-  for(const id of ['spin','move','hint','gauge'])$(id).hidden=true;
+  for(const id of ['spin','move','hint','gauge','aimdial'])$(id).hidden=true;
   $('replay').hidden=false;
   replayPass(0);
 }
@@ -877,7 +888,7 @@ function replayStep(dt){
     const e=r.ev[r.seen],pan=clamp(e.x/HX,-1,1)*0.6;
     if(e.t==='hit')sound.ball(e.v,pan);
     else if(e.t==='cush')sound.cushion(e.v,pan);
-    else if(e.t==='pocket'){r.drops.push(newDrop(e,r.balls));sound.pocket(e.v,pan)}
+    else if(e.t==='pocket')r.drops.push(newDrop(e,r.balls,pan));
   }
   r.drops=r.drops.filter(d=>dropStep(d,dt*replayRate(r.t)));
   if(r.t>=r.end){if(r.pass<REPLAY_PASSES-1)replayPass(r.pass+1);else endReplay()}
@@ -899,6 +910,7 @@ const turnRate=v=>TURN_FINE+(TURN_FAST-TURN_FINE)*clamp((v-TURN_V0)/(TURN_V1-TUR
 function screenAngle(vx,vy){return Math.atan2(-vy,vx)}
 canvas.addEventListener('pointerdown',e=>{
   sound.unlock();
+  if(e.pointerType==='mouse'&&e.button!==0)return;
   if(G.phase==='replay'){endReplay();return}
   if(G.mode!=='play'||!human())return;
   if(G.phase==='aim'){
@@ -926,7 +938,8 @@ canvas.addEventListener('pointermove',e=>{
     drag.on=true;drag.phi=phi;
     // seen from above, the shot goes where the pull points (as a slingshot); from behind the ball it starts
     // where the cue already points, and the pull only turns it from there
-    if(view==='top'){
+    // (not with a mouse: its cue was already aimed with the right button, see 'aiming before the pull' below)
+    if(view==='top'&&e.pointerType!=='mouse'){
       camera.updateMatrixWorld();
       const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0),u=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1);
       const wx=vx*r.x-vy*u.x,wz=vx*r.z-vy*u.z;
@@ -942,6 +955,57 @@ canvas.addEventListener('pointermove',e=>{
   // back near where the finger went down: the shot is called off (the gauge stops and empties)
   drag.near=len<12;
 });
+// ---- aiming before the pull (2026-11-18: "turning before pulling is so hard") ----
+// which way a move to the right on the screen turns the shot: toward the camera's right
+function screenSign(){
+  camera.updateMatrixWorld();
+  const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);
+  return Math.sign(-Math.sin(G.aim)*r.x+Math.cos(G.aim)*r.z)||1;
+}
+// a sideways move of dx pixels at speed v (px/s): finely when slow, as the pull's own sideways turn
+const turnBy=(dx,v)=>{G.aim=wrap(G.aim+dx*turnRate(v)*screenSign())};
+// PC: the right button held down turns the cue (seen from above it points at the pointer; from behind the ball a
+// sideways move turns it, finely when slow). Just moving the mouse does nothing: following it with no button down
+// turned the cue on the way to every button (2026-11-18). The wheel and the arrow keys still turn it finely
+let rdrag=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='mouse'||e.button!==2||G.mode!=='play'||!human()||G.phase!=='aim')return;
+  rdrag={id:e.pointerId,x:e.clientX,t:e.timeStamp,v:0};
+  try{canvas.setPointerCapture(e.pointerId)}catch{}
+  rightAim(e);
+});
+function rightAim(e){
+  if(view==='top'){
+    const p=tablePoint(e),c=ballN(0);
+    if(p&&Math.hypot(p.x-c.x,p.z-c.z)>R)G.aim=Math.atan2(p.z-c.z,p.x-c.x);
+    return;
+  }
+  const dx=e.clientX-rdrag.x,dt=Math.max(1,e.timeStamp-rdrag.t)/1000;
+  rdrag.v+=(Math.abs(dx)/dt-rdrag.v)*Math.min(1,dt*12);
+  turnBy(dx,rdrag.v);
+  rdrag.x=e.clientX;rdrag.t=e.timeStamp;
+}
+canvas.addEventListener('pointermove',e=>{if(rdrag&&e.pointerId===rdrag.id&&G.phase==='aim')rightAim(e)});
+canvas.addEventListener('pointerup',e=>{if(rdrag&&e.button===2)rdrag=null});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+// touch: the dial under the table. Rubbing it sideways turns the cue before any pull, slowly for the last touch
+const dial=$('aimdial');let dialDrag=null;
+dial.addEventListener('pointerdown',e=>{
+  sound.unlock();
+  if(G.mode!=='play'||!human()||G.phase!=='aim')return;
+  dialDrag={id:e.pointerId,x:e.clientX,t:e.timeStamp,v:0,shift:0};
+  try{dial.setPointerCapture(e.pointerId)}catch{}
+});
+dial.addEventListener('pointermove',e=>{
+  const d=dialDrag;if(!d||e.pointerId!==d.id||G.phase!=='aim')return;
+  const dx=e.clientX-d.x,dt=Math.max(1,e.timeStamp-d.t)/1000;
+  d.v+=(Math.abs(dx)/dt-d.v)*Math.min(1,dt*12);
+  turnBy(dx,d.v);
+  // the dial's ticks slide with the finger
+  d.shift+=dx;dial.style.backgroundPositionX=d.shift+'px';
+  d.x=e.clientX;d.t=e.timeStamp;
+});
+for(const ev of ['pointerup','pointercancel'])dial.addEventListener(ev,()=>{dialDrag=null});
 function endDrag(e){
   if(!drag||e.pointerId!==drag.id)return;
   const d=drag;drag=null;
@@ -1011,8 +1075,8 @@ $('move').addEventListener('click',()=>{
   else if(G.phase==='place'){G.phase='aim';setView(G.prevView||'aim')}
   hud();
 });
-function setView(v){view=v;$('viewbtn').textContent=v==='top'?'3D':'TOP'}
-$('viewbtn').addEventListener('click',()=>{sound.unlock();if(G.phase==='place')return;setView(view==='top'?'aim':'top')});
+function setView(v){view=v;for(const b of $('viewbtn').children)b.classList.toggle('on',b.dataset.v===(v==='top'?'top':'aim'))}
+$('viewbtn').addEventListener('click',e=>{const b=e.target.closest('button');sound.unlock();if(!b||G.phase==='place')return;setView(b.dataset.v)});
 $('sound').addEventListener('click',()=>{sound.unlock();sound.setOn(!sound.on);paintSound()});
 function paintSound(){const b=$('sound');b.setAttribute('aria-pressed',sound.on);b.textContent=sound.on?'♪ ON':'♪ OFF'}
 paintSound();
@@ -1044,7 +1108,7 @@ function toMenu(){
   // leaving an online match by hand: the other is told, and the room is left
   leaveOnline();
   sound.bgmStop();G.mode='menu';G.phase='idle';G.vs='cpu';drag=null;cpuAnim=null;stroke=null;cueHold.visible=false;
-  for(const id of ['hud','pause','viewbtn','spin','move','hint','gauge'])$(id).hidden=true;
+  for(const id of ['hud','pause','viewbtn','spin','move','hint','gauge','aimdial'])$(id).hidden=true;
   $('result').classList.add('hidden');$('pausemenu').classList.add('hidden');$('cut').classList.add('hidden');
   menu.classList.remove('hidden');goScreen('top');
   G.balls=rack();syncMeshes();setView('aim');
@@ -1333,8 +1397,7 @@ function update(dt){
         sound.cushion(e.v,pan);
       }else if(e.t==='pocket'){
         s.pots.push(e.a);
-        G.drops.push(newDrop(e,G.balls));
-        sound.pocket(e.v,pan);
+        G.drops.push(newDrop(e,G.balls,pan));
       }
     }
     if(!anyMoving(G.balls)&&!G.drops.length){acc=0;G.phase='wait';setTimeout(endShot,250)}
@@ -1346,10 +1409,14 @@ function update(dt){
 // which a slowed replay gave away). It goes on with the speed and spin it had, gravity pulls it down, the lip rolls
 // it in while it still hangs on the edge, and the leather wall and bottom stop it
 const DROP_G=9.81,CUP_FLOOR=-0.09;
-function newDrop(e,balls){
+// The pocket's sound is heard when the falling ball first meets the pocket (its back, the leather or the cup's
+// floor), not when its centre crosses the hole's edge: in the slowed replay that came well before the ball was
+// seen to go in (2026-11-18). A slowed drop meets it later, so the sound waits with it
+function newDrop(e,balls,pan=0){
   const b=balls.find(q=>q.n===e.a),p=POCKETS[e.p];
-  return {n:e.a,p,t:0,x:e.x,z:e.z,y:R,vx:e.vx,vz:e.vz,vy:0,wx:b?.wx||0,wy:b?.wy||0,wz:b?.wz||0};
+  return {n:e.a,p,t:0,x:e.x,z:e.z,y:R,vx:e.vx,vz:e.vz,vy:0,wx:b?.wx||0,wy:b?.wy||0,wz:b?.wz||0,snd:{v:e.v,pan}};
 }
+function dropSound(d){if(d.snd){sound.pocket(d.snd.v,d.snd.pan);d.snd=null}}
 function dropStep(d,dt){
   const m=meshes[d.n],p=d.p;
   // (steps short enough that a fast ball moves no more than ~4 mm in one, or it goes through the pocket's back)
@@ -1366,7 +1433,7 @@ function dropStep(d,dt){
         // motion), giving up most of its push. Only the leather used to stop it, so a ball that came in hard
         // crossed the hole before it had fallen that far and flew out over the rail (2026-11-18)
         const k=dist+(lim-dist)*0.35;d.x=p.x+nx*k;d.z=p.z+nz*k;
-        if(vn>0){d.vx-=vn*nx*1.3;d.vz-=vn*nz*1.3;d.vx*=0.7;d.vz*=0.7}
+        if(vn>0){d.vx-=vn*nx*1.3;d.vz-=vn*nz*1.3;d.vx*=0.7;d.vz*=0.7;dropSound(d)}
       }else{
         // still on the lip and not heading out: the edge under it tips it in toward the middle
         const a=DROP_G*1.4*Math.min(1,(dist-lim)/R);
@@ -1374,13 +1441,13 @@ function dropStep(d,dt){
       }
     }
     d.x+=d.vx*h;d.z+=d.vz*h;d.y+=d.vy*h;
-    if(d.y<CUP_FLOOR+R){d.y=CUP_FLOOR+R;d.vy=-d.vy*0.25;d.vx*=0.6;d.vz*=0.6}
+    if(d.y<CUP_FLOOR+R){dropSound(d);d.y=CUP_FLOOR+R;d.vy=-d.vy*0.25;d.vx*=0.6;d.vz*=0.6}
   }
   m.visible=true;m.position.set(d.x,d.y,d.z);
   const w=Math.hypot(d.wx,d.wy,d.wz);
   if(w>1e-4){vTmp.set(d.wx/w,d.wy/w,d.wz/w);qTmp.setFromAxisAngle(vTmp,w*dt);m.quaternion.premultiply(qTmp)}
   // deep in the cup and settled: out of sight
-  if(d.t>0.9||(d.y<CUP_FLOOR+R+0.002&&d.t>0.5)){m.visible=false;return false}
+  if(d.t>0.9||(d.y<CUP_FLOOR+R+0.002&&d.t>0.5)){dropSound(d);m.visible=false;return false}
   return true;
 }
 function render(dt){

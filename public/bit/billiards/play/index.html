@@ -19,11 +19,14 @@
 </div>
 <button id="pause" class="rbtn pause" aria-label="ポーズ" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1.5" width="2.8" height="9" rx=".6"/><rect x="7.2" y="1.5" width="2.8" height="9" rx=".6"/></svg></button>
 <button id="sound" class="rbtn sound" aria-pressed="true">♪ ON</button>
-<button id="viewbtn" class="rbtn viewbtn" hidden>TOP</button>
+<!-- the view, a switch for play (bottom right), not one more round button beside the sound's (2026-11-18) -->
+<div id="viewbtn" class="viewseg" hidden><button data-v="aim" class="on"><span>3D</span></button><button data-v="top"><span>TOP</span></button></div>
 <!-- the power, filling as the cue is drawn back -->
 <div id="gauge" class="gauge" hidden><div class="fill" id="gfill"></div><span id="gpct">0</span></div>
 <!-- where the tip meets the cue ball: tap or drag the dot -->
-<div id="spin" class="spin" hidden><button class="face" id="spinface" aria-label="撞点を選ぶ"><i id="spindot"></i></button><span id="spinname">センター</span></div>
+<div id="spin" class="spin" hidden><button class="face" id="spinface" aria-label="撞点を選ぶ"><i id="spindot"></i></button><span class="spl"><small>撞点</small><b id="spinname">センター</b></span></div>
+<!-- touch: turn the cue before pulling, by rubbing this sideways (slowly for the last touch) -->
+<div id="aimdial" class="aimdial" hidden></div><i class="aimmark" aria-hidden="true"></i>
 <!-- ball in hand: move the cue ball, then set it -->
 <button id="move" class="btn pri ico mv" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v16M2 10h16M10 2 7.5 4.5M10 2l2.5 2.5M10 18l-2.5-2.5M10 18l2.5-2.5M2 10l2.5-2.5M2 10l2.5 2.5M18 10l-2.5-2.5M18 10l-2.5 2.5"/></svg>MOVE</button>
 <p id="hint" class="hint" hidden></p>

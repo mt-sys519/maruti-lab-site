@@ -88,8 +88,9 @@ export function BilliardsGame() {
         <iframe className="blFrame" src={PLAY_URL} title="BILLIARDS" allow="fullscreen; autoplay" />
         {fullscreenActive && (
           // Fullscreen shows only the stage's own subtree, so the button below
-          // it disappears; this one stays inside. Bottom left, because the
-          // game's own pause and sound buttons hold the top corners.
+          // it disappears; this one stays inside. Top left, beside the game's
+          // pause button: the bottom corners are the hit point's and the view
+          // switch's (billiards.css).
           <button className="blExitFullscreen" type="button" onClick={toggleFullscreen} aria-label="全画面表示を終了">
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
               <path d="M7 2v5H2M13 2v5h5M7 18v-5H2M13 18v-5h5" />
