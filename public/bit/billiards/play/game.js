@@ -888,7 +888,7 @@ function replayPass(k){
   const s=G.shot,r=replay,d=r.nine.time;
   Object.assign(r,{pass:k,t:0,acc:0,ev:[],seen:0,drops:[]});
   r.from=k===0?0:k===1?Math.max(0,r.hit-0.12):Math.max(0,d-0.45);
-  r.end=k===0?d+0.9:k===1?d+0.5:d+0.65;
+  r.end=k===0?d+0.9:k===1?d+0.3:d+0.65;
   r.balls=copyBalls(s.start);
   strike(r.balls[0],s.strike.th,s.strike.speed,s.strike.side,s.strike.height);
   for(let n=0;n<=NBALLS;n++)meshes[n].quaternion.copy(s.quats[n]);
@@ -905,9 +905,24 @@ function replayPass(k){
   const [ux,uz,p]=nineWay();
   if(k===0)watchTarget(s.strike.th);
   else if(k===1){
-    // behind the pocket, low, a little to one side, looking back up the 9's way in
-    const a=0.35,cx=ux*Math.cos(a)-uz*Math.sin(a),cz=ux*Math.sin(a)+uz*Math.cos(a);
-    camT.pos.set(p.x+cx*0.3,0.17,p.z+cz*0.3);camT.look.set(p.x-ux*0.42,0.0,p.z-uz*0.42);camT.up.set(0,1,0);
+    // up behind the 9, a little to one side, looking down its way to the pocket: the cue ball coming onto it and
+    // the 9 running away from the lens into the hole. From behind the pocket (low at 0.17 m, and then high) the
+    // rail filled half a phone's picture and the balls were small and far (2026-11-18). The distance is found as
+    // the overview's is, against the pocket and both balls
+    const nb=r.balls.find(b=>b.n===winBall()),cb=r.balls[0];
+    const pts=[new THREE.Vector3(p.x,0,p.z),new THREE.Vector3(nb.x,R,nb.z),new THREE.Vector3(cb.x,R,cb.z)];
+    const look=new THREE.Vector3(nb.x*0.45+p.x*0.55,0,nb.z*0.45+p.z*0.55);
+    const a=0.22,pitch=0.5,cx=ux*Math.cos(a)-uz*Math.sin(a),cz=ux*Math.sin(a)+uz*Math.cos(a);
+    const dir=new THREE.Vector3(-cx*Math.cos(pitch),Math.sin(pitch),-cz*Math.cos(pitch));
+    fitCam.fov=camera.fov;fitCam.aspect=camera.aspect;fitCam.near=0.02;fitCam.far=30;fitCam.updateProjectionMatrix();
+    let lo=0.25,hi=6;const v=new THREE.Vector3();
+    for(let i=0;i<22;i++){
+      const mid=(lo+hi)/2;
+      fitCam.position.copy(look).addScaledVector(dir,mid);fitCam.up.set(0,1,0);fitCam.lookAt(look);fitCam.updateMatrixWorld();
+      const ok=pts.every(q=>{v.copy(q).project(fitCam);return Math.abs(v.x)<0.8&&v.y>-0.75&&v.y<0.55});
+      if(ok)hi=mid;else lo=mid;
+    }
+    camT.pos.copy(look).addScaledVector(dir,hi);camT.look.copy(look);camT.up.set(0,1,0);
   }else{
     // close, over the cloth, behind and beside the 9 as it goes in: the hole in front of the lens (from beside
     // the pocket, low over the rail, the wood filled the picture)
@@ -923,9 +938,10 @@ function replayRate(t){
   const r=replay,d=r.nine.time;
   if(r.pass===0)return 1;
   if(r.pass===1){
-    // 1/5 as the 9 is hit, then faster and faster: 1x as it reaches the pocket
-    const t0=r.hit,t1=Math.max(t0+0.35,d-0.1),k=clamp((t-t0)/(t1-t0),0,1);
-    return 0.2+0.8*k*k;
+    // a third of speed as the 9 is hit, back to 1x within 0.3 s of it (the slow 1/5 easing all the way to the
+    // pocket was "too long", 2026-11-18)
+    const k=clamp((t-r.hit)/0.3,0,1);
+    return 0.3+0.7*k;
   }
   // the 9 going in, at 0.3x; back to 1x once it's down
   if(t<d+0.35)return 0.3;
