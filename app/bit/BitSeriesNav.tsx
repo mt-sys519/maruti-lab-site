@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { BitGameId } from "./games";
 import { bitGames as games } from "./games";
@@ -29,6 +29,20 @@ export function BitSeriesNav({ active }: BitSeriesNavProps) {
     const left = Math.round(el.scrollLeft);
     setEdges({ back: left > 1, on: left + el.clientWidth < el.scrollWidth - 1 });
   }, []);
+
+  // The row starts at the game that is open, not at 001: on a phone the later
+  // games' own names were off the screen on their own pages (2026-11-18). It
+  // stops clear of the back step drawn over the left edge; where the row
+  // can't scroll that far (the last few, or a screen wide enough for all) it
+  // simply goes as far as it can. Before paint, so the row doesn't jump.
+  useLayoutEffect(() => {
+    const el = rail.current;
+    const here = el?.querySelector<HTMLElement>("a.isActive");
+    if (!el || !here) return;
+    const x = here.getBoundingClientRect().left - el.getBoundingClientRect().left + el.scrollLeft;
+    // 44px clears the 38px step; a wide screen's own padding is already more
+    el.scrollLeft = Math.max(0, x - Math.max(44, parseFloat(getComputedStyle(el).paddingLeft) || 0));
+  }, [active]);
 
   useEffect(() => {
     const el = rail.current;
