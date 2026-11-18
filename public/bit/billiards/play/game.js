@@ -498,19 +498,24 @@ function hud(){
   const tg=G.balls.length?targets():[0],word=EIGHT()&&tg[0]!==8?(G.vs==='solo'?'OPEN':{S:'SOLIDS',T:'STRIPES'}[G.group[G.turn]]||'OPEN'):'';
   $('ballon').style.display=word?'none':'';$('ontx').style.display=word?'':'none';$('ontx').textContent=word;
   if(!word)drawBallIcon($('ballon'),tg[0]);
-  // 8-ball against someone: each player's seven under their name, dimmed once down
-  const rows=EIGHT()&&G.vs!=='solo';
-  $('board').classList.toggle('eight',rows);
-  for(const i of [0,1]){
-    const mb=$('mb'+i),g=rows?G.group[i]:null,key=g?g+G.balls.map(b=>b.on?1:0).join(''):'';
-    if(mb.dataset.key===key)continue;
-    mb.dataset.key=key;mb.innerHTML='';
-    if(!g)continue;
-    for(let n=g==='S'?1:9,k=0;k<7;k++,n++){
-      const s=document.createElement('span'),col=BALL_COL[n];
-      s.style.background=g==='S'?col:`linear-gradient(${IVORY} 0 27%,${col} 27% 73%,${IVORY} 73%)`;
-      if(!ballN(n)?.on)s.className='gone';
-      mb.append(s);
+  // 8-ball: all fifteen in a row under the top one, the left player's group on the left (solids while the table
+  // is open), the 8 between them; a ball down is a ring (style.css .prow)
+  const prow=$('pocketrow');prow.hidden=!(EIGHT()&&G.mode==='play');
+  if(!prow.hidden){
+    const left=G.group[0]==='T'?9:1,key=left+G.balls.map(b=>b.on?1:0).join('');
+    if(prow.dataset.key!==key){
+      prow.dataset.key=key;prow.innerHTML='';
+      const add=n=>{
+        const s=document.createElement('span'),col=BALL_COL[n];
+        // the number's white spot on each, so the black 8 reads as a ball and not as the ring of one gone
+        const spot=`radial-gradient(circle,${IVORY} 0 24%,transparent 27%)`;
+        s.style.background=n>8?`${spot},linear-gradient(${IVORY} 0 27%,${col} 27% 73%,${IVORY} 73%)`:`${spot},${col}`;
+        s.className=!ballN(n)?.on?'gone':n===8?'eight':'';
+        prow.append(s);
+      };
+      for(let k=0;k<7;k++)add(left+k);
+      prow.append(document.createElement('i'));add(8);prow.append(document.createElement('i'));
+      for(let k=0;k<7;k++)add(10-left+k);
     }
   }
   const mine=human()&&(G.phase==='aim'||G.phase==='place');
@@ -531,17 +536,28 @@ function startMatch(vs,breaker=0){
   $('menu').classList.add('hidden');$('result').classList.add('hidden');
   for(const id of ['hud','pause','viewbtn'])$(id).hidden=false;
   sound.bgmStart();
-  newRack(breaker);
+  newRack(breaker,true);
 }
-function newRack(breaker){
+// the old games' beat before play (2026-11-18): the whole table first, the balls heard going into the rack, then
+// BREAK with its phrase, and only then the cue. Shorter for the racks after the first. A token drops the beat's
+// rest if the match is left or the table is taken from the other side meanwhile
+let introTok=0;
+function newRack(breaker,first=false){
   G.rackNo++;
   G.balls=rack();G.turn=breaker;G.breakShot=true;G.inHand=true;G.kitchen=true;G.drops=[];
-  G.group=[null,null];G.why='';
+  G.group=[null,null];G.why='';G.lastTurn=breaker;
   G.spinX=G.spinY=0;setSpinDot();
   const c=ballN(0);c.x=-HX/2-0.02;c.z=0;
   syncMeshes();
   G.aim=0;
+  G.phase='intro';hud();
+  const tok=++introTok;
+  setTimeout(()=>{if(tok===introTok&&G.mode==='play')sound.rack()},first?350:150);
+  setTimeout(()=>{if(tok===introTok&&G.mode==='play')breakNow()},first?1250:750);
+}
+function breakNow(){
   startTurn();
+  sound.breakJingle();
   say('BREAK',G.vs==='solo'?(EIGHT()?'少ない打数で、最後に8番を落とそう':'少ない打数で、9番まで取り切ろう'):G.vs==='cpu'?(G.turn===0?'あなたのブレイク':'CPUのブレイク')
     // online: the one who joined by the link learns here what the room's maker picked
     :ONLINE()?(EIGHT()?'8-BALL':'9-BALL')+' · '+(G.race>1?'RACE TO '+G.race:'1 RACK')+'　'+(G.turn===0?'あなたのブレイク':'相手のブレイク')
@@ -557,11 +573,18 @@ function startTurn(){
   else if(human()){G.phase='aim'}
   else if(ONLINE()){G.phase='remote';setTimeout(pump,0)}
   else{G.phase='cpu';setTimeout(cpuTurn,700)}
+  // the table coming back to you: two soft notes (not after a foul, which has its own)
+  const prev=G.lastTurn;G.lastTurn=G.turn;
+  if(human()&&G.vs!=='solo'&&prev!==G.turn&&!G.quietTurn)sound.turnChime();
+  G.quietTurn=false;
   hud();
 }
+// the gauge's full power: the break alone goes up to 10 m/s (a real break is 9-11 m/s, far over any other shot;
+// 2026-11-18, "make the break a power shot"), every other shot to 7.85
+const topSpeed=()=>G.breakShot?9.75:7.6;
 function shoot(th,power,sx,sy){
   const c=ballN(0);
-  const speed=0.25+Math.pow(power,1.35)*7.6;
+  const speed=0.25+Math.pow(power,1.35)*topSpeed();
   // online: the other side plays the same strike from the same balls
   if(ONLINE()&&human())netSend({t:'s',n:G.shotNo,th,p:power,sx,sy,b:pack(G.balls)});
   G.shot={n:G.shotNo,th,ev:[],t:0,targets:targets(),first:null,rail:false,pots:[],seen:0,speed,start:copyBalls(G.balls),
@@ -595,7 +618,7 @@ function endShot(){
   G.breakShot=false;
   if(nine&&!foul){
     const me=G.turn;
-    startReplay(()=>{if(G.vs==='solo'){G.phase='wait';say('CLEAR!',G.shots+' 打で取り切り',2);setTimeout(()=>finish(0),2200)}else winRack(me)});
+    startReplay(()=>{if(G.vs==='solo'){G.phase='wait';sound.potJingle();say('CLEAR!',G.shots+' 打で取り切り',2);setTimeout(()=>finish(0),2200)}else winRack(me)});
     return;
   }
   if(nine&&foul)respot(9);
@@ -620,7 +643,7 @@ function endShot8(){
   if(pots.includes(8)&&!wasBreak){
     const legal=!foul&&tg[0]===8;
     if(legal){
-      startReplay(()=>{if(G.vs==='solo'){G.phase='wait';say('CLEAR!',G.shots+' 打で取り切り',2);setTimeout(()=>finish(0),2200)}else winRack(me)});
+      startReplay(()=>{if(G.vs==='solo'){G.phase='wait';sound.potJingle();say('CLEAR!',G.shots+' 打で取り切り',2);setTimeout(()=>finish(0),2200)}else winRack(me)});
       return;
     }
     if(G.vs!=='solo'){
@@ -653,6 +676,7 @@ function endShot8(){
 // a foul gives the other player (or, alone, yourself) the cue ball in hand; a ball of your own in keeps you at
 // the table; anything else passes the turn
 function afterShot(foul,again){
+  if(foul){sound.foulJingle();G.quietTurn=true}
   if(foul&&G.vs==='solo'){
     // alone: a foul only costs the shot, and the cue ball goes where you like
     G.fouls++;G.inHand=true;G.kitchen=false;
@@ -682,8 +706,8 @@ function freeNear(x,z){
 function winRack(p,why=''){
   G.racks[p]++;G.phase='wait';G.why=why;hud();
   const done=G.racks[p]>=G.race,res=G.vs==='cpu'?(p===0?'あなたの勝ち':'CPUの勝ち'):NAMES()[p]+' の勝ち';
-  if(why)say('FOUL',why+'。'+res,2.6,true);
-  else say(EIGHT()?'8-BALL!':'9-BALL!',res,2);
+  if(why){say('FOUL',why+'。'+res,2.6,true);sound.foulJingle()}
+  else{say(EIGHT()?'8-BALL!':'9-BALL!',res,2);sound.potJingle()}
   setTimeout(()=>{if(done)finish(p);else newRack(p)},why?2800:2200);
 }
 function finish(who){
@@ -700,7 +724,14 @@ function finish(who){
   }
   // 8-ball keeps a line for how a rack lost on the 8 ended (empty otherwise), so the card is one shape all game
   $('result-why').hidden=!EIGHT()||G.vs==='solo';$('result-why').textContent=G.vs==='solo'?'':G.why;
-  $('result').classList.remove('hidden');
+  // the result in two beats (2026-11-18): who won, with its phrase over a quiet room; then the score, set down
+  // like a ball, and the buttons. Their room is kept while hidden, so nothing moves when they come
+  sound.bgmStop();
+  const won=G.vs==='solo'||G.vs==='two'||who===0;
+  if(won)sound.winJingle();else sound.loseJingle();
+  const res=$('result'),tok=++introTok;
+  res.classList.add('stage');res.classList.remove('hidden');
+  setTimeout(()=>{if(tok!==introTok)return;res.classList.remove('stage');sound.tick()},800);
   for(const id of ['spin','move','hint','aimdial'])$(id).hidden=true;
 }
 
@@ -752,7 +783,7 @@ function cpuPlan(){
   // the break: full power at the rack's apex (the 1 in 9-ball; whichever ball is there in 8-ball)
   if(G.breakShot){
     const a=G.balls.filter(b=>b.on&&b.n>0).sort((p,q)=>p.x-q.x)[0];
-    return {th:wrap(Math.atan2(a.z-c.z,a.x-c.x)+(Math.random()-0.5)*0.004),speed:7.8,sx:0,sy:0};
+    return {th:wrap(Math.atan2(a.z-c.z,a.x-c.x)+(Math.random()-0.5)*0.004),speed:9.8,sx:0,sy:0};
   }
   const t=aimBall();let cands=[];
   for(const n of targets()){
@@ -815,7 +846,7 @@ function cpuTurn(){
   let th=plan.th+(Math.random()-0.5)*2*E.a*Math.PI/180;
   let speed=plan.speed*(1+(Math.random()-0.5)*2*E.v);
   if(Math.random()<E.pick)th+=(Math.random()-0.5)*0.05;
-  const power=Math.pow(clamp((speed-0.25)/7.6,0,1),1/1.35);
+  const power=Math.pow(clamp((speed-0.25)/topSpeed(),0,1),1/1.35);
   // turn the cue to the shot, draw it back, strike
   cpuAnim={t:0,from:G.aim,th,power,sx:plan.sx,sy:plan.sy};G.rsx=plan.sx;G.rsy=plan.sy;
 }
@@ -1133,8 +1164,9 @@ menu.addEventListener('click',e=>{
 function toMenu(){
   // leaving an online match by hand: the other is told, and the room is left
   leaveOnline();
+  introTok++;
   sound.bgmStop();G.mode='menu';G.phase='idle';G.vs='cpu';drag=null;cpuAnim=null;stroke=null;cueHold.visible=false;
-  for(const id of ['hud','pause','viewbtn','spin','move','hint','gauge','aimdial'])$(id).hidden=true;
+  for(const id of ['hud','pause','viewbtn','spin','move','hint','gauge','aimdial','pocketrow'])$(id).hidden=true;
   $('result').classList.add('hidden');$('pausemenu').classList.add('hidden');$('cut').classList.add('hidden');
   menu.classList.remove('hidden');goScreen('top');
   G.balls=rack();syncMeshes();setView('aim');
@@ -1146,6 +1178,14 @@ $('resume').addEventListener('click',()=>{sound.unlock();if(paused){paused=false
 $('pause-menu').addEventListener('click',()=>{paused=false;toMenu()});
 $('again').addEventListener('click',()=>{if(ONLINE())onlineAgain();else startMatch(G.vs)});
 $('result-menu').addEventListener('click',toMenu);
+// every button answers with a sound (2026-11-18, the old games' manners): deciding (start, a mode, OK, rematch),
+// going back, or choosing (everything else). The sound switch itself stays quiet
+const UI_DECIDE='[data-start],.tile,#again,#hp-ok,#on-make,#resume,#cut-re,#on-re,#move',
+  UI_BACK='.bk,#on-back,#pause-menu,#result-menu,#cut-menu';
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.id==='sound')return;
+  sound.unlock();sound.ui(b.matches(UI_BACK)?'back':b.matches(UI_DECIDE)?'decide':'select');
+},true);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.mode==='play'&&!ONLINE()){paused=true;sound.bgmStop();$('pausemenu').classList.remove('hidden')}});
 // the screen stays on through a match (it slept in full screen while the CPU thought, 2026-11-18), and is let go on
 // the menu, the result and the pause. Checked once a second rather than at every place the mode changes; the
@@ -1309,8 +1349,8 @@ function netMsg(m){
   if(m.t==='sync'){
     $('cut').classList.add('hidden');
     if(m.st.matchNo!==matchNo||G.mode!=='play')return;
-    if(m.st.n>G.shotNo){adopt(m.st);sQueue={};endMsgs={};G.waitEnd=false;startTurn()}
-    else if(m.st.n===G.shotNo&&G.phase!=='replay'&&G.phase!=='roll'&&G.phase!=='wait')startTurn();
+    if(m.st.n>G.shotNo){introTok++;adopt(m.st);sQueue={};endMsgs={};G.waitEnd=false;startTurn()}
+    else if(m.st.n===G.shotNo&&G.phase!=='replay'&&G.phase!=='roll'&&G.phase!=='wait'&&G.phase!=='intro')startTurn();
     return;
   }
   if(G.mode!=='play')return;

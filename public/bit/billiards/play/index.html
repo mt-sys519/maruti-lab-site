@@ -10,11 +10,10 @@
 
 <!-- over the table while playing. Everything here keeps its size whatever it says, so nothing moves -->
 <div id="hud" class="hud" hidden>
- <!-- 8-ball against someone (.eight): a row of each player's seven under their name -->
  <div class="board" id="board">
-  <div class="pl" id="pl0"><i></i><b id="name0">YOU</b><span class="mb" id="mb0"></span></div>
+  <div class="pl" id="pl0"><i></i><b id="name0">YOU</b></div>
   <div class="on"><span class="lbl">BALL ON</span><canvas id="ballon" width="56" height="56"></canvas><span class="ontx" id="ontx"></span></div>
-  <div class="pl r" id="pl1"><b id="name1">CPU</b><i></i><span class="mb" id="mb1"></span></div>
+  <div class="pl r" id="pl1"><b id="name1">CPU</b><i></i></div>
  </div>
 </div>
 <button id="pause" class="rbtn pause" aria-label="ポーズ" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1.5" width="2.8" height="9" rx=".6"/><rect x="7.2" y="1.5" width="2.8" height="9" rx=".6"/></svg></button>
@@ -33,6 +32,8 @@
 <div class="bslot"><div id="banner" class="banner" aria-live="polite"></div></div>
 <!-- the winning shot played again: a tap skips it -->
 <div id="replay" class="rlabel" hidden><i></i>REPLAY<small>タップでスキップ</small></div>
+<!-- 8-ball: all fifteen under the top row, a ball down shown as a ring -->
+<div id="pocketrow" class="prow" hidden></div>
 
 <div id="menu" class="overlay">
  <div class="panel" data-screen="top">

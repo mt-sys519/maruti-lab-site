@@ -9,6 +9,7 @@ const FILES={
   clack:'sounds/539854_12029332-hq.mp3',    // Za-Games "billiard ball clack"
   sink:'sounds/763601_15688677-hq.mp3',     // ChloePieterse "Pool Ball Sinking"
   hits:'sounds/62331_791247-hq.mp3',        // bsumusictech "Pool balls.wav"
+  clatter:'sounds/763602_15688677-hq.mp3',  // ChloePieterse's clatter (the rack at START, 2026-11-18)
 };
 // [file, start s, length s, gain]: picked by ear and by the waveform (sounds-src/cuts.md)
 // (onsets found from the waveform's 5 ms peaks: each cut starts 10 ms before its hit and ends before the next sound)
@@ -19,7 +20,12 @@ export const CUTS={
   pocket:[['sink',0.81,0.58],['sink',2.5,0.8],['sink',3.81,0.9],['sink',11.265,0.85],['sink',18.475,0.75],['sink',25.865,0.75]],
   // the one hit in the rail recording (the others' rail-less recordings were all "none of these")
   cushion:[['rail',0.355,0.3]],
+  // the balls gathered into the rack: the recording's first burst (found from the waveform, not yet by ear)
+  rack:[['clatter',0.47,0.9]],
 };
+// the menus' sounds are the table's own (2026-11-18, "the old games' manners: a sound for every button"):
+// choosing, a light click of two balls; deciding, the cue's strike; going back, a ball into the cushion
+const UI={select:[CUTS.ball[6],0.2],decide:[CUTS.cue[1],0.42],back:[CUTS.cushion[0],0.4]};
 
 // ---------- BGM: a jazz bar's trio, written in code (as AIR HOCKEY's songs are) ----------
 // Medium swing at 104 BPM in F, a 16-bar loop. Each bar is 12 triplet-eighths: a swung pair of eighths is the
@@ -130,6 +136,59 @@ export class Sound{
     if(!this.cut(CUTS.pocket,g,pan))this.knock(g*0.4,220,0.18,pan,0.4);
   }
 
+  // ---- the game's manners (2026-11-18): buttons, the rack, jingles in the trio's own voices ----
+  ui(kind){if(!this.ready())return;const [c,g]=UI[kind];this.cut([c],g)}
+  rack(){if(!this.ready())return;this.cut(CUTS.rack,0.7)}
+  // the result's numbers, set down like a ball
+  tick(){if(!this.ready())return;this.cut([CUTS.ball[6]],0.35)}
+  noise(){
+    if(!this.noiseBuf){
+      const c=this.ctx,n=c.createBuffer(1,c.sampleRate,c.sampleRate),d=n.getChannelData(0);
+      for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      this.noiseBuf=n;
+    }
+    return this.noiseBuf;
+  }
+  // a short phrase on its own bus, a little over the BGM
+  jingle(play,lv=0.42){
+    if(!this.ready())return;
+    const c=this.ctx,bus=c.createGain();bus.gain.value=lv;bus.connect(this.out);
+    this.noise();play(c.currentTime+0.03,bus);
+    setTimeout(()=>bus.disconnect(),4500);
+  }
+  chord(notes,t,dur,g,bus){for(const n of notes)this.epiano(midi(n),t,dur,g,bus)}
+  // BREAK: a swung pickup up to F6/9, the bass and the ride on the landing
+  breakJingle(){this.jingle((t,b)=>{
+    const e=60/BPM/3;
+    this.epiano(midi(72),t,e*2,0.07,b);this.epiano(midi(74),t+e*2,e,0.07,b);this.epiano(midi(77),t+e*3,e*2,0.08,b);
+    this.chord([69,74,79],t+e*5,e*6,0.06,b);this.bass(midi(41),t+e*5,e*6,0.34,b);this.ride(t+e*5,0.035,b);
+  })}
+  // your turn: two soft notes
+  turnChime(){this.jingle((t,b)=>{this.epiano(midi(81),t,0.12,0.05,b);this.epiano(midi(77),t+0.15,0.3,0.05,b)},0.38)}
+  // 9-BALL! / 8-BALL!: a run up into Fmaj9
+  potJingle(){this.jingle((t,b)=>{
+    const e=60/BPM/3;
+    [72,76,79,81].forEach((n,i)=>this.epiano(midi(n),t+i*e,e,0.07,b));
+    this.chord([69,76,79,84],t+e*4,e*8,0.06,b);this.bass(midi(41),t+e*4,e*8,0.34,b);this.ride(t+e*4,0.04,b);
+  })}
+  // FOUL: two tritones stepping down a half tone, low
+  foulJingle(){this.jingle((t,b)=>{
+    this.chord([56,62],t,0.16,0.07,b);this.bass(midi(42),t,0.16,0.3,b);
+    this.chord([55,61],t+0.24,0.4,0.07,b);this.bass(midi(41),t+0.24,0.4,0.32,b);
+  })}
+  // the match won: ii - V - I, the last chord held
+  winJingle(){this.jingle((t,b)=>{
+    const q=60/BPM;
+    this.chord([65,70,74],t,q*0.6,0.06,b);this.bass(midi(43),t,q*0.6,0.32,b);
+    this.chord([64,70,76],t+q*0.75,q*0.6,0.06,b);this.bass(midi(36),t+q*0.75,q*0.6,0.32,b);
+    this.chord([64,67,69,74],t+q*1.5,q*3,0.06,b);this.epiano(midi(81),t+q*1.5,q*3,0.08,b,1.6);
+    this.bass(midi(41),t+q*1.5,q*3,0.36,b);this.ride(t+q*1.5,0.045,b);
+  })}
+  // lost: a line sliding down to F minor
+  loseJingle(){this.jingle((t,b)=>{
+    [69,68,67,66].forEach((n,i)=>this.epiano(midi(n),t+i*0.22,0.2,0.07,b));
+    this.chord([56,60,67],t+0.9,1.3,0.06,b);this.bass(midi(41),t+0.9,1.3,0.32,b);
+  })}
   // ---- the BGM ----
   bgmStart(){
     if(!this.ctx||this.bgm)return;

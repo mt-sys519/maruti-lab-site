@@ -70,19 +70,21 @@ body.touch{--hintb:104px}
 .on{display:flex;align-items:center;justify-content:center;gap:4px}
 .on .lbl{font:600 9px/1 var(--en);letter-spacing:.12em;color:var(--mute);width:22px;text-align:right}
 #ballon{width:24px;height:24px}
-/* 8-ball: the group by name in place of a ball, and each player's seven under their name. The board is one
-   height for the whole match (the rows' room is kept while the table is open) */
+/* 8-ball: the group by name in place of a ball (OPEN / SOLIDS / STRIPES) */
 .ontx{font:700 10px/1 var(--en);letter-spacing:.04em;color:var(--ink);white-space:nowrap}
-.mb{display:none}
-/* the seven shrink on a narrow phone (8 px from 412 px wide, 5 px at 360) so the board fits between the buttons */
-.board.eight{--mb:clamp(5px,calc((100vw - 300px)/12),8px);height:46px;grid-template-columns:minmax(min-content,1fr) 58px minmax(min-content,1fr);border-radius:18px}
-.board.eight .pl{flex-wrap:wrap;align-content:center;row-gap:5px}
-.board.eight .mb{display:flex;flex-basis:100%;gap:1px;height:var(--mb)}
-.pl.r .mb{justify-content:flex-end}
-.mb span{flex:none;width:var(--mb);height:var(--mb);border-radius:50%}
-.mb span.gone{opacity:.18}
 /* 360 px wide: SOLO's SHOTS 99 doesn't fit beside BALL ON's words, so the ball stands alone */
-@media (max-width:370px){.on .lbl{display:none}.board:not(.eight){grid-template-columns:minmax(min-content,1fr) 30px minmax(min-content,1fr)}}
+@media (max-width:370px){.on .lbl{display:none}.board{grid-template-columns:minmax(min-content,1fr) 30px minmax(min-content,1fr)}}
+/* 8-ball's fifteen under the top row (2026-11-18, "no sign of the balls that went down"; the seven dots under each
+   name were 5-8 px and only there once the groups were set): the left player's group on the left (solids while
+   the table is open), the 8 between, a ball down left as a ring. Hidden while a replay's label is up */
+.prow{position:fixed;z-index:3;left:0;right:0;top:calc(max(10px,var(--it)) + 34px*var(--k) + 8px);display:flex;justify-content:center;
+ align-items:center;gap:3px;pointer-events:none;transform-origin:top center;scale:var(--k)}
+.prow[hidden]{display:none}
+.prow span{flex:none;width:15px;height:15px;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.55)}
+.prow span.eight{box-shadow:inset 0 0 0 1px rgba(255,255,255,.42),0 1px 2px rgba(0,0,0,.55)}
+.prow span.gone{background:transparent!important;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
+.prow i{flex:none;width:7px}
+#replay:not([hidden])~.prow{visibility:hidden}
 
 /* the power gauge: right edge, shown while the cue is drawn */
 .gauge{position:fixed;z-index:3;right:16px;top:50%;width:20px;height:min(240px,44vh);transform:translateY(-50%);
@@ -125,6 +127,8 @@ body.touch{--hintb:104px}
 .overlay{position:fixed;inset:0;z-index:4;display:flex;align-items:safe center;justify-content:center;
  padding:16px;background:rgba(6,7,11,.55);overflow-y:auto}
 .overlay.hidden{display:none}
+/* the result's first beat: only who won; the score and the buttons keep their room until the second (2026-11-18) */
+#result.stage .sc,#result.stage .why,#result.stage button{visibility:hidden}
 :where(.overlay) :where(h1,h2,p){margin:0}
 :where(button){margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
 
