@@ -469,6 +469,7 @@ function syncMeshes(){
 }
 
 // ---------- HUD ----------
+const MOVE_ICON='M10 2v16M2 10h16M10 2 7.5 4.5M10 2l2.5 2.5M10 18l-2.5-2.5M10 18l2.5-2.5M2 10l2.5-2.5M2 10l2.5 2.5M18 10l-2.5-2.5M18 10l-2.5 2.5';
 const banner=$('banner');let bannerT=0;
 function say(text,sub='',sec=1.4,foul=false){
   banner.innerHTML='';banner.append(text);
@@ -521,7 +522,9 @@ function hud(){
   const mine=human()&&(G.phase==='aim'||G.phase==='place');
   $('spin').hidden=!mine||G.phase==='place';
   $('move').hidden=!(mine&&G.inHand);
-  const mv=$('move');mv.lastChild.textContent=G.phase==='place'?'SET':'MOVE';
+  // SET wears a check, not MOVE's four arrows: with the arrows it looked like the button that moves the ball (2026-11-19)
+  const mv=$('move'),setting=G.phase==='place';mv.lastChild.textContent=setting?'SET':'MOVE';
+  mv.querySelector('path').setAttribute('d',setting?'M4 10.5l4 4 8-9':MOVE_ICON);
   // online, the other's turn: the line under the table says so
   // (the how-to line: only until the match's first shot, and while placing the ball in hand)
   const hint=$('hint'),theirs=ONLINE()&&G.phase==='remote';hint.hidden=!(theirs||(mine&&(G.phase==='place'||G.shots===0)));
