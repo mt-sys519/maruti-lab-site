@@ -934,6 +934,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(G.phase==='replay'){endReplay();return}
   if(G.mode!=='play'||!human())return;
   if(G.phase==='aim'){
+    if(underDial(e)){startDial(e);return}
     drag={id:e.pointerId,sx:e.clientX,sy:e.clientY,on:false,phi:0,power:0,ts:e.timeStamp,v:0};
     try{canvas.setPointerCapture(e.pointerId)}catch{}
   }else if(G.phase==='place'){
@@ -1010,12 +1011,17 @@ canvas.addEventListener('pointerup',e=>{if(rdrag&&e.button===2)rdrag=null});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 // touch: the dial under the table. Rubbing it sideways turns the cue before any pull, slowly for the last touch
 const dial=$('aimdial');let dialDrag=null;
-dial.addEventListener('pointerdown',e=>{
+function startDial(e){
   sound.unlock();
   if(G.mode!=='play'||!human()||G.phase!=='aim')return;
   dialDrag={id:e.pointerId,x:e.clientX,t:e.timeStamp,v:0,shift:0};
   try{dial.setPointerCapture(e.pointerId)}catch{}
-});
+}
+dial.addEventListener('pointerdown',startDial);
+// a finger that lands a little off the dial (or anywhere under it, between the bottom row's pieces) is the dial's,
+// not a pull: aiming for the dial started the gauge now and then (2026-11-18)
+const DIAL_SLACK=18;
+const underDial=e=>e.pointerType!=='mouse'&&!dial.hidden&&e.clientY>dial.getBoundingClientRect().top-DIAL_SLACK;
 dial.addEventListener('pointermove',e=>{
   const d=dialDrag;if(!d||e.pointerId!==d.id||G.phase!=='aim')return;
   const dx=e.clientX-d.x,dt=Math.max(1,e.timeStamp-d.t)/1000;
