@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ShareButton } from "./shared/ShareButton";
+import { XShareButton } from "./shared/XShareButton";
 
 declare global {
   // iOS Safari only gained unprefixed element.requestFullscreen() in 16.4; the
@@ -98,6 +100,12 @@ export function AirHockeyGame() {
         )}
       </div>
       <div className="ahBar">
+        {/* The page's share, as the older games have it: left of the full
+            screen button, in the same round outline (2026-11-18). */}
+        <div className="ahShare">
+          <ShareButton title="MarutiBit「AIR HOCKEY」" text="リアル志向のエアホッケー。ゲームセンターのあの台を、指一本で。" url="https://marutilab.com/bit/airhockey" />
+          <XShareButton variant="compact" text={"MarutiBit「AIR HOCKEY」\nリアル志向のエアホッケー。ゲームセンターのあの台を、指一本で。"} url="https://marutilab.com/bit/airhockey" />
+        </div>
         <button className="ahFullscreen" type="button" aria-pressed={fullscreenActive} onClick={toggleFullscreen}>
           <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
             <path d="M2 7V2h5M18 7V2h-5M2 13v5h5M18 13v5h-5" />
