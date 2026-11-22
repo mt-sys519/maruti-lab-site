@@ -569,7 +569,7 @@ function breakNow(){
 function startTurn(){
   const c=ballN(0),t=aimBall();
   if(!G.breakShot&&t)G.aim=Math.atan2(t.z-c.z,t.x-c.x);
-  G.power=0;
+  G.power=0;preAimed=false;
   // a free ball opens from above with the cue ball already in hand: starting in the aiming view with only a MOVE
   // button, nobody saw that the ball could be moved (2026-11-17). Not on the break, whose ball is already placed
   if(human()&&G.inHand&&!G.kitchen){G.phase='place';G.prevView=view;setView('top')}
@@ -972,6 +972,10 @@ function endReplay(){
 
 // ---------- input ----------
 let drag=null;
+// the cue was turned this turn before any pull (the dial, or a mouse's right button): a pull seen from above then
+// keeps that aim and only turns it, as from behind the ball. Pointing it where the pull points threw the dial's
+// aim away (2026-11-23: "set it with the bar in TOP, then it points somewhere else entirely")
+let preAimed=false;
 // how much a finger's sideways move turns the shot, by how fast it moves (radians per CSS pixel): slow, a
 // thirtieth of a degree a pixel, for the last touch on a cut; fast, ~0.4 deg a pixel, to swing round. The pull's
 // own angle turned it ~0.3 deg a pixel at any speed: far too coarse to aim with (2026-11-17)
@@ -1010,7 +1014,7 @@ canvas.addEventListener('pointermove',e=>{
     // seen from above, the shot goes where the pull points (as a slingshot); from behind the ball it starts
     // where the cue already points, and the pull only turns it from there
     // (not with a mouse: its cue was already aimed with the right button, see 'aiming before the pull' below)
-    if(view==='top'&&e.pointerType!=='mouse'){
+    if(view==='top'&&e.pointerType!=='mouse'&&!preAimed){
       camera.updateMatrixWorld();
       const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0),u=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1);
       const wx=vx*r.x-vy*u.x,wz=vx*r.z-vy*u.z;
@@ -1034,7 +1038,7 @@ function screenSign(){
   return Math.sign(-Math.sin(G.aim)*r.x+Math.cos(G.aim)*r.z)||1;
 }
 // a sideways move of dx pixels at speed v (px/s): finely when slow, as the pull's own sideways turn
-const turnBy=(dx,v)=>{G.aim=wrap(G.aim+dx*turnRate(v)*screenSign())};
+const turnBy=(dx,v)=>{G.aim=wrap(G.aim+dx*turnRate(v)*screenSign());if(dx)preAimed=true};
 // PC: the right button held down turns the cue (seen from above it points at the pointer; from behind the ball a
 // sideways move turns it, finely when slow). Just moving the mouse does nothing: following it with no button down
 // turned the cue on the way to every button (2026-11-18). The wheel and the arrow keys still turn it finely
