@@ -6,6 +6,7 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { RainChimeGame } from "../RainChimeGame";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
 const title = "雨音とチャイムのヒーリングアンビエント｜AVENUE";
@@ -60,6 +61,7 @@ export default function AvenuePage() {
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="avenue" />
+      <WorkNotes href="/bit/avenue" />
       <BitFooter label="MARUTIBIT / GAME 007" />
     </main>
   );

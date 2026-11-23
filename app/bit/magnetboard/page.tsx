@@ -7,9 +7,10 @@ import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { MagnetBoardGame } from "../MagnetBoardGame";
 import "../magnetBoard.css";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
-const title = "ブラウザで描ける磁気お絵かきボード｜MAGNET BOARD";
+const title = "磁気お絵かきボード｜MAGNET BOARD";
 const description =
   "砂鉄で描いて、つまみでシャーッと消す、磁気お絵かきボード。ひらがな・たしざん・ひきざん・かたちのお手本も出せる。無料、登録不要。";
 
@@ -62,6 +63,7 @@ export default function MagnetBoardPage() {
         <PrAds kind="a8" />
 
         <BitCartridgeNav current="magnetboard" />
+        <WorkNotes href="/bit/magnetboard" />
         <BitFooter label="MARUTIBIT / GAME 010" />
       </main>
     </>

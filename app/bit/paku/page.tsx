@@ -86,11 +86,10 @@ export default function PakuPage() {
         footnote="上層と中層の魚は、沈みきった餌をある深さより下までは追いません。底に落ちたぶんはコリドラスの取り分になります。"
       />
 
-      <WorkNotes href="/bit/paku" />
-
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="paku" />
+      <WorkNotes href="/bit/paku" />
       <BitFooter label="MARUTIBIT / GAME 005" />
     </main>
   );

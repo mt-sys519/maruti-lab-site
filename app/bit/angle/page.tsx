@@ -6,13 +6,14 @@ import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
-const title = "MarutiBit — ANGLE（角度当てゲーム）";
+const title = "角度当てゲーム｜ANGLE";
 const description = "三角形の角度を順番に解く角度当てゲーム。全5問の図形パズル、初級・中級・上級の3段階。";
 
 export const metadata: Metadata = {
-  title,
+  title: { absolute: title },
   description,
   alternates: { canonical: "/bit/angle" },
   openGraph: {
@@ -54,6 +55,7 @@ export default function AnglePage() {
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="angle" />
+      <WorkNotes href="/bit/angle" />
       <BitFooter label="MARUTIBIT / GAME 001" />
     </main>
   );

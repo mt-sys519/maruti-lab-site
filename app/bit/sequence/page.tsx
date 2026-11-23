@@ -6,6 +6,7 @@ import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
@@ -51,6 +52,7 @@ export default function SequencePage() {
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="sequence" />
+      <WorkNotes href="/bit/sequence" />
       <BitFooter label="MARUTIBIT / GAME 003" />
     </main>
   );

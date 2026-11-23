@@ -7,9 +7,10 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import "../airHockey.css";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
-const title = "ブラウザで遊べるエアホッケー｜AIR HOCKEY";
+const title = "エアホッケーのブラウザゲーム｜AIR HOCKEY";
 const description =
   "カンッと打って、スーッと滑る。ゲームセンターのエアホッケーをブラウザで。途中でパックが増える15点先取、本物の球速と公式ルールで戦うPRO STAGE、スマホやタブレット1台での2人対戦も、URLを送るだけのオンライン対戦も。無料、登録不要。";
 
@@ -74,6 +75,7 @@ export default function AirHockeyPage() {
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="airhockey" />
+      <WorkNotes href="/bit/airhockey" />
       <BitFooter label="MARUTIBIT / GAME 011" />
     </main>
   );

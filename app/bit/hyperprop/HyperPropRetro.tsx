@@ -129,9 +129,8 @@ export function HyperPropRetro() {
         </div>
       </section>
 
-      <WorkNotes href="/bit/hyperprop" className="rtNotes" />
-
       <PrAds kind="a8" />
+      <WorkNotes href="/bit/hyperprop" className="rtNotes" />
       <RetroFooter />
     </main>
   );

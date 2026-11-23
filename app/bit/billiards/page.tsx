@@ -7,9 +7,10 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import "../billiards.css";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
-const title = "ブラウザで遊べるビリヤード｜BILLIARDS";
+const title = "ビリヤードのブラウザゲーム｜BILLIARDS";
 const description =
   "7フィートの台で撞く、リアル志向のビリヤードをブラウザで。ナインボールとエイトボール、3段階のCPU戦、ひとりで取り切るSOLO、1台を交互に使う2人対戦、URLを送るだけのオンライン対戦も。無料、登録不要。";
 
@@ -71,6 +72,7 @@ export default function BilliardsPage() {
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="billiards" />
+      <WorkNotes href="/bit/billiards" />
       <BitFooter label="MARUTIBIT / GAME 012" />
     </main>
   );

@@ -6,6 +6,7 @@ import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { InputRainGame } from "../InputRainGame";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
@@ -55,6 +56,7 @@ export default function InputRainPage() {
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="input-rain" />
+      <WorkNotes href="/bit/input-rain" />
       <BitFooter label="MARUTIBIT / GAME 004" />
     </main>
   );

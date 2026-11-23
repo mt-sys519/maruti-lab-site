@@ -6,6 +6,7 @@ import { BitFooter } from "../BitFooter";
 import { BitHeader } from "../BitHeader";
 import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
 export const metadata: Metadata = {
@@ -62,6 +63,7 @@ export default function BlankPage() {
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="blank" />
+      <WorkNotes href="/bit/blank" />
       <BitFooter label="MARUTIBIT / GAME 002" />
     </main>
   );

@@ -7,6 +7,7 @@ import { BitHowToPlay } from "../BitHowToPlay";
 import { BitSeriesNav } from "../BitSeriesNav";
 import { MixPopGame } from "../MixPopGame";
 import "../mixPop.css";
+import { WorkNotes } from "../../blog/NoteWork";
 import { PrAds } from "../../PrAds";
 
 const title = "ドリンクバーを混ぜるゲーム｜MIX POP";
@@ -90,9 +91,12 @@ export default function MixPopPage() {
       />
 
 
+
+
       <PrAds kind="a8" />
 
       <BitCartridgeNav current="mixpop" />
+      <WorkNotes href="/bit/mixpop" />
       <BitFooter />
     </main>
     </>
