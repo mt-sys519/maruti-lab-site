@@ -576,8 +576,10 @@ export function mountMagnetBoard(root) {
   const rand = (n) => Math.floor(Math.random() * n);
   const fontAsked = new Set();
   const font = (size) => `600 ${size}px "Klee One", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif`;
-  function needFont(text) { // canvas text only shows the web font once that glyph slice is in
-    const f = font(100);
+  // the sums are written loosely, as a grown-up would jot them; the kana stay schoolbook
+  const handFont = (size) => `400 ${size}px "Yomogi", "Klee One", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif`;
+  function needFont(text, face = font) { // canvas text only shows the web font once that glyph slice is in
+    const f = face(100);
     if (!document.fonts || fontAsked.has(text) || document.fonts.check(f, text)) return;
     fontAsked.add(text);
     document.fonts.load(f, text).then(() => { if (alive) drawGuide(); }).catch(() => {});
@@ -606,13 +608,13 @@ export function mountMagnetBoard(root) {
   function sheetMath(g, w, h, m) {
     if (!lesson.math) newMath();
     const q = lesson.math, text = `${q.a} ${q.op} ${q.b} =`;
-    needFont('0123456789+−=');
-    g.font = font(100);
+    needFont('0123456789+−=', handFont);
+    g.font = handFont(100);
     const per = g.measureText(text).width / 100;
     const fs = Math.min(m * 0.2, (w * 0.86) / (per + 1.45));
     const box = fs * 1.15, gap = fs * 0.3, total = per * fs + gap + box;
     const x0 = (w - total) / 2, cy = h * 0.34;
-    g.font = font(fs); g.textAlign = 'left'; g.textBaseline = 'middle'; g.globalAlpha = 1;
+    g.font = handFont(fs); g.textAlign = 'left'; g.textBaseline = 'middle'; g.globalAlpha = 1;
     g.fillText(text, x0, cy);
     const bx = x0 + per * fs + gap, by = cy - box / 2;
     g.globalAlpha = 0.6; g.lineWidth = 2.5; g.setLineDash([8, 6]);

@@ -33,10 +33,11 @@ export const metadata: Metadata = {
 export default function MagnetBoardPage() {
   return (
     <>
-      {/* Klee One for the practice sheets and the kana picker: a schoolbook
-          hand a child would copy from. It loads on this route only. */}
+      {/* Klee One for the kana sheets and the kana picker: a schoolbook
+          hand a child would copy from. Yomogi for the sums, written loosely.
+          They load on this route only. */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&family=Yomogi&display=swap" />
       <main className="bitPage bitPageMilk" style={{ "--pkg-color": "#7B8CDE" } as CSSProperties}>
         <BitHeader current="MAGNET BOARD" />
         <BitSeriesNav active="magnetboard" />
