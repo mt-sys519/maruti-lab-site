@@ -725,7 +725,7 @@ function composeFrame(W, L, img, text, light) {
 // The frames as small tiles of the visitor's own photo, in the chosen look with the sliders applied.
 // フィルム化 (the film strip and slide mounts, on the light box) and 枠 (mounts and the instant card),
 // each its own row of tiles; one frame at a time across both.
-const FILM_TILES = [['none', 'なし'], ['film', 'フィルム'], ['slide', 'スライド白'], ['slidecard', 'スライド紙']];
+const FILM_TILES = [['none', 'なし'], ['film', 'スリーブ'], ['slide', 'マウント白'], ['slidecard', 'マウント紙']];
 const MOUNT_TILES = [['none', 'なし'], ['white', '白'], ['dark', '黒'], ['instant', 'インスタント']];
 const TILE_W = 160;
 
