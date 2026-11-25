@@ -13,55 +13,101 @@ import { PrAds } from "./PrAds";
 // layout's defaults, which are written for this page.
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
-const yuramekiUrl = "/yurameki";
-const aoganeUrl = "/aogane";
-const aoganePlayUrl = "/aogane/play/";
+// Every tool gets the same card, in one grid: the image tools first, then the
+// games and apps. `bg` is the tool's own colour, shown behind its picture.
+// A card with `clock` shows the live PromptTerm CLOCK instead of a picture.
+type Work = {
+  name: string;
+  label: string;
+  copy: string;
+  image?: string;
+  clock?: boolean;
+  bg: string;
+  href: string;
+  action: string;
+};
 
-const works = [
+const works: Work[] = [
   {
     name: "PICLEA",
     label: "PHOTO LETTERING",
     copy: "自分の写真の上で、200以上の書体を仕上がりのまま見比べて選べる文字入れツール。写真は端末の外へ出ません。",
     image: "/piclea/og.png",
+    bg: "#f3e6e8",
     href: "/piclea/",
     action: "使ってみる",
-    external: false,
   },
   {
-    name: "HALLO TERRA",
-    label: "WORLD GREETINGS",
-    copy: "世界地図から場所を選ぶと、その土地の挨拶・お礼・お詫びが、現地の文字とカタカナの読みで出てきます。",
-    image: "/og/hallo-terra-2.jpg",
-    href: "/hallo-terra",
+    name: "YURAMEKI",
+    label: "LIVING PICTURE",
+    copy: "一枚の絵に、息を宿す。風や衣、髪や光が静かに動き出します。作品は端末の中だけで息づきます。",
+    image: "/yurameki/og.png",
+    bg: "#efe9dc",
+    href: "/yurameki",
     action: "使ってみる",
-    external: false,
   },
   {
     name: "SwiftCrop",
     label: "IMAGE UTILITY",
     copy: "画像を外へ送らず、必要な比率とサイズへ。複数枚もブラウザだけで整える画像ツール。",
     image: "/works/swiftcrop.png",
+    bg: "#e6edf3",
     href: "/swiftcrop",
     action: "使ってみる",
-    external: false,
   },
   {
     name: "COLOR RE:FINE",
     label: "LOCAL COLORIZATION",
     copy: "白黒写真に、もう一度、あの日の色を。端末の中だけで写真をカラー化します。",
     image: "/works/color-refine.png",
+    bg: "#efe7da",
     href: "/color-refine",
     action: "使ってみる",
-    external: false,
+  },
+  {
+    name: "filmea",
+    label: "FILM LOOKS",
+    copy: "手持ちの写真にフィルムの色をあてて見比べ、気に入った色で保存できるツール。写真は端末の外へ出ません。",
+    image: "/filmea/og.png",
+    bg: "#ebe9e2",
+    href: "/filmea/",
+    action: "使ってみる",
+  },
+  {
+    name: "蒼鉄 -AOGANE-",
+    label: "PC GAME",
+    copy: "顔を向けた方へ視界が動く、WEBカメラ式ヘッドトラッキングFPS。PCのブラウザで遊べます。",
+    image: "/aogane/play/assets/cover.webp",
+    bg: "#0a0f12",
+    href: "/aogane",
+    action: "遊んでみる",
+  },
+  {
+    name: "PromptTerm CLOCK",
+    label: "DESKTOP APP",
+    copy: "秒まで刻み続ける、6管の端末時計。無料・登録不要、オフラインで動くWindowsのデスクトップ時計です。",
+    clock: true,
+    bg: "#020504",
+    href: "/clock",
+    action: "ダウンロード",
+  },
+  {
+    name: "HALLO TERRA",
+    label: "WORLD GREETINGS",
+    copy: "世界地図から場所を選ぶと、その土地の挨拶・お礼・お詫びが、現地の文字とカタカナの読みで出てきます。",
+    image: "/og/hallo-terra-2.jpg",
+    bg: "#e1efe8",
+    href: "/hallo-terra",
+    action: "使ってみる",
   },
   {
     name: "4TRACK CASSETTE SAMPLER",
     label: "BROWSER SAMPLER",
     copy: "音を切る、並べる、録る。4トラック、PAN、マイク録音、LO-FIをブラウザだけで扱うサンプラー。",
     image: "/og/4track.png",
+    bg: "#f1e4e2",
     href: "/4track",
     action: "使ってみる",
-    external: false,
   },
 ];
 
@@ -116,68 +162,27 @@ export default function Home() {
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" />
       <BitRetro />
 
-      {/* AOGANE is its own section, not a MarutiBit cartridge: a full game with
-          its own intro page (/aogane) and the game in a page of its own. */}
-      <section id="aogane" className="feature featureAogane" aria-labelledby="aogane-title">
-        <a className="featureImage aoganeImage imageLink" href={aoganeUrl} aria-label="蒼鉄 -AOGANE-の紹介ページを開く">
-          <Image src="/aogane/play/assets/cover.webp" alt="パイロットのAOIと有人機・蒼鉄" fill sizes="(max-width: 800px) 100vw, 62vw" />
-        </a>
-        <div className="featureCopy">
-          <p className="workNumber">PC GAME</p>
-          <h2 id="aogane-title">蒼鉄<small>-AOGANE-</small></h2>
-          <p className="workTagline">WEBカメラ式ヘッドトラッキングFPS</p>
-          <p>顔を向けた方へ視界が動き、銃はマウスで構える。AIが暴走した月面の送電施設へ、人の手で動かせる最後の機体・蒼鉄で向かいます。PCのブラウザで遊べます。</p>
-          <a className="textButton refinedLink" href={aoganePlayUrl}><span>ゲームを開く</span></a>
-          <a className="featureSubLink refinedLink" href={aoganeUrl}><span>蒼鉄について</span></a>
-        </div>
-      </section>
-
-      <section className="feature featureClock" aria-labelledby="clock-title">
-        <div className="clockCopy">
-          <p className="workNumber">DESKTOP APP</p>
-          <h2 id="clock-title">PromptTerm<br />CLOCK</h2>
-          <p className="workTagline">秒まで刻み続ける、6管の端末時計。</p>
-          <p>架空の端末環境PromptTermに組み込まれた、Windowsデスクトップ時計。無料、登録不要、オフラインで動きます。</p>
-          <a className="lightButton" href="/clock">作品を見る・ダウンロード</a>
-        </div>
-        <a className="clockImage imageLink" href="/clock" aria-label="PromptTerm CLOCKの作品ページを開く">
-          <ClockPreview />
-        </a>
-      </section>
-
       <section id="works" className="worksSection" aria-labelledby="works-title">
         <div className="sectionHeading">
-          <p className="eyebrow">OTHER WORKS</p>
-          <h2 id="works-title">ちいさな道具が、<br />日々を少したのしくする。</h2>
+          <p className="eyebrow">WORKS</p>
+          <h2 id="works-title">思いついたものを、<br />触れる形に。</h2>
         </div>
         <div className="worksGrid">
           {works.map((work) => (
             <article className="workCard" key={work.name}>
-              <a className="cardImage imageLink" href={work.href} target={work.external ? "_blank" : undefined} rel={work.external ? "noreferrer" : undefined} aria-label={`${work.name}を開く`}><Image src={work.image} alt={`${work.name}の画面`} fill sizes="(max-width: 700px) 100vw, 66vw" /></a>
+              <a className="cardImage imageLink" href={work.href} style={{ background: work.bg }} aria-label={`${work.name}を開く`}>
+                {work.clock ? <ClockPreview /> : <Image src={work.image!} alt={`${work.name}の画面`} fill sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 33vw" />}
+              </a>
               <div className="cardBody">
                 <div className="cardMeta"><span>{work.label}</span></div>
                 <h3>{work.name}</h3>
                 <p>{work.copy}</p>
-                <a className="cardLink refinedLink" href={work.href} target={work.external ? "_blank" : undefined} rel={work.external ? "noreferrer" : undefined}><span>{work.action}</span></a>
+                <a className="cardLink refinedLink" href={work.href}><span>{work.action}</span></a>
               </div>
             </article>
           ))}
         </div>
         <p className="smallWork"><span>LINE STICKER</span><a href="https://store.line.me/stickershop/product/35520055/ja" target="_blank" rel="noreferrer">PromptTerm StickerをLINE STOREで見る</a></p>
-      </section>
-
-      <section id="yurameki" className="feature featureYurameki" aria-labelledby="yurameki-title">
-        <a className="featureImage yuramekiImage imageLink" href={yuramekiUrl} aria-label="YURAMEKIを開く">
-          <Image src="/works/yurameki-breath.png" alt="YURAMEKIの呼吸する作例" fill sizes="(max-width: 800px) 100vw, 62vw" />
-        </a>
-        <div className="featureCopy">
-          <p className="workNumber">MAIN WORK</p>
-          <h2 id="yurameki-title">YURAMEKI</h2>
-          <p className="workTagline">一枚の絵に、息を宿す。</p>
-          <p>風、衣、髪、光の気配。息づく場所を静かに囲み、止まっていた一瞬へ時間を結びます。作品は端末の中だけで息づきます。</p>
-          <a className="textButton refinedLink" href={yuramekiUrl}><span>YURAMEKIを開く</span></a>
-          <a className="featureSubLink refinedLink" href="/yurameki/about"><span>YURAMEKIについて</span></a>
-        </div>
       </section>
 
       {posts.length > 0 && (
@@ -220,7 +225,7 @@ export default function Home() {
       <section id="about" className="aboutSection" aria-labelledby="about-title">
         <p className="eyebrow">ABOUT</p>
         <div>
-          <h2 id="about-title">小さな道具を、<br />AIと一緒に作っています。</h2>
+          <h2 id="about-title">道具とゲームを、<br />AIと一緒に作っています。</h2>
           <p>画像を動かす。整える。色を戻す。時間を表示する。Maruti Labは、思いつきを実際に触れる道具へ変え、公開し、使いながら直していく個人ラボです。</p>
           <a className="textButton refinedLink" href="/about"><span>運営者情報を見る</span></a>
         </div>

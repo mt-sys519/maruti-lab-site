@@ -5,7 +5,7 @@ import { SiteFooter } from "../SiteFooter";
 export const metadata: Metadata = {
   title: "運営者情報",
   description:
-    "Maruti Labは、ブラウザや手元の端末だけで動く小さな道具とゲームを作っている個人の制作ラボです。運営者、連絡方法、公開しているものについて。",
+    "Maruti Labは、ブラウザや手元の端末だけで動く道具とゲームを作っている個人の制作ラボです。運営者、連絡方法、公開しているものについて。",
   alternates: { canonical: "https://marutilab.com/about" },
 };
 
@@ -24,7 +24,7 @@ export default function AboutPage() {
           <div>
             <h2>maruti（マルティ）</h2>
             <p>
-              Maruti Labは、日本の個人が運営している制作ラボです。ブラウザや手元の端末だけで動く小さな道具と、ひと息で遊べるゲームを作って公開しています。思いついたものを実際に触れる形にして、公開して、使いながら直していく、という進め方をしています。
+              Maruti Labは、日本の個人が運営している制作ラボです。ブラウザや手元の端末だけで動く道具と、ひと息で遊べるゲームを作って公開しています。思いついたものを実際に触れる形にして、公開して、使いながら直していく、という進め方をしています。
             </p>
             <p>
               Xでは<a href="https://x.com/maruti_lab" target="_blank" rel="noreferrer">@maruti_lab</a>として、作っているものと、その途中を書いています。

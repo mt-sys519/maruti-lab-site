@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "Maruti Lab — 小さなデジタル道具のラボ", template: "%s | Maruti Lab" },
+  title: { default: "Maruti Lab — 道具とゲームをつくる個人ラボ", template: "%s | Maruti Lab" },
   description: "画像を動かす。写真を整える。色を戻す。時間を灯す。YURAMEKI、SwiftCrop、COLOR RE:FINE、PromptTermをつくる個人ラボ。",
   applicationName: "Maruti Lab",
   creator: "Maruti Lab",
@@ -34,10 +34,10 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ja_JP",
     siteName: "Maruti Lab",
-    title: "Maruti Lab — 小さなデジタル道具のラボ",
+    title: "Maruti Lab — 道具とゲームをつくる個人ラボ",
     description: "画像を動かす。写真を整える。色を戻す。時間を灯す。",
     url: "/",
-    images: [{ url: "/maruti-lab-og.jpg", width: 1200, height: 630, alt: "Maruti Lab — 小さなデジタル道具のラボ" }],
+    images: [{ url: "/maruti-lab-og.jpg", width: 1200, height: 630, alt: "Maruti Lab — 道具とゲームをつくる個人ラボ" }],
   },
   twitter: { card: "summary_large_image", title: "Maruti Lab", description: "画像を動かす。写真を整える。色を戻す。時間を灯す。", images: ["/maruti-lab-og.jpg"] },
   // AdSense verifies ownership by finding this in the head of every page, so it
