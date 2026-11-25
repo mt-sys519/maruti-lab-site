@@ -30,8 +30,49 @@ let engine;
 let groups = [];
 let presets = [];
 let current = null;
-const lastInGroup = {};
-let currentTab = 'F';
+const lastInGroup = {}; // the last look used in each tab, by tab id (a group's letter or a purpose's p:id)
+let currentTab = 'p:people';
+
+// 目的: a way in for people who do not know the groups. Each gathers looks from all nine groups,
+// chosen by their names and descriptions; the icon says the subject at a glance.
+const ICON = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const PURPOSES = [
+  { id: 'p:people', label: '人物', note: '肌がやわらかく明るく見える色。9系統から集めました',
+    icon: ICON('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-4 3.8-6.2 7.5-6.2s6.7 2.2 7.5 6.2"/>'),
+    codes: ['F05', 'S01', 'C01', 'K02', 'P05', 'O10', 'F02', 'S09', 'F04', 'R03', 'O03', 'N04'] },
+  { id: 'p:land', label: '風景', note: '空の青と緑が映える色',
+    icon: ICON('<path d="M3 19l6.5-10 4 6 2.5-3.5L21 19z"/><circle cx="17" cy="6" r="1.8"/>'),
+    codes: ['F01', 'S04', 'S05', 'S07', 'P04', 'C02', 'K03', 'K10', 'K04', 'O08', 'R01', 'L02', 'S03'] },
+  { id: 'p:street', label: '街', note: '街のスナップに合う、硬めで渋い色',
+    icon: ICON('<path d="M4 20V9h5v11M9 20V5h6v15M15 20v-8h5v8M3 20h18"/>'),
+    codes: ['F06', 'F03', 'F07', 'F08', 'R02', 'R04', 'R05', 'P03', 'N05', 'N06', 'N11', 'K09', 'P07'] },
+  { id: 'p:mono', label: 'モノクロ', note: '白黒。やわらかいものから硬いものまで',
+    icon: ICON('<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>'),
+    codes: ['F09', 'F10', 'S10', 'N17', 'N18', 'N20', 'P08', 'P09', 'P10', 'P11', 'P12', 'L03', 'L04', 'C06', 'R06', 'R07', 'R08', 'R09', 'K13', 'O04', 'O11'] },
+  { id: 'p:film', label: 'フィルム', note: '褪せた色、クロス現像、セピア。昔のフィルムやプリントの風合い',
+    icon: ICON('<rect x="4" y="3.5" width="16" height="17" rx="1.5"/><path d="M8 3.5v17M16 3.5v17M4 8h4M4 12h4M4 16h4M16 8h4M16 12h4M16 16h4"/>'),
+    codes: ['F13', 'S06', 'S08', 'K05', 'O07', 'N12', 'K11', 'R10', 'R11', 'R12', 'O05', 'F11', 'S11', 'N13', 'O06'] },
+  { id: 'p:mood', label: '気分', note: '朝の青、夢のアンバー、染めた色。気分で選ぶ色',
+    icon: ICON('<path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path d="M18.5 15.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z"/>'),
+    codes: ['N01', 'N02', 'N03', 'N07', 'N08', 'N09', 'N10', 'N14', 'N15', 'N16', 'K12', 'K07', 'O02', 'O01', 'K06'] },
+];
+
+// The looks a tab shows: a purpose's own list, or a group's looks.
+function tabItems(id) {
+  const pu = PURPOSES.find((x) => x.id === id);
+  if (!pu) return presets.filter((p) => p.group === id);
+  const byCode = new Map(presets.filter((p) => p.group !== 'U').map((p) => [p.code, p]));
+  return pu.codes.map((c) => byCode.get(c)).filter(Boolean);
+}
+
+// Choosing a tab shows it and applies its last-used look (else its first) right away.
+function openTab(id) {
+  currentTab = id; renderTabs(); renderThumbs();
+  const items = tabItems(id);
+  const pick = items.find((p) => p === lastInGroup[id]) || items[0];
+  if (pick && pick !== current) selectPreset(pick);
+  reveal();
+}
 const lutCache = new Map();
 const lutLoading = new Map();
 let userCount = 0;
@@ -361,19 +402,24 @@ function renderTabs() {
     b.querySelector('.dot').style.background = GROUP_COLORS[t.id] || GROUP_COLORS.U;
     b.lastChild.textContent = t.id === 'U' ? '手持ち' : t.id;
     b.title = t.label;
-    b.addEventListener('click', () => {
-      currentTab = t.id; renderTabs(); renderThumbs();
-      // a type is chosen to be seen: apply its last-used look (else its first) right away
-      const inGroup = presets.filter((p) => p.group === t.id);
-      const pick = inGroup.find((p) => p === lastInGroup[t.id]) || inGroup[0];
-      if (pick && pick !== current) selectPreset(pick);
-      reveal();
-    });
+    b.addEventListener('click', () => openTab(t.id));
     el.appendChild(b);
   }
   el.scrollLeft = keep;
   el.querySelector('.tab.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  $('groupNote').textContent = tabsList().find((t) => t.id === currentTab)?.note || '';
+  const pt = $('purposeTabs');
+  pt.innerHTML = '';
+  for (const pu of PURPOSES) {
+    const b = document.createElement('button');
+    b.className = 'pt' + (pu.id === currentTab ? ' on' : '');
+    b.setAttribute('role', 'tab');
+    b.title = pu.note;
+    b.innerHTML = `${pu.icon}<span>${pu.label}</span>`;
+    b.addEventListener('click', () => openTab(pu.id));
+    pt.appendChild(b);
+  }
+  const pu = PURPOSES.find((x) => x.id === currentTab);
+  $('groupNote').textContent = pu ? `${pu.note}（${tabItems(pu.id).length}種）` : tabsList().find((t) => t.id === currentTab)?.note || '';
 }
 
 function renderThumbs() {
@@ -381,7 +427,7 @@ function renderThumbs() {
   el.innerHTML = '';
   if (!engine.imgW) return;
   const token = ++thumbToken;
-  const items = presets.filter((p) => p.group === currentTab);
+  const items = tabItems(currentTab);
   const tw = 168, th = Math.max(24, Math.round(tw * engine.imgH / engine.imgW));
   const jobs = [];
   for (const p of items) {
@@ -419,6 +465,7 @@ async function selectPreset(p) {
     const lut = await getLut(p);
     current = p;
     lastInGroup[p.group] = p;
+    if (tabItems(currentTab).includes(p)) lastInGroup[currentTab] = p;
     engine.setLut(lut);
     const amt = $('s-intensity');
     amt.value = lookIntensity.get(p) ?? SLIDERS.intensity.def;
@@ -452,10 +499,11 @@ async function loadPresets() {
     groups = []; presets = [];
   }
   $('lookCount').textContent = `${presets.length} 種`;
-  currentTab = groups[0]?.id || 'U';
+  currentTab = PURPOSES[0].id;
   renderTabs();
   renderThumbs();
-  if (presets.length) selectPreset(presets[0]);
+  const first = tabItems(currentTab)[0] || presets[0];
+  if (first) selectPreset(first);
 }
 
 async function addUserLut(file) {
