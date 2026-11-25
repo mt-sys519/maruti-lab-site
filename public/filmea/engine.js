@@ -263,7 +263,7 @@ export class Engine {
     gl.uniform1f(L.u_exposure, p.exposure);
     gl.uniform3fv(L.u_wbGain, this._wbGain(p.wb));
     gl.uniform1f(L.u_grain, p.grain);
-    gl.uniform1f(L.u_grainSize, Math.max(1, Math.max(this.imgW, this.imgH) / 2600));
+    gl.uniform1f(L.u_grainSize, Math.max(1, Math.max(this.imgW, this.imgH) / 2600, this._grainCellMin || 0));
     gl.uniform1f(L.u_vignette, p.vignette);
   }
 
@@ -324,7 +324,14 @@ export class Engine {
   }
 
   // Full-resolution render, tiled, returned as an ImageData-sized RGBA8 array (top row first).
-  renderFull() {
+  // outLong: the long side the result will be shrunk to, if any. Grain cells are kept at least one
+  // output pixel wide so shrinking does not average the grain away.
+  renderFull(outLong = 0) {
+    this._grainCellMin = outLong ? Math.max(this.imgW, this.imgH) / outLong : 0;
+    try { return this._renderFull(); } finally { this._grainCellMin = 0; }
+  }
+
+  _renderFull() {
     const gl = this.gl;
     const W = this.imgW, H = this.imgH;
     const tile = Math.min(2048, gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));

@@ -11,7 +11,7 @@ const SAMPLES = [
   { label: '陰影', url: 'photos/shade.jpg' },
 ];
 
-const GROUP_COLORS = { F: '#4f7a5e', S: '#5a6f93', N: '#b8863b', P: '#7c5f8f', L: '#a8463e', C: '#9a5b45', R: '#3f6e73', O: '#c0703a', U: '#6f6a63' };
+const GROUP_COLORS = { F: '#4f7a5e', S: '#5a6f93', N: '#b8863b', P: '#7c5f8f', L: '#a8463e', C: '#9a5b45', R: '#3f6e73', K: '#6b7d3c', O: '#c0703a', U: '#6f6a63' };
 
 const SLIDERS = {
   intensity: { def: 100, to: (v) => v / 100, fmt: (v) => `${v}` },
@@ -35,6 +35,8 @@ let splitX = 0.5;
 let holdKey = false, holdBtn = false;
 let rafPending = false;
 let frame = 'none';
+const lookIntensity = new Map(); // each look keeps its own 効き具合; a look not touched yet starts at 100
+let saveLong = 0; // long side of the saved image; 0 keeps the photo's own size
 let thumbToken = 0;
 
 function toast(msg, isError = false) {
@@ -296,6 +298,9 @@ async function selectPreset(p) {
     current = p;
     lastInGroup[p.group] = p;
     engine.setLut(lut);
+    const amt = $('s-intensity');
+    amt.value = lookIntensity.get(p) ?? SLIDERS.intensity.def;
+    amt.dispatchEvent(new Event('input'));
     const label = $('lookLabel');
     label.querySelector('i').style.background = GROUP_COLORS[p.group] || GROUP_COLORS.U;
     label.querySelector('b').textContent = p.code;
@@ -375,18 +380,44 @@ async function handleFiles(files) {
 }
 
 // ---------- save ----------
+// Shrink so the long side is `long`, halving first so the last step never skips pixels.
+function shrinkCanvas(src, long) {
+  const s = long / Math.max(src.width, src.height);
+  const tw = Math.max(1, Math.round(src.width * s)), th = Math.max(1, Math.round(src.height * s));
+  let cur = src;
+  while (cur.width / 2 >= tw && cur.height / 2 >= th) {
+    const c = document.createElement('canvas');
+    c.width = Math.round(cur.width / 2); c.height = Math.round(cur.height / 2);
+    const x = c.getContext('2d');
+    x.imageSmoothingQuality = 'high';
+    x.drawImage(cur, 0, 0, c.width, c.height);
+    cur = c;
+  }
+  const c = document.createElement('canvas');
+  c.width = tw; c.height = th;
+  const x = c.getContext('2d');
+  x.imageSmoothingQuality = 'high';
+  x.drawImage(cur, 0, 0, tw, th);
+  return c;
+}
+
 async function save() {
   if (!engine.imgW) return;
   const btn = $('btnSave');
   btn.disabled = true;
   await new Promise((r) => setTimeout(r, 30));
   try {
-    const W = engine.imgW, H = engine.imgH;
-    const pixels = engine.renderFull();
+    const iw = engine.imgW, ih = engine.imgH;
+    const shrink = saveLong && saveLong < Math.max(iw, ih);
+    const pixels = engine.renderFull(shrink ? saveLong : 0);
+    let img = document.createElement('canvas');
+    img.width = iw; img.height = ih;
+    img.getContext('2d').putImageData(new ImageData(pixels, iw, ih), 0, 0);
+    if (shrink) img = shrinkCanvas(img, saveLong);
+    const W = img.width, H = img.height;
     let out = document.createElement('canvas');
     if (frame === 'none') {
-      out.width = W; out.height = H;
-      out.getContext('2d').putImageData(new ImageData(pixels, W, H), 0, 0);
+      out = img;
     } else {
       const pad = Math.round(Math.max(W, H) * 0.035);
       const bottom = Math.round(pad * 2.2);
@@ -394,7 +425,7 @@ async function save() {
       const x = out.getContext('2d');
       x.fillStyle = frame === 'white' ? '#f8f7f3' : '#151517';
       x.fillRect(0, 0, out.width, out.height);
-      x.putImageData(new ImageData(pixels, W, H), pad, pad);
+      x.drawImage(img, pad, pad);
       x.fillStyle = frame === 'white' ? '#5b5752' : '#8c8a86';
       const fs = Math.max(11, Math.round(out.width * 0.0095));
       x.font = `500 ${fs}px "DM Mono", Consolas, monospace`;
@@ -461,6 +492,7 @@ function initUI() {
       val.textContent = s.fmt(v);
       engine.params[key] = s.to(v);
       setFill(el);
+      if (key === 'intensity' && current) lookIntensity.set(current, v);
       if (key !== 'intensity') {
         const changed = Object.entries(SLIDERS).some(([k, d]) => k !== 'intensity' && +$(`s-${k}`).value !== d.def);
         $('adjustState').textContent = changed ? '調整中' : '初期値';
@@ -535,15 +567,27 @@ function initUI() {
   });
   window.addEventListener('blur', () => { holdKey = false; holdBtn = false; hold.classList.remove('on'); requestRender(); });
 
+  const saveState = () => {
+    const size = document.querySelector('#sizeSeg button.on').textContent;
+    $('frameState').textContent = frame === 'none' ? size : `${size}・枠 ${document.querySelector('#frameSeg button.on').textContent}`;
+  };
   $('frameSeg').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     frame = b.dataset.v;
-    $('frameState').textContent = b.textContent;
     document.querySelectorAll('#frameSeg button').forEach((x) => x.classList.toggle('on', x === b));
     $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`);
+    saveState();
     layout();
   });
+  $('sizeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    saveLong = +b.dataset.v;
+    document.querySelectorAll('#sizeSeg button').forEach((x) => x.classList.toggle('on', x === b));
+    saveState();
+  });
+  saveState();
 
   $('infoSec').addEventListener('toggle', () => requestRender());
   $('btnHist').addEventListener('click', () => {
