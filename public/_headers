@@ -10,6 +10,9 @@
 # filmea: the 88 colour tables (~19MB) only change when a look is re-measured, so a day.
 /filmea/luts/*
   Cache-Control: public, max-age=86400
+# filmea's service worker: always asked for afresh, so a new version takes over on the next visit.
+/filmea/sw.js
+  Cache-Control: no-cache
 
 # AIR HOCKEY: three.js never changes under the same name, so a week; the table's
 # model, light map and hit sounds might be redone, so a day.

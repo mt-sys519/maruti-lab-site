@@ -134,15 +134,13 @@ function layout() {
   let s;
   if (DRAWN_FRAMES.includes(frame)) {
     // the photo shows through its window, cropped to the frame's shape; the rest is drawn
-    const L = frameLayout(frame, engine.imgW, engine.imgH);
+    const L = frameLayout(frame, engine.imgW, engine.imgH, cropShift);
     const mw = Math.floor(Math.min(availW, availH / L.ratio));
     s = (L.w * mw) / L.crop.w;
     Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * L.ratio) + 'px', paddingTop: '' });
     Object.assign(crop.style, { left: L.x * mw + 'px', top: L.y * mw + 'px', width: L.w * mw + 'px', height: L.h * mw + 'px' });
-    Object.assign(box.style, { left: -L.crop.x * s + 'px', top: -L.crop.y * s + 'px' });
-    // where the window sits inside the photo, so the labels on the photo stay inside it
-    const cut = { l: L.crop.x, t: L.crop.y, r: engine.imgW - L.crop.x - L.crop.w, b: engine.imgH - L.crop.y - L.crop.h };
-    for (const k in cut) box.style.setProperty(`--crop-${k}`, cut[k] * s + 'px');
+    cropScale = s;
+    placeCrop(L);
     artWidth = mw;
     engine.params.light = isSlide() ? slideLight : -1;
     drawArt();
@@ -181,6 +179,19 @@ function layout() {
   requestRender();
 }
 
+// The photo behind a drawn frame's window, placed so the window shows L.crop; cropScale is the screen
+// px per photo px. Also where the window sits inside the photo, so the labels on it stay inside.
+let cropScale = 1;
+function placeCrop(L) {
+  const box = $('canvasBox'), s = cropScale;
+  Object.assign(box.style, { left: -L.crop.x * s + 'px', top: -L.crop.y * s + 'px' });
+  const cut = { l: L.crop.x, t: L.crop.y, r: engine.imgW - L.crop.x - L.crop.w, b: engine.imgH - L.crop.y - L.crop.h };
+  for (const k in cut) box.style.setProperty(`--crop-${k}`, cut[k] * s + 'px');
+}
+
+// Where a drawn frame cuts the photo, moved by dragging the photo in its window (see frameLayout).
+let cropShift = { x: 0, y: 0 };
+
 // The drawn frame (film or slide mount) behind the photo on screen, the same drawing the saved file gets.
 let artWidth = 0;
 
@@ -197,7 +208,7 @@ function resetZoom() {
 }
 function drawArt() {
   if (!DRAWN_FRAMES.includes(frame) || !engine.imgW || !artWidth) return;
-  const L = frameLayout(frame, engine.imgW, engine.imgH);
+  const L = frameLayout(frame, engine.imgW, engine.imgH, cropShift);
   const dpr = Math.min((window.devicePixelRatio || 1) * zoomRes, 4096 / artWidth);
   const glow = isSlide() ? screenGlow(L) : null;
   for (const [id, draw] of [['frameArt', (x, w) => drawFrameUnder(x, w, L, frameText(), slideLight)], ['frameOver', (x, w) => drawFrameOver(x, w, L, glow, slideLight)]]) {
@@ -303,6 +314,7 @@ async function setPhotoFromBlob(blob) {
   engine.setImage(c, w, h);
   $('resInfo').textContent = `${w} × ${h}`;
   resetZoom();
+  cropShift = { x: 0, y: 0 };
   layout();
   renderThumbs();
 }
@@ -335,6 +347,7 @@ function fallbackScene() {
   x.fillStyle = sk; x.beginPath(); x.arc(430, 350, 160, 0, Math.PI * 2); x.fill();
   x.fillStyle = '#c0282d'; x.fillRect(900, 230, 260, 220);
   engine.setImage(c, W, H);
+  cropShift = { x: 0, y: 0 };
   $('resInfo').textContent = `${W} × ${H}`;
   layout();
   renderThumbs();
@@ -663,7 +676,7 @@ function composeMount(style, mountW, g, img, small = false) {
 
 // Instant, film or slide mount: the frame drawn at the chosen width, the photo cropped into its window.
 async function saveDrawnFrame(iw, ih) {
-  const L = frameLayout(frame, iw, ih);
+  const L = frameLayout(frame, iw, ih, cropShift);
   let mountW = saveLong || Math.round(L.crop.w / L.w);
   mountW = Math.min(mountW, Math.floor(Math.sqrt(16e6 / L.ratio)));
   const k = (L.w * mountW) / L.crop.w; // output pixels per photo pixel
@@ -732,7 +745,7 @@ function drawTiles() {
       const g = mountLayout(engine.imgW, engine.imgH);
       pic = composeMount(style, TILE_W, g, renderedPhoto(Math.max(16, Math.round(g.w * TILE_W)), -1), true);
     } else {
-      const L = frameLayout(style, engine.imgW, engine.imgH);
+      const L = frameLayout(style, engine.imgW, engine.imgH, cropShift);
       const light = LIGHT_FRAMES.includes(style) ? slideLight : -1;
       pic = composeFrame(TILE_W, L, renderedPhoto(Math.max(16, Math.ceil(TILE_W * L.w * engine.imgW / L.crop.w)), light), frameText(), slideLight);
     }
@@ -830,6 +843,7 @@ function initUI() {
 
   const box = $('canvasBox');
   let dragging = false;
+  let cropDrag = null; // dragging the photo in a drawn frame's window
   const moveSplit = (clientX) => {
     const r = box.getBoundingClientRect();
     splitX = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
@@ -849,14 +863,29 @@ function initUI() {
         hint.classList.add('gone');
         try { localStorage.setItem('filmea-hinted', '1'); } catch {}
       }, 170);
+      if (DRAWN_FRAMES.includes(frame) && zoom.s === 1) cropDrag = { x: e.clientX, y: e.clientY, sx: cropShift.x, sy: cropShift.y, moved: false };
       return;
     }
     dragging = true;
     box.setPointerCapture(e.pointerId);
     moveSplit(e.clientX);
   });
-  box.addEventListener('pointermove', (e) => { if (dragging) moveSplit(e.clientX); });
-  const end = () => { dragging = false; pressEnd(); };
+  box.addEventListener('pointermove', (e) => {
+    if (dragging) { moveSplit(e.clientX); return; }
+    if (!cropDrag || zoom.s !== 1) return;
+    const dx = e.clientX - cropDrag.x, dy = e.clientY - cropDrag.y;
+    if (!cropDrag.moved && Math.hypot(dx, dy) < 6) return;
+    if (!cropDrag.moved) { pressEnd(); cropDrag.moved = true; } // moving the photo, not holding for the original
+    // the photo follows the finger: shift is in halves of the room the crop has on each axis
+    const c0 = frameLayout(frame, engine.imgW, engine.imgH).crop;
+    const hx = (engine.imgW - c0.w) / 2, hy = (engine.imgH - c0.h) / 2;
+    const clamp = (v) => Math.max(-1, Math.min(1, v));
+    cropShift = { x: hx > 0.5 ? clamp(cropDrag.sx - dx / cropScale / hx) : 0, y: hy > 0.5 ? clamp(cropDrag.sy - dy / cropScale / hy) : 0 };
+    placeCrop(frameLayout(frame, engine.imgW, engine.imgH, cropShift));
+    refreshGlow();
+    refreshTiles();
+  });
+  const end = () => { dragging = false; cropDrag = null; pressEnd(); };
   box.addEventListener('pointerup', end);
   box.addEventListener('pointercancel', end);
   box.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -891,7 +920,7 @@ function initUI() {
     if (e.pointerType !== 'touch') return;
     try { if (!box.hasPointerCapture(e.pointerId)) stage.setPointerCapture(e.pointerId); } catch {}
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pts.size === 2) { pressEnd(); dragging = false; } // a second finger: a pinch, not a hold or a split drag
+    if (pts.size === 2) { pressEnd(); dragging = false; cropDrag = null; } // a second finger: a pinch, not a hold or a drag
     if (pts.size <= 2) begin();
   });
   stage.addEventListener('pointermove', (e) => {
@@ -970,9 +999,10 @@ function initUI() {
       $(body).hidden = !mine;
       $(state).textContent = mine ? list.find(([x]) => x === frame)[1] : 'なし';
     }
-    const checks = $('textChecks');
+    const checks = $('textChecks'), note = $('cropNote');
     checks.hidden = !sec;
-    if (sec) $(sec[2]).appendChild(checks);
+    note.hidden = !drawn;
+    if (sec) { $(sec[2]).appendChild(note); $(sec[2]).appendChild(checks); }
     $('viewport').classList.toggle('framed', frame !== 'none');
     $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`) + (drawn ? ' drawn' : '');
     saveState();
@@ -1045,7 +1075,24 @@ function initUI() {
   new ResizeObserver(layout).observe(vp);
 }
 
+// As an app: the service worker keeps the page usable offline, and where the browser offers to install
+// the page, a button in the top bar does it.
+function appSetup() {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  let offer = null;
+  const btn = $('btnInstall');
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); offer = e; btn.hidden = false; });
+  window.addEventListener('appinstalled', () => { offer = null; btn.hidden = true; });
+  btn.addEventListener('click', async () => {
+    if (!offer) return;
+    offer.prompt();
+    await offer.userChoice.catch(() => {});
+    offer = null; btn.hidden = true;
+  });
+}
+
 function boot() {
+  appSetup();
   try {
     engine = new Engine($('view'));
   } catch (e) {

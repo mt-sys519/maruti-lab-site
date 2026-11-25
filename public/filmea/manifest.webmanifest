@@ -1,0 +1,18 @@
+{
+  "name": "FILMEA（フィルミア）",
+  "short_name": "FILMEA",
+  "description": "写真に101種類の色をあてて見比べ、気に入った色で保存できるツール。写真は端末の中だけで処理します。",
+  "id": "/filmea/",
+  "start_url": "/filmea/",
+  "scope": "/filmea/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f2eee6",
+  "theme_color": "#f2eee6",
+  "lang": "ja",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

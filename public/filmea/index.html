@@ -20,6 +20,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="FILMEA">
 <link rel="stylesheet" href="style.css">
 <script>
   try { const t = localStorage.getItem('filmea-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
@@ -29,6 +31,10 @@
 <header class="topbar">
   <div class="brand"><img class="mark" src="icon.svg" alt=""><span class="brand-name">FILMEA</span></div>
   <div class="top-actions">
+    <!-- shown only where the browser offers to install the page as an app (Chrome, Edge, Android) -->
+    <button class="ib" id="btnInstall" title="アプリとして追加" aria-label="アプリとして追加" hidden>
+      <svg viewBox="0 0 24 24"><rect x="6.5" y="2.8" width="11" height="18.4" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v7m0 0l-3-3m3 3l3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <button class="ib" id="btnTheme" title="明るい画面 / 暗い画面" aria-label="明るい画面 / 暗い画面">
       <svg viewBox="0 0 24 24" class="i-moon"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
       <svg viewBox="0 0 24 24" class="i-sun"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.8v2.2M12 19v2.2M2.8 12h2.2M19 12h2.2M5.5 5.5l1.5 1.5M17 17l1.5 1.5M5.5 18.5L7 17M17 7l1.5-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -125,7 +131,8 @@
           <div class="ftiles" id="filmTiles" role="radiogroup" aria-label="フィルム化"></div>
           <div class="fbody" id="filmBody" hidden>
             <div class="ctrl" id="lightCtrl" hidden><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
-            <!-- the text checks sit in whichever row holds the chosen frame -->
+            <!-- the crop note and the text checks sit in whichever row holds the chosen frame -->
+            <p class="crop-note" id="cropNote" hidden>写真をドラッグすると、切り取る位置を動かせます</p>
             <div class="text-checks" id="textChecks" hidden>
               <p class="seg-label">枠に入れる文字</p>
               <label class="check"><input type="checkbox" id="captionCheck" checked><span>色名を入れる</span></label>

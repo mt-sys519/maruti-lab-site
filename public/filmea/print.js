@@ -53,15 +53,16 @@ export const DRAWN_FRAMES = ['instant', 'film', 'slide', 'slidecard'];
 export const LIGHT_FRAMES = ['film', 'slide', 'slidecard'];
 
 // x, y, w, h: the photo's window, as fractions of the canvas width. ratio: canvas height / width.
-// crop: the part of the photo the window shows.
-export function frameLayout(style, pw, ph) {
+// crop: the part of the photo the window shows; shift moves it off centre, -1..1 of the room there is
+// along each side (-1 the left or top edge, 1 the right or bottom).
+export function frameLayout(style, pw, ph, shift = { x: 0, y: 0 }) {
   if (style === 'white' || style === 'dark') {
     const g = mountLayout(pw, ph);
     return { ...g, crop: { x: 0, y: 0, w: pw, h: ph } };
   }
   const cropTo = (aspect) => {
-    if (pw / ph > aspect) { const w = ph * aspect; return { x: (pw - w) / 2, y: 0, w, h: ph }; }
-    const h = pw / aspect; return { x: 0, y: (ph - h) / 2, w: pw, h };
+    if (pw / ph > aspect) { const w = ph * aspect; return { x: (pw - w) / 2 * (1 + (shift.x || 0)), y: 0, w, h: ph }; }
+    const h = pw / aspect; return { x: 0, y: (ph - h) / 2 * (1 + (shift.y || 0)), w: pw, h };
   };
   if (style === 'instant') {
     const a = pw / ph;
