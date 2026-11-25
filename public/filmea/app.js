@@ -1086,22 +1086,26 @@ function initUI() {
 }
 
 // As an app: the service worker keeps the page usable offline, and the button in the top bar adds the
-// page as an app. Where the browser can do it from the page (Chrome, Edge, Android) it asks right away;
-// elsewhere (Safari on iPhone, or before the browser is ready) it says how to do it from the browser.
+// page as an app. On phones and tablets the button is always there: where the browser can do it from
+// the page (Chrome on Android) it asks right away, elsewhere (Safari on iPhone) it says how. On a
+// computer, where few want it, the button shows only while the browser offers to install the page.
 function appSetup() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   const btn = $('btnInstall');
   if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) { btn.hidden = true; return; }
-  let offer = null;
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); offer = e; });
-  window.addEventListener('appinstalled', () => { offer = null; btn.hidden = true; });
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const handheld = ios || /Android|Mobi/i.test(navigator.userAgent);
+  let offer = null;
+  const show = () => { btn.hidden = !(handheld || offer); };
+  show();
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); offer = e; show(); });
+  window.addEventListener('appinstalled', () => { offer = null; btn.hidden = true; });
   btn.addEventListener('click', async () => {
     if (offer) {
       offer.prompt();
       const choice = await offer.userChoice.catch(() => null);
       offer = null;
-      if (choice?.outcome === 'accepted') btn.hidden = true;
+      if (choice?.outcome === 'accepted') btn.hidden = true; else show();
       return;
     }
     toast(ios ? 'Safari の共有ボタン（□に↑）から「ホーム画面に追加」を選ぶと、アプリとして使えます'
