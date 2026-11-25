@@ -1,6 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
-import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, windowRadius, mountCode, readExifDate, DRAWN_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
+import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, mountCode, readExifDate, DRAWN_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -85,7 +85,7 @@ function layout() {
   let availH = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   const stage = $('stage'), cap = $('frameCaption');
   const crop = $('cropBox'), box = $('canvasBox');
-  Object.assign(crop.style, { left: '', top: '', width: '', height: '', borderRadius: '' });
+  Object.assign(crop.style, { left: '', top: '', width: '', height: '' });
   Object.assign(box.style, { left: '', top: '' });
   engine.params.light = -1;
   for (const k of ['l', 't', 'r', 'b']) box.style.removeProperty(`--crop-${k}`);
@@ -96,7 +96,7 @@ function layout() {
     const mw = Math.floor(Math.min(availW, availH / L.ratio));
     s = (L.w * mw) / L.crop.w;
     Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * L.ratio) + 'px', paddingTop: '' });
-    Object.assign(crop.style, { left: L.x * mw + 'px', top: L.y * mw + 'px', width: L.w * mw + 'px', height: L.h * mw + 'px', borderRadius: windowRadius(L, mw) + 'px' });
+    Object.assign(crop.style, { left: L.x * mw + 'px', top: L.y * mw + 'px', width: L.w * mw + 'px', height: L.h * mw + 'px' });
     Object.assign(box.style, { left: -L.crop.x * s + 'px', top: -L.crop.y * s + 'px' });
     // where the window sits inside the photo, so the labels on the photo stay inside it
     const cut = { l: L.crop.x, t: L.crop.y, r: engine.imgW - L.crop.x - L.crop.w, b: engine.imgH - L.crop.y - L.crop.h };
@@ -600,8 +600,8 @@ async function saveDrawnFrame(iw, ih) {
   const x = out.getContext('2d');
   drawFrameUnder(x, mountW, L, frameText(), slideLight);
   x.save();
-  const r = windowRadius(L, mountW), wx = L.x * mountW, wy = L.y * mountW, ww = L.w * mountW, wh = L.h * mountW;
-  x.beginPath(); x.roundRect ? x.roundRect(wx, wy, ww, wh, r) : x.rect(wx, wy, ww, wh); x.clip();
+  const wx = L.x * mountW, wy = L.y * mountW, ww = L.w * mountW, wh = L.h * mountW;
+  x.beginPath(); x.rect(wx, wy, ww, wh); x.clip();
   x.imageSmoothingQuality = 'high';
   x.drawImage(img, L.crop.x * f, L.crop.y * f, L.crop.w * f, L.crop.h * f, wx, wy, ww, wh);
   x.restore();

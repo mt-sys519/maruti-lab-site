@@ -35,6 +35,9 @@ const FILM = { pitch: 38, across: 35, frameL: 36, frameS: 24, perfL: 1.98, perfS
 // 'slide' is a white plastic mount, which the light partly shines through; 'slidecard' a card one,
 // opaque, printed, the picture glowing out of it.
 const SLIDE = { size: 50, wl: 35, ws: 23 };
+// How far the window's cut edge shows inside the opening (mm). The window and the picture in it are
+// square-cornered, as on the white plastic mounts of the reference photo.
+const RIM = 0.35;
 export const DRAWN_FRAMES = ['film', 'slide', 'slidecard'];
 
 // x, y, w, h: the photo's window, as fractions of the canvas width. ratio: canvas height / width.
@@ -52,9 +55,8 @@ export function frameLayout(style, pw, ph) {
     const wide = pw >= ph, u = 1 / SLIDE.size;
     const w = wide ? SLIDE.wl : SLIDE.ws, h = wide ? SLIDE.ws : SLIDE.wl;
     const win = { x: (SLIDE.size - w) / 2 * u, y: (SLIDE.size - h) / 2 * u, w: w * u, h: h * u };
-    // The window's cut edge shows as a thin, uneven shade round the picture (the film never sits
-    // exactly centred in the mount): wider at the top and right, as in the reference photo.
-    const [t, r, b, l] = (wide ? [0.4, 0.45, 0.25, 0.3] : [0.3, 0.4, 0.45, 0.25]).map((v) => v * u);
+    // The window's cut edge shows as a thin shade round the picture, the same width on all four sides.
+    const [t, r, b, l] = [RIM, RIM, RIM, RIM].map((v) => v * u);
     const pic = { x: win.x + l, y: win.y + t, w: win.w - l - r, h: win.h - t - b };
     return { style, wide, mm: u, ratio: 1, ...pic, win, crop: cropTo(pic.w / pic.h) };
   }
@@ -64,13 +66,6 @@ export function frameLayout(style, pw, ph) {
   const win = wide ? { x: along * u, y: across * u, w: FILM.frameL * u, h: FILM.frameS * u }
     : { x: across * u, y: along * u, w: FILM.frameS * u, h: FILM.frameL * u };
   return { style, wide, mm: u, ratio: wide ? FILM.across / FILM.pitch : FILM.pitch / FILM.across, ...win, crop: cropTo(wide ? 1.5 : 2 / 3) };
-}
-
-// Rounded corners of the photo's window, in canvas px: a slide mount's window is softened; a film
-// frame's are square.
-export function windowRadius(L, W) {
-  const r = { slide: 0.2, slidecard: 0.2 }[L.style] || 0; // the picture's own corners, from the camera's gate
-  return r * L.mm * W;
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -195,8 +190,7 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
   // line 150–190 at the top, ~116–160 on the right)
   const wn = L.win;
   ctx.fillStyle = card ? 'rgb(124,112,96)' : 'rgb(174,167,170)';
-  roundRect(ctx, wn.x * W, wn.y * W, wn.w * W, wn.h * W, (card ? 0.15 : 0.7) * mm);
-  ctx.fill();
+  ctx.fillRect(wn.x * W, wn.y * W, wn.w * W, wn.h * W);
 }
 
 // The light box itself (exposure, flare, highlight roll-off) is done in the engine's shader
@@ -258,7 +252,7 @@ function slideOver(ctx, W, L, glow, strength) {
   const x = L.x * W, y = L.y * W, w = L.w * W, h = L.h * W;
   if (glow && L.style === 'film') filmBleed(ctx, W, L, glow.glow || glow, strength);
   ctx.save();
-  roundRect(ctx, x, y, w, h, windowRadius(L, W)); ctx.clip();
+  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
   ctx.globalCompositeOperation = 'screen';
   if (glow) {
     // scattered light: the picture's own colour, faint at the default and strong when the box is bright
