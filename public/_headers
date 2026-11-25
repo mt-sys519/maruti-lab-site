@@ -7,6 +7,10 @@
 /piclea/fonts/*
   Cache-Control: public, max-age=604800
 
+# filmea: the 88 colour tables (~19MB) only change when a look is re-measured, so a day.
+/filmea/luts/*
+  Cache-Control: public, max-age=86400
+
 # AIR HOCKEY: three.js never changes under the same name, so a week; the table's
 # model, light map and hit sounds might be redone, so a day.
 /bit/airhockey/play/vendor/*

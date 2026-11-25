@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b2723">
+<title>使い方 — filmea（写真の色を選んで仕上げる無料ツール）</title>
+<meta name="description" content="filmea の使い方。写真をひらいて色を選び、効き具合や明るさを整えて保存するまでの流れと、左右比較・長押し・ヒストグラム・保存の枠・手持ちの LUT の読み込みを順に説明します。">
+<link rel="canonical" href="https://marutilab.com/filmea/guide/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使い方 — filmea（写真の色を選んで仕上げる無料ツール）">
+<meta property="og:description" content="写真をひらいて色を選び、効き具合や明るさを整えて保存するまでの流れを順に説明します。">
+<meta property="og:url" content="https://marutilab.com/filmea/guide/">
+<meta property="og:image" content="https://marutilab.com/filmea/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../pages.css">
+</head>
+<body>
+<header class="band"><div class="band-in">
+  <a class="logo" href="../"><img src="../icon.svg" alt=""><span><b>filmea</b><small>BY MARUTI LAB</small></span></a>
+  <a class="use" href="../">filmea を使う</a>
+</div></header>
+<nav class="tabs" aria-label="filmea のページ"><a href="../">つかう</a><a href="./" aria-current="page">使い方</a><a href="../faq/">よくある質問</a><a href="../licenses.html">ライセンス</a></nav>
+
+<main>
+<div class="head">
+  <p class="kicker">GUIDE</p>
+  <h1>filmea の使い方</h1>
+  <p class="lead">filmea（フィルミア）は、手持ちの写真に88種類の色をあてて見比べ、気に入った色で保存できる無料のツールです。写真をひらいてから保存するまでの流れと、比べ方・整え方の道具を順に説明します。料金や写真の扱いについては<a href="../faq/">よくある質問</a>にまとめています。</p>
+  <nav class="toc" aria-label="目次"><a href="#flow">基本の流れ</a><a href="#looks">色の選び方</a><a href="#compare">見比べる</a><a href="#adjust">明るさ・色温度・粒子</a><a href="#save">保存と枠</a><a href="#lut">手持ちの LUT</a><a href="#tips">うまく使うコツ</a></nav>
+</div>
+
+<section id="flow">
+  <h2><span class="no">01</span>基本の流れ</h2>
+  <ol class="steps">
+    <li>「OPEN PHOTO」を押して写真を選びます。パソコンなら画面に写真をドロップしても開けます。手元に写真がなければ、下の「サンプルで試す」から人物・風景・街などの写真で試せます。</li>
+    <li>右側（スマホでは写真の下）に、あなたの写真に色をあてた小さな見本がフィルムのコマのように並びます。上のタブで系統を切り替え、コマを押すとその色が写真全体にかかります。</li>
+    <li>写真の下にあるつまみで効き具合を決めます。100 がその色そのもの、0 が元の写真で、間の値なら色を薄めてかけられます。</li>
+    <li>必要なら「明るさ・色温度・粒子」をひらいて整え、右上の保存ボタンを押します。写真は元の大きさのまま JPEG で保存されます。</li>
+  </ol>
+  <p class="note">写真はどこにもアップロードされず、読み込みから保存まで、すべてお使いの端末のブラウザの中で処理します。</p>
+</section>
+
+<section id="looks">
+  <h2><span class="no">02</span>色の選び方</h2>
+  <p>色は Type-F から Type-O まで8つの系統に分かれていて、あわせて88種類あります。タブの下に系統ごとの短い説明が出るので、まずは気になる系統をひらき、コマを端から押して見比べるのが早道です。コマは見本の写真ではなく、いまひらいているあなたの写真で描いているので、仕上がりをそのまま想像しながら選べます。</p>
+  <p>どの色も、同じ RAW データを「標準」とそれぞれのモードに現像し分けた画像の組から、filmea が独自に色の差を測って作ったものです。数式で雰囲気を似せたフィルターではなく、測った差をそのまま写真に重ねる仕組みなので、明るい所・暗い所・肌・空といった色ごとに、効き方が細かく変わります。</p>
+  <div class="tip"><b>選んでいる色を確かめる</b>ヒストグラムのボタンを押すと、明るさの分布と一緒に、いま選んでいる色の番号と名前が表示されます。</div>
+</section>
+
+<section id="compare">
+  <h2><span class="no">03</span>見比べる</h2>
+  <p>色をかけたあとは、元の写真と比べながら選ぶと失敗しません。写真の下の道具でいつでも比べられます。</p>
+  <div class="tools">
+    <div class="tool"><i><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></i><div><b>左右で比べる</b><span>写真の左半分が元の色、右半分が選んだ色になります。真ん中の線をドラッグして、境目を好きな位置に動かせます。</span></div></div>
+    <div class="tool"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></i><div><b>押している間だけ元の色</b><span>ボタンか写真そのものを長押しすると、指を離すまで元の写真に戻ります。パソコンでは <kbd>Space</kbd> キーを押している間も同じです。</span></div></div>
+    <div class="tool"><i><svg viewBox="0 0 24 24"><path d="M12 3.5c3 4 6 7 6 10.5a6 6 0 0 1-12 0c0-3.5 3-6.5 6-10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></i><div><b>効き具合</b><span>選んだ色をどれだけ強くかけるかを 0〜100 で決めます。色を替えても効き具合はそのまま残ります。</span></div></div>
+    <div class="tool"><i><svg viewBox="0 0 24 24"><path d="M4 19h16M6.5 19v-5M10 19V9M13.5 19v-7M17 19V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></i><div><b>ヒストグラム</b><span>仕上がりの明るさの分布を表示します。白飛びや黒つぶれが出ていないかを確かめるときに使います。</span></div></div>
+  </div>
+</section>
+
+<section id="adjust">
+  <h2><span class="no">04</span>明るさ・色温度・粒子</h2>
+  <p>「明るさ・色温度・粒子」をひらくと、色をかける前の写真を整えるつまみと、仕上げの効果のつまみが出ます。どのつまみもダブルクリック（ダブルタップ）で初期値に戻り、「すべて初期値にもどす」でまとめて戻せます。</p>
+  <ul class="dots">
+    <li><b>明るさ</b>　写真の露出を上げ下げします。色をかける前に光の量で調整するので、暗い所の色まで自然に持ち上がります。</li>
+    <li><b>色温度</b>　左へ動かすと青く、右へ動かすと黄色く寄ります。室内の電球で黄色くなった写真や、日陰で青くなった写真の補正に使えます。</li>
+    <li><b>フィルム粒子</b>　フィルムのようなざらつきを足します。</li>
+    <li><b>周辺減光</b>　写真の四隅を暗く落として、真ん中に目がいくようにします。</li>
+  </ul>
+</section>
+
+<section id="save">
+  <h2><span class="no">05</span>保存と枠</h2>
+  <p>右上の保存ボタンを押すと、いまの仕上がりが JPEG で保存されます。大きさは読み込んだ写真と同じで、縮小はしません（とても大きな写真で端末が扱える上限を超える場合だけ、上限まで縮めて読み込みます）。</p>
+  <p>「保存の枠」で白か黒を選ぶと、写真のまわりに余白をつけ、下の余白に選んだ色の番号を小さく入れて保存できます。プリントやフィルムのコマのような見た目で SNS に載せたいときに使ってください。枠を選ぶと画面の写真にも同じ余白がつくので、保存する前に見た目を確かめられます。</p>
+  <div class="tip"><b>iPhone で保存したとき</b>保存した画像は「ファイル」アプリの「ダウンロード」に入ります。写真アプリに入れたいときは、ファイルを開いて共有ボタンから「画像を保存」を選んでください。</div>
+</section>
+
+<section id="lut">
+  <h2><span class="no">06</span>手持ちの LUT を読み込む</h2>
+  <p>ほかのソフトで使っている色のデータ（LUT）も、filmea で写真にあてて試せます。「手持ちの LUT を読み込む」をひらいてファイルを選ぶか、パソコンなら画面にドロップしてください。読み込める形式は .cube、HaldCLUT の .png、.lut16 です。読み込んだ LUT は「手持ちの LUT」のタブに並び、ほかの色と同じように比べたり保存したりできます。</p>
+  <p class="note">読み込んだ LUT もアップロードはされず、ページを閉じると消えます。</p>
+</section>
+
+<section id="tips">
+  <h2><span class="no">07</span>うまく使うコツ</h2>
+  <p>filmea の色は、カメラやスマホで撮ったままの、手を加えていない写真に合わせて作っています。いちばん本来の色に近づくのは、撮って出しの写真にそのままあてたときです。すでにアプリで色を濃くした写真や、フィルターをかけた写真にあてると、色が重なって強く出すぎることがあります。そのときは効き具合を 50〜70 くらいに下げてみてください。</p>
+  <p>暗すぎる写真や明るすぎる写真は、先に「明るさ」で整えてから色を選ぶほうが、色の違いが見比べやすくなります。</p>
+</section>
+
+<div class="next">
+  <a href="../faq/"><small>料金や写真の扱い</small>よくある質問</a>
+  <a href="../licenses.html"><small>書体と写真の出どころ</small>ライセンス</a>
+  <a href="../"><small>さっそく</small>filmea を使う</a>
+</div>
+</main>
+
+<footer>
+  <div class="by">filmea</div>
+  <nav aria-label="Maruti Lab"><a href="/">Maruti Lab</a><a href="/about">運営者について</a><a href="/privacy">プライバシーポリシー</a><a href="/terms">利用規約</a><a href="/contact">お問い合わせ</a></nav>
+  © 2026 Maruti Lab
+</footer>
+</body>
+</html>
