@@ -99,9 +99,19 @@ function balance(p,max,m){
   let lo=0,hi=max;for(let i=0;i<14;i++){const mid=(lo+hi)/2;if(greedy(p,mid,m).length<=g.length)hi=mid;else lo=mid}
   return greedy(p,hi,m);
 }
-function wrapLines(c,L,f){
-  const key=[f.fam,f.w,L.size,L.ls,L.wrap,L.bem,L.vertical,D.W,D.H,L.text].join('|');
+// sig: the whole text measured as it draws now. A Japanese web font comes in slices, and Safari can bring one in
+// (the Latin letters, say) without telling document.fonts; with the width in the key the lines are worked out
+// again when it lands, instead of a wrap made with the stand-in font staying while the letters narrow.
+// Each font and text is waited for once only, so a browser whose check never comes true cannot loop.
+const waited=new Set();
+function watchFont(font,text){
+  const k=font+'|'+text;if(waited.has(k)||document.fonts.check(font,text))return;if(waited.size>400)waited.clear();waited.add(k);
+  document.fonts.load(font,text).then(()=>{glyphCache=new Map();wrapCache.clear();FONTV++;emit('fonts')},()=>{});
+}
+function wrapLines(c,L,f,sig){
+  const key=[f.fam,f.w,L.size,L.ls,L.wrap,L.bem,L.vertical,D.W,D.H,sig,L.text].join('|');
   if(wrapCache.has(key))return wrapCache.get(key);
+  watchFont(c.font,L.text);
   const sp=L.size*L.ls/100,paras=L.text.split('\n');
   let out=paras;
   if(L.bem||L.wrap){
@@ -131,13 +141,13 @@ function ask(msg,{ok='OK',input=null,cancel=true}={}){
 /* ---------- drawing ---------- */
 function layout(c,L,f){
   c.font=fontStr(f,L.size);
-  const s=L.size,sp=s*L.ls/100,lines=wrapLines(c,L,f);
+  const s=L.size,sp=s*L.ls/100,sig=c.measureText(L.text).width.toFixed(2),lines=wrapLines(c,L,f,sig);
   if(!L.vertical){
     const ws=lines.map(t=>measure(c,t,sp)),lh=s*L.lh;
-    return {lines,ws,sp,lh,W:Math.max(s*.3,(L.bem||0)*s,...ws),H:lh*lines.length};
+    return {lines,ws,sp,lh,sig,W:Math.max(s*.3,(L.bem||0)*s,...ws),H:lh*lines.length};
   }
   const cw=s*L.lh,adv=s+sp,hs=lines.map(t=>Math.max(0,[...t].length*adv-sp));
-  return {lines,hs,sp,cw,adv,W:cw*lines.length,H:Math.max(s,(L.bem||0)*s,...hs)};
+  return {lines,hs,sp,cw,adv,sig,W:cw*lines.length,H:Math.max(s,(L.bem||0)*s,...hs)};
 }
 function glyphs(c,L,f,m,stroke){
   const put=(ch,x,y)=>stroke?c.strokeText(ch,x,y):c.fillText(ch,x,y);
@@ -209,7 +219,7 @@ function drawLayer(c,L,ov){
   if(L.band.on){
     c.save();
     if(L.band.glass){
-      const sh=L.band.shape||'rect',fr=frameSize(L,m),hx=fr.w/2,hy=fr.h/2,pk=pxKey(c,L,c.font+FONTV),hit=pxGet(c,L,'b',pk);
+      const sh=L.band.shape||'rect',fr=frameSize(L,m),hx=fr.w/2,hy=fr.h/2,pk=pxKey(c,L,c.font+FONTV+m.sig),hit=pxGet(c,L,'b',pk);
       if(hit)pxPut(c,hit);
       else pxSet(c,L,'b',pk,glassPaint(c,glassRead(c,hx,hy),sh==='circle'||sh==='ellipse'?sdEllipse(hx,hy):sdRect(hx,hy,sh==='pill'?Math.min(hx,hy):Math.min(L.size*L.band.r/100,hx,hy)),hx,hy,L.opacity,[L.band.color,L.band.gta]));
       framePath(c,L,m);
@@ -218,7 +228,7 @@ function drawLayer(c,L,ov){
     const ln=L.band.line;if(ln?.on){c.globalAlpha=L.opacity;c.lineWidth=s*ln.w/100;c.strokeStyle=ln.color;c.stroke()}
     c.restore();
   }
-  const gm=L.glyph,gk=(gm==='glass'||gm==='jelly'||gm==='carve')&&pxKey(c,L,c.font+FONTV),gh=gk&&pxGet(c,L,'g',gk);
+  const gm=L.glyph,gk=(gm==='glass'||gm==='jelly'||gm==='carve')&&pxKey(c,L,c.font+FONTV+m.sig),gh=gk&&pxGet(c,L,'g',gk);
   const GA=!gh&&(gm==='glass'||gm==='jelly')&&glyphRead(c,L,m); // glass and jelly bend the picture as it was before their shadow
   c.globalAlpha=L.opacity;c.lineJoin='round';c.miterLimit=2;c.lineWidth=s*L.stroke.w/100*2;
   // 二重のフチ: a second edge round the outside of 縁取り, as wide again as its own 太さ
@@ -818,7 +828,10 @@ function draw(c,o={}){
       const h=handles(L,M,kk),dot=(x,y,r)=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();c.stroke()};
       c.save();c.fillStyle='#fff';c.strokeStyle='rgba(40,25,15,.3)';c.lineWidth=kk;c.shadowColor='rgba(40,25,15,.3)';c.shadowBlur=4;
       for(const q of h.corners)dot(q.x,q.y,6.5*kk);
-      for(const q of Object.values(h.edges)){c.beginPath();c.roundRect(q.x-4.5*kk,q.y-4.5*kk,9*kk,9*kk,2.5*kk);c.fill();c.stroke()}
+      for(const [e,q] of Object.entries(h.edges)){
+        const [w,hh]=!h.split?[9,9]:e==='l'||e==='r'?[7,26]:[26,7];
+        c.beginPath();c.roundRect(q.x-w/2*kk,q.y-hh/2*kk,w*kk,hh*kk,(h.split?3.5:2.5)*kk);c.fill();c.stroke();
+      }
       dot(h.rot.x,h.rot.y,13*kk);if(h.mv)dot(h.mv.x,h.mv.y,13*kk);c.restore();
       rotIcon(c,h.rot.x,h.rot.y,kk);if(h.mv)moveIcon(c,h.mv.x,h.mv.y,kk);
     }
@@ -893,11 +906,14 @@ function handles(L,M,kk){
   const below=b.h/2+34*kk,room=L.y+below*cs+18*kk<D.H;
   // a shape also stretches one way from the middle of each side
   // a line only lengthens from its ends; its thickness is set in the panel
-  const edges=isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isText(L)?(L.vertical?{t:at(0,-b.h/2),b:at(0,b.h/2)}:{r:at(b.w/2,0),l:at(-b.w/2,0)}):(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle'&&tool==='crop')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
+  // a grid cell (outside トリミング) has a bar on each side it shares with another cell, to move that border
+  const gc=isCell(L)&&tool!=='crop'&&D.grid&&gridOf(D.grid)[L.gc],E=1e-4;
+  const edges=gc?Object.fromEntries([['r',gc[0]+gc[2]<1-E,at(b.w/2,0)],['l',gc[0]>E,at(-b.w/2,0)],['b',gc[1]+gc[3]<1-E,at(0,b.h/2)],['t',gc[1]>E,at(0,-b.h/2)]].filter(e=>e[1]).map(([k,,q])=>[k,q]))
+    :isLine(L)?{r:at(b.w/2,0),l:at(-b.w/2,0)}:isText(L)?(L.vertical?{t:at(0,-b.h/2),b:at(0,b.h/2)}:{r:at(b.w/2,0),l:at(-b.w/2,0)}):(isShape(L)&&L.kind!=='circle')||(isImg(L)&&L.photoId&&L.shape!=='circle'&&tool==='crop')?{r:at(b.w/2,0),l:at(-b.w/2,0),b:at(0,b.h/2),t:at(0,-b.h/2)}:{};
   // a grid cell keeps its place (a drag swaps it with another), so it has no move handle
-  const yb=room?below:-below,w=(lx,ly)=>({x:L.x+lx*cs-ly*sn,y:L.y+lx*sn+ly*cs}),cell=isImg(L)&&L.gc!=null&&D.grid;
+  const yb=room?below:-below,w=(lx,ly)=>({x:L.x+lx*cs-ly*sn,y:L.y+lx*sn+ly*cs}),cell=isCell(L);
   const [rot,mv]=cell?[at(0,yb),null]:pair([w(-HG*kk,yb),w(HG*kk,yb)],m+2*kk);
-  return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot,mv};
+  return {corners:isLine(L)?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>at(i*b.w/2,j*b.h/2)),edges,rot,mv,split:!!gc};
 }
 function local(L,p){const dx=p.x-L.x,dy=p.y-L.y,c=Math.cos(-L.rot),s=Math.sin(-L.rot);return {x:dx*c-dy*s,y:dx*s+dy*c}}
 function hitLayer(M,p,kk,only){
@@ -1145,6 +1161,7 @@ cv.addEventListener('pointerdown',e=>{
   else{
     const h=hitHandle(L,p);
     if(h==='scale'){G.g={mode:'scale',d:Math.max(1,Math.hypot(p.x-L.x,p.y-L.y)),size:L[SZ(L)],h:L.h,box:layerBox(L)};return}
+    if(h&&h.startsWith('edge:')&&isCell(L)&&tool!=='crop'){G.g=splitStart(L,h.slice(5));return}
     if(h&&h.startsWith('edge:')&&isImg(L)&&turned(L)&&L.photoId){G.g=frameStart(L,h.slice(5),p);return}
     if(h&&h.startsWith('edge:')&&isImg(L)){bakeView(L);const f=imgFrame(L);G.g={mode:'icrop',L,e:h.slice(5),p,x:L.x,y:L.y,fw:f.w,fh:f.h,rot:L.rot,crop:{...cropOf(L)}};return}
     if(h&&h.startsWith('edge:')&&isText(L)){const m=G.M.get(L.id),w0=L.vertical?m.H:m.W;G.g={mode:'wrap',e:h.slice(5),p,x0:L.x,y0:L.y,rot:L.rot,w0,w:w0};return}
@@ -1180,6 +1197,7 @@ cv.addEventListener('pointermove',e=>{
   else if(g.mode==='izoom'&&L&&G.ptrs.size===2){L.zs=Math.max(1,Math.min(3,g.zs*two().d/g.t.d));syncInside(L)}
   else if(g.mode==='rot'&&L){L.rot=snapAngle(g.rot+Math.atan2(p.y-L.y,p.x-L.x)-g.a)}
   else if(g.mode==='marq')g.q=p;
+  else if(g.mode==='gsplit')splitDrag(g,p);
   else if(g.mode==='mmove'){
     if(!g.moved&&Math.hypot(p.x-g.p.x,p.y-g.p.y)/kE()<4)return;g.moved=true;
     let dx=p.x-g.p.x,dy=p.y-g.p.y;const u=g.u,T=targets(new Set(g.st.map(s=>s.L))),thr=SNAP*kE();
@@ -1390,6 +1408,25 @@ const GRIDS={
   g9:[0,1,2].flatMap(r=>[0,1,2].map(c=>[c/3,r/3,1/3,1/3])),
 };
 const gridCells=()=>D.layers.filter(L=>isImg(L)&&L.gc!=null).sort((a,b)=>a.gc-b.gc);
+const isCell=L=>isImg(L)&&L.gc!=null&&!!D.grid;
+// The cells as laid now: a border pulled by hand keeps its own copy (D.grid.cells); choosing the layout again resets it.
+const gridOf=g=>g.cells||GRIDS[g.lay];
+// Pulling the bar on a cell's side moves that border, as in Canva: every cell edge on the same line goes with it,
+// so a row or column stays straight, and no cell gets thinner than MINC of the page.
+const MINC=.08;
+function splitStart(L,e){
+  const cs=gridOf(D.grid).map(c=>[...c]),c=cs[L.gc],ax=e==='l'||e==='r'?0:1,v=e==='r'||e==='b'?c[ax]+c[ax+2]:c[ax],E=1e-4;
+  let lo=MINC,hi=1-MINC;
+  for(const d of cs){if(Math.abs(d[ax]+d[ax+2]-v)<E)lo=Math.max(lo,d[ax]+MINC);if(Math.abs(d[ax]-v)<E)hi=Math.min(hi,d[ax]+d[ax+2]-MINC)}
+  return {mode:'gsplit',cs,ax,v,lo,hi};
+}
+function splitDrag(g,p){
+  const len=g.ax?D.H:D.W,thr=SNAP*kE()/len,E=1e-4;let nv=Math.max(g.lo,Math.min(g.hi,(g.ax?p.y:p.x)/len));
+  const s=[1/4,1/3,1/2,2/3,3/4,g.v].filter(t=>t>=g.lo&&t<=g.hi).reduce((b,t)=>Math.abs(t-nv)<thr&&(b==null||Math.abs(t-nv)<Math.abs(b-nv))?t:b,null);
+  if(s!=null)nv=s;
+  D.grid.cells=g.cs.map(d=>{d=[...d];const a=g.ax,end=d[a]+d[a+2];if(Math.abs(d[a]-g.v)<E){d[a]=nv;d[a+2]=end-nv}else if(Math.abs(end-g.v)<E)d[a+2]=nv-d[a];return d});
+  layoutGrid();G.guides=s==null?null:g.ax?{x:null,y:s*D.H}:{x:s*D.W,y:null};
+}
 // The grid cell (or empty frame) under a point, not counting 'not'.
 function cellAt(p,not){
   for(let i=D.layers.length-1;i>=0;i--){
@@ -1403,7 +1440,7 @@ function swapPhotos(A,B){
   for(const k of PHOTO_KEYS){const a=A[k],b=B[k];if(b===undefined)delete A[k];else A[k]=b;if(a===undefined)delete B[k];else B[k]=a}
 }
 function layoutGrid(){
-  const g=D.grid,cells=g&&GRIDS[g.lay];if(!cells)return;
+  const g=D.grid,cells=g&&gridOf(g);if(!cells)return;
   const G=g.gap*D.W,e=1e-6,side=(a,lo)=>a<e||a>1-e?G:G/2;
   for(const L of gridCells()){
     const c=cells[L.gc];if(!c)continue;const [x,y,w,h]=c;
