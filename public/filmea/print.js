@@ -323,6 +323,22 @@ function slideOver(ctx, W, L, glow, strength) {
     ctx.globalAlpha = 1;
   }
   ctx.restore();
+  if (L.style === 'film') filmSheen(ctx, W, L);
+}
+
+// The film is glossy plastic: a room light reflects off it as soft slanted bands across the whole
+// strip, picture included. Light added, so screened on, here and on the page.
+function filmSheen(ctx, W, L) {
+  const H = W * L.ratio;
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  for (const [o, a] of [[0, 0], [0.2, 0], [0.29, 0.05], [0.35, 0.14], [0.4, 0.05], [0.52, 0], [0.68, 0], [0.73, 0.045], [0.77, 0]]) {
+    g.addColorStop(o, `rgba(255,255,255,${a})`);
+  }
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
 }
 
 // On the strip, light from the picture's bright parts spreads into the dark film right next to them
@@ -364,25 +380,24 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
   // Work along the strip (x) and across it (y); an upright photo's strip runs down the canvas.
   const len = L.wide ? W : H, wid = L.wide ? H : W;
   if (!L.wide) { ctx.translate(W, 0); ctx.rotate(Math.PI / 2); }
-  // the base: unexposed slide film with the light box behind it, deep but not paint-black, a warm
-  // brown that lets a little more through as the light gets stronger, and a little unevenness
+  // the base: unexposed slide film with the light box behind it, deep but not paint-black, a neutral
+  // dark that lets a little more through as the light gets stronger. It is plastic, so it is even:
+  // no blotches or warm cast, which made it read as card or felt.
   // measured: a slide strip's base on a light table is about 21% of the table's white (L 51 of 238)
   const base = 0.13 + 0.13 * strength;
-  ctx.fillStyle = `rgb(${Math.round(238 * base)},${Math.round(236 * base)},${Math.round(226 * base)})`; ctx.fillRect(0, 0, len, wid);
-  // The light box is not even: brightest under the middle of the frame and falling away toward the
-  // strip's cut ends and edges, with soft blotches where the diffuser is uneven. All of it follows
-  // the light's strength.
-  const pool = ctx.createRadialGradient(len / 2, wid / 2, 0, len / 2, wid / 2, len * 0.62);
-  pool.addColorStop(0, `rgba(255,205,150,${0.16 * strength})`); pool.addColorStop(0.55, `rgba(255,205,150,${0.06 * strength})`); pool.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = pool; ctx.fillRect(0, 0, len, wid);
+  ctx.fillStyle = `rgb(${Math.round(236 * base)},${Math.round(238 * base)},${Math.round(238 * base)})`; ctx.fillRect(0, 0, len, wid);
+  // the strip's cut ends fall away a little from the middle of the light box
   for (const [x0, x1] of [[0, len * 0.16], [len, len * 0.84]]) {
     const fall = ctx.createLinearGradient(x0, 0, x1, 0);
     fall.addColorStop(0, `rgba(0,0,0,${0.18 + 0.14 * strength})`); fall.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = fall; ctx.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), wid);
   }
-  speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 2.5), 0.05 + 0.06 * strength, true);
-  speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 0.06), 0.06, true);
-  // perforations: the scanner's light through them, falling off a little at their edges
+  speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 0.06), 0.03, true);
+  // the long cut edges of the plastic catch the light as a thin bright line
+  ctx.fillStyle = `rgba(255,255,255,${0.16 + 0.14 * strength})`;
+  ctx.fillRect(0, 0, len, Math.max(1, mm * 0.1));
+  ctx.fillRect(0, wid - Math.max(1, mm * 0.1), len, Math.max(1, mm * 0.1));
+  // perforations: clean holes punched through the plastic, the light box seen straight through
   const fx = (len - FILM.frameL * mm) / 2;
   const step = FILM.perfStep * mm, pl = FILM.perfL * mm, ps = FILM.perfS * mm, pr = FILM.perfR * mm;
   const first = fx + (FILM.frameL * mm - 8 * step) / 2 + (step - pl) / 2;
@@ -392,14 +407,9 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     for (const y of [FILM.perfIn * mm, wid - FILM.perfIn * mm - ps]) {
       ctx.save();
       // the light box seen straight through the hole blooms onto the film round it
-      ctx.shadowColor = `rgba(255,250,240,${0.25 + 0.5 * strength})`; ctx.shadowBlur = mm * (0.15 + 0.6 * strength);
-      ctx.fillStyle = '#f3efe6';
+      ctx.shadowColor = `rgba(255,255,252,${0.2 + 0.4 * strength})`; ctx.shadowBlur = mm * (0.08 + 0.3 * strength);
+      ctx.fillStyle = '#fbfaf6';
       roundRect(ctx, x, y, pl, ps, pr); ctx.fill();
-      ctx.restore();
-      ctx.save();
-      roundRect(ctx, x, y, pl, ps, pr); ctx.clip();
-      ctx.strokeStyle = 'rgba(120,110,95,0.5)'; ctx.lineWidth = mm * 0.12;
-      roundRect(ctx, x, y, pl, ps, pr); ctx.stroke();
       ctx.restore();
     }
   }

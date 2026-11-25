@@ -89,13 +89,13 @@ let slideLight = 0.6; // 光の強さ, the light box behind slides and the film 
 let saveLong = 0; // long side of the saved image; 0 keeps the photo's own size
 let thumbToken = 0;
 
-function toast(msg, isError = false) {
+function toast(msg, isError = false, ms = 0) {
   const t = $('toast');
   t.textContent = msg;
   t.classList.toggle('error', isError);
   t.classList.add('show');
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.classList.remove('show'), isError ? 5000 : 2200);
+  toast._t = setTimeout(() => t.classList.remove('show'), ms || (isError ? 5000 : 2200));
 }
 
 function requestRender() {
@@ -1075,19 +1075,27 @@ function initUI() {
   new ResizeObserver(layout).observe(vp);
 }
 
-// As an app: the service worker keeps the page usable offline, and where the browser offers to install
-// the page, a button in the top bar does it.
+// As an app: the service worker keeps the page usable offline, and the button in the top bar adds the
+// page as an app. Where the browser can do it from the page (Chrome, Edge, Android) it asks right away;
+// elsewhere (Safari on iPhone, or before the browser is ready) it says how to do it from the browser.
 function appSetup() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
-  let offer = null;
   const btn = $('btnInstall');
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); offer = e; btn.hidden = false; });
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) { btn.hidden = true; return; }
+  let offer = null;
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); offer = e; });
   window.addEventListener('appinstalled', () => { offer = null; btn.hidden = true; });
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   btn.addEventListener('click', async () => {
-    if (!offer) return;
-    offer.prompt();
-    await offer.userChoice.catch(() => {});
-    offer = null; btn.hidden = true;
+    if (offer) {
+      offer.prompt();
+      const choice = await offer.userChoice.catch(() => null);
+      offer = null;
+      if (choice?.outcome === 'accepted') btn.hidden = true;
+      return;
+    }
+    toast(ios ? 'Safari の共有ボタン（□に↑）から「ホーム画面に追加」を選ぶと、アプリとして使えます'
+      : 'ブラウザのメニューの「アプリをインストール」か「ホーム画面に追加」から、アプリとして追加できます', false, 6000);
   });
 }
 
