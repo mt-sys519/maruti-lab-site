@@ -1,5 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
+import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, windowRadius, mountCode, readExifDate } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -10,6 +11,10 @@ const SAMPLES = [
   { label: '赤', url: 'photos/red.jpg' },
   { label: '陰影', url: 'photos/shade.jpg' },
 ];
+
+// The date on the mount, in the amber of a film's edge printing (deeper on white so it still reads).
+const DATE_INK = { white: '#d4890f', dark: '#e8a51e' };
+const CODE_SIZE = 0.0115, CODE_TRACK = 0.12; // the number's size (of the mount's width) and tracking
 
 const GROUP_COLORS = { F: '#4f7a5e', S: '#5a6f93', N: '#b8863b', P: '#7c5f8f', L: '#a8463e', C: '#9a5b45', R: '#3f6e73', K: '#6b7d3c', O: '#c0703a', U: '#6f6a63' };
 
@@ -36,6 +41,9 @@ let holdKey = false, holdBtn = false;
 let rafPending = false;
 let frame = 'none';
 const lookIntensity = new Map(); // each look keeps its own 効き具合; a look not touched yet starts at 100
+let stampOn = true;   // the keycode-like number at the mount's lower right
+let captionOn = true; // the look's code under the photo on a mount
+let photoDate = new Date();
 let saveLong = 0; // long side of the saved image; 0 keeps the photo's own size
 let thumbToken = 0;
 
@@ -73,8 +81,45 @@ function layout() {
   const cs = getComputedStyle(vp);
   let availW = vp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   let availH = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-  if (frame !== 'none') { availW /= 1.07; availH = availH / 1.07 - 44; }
-  const s = Math.min(availW / engine.imgW, availH / engine.imgH, 1);
+  const stage = $('stage'), cap = $('frameCaption');
+  const crop = $('cropBox'), box = $('canvasBox');
+  Object.assign(crop.style, { left: '', top: '', width: '', height: '', borderRadius: '' });
+  Object.assign(box.style, { left: '', top: '' });
+  for (const k of ['l', 't', 'r', 'b']) box.style.removeProperty(`--crop-${k}`);
+  let s;
+  if (frame === 'film' || frame === 'instant') {
+    // the photo shows through its window, cropped to the frame's shape; the rest is drawn
+    const L = frameLayout(frame, engine.imgW, engine.imgH);
+    const mw = Math.floor(Math.min(availW, availH / L.ratio));
+    s = (L.w * mw) / L.crop.w;
+    Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * L.ratio) + 'px', paddingTop: '' });
+    Object.assign(crop.style, { left: L.x * mw + 'px', top: L.y * mw + 'px', width: L.w * mw + 'px', height: L.h * mw + 'px', borderRadius: windowRadius(L, mw) + 'px' });
+    Object.assign(box.style, { left: -L.crop.x * s + 'px', top: -L.crop.y * s + 'px' });
+    // where the window sits inside the photo, so the labels on the photo stay inside it
+    const cut = { l: L.crop.x, t: L.crop.y, r: engine.imgW - L.crop.x - L.crop.w, b: engine.imgH - L.crop.y - L.crop.h };
+    for (const k in cut) box.style.setProperty(`--crop-${k}`, cut[k] * s + 'px');
+    artWidth = mw;
+    drawArt();
+  } else if (frame !== 'none') {
+    // the 4:5 mount as it will be saved, photo placed by mountLayout
+    const g = mountLayout(engine.imgW, engine.imgH);
+    const mw = Math.floor(Math.min(availW, availH / g.ratio));
+    s = (g.w * mw) / engine.imgW;
+    Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * g.ratio) + 'px', paddingTop: (g.y * mw) + 'px' });
+    cap.style.top = captionY(g) * mw + 'px';
+    cap.style.fontSize = Math.max(7, mw * 0.016) + 'px';
+    cap.style.letterSpacing = Math.max(1, mw * 0.016 * 0.24) + 'px';
+    const code = $('frameDate');
+    code.style.top = captionY(g) * mw + 'px';
+    code.style.fontSize = Math.max(6, mw * CODE_SIZE) + 'px';
+    code.style.letterSpacing = mw * CODE_SIZE * CODE_TRACK + 'px';
+    code.style.right = (1 - g.x - g.w) * mw + 'px';
+    code.style.marginRight = -mw * CODE_SIZE * CODE_TRACK + 'px'; // letter-spacing trails the last digit
+    code.textContent = mountCode(photoDate, lookDigits());
+  } else {
+    s = Math.min(availW / engine.imgW, availH / engine.imgH, 1);
+    Object.assign(stage.style, { width: '', height: '', paddingTop: '' });
+  }
   const cssW = Math.max(1, Math.floor(engine.imgW * s));
   const cssH = Math.max(1, Math.floor(engine.imgH * s));
   const c = $('view');
@@ -86,6 +131,39 @@ function layout() {
   $('splitLine').style.left = splitX * 100 + '%';
   requestRender();
 }
+
+// The drawn frame (film or instant) behind the photo on screen, the same drawing the saved file gets.
+let artWidth = 0;
+function drawArt() {
+  if ((frame !== 'film' && frame !== 'instant') || !engine.imgW || !artWidth) return;
+  const L = frameLayout(frame, engine.imgW, engine.imgH);
+  const dpr = window.devicePixelRatio || 1;
+  for (const [id, draw] of [['frameArt', (x, w) => drawFrameUnder(x, w, L, frameText())], ['frameOver', (x, w) => drawFrameOver(x, w, L)]]) {
+    const c = $(id);
+    c.style.width = artWidth + 'px'; c.style.height = Math.floor(artWidth * L.ratio) + 'px';
+    c.width = Math.round(artWidth * dpr); c.height = Math.round(artWidth * L.ratio * dpr);
+    draw(c.getContext('2d'), c.width);
+  }
+}
+
+function frameText() {
+  return { caption: captionOn ? $('frameCaption').textContent : '', code: stampOn ? mountCode(photoDate, lookDigits()) : '' };
+}
+
+// The look as four digits for the mount's number: its group's place in the tab order, then its number.
+function lookDigits() {
+  if (!current) return '0000';
+  const gi = current.group === 'U' ? 99 : groups.findIndex((g) => g.id === current.group) + 1;
+  const n = parseInt(String(current.code).replace(/\D/g, ''), 10) || 0;
+  return String(gi).padStart(2, '0') + String(n % 100).padStart(2, '0');
+}
+
+// The caption and date sit in a narrow band right under the photo (the bottom margin a tall photo
+// gets), however much mount a wide photo leaves below.
+function captionY(g) {
+  return g.y + g.h + Math.min(g.bottom, 0.078) / 2;
+}
+
 
 // ---------- histogram ----------
 function drawHistogram() {
@@ -117,6 +195,7 @@ function drawHistogram() {
 
 // ---------- images ----------
 async function setPhotoFromBlob(blob) {
+  photoDate = (await readExifDate(blob)) || (blob.lastModified ? new Date(blob.lastModified) : new Date());
   const bmp = await createImageBitmap(blob, { imageOrientation: 'from-image' });
   let w = bmp.width, h = bmp.height;
   const lim = engine.maxTex;
@@ -308,6 +387,8 @@ async function selectPreset(p) {
     label.title = p.desc || '';
     $('activeCode').textContent = `${p.code}  ${p.name}`;
     $('frameCaption').textContent = `filmea  //  ${p.group === 'U' ? 'USER' : 'TYPE-' + p.code}`;
+    $('frameDate').textContent = mountCode(photoDate, lookDigits());
+    drawArt();
     markActiveThumb();
     requestRender();
   } catch (e) {
@@ -408,43 +489,98 @@ async function save() {
   await new Promise((r) => setTimeout(r, 30));
   try {
     const iw = engine.imgW, ih = engine.imgH;
-    const shrink = saveLong && saveLong < Math.max(iw, ih);
-    const pixels = engine.renderFull(shrink ? saveLong : 0);
+    if (frame === 'film' || frame === 'instant') return await saveDrawnFrame(iw, ih);
+    const g = frame === 'none' ? null : mountLayout(iw, ih);
+    // Long side the photo itself ends up with. On a mount the size choice is the mount's width
+    // (1080 -> 1080x1350); the original size keeps the photo's pixels, kept under the ~16.7M-pixel
+    // canvas limit of phones.
+    let photoLong = saveLong || Math.max(iw, ih);
+    let mountW = 0;
+    if (g) {
+      mountW = saveLong || Math.round(iw / g.w);
+      mountW = Math.min(mountW, Math.floor(Math.sqrt(16e6 / g.ratio)));
+      photoLong = Math.round(Math.max(g.w, g.h) * mountW);
+    }
+    const shrink = photoLong < Math.max(iw, ih);
+    const pixels = engine.renderFull(shrink ? photoLong : 0);
     let img = document.createElement('canvas');
     img.width = iw; img.height = ih;
     img.getContext('2d').putImageData(new ImageData(pixels, iw, ih), 0, 0);
-    if (shrink) img = shrinkCanvas(img, saveLong);
+    if (shrink) img = shrinkCanvas(img, photoLong);
     const W = img.width, H = img.height;
     let out = document.createElement('canvas');
-    if (frame === 'none') {
+    if (!g) {
       out = img;
     } else {
-      const pad = Math.round(Math.max(W, H) * 0.035);
-      const bottom = Math.round(pad * 2.2);
-      out.width = W + pad * 2; out.height = H + pad + bottom;
+      out.width = mountW; out.height = Math.round(mountW * g.ratio);
       const x = out.getContext('2d');
       x.fillStyle = frame === 'white' ? '#f8f7f3' : '#151517';
       x.fillRect(0, 0, out.width, out.height);
-      x.drawImage(img, pad, pad);
-      x.fillStyle = frame === 'white' ? '#5b5752' : '#8c8a86';
-      const fs = Math.max(11, Math.round(out.width * 0.0095));
+      x.drawImage(img, Math.round((mountW - W) / 2), Math.round(g.y * mountW));
+      const fs = Math.max(11, Math.round(mountW * 0.016));
       x.font = `500 ${fs}px "DM Mono", Consolas, monospace`;
-      x.textAlign = 'center';
       x.textBaseline = 'middle';
       if ('letterSpacing' in x) x.letterSpacing = `${Math.round(fs * 0.24)}px`;
-      x.fillText($('frameCaption').textContent, out.width / 2, H + pad + bottom / 2);
+      const cy = captionY(g) * mountW;
+      if (captionOn) {
+        x.fillStyle = frame === 'white' ? '#5b5752' : '#8c8a86';
+        x.textAlign = 'center';
+        x.fillText($('frameCaption').textContent, mountW / 2, cy);
+      }
+      if (stampOn) {
+        // right-aligned to the photo's edge; letterSpacing also trails the last digit, so shift it back
+        const cs = Math.max(8, Math.round(mountW * CODE_SIZE));
+        x.font = `500 ${cs}px "DM Mono", Consolas, monospace`;
+        const track = cs * CODE_TRACK;
+        if ('letterSpacing' in x) x.letterSpacing = `${track}px`;
+        x.fillStyle = frame === 'white' ? DATE_INK.white : DATE_INK.dark;
+        x.textAlign = 'right';
+        x.fillText(mountCode(photoDate, lookDigits()), (g.x + g.w) * mountW + ('letterSpacing' in x ? track : 0), cy);
+      }
     }
-    const blob = await new Promise((r) => out.toBlob(r, 'image/jpeg', 0.95));
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `filmea_${(current?.code || 'none').toLowerCase()}_${Date.now()}.jpg`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    await download(out);
   } catch (e) {
     toast(`保存できませんでした: ${e.message}`, true);
   } finally {
     btn.disabled = false;
   }
+}
+
+// Film or instant: the frame drawn at the chosen width, the photo cropped into its window.
+async function saveDrawnFrame(iw, ih) {
+  const L = frameLayout(frame, iw, ih);
+  let mountW = saveLong || Math.round(L.crop.w / L.w);
+  mountW = Math.min(mountW, Math.floor(Math.sqrt(16e6 / L.ratio)));
+  const k = (L.w * mountW) / L.crop.w; // output pixels per photo pixel
+  const long = Math.round(Math.max(iw, ih) * k);
+  const shrink = k < 1;
+  const pixels = engine.renderFull(shrink ? long : 0);
+  let img = document.createElement('canvas');
+  img.width = iw; img.height = ih;
+  img.getContext('2d').putImageData(new ImageData(pixels, iw, ih), 0, 0);
+  if (shrink) img = shrinkCanvas(img, long);
+  const f = img.width / iw;
+  const out = document.createElement('canvas');
+  out.width = mountW; out.height = Math.round(mountW * L.ratio);
+  const x = out.getContext('2d');
+  drawFrameUnder(x, mountW, L, frameText());
+  x.save();
+  const r = windowRadius(L, mountW), wx = L.x * mountW, wy = L.y * mountW, ww = L.w * mountW, wh = L.h * mountW;
+  x.beginPath(); x.roundRect ? x.roundRect(wx, wy, ww, wh, r) : x.rect(wx, wy, ww, wh); x.clip();
+  x.imageSmoothingQuality = 'high';
+  x.drawImage(img, L.crop.x * f, L.crop.y * f, L.crop.w * f, L.crop.h * f, wx, wy, ww, wh);
+  x.restore();
+  drawFrameOver(x, mountW, L);
+  await download(out);
+}
+
+async function download(out, type = 'image/jpeg') {
+  const blob = await new Promise((r) => out.toBlob(r, type, 0.95));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `filmea_${(current?.code || 'none').toLowerCase()}_${Date.now()}.${type === 'image/png' ? 'png' : 'jpg'}`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
 // ---------- wiring ----------
@@ -569,8 +705,16 @@ function initUI() {
 
   const saveState = () => {
     const size = document.querySelector('#sizeSeg button.on').textContent;
-    $('frameState').textContent = frame === 'none' ? size : `${size}・枠 ${document.querySelector('#frameSeg button.on').textContent}`;
+    $('sizeLabel').textContent = frame === 'none' ? '大きさ（長い辺）' : '大きさ（台紙の横幅）';
+    $('captionCheck').closest('label').classList.toggle('off', frame === 'none');
+    $('stampCheck').closest('label').classList.toggle('off', frame === 'none');
+    const parts = [size];
+    if (frame !== 'none') parts.push(`枠 ${document.querySelector('#frameSeg button.on').textContent}`);
+    if (frame !== 'none' && stampOn) parts.push('番号');
+    $('frameState').textContent = parts.join('・');
   };
+  $('stampCheck').addEventListener('change', (e) => { stampOn = e.target.checked; $('frameDate').classList.toggle('hidden', !stampOn); saveState(); drawArt(); });
+  $('captionCheck').addEventListener('change', (e) => { captionOn = e.target.checked; $('frameCaption').classList.toggle('hidden', !captionOn); drawArt(); });
   $('frameSeg').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
