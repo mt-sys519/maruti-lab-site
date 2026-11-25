@@ -5,8 +5,8 @@ import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, mountCode, fil
 const $ = (id) => document.getElementById(id);
 
 const SAMPLES = [
-  { label: '人物', url: 'photos/portrait.jpg' },
-  { label: '風景', url: 'photos/landscape.jpg' },
+  { label: '人物', url: 'photos/person.jpg' },
+  { label: '風景', url: 'photos/fuji.jpg' },
   { label: '街', url: 'photos/street.jpg' },
   { label: '赤', url: 'photos/red.jpg' },
   { label: '陰影', url: 'photos/shade.jpg' },

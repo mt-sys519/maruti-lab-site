@@ -4,10 +4,10 @@
 // deploy shows up on the next visit; the saved copy is only used offline. The colour tables, sample
 // photos and icons do not change under the same name, so they are served from the cache once fetched.
 // Photos the visitor opens never pass through here: they are read from the device, not fetched.
-const VERSION = 'filmea-v1';
+const VERSION = 'filmea-v2';
 const SHELL = [
   './', 'index.html', 'app.js', 'engine.js', 'loaders.js', 'print.js', 'style.css', 'presets.json',
-  'icon.svg', 'icon-192.png', 'manifest.webmanifest', 'photos/portrait.jpg',
+  'icon.svg', 'icon-192.png', 'manifest.webmanifest', 'photos/person.jpg',
 ];
 
 self.addEventListener('install', (e) => {
