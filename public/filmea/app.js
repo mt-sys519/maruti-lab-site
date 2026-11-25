@@ -429,7 +429,7 @@ async function selectPreset(p) {
     label.querySelector('span').textContent = p.name;
     label.title = p.desc || '';
     $('activeCode').textContent = `${p.code}  ${p.name}`;
-    $('frameCaption').textContent = `filmea  //  ${p.group === 'U' ? 'USER' : 'TYPE-' + p.code}`;
+    $('frameCaption').textContent = `FILMEA  //  ${p.group === 'U' ? 'USER' : 'TYPE-' + p.code}`;
     $('frameDate').textContent = mountCode(photoDate, lookDigits());
     drawArt();
     markActiveThumb();
