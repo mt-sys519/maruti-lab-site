@@ -111,6 +111,16 @@
     <p class="group-note" id="groupNote"></p>
     <div class="thumbs" id="thumbs"></div>
 
+    <section class="fsec" id="filmSec">
+      <div class="ptitle"><h2>FILM</h2><span>フィルム化</span></div>
+      <div class="ftiles" id="filmTiles" role="radiogroup" aria-label="フィルム化"></div>
+      <div class="fbody" id="filmBody" hidden>
+        <div class="ctrl" id="lightCtrl"><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
+        <!-- the text checks move here while a film frame is chosen, and under 台紙 while a mount is -->
+        <div id="filmTextSlot"></div>
+      </div>
+    </section>
+
     <div class="rows">
       <details class="row" id="adjust">
         <summary>
@@ -128,20 +138,22 @@
       <details class="row" id="exportSec">
         <summary>
           <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7.5" y="7.5" width="9" height="8" fill="currentColor" opacity=".3"/></svg>
-          <span>保存の大きさと枠</span><em id="frameState">元の大きさ</em>
+          <span>保存の大きさ</span><em id="frameState">元の大きさ</em>
         </summary>
         <div class="row-body">
           <p class="seg-label" id="sizeLabel">大きさ（長い辺）</p>
           <div class="seg" id="sizeSeg" role="radiogroup">
             <button data-v="0" class="on">元の大きさ</button><button data-v="2048">2048px</button><button data-v="1080">1080px</button>
           </div>
-          <p class="seg-label">枠</p>
+          <p class="seg-label">台紙（インスタの比率の余白）</p>
           <div class="seg" id="frameSeg" role="radiogroup">
-            <button data-v="none" class="on">なし</button><button data-v="white">白</button><button data-v="dark">黒</button><button data-v="film">フィルム</button><button data-v="slide">スライド白</button><button data-v="slidecard">スライド紙</button>
+            <button data-v="none" class="on">なし</button><button data-v="white">白</button><button data-v="dark">黒</button>
           </div>
-          <div class="ctrl" id="lightCtrl" hidden><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
-          <label class="check"><input type="checkbox" id="stampCheck" checked><span>枠に16桁の番号を入れる（撮影日時と色）</span></label>
-          <label class="check"><input type="checkbox" id="captionCheck" checked><span>枠に色の番号を入れる</span></label>
+          <div class="text-checks" id="textChecks" hidden>
+            <p class="seg-label" id="textLabel">台紙に入れる文字</p>
+            <label class="check"><input type="checkbox" id="captionCheck" checked><span>色名を入れる</span></label>
+            <label class="check"><input type="checkbox" id="stampCheck" checked><span>16桁の番号を入れる（撮影日時と色）</span></label>
+          </div>
         </div>
       </details>
       <details class="row" id="lutSec">

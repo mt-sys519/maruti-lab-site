@@ -111,9 +111,6 @@ svg { display: block; }
 .stage.drawn .crop-box { position: absolute; overflow: hidden; }
 /* slides: the view gets a CSS filter from app.js (slideFilterCss), the same numbers the save uses */
 .ctrl[hidden] { display: none; }
-#lightCtrl { margin-top: 14px; }
-#frameSeg { flex-wrap: wrap; }
-#frameSeg button { flex: 1 0 28%; }
 .frame-date { display: none; position: absolute; transform: translateY(-50%); font: 500 10px/1 "DM Mono", monospace; letter-spacing: 2.4px; white-space: nowrap; }
 .frame-date.hidden { visibility: hidden; }
 .stage.frame-white .frame-date { display: block; color: #d4890f; }
@@ -287,6 +284,22 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .seg { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
 .seg button { flex: 1; height: 30px; border: none; background: transparent; border-radius: 7px; font-size: 12.5px; color: var(--sub); }
 .seg button.on { background: var(--surface); color: var(--text); font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+/* フィルム化: the film and slide frames as tiles of the visitor's own photo, under the looks */
+.fsec { border-top: 1px solid var(--line); padding-bottom: 16px; }
+.fsec .ptitle { padding-top: 16px; }
+.ftiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 6px 18px 0; }
+.ftile { border: none; background: none; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; text-align: left; }
+.ftile .box { aspect-ratio: 1; border-radius: 6px; background: #3a3633; display: grid; place-items: center; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); }
+.ftile canvas { display: block; max-width: 86%; max-height: 86%; }
+.ftile:hover .box { box-shadow: inset 0 0 0 1px var(--faint); }
+.ftile.on .box { box-shadow: 0 0 0 2px var(--text); }
+.ftile.on .fname span { font-weight: 700; }
+.fbody { padding: 14px 18px 0; }
+.fbody[hidden], .text-checks[hidden] { display: none; }
+.fbody .ctrl { margin-bottom: 0; }
+.text-checks { margin-top: 14px; }
+.text-checks .seg-label { margin: 0; }
+.seg button.dis { opacity: .45; }
 .lut-drop {
   display: grid; place-items: center; text-align: center; border: 1.5px dashed var(--line); border-radius: 12px;
   padding: 16px 10px; font-size: 12px; color: var(--sub); line-height: 1.7; cursor: pointer;
@@ -342,6 +355,8 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
   .thumbs { display: flex; overflow-x: auto; gap: 10px; padding: 10px 16px 14px; scroll-snap-type: x proximity; scroll-padding-inline: 16px; scrollbar-width: none; }
   .thumbs::-webkit-scrollbar { display: none; }
   .thumb { flex: 0 0 100px; scroll-snap-align: start; }
+  .ftiles { padding: 6px 16px 0; }
+  .fbody { padding: 12px 16px 0; }
   .row summary { padding: 13px 16px; }
   .row-body { padding: 4px 16px 16px 44px; }
 }

@@ -1,6 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
-import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, mountCode, readExifDate, DRAWN_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
+import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -67,6 +67,7 @@ function requestRender() {
     engine.render();
     if ($('infoSec').open) drawHistogram();
     if (!engine.view.bypass) refreshGlow();
+    refreshTiles();
     const showTags = splitOn && !engine.view.bypass && !!current;
     $('tagBefore').classList.toggle('show', showTags);
     $('tagAfter').classList.toggle('show', showTags);
@@ -182,7 +183,14 @@ function refreshGlow() {
 }
 
 function frameText() {
-  return { caption: captionOn ? $('frameCaption').textContent : '', code: stampOn ? mountCode(photoDate, lookDigits()) : '' };
+  return { caption: captionOn ? $('frameCaption').textContent : '', code: stampOn ? mountCode(photoDate, lookDigits()) : '', frame: filmFrameNumber(photoDate), dx: lookDx() };
+}
+
+// The look for the film's DX bars: its place in the whole list (product class) and its group (specifier).
+function lookDx() {
+  if (!current) return { product: 0, specifier: 0 };
+  const g = parseInt(lookDigits().slice(0, 2), 10);
+  return { product: presets.indexOf(current) + 1, specifier: g === 99 ? 15 : g };
 }
 
 // The look as four digits for the mount's number: its group's place in the tab order, then its number.
@@ -594,26 +602,72 @@ async function saveDrawnFrame(iw, ih) {
   img.width = iw; img.height = ih;
   img.getContext('2d').putImageData(new ImageData(pixels, iw, ih), 0, 0);
   if (shrink) img = shrinkCanvas(img, long);
-  const f = img.width / iw;
+  await download(composeFrame(mountW, L, img, frameText(), slideLight));
+}
+
+// A drawn frame W wide with the picture in its window and the light through it. img: the rendered
+// photo at any size (its scale is read per axis, so a rounded height cannot shift the crop).
+function composeFrame(W, L, img, text, light) {
+  const fx = img.width / engine.imgW, fy = img.height / engine.imgH;
+  const sx = L.crop.x * fx, sy = L.crop.y * fy, sw = L.crop.w * fx, sh = L.crop.h * fy;
   const out = document.createElement('canvas');
-  out.width = mountW; out.height = Math.round(mountW * L.ratio);
+  out.width = W; out.height = Math.round(W * L.ratio);
   const x = out.getContext('2d');
-  drawFrameUnder(x, mountW, L, frameText(), slideLight);
+  drawFrameUnder(x, W, L, text, light);
   x.save();
-  const wx = L.x * mountW, wy = L.y * mountW, ww = L.w * mountW, wh = L.h * mountW;
-  x.beginPath(); x.rect(wx, wy, ww, wh); x.clip();
+  x.beginPath(); x.rect(L.x * W, L.y * W, L.w * W, L.h * W); x.clip();
   x.imageSmoothingQuality = 'high';
-  x.drawImage(img, L.crop.x * f, L.crop.y * f, L.crop.w * f, L.crop.h * f, wx, wy, ww, wh);
+  x.drawImage(img, sx, sy, sw, sh, L.x * W, L.y * W, L.w * W, L.h * W);
   x.restore();
-  let glow = null;
-  if (isSlide()) {
-    const g = document.createElement('canvas');
-    g.width = 192; g.height = Math.max(1, Math.round(192 * L.crop.h / L.crop.w));
-    g.getContext('2d').drawImage(img, L.crop.x * f, L.crop.y * f, L.crop.w * f, L.crop.h * f, 0, 0, g.width, g.height);
-    glow = { glow: transmissionGlow(g), scatter: transmissionScatter(g) };
+  const g = document.createElement('canvas');
+  g.width = 192; g.height = Math.max(1, Math.round(192 * L.crop.h / L.crop.w));
+  g.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, g.width, g.height);
+  drawFrameOver(x, W, L, { glow: transmissionGlow(g), scatter: transmissionScatter(g) }, light);
+  return out;
+}
+
+// ---------- フィルム化 tiles ----------
+// The frames as small tiles of the visitor's own photo, in the chosen look with the sliders applied.
+const FILM_TILES = [['none', 'なし'], ['film', 'フィルム'], ['slide', 'スライド白'], ['slidecard', 'スライド紙']];
+const TILE_W = 160;
+
+// The photo as it is now rendered, w wide, through the light box when light >= 0 (top row first).
+function renderedPhoto(w, light) {
+  const h = Math.max(1, Math.round(w * engine.imgH / engine.imgW));
+  const keep = engine.params.light;
+  engine.params.light = light;
+  const px = engine.readSmall(w, h);
+  engine.params.light = keep;
+  const flip = new Uint8ClampedArray(w * h * 4);
+  for (let r = 0; r < h; r++) flip.set(px.subarray((h - 1 - r) * w * 4, (h - r) * w * 4), r * w * 4);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c.getContext('2d').putImageData(new ImageData(flip, w, h), 0, 0);
+  return c;
+}
+
+function drawTiles() {
+  if (!engine.imgW || !current) return;
+  for (const b of document.querySelectorAll('#filmTiles .ftile')) {
+    const style = b.dataset.v;
+    let pic;
+    if (style === 'none') {
+      pic = renderedPhoto(engine.imgW >= engine.imgH ? TILE_W : Math.max(16, Math.round(TILE_W * engine.imgW / engine.imgH)), -1);
+    } else {
+      const L = frameLayout(style, engine.imgW, engine.imgH);
+      pic = composeFrame(TILE_W, L, renderedPhoto(Math.max(16, Math.ceil(TILE_W * L.w * engine.imgW / L.crop.w)), slideLight), frameText(), slideLight);
+    }
+    const c = b.querySelector('canvas');
+    c.width = pic.width; c.height = pic.height;
+    c.getContext('2d').drawImage(pic, 0, 0);
   }
-  drawFrameOver(x, mountW, L, glow, slideLight);
-  await download(out);
+}
+
+// Redrawn a moment after the last change of photo, look, slider or text.
+let tileTimer = 0;
+function refreshTiles() {
+  clearTimeout(tileTimer);
+  tileTimer = setTimeout(drawTiles, 150);
 }
 
 async function download(out, type = 'image/jpeg') {
@@ -745,17 +799,46 @@ function initUI() {
   });
   window.addEventListener('blur', () => { holdKey = false; holdBtn = false; hold.classList.remove('on'); requestRender(); });
 
+  const isMount = () => frame === 'white' || frame === 'dark';
   const saveState = () => {
     const size = document.querySelector('#sizeSeg button.on').textContent;
-    $('sizeLabel').textContent = frame === 'none' ? '大きさ（長い辺）' : '大きさ（台紙の横幅）';
-    $('captionCheck').closest('label').classList.toggle('off', frame === 'none');
-    $('stampCheck').closest('label').classList.toggle('off', frame === 'none');
-    $('lightCtrl').hidden = !isSlide();
+    $('sizeLabel').textContent = frame === 'none' ? '大きさ（長い辺）' : isMount() ? '大きさ（台紙の横幅）' : '大きさ（枠の横幅）';
     const parts = [size];
-    if (frame !== 'none') parts.push(`枠 ${document.querySelector('#frameSeg button.on').textContent}`);
-    if (frame !== 'none' && stampOn) parts.push('番号');
+    if (isMount()) parts.push(`台紙 ${document.querySelector('#frameSeg button.on').textContent}`);
+    if (isMount() && stampOn) parts.push('番号');
     $('frameState').textContent = parts.join('・');
   };
+  // One frame at a time: a film frame (the tiles) or a mount (台紙). The text checks sit right under
+  // whichever is chosen, and are hidden with no frame.
+  const setFrame = (v) => {
+    frame = v;
+    const drawn = DRAWN_FRAMES.includes(frame);
+    document.querySelectorAll('#filmTiles .ftile').forEach((x) => x.classList.toggle('on', x.dataset.v === (drawn ? frame : 'none')));
+    document.querySelectorAll('#frameSeg button').forEach((x) => {
+      x.classList.toggle('on', x.dataset.v === (isMount() ? frame : 'none'));
+      x.classList.toggle('dis', drawn && x.dataset.v !== 'none');
+    });
+    $('filmBody').hidden = !drawn;
+    const checks = $('textChecks');
+    checks.hidden = frame === 'none';
+    if (drawn) $('filmTextSlot').appendChild(checks);
+    else $('frameSeg').after(checks);
+    $('textLabel').textContent = drawn ? '枠に入れる文字' : '台紙に入れる文字';
+    $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`) + (drawn ? ' drawn' : '');
+    saveState();
+    layout();
+  };
+  for (const [v, label] of FILM_TILES) {
+    const b = document.createElement('button');
+    b.className = 'ftile' + (v === 'none' ? ' on' : '');
+    b.dataset.v = v;
+    b.setAttribute('role', 'radio');
+    b.innerHTML = '<div class="box"><canvas></canvas></div><div class="fname"><span></span></div>';
+    b.querySelector('span').textContent = label;
+    // なし here takes off a film frame only; a mount chosen under 保存の大きさ stays
+    b.addEventListener('click', () => { if (v !== 'none' || DRAWN_FRAMES.includes(frame)) setFrame(v); });
+    $('filmTiles').appendChild(b);
+  }
   $('s-light').addEventListener('input', (e) => {
     slideLight = +e.target.value / 100;
     $('v-light').textContent = e.target.value;
@@ -766,16 +849,13 @@ function initUI() {
   $('s-light').addEventListener('dblclick', (e) => { e.target.value = 60; e.target.dispatchEvent(new Event('input')); });
   $('v-light').textContent = $('s-light').value;
   setFill($('s-light'));
-  $('stampCheck').addEventListener('change', (e) => { stampOn = e.target.checked; $('frameDate').classList.toggle('hidden', !stampOn); saveState(); drawArt(); });
-  $('captionCheck').addEventListener('change', (e) => { captionOn = e.target.checked; $('frameCaption').classList.toggle('hidden', !captionOn); drawArt(); });
+  $('stampCheck').addEventListener('change', (e) => { stampOn = e.target.checked; $('frameDate').classList.toggle('hidden', !stampOn); saveState(); drawArt(); refreshTiles(); });
+  $('captionCheck').addEventListener('change', (e) => { captionOn = e.target.checked; $('frameCaption').classList.toggle('hidden', !captionOn); drawArt(); refreshTiles(); });
   $('frameSeg').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
-    frame = b.dataset.v;
-    document.querySelectorAll('#frameSeg button').forEach((x) => x.classList.toggle('on', x === b));
-    $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`) + (DRAWN_FRAMES.includes(frame) ? ' drawn' : '');
-    saveState();
-    layout();
+    // なし here takes off a mount only; a film frame chosen above stays
+    if (b.dataset.v !== 'none' || isMount()) setFrame(b.dataset.v);
   });
   $('sizeSeg').addEventListener('click', (e) => {
     const b = e.target.closest('button');

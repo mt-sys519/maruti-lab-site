@@ -348,22 +348,51 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
   ctx.fillStyle = 'rgb(214,198,92)'; // measured on the slide strip: (208,197,90)
   ctx.shadowColor = 'rgba(255,170,60,0.45)'; ctx.shadowBlur = p * 1.2;
   if (text.caption) dotText(ctx, text.caption.toUpperCase().replace(/\s+/g, ' '), fx + mm * 1.2, edgeA, p);
-  dotText(ctx, '12', fx + mm * 0.6, edgeB, p);
-  dotText(ctx, '>12A', fx + FILM.frameL * mm / 2 + mm * 0.6, edgeB, p);
   if (text.code) dotText(ctx, text.code, fx + FILM.frameL * mm - mm * 1.2, edgeA, p * 0.8, 'right');
-  // DX bars: a clock track and a data track in the outer strip, under the frame's first half
-  ctx.shadowBlur = 0;
-  const bx = fx + mm * 3.2, bar = mm * 0.26, rowH = mm * 0.32;
-  const data = '1011001110100110110010';
-  for (let i = 0; i < data.length; i++) {
-    ctx.fillRect(bx + i * bar * 1.6, edgeB - rowH * 1.25, bar, rowH);
-    if (data[i] === '1') ctx.fillRect(bx + i * bar * 1.6, edgeB + rowH * 0.25, bar, rowH);
+  // the frame number, and the half-frame mark (>12A) midway along, as on a real roll
+  const half = FILM.frameL * mm / 2;
+  let w1 = 0, w2 = 0;
+  if (text.frame) {
+    w1 = dotText(ctx, String(text.frame), fx + mm * 0.6, edgeB, p);
+    w2 = dotText(ctx, `>${text.frame}A`, fx + half + mm * 0.6, edgeB, p);
   }
+  // DX bars after each number, as the code repeats every half frame: a clock track (one mark a bit)
+  // and the data track under it
+  ctx.shadowBlur = 0;
+  const bar = mm * 0.26, barStep = bar * 1.6, rowH = mm * 0.32;
+  const bars = (x0, data) => {
+    for (let i = 0; i < data.length; i++) {
+      ctx.fillRect(x0 + i * barStep, edgeB - rowH * 1.25, bar, rowH);
+      if (data[i] === '1') ctx.fillRect(x0 + i * barStep, edgeB + rowH * 0.25, bar, rowH);
+    }
+  };
+  const dx = text.dx || { product: 0, specifier: 0 };
+  bars(fx + mm * 1.5 + w1, dxBits(dx.product, dx.specifier, text.frame || 0, false));
+  bars(fx + half + mm * 1.5 + w2, dxBits(dx.product, dx.specifier, text.frame || 0, true));
+}
+
+// The DX film edge code as 31 bits, laid out as on real film: entry code (6), product class (7, the
+// film's DX number part 1), a blank bit, specifier (4, part 2), frame number (6), half-frame (1), a
+// blank bit, parity (1) and exit code (4). Here the product class is the look's place in the list and
+// the specifier its group, so the bars name the look and the frame as the printed numbers do. The
+// entry and exit codes are the same on every frame; parity makes the count of 1s in the data even.
+const DX_ENTRY = '101010', DX_EXIT = '0101';
+export function dxBits(product, specifier, frame, halfFrame) {
+  const bin = (n, len) => (Math.max(0, n) % (1 << len)).toString(2).padStart(len, '0');
+  const data = bin(product, 7) + '0' + bin(specifier, 4) + bin(frame, 6) + (halfFrame ? '1' : '0') + '0';
+  const parity = [...data].filter((b) => b === '1').length % 2 ? '1' : '0';
+  return DX_ENTRY + data + parity + DX_EXIT;
 }
 
 // The number printed small at the mount's lower right, run together like the keycode on a film's
 // edge: shooting date and time (YYYYMMDDhhmm) then the look as four digits (group, number), so
 // 2026112514320804 is 25 Nov 2026 14:32 in the eighth group's fourth look. 0000 when no look is chosen.
+// The frame number on the film strip, 1–36 as on a 36-exposure roll, taken from the shooting time
+// (minutes of the day) so each photo gets its own and the same photo always gets the same one.
+export function filmFrameNumber(date) {
+  return ((date.getHours() * 60 + date.getMinutes()) % 36) + 1;
+}
+
 export function mountCode(date, lookDigits) {
   const p = (n) => String(n).padStart(2, '0');
   return `${date.getFullYear()}${p(date.getMonth() + 1)}${p(date.getDate())}${p(date.getHours())}${p(date.getMinutes())}${lookDigits}`;
