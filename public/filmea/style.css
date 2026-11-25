@@ -106,8 +106,9 @@ svg { display: block; }
 .stage.drawn { border-radius: 0; justify-content: flex-start; }
 /* the glow is light added to the picture: screen it onto the page as the save does onto the file */
 .frame-over { pointer-events: none; mix-blend-mode: screen; }
-.stage.drawn .frame-art { display: block; }
-.stage.drawn .crop-box { position: absolute; overflow: hidden; }
+.stage.drawn .frame-art { display: block; z-index: 2; pointer-events: none; }
+.stage.drawn .frame-over { z-index: 3; }
+.stage.drawn .crop-box { position: absolute; overflow: hidden; z-index: 1; }
 /* slides: the view gets a CSS filter from app.js (slideFilterCss), the same numbers the save uses */
 .ctrl[hidden] { display: none; }
 .frame-date { display: none; position: absolute; transform: translateY(-50%); font: 500 10px/1 "DM Mono", monospace; letter-spacing: 2.4px; white-space: nowrap; }

@@ -136,12 +136,17 @@ function layout() {
     // the photo shows through its window, cropped to the frame's shape; the rest is drawn
     const L = frameLayout(frame, engine.imgW, engine.imgH, cropShift);
     const mw = Math.floor(Math.min(availW, availH / L.ratio));
-    s = (L.w * mw) / L.crop.w;
+    // The frame is drawn over the photo with its window cut out, so the window's edge comes from one
+    // canvas only. The photo sits a little larger than the window and runs under the frame by BLEED
+    // px, so rounding to the screen's pixels (125% scaling and the like) never leaves an edge of the
+    // window uncovered or the light short of the picture's edge.
+    const winW = L.w * mw, winH = L.h * mw;
+    s = (winW / L.crop.w) * Math.max((winW + 2) / winW, (winH + 2) / winH);
     Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * L.ratio) + 'px', paddingTop: '' });
-    Object.assign(crop.style, { left: L.x * mw + 'px', top: L.y * mw + 'px', width: L.w * mw + 'px', height: L.h * mw + 'px' });
+    Object.assign(crop.style, { left: L.x * mw - BLEED + 'px', top: L.y * mw - BLEED + 'px', width: winW + 2 * BLEED + 'px', height: winH + 2 * BLEED + 'px' });
+    artWidth = mw;
     cropScale = s;
     placeCrop(L);
-    artWidth = mw;
     engine.params.light = isSlide() ? slideLight : -1;
     drawArt();
   } else if (frame !== 'none') {
@@ -182,11 +187,14 @@ function layout() {
 // The photo behind a drawn frame's window, placed so the window shows L.crop; cropScale is the screen
 // px per photo px. Also where the window sits inside the photo, so the labels on it stay inside.
 let cropScale = 1;
+const BLEED = 3;
 function placeCrop(L) {
-  const box = $('canvasBox'), s = cropScale;
-  Object.assign(box.style, { left: -L.crop.x * s + 'px', top: -L.crop.y * s + 'px' });
-  const cut = { l: L.crop.x, t: L.crop.y, r: engine.imgW - L.crop.x - L.crop.w, b: engine.imgH - L.crop.y - L.crop.h };
-  for (const k in cut) box.style.setProperty(`--crop-${k}`, cut[k] * s + 'px');
+  const box = $('canvasBox'), s = cropScale, winW = L.w * artWidth, winH = L.h * artWidth;
+  // the crop's centre on the window's centre (the photo is scaled a hair past the window)
+  const left = BLEED + winW / 2 - (L.crop.x + L.crop.w / 2) * s, top = BLEED + winH / 2 - (L.crop.y + L.crop.h / 2) * s;
+  Object.assign(box.style, { left: left + 'px', top: top + 'px' });
+  const cut = { l: BLEED - left, t: BLEED - top, r: left + engine.imgW * s - BLEED - winW, b: top + engine.imgH * s - BLEED - winH };
+  for (const k in cut) box.style.setProperty(`--crop-${k}`, Math.max(0, cut[k]) + 'px');
 }
 
 // Where a drawn frame cuts the photo, moved by dragging the photo in its window (see frameLayout).
@@ -211,7 +219,9 @@ function drawArt() {
   const L = frameLayout(frame, engine.imgW, engine.imgH, cropShift);
   const dpr = Math.min((window.devicePixelRatio || 1) * zoomRes, 4096 / artWidth);
   const glow = isSlide() ? screenGlow(L) : null;
-  for (const [id, draw] of [['frameArt', (x, w) => drawFrameUnder(x, w, L, frameText(), slideLight)], ['frameOver', (x, w) => drawFrameOver(x, w, L, glow, slideLight)]]) {
+  // the frame over the photo with its window cut out, then the light through it (screened on)
+  const under = (x, w) => { drawFrameUnder(x, w, L, frameText(), slideLight); x.clearRect(L.x * w, L.y * w, L.w * w, L.h * w); };
+  for (const [id, draw] of [['frameArt', under], ['frameOver', (x, w) => drawFrameOver(x, w, L, glow, slideLight)]]) {
     const c = $(id);
     c.style.width = artWidth + 'px'; c.style.height = Math.floor(artWidth * L.ratio) + 'px';
     c.width = Math.round(artWidth * dpr); c.height = Math.round(artWidth * L.ratio * dpr);
