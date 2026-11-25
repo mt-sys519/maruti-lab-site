@@ -20,7 +20,7 @@ export function mountLayout(pw, ph) {
   return { ratio, w, h, x: (1 - w) / 2, y: top, bottom: v - top };
 }
 
-// ---------- film and instant frames ----------
+// ---------- film and slide frames ----------
 // Not Instagram shapes: these keep the real thing's proportions. Sizes are millimetres of the
 // real thing, scaled to the canvas. Both crop the photo (centred) to their own window.
 //
@@ -30,16 +30,12 @@ export function mountLayout(pw, ph) {
 // black and the edge print, exposed in at the factory, comes out light: dot-matrix lettering along
 // one edge, frame numbers and the DX bars along the other.
 const FILM = { pitch: 38, across: 35, frameL: 36, frameS: 24, perfL: 1.98, perfS: 2.79, perfR: 0.51, perfStep: 4.75, perfIn: 2.01 };
-// Instant: instax cards, all 86 mm on the long side, picture 6.5 mm from the top edge and the
-// thick margin below. Upright photos get mini, wide ones WIDE, near-square ones SQUARE.
-const INSTAX = {
-  mini: { w: 54, h: 86, iw: 46, ih: 62 },
-  square: { w: 72, h: 86, iw: 62, ih: 62 },
-  wide: { w: 108, h: 86, iw: 99, ih: 62 },
-};
-// The card's corners are left square: a JPEG has no transparency, and SNS turn transparent corners
-// black or white anyway.
-const INSTAX_TOP = 6.5;
+// Slide mounts: a 50×50 mm square holding one frame of slide film, its window a little inside the
+// 36×24 frame (35×23 mm) so the film's edges stay hidden, seen on a light box with the light behind.
+// 'slide' is a white plastic mount, which the light partly shines through; 'slidecard' a card one,
+// opaque, printed, the picture glowing out of it.
+const SLIDE = { size: 50, wl: 35, ws: 23 };
+export const DRAWN_FRAMES = ['film', 'slide', 'slidecard'];
 
 // x, y, w, h: the photo's window, as fractions of the canvas width. ratio: canvas height / width.
 // crop: the part of the photo the window shows.
@@ -52,11 +48,15 @@ export function frameLayout(style, pw, ph) {
     if (pw / ph > aspect) { const w = ph * aspect; return { x: (pw - w) / 2, y: 0, w, h: ph }; }
     const h = pw / aspect; return { x: 0, y: (ph - h) / 2, w: pw, h };
   };
-  if (style === 'instant') {
-    const a = pw / ph;
-    const kind = a < 0.9 ? 'mini' : a > 1.15 ? 'wide' : 'square';
-    const f = INSTAX[kind], u = 1 / f.w;
-    return { style, kind, mm: u, ratio: f.h / f.w, x: (f.w - f.iw) / 2 * u, y: INSTAX_TOP * u, w: f.iw * u, h: f.ih * u, crop: cropTo(f.iw / f.ih) };
+  if (style === 'slide' || style === 'slidecard') {
+    const wide = pw >= ph, u = 1 / SLIDE.size;
+    const w = wide ? SLIDE.wl : SLIDE.ws, h = wide ? SLIDE.ws : SLIDE.wl;
+    const win = { x: (SLIDE.size - w) / 2 * u, y: (SLIDE.size - h) / 2 * u, w: w * u, h: h * u };
+    // The window's cut edge shows as a thin, uneven shade round the picture (the film never sits
+    // exactly centred in the mount): wider at the top and right, as in the reference photo.
+    const [t, r, b, l] = (wide ? [0.4, 0.45, 0.25, 0.3] : [0.3, 0.4, 0.45, 0.25]).map((v) => v * u);
+    const pic = { x: win.x + l, y: win.y + t, w: win.w - l - r, h: win.h - t - b };
+    return { style, wide, mm: u, ratio: 1, ...pic, win, crop: cropTo(pic.w / pic.h) };
   }
   const wide = pw >= ph;
   const W = wide ? FILM.pitch : FILM.across, u = 1 / W;
@@ -66,10 +66,11 @@ export function frameLayout(style, pw, ph) {
   return { style, wide, mm: u, ratio: wide ? FILM.across / FILM.pitch : FILM.pitch / FILM.across, ...win, crop: cropTo(wide ? 1.5 : 2 / 3) };
 }
 
-// Rounded corners of the photo's window, in canvas px: the instax mask's are just softened; a film
+// Rounded corners of the photo's window, in canvas px: a slide mount's window is softened; a film
 // frame's are square.
 export function windowRadius(L, W) {
-  return L.style === 'instant' ? 0.25 * L.mm * W : 0;
+  const r = { slide: 0.2, slidecard: 0.2 }[L.style] || 0; // the picture's own corners, from the camera's gate
+  return r * L.mm * W;
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -131,64 +132,200 @@ function dotText(ctx, text, x, y, p, align = 'left') {
 }
 
 // Under the photo: the card or the strip. text: { caption, code } (either may be empty).
-export function drawFrameUnder(ctx, W, L, text) {
+export function drawFrameUnder(ctx, W, L, text, strength = 0.6) {
   ctx.save();
-  if (L.style === 'instant') instaxUnder(ctx, W, L, text);
-  else filmUnder(ctx, W, L, text);
+  if (L.style === 'slide' || L.style === 'slidecard') slideUnder(ctx, W, L, text, strength);
+  else filmUnder(ctx, W, L, text, strength);
   ctx.restore();
 }
 
-// Over the photo: the soft edge where the instax card's mask meets the picture. Film is flat.
-export function drawFrameOver(ctx, W, L) {
-  if (L.style !== 'instant') return;
+// Over the photo: the light coming through the picture, on a slide mount or the film strip. strength: 0..1.
+export function drawFrameOver(ctx, W, L, glow, strength = 0.6) {
+  slideOver(ctx, W, L, glow, strength);
+}
+
+// Set a DM Mono font of size px with tracking (a fraction of the size); returns the tracking in px.
+function setFont(ctx, px, track) {
+  ctx.font = `500 ${px}px "DM Mono", Consolas, monospace`;
+  const t = px * track;
+  if ('letterSpacing' in ctx) { ctx.letterSpacing = `${t}px`; return t; }
+  return 0;
+}
+
+function slideUnder(ctx, W, L, text, strength = 0.6) {
+  const mm = L.mm * W, card = L.style === 'slidecard';
+  const x = L.x * W, y = L.y * W, w = L.w * W, h = L.h * W, cx = x + w / 2, cy = y + h / 2;
+  if (card) {
+    // card stock lit only from behind: what reaches the front is dim and warm, darker to the corners
+    ctx.fillStyle = '#b9ab92'; ctx.fillRect(0, 0, W, W);
+    const v = ctx.createRadialGradient(cx, cy, mm * 12, cx, cy, mm * 38);
+    v.addColorStop(0, 'rgba(255,240,210,0.16)'); v.addColorStop(1, 'rgba(40,28,14,0.28)');
+    ctx.fillStyle = v; ctx.fillRect(0, 0, W, W);
+    speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.05), 0.09, false);
+    speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.05), 0.05, true);
+  } else {
+    // white plastic, flat: on the reference the mount face is even to within a few levels from the
+    // window to its outer edge
+    ctx.fillStyle = '#f6f5f2'; ctx.fillRect(0, 0, W, W);
+    speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.04), 0.02, false);
+  }
+  // the outer edge: no bevel, just the mount's cut edge, a line about 0.4 mm wide a few percent
+  // darker than the face (measured: face 211, edge 204–206, then the light box)
+  ctx.strokeStyle = card ? 'rgba(60,44,28,0.18)' : 'rgba(110,104,100,0.12)';
+  ctx.lineWidth = mm * 0.4;
+  ctx.strokeRect(mm * 0.2, mm * 0.2, W - mm * 0.4, W - mm * 0.4);
+  // moulded (plastic) or printed (card) numbers, small, in the margin under the window
+  const base = y + h + (W - y - h) * 0.55;
+  ctx.textBaseline = 'middle';
+  const write = (t, px, track, ax, align, col) => {
+    const tr = setFont(ctx, px, track);
+    ctx.textAlign = align;
+    const xx = align === 'right' ? ax + tr : ax;
+    if (!card) { ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillText(t, xx + px * 0.05, base + px * 0.07); }
+    ctx.fillStyle = col; ctx.fillText(t, xx, base);
+  };
+  const ink = card ? 'rgba(70,54,36,0.75)' : 'rgba(150,146,138,0.8)';
+  // aligned to the window's sides when it is wide; an upright window (23 mm) is too narrow for both,
+  // so they spread to the mount's own margins instead
+  const left = L.wide ? x : mm * 4, right = L.wide ? x + w : W - mm * 4;
+  if (text.code) write(text.code, mm * 0.95, 0.1, left, 'left', ink);
+  if (text.caption) write(text.caption.toUpperCase().replace(/\s+/g, ' '), mm * 0.95, 0.16, right, 'right', ink);
+  // the window's cut edge: not black but a thin soft shade of the mount, about 70% of its brightness,
+  // picking up a little of the picture's colour (measured on the reference photo: mount ~228, the
+  // line 150–190 at the top, ~116–160 on the right)
+  const wn = L.win;
+  ctx.fillStyle = card ? 'rgb(124,112,96)' : 'rgb(174,167,170)';
+  roundRect(ctx, wn.x * W, wn.y * W, wn.w * W, wn.h * W, (card ? 0.15 : 0.7) * mm);
+  ctx.fill();
+}
+
+// The light box itself (exposure, flare, highlight roll-off) is done in the engine's shader
+// (engine.js lightBox), so the screen and the saved file are the same pixels. Here: the glow that
+// needs a blur, which a single shader pass cannot do.
+
+// The whole picture, blurred far out: light scattered inside the film and the lens, which tints even
+// the dark parts of a backlit picture with its own colour. src: the cropped picture at any size.
+export function transmissionScatter(src) {
+  const sw = 14, sh = Math.max(1, Math.round(14 * src.height / src.width));
+  const a = document.createElement('canvas');
+  a.width = sw; a.height = sh;
+  const ax = a.getContext('2d');
+  ax.imageSmoothingQuality = 'high';
+  ax.drawImage(src, 0, 0, sw, sh);
+  const c = document.createElement('canvas');
+  c.width = 96; c.height = Math.max(1, Math.round(96 * sh / sw));
+  const cx = c.getContext('2d');
+  cx.imageSmoothingQuality = 'high';
+  cx.drawImage(a, 0, 0, c.width, c.height);
+  return c;
+}
+
+// The highlights of the picture, blurred: what a transparency throws as glow when light comes through.
+// src: the cropped picture at any size. Returns a small canvas to draw stretched over the window.
+export function transmissionGlow(src) {
+  const sw = 96, sh = Math.max(1, Math.round(96 * src.height / src.width));
+  const a = document.createElement('canvas');
+  a.width = sw; a.height = sh;
+  const ax = a.getContext('2d', { willReadFrequently: true });
+  ax.drawImage(src, 0, 0, sw, sh);
+  const d = ax.getImageData(0, 0, sw, sh), p = d.data;
+  for (let i = 0; i < p.length; i += 4) {
+    const l = (0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]) / 255;
+    const k = Math.max(0, (l - 0.55) / 0.45) ** 1.5;
+    p[i] *= k; p[i + 1] *= k; p[i + 2] *= k; p[i + 3] = 255;
+  }
+  ax.putImageData(d, 0, 0);
+  // blur by going down and back up twice
+  const b = document.createElement('canvas');
+  b.width = Math.max(1, sw >> 3); b.height = Math.max(1, sh >> 3);
+  const bx = b.getContext('2d');
+  bx.imageSmoothingQuality = 'high';
+  bx.drawImage(a, 0, 0, b.width, b.height);
+  const c = document.createElement('canvas');
+  c.width = sw; c.height = sh;
+  const cx = c.getContext('2d');
+  cx.imageSmoothingQuality = 'high';
+  cx.drawImage(b, 0, 0, sw, sh);
+  cx.globalCompositeOperation = 'screen';
+  cx.globalAlpha = 0.6;
+  cx.drawImage(a, 0, 0); // keep a little of the sharper core
+  return c;
+}
+
+// Light through the transparency: the picture's highlights glow and the frame is lifted as a lit
+// thing is. Nothing is drawn round the window itself; the mount is just cut.
+function slideOver(ctx, W, L, glow, strength) {
+  const x = L.x * W, y = L.y * W, w = L.w * W, h = L.h * W;
+  if (glow && L.style === 'film') filmBleed(ctx, W, L, glow.glow || glow, strength);
+  ctx.save();
+  roundRect(ctx, x, y, w, h, windowRadius(L, W)); ctx.clip();
+  ctx.globalCompositeOperation = 'screen';
+  if (glow) {
+    // scattered light: the picture's own colour, faint at the default and strong when the box is bright
+    if (glow.scatter) { ctx.globalAlpha = Math.min(0.75, 0.05 + 0.7 * strength ** 2.2); ctx.drawImage(glow.scatter, x, y, w, h); }
+    ctx.globalAlpha = Math.min(1, 0.4 + 0.9 * strength);
+    ctx.drawImage(glow.glow || glow, x, y, w, h);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+// On the strip, light from the picture's bright parts spreads into the dark film right next to them
+// (halation): a wide blur of the glow, laid only outside the frame, so the rebate beside a bright sky
+// lights up and beside a dark corner stays dark.
+function filmBleed(ctx, W, L, glow, strength) {
   const x = L.x * W, y = L.y * W, w = L.w * W, h = L.h * W, mm = L.mm * W;
-  ctx.save();
-  roundRect(ctx, x, y, w, h, windowRadius(L, W));
-  ctx.clip();
-  const edge = mm * 0.5, dark = 'rgba(40,32,24,0.22)';
-  for (const [x0, y0, x1, y1, rx, ry, rw, rh] of [
-    [x, 0, x + edge, 0, x, y, edge, h], [x + w, 0, x + w - edge, 0, x + w - edge, y, edge, h],
-    [0, y, 0, y + edge, x, y, w, edge], [0, y + h, 0, y + h - edge, x, y + h - edge, w, edge],
-  ]) {
-    const g = ctx.createLinearGradient(x0, y0, x1, y1);
-    g.addColorStop(0, dark); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.fillRect(rx, ry, rw, rh);
+  const spread = mm * 2.4;
+  const pad = Math.max(2, Math.round(glow.width * spread / w));
+  const c = document.createElement('canvas');
+  c.width = glow.width + 2 * pad; c.height = glow.height + 2 * pad;
+  const cx = c.getContext('2d');
+  cx.drawImage(glow, pad, pad);
+  // blur it outward: down to a few pixels and back up, twice
+  for (const f of [5, 3]) {
+    const t = document.createElement('canvas');
+    t.width = Math.max(1, Math.round(c.width / f)); t.height = Math.max(1, Math.round(c.height / f));
+    const tx = t.getContext('2d');
+    tx.imageSmoothingQuality = 'high';
+    tx.drawImage(c, 0, 0, t.width, t.height);
+    cx.clearRect(0, 0, c.width, c.height);
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(t, 0, 0, c.width, c.height);
   }
+  const k = w / glow.width;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, W * L.ratio);
+  ctx.rect(x, y, w, h);
+  ctx.clip('evenodd');
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = Math.min(1, 1.6 * strength);
+  ctx.drawImage(c, x - pad * k, y - pad * k, c.width * k, c.height * k);
   ctx.restore();
 }
 
-function instaxUnder(ctx, W, L, text) {
-  const H = W * L.ratio, mm = L.mm * W;
-  // the card: a faintly warm white that is a shade darker toward the bottom
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#f6f4ef'); g.addColorStop(1, '#efece5');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  speckle(ctx, 0, 0, W, H, Math.max(1, mm * 0.08), 0.05, false);
-  // the mask's edge sits a hair above the picture and catches the light
-  ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = Math.max(1, mm * 0.12);
-  roundRect(ctx, L.x * W - mm * 0.1, L.y * W - mm * 0.1, L.w * W + mm * 0.2, L.h * W + mm * 0.2, windowRadius(L, W) + mm * 0.1);
-  ctx.stroke();
-  // the look and the number, centred in the thick margin under the picture
-  const below = (L.y + L.h) * W, band = H - below;
-  const both = text.caption && text.code;
-  if (text.caption) {
-    ctx.fillStyle = '#7d776d';
-    dotText(ctx, text.caption.toUpperCase().replace(/\s+/g, ' '), W / 2, below + band * (both ? 0.42 : 0.5), mm * 0.2, 'center');
-  }
-  if (text.code) {
-    ctx.fillStyle = '#c98a2a';
-    dotText(ctx, text.code, W / 2, below + band * (both ? 0.62 : 0.5), mm * 0.15, 'center');
-  }
-}
-
-function filmUnder(ctx, W, L, text) {
+function filmUnder(ctx, W, L, text, strength = 0.6) {
   const H = W * L.ratio, mm = L.mm * W;
   // Work along the strip (x) and across it (y); an upright photo's strip runs down the canvas.
   const len = L.wide ? W : H, wid = L.wide ? H : W;
   if (!L.wide) { ctx.translate(W, 0); ctx.rotate(Math.PI / 2); }
-  // the base: unexposed slide film scanned with light behind it, deep but not paint-black, with a
-  // warm cast and a little unevenness
-  ctx.fillStyle = '#1c1713'; ctx.fillRect(0, 0, len, wid);
+  // the base: unexposed slide film with the light box behind it, deep but not paint-black, a warm
+  // brown that lets a little more through as the light gets stronger, and a little unevenness
+  // measured: a slide strip's base on a light table is about 21% of the table's white (L 51 of 238)
+  const base = 0.13 + 0.13 * strength;
+  ctx.fillStyle = `rgb(${Math.round(238 * base)},${Math.round(236 * base)},${Math.round(226 * base)})`; ctx.fillRect(0, 0, len, wid);
+  // The light box is not even: brightest under the middle of the frame and falling away toward the
+  // strip's cut ends and edges, with soft blotches where the diffuser is uneven. All of it follows
+  // the light's strength.
+  const pool = ctx.createRadialGradient(len / 2, wid / 2, 0, len / 2, wid / 2, len * 0.62);
+  pool.addColorStop(0, `rgba(255,205,150,${0.16 * strength})`); pool.addColorStop(0.55, `rgba(255,205,150,${0.06 * strength})`); pool.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = pool; ctx.fillRect(0, 0, len, wid);
+  for (const [x0, x1] of [[0, len * 0.16], [len, len * 0.84]]) {
+    const fall = ctx.createLinearGradient(x0, 0, x1, 0);
+    fall.addColorStop(0, `rgba(0,0,0,${0.18 + 0.14 * strength})`); fall.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = fall; ctx.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), wid);
+  }
+  speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 2.5), 0.05 + 0.06 * strength, true);
   speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 0.06), 0.06, true);
   // perforations: the scanner's light through them, falling off a little at their edges
   const fx = (len - FILM.frameL * mm) / 2;
@@ -199,7 +336,8 @@ function filmUnder(ctx, W, L, text) {
     if (x > len || x + pl < 0) continue;
     for (const y of [FILM.perfIn * mm, wid - FILM.perfIn * mm - ps]) {
       ctx.save();
-      ctx.shadowColor = 'rgba(255,250,240,0.35)'; ctx.shadowBlur = mm * 0.25;
+      // the light box seen straight through the hole blooms onto the film round it
+      ctx.shadowColor = `rgba(255,250,240,${0.25 + 0.5 * strength})`; ctx.shadowBlur = mm * (0.15 + 0.6 * strength);
       ctx.fillStyle = '#f3efe6';
       roundRect(ctx, x, y, pl, ps, pr); ctx.fill();
       ctx.restore();
@@ -213,7 +351,7 @@ function filmUnder(ctx, W, L, text) {
   // edge print, light on the black rebate, between the perforations and the film's edge
   const edgeA = FILM.perfIn * mm / 2, edgeB = wid - FILM.perfIn * mm / 2;
   const p = mm * 0.15; // dot pitch: lettering about 1 mm tall
-  ctx.fillStyle = 'rgba(244,196,92,0.92)';
+  ctx.fillStyle = 'rgb(214,198,92)'; // measured on the slide strip: (208,197,90)
   ctx.shadowColor = 'rgba(255,170,60,0.45)'; ctx.shadowBlur = p * 1.2;
   if (text.caption) dotText(ctx, text.caption.toUpperCase().replace(/\s+/g, ' '), fx + mm * 1.2, edgeA, p);
   dotText(ctx, '12', fx + mm * 0.6, edgeB, p);

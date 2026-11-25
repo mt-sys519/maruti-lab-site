@@ -104,10 +104,14 @@ svg { display: block; }
 .frame-caption { display: none; position: absolute; left: 0; right: 0; transform: translateY(-50%); text-align: center; font: 500 10px/1 "DM Mono", monospace; letter-spacing: 2.4px; white-space: nowrap; }
 .frame-caption.hidden { visibility: hidden; }
 .frame-art { display: none; position: absolute; left: 0; top: 0; }
-.stage.frame-film, .stage.frame-instant { border-radius: 0; justify-content: flex-start; }
-.frame-over { pointer-events: none; }
-.stage.frame-film .frame-art, .stage.frame-instant .frame-art { display: block; }
-.stage.frame-film .crop-box, .stage.frame-instant .crop-box { position: absolute; overflow: hidden; }
+.stage.drawn { border-radius: 0; justify-content: flex-start; }
+/* the glow is light added to the picture: screen it onto the page as the save does onto the file */
+.frame-over { pointer-events: none; mix-blend-mode: screen; }
+.stage.drawn .frame-art { display: block; }
+.stage.drawn .crop-box { position: absolute; overflow: hidden; }
+/* slides: the view gets a CSS filter from app.js (slideFilterCss), the same numbers the save uses */
+.ctrl[hidden] { display: none; }
+#lightCtrl { margin-top: 14px; }
 #frameSeg { flex-wrap: wrap; }
 #frameSeg button { flex: 1 0 28%; }
 .frame-date { display: none; position: absolute; transform: translateY(-50%); font: 500 10px/1 "DM Mono", monospace; letter-spacing: 2.4px; white-space: nowrap; }

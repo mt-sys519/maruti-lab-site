@@ -37,6 +37,7 @@ uniform vec3 u_wbGain;       // linear gains, max channel = 1
 uniform float u_grain;       // 0..1
 uniform float u_grainSize;   // grain cell in image pixels
 uniform float u_vignette;    // 0..1
+uniform float u_light;       // < 0 off; 0..1 the light box behind a slide or film frame (光の強さ)
 
 vec3 toLin(vec3 s) {
   return mix(pow((s + 0.055) / 1.055, vec3(2.4)), s / 12.92, vec3(lessThanEqual(s, vec3(0.04045))));
@@ -92,6 +93,24 @@ vec3 expose(vec3 lin, float ev) {
   if (m <= 0.0) return lin;
   float y = g * m / (1.0 + (g - 1.0) * m);
   return lin * (y / m);
+}
+
+// The picture as a transparency on a light box, photographed: the finished colour is the film's
+// transmittance, the light box multiplies it (exposure), stray light adds a floor (flare), and the
+// camera's highlights roll off into white, each channel on its own so bright colours pale out.
+// Measured on real photos (prototypes/color-lab/README.md): darks sit at ~10% of the box's white at
+// the default, and nothing goes black. strength 0..1; 0.6 is the default and keeps mid-tones as they are.
+vec3 lightBox(vec3 col, float s) {
+  vec3 t = toLin(col);
+  float e = s <= 0.6 ? mix(0.55, 1.0, s / 0.6) : mix(1.0, 4.0, (s - 0.6) / 0.4);   // x0.55 .. x1 .. x4 (+2 EV)
+  float f = s <= 0.6 ? mix(0.003, 0.010, s / 0.6) : mix(0.010, 0.06, (s - 0.6) / 0.4); // flare, linear
+  vec3 v = t * e + f;
+  float k = 0.62; // shoulder: straight below, rolling into 1.0 above
+  vec3 over = max(v - k, 0.0);
+  v = min(v, vec3(k)) + (1.0 - k) * (1.0 - exp(-over / (1.0 - k)));
+  vec3 o = toSrgb(v);
+  float L = dot(o, vec3(0.2126, 0.7152, 0.0722));
+  return L + (o - L) * 1.08;
 }
 
 float hash(vec2 p) {
@@ -152,6 +171,7 @@ void main() {
     float w = 4.0 * L * (1.0 - L); // 0 at pure black and pure white
     col += n * u_grain * 0.22 * w;
   }
+  if (u_light >= 0.0) col = lightBox(col, u_light);
   outColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }`;
 
@@ -181,7 +201,7 @@ export class Engine {
     this.lutTex = gl.createTexture();
     this.lut = null;
     this.imgW = 0; this.imgH = 0;
-    this.params = { intensity: 1, exposure: 0, wb: 0, grain: 0, vignette: 0 };
+    this.params = { intensity: 1, exposure: 0, wb: 0, grain: 0, vignette: 0, light: -1 };
     this.view = { splitX: 0.5, bypass: false };
     this.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
   }
@@ -265,6 +285,7 @@ export class Engine {
     gl.uniform1f(L.u_grain, p.grain);
     gl.uniform1f(L.u_grainSize, Math.max(1, Math.max(this.imgW, this.imgH) / 2600, this._grainCellMin || 0));
     gl.uniform1f(L.u_vignette, p.vignette);
+    gl.uniform1f(L.u_light, p.light ?? -1);
   }
 
   render() {
@@ -315,7 +336,7 @@ export class Engine {
     const keep = { lut: this.lut, tex: this.lutTex, params: { ...this.params } };
     this.lutTex = this.thumbLutTex;
     this.setLut(lut);
-    Object.assign(this.params, { intensity: 1, grain: 0, exposure: 0, wb: 0, vignette: 0 });
+    Object.assign(this.params, { intensity: 1, grain: 0, exposure: 0, wb: 0, vignette: 0, light: -1 });
     const px = this.readSmall(w, h);
     this.lut = keep.lut; this.lutTex = keep.tex; this.params = keep.params;
     const out = new Uint8ClampedArray(w * h * 4);

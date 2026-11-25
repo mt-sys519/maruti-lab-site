@@ -137,8 +137,9 @@
           </div>
           <p class="seg-label">枠</p>
           <div class="seg" id="frameSeg" role="radiogroup">
-            <button data-v="none" class="on">なし</button><button data-v="white">白</button><button data-v="dark">黒</button><button data-v="film">フィルム</button><button data-v="instant">インスタント</button>
+            <button data-v="none" class="on">なし</button><button data-v="white">白</button><button data-v="dark">黒</button><button data-v="film">フィルム</button><button data-v="slide">スライド白</button><button data-v="slidecard">スライド紙</button>
           </div>
+          <div class="ctrl" id="lightCtrl" hidden><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
           <label class="check"><input type="checkbox" id="stampCheck" checked><span>枠に16桁の番号を入れる（撮影日時と色）</span></label>
           <label class="check"><input type="checkbox" id="captionCheck" checked><span>枠に色の番号を入れる</span></label>
         </div>

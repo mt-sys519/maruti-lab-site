@@ -1,6 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
-import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, windowRadius, mountCode, readExifDate } from './print.js';
+import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, windowRadius, mountCode, readExifDate, DRAWN_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -44,6 +44,7 @@ const lookIntensity = new Map(); // each look keeps its own 効き具合; a look
 let stampOn = true;   // the keycode-like number at the mount's lower right
 let captionOn = true; // the look's code under the photo on a mount
 let photoDate = new Date();
+let slideLight = 0.6; // 光の強さ, the light box behind slides and the film strip, 0..1
 let saveLong = 0; // long side of the saved image; 0 keeps the photo's own size
 let thumbToken = 0;
 
@@ -65,6 +66,7 @@ function requestRender() {
     engine.view.splitX = splitOn && !engine.view.bypass ? splitX : -1;
     engine.render();
     if ($('infoSec').open) drawHistogram();
+    if (!engine.view.bypass) refreshGlow();
     const showTags = splitOn && !engine.view.bypass && !!current;
     $('tagBefore').classList.toggle('show', showTags);
     $('tagAfter').classList.toggle('show', showTags);
@@ -85,9 +87,10 @@ function layout() {
   const crop = $('cropBox'), box = $('canvasBox');
   Object.assign(crop.style, { left: '', top: '', width: '', height: '', borderRadius: '' });
   Object.assign(box.style, { left: '', top: '' });
+  engine.params.light = -1;
   for (const k of ['l', 't', 'r', 'b']) box.style.removeProperty(`--crop-${k}`);
   let s;
-  if (frame === 'film' || frame === 'instant') {
+  if (DRAWN_FRAMES.includes(frame)) {
     // the photo shows through its window, cropped to the frame's shape; the rest is drawn
     const L = frameLayout(frame, engine.imgW, engine.imgH);
     const mw = Math.floor(Math.min(availW, availH / L.ratio));
@@ -99,6 +102,7 @@ function layout() {
     const cut = { l: L.crop.x, t: L.crop.y, r: engine.imgW - L.crop.x - L.crop.w, b: engine.imgH - L.crop.y - L.crop.h };
     for (const k in cut) box.style.setProperty(`--crop-${k}`, cut[k] * s + 'px');
     artWidth = mw;
+    engine.params.light = isSlide() ? slideLight : -1;
     drawArt();
   } else if (frame !== 'none') {
     // the 4:5 mount as it will be saved, photo placed by mountLayout
@@ -120,8 +124,11 @@ function layout() {
     s = Math.min(availW / engine.imgW, availH / engine.imgH, 1);
     Object.assign(stage.style, { width: '', height: '', paddingTop: '' });
   }
-  const cssW = Math.max(1, Math.floor(engine.imgW * s));
-  const cssH = Math.max(1, Math.floor(engine.imgH * s));
+  // Behind a drawn frame's window the photo is rounded up, not down: the window clips the extra, and
+  // a photo a fraction of a pixel short of the window would leave the mount showing along one edge.
+  const round = DRAWN_FRAMES.includes(frame) ? Math.ceil : Math.floor;
+  const cssW = Math.max(1, round(engine.imgW * s));
+  const cssH = Math.max(1, round(engine.imgH * s));
   const c = $('view');
   c.style.width = cssW + 'px';
   c.style.height = cssH + 'px';
@@ -132,18 +139,46 @@ function layout() {
   requestRender();
 }
 
-// The drawn frame (film or instant) behind the photo on screen, the same drawing the saved file gets.
+// The drawn frame (film or slide mount) behind the photo on screen, the same drawing the saved file gets.
 let artWidth = 0;
 function drawArt() {
-  if ((frame !== 'film' && frame !== 'instant') || !engine.imgW || !artWidth) return;
+  if (!DRAWN_FRAMES.includes(frame) || !engine.imgW || !artWidth) return;
   const L = frameLayout(frame, engine.imgW, engine.imgH);
   const dpr = window.devicePixelRatio || 1;
-  for (const [id, draw] of [['frameArt', (x, w) => drawFrameUnder(x, w, L, frameText())], ['frameOver', (x, w) => drawFrameOver(x, w, L)]]) {
+  const glow = isSlide() ? screenGlow(L) : null;
+  for (const [id, draw] of [['frameArt', (x, w) => drawFrameUnder(x, w, L, frameText(), slideLight)], ['frameOver', (x, w) => drawFrameOver(x, w, L, glow, slideLight)]]) {
     const c = $(id);
     c.style.width = artWidth + 'px'; c.style.height = Math.floor(artWidth * L.ratio) + 'px';
     c.width = Math.round(artWidth * dpr); c.height = Math.round(artWidth * L.ratio * dpr);
     draw(c.getContext('2d'), c.width);
   }
+}
+
+// Frames seen with light coming through them: the film strip and the slide mounts.
+function isSlide() { return frame === 'film' || frame === 'slide' || frame === 'slidecard'; }
+
+// The glow for the screen, from a small read of the rendered picture (rows come bottom-up).
+function screenGlow(L) {
+  const sw = 192, sh = Math.max(1, Math.round(192 * engine.imgH / engine.imgW));
+  const px = engine.readSmall(sw, sh);
+  const flip = new Uint8ClampedArray(px.length);
+  for (let r = 0; r < sh; r++) flip.set(px.subarray((sh - 1 - r) * sw * 4, (sh - r) * sw * 4), r * sw * 4);
+  const c = document.createElement('canvas');
+  c.width = sw; c.height = sh;
+  c.getContext('2d').putImageData(new ImageData(flip, sw, sh), 0, 0);
+  const k = sw / engine.imgW;
+  const crop = document.createElement('canvas');
+  crop.width = Math.max(1, Math.round(L.crop.w * k)); crop.height = Math.max(1, Math.round(L.crop.h * k));
+  crop.getContext('2d').drawImage(c, L.crop.x * k, L.crop.y * k, L.crop.w * k, L.crop.h * k, 0, 0, crop.width, crop.height);
+  return { glow: transmissionGlow(crop), scatter: transmissionScatter(crop) };
+}
+
+// The glow follows the picture as looks and sliders change; redrawn a moment after the last change.
+let glowTimer = 0;
+function refreshGlow() {
+  if (!isSlide()) return;
+  clearTimeout(glowTimer);
+  glowTimer = setTimeout(drawArt, 120);
 }
 
 function frameText() {
@@ -489,7 +524,7 @@ async function save() {
   await new Promise((r) => setTimeout(r, 30));
   try {
     const iw = engine.imgW, ih = engine.imgH;
-    if (frame === 'film' || frame === 'instant') return await saveDrawnFrame(iw, ih);
+    if (DRAWN_FRAMES.includes(frame)) return await saveDrawnFrame(iw, ih);
     const g = frame === 'none' ? null : mountLayout(iw, ih);
     // Long side the photo itself ends up with. On a mount the size choice is the mount's width
     // (1080 -> 1080x1350); the original size keeps the photo's pixels, kept under the ~16.7M-pixel
@@ -546,7 +581,7 @@ async function save() {
   }
 }
 
-// Film or instant: the frame drawn at the chosen width, the photo cropped into its window.
+// Film or slide mount: the frame drawn at the chosen width, the photo cropped into its window.
 async function saveDrawnFrame(iw, ih) {
   const L = frameLayout(frame, iw, ih);
   let mountW = saveLong || Math.round(L.crop.w / L.w);
@@ -563,14 +598,21 @@ async function saveDrawnFrame(iw, ih) {
   const out = document.createElement('canvas');
   out.width = mountW; out.height = Math.round(mountW * L.ratio);
   const x = out.getContext('2d');
-  drawFrameUnder(x, mountW, L, frameText());
+  drawFrameUnder(x, mountW, L, frameText(), slideLight);
   x.save();
   const r = windowRadius(L, mountW), wx = L.x * mountW, wy = L.y * mountW, ww = L.w * mountW, wh = L.h * mountW;
   x.beginPath(); x.roundRect ? x.roundRect(wx, wy, ww, wh, r) : x.rect(wx, wy, ww, wh); x.clip();
   x.imageSmoothingQuality = 'high';
   x.drawImage(img, L.crop.x * f, L.crop.y * f, L.crop.w * f, L.crop.h * f, wx, wy, ww, wh);
   x.restore();
-  drawFrameOver(x, mountW, L);
+  let glow = null;
+  if (isSlide()) {
+    const g = document.createElement('canvas');
+    g.width = 192; g.height = Math.max(1, Math.round(192 * L.crop.h / L.crop.w));
+    g.getContext('2d').drawImage(img, L.crop.x * f, L.crop.y * f, L.crop.w * f, L.crop.h * f, 0, 0, g.width, g.height);
+    glow = { glow: transmissionGlow(g), scatter: transmissionScatter(g) };
+  }
+  drawFrameOver(x, mountW, L, glow, slideLight);
   await download(out);
 }
 
@@ -708,11 +750,22 @@ function initUI() {
     $('sizeLabel').textContent = frame === 'none' ? '大きさ（長い辺）' : '大きさ（台紙の横幅）';
     $('captionCheck').closest('label').classList.toggle('off', frame === 'none');
     $('stampCheck').closest('label').classList.toggle('off', frame === 'none');
+    $('lightCtrl').hidden = !isSlide();
     const parts = [size];
     if (frame !== 'none') parts.push(`枠 ${document.querySelector('#frameSeg button.on').textContent}`);
     if (frame !== 'none' && stampOn) parts.push('番号');
     $('frameState').textContent = parts.join('・');
   };
+  $('s-light').addEventListener('input', (e) => {
+    slideLight = +e.target.value / 100;
+    $('v-light').textContent = e.target.value;
+    setFill(e.target);
+    engine.params.light = isSlide() ? slideLight : -1;
+    requestRender();
+  });
+  $('s-light').addEventListener('dblclick', (e) => { e.target.value = 60; e.target.dispatchEvent(new Event('input')); });
+  $('v-light').textContent = $('s-light').value;
+  setFill($('s-light'));
   $('stampCheck').addEventListener('change', (e) => { stampOn = e.target.checked; $('frameDate').classList.toggle('hidden', !stampOn); saveState(); drawArt(); });
   $('captionCheck').addEventListener('change', (e) => { captionOn = e.target.checked; $('frameCaption').classList.toggle('hidden', !captionOn); drawArt(); });
   $('frameSeg').addEventListener('click', (e) => {
@@ -720,7 +773,7 @@ function initUI() {
     if (!b) return;
     frame = b.dataset.v;
     document.querySelectorAll('#frameSeg button').forEach((x) => x.classList.toggle('on', x === b));
-    $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`);
+    $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`) + (DRAWN_FRAMES.includes(frame) ? ' drawn' : '');
     saveState();
     layout();
   });
