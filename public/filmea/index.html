@@ -33,10 +33,6 @@
       <svg viewBox="0 0 24 24" class="i-moon"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
       <svg viewBox="0 0 24 24" class="i-sun"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.8v2.2M12 19v2.2M2.8 12h2.2M19 12h2.2M5.5 5.5l1.5 1.5M17 17l1.5 1.5M5.5 18.5L7 17M17 7l1.5-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
-    <label class="primary" for="photoInput" title="写真をひらく">
-      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10" r="1.8" fill="currentColor"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      <span>写真をひらく</span>
-    </label>
     <input type="file" id="photoInput" accept="image/*" hidden>
     <button class="ib ib-accent" id="btnSave" title="保存" aria-label="保存">
       <svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -59,7 +55,12 @@
       <p class="start-note">写真はアップロードされず、この端末の中だけで処理します</p>
       <div class="start-samples"><span>サンプルで試す</span><div id="emptySamples"></div></div>
     </div>
-    <div class="samples" id="sampleBar"><span class="samples-label">サンプル</span></div>
+    <!-- the visitor's own photo first, then the samples: the same choice as on the start screen -->
+    <div class="samples" id="sampleBar">
+      <label class="sbtn sbtn-add" for="photoInput" title="自分の写真をひらく" aria-label="自分の写真をひらく"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></label>
+      <span class="samples-sep"></span>
+      <span class="samples-label">サンプル</span>
+    </div>
     <div class="stage" id="stage">
       <canvas class="frame-art" id="frameArt" aria-hidden="true"></canvas>
       <div class="crop-box" id="cropBox">
@@ -112,17 +113,37 @@
     <p class="group-note" id="groupNote"></p>
     <div class="thumbs" id="thumbs"></div>
 
-    <section class="fsec" id="filmSec">
-      <div class="ptitle"><h2>FILM</h2><span>フィルム化</span></div>
-      <div class="ftiles" id="filmTiles" role="radiogroup" aria-label="フィルム化"></div>
-      <div class="fbody" id="filmBody" hidden>
-        <div class="ctrl" id="lightCtrl"><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
-        <!-- the text checks move here while a film frame is chosen, and under 台紙 while a mount is -->
-        <div id="filmTextSlot"></div>
-      </div>
-    </section>
-
+    <!-- Under the looks, everything else is a row that opens on demand: the finishes first (the film and
+         the frame, the most fun after the look itself), then the fine adjustments, then the save size. -->
     <div class="rows">
+      <details class="row" id="filmSec">
+        <summary>
+          <svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 3.5v17M15.5 3.5v17M4 8h4.5M4 12h4.5M4 16h4.5M15.5 8H20M15.5 12H20M15.5 16H20" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span>フィルム化</span><em id="filmState">なし</em>
+        </summary>
+        <div class="row-body">
+          <div class="ftiles" id="filmTiles" role="radiogroup" aria-label="フィルム化"></div>
+          <div class="fbody" id="filmBody" hidden>
+            <div class="ctrl" id="lightCtrl" hidden><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
+            <!-- the text checks sit in whichever row holds the chosen frame -->
+            <div class="text-checks" id="textChecks" hidden>
+              <p class="seg-label">枠に入れる文字</p>
+              <label class="check"><input type="checkbox" id="captionCheck" checked><span>色名を入れる</span></label>
+              <label class="check"><input type="checkbox" id="stampCheck" checked><span>16桁の番号を入れる（撮影日時と色）</span></label>
+            </div>
+          </div>
+        </div>
+      </details>
+      <details class="row" id="mountSec">
+        <summary>
+          <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="6" width="10" height="9.5" fill="currentColor" opacity=".3"/></svg>
+          <span>枠</span><em id="mountState">なし</em>
+        </summary>
+        <div class="row-body">
+          <div class="ftiles" id="mountTiles" role="radiogroup" aria-label="枠"></div>
+          <div class="fbody" id="mountBody" hidden></div>
+        </div>
+      </details>
       <details class="row" id="adjust">
         <summary>
           <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
@@ -138,22 +159,13 @@
       </details>
       <details class="row" id="exportSec">
         <summary>
-          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7.5" y="7.5" width="9" height="8" fill="currentColor" opacity=".3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M4 4l6 6M20 20l-6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span>保存の大きさ</span><em id="frameState">元の大きさ</em>
         </summary>
         <div class="row-body">
           <p class="seg-label" id="sizeLabel">大きさ（長い辺）</p>
           <div class="seg" id="sizeSeg" role="radiogroup">
             <button data-v="0" class="on">元の大きさ</button><button data-v="2048">2048px</button><button data-v="1080">1080px</button>
-          </div>
-          <p class="seg-label">台紙（インスタの比率の余白）</p>
-          <div class="seg" id="frameSeg" role="radiogroup">
-            <button data-v="none" class="on">なし</button><button data-v="white">白</button><button data-v="dark">黒</button>
-          </div>
-          <div class="text-checks" id="textChecks" hidden>
-            <p class="seg-label" id="textLabel">台紙に入れる文字</p>
-            <label class="check"><input type="checkbox" id="captionCheck" checked><span>色名を入れる</span></label>
-            <label class="check"><input type="checkbox" id="stampCheck" checked><span>16桁の番号を入れる（撮影日時と色）</span></label>
           </div>
         </div>
       </details>

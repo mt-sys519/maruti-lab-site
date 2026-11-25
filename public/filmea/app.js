@@ -1,6 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
-import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
+import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, LIGHT_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -174,7 +174,7 @@ function layout() {
   const c = $('view');
   c.style.width = cssW + 'px';
   c.style.height = cssH + 'px';
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = (window.devicePixelRatio || 1) * zoomRes;
   c.width = Math.min(engine.imgW, Math.round(cssW * dpr));
   c.height = Math.min(engine.imgH, Math.round(cssH * dpr));
   $('splitLine').style.left = splitX * 100 + '%';
@@ -183,10 +183,22 @@ function layout() {
 
 // The drawn frame (film or slide mount) behind the photo on screen, the same drawing the saved file gets.
 let artWidth = 0;
+
+// Pinch zoom of the picture on screen: s about the stage's centre, then x, y in px. zoomRes is the
+// scale the canvases were last drawn for, so a zoomed picture is redrawn sharp once the fingers lift.
+let zoom = { s: 1, x: 0, y: 0 }, zoomRes = 1;
+function applyZoom() {
+  $('stage').style.transform = zoom.s === 1 && !zoom.x && !zoom.y ? '' : `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
+}
+function resetZoom() {
+  zoom = { s: 1, x: 0, y: 0 };
+  zoomRes = 1;
+  applyZoom();
+}
 function drawArt() {
   if (!DRAWN_FRAMES.includes(frame) || !engine.imgW || !artWidth) return;
   const L = frameLayout(frame, engine.imgW, engine.imgH);
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min((window.devicePixelRatio || 1) * zoomRes, 4096 / artWidth);
   const glow = isSlide() ? screenGlow(L) : null;
   for (const [id, draw] of [['frameArt', (x, w) => drawFrameUnder(x, w, L, frameText(), slideLight)], ['frameOver', (x, w) => drawFrameOver(x, w, L, glow, slideLight)]]) {
     const c = $(id);
@@ -197,7 +209,7 @@ function drawArt() {
 }
 
 // Frames seen with light coming through them: the film strip and the slide mounts.
-function isSlide() { return frame === 'film' || frame === 'slide' || frame === 'slidecard'; }
+function isSlide() { return LIGHT_FRAMES.includes(frame); }
 
 // The glow for the screen, from a small read of the rendered picture (rows come bottom-up).
 function screenGlow(L) {
@@ -290,12 +302,13 @@ async function setPhotoFromBlob(blob) {
   bmp.close?.();
   engine.setImage(c, w, h);
   $('resInfo').textContent = `${w} × ${h}`;
+  resetZoom();
   layout();
   renderThumbs();
 }
 
 async function loadSample(i) {
-  document.querySelectorAll('#sampleBar .sbtn').forEach((b, k) => b.classList.toggle('active', k === i));
+  document.querySelectorAll('#sampleBar .sbtn:not(.sbtn-add)').forEach((b, k) => b.classList.toggle('active', k === i));
   try {
     const res = await fetch(SAMPLES[i].url);
     if (!res.ok) throw new Error(res.status);
@@ -397,6 +410,7 @@ function renderTabs() {
   for (const t of tabsList()) {
     const b = document.createElement('button');
     b.className = 'tab' + (t.id === currentTab ? ' on' : '');
+    b.dataset.id = t.id;
     b.setAttribute('role', 'tab');
     b.innerHTML = '<span class="dot"></span><span></span>';
     b.querySelector('.dot').style.background = GROUP_COLORS[t.id] || GROUP_COLORS.U;
@@ -407,6 +421,7 @@ function renderTabs() {
   }
   el.scrollLeft = keep;
   el.querySelector('.tab.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  markGroupTab();
   const pt = $('purposeTabs');
   pt.innerHTML = '';
   for (const pu of PURPOSES) {
@@ -458,6 +473,13 @@ function renderThumbs() {
 
 function markActiveThumb() {
   document.querySelectorAll('.thumb').forEach((b) => b.classList.toggle('on', current?.id === b.dataset.id));
+  markGroupTab();
+}
+
+// While a purpose tab is open, the chosen look's group is underlined too, so its letter can be learnt.
+function markGroupTab() {
+  const purpose = PURPOSES.some((x) => x.id === currentTab);
+  document.querySelectorAll('#tabs .tab').forEach((b) => b.classList.toggle('cur', purpose && current?.group === b.dataset.id));
 }
 
 async function selectPreset(p) {
@@ -598,38 +620,7 @@ async function save() {
     img.width = iw; img.height = ih;
     img.getContext('2d').putImageData(new ImageData(pixels, iw, ih), 0, 0);
     if (shrink) img = shrinkCanvas(img, photoLong);
-    const W = img.width, H = img.height;
-    let out = document.createElement('canvas');
-    if (!g) {
-      out = img;
-    } else {
-      out.width = mountW; out.height = Math.round(mountW * g.ratio);
-      const x = out.getContext('2d');
-      x.fillStyle = frame === 'white' ? '#f8f7f3' : '#151517';
-      x.fillRect(0, 0, out.width, out.height);
-      x.drawImage(img, Math.round((mountW - W) / 2), Math.round(g.y * mountW));
-      const fs = Math.max(11, Math.round(mountW * 0.016));
-      x.font = `500 ${fs}px "DM Mono", Consolas, monospace`;
-      x.textBaseline = 'middle';
-      if ('letterSpacing' in x) x.letterSpacing = `${Math.round(fs * 0.24)}px`;
-      const cy = captionY(g) * mountW;
-      if (captionOn) {
-        x.fillStyle = frame === 'white' ? '#5b5752' : '#8c8a86';
-        x.textAlign = 'center';
-        x.fillText($('frameCaption').textContent, mountW / 2, cy);
-      }
-      if (stampOn) {
-        // right-aligned to the photo's edge; letterSpacing also trails the last digit, so shift it back
-        const cs = Math.max(8, Math.round(mountW * CODE_SIZE));
-        x.font = `500 ${cs}px "DM Mono", Consolas, monospace`;
-        const track = cs * CODE_TRACK;
-        if ('letterSpacing' in x) x.letterSpacing = `${track}px`;
-        x.fillStyle = frame === 'white' ? DATE_INK.white : DATE_INK.dark;
-        x.textAlign = 'right';
-        x.fillText(mountCode(photoDate, lookDigits()), (g.x + g.w) * mountW + ('letterSpacing' in x ? track : 0), cy);
-      }
-    }
-    await download(out);
+    await download(g ? composeMount(frame, mountW, g, img) : img);
   } catch (e) {
     toast(`保存できませんでした: ${e.message}`, true);
   } finally {
@@ -637,7 +628,40 @@ async function save() {
   }
 }
 
-// Film or slide mount: the frame drawn at the chosen width, the photo cropped into its window.
+// The white or black mount mountW wide with the photo (img, already at its size on the mount) on it,
+// and the look's name and the number under it. small: a tile, where the text keeps its proportion
+// instead of a readable minimum size.
+function composeMount(style, mountW, g, img, small = false) {
+  const out = document.createElement('canvas');
+  out.width = mountW; out.height = Math.round(mountW * g.ratio);
+  const x = out.getContext('2d');
+  x.fillStyle = style === 'white' ? '#f8f7f3' : '#151517';
+  x.fillRect(0, 0, out.width, out.height);
+  x.drawImage(img, Math.round((mountW - img.width) / 2), Math.round(g.y * mountW));
+  const fs = small ? mountW * 0.016 : Math.max(11, Math.round(mountW * 0.016));
+  x.font = `500 ${fs}px "DM Mono", Consolas, monospace`;
+  x.textBaseline = 'middle';
+  if ('letterSpacing' in x) x.letterSpacing = `${fs * 0.24}px`;
+  const cy = captionY(g) * mountW;
+  if (captionOn) {
+    x.fillStyle = style === 'white' ? '#5b5752' : '#8c8a86';
+    x.textAlign = 'center';
+    x.fillText($('frameCaption').textContent, mountW / 2, cy);
+  }
+  if (stampOn) {
+    // right-aligned to the photo's edge; letterSpacing also trails the last digit, so shift it back
+    const cs = small ? mountW * CODE_SIZE : Math.max(8, Math.round(mountW * CODE_SIZE));
+    x.font = `500 ${cs}px "DM Mono", Consolas, monospace`;
+    const track = cs * CODE_TRACK;
+    if ('letterSpacing' in x) x.letterSpacing = `${track}px`;
+    x.fillStyle = style === 'white' ? DATE_INK.white : DATE_INK.dark;
+    x.textAlign = 'right';
+    x.fillText(mountCode(photoDate, lookDigits()), (g.x + g.w) * mountW + ('letterSpacing' in x ? track : 0), cy);
+  }
+  return out;
+}
+
+// Instant, film or slide mount: the frame drawn at the chosen width, the photo cropped into its window.
 async function saveDrawnFrame(iw, ih) {
   const L = frameLayout(frame, iw, ih);
   let mountW = saveLong || Math.round(L.crop.w / L.w);
@@ -674,9 +698,12 @@ function composeFrame(W, L, img, text, light) {
   return out;
 }
 
-// ---------- フィルム化 tiles ----------
+// ---------- 枠 tiles ----------
 // The frames as small tiles of the visitor's own photo, in the chosen look with the sliders applied.
+// フィルム化 (the film strip and slide mounts, on the light box) and 枠 (mounts and the instant card),
+// each its own row of tiles; one frame at a time across both.
 const FILM_TILES = [['none', 'なし'], ['film', 'フィルム'], ['slide', 'スライド白'], ['slidecard', 'スライド紙']];
+const MOUNT_TILES = [['none', 'なし'], ['white', '白'], ['dark', '黒'], ['instant', 'インスタント']];
 const TILE_W = 160;
 
 // The photo as it is now rendered, w wide, through the light box when light >= 0 (top row first).
@@ -696,14 +723,18 @@ function renderedPhoto(w, light) {
 
 function drawTiles() {
   if (!engine.imgW || !current) return;
-  for (const b of document.querySelectorAll('#filmTiles .ftile')) {
+  for (const b of document.querySelectorAll('.ftile')) {
     const style = b.dataset.v;
     let pic;
     if (style === 'none') {
       pic = renderedPhoto(engine.imgW >= engine.imgH ? TILE_W : Math.max(16, Math.round(TILE_W * engine.imgW / engine.imgH)), -1);
+    } else if (style === 'white' || style === 'dark') {
+      const g = mountLayout(engine.imgW, engine.imgH);
+      pic = composeMount(style, TILE_W, g, renderedPhoto(Math.max(16, Math.round(g.w * TILE_W)), -1), true);
     } else {
       const L = frameLayout(style, engine.imgW, engine.imgH);
-      pic = composeFrame(TILE_W, L, renderedPhoto(Math.max(16, Math.ceil(TILE_W * L.w * engine.imgW / L.crop.w)), slideLight), frameText(), slideLight);
+      const light = LIGHT_FRAMES.includes(style) ? slideLight : -1;
+      pic = composeFrame(TILE_W, L, renderedPhoto(Math.max(16, Math.ceil(TILE_W * L.w * engine.imgW / L.crop.w)), light), frameText(), slideLight);
     }
     const c = b.querySelector('canvas');
     c.width = pic.width; c.height = pic.height;
@@ -830,6 +861,75 @@ function initUI() {
   box.addEventListener('pointercancel', end);
   box.addEventListener('contextmenu', (e) => e.preventDefault());
 
+  // Pinch to zoom on phones: two fingers zoom about their midpoint and move the picture; while it is
+  // zoomed, one finger drags it; a double tap puts it back. Touch only: a mouse keeps its clicks.
+  const stage = $('stage');
+  const pts = new Map();
+  let gesture = null, lastTap = 0, sharpTimer = 0;
+  const midOf = (p) => (p.length > 1 ? { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 } : p[0]);
+  const begin = () => {
+    const p = [...pts.values()], r = stage.getBoundingClientRect();
+    gesture = {
+      n: p.length, m0: midOf(p), d0: p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0,
+      s0: zoom.s, x0: zoom.x, y0: zoom.y, moved: false,
+      c: { x: r.left + r.width / 2 - zoom.x, y: r.top + r.height / 2 - zoom.y }, // the unzoomed centre
+    };
+  };
+  const clampZoom = () => {
+    const mx = (zoom.s - 1) * stage.offsetWidth / 2, my = (zoom.s - 1) * stage.offsetHeight / 2;
+    zoom.x = Math.max(-mx, Math.min(mx, zoom.x));
+    zoom.y = Math.max(-my, Math.min(my, zoom.y));
+  };
+  const sharpen = () => {
+    clearTimeout(sharpTimer);
+    sharpTimer = setTimeout(() => {
+      const want = Math.min(4, Math.max(1, Math.round(zoom.s * 2) / 2));
+      if (want !== zoomRes) { zoomRes = want; layout(); }
+    }, 150);
+  };
+  stage.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch') return;
+    try { if (!box.hasPointerCapture(e.pointerId)) stage.setPointerCapture(e.pointerId); } catch {}
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2) { pressEnd(); dragging = false; } // a second finger: a pinch, not a hold or a split drag
+    if (pts.size <= 2) begin();
+  });
+  stage.addEventListener('pointermove', (e) => {
+    if (!pts.has(e.pointerId) || !gesture) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const p = [...pts.values()];
+    if (gesture.n >= 2 && p.length >= 2) {
+      // keep the point that was under the fingers' midpoint under it
+      const m = midOf(p), d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+      const s = Math.max(1, Math.min(6, gesture.s0 * d / gesture.d0)), k = s / gesture.s0, c = gesture.c;
+      zoom = { s, x: m.x - c.x - k * (gesture.m0.x - c.x - gesture.x0), y: m.y - c.y - k * (gesture.m0.y - c.y - gesture.y0) };
+      gesture.moved = true;
+    } else if (gesture.n === 1 && zoom.s > 1 && !splitOn) {
+      const dx = p[0].x - gesture.m0.x, dy = p[0].y - gesture.m0.y;
+      if (!gesture.moved && Math.hypot(dx, dy) < 6) return;
+      if (!gesture.moved) pressEnd(); // dragging the picture, not holding for the original
+      gesture.moved = true;
+      zoom.x = gesture.x0 + dx; zoom.y = gesture.y0 + dy;
+    } else return;
+    clampZoom();
+    applyZoom();
+  });
+  const lift = (e) => {
+    if (!pts.has(e.pointerId)) return;
+    const tap = gesture && gesture.n === 1 && !gesture.moved;
+    pts.delete(e.pointerId);
+    if (pts.size) { begin(); return; } // one finger left after a pinch carries on dragging
+    gesture = null;
+    if (zoom.s < 1.03) { zoom = { s: 1, x: 0, y: 0 }; applyZoom(); }
+    if (tap) {
+      if (e.timeStamp - lastTap < 300 && zoom.s > 1) { zoom = { s: 1, x: 0, y: 0 }; applyZoom(); lastTap = 0; }
+      else lastTap = e.timeStamp;
+    }
+    sharpen();
+  };
+  stage.addEventListener('pointerup', lift);
+  stage.addEventListener('pointercancel', lift);
+
   const hold = $('btnHold');
   const setHoldBtn = (on) => { holdBtn = on; hold.classList.toggle('on', on || holdKey); requestRender(); };
   hold.addEventListener('pointerdown', (e) => { hold.setPointerCapture(e.pointerId); setHoldBtn(true); });
@@ -847,45 +947,49 @@ function initUI() {
   });
   window.addEventListener('blur', () => { holdKey = false; holdBtn = false; hold.classList.remove('on'); requestRender(); });
 
-  const isMount = () => frame === 'white' || frame === 'dark';
   const saveState = () => {
-    const size = document.querySelector('#sizeSeg button.on').textContent;
-    $('sizeLabel').textContent = frame === 'none' ? '大きさ（長い辺）' : isMount() ? '大きさ（台紙の横幅）' : '大きさ（枠の横幅）';
-    const parts = [size];
-    if (isMount()) parts.push(`台紙 ${document.querySelector('#frameSeg button.on').textContent}`);
-    if (isMount() && stampOn) parts.push('番号');
-    $('frameState').textContent = parts.join('・');
+    $('sizeLabel').textContent = frame === 'none' ? '大きさ（長い辺）' : '大きさ（枠の横幅）';
+    $('frameState').textContent = document.querySelector('#sizeSeg button.on').textContent;
   };
-  // One frame at a time: a film frame (the tiles) or a mount (台紙). The text checks sit right under
-  // whichever is chosen, and are hidden with no frame.
+  // One frame at a time, from either row of tiles; the other row shows なし. The light slider shows for
+  // the frames on the light box, the text checks under whichever row holds the frame; the look's label
+  // leaves the photo, as the frame prints it.
+  const SECTIONS = [['filmTiles', FILM_TILES, 'filmBody', 'filmState'], ['mountTiles', MOUNT_TILES, 'mountBody', 'mountState']];
+  const sectionOf = (v) => SECTIONS.find(([, list]) => v !== 'none' && list.some(([x]) => x === v));
   const setFrame = (v) => {
     frame = v;
-    const drawn = DRAWN_FRAMES.includes(frame);
-    document.querySelectorAll('#filmTiles .ftile').forEach((x) => x.classList.toggle('on', x.dataset.v === (drawn ? frame : 'none')));
-    document.querySelectorAll('#frameSeg button').forEach((x) => {
-      x.classList.toggle('on', x.dataset.v === (isMount() ? frame : 'none'));
-      x.classList.toggle('dis', drawn && x.dataset.v !== 'none');
-    });
-    $('filmBody').hidden = !drawn;
+    resetZoom();
+    const drawn = DRAWN_FRAMES.includes(frame), sec = sectionOf(frame);
+    for (const [id] of SECTIONS) {
+      const mine = sec && sec[0] === id;
+      document.querySelectorAll(`#${id} .ftile`).forEach((x) => x.classList.toggle('on', x.dataset.v === (mine ? frame : 'none')));
+    }
+    $('lightCtrl').hidden = !isSlide();
+    for (const [id, list, body, state] of SECTIONS) {
+      const mine = sec && sec[0] === id;
+      $(body).hidden = !mine;
+      $(state).textContent = mine ? list.find(([x]) => x === frame)[1] : 'なし';
+    }
     const checks = $('textChecks');
-    checks.hidden = frame === 'none';
-    if (drawn) $('filmTextSlot').appendChild(checks);
-    else $('frameSeg').after(checks);
-    $('textLabel').textContent = drawn ? '枠に入れる文字' : '台紙に入れる文字';
+    checks.hidden = !sec;
+    if (sec) $(sec[2]).appendChild(checks);
+    $('viewport').classList.toggle('framed', frame !== 'none');
     $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`) + (drawn ? ' drawn' : '');
     saveState();
     layout();
   };
-  for (const [v, label] of FILM_TILES) {
-    const b = document.createElement('button');
-    b.className = 'ftile' + (v === 'none' ? ' on' : '');
-    b.dataset.v = v;
-    b.setAttribute('role', 'radio');
-    b.innerHTML = '<div class="box"><canvas></canvas></div><div class="fname"><span></span></div>';
-    b.querySelector('span').textContent = label;
-    // なし here takes off a film frame only; a mount chosen under 保存の大きさ stays
-    b.addEventListener('click', () => { if (v !== 'none' || DRAWN_FRAMES.includes(frame)) setFrame(v); });
-    $('filmTiles').appendChild(b);
+  for (const [id, list] of SECTIONS) {
+    for (const [v, label] of list) {
+      const b = document.createElement('button');
+      b.className = 'ftile' + (v === 'none' ? ' on' : '');
+      b.dataset.v = v;
+      b.setAttribute('role', 'radio');
+      b.innerHTML = '<div class="box"><canvas></canvas></div><div class="fname"><span></span></div>';
+      b.querySelector('span').textContent = label;
+      // なし takes off a frame from its own row only; a frame chosen in the other row stays
+      b.addEventListener('click', () => { if (v !== 'none' || sectionOf(frame)?.[0] === id) setFrame(v); });
+      $(id).appendChild(b);
+    }
   }
   $('s-light').addEventListener('input', (e) => {
     slideLight = +e.target.value / 100;
@@ -899,12 +1003,6 @@ function initUI() {
   setFill($('s-light'));
   $('stampCheck').addEventListener('change', (e) => { stampOn = e.target.checked; $('frameDate').classList.toggle('hidden', !stampOn); saveState(); drawArt(); refreshTiles(); });
   $('captionCheck').addEventListener('change', (e) => { captionOn = e.target.checked; $('frameCaption').classList.toggle('hidden', !captionOn); drawArt(); refreshTiles(); });
-  $('frameSeg').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    // なし here takes off a mount only; a film frame chosen above stays
-    if (b.dataset.v !== 'none' || isMount()) setFrame(b.dataset.v);
-  });
   $('sizeSeg').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;

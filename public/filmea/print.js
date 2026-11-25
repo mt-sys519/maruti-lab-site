@@ -38,7 +38,19 @@ const SLIDE = { size: 50, wl: 35, ws: 23 };
 // How far the window's cut edge shows inside the opening (mm). The window and the picture in it are
 // square-cornered, as on the white plastic mounts of the reference photo.
 const RIM = 0.35;
-export const DRAWN_FRAMES = ['film', 'slide', 'slidecard'];
+// Instant: instax cards, all 86 mm on the long side, picture 6.5 mm from the top edge and the
+// thick margin below. Upright photos get mini, wide ones WIDE, near-square ones SQUARE. The card's
+// corners are left square: a JPEG has no transparency, and SNS turn transparent corners black or white.
+const INSTAX = {
+  mini: { w: 54, h: 86, iw: 46, ih: 62 },
+  square: { w: 72, h: 86, iw: 62, ih: 62 },
+  wide: { w: 108, h: 86, iw: 99, ih: 62 },
+};
+const INSTAX_TOP = 6.5;
+// Frames drawn round the photo (the photo cropped into a window), and those of them seen with the
+// light box behind them.
+export const DRAWN_FRAMES = ['instant', 'film', 'slide', 'slidecard'];
+export const LIGHT_FRAMES = ['film', 'slide', 'slidecard'];
 
 // x, y, w, h: the photo's window, as fractions of the canvas width. ratio: canvas height / width.
 // crop: the part of the photo the window shows.
@@ -51,6 +63,12 @@ export function frameLayout(style, pw, ph) {
     if (pw / ph > aspect) { const w = ph * aspect; return { x: (pw - w) / 2, y: 0, w, h: ph }; }
     const h = pw / aspect; return { x: 0, y: (ph - h) / 2, w: pw, h };
   };
+  if (style === 'instant') {
+    const a = pw / ph;
+    const kind = a < 0.9 ? 'mini' : a > 1.15 ? 'wide' : 'square';
+    const f = INSTAX[kind], u = 1 / f.w;
+    return { style, kind, mm: u, ratio: f.h / f.w, x: (f.w - f.iw) / 2 * u, y: INSTAX_TOP * u, w: f.iw * u, h: f.ih * u, crop: cropTo(f.iw / f.ih) };
+  }
   if (style === 'slide' || style === 'slidecard') {
     const wide = pw >= ph, u = 1 / SLIDE.size;
     const w = wide ? SLIDE.wl : SLIDE.ws, h = wide ? SLIDE.ws : SLIDE.wl;
@@ -129,14 +147,56 @@ function dotText(ctx, text, x, y, p, align = 'left') {
 // Under the photo: the card or the strip. text: { caption, code } (either may be empty).
 export function drawFrameUnder(ctx, W, L, text, strength = 0.6) {
   ctx.save();
-  if (L.style === 'slide' || L.style === 'slidecard') slideUnder(ctx, W, L, text, strength);
+  if (L.style === 'instant') instaxUnder(ctx, W, L, text);
+  else if (L.style === 'slide' || L.style === 'slidecard') slideUnder(ctx, W, L, text, strength);
   else filmUnder(ctx, W, L, text, strength);
   ctx.restore();
 }
 
-// Over the photo: the light coming through the picture, on a slide mount or the film strip. strength: 0..1.
+// Over the photo: the light coming through the picture, on a slide mount or the film strip
+// (strength: 0..1), or the soft edge where an instax card's mask meets the picture.
 export function drawFrameOver(ctx, W, L, glow, strength = 0.6) {
-  slideOver(ctx, W, L, glow, strength);
+  if (L.style === 'instant') instaxOver(ctx, W, L);
+  else slideOver(ctx, W, L, glow, strength);
+}
+
+function instaxUnder(ctx, W, L, text) {
+  const H = W * L.ratio, mm = L.mm * W;
+  // the card: a faintly warm white that is a shade darker toward the bottom
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#f6f4ef'); g.addColorStop(1, '#efece5');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  speckle(ctx, 0, 0, W, H, Math.max(1, mm * 0.08), 0.05, false);
+  // the mask's edge sits a hair above the picture and catches the light
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = Math.max(1, mm * 0.12);
+  ctx.strokeRect(L.x * W - mm * 0.1, L.y * W - mm * 0.1, L.w * W + mm * 0.2, L.h * W + mm * 0.2);
+  // the look and the number, centred in the thick margin under the picture
+  const below = (L.y + L.h) * W, band = H - below;
+  const both = text.caption && text.code;
+  if (text.caption) {
+    ctx.fillStyle = '#7d776d';
+    dotText(ctx, text.caption.toUpperCase().replace(/\s+/g, ' '), W / 2, below + band * (both ? 0.42 : 0.5), mm * 0.2, 'center');
+  }
+  if (text.code) {
+    ctx.fillStyle = '#c98a2a';
+    dotText(ctx, text.code, W / 2, below + band * (both ? 0.62 : 0.5), mm * 0.15, 'center');
+  }
+}
+
+function instaxOver(ctx, W, L) {
+  const x = L.x * W, y = L.y * W, w = L.w * W, h = L.h * W, mm = L.mm * W;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  const edge = mm * 0.5, dark = 'rgba(40,32,24,0.22)';
+  for (const [x0, y0, x1, y1, rx, ry, rw, rh] of [
+    [x, 0, x + edge, 0, x, y, edge, h], [x + w, 0, x + w - edge, 0, x + w - edge, y, edge, h],
+    [0, y, 0, y + edge, x, y, w, edge], [0, y + h, 0, y + h - edge, x, y + h - edge, w, edge],
+  ]) {
+    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+    g.addColorStop(0, dark); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(rx, ry, rw, rh);
+  }
+  ctx.restore();
 }
 
 // Set a DM Mono font of size px with tracking (a fraction of the size); returns the tracking in px.
