@@ -65,7 +65,7 @@ const works: Work[] = [
     action: "使ってみる",
   },
   {
-    name: "filmea",
+    name: "FILMEA",
     label: "FILM LOOKS",
     copy: "手持ちの写真にフィルムの色をあてて見比べ、気に入った色で保存できるツール。写真は端末の外へ出ません。",
     image: "/filmea/og.png",
