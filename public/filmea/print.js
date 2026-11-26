@@ -213,7 +213,9 @@ function setFont(ctx, px, track) {
 // The slide mounts as real things: modelled and rendered in Blender (filmea-blender/mount.py, outside
 // the site) on the light box, white plastic and card, for a wide and an upright window. Each is the
 // mount with its window left transparent, and the shade its window's edge throws on the film behind it
-// (black, as alpha). Loaded on first use; until then the mounts are drawn as below.
+// (black, as alpha). Loaded on first use; until then the mounts are drawn as below. The service worker
+// keeps these files forever under their names, so a new render gets a new ART_V.
+const ART_V = 2; // 2: square corners and plain cut edges, as the reference (1 had them rounded)
 const MOUNT_ART = {};
 let mountArtWaiting = null;
 export function loadMountArt(onReady) {
@@ -222,7 +224,7 @@ export function loadMountArt(onReady) {
   const jobs = [];
   for (const style of ['slide', 'slidecard']) {
     for (const o of ['wide', 'upright']) {
-      const load = (name) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `frames/${name}.webp`; });
+      const load = (name) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `frames/${name}-v${ART_V}.webp`; });
       jobs.push(Promise.all([load(`${style}-${o}`), load(`${style}-${o}-shade`)]).then(([mount, shade]) => { MOUNT_ART[`${style}-${o}`] = { mount, shade }; }));
     }
   }
@@ -259,13 +261,11 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
     ctx.fillStyle = '#f6f5f2'; ctx.fillRect(0, 0, W, W);
     speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.04), 0.02, false);
   }
-  if (!art) {
-    // the outer edge: no bevel, just the mount's cut edge, a line about 0.4 mm wide a few percent
-    // darker than the face (measured: face 211, edge 204–206, then the light box)
-    ctx.strokeStyle = card ? 'rgba(60,44,28,0.18)' : 'rgba(110,104,100,0.12)';
-    ctx.lineWidth = mm * 0.4;
-    ctx.strokeRect(mm * 0.2, mm * 0.2, W - mm * 0.4, W - mm * 0.4);
-  }
+  // the outer edge: no bevel, square corners, just the mount's cut edge, a line about 0.4 mm wide a few
+  // percent darker than the face (measured: face 211, edge 204–206, then the light box)
+  ctx.strokeStyle = card ? 'rgba(60,44,28,0.18)' : 'rgba(110,104,100,0.12)';
+  ctx.lineWidth = mm * 0.4;
+  ctx.strokeRect(mm * 0.2, mm * 0.2, W - mm * 0.4, W - mm * 0.4);
   // moulded (plastic) or printed (card) numbers, small, in the margin under the window
   const base = y + h + (W - y - h) * 0.55;
   ctx.textBaseline = 'middle';
