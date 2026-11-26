@@ -157,15 +157,22 @@ function layout() {
     const mw = Math.floor(Math.min(availW, availH / g.ratio));
     s = (g.w * mw) / g.crop.w;
     Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * g.ratio) + 'px', paddingTop: (g.y * mw) + 'px' });
+    // The look's name and the number in the same proportion to the mount as the saved file has them:
+    // set at 10px and scaled down, as browsers will not draw text below their minimum size, and a
+    // minimum on a small mount ran the two together.
+    const TEXT_PX = 10;
     cap.style.top = captionY(g) * mw + 'px';
-    cap.style.fontSize = Math.max(7, mw * 0.016) + 'px';
-    cap.style.letterSpacing = Math.max(1, mw * 0.016 * 0.24) + 'px';
-    const code = $('frameDate');
+    cap.style.fontSize = TEXT_PX + 'px';
+    cap.style.letterSpacing = TEXT_PX * 0.24 + 'px';
+    cap.style.transform = `translateY(-50%) scale(${mw * 0.016 / TEXT_PX})`;
+    const code = $('frameDate'), k = mw * CODE_SIZE / TEXT_PX;
     code.style.top = captionY(g) * mw + 'px';
-    code.style.fontSize = Math.max(6, mw * CODE_SIZE) + 'px';
-    code.style.letterSpacing = mw * CODE_SIZE * CODE_TRACK + 'px';
+    code.style.fontSize = TEXT_PX + 'px';
+    code.style.letterSpacing = TEXT_PX * CODE_TRACK + 'px';
+    code.style.transformOrigin = 'right center';
+    code.style.transform = `translateY(-50%) scale(${k})`;
     code.style.right = (1 - g.x - g.w) * mw + 'px';
-    code.style.marginRight = -mw * CODE_SIZE * CODE_TRACK + 'px'; // letter-spacing trails the last digit
+    code.style.marginRight = -TEXT_PX * CODE_TRACK * k + 'px'; // letter-spacing trails the last digit
     code.textContent = mountCode(photoDate, lookDigits());
   } else {
     // at most the photo's own pixels at the crop's full size, so zooming in keeps its size on screen
