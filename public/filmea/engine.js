@@ -28,7 +28,10 @@ uniform int u_exact;         // 1 = export pass: one fragment per image pixel
 uniform vec2 u_tileOffset;   // export tile origin in image pixels (top-left based)
 uniform vec2 u_tileSize;
 
-uniform float u_splitX;      // < 0 disables split; left of it shows the original
+uniform vec3 u_mapX;         // screen pass: the canvas (x right, y down, 0..1) to the photo's uv,
+uniform vec3 u_mapY;         // so the canvas can show a turned crop of the photo (identity: all of it)
+
+uniform float u_splitX;      // < 0 disables split; left of it (on the canvas) shows the original
 uniform int u_bypass;        // 1 = show original everywhere
 
 uniform float u_intensity;   // 0..1
@@ -133,13 +136,14 @@ void main() {
     src = texelFetch(u_img, ivec2(px), 0).rgb;
     px += 0.5;
   } else {
-    vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y);
+    vec3 c = vec3(v_uv.x, 1.0 - v_uv.y, 1.0);
+    vec2 uv = vec2(dot(u_mapX, c), dot(u_mapY, c));
     px = uv * u_imgSize;
     src = texture(u_img, uv).rgb;
   }
   vec2 uvImg = px / u_imgSize;
 
-  if (u_bypass == 1 || (u_splitX >= 0.0 && uvImg.x < u_splitX)) {
+  if (u_bypass == 1 || (u_splitX >= 0.0 && v_uv.x < u_splitX)) {
     outColor = vec4(src, 1.0);
     return;
   }
@@ -184,7 +188,8 @@ export class Engine {
     this.lut = null;
     this.imgW = 0; this.imgH = 0;
     this.params = { intensity: 1, exposure: 0, wb: 0, grain: 0, vignette: 0, light: -1 };
-    this.view = { splitX: 0.5, bypass: false };
+    // map: [mapX, mapY] for the screen canvas (see u_mapX), null to show the whole photo
+    this.view = { splitX: 0.5, bypass: false, map: null };
     this._init();
     // The GPU can drop the context (a photo too large for its memory, the app sent to the background).
     // Without preventDefault the browser never gives it back and nothing draws until the page is
@@ -297,6 +302,9 @@ export class Engine {
     gl.uniform1i(L.u_exact, exact ? 1 : 0);
     gl.uniform2f(L.u_tileOffset, tileOffset[0], tileOffset[1]);
     gl.uniform2f(L.u_tileSize, tileSize[0], tileSize[1]);
+    const map = !exact && !forceFull && this.view.map || [[1, 0, 0], [0, 1, 0]];
+    gl.uniform3fv(L.u_mapX, map[0]);
+    gl.uniform3fv(L.u_mapY, map[1]);
     gl.uniform1f(L.u_splitX, forceFull ? -1 : this.view.splitX);
     gl.uniform1i(L.u_bypass, !forceFull && this.view.bypass ? 1 : 0);
     gl.uniform1f(L.u_intensity, p.intensity);

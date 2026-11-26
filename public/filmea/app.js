@@ -1,6 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
-import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, drawFrameShade, loadMountArt, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, LIGHT_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
+import { mountLayout, frameLayout, TRIM0, TRIM_ZOOM_MAX, drawFrameUnder, drawFrameOver, drawFrameShade, loadMountArt, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, LIGHT_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -131,22 +131,23 @@ function layout() {
   Object.assign(box.style, { left: '', top: '' });
   engine.params.light = -1;
   for (const k of ['l', 't', 'r', 'b']) box.style.removeProperty(`--crop-${k}`);
-  let s;
+  let s, cssW = 0, cssH = 0;
+  engine.view.map = null;
   if (DRAWN_FRAMES.includes(frame)) {
     // the photo shows through its window, cropped to the frame's shape; the rest is drawn
-    const L = frameLayout(frame, engine.imgW, engine.imgH, cropShift);
+    const L = frameLayout(frame, engine.imgW, engine.imgH, trim);
     const mw = Math.floor(Math.min(availW, availH / L.ratio));
     // The frame is drawn over the photo with its window cut out, so the window's edge comes from one
-    // canvas only. The photo sits a little larger than the window and runs under the frame by BLEED
-    // px, so rounding to the screen's pixels (125% scaling and the like) never leaves an edge of the
-    // window uncovered or the light short of the picture's edge.
-    const winW = L.w * mw, winH = L.h * mw;
-    s = (winW / L.crop.w) * Math.max((winW + 2) / winW, (winH + 2) / winH);
+    // canvas only. The photo's canvas runs under the frame BLEED px past the window, so rounding to
+    // the screen's pixels (125% scaling and the like) never leaves an edge of the window uncovered or
+    // the light short of the picture's edge. The canvas shows only the crop, turned (placeCrop).
+    win = { w: L.w * mw, h: L.h * mw };
+    cssW = win.w + 2 * BLEED; cssH = win.h + 2 * BLEED;
     Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * L.ratio) + 'px', paddingTop: '' });
-    Object.assign(crop.style, { left: L.x * mw - BLEED + 'px', top: L.y * mw - BLEED + 'px', width: winW + 2 * BLEED + 'px', height: winH + 2 * BLEED + 'px' });
+    Object.assign(crop.style, { left: L.x * mw - BLEED + 'px', top: L.y * mw - BLEED + 'px', width: cssW + 'px', height: cssH + 'px' });
     artWidth = mw;
-    cropScale = s;
     placeCrop(L);
+    syncOrient(L);
     engine.params.light = isSlide() ? slideLight : -1;
     drawArt();
   } else if (frame !== 'none') {
@@ -169,36 +170,40 @@ function layout() {
     s = Math.min(availW / engine.imgW, availH / engine.imgH, 1);
     Object.assign(stage.style, { width: '', height: '', paddingTop: '' });
   }
-  // Behind a drawn frame's window the photo is rounded up, not down: the window clips the extra, and
-  // a photo a fraction of a pixel short of the window would leave the mount showing along one edge.
-  const round = DRAWN_FRAMES.includes(frame) ? Math.ceil : Math.floor;
-  const cssW = Math.max(1, round(engine.imgW * s));
-  const cssH = Math.max(1, round(engine.imgH * s));
+  const drawn = !!cssW;
+  if (!drawn) { cssW = Math.max(1, Math.floor(engine.imgW * s)); cssH = Math.max(1, Math.floor(engine.imgH * s)); }
   const c = $('view');
   c.style.width = cssW + 'px';
   c.style.height = cssH + 'px';
   const dpr = (window.devicePixelRatio || 1) * zoomRes;
-  c.width = Math.min(engine.imgW, Math.round(cssW * dpr));
-  c.height = Math.min(engine.imgH, Math.round(cssH * dpr));
+  c.width = Math.max(1, Math.min(drawn ? 4096 : engine.imgW, Math.round(cssW * dpr)));
+  c.height = Math.max(1, Math.min(drawn ? 4096 : engine.imgH, Math.round(cssH * dpr)));
   $('splitLine').style.left = splitX * 100 + '%';
   requestRender();
 }
 
-// The photo behind a drawn frame's window, placed so the window shows L.crop; cropScale is the screen
-// px per photo px. Also where the window sits inside the photo, so the labels on it stay inside.
-let cropScale = 1;
+// The photo in a drawn frame's window: the canvas (the window and BLEED round it, win the window's
+// size in CSS px) shows L.crop turned by its angle, through the engine's map from canvas to photo.
+// cropScale is the screen px per photo px. The labels on the photo keep to the window.
+let cropScale = 1, win = { w: 0, h: 0 };
 const BLEED = 3;
 function placeCrop(L) {
-  const box = $('canvasBox'), s = cropScale, winW = L.w * artWidth, winH = L.h * artWidth;
-  // the crop's centre on the window's centre (the photo is scaled a hair past the window)
-  const left = BLEED + winW / 2 - (L.crop.x + L.crop.w / 2) * s, top = BLEED + winH / 2 - (L.crop.y + L.crop.h / 2) * s;
-  Object.assign(box.style, { left: left + 'px', top: top + 'px' });
-  const cut = { l: BLEED - left, t: BLEED - top, r: left + engine.imgW * s - BLEED - winW, b: top + engine.imgH * s - BLEED - winH };
-  for (const k in cut) box.style.setProperty(`--crop-${k}`, Math.max(0, cut[k]) + 'px');
+  const c = L.crop, s = win.w / c.w, W = win.w + 2 * BLEED, H = win.h + 2 * BLEED;
+  const cos = Math.cos(c.angle), sin = Math.sin(c.angle), iw = engine.imgW, ih = engine.imgH;
+  cropScale = s;
+  // a point d from the window's centre (screen px) shows the photo at the crop's centre + R(-angle)·d / s
+  engine.view.map = [
+    [cos * W / s / iw, sin * H / s / iw, (c.cx - (cos * W + sin * H) / 2 / s) / iw],
+    [-sin * W / s / ih, cos * H / s / ih, (c.cy - (-sin * W + cos * H) / 2 / s) / ih],
+  ];
+  const box = $('canvasBox');
+  for (const k of ['l', 't', 'r', 'b']) box.style.setProperty(`--crop-${k}`, BLEED + 'px');
+  requestRender();
 }
 
-// Where a drawn frame cuts the photo, moved by dragging the photo in its window (see frameLayout).
-let cropShift = { x: 0, y: 0 };
+// How the photo sits in a drawn frame's window: turned, zoomed and moved (see TRIM0 in print.js).
+let trim = { ...TRIM0 };
+let trimming = false; // the トリミング mode, where the dock holds the turn and the dial
 
 // The drawn frame (film or slide mount) behind the photo on screen, the same drawing the saved file gets.
 let artWidth = 0;
@@ -216,7 +221,7 @@ function resetZoom() {
 }
 function drawArt() {
   if (!DRAWN_FRAMES.includes(frame) || !engine.imgW || !artWidth) return;
-  const L = frameLayout(frame, engine.imgW, engine.imgH, cropShift);
+  const L = frameLayout(frame, engine.imgW, engine.imgH, trim);
   const dpr = Math.min((window.devicePixelRatio || 1) * zoomRes, 4096 / artWidth);
   const glow = isSlide() ? screenGlow(L) : null;
   // the frame over the photo with its window cut out, then the light through it (screened on)
@@ -234,18 +239,31 @@ function isSlide() { return LIGHT_FRAMES.includes(frame); }
 
 // The glow for the screen, from a small read of the rendered picture (rows come bottom-up).
 function screenGlow(L) {
-  const sw = 192, sh = Math.max(1, Math.round(192 * engine.imgH / engine.imgW));
+  // read finer as the crop gets smaller, so the glow comes from as many pixels as the saved one's
+  const sw = Math.max(16, Math.min(engine.imgW, 2048, Math.round(192 * engine.imgW / L.crop.w)));
+  const sh = Math.max(1, Math.round(sw * engine.imgH / engine.imgW));
   const px = engine.readSmall(sw, sh);
   const flip = new Uint8ClampedArray(px.length);
   for (let r = 0; r < sh; r++) flip.set(px.subarray((sh - 1 - r) * sw * 4, (sh - r) * sw * 4), r * sw * 4);
   const c = document.createElement('canvas');
   c.width = sw; c.height = sh;
   c.getContext('2d').putImageData(new ImageData(flip, sw, sh), 0, 0);
-  const k = sw / engine.imgW;
   const crop = document.createElement('canvas');
-  crop.width = Math.max(1, Math.round(L.crop.w * k)); crop.height = Math.max(1, Math.round(L.crop.h * k));
-  crop.getContext('2d').drawImage(c, L.crop.x * k, L.crop.y * k, L.crop.w * k, L.crop.h * k, 0, 0, crop.width, crop.height);
+  crop.width = 192; crop.height = Math.max(1, Math.round(192 * L.crop.h / L.crop.w));
+  drawCrop(crop.getContext('2d'), c, L, 0, 0, crop.width, crop.height);
   return { glow: transmissionGlow(crop), scatter: transmissionScatter(crop) };
+}
+
+// Draw L.crop of img (the photo at any size) into the rect x, y, w, h of ctx, turned as on screen.
+function drawCrop(ctx, img, L, x, y, w, h) {
+  const c = L.crop, k = w / c.w; // ctx px per photo px
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.translate(x + w / 2, y + h / 2);
+  ctx.rotate(c.angle);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, -c.cx * k, -c.cy * k, engine.imgW * k, engine.imgH * k);
+  ctx.restore();
 }
 
 // The glow follows the picture as looks and sliders change; redrawn a moment after the last change.
@@ -279,6 +297,87 @@ function lookDigits() {
 // gets), however much mount a wide photo leaves below.
 function captionY(g) {
   return g.y + g.h + Math.min(g.bottom, 0.078) / 2;
+}
+
+// ---------- トリミング ----------
+// The photo moved and zoomed by the pointer(s), from a snapshot taken when the gesture starts: the
+// photo point that was under m0 is put under m, the crop zoomed k times (1 for a plain drag).
+function trimSnap(m0) {
+  const L = frameLayout(frame, engine.imgW, engine.imgH, trim);
+  const r = $('cropBox').getBoundingClientRect();
+  return { m0, cx: L.crop.cx, cy: L.crop.cy, angle: L.crop.angle, s: cropScale, zoom: trim.zoom, wc: { x: r.left + r.width / 2, y: r.top + r.height / 2 } };
+}
+function trimMove(g, m, k = 1) {
+  const zoom = Math.max(1, Math.min(TRIM_ZOOM_MAX, g.zoom * k)), s = g.s * zoom / g.zoom;
+  const cos = Math.cos(g.angle), sin = Math.sin(g.angle);
+  // a screen point as an offset in photo px from the crop's centre
+  const at = (p, sc) => { const dx = p.x - g.wc.x, dy = p.y - g.wc.y; return { x: (cos * dx + sin * dy) / sc, y: (-sin * dx + cos * dy) / sc }; };
+  const a = at(g.m0, g.s), b = at(m, s);
+  trim = { ...trim, zoom, x: (g.cx + a.x - b.x) / engine.imgW, y: (g.cy + a.y - b.y) / engine.imgH };
+  // keep the centre where frameLayout holds it, so the next gesture starts from what is on screen
+  const c = frameLayout(frame, engine.imgW, engine.imgH, trim).crop;
+  trim.x = c.cx / engine.imgW; trim.y = c.cy / engine.imgH;
+  trimChanged();
+}
+
+// After the trim changed: relayout when the window's shape may change (a quarter turn, the window's
+// direction), else only move the photo in it. The glow and the tiles follow a moment later.
+function trimChanged(shape = false) {
+  if (!DRAWN_FRAMES.includes(frame) || !engine.imgW) return;
+  if (shape) layout();
+  else placeCrop(frameLayout(frame, engine.imgW, engine.imgH, trim));
+  drawDial();
+}
+
+// 分度器: the fine angle on a scale that slides under a fixed needle, DIAL_PX of drag a degree.
+const DIAL_PX = 8, FINE_MAX = 45;
+function setFine(v) {
+  v = Math.max(-FINE_MAX, Math.min(FINE_MAX, Math.round(v * 10) / 10));
+  if (Object.is(v, -0)) v = 0;
+  if (v === trim.fine) return;
+  trim = { ...trim, fine: v };
+  trimChanged();
+}
+function drawDial() {
+  if (!trimming) return;
+  const cv = $('dialCanvas'), w = cv.clientWidth, h = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+  const f = trim.fine;
+  $('dialVal').textContent = `${f > 0 ? '+' : f < 0 ? '−' : ''}${Math.abs(f).toFixed(1)}°`;
+  $('dial').setAttribute('aria-valuenow', f.toFixed(1));
+  if (!w) return;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const x = cv.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.clearRect(0, 0, w, h);
+  const mid = w / 2, base = h - 3, ink = getComputedStyle($('dial')).color;
+  x.fillStyle = ink;
+  for (let d = Math.ceil(f - mid / DIAL_PX); d <= f + mid / DIAL_PX; d++) {
+    if (d < -FINE_MAX || d > FINE_MAX) continue;
+    const px = mid + (d - f) * DIAL_PX;
+    const len = d % 10 === 0 ? 12 : d % 5 === 0 ? 9 : 5;
+    // the ticks fade toward the ends of the scale
+    x.globalAlpha = Math.max(0, 1 - Math.abs(px - mid) / mid) * (d % 5 === 0 ? 0.9 : 0.55);
+    x.fillRect(Math.round(px * dpr) / dpr - 0.5, base - len, 1, len);
+    if (d === 0) { x.beginPath(); x.arc(px, base - len - 3.5, 1.6, 0, Math.PI * 2); x.fill(); }
+  }
+  x.globalAlpha = 1;
+  x.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#c65a3c';
+  x.fillRect(mid - 1, base - 17, 2, 17);
+}
+
+function setTrimming(on) {
+  on = on && DRAWN_FRAMES.includes(frame);
+  if (on === trimming) return;
+  trimming = on;
+  $('viewport').classList.toggle('trimming', on);
+  $('dock').classList.toggle('trimming', on);
+  $('btnTrim').classList.toggle('on', on);
+  if (on) { resetZoom(); layout(); drawDial(); }
+}
+
+// The window's direction (窓の向き) for the film strip and the slide mounts, as the layout made it.
+function syncOrient(L) {
+  for (const b of document.querySelectorAll('#orientSeg button')) b.classList.toggle('on', (b.dataset.v === 'wide') === !!L.wide);
 }
 
 
@@ -329,7 +428,7 @@ async function setPhotoFromBlob(blob, keep = false) {
   photoSrc = blob;
   engine.setImage(c, w, h);
   $('resInfo').textContent = `${w} × ${h}`;
-  if (!keep) { resetZoom(); cropShift = { x: 0, y: 0 }; }
+  if (!keep) { resetZoom(); trim = { ...TRIM0 }; setTrimming(false); }
   layout();
   renderThumbs();
 }
@@ -384,7 +483,7 @@ function fallbackScene(keep = false) {
   x.fillStyle = '#c0282d'; x.fillRect(900, 230, 260, 220);
   photoSrc = 'scene';
   engine.setImage(c, W, H);
-  if (!keep) cropShift = { x: 0, y: 0 };
+  if (!keep) { trim = { ...TRIM0 }; setTrimming(false); }
   $('resInfo').textContent = `${W} × ${H}`;
   layout();
   renderThumbs();
@@ -713,7 +812,7 @@ function composeMount(style, mountW, g, img, small = false) {
 
 // Instant, film or slide mount: the frame drawn at the chosen width, the photo cropped into its window.
 async function saveDrawnFrame(iw, ih) {
-  const L = frameLayout(frame, iw, ih, cropShift);
+  const L = frameLayout(frame, iw, ih, trim);
   let mountW = saveLong || Math.round(L.crop.w / L.w);
   mountW = Math.min(mountW, Math.floor(Math.sqrt(16e6 / L.ratio)));
   const k = (L.w * mountW) / L.crop.w; // output pixels per photo pixel
@@ -730,21 +829,15 @@ async function saveDrawnFrame(iw, ih) {
 // A drawn frame W wide with the picture in its window and the light through it. img: the rendered
 // photo at any size (its scale is read per axis, so a rounded height cannot shift the crop).
 function composeFrame(W, L, img, text, light) {
-  const fx = img.width / engine.imgW, fy = img.height / engine.imgH;
-  const sx = L.crop.x * fx, sy = L.crop.y * fy, sw = L.crop.w * fx, sh = L.crop.h * fy;
   const out = document.createElement('canvas');
   out.width = W; out.height = Math.round(W * L.ratio);
   const x = out.getContext('2d');
   drawFrameUnder(x, W, L, text, light);
-  x.save();
-  x.beginPath(); x.rect(L.x * W, L.y * W, L.w * W, L.h * W); x.clip();
-  x.imageSmoothingQuality = 'high';
-  x.drawImage(img, sx, sy, sw, sh, L.x * W, L.y * W, L.w * W, L.h * W);
-  x.restore();
+  drawCrop(x, img, L, L.x * W, L.y * W, L.w * W, L.h * W);
   drawFrameShade(x, W, L);
   const g = document.createElement('canvas');
   g.width = 192; g.height = Math.max(1, Math.round(192 * L.crop.h / L.crop.w));
-  g.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, g.width, g.height);
+  drawCrop(g.getContext('2d'), img, L, 0, 0, g.width, g.height);
   drawFrameOver(x, W, L, { glow: transmissionGlow(g), scatter: transmissionScatter(g) }, light);
   return out;
 }
@@ -783,9 +876,9 @@ function drawTiles() {
       const g = mountLayout(engine.imgW, engine.imgH);
       pic = composeMount(style, TILE_W, g, renderedPhoto(Math.max(16, Math.round(g.w * TILE_W)), -1), true);
     } else {
-      const L = frameLayout(style, engine.imgW, engine.imgH, cropShift);
+      const L = frameLayout(style, engine.imgW, engine.imgH, trim);
       const light = LIGHT_FRAMES.includes(style) ? slideLight : -1;
-      pic = composeFrame(TILE_W, L, renderedPhoto(Math.max(16, Math.ceil(TILE_W * L.w * engine.imgW / L.crop.w)), light), frameText(), slideLight);
+      pic = composeFrame(TILE_W, L, renderedPhoto(Math.min(engine.imgW, Math.max(16, Math.ceil(TILE_W * L.w * engine.imgW / L.crop.w))), light), frameText(), slideLight);
     }
     const c = b.querySelector('canvas');
     c.width = pic.width; c.height = pic.height;
@@ -893,6 +986,7 @@ function initUI() {
   try { if (localStorage.getItem('filmea-hinted')) hint.classList.add('gone'); } catch {}
   const pressEnd = () => { clearTimeout(pressTimer); if (holdBtn) { holdBtn = false; $('btnHold').classList.toggle('on', holdKey); requestRender(); } };
   box.addEventListener('pointerdown', (e) => {
+    if (trimming) return; // the stage takes the photo in the トリミング mode
     if (!splitOn) {
       // long-press on the photo shows the original, like photo editors on phones
       box.setPointerCapture(e.pointerId);
@@ -901,7 +995,7 @@ function initUI() {
         hint.classList.add('gone');
         try { localStorage.setItem('filmea-hinted', '1'); } catch {}
       }, 170);
-      if (DRAWN_FRAMES.includes(frame) && zoom.s === 1) cropDrag = { x: e.clientX, y: e.clientY, sx: cropShift.x, sy: cropShift.y, moved: false };
+      if (DRAWN_FRAMES.includes(frame) && zoom.s === 1) cropDrag = { x: e.clientX, y: e.clientY, snap: trimSnap({ x: e.clientX, y: e.clientY }), moved: false };
       return;
     }
     dragging = true;
@@ -914,14 +1008,7 @@ function initUI() {
     const dx = e.clientX - cropDrag.x, dy = e.clientY - cropDrag.y;
     if (!cropDrag.moved && Math.hypot(dx, dy) < 6) return;
     if (!cropDrag.moved) { pressEnd(); cropDrag.moved = true; } // moving the photo, not holding for the original
-    // the photo follows the finger: shift is in halves of the room the crop has on each axis
-    const c0 = frameLayout(frame, engine.imgW, engine.imgH).crop;
-    const hx = (engine.imgW - c0.w) / 2, hy = (engine.imgH - c0.h) / 2;
-    const clamp = (v) => Math.max(-1, Math.min(1, v));
-    cropShift = { x: hx > 0.5 ? clamp(cropDrag.sx - dx / cropScale / hx) : 0, y: hy > 0.5 ? clamp(cropDrag.sy - dy / cropScale / hy) : 0 };
-    placeCrop(frameLayout(frame, engine.imgW, engine.imgH, cropShift));
-    refreshGlow();
-    refreshTiles();
+    trimMove(cropDrag.snap, { x: e.clientX, y: e.clientY }); // the photo follows the finger
   });
   const end = () => { dragging = false; cropDrag = null; pressEnd(); };
   box.addEventListener('pointerup', end);
@@ -954,7 +1041,32 @@ function initUI() {
       if (want !== zoomRes) { zoomRes = want; layout(); }
     }, 150);
   };
+  // In the トリミング mode the stage takes every pointer, mouse too: one drags the photo in the window,
+  // two pinch it larger or smaller about their midpoint; the wheel zooms about the cursor.
+  const tpts = new Map();
+  let tg = null;
+  const trimBegin = () => {
+    const p = [...tpts.values()];
+    tg = { n: p.length, d0: p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0, snap: trimSnap(midOf(p)) };
+  };
+  const trimLift = (e) => {
+    if (!tpts.delete(e.pointerId)) return false;
+    if (tpts.size) trimBegin(); else tg = null;
+    return true;
+  };
+  stage.addEventListener('wheel', (e) => {
+    if (!trimming) return;
+    e.preventDefault();
+    const m = { x: e.clientX, y: e.clientY }, dy = e.deltaY * (e.deltaMode === 1 ? 16 : 1);
+    trimMove(trimSnap(m), m, Math.exp(-dy * 0.0015));
+  }, { passive: false });
   stage.addEventListener('pointerdown', (e) => {
+    if (trimming) {
+      try { stage.setPointerCapture(e.pointerId); } catch {}
+      tpts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (tpts.size <= 2) trimBegin();
+      return;
+    }
     if (e.pointerType !== 'touch') return;
     try { if (!box.hasPointerCapture(e.pointerId)) stage.setPointerCapture(e.pointerId); } catch {}
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -962,6 +1074,14 @@ function initUI() {
     if (pts.size <= 2) begin();
   });
   stage.addEventListener('pointermove', (e) => {
+    if (tpts.has(e.pointerId)) {
+      tpts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const p = [...tpts.values()];
+      if (!tg || !trimming) return;
+      if (tg.n >= 2 && p.length >= 2) trimMove(tg.snap, midOf(p), Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) / tg.d0);
+      else if (tg.n === 1) trimMove(tg.snap, p[0]);
+      return;
+    }
     if (!pts.has(e.pointerId) || !gesture) return;
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const p = [...pts.values()];
@@ -982,6 +1102,7 @@ function initUI() {
     applyZoom();
   });
   const lift = (e) => {
+    if (trimLift(e)) return;
     if (!pts.has(e.pointerId)) return;
     const tap = gesture && gesture.n === 1 && !gesture.moved;
     pts.delete(e.pointerId);
@@ -1037,10 +1158,12 @@ function initUI() {
       $(body).hidden = !mine;
       $(state).textContent = mine ? list.find(([x]) => x === frame)[1] : 'なし';
     }
-    const checks = $('textChecks'), note = $('cropNote');
+    const checks = $('textChecks'), cropCtrl = $('cropCtrl');
     checks.hidden = !sec;
-    note.hidden = !drawn;
-    if (sec) { $(sec[2]).appendChild(note); $(sec[2]).appendChild(checks); }
+    cropCtrl.hidden = !drawn;
+    $('orientCtrl').hidden = !isSlide(); // the window's direction: the film strip and the slide mounts only
+    if (sec) { $(sec[2]).appendChild(cropCtrl); $(sec[2]).appendChild(checks); }
+    if (!drawn) setTrimming(false);
     $('viewport').classList.toggle('framed', frame !== 'none');
     $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`) + (drawn ? ' drawn' : '');
     saveState();
@@ -1059,6 +1182,46 @@ function initUI() {
       $(id).appendChild(b);
     }
   }
+  $('orientSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    trim = { ...trim, orient: b.dataset.v };
+    trimChanged(true);
+  });
+  $('btnTrim').addEventListener('click', () => setTrimming(!trimming));
+  $('btnTrimDone').addEventListener('click', () => setTrimming(false));
+  $('btnTrimReset').addEventListener('click', () => { trim = { ...TRIM0, orient: trim.orient }; trimChanged(true); });
+  $('btnTurn').addEventListener('click', () => { trim = { ...trim, q: (trim.q + 1) % 4 }; trimChanged(true); });
+  // the dial: drag the scale; a double tap or double click on the number puts it back to 0
+  const dial = $('dial');
+  let dd = null, valTap = 0;
+  dial.addEventListener('pointerdown', (e) => {
+    dial.setPointerCapture(e.pointerId);
+    dd = { x: e.clientX, f: trim.fine, moved: false, onVal: $('dialVal').contains(e.target) };
+  });
+  dial.addEventListener('pointermove', (e) => {
+    if (!dd) return;
+    const dx = e.clientX - dd.x;
+    if (!dd.moved && Math.abs(dx) < 3) return;
+    dd.moved = true;
+    setFine(dd.f - dx / DIAL_PX);
+  });
+  const dialUp = (e) => {
+    if (dd && !dd.moved && dd.onVal && e.type === 'pointerup') {
+      if (e.timeStamp - valTap < 350) { setFine(0); valTap = 0; } else valTap = e.timeStamp;
+    }
+    dd = null;
+  };
+  dial.addEventListener('pointerup', dialUp);
+  dial.addEventListener('pointercancel', dialUp);
+  // ← → turn by 0.1°, with Shift by 1°, while the mode is on (the panel's sliders keep their keys)
+  window.addEventListener('keydown', (e) => {
+    if (!trimming || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.target.tagName === 'INPUT') return;
+    e.preventDefault();
+    setFine(trim.fine + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 1 : 0.1));
+  });
+  window.addEventListener('resize', drawDial);
+
   $('s-light').addEventListener('input', (e) => {
     slideLight = +e.target.value / 100;
     $('v-light').textContent = e.target.value;

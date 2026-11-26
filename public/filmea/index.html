@@ -85,7 +85,7 @@
       <div class="frame-date" id="frameDate"></div>
     </div>
 
-    <div class="dock">
+    <div class="dock" id="dock">
       <button class="db" id="btnSplit" aria-label="左右で比べる" data-tip="左右で比べる">
         <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 7a2 2 0 0 1 2-2H12v14H5.5a2 2 0 0 1-2-2z" fill="currentColor" opacity=".35"/><path d="M12 3v18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
@@ -106,6 +106,19 @@
         <canvas id="hist" width="640" height="150"></canvas>
         <div class="hist-foot"><span class="mono" id="activeCode">--</span><span class="mono" id="resInfo">-- × --</span></div>
       </details>
+      <!-- the トリミング mode puts these in the dock instead: a quarter turn, the dial for the fine angle -->
+      <div class="trim-bar">
+        <button class="db" id="btnTurn" aria-label="90°回転" data-tip="90°回転">
+          <svg viewBox="0 0 24 24"><rect x="4" y="9" width="11" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 4.5h3.5a6 6 0 0 1 6 6V13m0 0l-2.6-2.6M19.5 13l2.6-2.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="sep"></span>
+        <div class="dial" id="dial" tabindex="0" role="slider" aria-label="角度" aria-valuemin="-45" aria-valuemax="45" aria-valuenow="0" data-tip="ドラッグで角度（← → で 0.1°）">
+          <canvas id="dialCanvas"></canvas><span class="dial-val" id="dialVal">0.0°</span>
+        </div>
+        <span class="sep"></span>
+        <button class="dt" id="btnTrimReset">リセット</button>
+        <button class="dt dt-on" id="btnTrimDone">完了</button>
+      </div>
     </div>
 
     <div class="drop-hint" id="dropHint"><div>写真、または .cube / HaldCLUT / .lut16 をここに</div></div>
@@ -131,8 +144,12 @@
           <div class="ftiles" id="filmTiles" role="radiogroup" aria-label="フィルム化"></div>
           <div class="fbody" id="filmBody" hidden>
             <div class="ctrl" id="lightCtrl" hidden><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
-            <!-- the crop note and the text checks sit in whichever row holds the chosen frame -->
-            <p class="crop-note" id="cropNote" hidden>写真をドラッグすると、切り取る位置を動かせます</p>
+            <!-- the crop controls and the text checks sit in whichever row holds the chosen frame -->
+            <div class="crop-ctrl" id="cropCtrl" hidden>
+              <div class="orient" id="orientCtrl" hidden><span class="seg-label">窓の向き</span><div class="seg" id="orientSeg" role="radiogroup" aria-label="窓の向き"><button data-v="wide">横</button><button data-v="upright">縦</button></div></div>
+              <p class="crop-note" id="cropNote">写真をドラッグすると、切り取る位置を動かせます</p>
+              <button class="trim-btn" id="btnTrim">トリミング</button>
+            </div>
             <div class="text-checks" id="textChecks" hidden>
               <p class="seg-label">枠に入れる文字</p>
               <label class="check"><input type="checkbox" id="captionCheck" checked><span>色名を入れる</span></label>

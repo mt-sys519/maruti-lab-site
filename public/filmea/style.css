@@ -185,6 +185,21 @@ svg { display: block; }
 .hist-pop[open] { padding: 10px; border-radius: 14px; background: var(--dock); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 30px rgba(0, 0, 0, .35); }
 .hist-pop #hist { width: 100%; height: 80px; border-radius: 8px; background: rgba(0, 0, 0, .35); display: block; }
 .hist-foot { display: flex; justify-content: space-between; font-size: 10.5px; padding: 7px 2px 0; opacity: .75; }
+/* the トリミング mode: the dock holds the turn, the dial, リセット and 完了 instead */
+.trim-bar { display: none; align-items: center; gap: 4px; }
+.dock.trimming > :not(.trim-bar) { display: none; }
+.dock.trimming .trim-bar { display: flex; }
+.dial { position: relative; width: 240px; height: 40px; touch-action: none; cursor: ew-resize; color: var(--dock-ink); border-radius: 8px; outline: none; user-select: none; -webkit-user-select: none; }
+.dial:focus-visible { box-shadow: 0 0 0 2px rgba(255, 255, 255, .35); }
+.dial canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.dial-val {
+  position: absolute; left: 50%; top: 1px; transform: translateX(-50%); padding: 1px 8px;
+  font: 500 11px/14px "DM Mono", monospace; white-space: nowrap; cursor: pointer;
+}
+.dt { height: 36px; padding: 0 11px; border: none; border-radius: 10px; background: none; color: inherit; font-size: 12.5px; white-space: nowrap; }
+.dt:hover { background: rgba(255, 255, 255, .08); }
+.dt-on { background: var(--dock-ink); color: #1c1916; font-weight: 700; }
+.dt-on:hover { background: var(--dock-ink); filter: brightness(1.05); }
 
 .drop-hint {
   position: absolute; inset: 14px; z-index: 20; border: 2px dashed var(--accent); border-radius: 18px;
@@ -302,12 +317,25 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .ftile.on .fname span { font-weight: 700; }
 .fbody { padding-top: 14px; }
 .fbody[hidden] { display: none; }
-.text-checks[hidden], .crop-note[hidden] { display: none; }
+.text-checks[hidden], .crop-ctrl[hidden], .orient[hidden] { display: none; }
 .crop-note { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
-.ctrl:not([hidden]) + .crop-note { margin-top: 12px; }
+.ctrl:not([hidden]) + .crop-ctrl { margin-top: 12px; }
+/* 窓の向き: a small 横｜縦 switch on one line with its label */
+.orient { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.orient .seg-label { margin: 0; }
+.orient .seg { width: 132px; flex: none; }
+.orient .seg button { height: 26px; }
+.trim-btn {
+  margin-top: 10px; height: 32px; padding: 0 14px; border-radius: 9px; font-size: 12.5px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+}
+.trim-btn:hover { border-color: var(--faint); }
+.trim-btn.on { background: var(--text); border-color: var(--text); color: var(--surface); }
 .stage.drawn .canvas-box { cursor: grab; }
+.viewport.trimming .stage { cursor: grab; }
+.viewport.trimming .hint { opacity: 0; }
 .fbody .ctrl { margin-bottom: 0; }
-.ctrl:not([hidden]) + .text-checks, .crop-note:not([hidden]) + .text-checks { margin-top: 14px; }
+.ctrl:not([hidden]) + .text-checks, .crop-ctrl:not([hidden]) + .text-checks { margin-top: 14px; }
 .text-checks .seg-label { margin: 0; }
 /* with a frame on, the frame prints the look: its label leaves the photo */
 .viewport.framed .look-label { display: none; }
@@ -372,6 +400,8 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
   .dock { bottom: 12px; padding: 4px; gap: 2px; }
   .db { width: 38px; height: 38px; }
   .amount input[type="range"] { width: 90px; }
+  .dial { width: clamp(100px, calc(100vw - 236px), 200px); }
+  .dt { padding: 0 9px; }
   [data-tip]:hover::after { display: none; }
   .hint { bottom: calc(10px + var(--crop-b, 0px)); }
   .panel { width: 100%; flex: 1; border-left: none; border-top: 1px solid var(--line); }

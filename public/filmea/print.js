@@ -22,7 +22,7 @@ export function mountLayout(pw, ph) {
 
 // ---------- film and slide frames ----------
 // Not Instagram shapes: these keep the real thing's proportions. Sizes are millimetres of the
-// real thing, scaled to the canvas. Both crop the photo (centred) to their own window.
+// real thing, scaled to the canvas. Both crop the photo to their own window (see fitCrop).
 //
 // Film: one frame of 135 slide film, scanned edge to edge: 38 mm of strip (one frame pitch) by its
 // 35 mm width, the 36×24 frame in the middle. Kodak Standard perforations: 1.98 mm along the film by
@@ -52,26 +52,47 @@ const INSTAX_TOP = 6.5;
 export const DRAWN_FRAMES = ['instant', 'film', 'slide', 'slidecard'];
 export const LIGHT_FRAMES = ['film', 'slide', 'slidecard'];
 
+// How the photo sits in a drawn frame's window (トリミング). q: quarter turns clockwise; fine: degrees
+// on top of them (-45..45); zoom: 1 is the largest crop the window can take at that angle; x, y: the
+// crop's centre as fractions of the photo; orient: the window 'wide' or 'upright', null to follow the
+// photo's shape (as turned; a square photo gets a wide window).
+export const TRIM0 = { q: 0, fine: 0, zoom: 1, x: 0.5, y: 0.5, orient: null };
+export const TRIM_ZOOM_MAX = 8;
+
+// The crop of aspect A (width / height, as the window shows it) for a photo pw×ph turned by the trim:
+// cx, cy its centre and w, h its size in photo pixels, angle the turn in radians (clockwise on screen).
+// It is as large as fits at that angle, divided by the zoom, and its centre is held where the turned
+// crop stays on the photo, so the window never shows past the photo's edge.
+export function fitCrop(pw, ph, A, trim) {
+  const angle = ((trim.q || 0) * 90 + (trim.fine || 0)) * Math.PI / 180;
+  const c = Math.abs(Math.cos(angle)), s = Math.abs(Math.sin(angle));
+  const h = Math.min(pw / (A * c + s), ph / (A * s + c)) / Math.max(1, trim.zoom || 1), w = A * h;
+  // the turned crop's half extent along the photo's axes
+  const ex = (w * c + h * s) / 2, ey = (w * s + h * c) / 2;
+  const cx = Math.min(pw - ex, Math.max(ex, (trim.x ?? 0.5) * pw));
+  const cy = Math.min(ph - ey, Math.max(ey, (trim.y ?? 0.5) * ph));
+  return { cx, cy, w, h, angle };
+}
+
 // x, y, w, h: the photo's window, as fractions of the canvas width. ratio: canvas height / width.
-// crop: the part of the photo the window shows; shift moves it off centre, -1..1 of the room there is
-// along each side (-1 the left or top edge, 1 the right or bottom).
-export function frameLayout(style, pw, ph, shift = { x: 0, y: 0 }) {
+// crop: the part of the photo the window shows (see fitCrop); white and black mounts show it all.
+export function frameLayout(style, pw, ph, trim = TRIM0) {
   if (style === 'white' || style === 'dark') {
     const g = mountLayout(pw, ph);
-    return { ...g, crop: { x: 0, y: 0, w: pw, h: ph } };
+    return { ...g, crop: { cx: pw / 2, cy: ph / 2, w: pw, h: ph, angle: 0 } };
   }
-  const cropTo = (aspect) => {
-    if (pw / ph > aspect) { const w = ph * aspect; return { x: (pw - w) / 2 * (1 + (shift.x || 0)), y: 0, w, h: ph }; }
-    const h = pw / aspect; return { x: 0, y: (ph - h) / 2 * (1 + (shift.y || 0)), w: pw, h };
-  };
+  const tr = { ...TRIM0, ...trim };
+  // the photo's shape once turned, which picks the window's own shape
+  const turned = tr.q % 2 === 1, rw = turned ? ph : pw, rh = turned ? pw : ph;
+  const cropTo = (aspect) => fitCrop(pw, ph, aspect, tr);
   if (style === 'instant') {
-    const a = pw / ph;
+    const a = rw / rh;
     const kind = a < 0.9 ? 'mini' : a > 1.15 ? 'wide' : 'square';
     const f = INSTAX[kind], u = 1 / f.w;
     return { style, kind, mm: u, ratio: f.h / f.w, x: (f.w - f.iw) / 2 * u, y: INSTAX_TOP * u, w: f.iw * u, h: f.ih * u, crop: cropTo(f.iw / f.ih) };
   }
   if (style === 'slide' || style === 'slidecard') {
-    const wide = pw >= ph, u = 1 / SLIDE.size;
+    const wide = tr.orient ? tr.orient === 'wide' : rw >= rh, u = 1 / SLIDE.size;
     const w = wide ? SLIDE.wl : SLIDE.ws, h = wide ? SLIDE.ws : SLIDE.wl;
     const win = { x: (SLIDE.size - w) / 2 * u, y: (SLIDE.size - h) / 2 * u, w: w * u, h: h * u };
     // The window's cut edge shows as a thin shade round the picture, the same width on all four sides.
@@ -81,7 +102,7 @@ export function frameLayout(style, pw, ph, shift = { x: 0, y: 0 }) {
     const pic = { x: win.x + l, y: win.y + t, w: win.w - l - r, h: win.h - t - b };
     return { style, wide, mm: u, ratio: 1, ...pic, win, crop: cropTo(pic.w / pic.h) };
   }
-  const wide = pw >= ph;
+  const wide = tr.orient ? tr.orient === 'wide' : rw >= rh;
   const W = wide ? FILM.pitch : FILM.across, u = 1 / W;
   const along = (FILM.pitch - FILM.frameL) / 2, across = (FILM.across - FILM.frameS) / 2;
   const win = wide ? { x: along * u, y: across * u, w: FILM.frameL * u, h: FILM.frameS * u }
