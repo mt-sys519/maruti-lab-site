@@ -41,6 +41,7 @@ uniform float u_grain;       // 0..1
 uniform float u_grainSize;   // grain cell in image pixels
 uniform float u_vignette;    // 0..1
 uniform float u_light;       // < 0 off; 0..1 the light box behind a slide or film frame (光の強さ)
+uniform float u_mtf;         // 0 off; else image px per mm of film: the picture as slide film resolves it
 
 vec3 toLin(vec3 s) {
   return mix(pow((s + 0.055) / 1.055, vec3(2.4)), s / 12.92, vec3(lessThanEqual(s, vec3(0.04045))));
@@ -127,6 +128,53 @@ float vnoise(vec2 p) {
   return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
 }
 
+// The sharpness of slide film, from FUJICHROME PROVIA 100F's data sheet MTF (read from its chart, the
+// trial in filmea-blender/mtf.py): about 114% from 1 to 10 cycles/mm (development's adjacency effect,
+// the film's own crispness in outlines and textures), 94% at 20, 73% at 30, 51% at 40, 35% at 50, 26% at
+// 60, so the finest detail falls away softly instead of staying crisp to the last pixel. Two parts, in
+// linear light: a 0.0049 mm Gaussian for the fall (fits 20–60 cycles/mm), and 14% of the difference from a
+// 0.34 mm blur for the rise. On screen the canvas is already smaller than the photo, so only the rise is
+// added there; the saved file gets both. u_mtf: image pixels per millimetre of the film frame.
+vec3 filmMtf(vec3 src, vec2 uv) {
+  vec2 texel = 1.0 / u_imgSize;
+  vec3 fine = toLin(src);
+  float sr = 0.0049 * u_mtf;
+  if (u_exact == 1 && sr > 0.1) {
+    // separable 5 taps: the Gaussian itself when it spans a pixel or more; below that a 3-tap kernel
+    // whose response matches the Gaussian's at a quarter cycle per pixel (sampling it would lose it)
+    float k[5];
+    if (sr < 0.6) {
+      float a = 0.5 * (1.0 - exp(-19.739 * sr * sr / 16.0));
+      k[0] = 0.0; k[1] = a; k[2] = 1.0 - 2.0 * a; k[3] = a; k[4] = 0.0;
+    } else {
+      float s = 0.0;
+      for (int i = 0; i < 5; i++) { k[i] = exp(-float((i - 2) * (i - 2)) / (2.0 * sr * sr)); s += k[i]; }
+      for (int i = 0; i < 5; i++) k[i] /= s;
+    }
+    vec3 acc = vec3(0.0);
+    for (int j = 0; j < 5; j++) {
+      for (int i = 0; i < 5; i++) {
+        float w = k[i] * k[j];
+        if (w > 0.0) acc += w * toLin(texture(u_img, uv + vec2(float(i - 2), float(j - 2)) * texel).rgb);
+      }
+    }
+    fine = acc;
+  }
+  float sl = 0.34 * u_mtf;              // the wide blur, in image pixels
+  float d = sl / 1.2;                   // tap spacing of a 5x5 Gaussian
+  float lod = max(0.0, log2(d * 0.5));  // read from the mip level whose texels are about half a step
+  vec3 wide = vec3(0.0); float ws = 0.0;
+  for (int j = -2; j <= 2; j++) {
+    for (int i = -2; i <= 2; i++) {
+      float w = exp(-0.347 * float(i * i + j * j));
+      wide += w * toLin(textureLod(u_img, uv + vec2(float(i), float(j)) * d * texel, lod).rgb);
+      ws += w;
+    }
+  }
+  wide /= ws;
+  return toSrgb(max(fine + 0.14 * (fine - wide), 0.0));
+}
+
 void main() {
   vec2 px;   // image pixel coordinate, origin top-left
   vec3 src;
@@ -147,6 +195,8 @@ void main() {
     outColor = vec4(src, 1.0);
     return;
   }
+
+  if (u_mtf > 0.0) src = filmMtf(src, uvImg);
 
   // Pre-LUT adjustments, in linear light. Skipped entirely at their defaults so the
   // LUT sees the photo's exact 8-bit values (no sRGB round-trip rounding).
@@ -187,7 +237,7 @@ export class Engine {
     this.gl = gl;
     this.lut = null;
     this.imgW = 0; this.imgH = 0;
-    this.params = { intensity: 1, exposure: 0, wb: 0, grain: 0, vignette: 0, light: -1 };
+    this.params = { intensity: 1, exposure: 0, wb: 0, grain: 0, vignette: 0, light: -1, mtf: 0 };
     // map: [mapX, mapY] for the screen canvas (see u_mapX), null to show the whole photo
     this.view = { splitX: 0.5, bypass: false, map: null };
     this._init();
@@ -314,6 +364,7 @@ export class Engine {
     gl.uniform1f(L.u_grainSize, Math.max(1, Math.max(this.imgW, this.imgH) / 2600, this._grainCellMin || 0));
     gl.uniform1f(L.u_vignette, p.vignette);
     gl.uniform1f(L.u_light, p.light ?? -1);
+    gl.uniform1f(L.u_mtf, p.mtf || 0);
   }
 
   render() {
@@ -364,7 +415,7 @@ export class Engine {
     const keep = { lut: this.lut, tex: this.lutTex, params: { ...this.params } };
     this.lutTex = this.thumbLutTex;
     this.setLut(lut);
-    Object.assign(this.params, { intensity: 1, grain: 0, exposure: 0, wb: 0, vignette: 0, light: -1 });
+    Object.assign(this.params, { intensity: 1, grain: 0, exposure: 0, wb: 0, vignette: 0, light: -1, mtf: 0 });
     const px = this.readSmall(w, h);
     this.lut = keep.lut; this.lutTex = keep.tex; this.params = keep.params;
     const out = new Uint8ClampedArray(w * h * 4);

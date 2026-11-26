@@ -131,6 +131,7 @@ function layout() {
   Object.assign(crop.style, { left: '', top: '', width: '', height: '' });
   Object.assign(box.style, { left: '', top: '' });
   engine.params.light = -1;
+  engine.params.mtf = 0;
   for (const k of ['l', 't', 'r', 'b']) box.style.removeProperty(`--crop-${k}`);
   let s, cssW = 0, cssH = 0;
   engine.view.map = null;
@@ -151,6 +152,9 @@ function layout() {
     placeCrop(L);
     syncOrient(L);
     engine.params.light = isSlide() ? slideLight : -1;
+    // on slide film the picture takes the film's sharpness: how many of the photo's pixels make a
+    // millimetre of the frame (the window's width in mm is L.w / L.mm)
+    engine.params.mtf = isSlide() ? L.crop.w * L.mm / L.w : 0;
     drawArt();
   } else if (frame !== 'none') {
     // the 4:5 mount as it will be saved, the photo (its crop) placed by mountLayout
