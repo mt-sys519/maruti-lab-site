@@ -181,6 +181,28 @@ export class Engine {
     const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false, premultipliedAlpha: false });
     if (!gl) throw new Error('WebGL2 is not available in this browser');
     this.gl = gl;
+    this.lut = null;
+    this.imgW = 0; this.imgH = 0;
+    this.params = { intensity: 1, exposure: 0, wb: 0, grain: 0, vignette: 0, light: -1 };
+    this.view = { splitX: 0.5, bypass: false };
+    this._init();
+    // The GPU can drop the context (a photo too large for its memory, the app sent to the background).
+    // Without preventDefault the browser never gives it back and nothing draws until the page is
+    // reopened; with it, the context returns, everything is rebuilt here, and onRestored puts the photo
+    // back (the engine keeps no copy of it).
+    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.onLost?.(); });
+    canvas.addEventListener('webglcontextrestored', () => {
+      this._init();
+      if (this.lut) this.setLut(this.lut);
+      this.onRestored?.();
+    });
+  }
+
+  get lost() { return this.gl.isContextLost(); }
+
+  // Everything that lives on the GPU; run again when a lost context comes back.
+  _init() {
+    const gl = this.gl;
     this.prog = this._program(VS, FS);
     this.loc = {};
     const n = gl.getProgramParameter(this.prog, gl.ACTIVE_UNIFORMS);
@@ -199,10 +221,8 @@ export class Engine {
 
     this.imgTex = gl.createTexture();
     this.lutTex = gl.createTexture();
-    this.lut = null;
-    this.imgW = 0; this.imgH = 0;
-    this.params = { intensity: 1, exposure: 0, wb: 0, grain: 0, vignette: 0, light: -1 };
-    this.view = { splitX: 0.5, bypass: false };
+    this.thumbLutTex = null;
+    this._smalls = null; this._small = null;
     this.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
   }
 
@@ -348,6 +368,8 @@ export class Engine {
   // outLong: the long side the result will be shrunk to, if any. Grain cells are kept at least one
   // output pixel wide so shrinking does not average the grain away.
   renderFull(outLong = 0) {
+    // a lost context reads every size as 0, and the tile loop below would never end
+    if (this.lost) throw new Error('描画を立て直しています。少し待ってからもう一度保存してください');
     this._grainCellMin = outLong ? Math.max(this.imgW, this.imgH) / outLong : 0;
     try { return this._renderFull(); } finally { this._grainCellMin = 0; }
   }

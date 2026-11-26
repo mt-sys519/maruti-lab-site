@@ -311,7 +311,12 @@ function drawHistogram() {
 }
 
 // ---------- images ----------
-async function setPhotoFromBlob(blob) {
+// The photo on screen, so it can be put back when the GPU context comes back: the file itself, or
+// 'scene' for the drawn fallback.
+let photoSrc = null;
+
+// keep: the same photo put back after a lost context, the zoom and crop left as they were.
+async function setPhotoFromBlob(blob, keep = false) {
   photoDate = (await readExifDate(blob)) || (blob.lastModified ? new Date(blob.lastModified) : new Date());
   const bmp = await createImageBitmap(blob, { imageOrientation: 'from-image' });
   let w = bmp.width, h = bmp.height;
@@ -321,10 +326,10 @@ async function setPhotoFromBlob(blob) {
   c.width = w; c.height = h;
   c.getContext('2d').drawImage(bmp, 0, 0, w, h);
   bmp.close?.();
+  photoSrc = blob;
   engine.setImage(c, w, h);
   $('resInfo').textContent = `${w} × ${h}`;
-  resetZoom();
-  cropShift = { x: 0, y: 0 };
+  if (!keep) { resetZoom(); cropShift = { x: 0, y: 0 }; }
   layout();
   renderThumbs();
 }
@@ -341,7 +346,28 @@ async function loadSample(i) {
   }
 }
 
-function fallbackScene() {
+// A lost GPU context comes back empty: put the photo back. A context lost again within a few seconds
+// of putting it back means the photo itself is too much for the GPU; it is not tried a third time, and
+// the next photo chosen is shown as usual.
+let putBackAt = -1e9, giveUp = false;
+function onContextLost() {
+  giveUp = performance.now() - putBackAt < 5000;
+}
+function onContextRestored() {
+  if (giveUp) {
+    giveUp = false;
+    engine.imgW = engine.imgH = 0;
+    photoSrc = null;
+    $('thumbs').innerHTML = '';
+    toast('この写真は大きすぎて表示できませんでした。別の写真を選んでください', true);
+    return;
+  }
+  putBackAt = performance.now();
+  if (photoSrc === 'scene') fallbackScene(true);
+  else if (photoSrc) setPhotoFromBlob(photoSrc, true).catch((e) => toast(e.message, true));
+}
+
+function fallbackScene(keep = false) {
   const W = 1500, H = 1000;
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
@@ -356,8 +382,9 @@ function fallbackScene() {
   sk.addColorStop(0, '#f6d2bd'); sk.addColorStop(0.6, '#d9a283'); sk.addColorStop(1, '#9a6248');
   x.fillStyle = sk; x.beginPath(); x.arc(430, 350, 160, 0, Math.PI * 2); x.fill();
   x.fillStyle = '#c0282d'; x.fillRect(900, 230, 260, 220);
+  photoSrc = 'scene';
   engine.setImage(c, W, H);
-  cropShift = { x: 0, y: 0 };
+  if (!keep) cropShift = { x: 0, y: 0 };
   $('resInfo').textContent = `${W} × ${H}`;
   layout();
   renderThumbs();
@@ -1121,6 +1148,8 @@ function boot() {
     toast(e.message, true);
     return;
   }
+  engine.onLost = onContextLost;
+  engine.onRestored = onContextRestored;
   window.__filmea = { engine, get presets() { return presets; } };
   initUI();
   fallbackScene();
