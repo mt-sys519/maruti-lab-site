@@ -234,8 +234,10 @@ function mountArt(L) {
   return MOUNT_ART[`${L.style}-${L.wide ? 'wide' : 'upright'}`];
 }
 
-// The shade of a mount's window on the picture: drawn over the picture, under the light's glow.
+// Over the picture, under the light's glow: the shade of a mount's window, or on the film strip the light
+// box's unevenness that shows through the rebate too.
 export function drawFrameShade(ctx, W, L) {
+  if (L.style === 'film') { filmLight(ctx, W, L, true); return; }
   const art = (L.style === 'slide' || L.style === 'slidecard') && mountArt(L);
   if (art) ctx.drawImage(art.shade, L.win.x * W, L.win.y * W, L.win.w * W, L.win.h * W);
 }
@@ -412,28 +414,97 @@ function filmBleed(ctx, W, L, glow, strength) {
   ctx.restore();
 }
 
+// The film's base, as each kind looks on a light box. black: reversal film's unexposed rebate (measured:
+// about 21% of the table's white, L 51 of 238), the edge print exposed in light. brown: a colour negative's
+// orange mask, its edge print exposed in dark. clear: a clear base (black-and-white film), dark print.
+const FILM_BASES = {
+  black: { ink: 'rgb(214,198,92)', glow: 'rgba(255,170,60,0.45)' }, // print measured on the slide strip: (208,197,90)
+  brown: { rgb: [214, 112, 44], ink: 'rgb(92,36,12)' },
+  clear: { rgb: [228, 230, 228], ink: 'rgb(62,62,60)' },
+};
+
+// The light box behind the strip is not perfectly even: brighter in the middle, a soft mottle from its
+// diffuser. The film lets it through, the rebate and the picture alike, which is what makes the film read
+// as something light passes through rather than a flat print. One fixed pattern (seeded), so it does not
+// change from one redraw to the next; black, its alpha the light that is missing. Along x the strip's
+// length, along y its width.
+let lightFieldCanvas = null;
+function lightField() {
+  if (lightFieldCanvas) return lightFieldCanvas;
+  const w = 76, h = 70, c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const x = c.getContext('2d'), d = x.createImageData(w, h);
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const g = 10, grid = Array.from({ length: (g + 1) * (g + 1) }, rnd); // value noise, smoothed
+  const sm = (t) => t * t * (3 - 2 * t);
+  const at = (u, v) => {
+    const fu = u * g, fv = v * g, i = Math.min(g - 1, Math.floor(fu)), j = Math.min(g - 1, Math.floor(fv));
+    const a = sm(fu - i), b = sm(fv - j);
+    const p = (ii, jj) => grid[jj * (g + 1) + ii];
+    return (p(i, j) * (1 - a) + p(i + 1, j) * a) * (1 - b) + (p(i, j + 1) * (1 - a) + p(i + 1, j + 1) * a) * b;
+  };
+  for (let yy = 0; yy < h; yy++) {
+    for (let xx = 0; xx < w; xx++) {
+      const u = (xx + 0.5) / w, v = (yy + 0.5) / h;
+      const r2 = ((u - 0.5) * 2) ** 2 + ((v - 0.5) * 2) ** 2;
+      const light = (1 - 0.05 * r2) * (1 - 0.035 * at(u, v)); // up to ~10% less light at the corners
+      d.data[(yy * w + xx) * 4 + 3] = Math.round((1 - light) * 255);
+    }
+  }
+  x.putImageData(d, 0, 0);
+  return (lightFieldCanvas = c);
+}
+// Lay the light box's unevenness over the whole strip, or over its window only. ctx unrotated.
+function filmLight(ctx, W, L, windowOnly) {
+  const H = W * L.ratio;
+  ctx.save();
+  if (windowOnly) { ctx.beginPath(); ctx.rect(L.x * W, L.y * W, L.w * W, L.h * W); ctx.clip(); }
+  if (!L.wide) { ctx.translate(W, 0); ctx.rotate(Math.PI / 2); }
+  const len = L.wide ? W : H, wid = L.wide ? H : W;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(lightField(), 0, 0, len, wid);
+  ctx.restore();
+}
+
 function filmUnder(ctx, W, L, text, strength = 0.6) {
   const H = W * L.ratio, mm = L.mm * W;
+  const kind = FILM_BASES[text.base] ? text.base : 'black', fb = FILM_BASES[kind], dark = kind === 'black';
   // Work along the strip (x) and across it (y); an upright photo's strip runs down the canvas.
   const len = L.wide ? W : H, wid = L.wide ? H : W;
   if (!L.wide) { ctx.translate(W, 0); ctx.rotate(Math.PI / 2); }
-  // the base: unexposed slide film with the light box behind it, deep but not paint-black, a neutral
-  // dark that lets a little more through as the light gets stronger. It is plastic, so it is even:
-  // no blotches or warm cast, which made it read as card or felt.
-  // measured: a slide strip's base on a light table is about 21% of the table's white (L 51 of 238)
-  const base = 0.13 + 0.13 * strength;
-  ctx.fillStyle = `rgb(${Math.round(236 * base)},${Math.round(238 * base)},${Math.round(238 * base)})`; ctx.fillRect(0, 0, len, wid);
+  if (dark) {
+    // the base: unexposed slide film with the light box behind it, deep but not paint-black, a neutral
+    // dark that lets a little more through as the light gets stronger. It is plastic, so it is even:
+    // no blotches or warm cast, which made it read as card or felt.
+    // A little green, as the reference strip measures (49,59,49 against the table's 238): the base's
+    // own colour with the light through it, which is what keeps it from reading as black paint.
+    const base = 0.13 + 0.13 * strength;
+    ctx.fillStyle = `rgb(${Math.round(236 * base)},${Math.round(284 * base)},${Math.round(236 * base)})`;
+  } else {
+    // a light base passes most of the box's light: it follows the light slider as the picture does
+    const k = 0.78 + 0.37 * strength;
+    ctx.fillStyle = `rgb(${fb.rgb.map((v) => Math.min(255, Math.round(v * k))).join(',')})`;
+  }
+  ctx.fillRect(0, 0, len, wid);
   // the strip's cut ends fall away a little from the middle of the light box
   for (const [x0, x1] of [[0, len * 0.16], [len, len * 0.84]]) {
     const fall = ctx.createLinearGradient(x0, 0, x1, 0);
-    fall.addColorStop(0, `rgba(0,0,0,${0.18 + 0.14 * strength})`); fall.addColorStop(1, 'rgba(0,0,0,0)');
+    fall.addColorStop(0, `rgba(0,0,0,${(0.18 + 0.14 * strength) * (dark ? 1 : 0.5)})`); fall.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = fall; ctx.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), wid);
   }
-  speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 0.06), 0.03, true);
-  // the long cut edges of the plastic catch the light as a thin bright line
-  ctx.fillStyle = `rgba(255,255,255,${0.16 + 0.14 * strength})`;
+  speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 0.06), 0.03, dark);
+  // the long cut edges: on dark film they catch the light as a thin bright line; on a light base the cut
+  // bends the light away and shows as a thin dark one
+  ctx.fillStyle = dark ? `rgba(255,255,255,${0.16 + 0.14 * strength})` : 'rgba(40,30,20,0.22)';
   ctx.fillRect(0, 0, len, Math.max(1, mm * 0.1));
   ctx.fillRect(0, wid - Math.max(1, mm * 0.1), len, Math.max(1, mm * 0.1));
+  // the light box's unevenness, through the film (the window gets the same over the picture);
+  // the holes, drawn after it, stay the light box's full white as a photo of one shows them
+  ctx.save();
+  if (!L.wide) { ctx.rotate(-Math.PI / 2); ctx.translate(-W, 0); }
+  filmLight(ctx, W, L, false);
+  ctx.restore();
   // perforations: clean holes punched through the plastic, the light box seen straight through
   const fx = (len - FILM.frameL * mm) / 2;
   const step = FILM.perfStep * mm, pl = FILM.perfL * mm, ps = FILM.perfS * mm, pr = FILM.perfR * mm;
@@ -443,18 +514,26 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     if (x > len || x + pl < 0) continue;
     for (const y of [FILM.perfIn * mm, wid - FILM.perfIn * mm - ps]) {
       ctx.save();
-      // the light box seen straight through the hole blooms onto the film round it
-      ctx.shadowColor = `rgba(255,255,252,${0.2 + 0.4 * strength})`; ctx.shadowBlur = mm * (0.08 + 0.3 * strength);
+      // the light box seen straight through the hole blooms onto the film round it (less on a light base)
+      ctx.shadowColor = `rgba(255,255,252,${(0.2 + 0.4 * strength) * (dark ? 1 : 0.5)})`; ctx.shadowBlur = mm * (0.08 + 0.3 * strength);
       ctx.fillStyle = '#fbfaf6';
       roundRect(ctx, x, y, pl, ps, pr); ctx.fill();
       ctx.restore();
+      if (!dark) {
+        // the hole's cut wall bends the light away: a thin dark outline, how a hole shows in clear film
+        ctx.save();
+        ctx.strokeStyle = 'rgba(40,30,20,0.28)'; ctx.lineWidth = Math.max(0.6, mm * 0.06);
+        roundRect(ctx, x, y, pl, ps, pr); ctx.stroke();
+        ctx.restore();
+      }
     }
   }
-  // edge print, light on the black rebate, between the perforations and the film's edge
+  // edge print between the perforations and the film's edge: light on the black rebate (with a little
+  // glow), dark on a light base
   const edgeA = FILM.perfIn * mm / 2, edgeB = wid - FILM.perfIn * mm / 2;
   const p = mm * 0.15; // dot pitch: lettering about 1 mm tall
-  ctx.fillStyle = 'rgb(214,198,92)'; // measured on the slide strip: (208,197,90)
-  ctx.shadowColor = 'rgba(255,170,60,0.45)'; ctx.shadowBlur = p * 1.2;
+  ctx.fillStyle = fb.ink;
+  if (fb.glow) { ctx.shadowColor = fb.glow; ctx.shadowBlur = p * 1.2; }
   if (text.caption) dotText(ctx, text.caption.toUpperCase().replace(/\s+/g, ' '), fx + mm * 1.2, edgeA, p);
   if (text.code) dotText(ctx, text.code, fx + FILM.frameL * mm - mm * 1.2, edgeA, p * 0.8, 'right');
   // the frame number, and the half-frame mark (>12A) midway along, as on a real roll
