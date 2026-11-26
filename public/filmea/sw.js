@@ -2,7 +2,7 @@
 //
 // The page itself (HTML, scripts, styles, the list of looks) is fetched from the network first, so a
 // deploy shows up on the next visit; the saved copy is only used offline. The colour tables, sample
-// photos and icons do not change under the same name, so they are served from the cache once fetched.
+// photos, the rendered mounts and icons do not change under the same name, so they are served from the cache once fetched.
 // Photos the visitor opens never pass through here: they are read from the device, not fetched.
 const VERSION = 'filmea-v2';
 const SHELL = [
@@ -21,7 +21,7 @@ self.addEventListener('activate', (e) => {
   })());
 });
 
-const FIXED = /\/filmea\/(luts|photos)\/|\/filmea\/icon[^/]*\.(png|svg)$/;
+const FIXED = /\/filmea\/(luts|photos|frames)\/|\/filmea\/icon[^/]*\.(png|svg)$/;
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;

@@ -1,6 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
-import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, LIGHT_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
+import { mountLayout, frameLayout, drawFrameUnder, drawFrameOver, drawFrameShade, loadMountArt, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, LIGHT_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -220,7 +220,7 @@ function drawArt() {
   const dpr = Math.min((window.devicePixelRatio || 1) * zoomRes, 4096 / artWidth);
   const glow = isSlide() ? screenGlow(L) : null;
   // the frame over the photo with its window cut out, then the light through it (screened on)
-  const under = (x, w) => { drawFrameUnder(x, w, L, frameText(), slideLight); x.clearRect(L.x * w, L.y * w, L.w * w, L.h * w); };
+  const under = (x, w) => { drawFrameUnder(x, w, L, frameText(), slideLight); x.clearRect(L.x * w, L.y * w, L.w * w, L.h * w); drawFrameShade(x, w, L); };
   for (const [id, draw] of [['frameArt', under], ['frameOver', (x, w) => drawFrameOver(x, w, L, glow, slideLight)]]) {
     const c = $(id);
     c.style.width = artWidth + 'px'; c.style.height = Math.floor(artWidth * L.ratio) + 'px';
@@ -741,6 +741,7 @@ function composeFrame(W, L, img, text, light) {
   x.imageSmoothingQuality = 'high';
   x.drawImage(img, sx, sy, sw, sh, L.x * W, L.y * W, L.w * W, L.h * W);
   x.restore();
+  drawFrameShade(x, W, L);
   const g = document.createElement('canvas');
   g.width = 192; g.height = Math.max(1, Math.round(192 * L.crop.h / L.crop.w));
   g.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, g.width, g.height);
@@ -1152,6 +1153,8 @@ function boot() {
   engine.onRestored = onContextRestored;
   window.__filmea = { engine, get presets() { return presets; } };
   initUI();
+  // the rendered slide mounts; the picture's crop changes with them, so lay out again once they are in
+  loadMountArt(() => { layout(); refreshTiles(); });
   fallbackScene();
   loadPresets();
   loadSample(0);

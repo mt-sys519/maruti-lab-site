@@ -75,7 +75,9 @@ export function frameLayout(style, pw, ph, shift = { x: 0, y: 0 }) {
     const w = wide ? SLIDE.wl : SLIDE.ws, h = wide ? SLIDE.ws : SLIDE.wl;
     const win = { x: (SLIDE.size - w) / 2 * u, y: (SLIDE.size - h) / 2 * u, w: w * u, h: h * u };
     // The window's cut edge shows as a thin shade round the picture, the same width on all four sides.
-    const [t, r, b, l] = [RIM, RIM, RIM, RIM].map((v) => v * u);
+    // A rendered mount has its own edge in the window, so the picture fills the window there.
+    const rim = MOUNT_ART[`${style}-${wide ? 'wide' : 'upright'}`] ? 0 : RIM;
+    const [t, r, b, l] = [rim, rim, rim, rim].map((v) => v * u);
     const pic = { x: win.x + l, y: win.y + t, w: win.w - l - r, h: win.h - t - b };
     return { style, wide, mm: u, ratio: 1, ...pic, win, crop: cropTo(pic.w / pic.h) };
   }
@@ -208,10 +210,42 @@ function setFont(ctx, px, track) {
   return 0;
 }
 
+// The slide mounts as real things: modelled and rendered in Blender (filmea-blender/mount.py, outside
+// the site) on the light box, white plastic and card, for a wide and an upright window. Each is the
+// mount with its window left transparent, and the shade its window's edge throws on the film behind it
+// (black, as alpha). Loaded on first use; until then the mounts are drawn as below.
+const MOUNT_ART = {};
+let mountArtWaiting = null;
+export function loadMountArt(onReady) {
+  if (mountArtWaiting) { mountArtWaiting.push(onReady); return; }
+  mountArtWaiting = [onReady];
+  const jobs = [];
+  for (const style of ['slide', 'slidecard']) {
+    for (const o of ['wide', 'upright']) {
+      const load = (name) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `frames/${name}.webp`; });
+      jobs.push(Promise.all([load(`${style}-${o}`), load(`${style}-${o}-shade`)]).then(([mount, shade]) => { MOUNT_ART[`${style}-${o}`] = { mount, shade }; }));
+    }
+  }
+  Promise.allSettled(jobs).then(() => { for (const f of mountArtWaiting) f?.(); });
+}
+function mountArt(L) {
+  return MOUNT_ART[`${L.style}-${L.wide ? 'wide' : 'upright'}`];
+}
+
+// The shade of a mount's window on the picture: drawn over the picture, under the light's glow.
+export function drawFrameShade(ctx, W, L) {
+  const art = (L.style === 'slide' || L.style === 'slidecard') && mountArt(L);
+  if (art) ctx.drawImage(art.shade, L.win.x * W, L.win.y * W, L.win.w * W, L.win.h * W);
+}
+
 function slideUnder(ctx, W, L, text, strength = 0.6) {
   const mm = L.mm * W, card = L.style === 'slidecard';
   const x = L.x * W, y = L.y * W, w = L.w * W, h = L.h * W, cx = x + w / 2, cy = y + h / 2;
-  if (card) {
+  const art = mountArt(L);
+  if (art) {
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(art.mount, 0, 0, W, W);
+  } else if (card) {
     // card stock lit only from behind: what reaches the front is dim and warm, darker to the corners
     ctx.fillStyle = '#b9ab92'; ctx.fillRect(0, 0, W, W);
     const v = ctx.createRadialGradient(cx, cy, mm * 12, cx, cy, mm * 38);
@@ -225,11 +259,13 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
     ctx.fillStyle = '#f6f5f2'; ctx.fillRect(0, 0, W, W);
     speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.04), 0.02, false);
   }
-  // the outer edge: no bevel, just the mount's cut edge, a line about 0.4 mm wide a few percent
-  // darker than the face (measured: face 211, edge 204–206, then the light box)
-  ctx.strokeStyle = card ? 'rgba(60,44,28,0.18)' : 'rgba(110,104,100,0.12)';
-  ctx.lineWidth = mm * 0.4;
-  ctx.strokeRect(mm * 0.2, mm * 0.2, W - mm * 0.4, W - mm * 0.4);
+  if (!art) {
+    // the outer edge: no bevel, just the mount's cut edge, a line about 0.4 mm wide a few percent
+    // darker than the face (measured: face 211, edge 204–206, then the light box)
+    ctx.strokeStyle = card ? 'rgba(60,44,28,0.18)' : 'rgba(110,104,100,0.12)';
+    ctx.lineWidth = mm * 0.4;
+    ctx.strokeRect(mm * 0.2, mm * 0.2, W - mm * 0.4, W - mm * 0.4);
+  }
   // moulded (plastic) or printed (card) numbers, small, in the margin under the window
   const base = y + h + (W - y - h) * 0.55;
   ctx.textBaseline = 'middle';
@@ -249,6 +285,7 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
   // the window's cut edge: not black but a thin soft shade of the mount, about 70% of its brightness,
   // picking up a little of the picture's colour (measured on the reference photo: mount ~228, the
   // line 150–190 at the top, ~116–160 on the right)
+  if (art) return; // the rendered mount has its own window edge
   const wn = L.win;
   ctx.fillStyle = card ? 'rgb(124,112,96)' : 'rgb(174,167,170)';
   ctx.fillRect(wn.x * W, wn.y * W, wn.w * W, wn.h * W);
