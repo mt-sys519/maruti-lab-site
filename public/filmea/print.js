@@ -386,22 +386,6 @@ function slideOver(ctx, W, L, glow, strength) {
     ctx.globalAlpha = 1;
   }
   ctx.restore();
-  if (L.style === 'film') filmSheen(ctx, W, L);
-}
-
-// The film is glossy plastic: a room light reflects off it as soft slanted bands across the whole
-// strip, picture included. Light added, so screened on, here and on the page.
-function filmSheen(ctx, W, L) {
-  const H = W * L.ratio;
-  ctx.save();
-  ctx.globalCompositeOperation = 'screen';
-  const g = ctx.createLinearGradient(0, 0, W, H);
-  for (const [o, a] of [[0, 0], [0.2, 0], [0.29, 0.05], [0.35, 0.14], [0.4, 0.05], [0.52, 0], [0.68, 0], [0.73, 0.045], [0.77, 0]]) {
-    g.addColorStop(o, `rgba(255,255,255,${a})`);
-  }
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
-  ctx.restore();
 }
 
 // On the strip, light from the picture's bright parts spreads into the dark film right next to them
@@ -442,7 +426,7 @@ function filmBleed(ctx, W, L, glow, strength) {
 // about 21% of the table's white, L 51 of 238), the edge print exposed in light. brown: a colour negative's
 // orange mask, its edge print exposed in dark. clear: a clear base (black-and-white film), dark print.
 const FILM_BASES = {
-  black: { ink: 'rgb(214,198,92)', glow: 'rgba(255,170,60,0.45)' }, // print measured on the slide strip: (208,197,90)
+  black: {}, // the print is light through the film: see printGlow
   brown: { rgb: [214, 112, 44], ink: 'rgb(92,36,12)' },
   clear: { rgb: [228, 230, 228], ink: 'rgb(62,62,60)' },
 };
@@ -552,35 +536,96 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
       }
     }
   }
-  // edge print between the perforations and the film's edge: light on the black rebate (with a little
-  // glow), dark on a light base
+  // edge print between the perforations and the film's edge: dark on a light base; on the black rebate it
+  // is where the light comes through (see printGlow)
   const edgeA = FILM.perfIn * mm / 2, edgeB = wid - FILM.perfIn * mm / 2;
   const p = mm * 0.15; // dot pitch: lettering about 1 mm tall
-  ctx.fillStyle = fb.ink;
-  if (fb.glow) { ctx.shadowColor = fb.glow; ctx.shadowBlur = p * 1.2; }
-  if (text.caption) dotText(ctx, text.caption.toUpperCase().replace(/\s+/g, ' '), fx + mm * 1.2, edgeA, p);
-  if (text.code) dotText(ctx, text.code, fx + FILM.frameL * mm - mm * 1.2, edgeA, p * 0.8, 'right');
-  // the frame number, and the half-frame mark (>12A) midway along, as on a real roll
   const half = FILM.frameL * mm / 2;
-  let w1 = 0, w2 = 0;
-  if (text.frame) {
-    w1 = dotText(ctx, String(text.frame), fx + mm * 0.6, edgeB, p);
-    w2 = dotText(ctx, `>${text.frame}A`, fx + half + mm * 0.6, edgeB, p);
-  }
-  // DX bars after each number, as the code repeats every half frame: a clock track (one mark a bit)
-  // and the data track under it
-  ctx.shadowBlur = 0;
-  const bar = mm * 0.26, barStep = bar * 1.6, rowH = mm * 0.32;
-  const bars = (x0, data) => {
-    for (let i = 0; i < data.length; i++) {
-      ctx.fillRect(x0 + i * barStep, edgeB - rowH * 1.25, bar, rowH);
-      if (data[i] === '1') ctx.fillRect(x0 + i * barStep, edgeB + rowH * 0.25, bar, rowH);
+  const edgePrint = (c) => {
+    if (text.caption) dotText(c, text.caption.toUpperCase().replace(/\s+/g, ' '), fx + mm * 1.2, edgeA, p);
+    if (text.code) dotText(c, text.code, fx + FILM.frameL * mm - mm * 1.2, edgeA, p * 0.8, 'right');
+    // the frame number, and the half-frame mark (>12A) midway along, as on a real roll
+    let w1 = 0, w2 = 0;
+    if (text.frame) {
+      w1 = dotText(c, String(text.frame), fx + mm * 0.6, edgeB, p);
+      w2 = dotText(c, `>${text.frame}A`, fx + half + mm * 0.6, edgeB, p);
     }
+    // DX bars after each number, as the code repeats every half frame: a clock track (one mark a bit)
+    // and the data track under it
+    const bar = mm * 0.26, barStep = bar * 1.6, rowH = mm * 0.32;
+    const bars = (x0, data) => {
+      for (let i = 0; i < data.length; i++) {
+        c.fillRect(x0 + i * barStep, edgeB - rowH * 1.25, bar, rowH);
+        if (data[i] === '1') c.fillRect(x0 + i * barStep, edgeB + rowH * 0.25, bar, rowH);
+      }
+    };
+    const dx = text.dx || { product: 0, specifier: 0 };
+    bars(fx + mm * 1.5 + w1, dxBits(dx.product, dx.specifier, text.frame || 0, false));
+    bars(fx + half + mm * 1.5 + w2, dxBits(dx.product, dx.specifier, text.frame || 0, true));
   };
-  const dx = text.dx || { product: 0, specifier: 0 };
-  bars(fx + mm * 1.5 + w1, dxBits(dx.product, dx.specifier, text.frame || 0, false));
-  bars(fx + half + mm * 1.5 + w2, dxBits(dx.product, dx.specifier, text.frame || 0, true));
+  if (!dark) { ctx.fillStyle = fb.ink; edgePrint(ctx); return; }
+  printGlow(ctx, len, wid, mm, p, strength, edgePrint);
 }
+
+// On reversal film the edge print is where the dye is gone: the light box shines straight through it, as
+// through the holes, so the lettering is a light source of its own in the dark rebate. A bright core,
+// warm yellow (the reference's RVP50 print) going toward white as the light gets strong, and its light
+// spread into the black round it, a tight bloom and a wide halo, both growing with the light.
+const PRINT_CORE = [255, 206, 70];
+function printGlow(ctx, len, wid, mm, p, strength, draw) {
+  const w = Math.max(1, Math.ceil(len)), h = Math.max(1, Math.ceil(wid));
+  const mask = document.createElement('canvas');
+  mask.width = w; mask.height = h;
+  const mx = mask.getContext('2d');
+  mx.fillStyle = '#fff';
+  draw(mx);
+  const tinted = (src, rgb) => {
+    const c = document.createElement('canvas');
+    c.width = src.width; c.height = src.height;
+    const x = c.getContext('2d');
+    x.drawImage(src, 0, 0);
+    x.globalCompositeOperation = 'source-in';
+    x.fillStyle = `rgb(${rgb.join(',')})`; x.fillRect(0, 0, c.width, c.height);
+    return c;
+  };
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter'; // light adds
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  const s = strength;
+  // the wide halo, then the tight bloom
+  ctx.globalAlpha = Math.min(1, 0.18 + 0.5 * s);
+  ctx.drawImage(blurred(tinted(mask, [255, 140, 20]), mm * (0.35 + 0.45 * s)), 0, 0, w, h);
+  ctx.globalAlpha = Math.min(1, 0.45 + 0.6 * s);
+  ctx.drawImage(blurred(tinted(mask, [255, 190, 50]), p * (0.8 + 0.8 * s)), 0, 0, w, h);
+  // the core: dimmer than the holes at a weak light, burning toward white at a strong one
+  const k = 0.55 + 0.75 * s, white = Math.max(0, s - 0.6) * 1.6;
+  const core = PRINT_CORE.map((v) => Math.min(255, Math.round(v * k + (255 - v) * white)));
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(tinted(mask, core), 0, 0, w, h);
+  ctx.restore();
+}
+
+// A soft copy of src blurred by about r px: down to a few pixels and back up, twice.
+function blurred(src, r) {
+  const f = Math.max(1, r / 1.5);
+  let c = src;
+  for (const k of [f, f * 0.6]) {
+    const t = document.createElement('canvas');
+    t.width = Math.max(1, Math.round(src.width / k)); t.height = Math.max(1, Math.round(src.height / k));
+    const tx = t.getContext('2d');
+    tx.imageSmoothingQuality = 'high';
+    tx.drawImage(c, 0, 0, t.width, t.height);
+    const u = document.createElement('canvas');
+    u.width = src.width; u.height = src.height;
+    const ux = u.getContext('2d');
+    ux.imageSmoothingQuality = 'high';
+    ux.drawImage(t, 0, 0, u.width, u.height);
+    c = u;
+  }
+  return c;
+}
+
 
 // The DX film edge code as 31 bits, laid out as on real film: entry code (6), product class (7, the
 // film's DX number part 1), a blank bit, specifier (4, part 2), frame number (6), half-frame (1), a
