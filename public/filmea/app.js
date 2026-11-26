@@ -979,16 +979,20 @@ async function download(out, type = 'image/jpeg') {
 
 // ---------- wiring ----------
 // Track fill: from the left for 0..max sliders, from the middle for ±sliders (exposure).
+const THUMB = 18; // px, the range thumb's width in style.css
 function setFill(el) {
   if (el.classList.contains('wb')) return;
   const min = +el.min, max = +el.max, v = +el.value;
   const pos = ((v - min) / (max - min)) * 100;
   const from = min < 0 ? ((0 - min) / (max - min)) * 100 : 0;
-  const a = Math.min(from, pos), b = Math.max(from, pos);
+  // the thumb's centre only travels from one radius in to one radius short of the end, so the fill's
+  // edge is placed on that run, not on the whole track, or it slips off the thumb toward either end
+  const at = (p) => p <= 0 ? '0%' : p >= 100 ? '100%' : `calc(${THUMB / 2}px + (100% - ${THUMB}px) * ${p / 100})`;
+  const a = at(Math.min(from, pos)), b = at(Math.max(from, pos));
   const inDock = !!el.closest('.dock');
   const fill = inDock ? 'var(--dock-ink)' : 'var(--accent)';
   const base = inDock ? 'rgba(255,255,255,.2)' : 'var(--surface-2)';
-  el.style.background = `linear-gradient(90deg, transparent ${a}%, ${fill} ${a}%, ${fill} ${b}%, transparent ${b}%), ${base}`;
+  el.style.background = `linear-gradient(90deg, transparent ${a}, ${fill} ${a}, ${fill} ${b}, transparent ${b}), ${base}`;
 }
 
 // The page opens on a start screen asking for the visitor's own photo; the portrait sample is
@@ -1310,6 +1314,8 @@ function initUI() {
     drawArt(); refreshTiles();
   });
   $('s-light').addEventListener('dblclick', (e) => { e.target.value = 60; e.target.dispatchEvent(new Event('input')); });
+  // the slider is the truth: if a browser brings back its last position, the light follows it
+  slideLight = +$('s-light').value / 100;
   $('v-light').textContent = $('s-light').value;
   setFill($('s-light'));
   $('stampCheck').addEventListener('change', (e) => { stampOn = e.target.checked; $('frameDate').classList.toggle('hidden', !stampOn); saveState(); drawArt(); refreshTiles(); });

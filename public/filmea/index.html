@@ -95,7 +95,7 @@
       <span class="sep"></span>
       <label class="amount" data-tip="効き具合">
         <svg viewBox="0 0 24 24"><path d="M12 3.5c3 4 6 7 6 10.5a6 6 0 0 1-12 0c0-3.5 3-6.5 6-10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 20a6 6 0 0 0 6-6H6a6 6 0 0 0 6 6z" fill="currentColor" opacity=".45"/></svg>
-        <input type="range" id="s-intensity" min="0" max="100" value="100" step="1" aria-label="効き具合">
+        <input type="range" autocomplete="off" id="s-intensity" min="0" max="100" value="100" step="1" aria-label="効き具合">
         <span class="ctrl-val" id="v-intensity"></span>
       </label>
       <span class="sep"></span>
@@ -151,7 +151,7 @@
           <div class="ftiles" id="filmTiles" role="radiogroup" aria-label="フィルム化"></div>
           <div class="fbody" id="filmBody" hidden>
             <div class="base-ctrl" id="baseCtrl" hidden><p class="seg-label">フィルムの色</p><div class="seg" id="baseSeg" role="radiogroup" aria-label="フィルムの色"><button type="button" data-v="black" class="on">黒</button><button type="button" data-v="brown">茶</button><button type="button" data-v="clear">透明</button></div></div>
-            <div class="ctrl" id="lightCtrl" hidden><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" id="s-light" min="0" max="100" value="60" step="1"></div>
+            <div class="ctrl" id="lightCtrl" hidden><div class="ctrl-top"><span>光の強さ</span><span class="ctrl-val" id="v-light"></span></div><input type="range" autocomplete="off" id="s-light" min="0" max="100" value="60" step="1"></div>
             <!-- the crop note and the text checks sit in whichever row holds the chosen frame -->
             <p class="crop-note" id="cropNote" hidden>写真をドラッグすると、切り取る位置を動かせます</p>
             <div class="text-checks" id="textChecks" hidden>
@@ -178,10 +178,10 @@
           <span>明るさ・色温度・粒子</span><em id="adjustState">初期値</em>
         </summary>
         <div class="row-body">
-          <div class="ctrl"><div class="ctrl-top"><span>明るさ</span><span class="ctrl-val" id="v-exposure"></span></div><input type="range" id="s-exposure" min="-200" max="200" value="0" step="5"></div>
-          <div class="ctrl"><div class="ctrl-top"><span>色温度</span><span class="ctrl-val" id="v-wb"></span></div><input type="range" id="s-wb" class="wb" min="-100" max="100" value="0" step="1"></div>
-          <div class="ctrl"><div class="ctrl-top"><span>フィルム粒子</span><span class="ctrl-val" id="v-grain"></span></div><input type="range" id="s-grain" min="0" max="100" value="0" step="1"></div>
-          <div class="ctrl"><div class="ctrl-top"><span>周辺減光</span><span class="ctrl-val" id="v-vignette"></span></div><input type="range" id="s-vignette" min="0" max="100" value="0" step="1"></div>
+          <div class="ctrl"><div class="ctrl-top"><span>明るさ</span><span class="ctrl-val" id="v-exposure"></span></div><input type="range" autocomplete="off" id="s-exposure" min="-200" max="200" value="0" step="5"></div>
+          <div class="ctrl"><div class="ctrl-top"><span>色温度</span><span class="ctrl-val" id="v-wb"></span></div><input type="range" autocomplete="off" id="s-wb" class="wb" min="-100" max="100" value="0" step="1"></div>
+          <div class="ctrl"><div class="ctrl-top"><span>フィルム粒子</span><span class="ctrl-val" id="v-grain"></span></div><input type="range" autocomplete="off" id="s-grain" min="0" max="100" value="0" step="1"></div>
+          <div class="ctrl"><div class="ctrl-top"><span>周辺減光</span><span class="ctrl-val" id="v-vignette"></span></div><input type="range" autocomplete="off" id="s-vignette" min="0" max="100" value="0" step="1"></div>
           <button class="text-btn" id="btnReset">すべて初期値にもどす</button>
         </div>
       </details>
