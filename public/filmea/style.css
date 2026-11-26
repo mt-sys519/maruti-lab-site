@@ -189,6 +189,9 @@ svg { display: block; }
 .trim-bar { display: none; align-items: center; gap: 4px; }
 .dock.trimming > :not(.trim-bar) { display: none; }
 .dock.trimming .trim-bar { display: flex; }
+.db[hidden] { display: none; }
+#btnOrient rect { fill: none; }
+#btnOrient.is-wide .o-wide, #btnOrient:not(.is-wide) .o-tall { fill: currentColor; fill-opacity: .4; }
 .dial { position: relative; width: 240px; height: 40px; touch-action: none; cursor: ew-resize; color: var(--dock-ink); border-radius: 8px; outline: none; user-select: none; -webkit-user-select: none; }
 .dial:focus-visible { box-shadow: 0 0 0 2px rgba(255, 255, 255, .35); }
 .dial canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -317,25 +320,14 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .ftile.on .fname span { font-weight: 700; }
 .fbody { padding-top: 14px; }
 .fbody[hidden] { display: none; }
-.text-checks[hidden], .crop-ctrl[hidden], .orient[hidden] { display: none; }
+.text-checks[hidden], .crop-note[hidden] { display: none; }
 .crop-note { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
-.ctrl:not([hidden]) + .crop-ctrl { margin-top: 12px; }
-/* 窓の向き: a small 横｜縦 switch on one line with its label */
-.orient { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.orient .seg-label { margin: 0; }
-.orient .seg { width: 132px; flex: none; }
-.orient .seg button { height: 26px; }
-.trim-btn {
-  margin-top: 10px; height: 32px; padding: 0 14px; border-radius: 9px; font-size: 12.5px;
-  border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
-}
-.trim-btn:hover { border-color: var(--faint); }
-.trim-btn.on { background: var(--text); border-color: var(--text); color: var(--surface); }
+.ctrl:not([hidden]) + .crop-note { margin-top: 12px; }
 .stage.drawn .canvas-box { cursor: grab; }
 .viewport.trimming .stage { cursor: grab; }
 .viewport.trimming .hint { opacity: 0; }
 .fbody .ctrl { margin-bottom: 0; }
-.ctrl:not([hidden]) + .text-checks, .crop-ctrl:not([hidden]) + .text-checks { margin-top: 14px; }
+.ctrl:not([hidden]) + .text-checks, .crop-note:not([hidden]) + .text-checks { margin-top: 14px; }
 .text-checks .seg-label { margin: 0; }
 /* with a frame on, the frame prints the look: its label leaves the photo */
 .viewport.framed .look-label { display: none; }
@@ -400,7 +392,8 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
   .dock { bottom: 12px; padding: 4px; gap: 2px; }
   .db { width: 38px; height: 38px; }
   .amount input[type="range"] { width: 90px; }
-  .dial { width: clamp(100px, calc(100vw - 236px), 200px); }
+  .dial { width: clamp(96px, calc(100vw - 236px), 200px); }
+  .dock.has-orient .dial { width: clamp(80px, calc(100vw - 280px), 200px); }
   .dt { padding: 0 9px; }
   [data-tip]:hover::after { display: none; }
   .hint { bottom: calc(10px + var(--crop-b, 0px)); }
@@ -414,6 +407,10 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
   .thumb { flex: 0 0 100px; scroll-snap-align: start; }
   .row summary { padding: 13px 16px; }
   .row-body { padding: 4px 16px 16px 44px; }
+}
+
+@media (max-width: 380px) {
+  .amount input[type="range"] { width: 64px; }
 }
 
 /* ---------- start screen: an empty slide mount waiting for a photo ---------- */

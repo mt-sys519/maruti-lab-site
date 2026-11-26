@@ -75,15 +75,18 @@ export function fitCrop(pw, ph, A, trim) {
 }
 
 // x, y, w, h: the photo's window, as fractions of the canvas width. ratio: canvas height / width.
-// crop: the part of the photo the window shows (see fitCrop); white and black mounts show it all.
+// crop: the part of the photo the window shows (see fitCrop). 'none', 'white' and 'dark' give the crop
+// of the photo's own shape (and for the mounts, mountLayout round it).
 export function frameLayout(style, pw, ph, trim = TRIM0) {
-  if (style === 'white' || style === 'dark') {
-    const g = mountLayout(pw, ph);
-    return { ...g, crop: { cx: pw / 2, cy: ph / 2, w: pw, h: ph, angle: 0 } };
-  }
   const tr = { ...TRIM0, ...trim };
   // the photo's shape once turned, which picks the window's own shape
   const turned = tr.q % 2 === 1, rw = turned ? ph : pw, rh = turned ? pw : ph;
+  if (style === 'none' || style === 'white' || style === 'dark') {
+    // no window: the photo keeps its own shape (turned), all of it until it is straightened or zoomed,
+    // and the white and black mounts are laid out round that crop
+    const crop = fitCrop(pw, ph, rw / rh, tr);
+    return style === 'none' ? { style, crop } : { ...mountLayout(crop.w, crop.h), crop };
+  }
   const cropTo = (aspect) => fitCrop(pw, ph, aspect, tr);
   if (style === 'instant') {
     const a = rw / rh;

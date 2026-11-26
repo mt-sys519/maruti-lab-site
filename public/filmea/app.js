@@ -142,6 +142,7 @@ function layout() {
     // the screen's pixels (125% scaling and the like) never leaves an edge of the window uncovered or
     // the light short of the picture's edge. The canvas shows only the crop, turned (placeCrop).
     win = { w: L.w * mw, h: L.h * mw };
+    bleed = BLEED;
     cssW = win.w + 2 * BLEED; cssH = win.h + 2 * BLEED;
     Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * L.ratio) + 'px', paddingTop: '' });
     Object.assign(crop.style, { left: L.x * mw - BLEED + 'px', top: L.y * mw - BLEED + 'px', width: cssW + 'px', height: cssH + 'px' });
@@ -151,10 +152,10 @@ function layout() {
     engine.params.light = isSlide() ? slideLight : -1;
     drawArt();
   } else if (frame !== 'none') {
-    // the 4:5 mount as it will be saved, photo placed by mountLayout
-    const g = mountLayout(engine.imgW, engine.imgH);
+    // the 4:5 mount as it will be saved, the photo (its crop) placed by mountLayout
+    const g = frameLayout(frame, engine.imgW, engine.imgH, trim);
     const mw = Math.floor(Math.min(availW, availH / g.ratio));
-    s = (g.w * mw) / engine.imgW;
+    s = (g.w * mw) / g.crop.w;
     Object.assign(stage.style, { width: mw + 'px', height: Math.floor(mw * g.ratio) + 'px', paddingTop: (g.y * mw) + 'px' });
     cap.style.top = captionY(g) * mw + 'px';
     cap.style.fontSize = Math.max(7, mw * 0.016) + 'px';
@@ -167,28 +168,40 @@ function layout() {
     code.style.marginRight = -mw * CODE_SIZE * CODE_TRACK + 'px'; // letter-spacing trails the last digit
     code.textContent = mountCode(photoDate, lookDigits());
   } else {
-    s = Math.min(availW / engine.imgW, availH / engine.imgH, 1);
+    // at most the photo's own pixels at the crop's full size, so zooming in keeps its size on screen
+    const c0 = frameLayout('none', engine.imgW, engine.imgH, trim).crop;
+    s = Math.min(availW / c0.w, availH / c0.h, trim.zoom);
     Object.assign(stage.style, { width: '', height: '', paddingTop: '' });
   }
-  const drawn = !!cssW;
-  if (!drawn) { cssW = Math.max(1, Math.floor(engine.imgW * s)); cssH = Math.max(1, Math.floor(engine.imgH * s)); }
+  if (!cssW) {
+    // no window: the canvas is the crop itself, edge to edge
+    const L = frameLayout(frame, engine.imgW, engine.imgH, trim);
+    win = { w: Math.max(1, Math.floor(L.crop.w * s)), h: Math.max(1, Math.floor(L.crop.h * s)) };
+    cssW = win.w; cssH = win.h;
+    bleed = 0;
+    placeCrop(L);
+    syncOrient(L);
+  }
   const c = $('view');
   c.style.width = cssW + 'px';
   c.style.height = cssH + 'px';
+  // no more canvas pixels than photo pixels across it, nor than a GPU canvas wants
   const dpr = (window.devicePixelRatio || 1) * zoomRes;
-  c.width = Math.max(1, Math.min(drawn ? 4096 : engine.imgW, Math.round(cssW * dpr)));
-  c.height = Math.max(1, Math.min(drawn ? 4096 : engine.imgH, Math.round(cssH * dpr)));
+  const cw = Math.max(1, Math.min(4096, Math.ceil(cssW / cropScale), Math.round(cssW * dpr)));
+  const ch = Math.max(1, Math.min(4096, Math.ceil(cssH / cropScale), Math.round(cssH * dpr)));
+  if (c.width !== cw) c.width = cw; // reassigning clears the canvas, even to the same size
+  if (c.height !== ch) c.height = ch;
   $('splitLine').style.left = splitX * 100 + '%';
   requestRender();
 }
 
-// The photo in a drawn frame's window: the canvas (the window and BLEED round it, win the window's
-// size in CSS px) shows L.crop turned by its angle, through the engine's map from canvas to photo.
-// cropScale is the screen px per photo px. The labels on the photo keep to the window.
-let cropScale = 1, win = { w: 0, h: 0 };
+// The photo on screen: the canvas (win, the window or the photo's own crop in CSS px, and bleed round
+// it, BLEED under a drawn frame) shows L.crop turned by its angle, through the engine's map from canvas
+// to photo. cropScale is the screen px per photo px. The labels on the photo keep to the window.
+let cropScale = 1, win = { w: 0, h: 0 }, bleed = 0;
 const BLEED = 3;
 function placeCrop(L) {
-  const c = L.crop, s = win.w / c.w, W = win.w + 2 * BLEED, H = win.h + 2 * BLEED;
+  const c = L.crop, s = win.w / c.w, W = win.w + 2 * bleed, H = win.h + 2 * bleed;
   const cos = Math.cos(c.angle), sin = Math.sin(c.angle), iw = engine.imgW, ih = engine.imgH;
   cropScale = s;
   // a point d from the window's centre (screen px) shows the photo at the crop's centre + R(-angle)·d / s
@@ -197,7 +210,7 @@ function placeCrop(L) {
     [-sin * W / s / ih, cos * H / s / ih, (c.cy - (-sin * W + cos * H) / 2 / s) / ih],
   ];
   const box = $('canvasBox');
-  for (const k of ['l', 't', 'r', 'b']) box.style.setProperty(`--crop-${k}`, BLEED + 'px');
+  for (const k of ['l', 't', 'r', 'b']) box.style.setProperty(`--crop-${k}`, bleed + 'px');
   requestRender();
 }
 
@@ -323,8 +336,9 @@ function trimMove(g, m, k = 1) {
 // After the trim changed: relayout when the window's shape may change (a quarter turn, the window's
 // direction), else only move the photo in it. The glow and the tiles follow a moment later.
 function trimChanged(shape = false) {
-  if (!DRAWN_FRAMES.includes(frame) || !engine.imgW) return;
-  if (shape) layout();
+  if (!engine.imgW) return;
+  // without a window the photo's own crop is the shape on screen, so it is laid out again every time
+  if (shape || !DRAWN_FRAMES.includes(frame)) layout();
   else placeCrop(frameLayout(frame, engine.imgW, engine.imgH, trim));
   drawDial();
 }
@@ -366,7 +380,6 @@ function drawDial() {
 }
 
 function setTrimming(on) {
-  on = on && DRAWN_FRAMES.includes(frame);
   if (on === trimming) return;
   trimming = on;
   $('viewport').classList.toggle('trimming', on);
@@ -375,9 +388,44 @@ function setTrimming(on) {
   if (on) { resetZoom(); layout(); drawDial(); }
 }
 
-// The window's direction (窓の向き) for the film strip and the slide mounts, as the layout made it.
+// The window's direction (窓の向き): a button in the トリミング mode for the film strip and the slide
+// mounts only, showing the direction the layout made.
 function syncOrient(L) {
-  for (const b of document.querySelectorAll('#orientSeg button')) b.classList.toggle('on', (b.dataset.v === 'wide') === !!L.wide);
+  const b = $('btnOrient'), show = isSlide();
+  b.hidden = !show;
+  $('dock').classList.toggle('has-orient', show);
+  if (show) {
+    b.classList.toggle('is-wide', !!L.wide);
+    b.setAttribute('aria-label', L.wide ? '窓の向き：横（押すと縦）' : '窓の向き：縦（押すと横）');
+  }
+  drawDial();
+}
+
+// The photo turned or zoomed with no window (なし, 白, 黒) changes the saved file; untouched, it is saved
+// as it always was.
+function plainTrim() { return !trim.q && !trim.fine && trim.zoom === 1; }
+
+// L.crop of the photo, rendered in full as the save does, at k output px per photo px.
+function renderCrop(L, k) {
+  const iw = engine.imgW, ih = engine.imgH, long = Math.round(Math.max(iw, ih) * k), shrink = k < 1;
+  const pixels = engine.renderFull(shrink ? long : 0);
+  let img = document.createElement('canvas');
+  img.width = iw; img.height = ih;
+  img.getContext('2d').putImageData(new ImageData(pixels, iw, ih), 0, 0);
+  if (shrink) img = shrinkCanvas(img, long);
+  const out = document.createElement('canvas');
+  out.width = Math.max(1, Math.round(L.crop.w * k)); out.height = Math.max(1, Math.round(L.crop.h * k));
+  drawCrop(out.getContext('2d'), img, L, 0, 0, out.width, out.height);
+  return out;
+}
+
+// The crop as it is now rendered, w wide (for the tiles).
+function croppedPhoto(L, w, light) {
+  const c = L.crop, src = renderedPhoto(Math.min(engine.imgW, Math.max(16, Math.ceil(w * engine.imgW / c.w))), light);
+  const out = document.createElement('canvas');
+  out.width = w; out.height = Math.max(1, Math.round(w * c.h / c.w));
+  drawCrop(out.getContext('2d'), src, L, 0, 0, out.width, out.height);
+  return out;
 }
 
 
@@ -752,6 +800,7 @@ async function save() {
   try {
     const iw = engine.imgW, ih = engine.imgH;
     if (DRAWN_FRAMES.includes(frame)) return await saveDrawnFrame(iw, ih);
+    if (!plainTrim()) return await saveTrimmed(iw, ih);
     const g = frame === 'none' ? null : mountLayout(iw, ih);
     // Long side the photo itself ends up with. On a mount the size choice is the mount's width
     // (1080 -> 1080x1350); the original size keeps the photo's pixels, kept under the ~16.7M-pixel
@@ -808,6 +857,19 @@ function composeMount(style, mountW, g, img, small = false) {
     x.fillText(mountCode(photoDate, lookDigits()), (g.x + g.w) * mountW + ('letterSpacing' in x ? track : 0), cy);
   }
   return out;
+}
+
+// なし, 白 or 黒 with the photo turned or zoomed: the crop, never enlarged when saved bare (as the whole
+// photo never is), and at the mount's own size on a mount.
+async function saveTrimmed(iw, ih) {
+  const L = frameLayout(frame, iw, ih, trim), c = L.crop;
+  if (frame === 'none') {
+    await download(renderCrop(L, saveLong ? Math.min(1, saveLong / Math.max(c.w, c.h)) : 1));
+    return;
+  }
+  let mountW = saveLong || Math.round(c.w / L.w);
+  mountW = Math.min(mountW, Math.floor(Math.sqrt(16e6 / L.ratio)));
+  await download(composeMount(frame, mountW, L, renderCrop(L, (L.w * mountW) / c.w)));
 }
 
 // Instant, film or slide mount: the frame drawn at the chosen width, the photo cropped into its window.
@@ -871,10 +933,11 @@ function drawTiles() {
     const style = b.dataset.v;
     let pic;
     if (style === 'none') {
-      pic = renderedPhoto(engine.imgW >= engine.imgH ? TILE_W : Math.max(16, Math.round(TILE_W * engine.imgW / engine.imgH)), -1);
+      const L = frameLayout(style, engine.imgW, engine.imgH, trim), c = L.crop;
+      pic = croppedPhoto(L, c.w >= c.h ? TILE_W : Math.max(16, Math.round(TILE_W * c.w / c.h)), -1);
     } else if (style === 'white' || style === 'dark') {
-      const g = mountLayout(engine.imgW, engine.imgH);
-      pic = composeMount(style, TILE_W, g, renderedPhoto(Math.max(16, Math.round(g.w * TILE_W)), -1), true);
+      const g = frameLayout(style, engine.imgW, engine.imgH, trim);
+      pic = composeMount(style, TILE_W, g, croppedPhoto(g, Math.max(16, Math.round(g.w * TILE_W)), -1), true);
     } else {
       const L = frameLayout(style, engine.imgW, engine.imgH, trim);
       const light = LIGHT_FRAMES.includes(style) ? slideLight : -1;
@@ -1158,12 +1221,10 @@ function initUI() {
       $(body).hidden = !mine;
       $(state).textContent = mine ? list.find(([x]) => x === frame)[1] : 'なし';
     }
-    const checks = $('textChecks'), cropCtrl = $('cropCtrl');
+    const checks = $('textChecks'), note = $('cropNote');
     checks.hidden = !sec;
-    cropCtrl.hidden = !drawn;
-    $('orientCtrl').hidden = !isSlide(); // the window's direction: the film strip and the slide mounts only
-    if (sec) { $(sec[2]).appendChild(cropCtrl); $(sec[2]).appendChild(checks); }
-    if (!drawn) setTrimming(false);
+    note.hidden = !drawn;
+    if (sec) { $(sec[2]).appendChild(note); $(sec[2]).appendChild(checks); }
     $('viewport').classList.toggle('framed', frame !== 'none');
     $('stage').className = 'stage' + (frame === 'none' ? '' : ` frame-${frame}`) + (drawn ? ' drawn' : '');
     saveState();
@@ -1182,15 +1243,14 @@ function initUI() {
       $(id).appendChild(b);
     }
   }
-  $('orientSeg').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    trim = { ...trim, orient: b.dataset.v };
+  $('btnOrient').addEventListener('click', () => {
+    const wide = frameLayout(frame, engine.imgW, engine.imgH, trim).wide;
+    trim = { ...trim, orient: wide ? 'upright' : 'wide' };
     trimChanged(true);
   });
   $('btnTrim').addEventListener('click', () => setTrimming(!trimming));
   $('btnTrimDone').addEventListener('click', () => setTrimming(false));
-  $('btnTrimReset').addEventListener('click', () => { trim = { ...TRIM0, orient: trim.orient }; trimChanged(true); });
+  $('btnTrimReset').addEventListener('click', () => { trim = { ...TRIM0 }; trimChanged(true); });
   $('btnTurn').addEventListener('click', () => { trim = { ...trim, q: (trim.q + 1) % 4 }; trimChanged(true); });
   // the dial: drag the scale; a double tap or double click on the number puts it back to 0
   const dial = $('dial');
