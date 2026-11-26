@@ -86,6 +86,7 @@ let stampOn = true;   // the keycode-like number at the mount's lower right
 let captionOn = true; // the look's code under the photo on a mount
 let photoDate = new Date();
 let slideLight = 0.6; // 光の強さ, the light box behind slides and the film strip, 0..1
+let filmBase = 'black'; // the film strip's base: black (reversal), brown (negative's orange mask) or clear
 let saveLong = 0; // long side of the saved image; 0 keeps the photo's own size
 let thumbToken = 0;
 
@@ -295,7 +296,7 @@ function refreshGlow() {
 }
 
 function frameText() {
-  return { caption: captionOn ? $('frameCaption').textContent : '', code: stampOn ? mountCode(photoDate, lookDigits()) : '', frame: filmFrameNumber(photoDate), dx: lookDx() };
+  return { caption: captionOn ? $('frameCaption').textContent : '', code: stampOn ? mountCode(photoDate, lookDigits()) : '', frame: filmFrameNumber(photoDate), dx: lookDx(), base: filmBase };
 }
 
 // The look for the film's DX bars: its place in the whole list (product class) and its group (specifier).
@@ -1223,6 +1224,7 @@ function initUI() {
       document.querySelectorAll(`#${id} .ftile`).forEach((x) => x.classList.toggle('on', x.dataset.v === (mine ? frame : 'none')));
     }
     $('lightCtrl').hidden = !isSlide();
+    $('baseCtrl').hidden = frame !== 'film';
     for (const [id, list, body, state] of SECTIONS) {
       const mine = sec && sec[0] === id;
       $(body).hidden = !mine;
@@ -1295,6 +1297,13 @@ function initUI() {
     setFill(e.target);
     engine.params.light = isSlide() ? slideLight : -1;
     requestRender();
+  });
+  $('baseSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    filmBase = b.dataset.v;
+    document.querySelectorAll('#baseSeg button').forEach((x) => x.classList.toggle('on', x === b));
+    drawArt(); refreshTiles();
   });
   $('s-light').addEventListener('dblclick', (e) => { e.target.value = 60; e.target.dispatchEvent(new Event('input')); });
   $('v-light').textContent = $('s-light').value;
