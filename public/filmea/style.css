@@ -229,7 +229,7 @@ svg { display: block; }
 .ptitle h2 { font: 600 12px "Josefin Sans", sans-serif; letter-spacing: .26em; }
 .ptitle span { font-size: 11px; color: var(--sub); }
 /* 目的: icon tabs, the first way in; 系統: the letter tabs under them, for people who know them */
-.purpose { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 2px 12px 10px; }
+.purpose { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 2px 12px 10px; }
 .pt { border: none; background: none; border-radius: 10px; padding: 8px 0 7px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--sub); font-size: 11.5px; min-width: 0; white-space: nowrap; }
 .pt svg { width: 24px; height: 24px; }
 .pt:hover { background: var(--surface-2); color: var(--text); }
@@ -417,6 +417,9 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 
 @media (max-width: 380px) {
   .amount input[type="range"] { width: 64px; }
+  /* Seven purpose tabs: a smaller label so "モノクロ" and "フィルム" stay inside their column on a 360px phone. */
+  .purpose { gap: 2px; padding-inline: 6px; }
+  .pt { font-size: 10.5px; }
 }
 
 /* ---------- start screen: an empty slide mount waiting for a photo ---------- */

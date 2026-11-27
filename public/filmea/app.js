@@ -10,7 +10,7 @@ const SAMPLES = [
   { label: '街', url: 'photos/street.jpg' },
   { label: '赤', url: 'photos/red.jpg' },
   { label: '陰影', url: 'photos/shade.jpg' },
-  { label: '食べ物', url: 'photos/macarons.jpg' },
+  { label: '食事', url: 'photos/macarons.jpg' },
 ];
 
 // The date on the mount, in the amber of a film's edge printing (deeper on white so it still reads).
@@ -47,6 +47,9 @@ const PURPOSES = [
   { id: 'p:street', label: '街', note: '街のスナップに合う、硬めで渋い色',
     icon: ICON('<path d="M4 20V9h5v11M9 20V5h6v15M15 20v-8h5v8M3 20h18"/>'),
     codes: ['F06', 'F03', 'F07', 'F08', 'R02', 'R04', 'R05', 'P03', 'N05', 'N06', 'N11', 'K09', 'P07'] },
+  { id: 'p:food', label: '食事', note: 'あたたかく明るい、おいしそうに見える色',
+    icon: ICON('<path d="M7 3v5a2 2 0 0 0 4 0V3M9 3v18"/><path d="M17 21V3c-2.2 1.2-3 4-3 7.5V13h3"/>'),
+    codes: ['N04', 'R03', 'S09', 'F12', 'L02', 'S03', 'N03', 'K06', 'F13', 'N01', 'K12', 'O03', 'K07'] },
   { id: 'p:mono', label: 'モノクロ', note: '白黒。やわらかいものから硬いものまで',
     icon: ICON('<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>'),
     codes: ['F09', 'F10', 'S10', 'N17', 'N18', 'N20', 'P08', 'P09', 'P10', 'P11', 'P12', 'L03', 'L04', 'C06', 'R06', 'R07', 'R08', 'R09', 'K13', 'O04', 'O11'] },
