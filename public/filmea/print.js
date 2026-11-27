@@ -427,7 +427,7 @@ function filmBleed(ctx, W, L, glow, strength) {
 // orange mask, its edge print exposed in dark. clear: a clear base (black-and-white film), dark print.
 const FILM_BASES = {
   black: {}, // the print is light through the film: see printGlow
-  brown: { rgb: [214, 112, 44], ink: 'rgb(92,36,12)' },
+  brown: { rgb: [226, 120, 70], ink: 'rgb(92,36,12)' },
   clear: { rgb: [228, 230, 228], ink: 'rgb(62,62,60)' },
 };
 
@@ -490,9 +490,11 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     const base = 0.13 + 0.13 * strength;
     ctx.fillStyle = `rgb(${Math.round(236 * base)},${Math.round(284 * base)},${Math.round(236 * base)})`;
   } else {
-    // a light base passes most of the box's light: it follows the light slider as the picture does
-    const k = 0.78 + 0.37 * strength;
-    ctx.fillStyle = `rgb(${fb.rgb.map((v) => Math.min(255, Math.round(v * k))).join(',')})`;
+    // a light base is where the light comes through (the print is the dense part): it glows with the
+    // box behind it, deeper at a weak light and washing toward white at a strong one, as the pale peach
+    // of a negative's mask looks on a light box
+    const k = 0.8 + 0.35 * strength, white = Math.max(0, strength - 0.2) * 0.6;
+    ctx.fillStyle = `rgb(${fb.rgb.map((v) => Math.min(255, Math.round(v * k + (255 - v) * white))).join(',')})`;
   }
   ctx.fillRect(0, 0, len, wid);
   // the strip's cut ends fall away a little from the middle of the light box
