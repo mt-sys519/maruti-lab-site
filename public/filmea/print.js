@@ -49,8 +49,10 @@ const INSTAX = {
 const INSTAX_TOP = 6.5;
 // Frames drawn round the photo (the photo cropped into a window), and those of them seen with the
 // light box behind them.
-export const DRAWN_FRAMES = ['instant', 'film', 'slide', 'slidecard'];
-export const LIGHT_FRAMES = ['film', 'slide', 'slidecard'];
+// The slide mounts: white plastic, black plastic and card, one tile with its colour chosen inside it.
+export const MOUNT_STYLES = ['slide', 'slideblack', 'slidecard'];
+export const DRAWN_FRAMES = ['instant', 'film', ...MOUNT_STYLES];
+export const LIGHT_FRAMES = ['film', ...MOUNT_STYLES];
 
 // How the photo sits in a drawn frame's window (トリミング). q: quarter turns clockwise; fine: degrees
 // on top of them (-45..45); zoom: 1 is the largest crop the window can take at that angle; x, y: the
@@ -94,7 +96,7 @@ export function frameLayout(style, pw, ph, trim = TRIM0) {
     const f = INSTAX[kind], u = 1 / f.w;
     return { style, kind, mm: u, ratio: f.h / f.w, x: (f.w - f.iw) / 2 * u, y: INSTAX_TOP * u, w: f.iw * u, h: f.ih * u, crop: cropTo(f.iw / f.ih) };
   }
-  if (style === 'slide' || style === 'slidecard') {
+  if (MOUNT_STYLES.includes(style)) {
     const wide = tr.orient ? tr.orient === 'wide' : rw >= rh, u = 1 / SLIDE.size;
     const w = wide ? SLIDE.wl : SLIDE.ws, h = wide ? SLIDE.ws : SLIDE.wl;
     const win = { x: (SLIDE.size - w) / 2 * u, y: (SLIDE.size - h) / 2 * u, w: w * u, h: h * u };
@@ -175,7 +177,7 @@ function dotText(ctx, text, x, y, p, align = 'left') {
 export function drawFrameUnder(ctx, W, L, text, strength = 0.6) {
   ctx.save();
   if (L.style === 'instant') instaxUnder(ctx, W, L, text);
-  else if (L.style === 'slide' || L.style === 'slidecard') slideUnder(ctx, W, L, text, strength);
+  else if (MOUNT_STYLES.includes(L.style)) slideUnder(ctx, W, L, text, strength);
   else filmUnder(ctx, W, L, text, strength);
   ctx.restore();
 }
@@ -246,7 +248,7 @@ export function loadMountArt(onReady) {
   if (mountArtWaiting) { mountArtWaiting.push(onReady); return; }
   mountArtWaiting = [onReady];
   const jobs = [];
-  for (const style of ['slide', 'slidecard']) {
+  for (const style of MOUNT_STYLES) {
     for (const o of ['wide', 'upright']) {
       const load = (name) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `frames/${name}-v${ART_V}.webp`; });
       jobs.push(Promise.all([load(`${style}-${o}`), load(`${style}-${o}-shade`)]).then(([mount, shade]) => { MOUNT_ART[`${style}-${o}`] = { mount, shade }; }));
@@ -262,12 +264,12 @@ function mountArt(L) {
 // box's unevenness that shows through the rebate too.
 export function drawFrameShade(ctx, W, L) {
   if (L.style === 'film') { filmLight(ctx, W, L, true); return; }
-  const art = (L.style === 'slide' || L.style === 'slidecard') && mountArt(L);
+  const art = MOUNT_STYLES.includes(L.style) && mountArt(L);
   if (art) ctx.drawImage(art.shade, L.win.x * W, L.win.y * W, L.win.w * W, L.win.h * W);
 }
 
 function slideUnder(ctx, W, L, text, strength = 0.6) {
-  const mm = L.mm * W, card = L.style === 'slidecard';
+  const mm = L.mm * W, card = L.style === 'slidecard', black = L.style === 'slideblack';
   const x = L.x * W, y = L.y * W, w = L.w * W, h = L.h * W, cx = x + w / 2, cy = y + h / 2;
   const art = mountArt(L);
   if (art) {
@@ -281,6 +283,10 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
     ctx.fillStyle = v; ctx.fillRect(0, 0, W, W);
     speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.05), 0.09, false);
     speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.05), 0.05, true);
+  } else if (black) {
+    // black plastic: opaque, only the room light on its face
+    ctx.fillStyle = '#323231'; ctx.fillRect(0, 0, W, W);
+    speckle(ctx, 0, 0, W, W, Math.max(1, mm * 0.04), 0.03, true);
   } else {
     // white plastic, flat: on the reference the mount face is even to within a few levels from the
     // window to its outer edge
@@ -290,7 +296,7 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
   // the outer edge: square corners; a rendered mount has its own chamfered edge, a drawn one gets a line
   // about 0.4 mm wide a few percent darker than the face (measured: face 211, edge 204–206)
   if (!art) {
-    ctx.strokeStyle = card ? 'rgba(60,44,28,0.18)' : 'rgba(110,104,100,0.12)';
+    ctx.strokeStyle = card ? 'rgba(60,44,28,0.18)' : black ? 'rgba(255,255,255,0.08)' : 'rgba(110,104,100,0.12)';
     ctx.lineWidth = mm * 0.4;
     ctx.strokeRect(mm * 0.2, mm * 0.2, W - mm * 0.4, W - mm * 0.4);
   }
@@ -301,10 +307,10 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
     const tr = setFont(ctx, px, track);
     ctx.textAlign = align;
     const xx = align === 'right' ? ax + tr : ax;
-    if (!card) { ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillText(t, xx + px * 0.05, base + px * 0.07); }
+    if (!card && !black) { ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillText(t, xx + px * 0.05, base + px * 0.07); }
     ctx.fillStyle = col; ctx.fillText(t, xx, base);
   };
-  const ink = card ? 'rgba(70,54,36,0.75)' : 'rgba(150,146,138,0.8)';
+  const ink = card ? 'rgba(70,54,36,0.75)' : black ? 'rgba(196,194,188,0.7)' : 'rgba(150,146,138,0.8)';
   // aligned to the window's sides when it is wide; an upright window (23 mm) is too narrow for both,
   // so they spread to the mount's own margins instead
   const left = L.wide ? x : mm * 4, right = L.wide ? x + w : W - mm * 4;
@@ -315,7 +321,7 @@ function slideUnder(ctx, W, L, text, strength = 0.6) {
   // line 150–190 at the top, ~116–160 on the right)
   if (art) return; // the rendered mount has its own window edge
   const wn = L.win;
-  ctx.fillStyle = card ? 'rgb(124,112,96)' : 'rgb(174,167,170)';
+  ctx.fillStyle = card ? 'rgb(124,112,96)' : black ? 'rgb(30,30,30)' : 'rgb(174,167,170)';
   ctx.fillRect(wn.x * W, wn.y * W, wn.w * W, wn.h * W);
 }
 

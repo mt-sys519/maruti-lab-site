@@ -1,6 +1,6 @@
 import { Engine } from './engine.js';
 import { loadLutFromBuffer, loadLutFromUrl } from './loaders.js';
-import { mountLayout, frameLayout, TRIM0, TRIM_ZOOM_MAX, drawFrameUnder, drawFrameOver, drawFrameShade, loadMountArt, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, LIGHT_FRAMES, transmissionGlow, transmissionScatter } from './print.js';
+import { mountLayout, frameLayout, TRIM0, TRIM_ZOOM_MAX, drawFrameUnder, drawFrameOver, drawFrameShade, loadMountArt, mountCode, filmFrameNumber, readExifDate, DRAWN_FRAMES, LIGHT_FRAMES, MOUNT_STYLES, transmissionGlow, transmissionScatter } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -87,6 +87,7 @@ let captionOn = true; // the look's code under the photo on a mount
 let photoDate = new Date();
 let slideLight = 0.6; // 光の強さ, the light box behind slides and the film strip, 0..1
 let filmBase = 'black'; // the film strip's base: black (reversal), brown (negative's orange mask) or clear
+let mountStyle = 'slide'; // the slide mount's colour: slide (white plastic), slideblack or slidecard (card)
 let saveLong = 0; // long side of the saved image; 0 keeps the photo's own size
 let thumbToken = 0;
 
@@ -920,9 +921,12 @@ function composeFrame(W, L, img, text, light) {
 // The frames as small tiles of the visitor's own photo, in the chosen look with the sliders applied.
 // フィルム化 (the film strip and slide mounts, on the light box) and 枠 (mounts and the instant card),
 // each its own row of tiles; one frame at a time across both.
-const FILM_TILES = [['none', 'なし'], ['film', 'スリーブ'], ['slide', 'マウント白'], ['slidecard', 'マウント紙']];
+const FILM_TILES = [['none', 'なし'], ['film', 'スリーブ'], ['mount', 'マウント']];
+// the マウント tile stands for whichever mount colour is chosen
+const tileOf = (f) => MOUNT_STYLES.includes(f) ? 'mount' : f;
+const styleOf = (v) => v === 'mount' ? mountStyle : v;
 const MOUNT_TILES = [['none', 'なし'], ['white', '白'], ['dark', '黒'], ['instant', 'インスタント']];
-const TILE_W = 160;
+const TILE_W = 220; // px of the tile's picture: sharp on a 2x screen in the three-across row
 
 // The photo as it is now rendered, w wide, through the light box when light >= 0 (top row first).
 function renderedPhoto(w, light) {
@@ -942,7 +946,7 @@ function renderedPhoto(w, light) {
 function drawTiles() {
   if (!engine.imgW || !current) return;
   for (const b of document.querySelectorAll('.ftile')) {
-    const style = b.dataset.v;
+    const style = styleOf(b.dataset.v);
     let pic;
     if (style === 'none') {
       const L = frameLayout(style, engine.imgW, engine.imgH, trim), c = L.crop;
@@ -1222,21 +1226,22 @@ function initUI() {
   // the frames on the light box, the text checks under whichever row holds the frame; the look's label
   // leaves the photo, as the frame prints it.
   const SECTIONS = [['filmTiles', FILM_TILES, 'filmBody', 'filmState'], ['mountTiles', MOUNT_TILES, 'mountBody', 'mountState']];
-  const sectionOf = (v) => SECTIONS.find(([, list]) => v !== 'none' && list.some(([x]) => x === v));
+  const sectionOf = (v) => SECTIONS.find(([, list]) => v !== 'none' && list.some(([x]) => x === tileOf(v)));
   const setFrame = (v) => {
     frame = v;
     resetZoom();
     const drawn = DRAWN_FRAMES.includes(frame), sec = sectionOf(frame);
     for (const [id] of SECTIONS) {
       const mine = sec && sec[0] === id;
-      document.querySelectorAll(`#${id} .ftile`).forEach((x) => x.classList.toggle('on', x.dataset.v === (mine ? frame : 'none')));
+      document.querySelectorAll(`#${id} .ftile`).forEach((x) => x.classList.toggle('on', x.dataset.v === (mine ? tileOf(frame) : 'none')));
     }
     $('lightCtrl').hidden = !isSlide();
     $('baseCtrl').hidden = frame !== 'film';
+    $('mountCtrl').hidden = !MOUNT_STYLES.includes(frame);
     for (const [id, list, body, state] of SECTIONS) {
       const mine = sec && sec[0] === id;
       $(body).hidden = !mine;
-      $(state).textContent = mine ? list.find(([x]) => x === frame)[1] : 'なし';
+      $(state).textContent = mine ? list.find(([x]) => x === tileOf(frame))[1] : 'なし';
     }
     const checks = $('textChecks'), note = $('cropNote');
     checks.hidden = !sec;
@@ -1256,7 +1261,7 @@ function initUI() {
       b.innerHTML = '<div class="box"><canvas></canvas></div><div class="fname"><span></span></div>';
       b.querySelector('span').textContent = label;
       // なし takes off a frame from its own row only; a frame chosen in the other row stays
-      b.addEventListener('click', () => { if (v !== 'none' || sectionOf(frame)?.[0] === id) setFrame(v); });
+      b.addEventListener('click', () => { if (v !== 'none' || sectionOf(frame)?.[0] === id) setFrame(styleOf(v)); });
       $(id).appendChild(b);
     }
   }
@@ -1312,6 +1317,14 @@ function initUI() {
     filmBase = b.dataset.v;
     document.querySelectorAll('#baseSeg button').forEach((x) => x.classList.toggle('on', x === b));
     drawArt(); refreshTiles();
+  });
+  $('mountSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    mountStyle = b.dataset.v;
+    document.querySelectorAll('#mountSeg button').forEach((x) => x.classList.toggle('on', x === b));
+    if (MOUNT_STYLES.includes(frame)) setFrame(mountStyle);
+    refreshTiles();
   });
   $('s-light').addEventListener('dblclick', (e) => { e.target.value = 60; e.target.dispatchEvent(new Event('input')); });
   // the slider is the truth: if a browser brings back its last position, the light follows it
