@@ -305,7 +305,18 @@ footer .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;mar
 .sprevs{display:flex;gap:8px;overflow-x:auto;justify-content:center;scroll-snap-type:x mandatory}
 .sprevs img{display:block;max-width:100%;max-height:52vh;border-radius:8px;box-shadow:var(--shadow);scroll-snap-align:center;-webkit-touch-callout:default}
 .sprevs.many{justify-content:flex-start}
-.sprevs.many img{max-width:78%}
+.sprevs.many img{max-width:100%;max-height:44vh}
+/* several pages: a tap leaves one out of 保存 (or takes it back); each can also be saved on its own */
+.sp{position:relative;flex:none;max-width:78%;display:flex;flex-direction:column;align-items:center;gap:8px;scroll-snap-align:center;cursor:pointer}
+.sp img{transition:opacity .2s}
+.sp:not(.on) img{opacity:.38}
+.sp b{position:absolute;left:7px;top:7px;font:500 10.5px Jost,sans-serif;background:rgba(255,252,249,.9);border-radius:6px;padding:2px 7px}
+.sp .sck{position:absolute;right:7px;top:7px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:600 13px/1 var(--ui);font-style:normal;background:var(--ink);color:#fff;box-shadow:0 0 0 2px #fff}
+.sp:not(.on) .sck{background:rgba(255,252,249,.85);color:transparent;box-shadow:inset 0 0 0 1.5px rgba(75,63,58,.45)}
+.sone{padding:6px 12px;border-radius:999px;font-size:12px;color:var(--ink);background:rgba(255,252,249,.8);box-shadow:inset 0 0 0 1px rgba(75,63,58,.18)}
+.sall{display:block;margin:6px auto 0}
+.sall[hidden]{display:none}
+#sshare:disabled{opacity:.45}
 .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(75,63,58,.12);flex:none}
 .ic svg{width:19px;height:19px}
 .wtabs{margin:4px 0 12px}
@@ -646,6 +657,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <div class="scrim" data-sclose></div>
   <div class="scard glass">
     <div class="sprevs" id="sprevs"></div>
+    <button class="stext sall" id="sall" hidden>選択をすべて外す</button>
     <p class="snote"><span id="ssize"></span>　<span data-os="snote"></span></p>
     <button class="pill dark big" id="sshare">写真に保存・共有</button>
     <button class="pill soft" id="sshare2" hidden style="margin-top:10px">共有する（インスタなどへ）</button>

@@ -2427,22 +2427,40 @@ $('#esave').onclick=async()=>{
     const blobs=await Promise.all(canvases.map(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))));
     saved?.urls.forEach(u=>URL.revokeObjectURL(u));
     saved={files:blobs.map((b,i)=>new File([b],`piclea-${stamp}${many?'-'+String(i+1).padStart(2,'0'):''}.jpg`,{type:'image/jpeg'})),urls:blobs.map(b=>URL.createObjectURL(b))};
-    $('#sprevs').innerHTML=saved.urls.map((u,i)=>`<img src="${u}" alt="${i+1}枚目">`).join('');
-    $('#sprevs').classList.toggle('many',many);
+    // with several pages each can be left out (a tap on it) or saved on its own; all are chosen at first
+    saved.on=new Set(saved.files.map((_,i)=>i));
+    $('#sprevs').innerHTML=many?saved.urls.map((u,i)=>`<div class="sp on" data-sp="${i}"><img src="${u}" alt="${i+1}枚目"><b>${i+1}</b><i class="sck" aria-hidden="true">✓</i><button class="sone" data-sone="${i}">この1枚を保存</button></div>`).join('')
+      :`<img src="${saved.urls[0]}" alt="保存する画像">`;
+    $('#sprevs').classList.toggle('many',many);$('#sprevs').scrollLeft=0;
     $('#ssize').textContent=`${many?P.pages.length+'枚・':''}${D.W} × ${D.H}`;
-    const share=OS!=='pc'&&navigator.canShare?.({files:saved.files});
-    $('#sshare').textContent=OS==='ios'&&share?(many?`${P.pages.length}枚まとめて保存・共有`:'写真に保存・共有'):many?`${P.pages.length}枚まとめて保存`:'画像を保存';
-    $('#sshare2').hidden=!(OS==='android'&&share); // Android: saving and sending to Instagram are two different wishes
+    $('#sall').hidden=!many;
+    $('#sshare2').hidden=!(OS==='android'&&OS!=='pc'&&navigator.canShare?.({files:saved.files})); // Android: saving and sending to Instagram are two different wishes
+    syncSaveSel();
     $('#ssheet').hidden=false;
     const empty=emptySlots();if(empty)toast(`写真がはまっていない枠が${empty}つあります`);
   }finally{clearTimeout(slow);btn.disabled=false}
 };
-$('#sshare').onclick=()=>{
-  if(!saved)return;
-  if(OS==='ios'&&navigator.canShare?.({files:saved.files}))navigator.share({files:saved.files}).catch(()=>{});
-  else{download(saved.files,saved.urls);toast(OS==='android'?'「ダウンロード」に保存しました':'ダウンロードフォルダに保存しました')}
-};
-$('#sshare2').onclick=()=>{if(saved&&navigator.canShare?.({files:saved.files}))navigator.share({files:saved.files}).catch(()=>{})};
+const chosen=()=>[...saved.on].sort((a,b)=>a-b);
+function syncSaveSel(){
+  const n=saved.files.length,k=saved.on.size,all=k===n,ios=OS==='ios'&&navigator.canShare?.({files:saved.files});
+  document.querySelectorAll('#sprevs .sp').forEach(x=>x.classList.toggle('on',saved.on.has(+x.dataset.sp)));
+  $('#sshare').textContent=n<2?(ios?'写真に保存・共有':'画像を保存'):(all?`${n}枚まとめて保存`:k?`選んだ${k}枚を保存`:'保存するページを選んでください')+(ios&&k?'・共有':'');
+  $('#sshare').disabled=!k;$('#sshare2').disabled=!k;
+  $('#sall').textContent=all?'選択をすべて外す':'すべて選ぶ';
+}
+function saveFiles(files,urls){
+  if(OS==='ios'&&navigator.canShare?.({files}))navigator.share({files}).catch(()=>{});
+  else{download(files,urls);toast(OS==='android'?'「ダウンロード」に保存しました':'ダウンロードフォルダに保存しました')}
+}
+$('#sshare').onclick=()=>{if(saved?.on.size)saveFiles(chosen().map(i=>saved.files[i]),chosen().map(i=>saved.urls[i]))};
+$('#sshare2').onclick=()=>{const files=saved&&chosen().map(i=>saved.files[i]);if(files?.length&&navigator.canShare?.({files}))navigator.share({files}).catch(()=>{})};
+$('#sprevs').addEventListener('click',e=>{
+  if(!saved)return;const one=e.target.closest('[data-sone]');
+  if(one){const i=+one.dataset.sone;saveFiles([saved.files[i]],[saved.urls[i]]);return}
+  const sp=e.target.closest('[data-sp]');if(!sp)return;const i=+sp.dataset.sp;
+  if(saved.on.has(i))saved.on.delete(i);else saved.on.add(i);syncSaveSel();
+});
+$('#sall').onclick=()=>{if(!saved)return;saved.on=saved.on.size===saved.files.length?new Set():new Set(saved.files.map((_,i)=>i));syncSaveSel()};
 document.querySelectorAll('[data-sclose]').forEach(x=>x.onclick=()=>$('#ssheet').hidden=true);
 addEventListener('resize',()=>paint());
 
