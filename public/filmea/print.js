@@ -241,7 +241,7 @@ function setFont(ctx, px, track) {
 // mount with its window left transparent, and the shade its window's edge throws on the film behind it
 // (black, as alpha). Loaded on first use; until then the mounts are drawn as below. The service worker
 // keeps these files forever under their names, so a new render gets a new ART_V.
-const ART_V = 3; // 3: the outer edge chamfered like the window's, square corners (2 had a plain cut edge, 1 rounded corners)
+const ART_V = 4; // 4: the black one's window bevels alike on all four sides; 3: the outer edge chamfered like the window's, square corners (2 had a plain cut edge, 1 rounded corners)
 const MOUNT_ART = {};
 let mountArtWaiting = null;
 export function loadMountArt(onReady) {
