@@ -317,7 +317,10 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 #filmTiles { grid-template-columns: repeat(3, 1fr); } /* なし・スリーブ・マウント: three across the row */
 .ftile { border: none; background: none; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; text-align: left; }
 .ftile .box { aspect-ratio: 1; border-radius: 6px; background: #3a3633; display: grid; place-items: center; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); }
-.ftile canvas { display: block; max-width: 86%; max-height: 86%; }
+/* the picture centred in its square, held inside 86% both ways (a percentage height needs the square as
+   its containing block, so the canvas is placed absolutely: in the grid it ran out of an upright tile) */
+.ftile .box { position: relative; }
+.ftile canvas { display: block; position: absolute; inset: 0; margin: auto; max-width: 86%; max-height: 86%; }
 .ftile:hover .box { box-shadow: inset 0 0 0 1px var(--faint); }
 .ftile.on .box { box-shadow: 0 0 0 2px var(--text); }
 .ftile.on .fname span { font-weight: 700; }

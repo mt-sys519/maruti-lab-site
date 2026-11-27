@@ -337,7 +337,7 @@ export function transmissionScatter(src) {
   a.width = sw; a.height = sh;
   const ax = a.getContext('2d');
   ax.imageSmoothingQuality = 'high';
-  ax.drawImage(src, 0, 0, sw, sh);
+  ax.drawImage(shrunk(src, sw, sh), 0, 0, sw, sh);
   const c = document.createElement('canvas');
   c.width = 96; c.height = Math.max(1, Math.round(96 * sh / sw));
   const cx = c.getContext('2d');
@@ -353,7 +353,7 @@ export function transmissionGlow(src) {
   const a = document.createElement('canvas');
   a.width = sw; a.height = sh;
   const ax = a.getContext('2d', { willReadFrequently: true });
-  ax.drawImage(src, 0, 0, sw, sh);
+  ax.drawImage(shrunk(src, sw, sh), 0, 0, sw, sh);
   const d = ax.getImageData(0, 0, sw, sh), p = d.data;
   for (let i = 0; i < p.length; i += 4) {
     const l = (0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]) / 255;
@@ -362,11 +362,7 @@ export function transmissionGlow(src) {
   }
   ax.putImageData(d, 0, 0);
   // blur by going down and back up twice
-  const b = document.createElement('canvas');
-  b.width = Math.max(1, sw >> 3); b.height = Math.max(1, sh >> 3);
-  const bx = b.getContext('2d');
-  bx.imageSmoothingQuality = 'high';
-  bx.drawImage(a, 0, 0, b.width, b.height);
+  const b = shrunk(a, sw >> 3, sh >> 3);
   const c = document.createElement('canvas');
   c.width = sw; c.height = sh;
   const cx = c.getContext('2d');
@@ -409,11 +405,7 @@ function filmBleed(ctx, W, L, glow, strength) {
   cx.drawImage(glow, pad, pad);
   // blur it outward: down to a few pixels and back up, twice
   for (const f of [5, 3]) {
-    const t = document.createElement('canvas');
-    t.width = Math.max(1, Math.round(c.width / f)); t.height = Math.max(1, Math.round(c.height / f));
-    const tx = t.getContext('2d');
-    tx.imageSmoothingQuality = 'high';
-    tx.drawImage(c, 0, 0, t.width, t.height);
+    const t = shrunk(c, Math.round(c.width / f), Math.round(c.height / f));
     cx.clearRect(0, 0, c.width, c.height);
     cx.imageSmoothingQuality = 'high';
     cx.drawImage(t, 0, 0, c.width, c.height);
@@ -664,20 +656,28 @@ function tintedMask(src, color) {
 function blurred(src, r) {
   const f = Math.max(1, r / 1.5);
   let c = src;
-  for (const k of [f, f * 0.6]) {
-    const t = document.createElement('canvas');
-    t.width = Math.max(1, Math.round(src.width / k)); t.height = Math.max(1, Math.round(src.height / k));
-    const tx = t.getContext('2d');
-    tx.imageSmoothingQuality = 'high';
-    tx.drawImage(c, 0, 0, t.width, t.height);
-    const u = document.createElement('canvas');
-    u.width = src.width; u.height = src.height;
-    const ux = u.getContext('2d');
-    ux.imageSmoothingQuality = 'high';
-    ux.drawImage(t, 0, 0, u.width, u.height);
-    c = u;
-  }
+  for (const k of [f, f * 0.6]) c = scaled(shrunk(c, Math.round(src.width / k), Math.round(src.height / k)), src.width, src.height);
   return c;
+}
+
+// src drawn at w x h.
+function scaled(src, w, h) {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, w); c.height = Math.max(1, h);
+  const x = c.getContext('2d');
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+  x.drawImage(src, 0, 0, c.width, c.height);
+  return c;
+}
+
+// src made smaller, to w x h, by halves: a GPU canvas (Chrome on a PC) shrinks in one step by sampling
+// a few pixels and skipping the rest, which turned the glows into blotches; halving averages them all,
+// the same in every browser.
+function shrunk(src, w, h) {
+  w = Math.max(1, w); h = Math.max(1, h);
+  let c = src;
+  while (c.width / 2 >= w && c.height / 2 >= h) c = scaled(c, Math.round(c.width / 2), Math.round(c.height / 2));
+  return c.width === w && c.height === h ? c : scaled(c, w, h);
 }
 
 
