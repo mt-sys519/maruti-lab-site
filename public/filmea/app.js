@@ -6,7 +6,7 @@ const $ = (id) => document.getElementById(id);
 
 const SAMPLES = [
   { label: '人物', url: 'photos/person.jpg' },
-  { label: '風景', url: 'photos/fuji.jpg' },
+  { label: '風景', url: 'photos/seaside.jpg' },
   { label: '街', url: 'photos/street.jpg' },
   { label: '赤', url: 'photos/red.jpg' },
   { label: '陰影', url: 'photos/shade.jpg' },
