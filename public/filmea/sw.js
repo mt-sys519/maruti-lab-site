@@ -7,7 +7,7 @@
 const VERSION = 'filmea-v2';
 const SHELL = [
   './', 'index.html', 'app.js', 'engine.js', 'loaders.js', 'print.js', 'style.css', 'presets.json',
-  'icon.svg', 'icon-192.png', 'manifest.webmanifest', 'photos/person.jpg',
+  'icon.svg', 'icon-192.png', 'manifest.webmanifest', 'photos/person.jpg', 'i18n.js',
 ];
 
 self.addEventListener('install', (e) => {

@@ -68,6 +68,7 @@ svg { display: block; }
 .ib-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
 .ib-accent:hover { filter: brightness(1.06); border-color: var(--accent); }
 .ib:disabled { opacity: .6; }
+.ib-lang { font: 500 12px "DM Mono", monospace; letter-spacing: .04em; color: var(--text); }
 .ib[hidden] { display: none; }
 .ib .i-sun { display: none; }
 :root[data-theme="dark"] .ib .i-sun { display: block; }
