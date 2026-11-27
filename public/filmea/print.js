@@ -519,8 +519,8 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     if (x > len || x + pl < 0) continue;
     for (const y of [FILM.perfIn * mm, wid - FILM.perfIn * mm - ps]) {
       ctx.save();
-      // the light box seen straight through the hole blooms onto the film round it (less on a light base)
-      ctx.shadowColor = `rgba(255,255,252,${(0.2 + 0.4 * strength) * (dark ? 1 : 0.5)})`; ctx.shadowBlur = mm * (0.08 + 0.3 * strength);
+      // the light box seen straight through the hole blooms onto the film round it, whatever the base
+      ctx.shadowColor = `rgba(255,255,252,${0.2 + 0.4 * strength})`; ctx.shadowBlur = mm * (0.08 + 0.3 * strength);
       ctx.fillStyle = '#fbfaf6';
       roundRect(ctx, x, y, pl, ps, pr); ctx.fill();
       ctx.restore();
@@ -553,8 +553,7 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     bars(fx + mm * 1.5 + w1, dxBits(dx.product, dx.specifier, text.frame || 0, false));
     bars(fx + half + mm * 1.5 + w2, dxBits(dx.product, dx.specifier, text.frame || 0, true));
   };
-  if (kind === 'brown') { printWrap(ctx, len, wid, p, strength, edgePrint, fb.ink, baseLight(fb.rgb, strength, true)); return; }
-  if (!dark) { ctx.fillStyle = fb.ink; edgePrint(ctx); return; }
+  if (!dark) { printWrap(ctx, len, wid, p, strength, edgePrint, fb.ink, baseLight(fb.rgb, strength, kind === 'brown')); return; }
   printGlow(ctx, len, wid, mm, p, strength, edgePrint);
 }
 
@@ -605,7 +604,7 @@ function baseLight(rgb, strength, glow) {
   return rgb.map((v) => Math.min(255, Math.round(v * k + (255 - v) * white)));
 }
 
-// On the negative the print is dense and the base is what the light comes through: the base's light
+// On a negative or a clear base the print is dense and the base is what the light comes through: the base's light
 // spreads over the print's edges, so the dark lettering and bars sit in the glow, their middles dark.
 function printWrap(ctx, len, wid, p, strength, draw, ink, baseRGB) {
   const w = Math.max(1, Math.ceil(len)), h = Math.max(1, Math.ceil(wid));
@@ -615,6 +614,11 @@ function printWrap(ctx, len, wid, p, strength, draw, ink, baseRGB) {
   mx.fillStyle = '#fff';
   draw(mx);
   ctx.save();
+  // the same spread of light as round the black film's print, here as the dense print's shadow softened
+  // into the base: a blurred copy under the sharp print
+  ctx.globalAlpha = Math.min(1, 0.3 + 0.35 * strength);
+  ctx.drawImage(blurred(tintedMask(mask, ink), p * (0.9 + 0.9 * strength)), 0, 0, w, h);
+  ctx.globalAlpha = 1;
   ctx.fillStyle = ink;
   draw(ctx);
   // the base's light, less of it the deeper inside the print: a blurred copy of the print cut out of it,
@@ -624,12 +628,23 @@ function printWrap(ctx, len, wid, p, strength, draw, ink, baseRGB) {
   const wx = wrap.getContext('2d');
   wx.fillStyle = `rgb(${baseRGB.join(',')})`; wx.fillRect(0, 0, w, h);
   wx.globalCompositeOperation = 'destination-out';
-  wx.drawImage(blurred(mask, p * (0.35 + 0.35 * strength)), 0, 0);
+  wx.drawImage(blurred(mask, p * (0.55 + 0.6 * strength)), 0, 0);
   wx.globalCompositeOperation = 'destination-in';
   wx.drawImage(mask, 0, 0);
-  ctx.globalAlpha = Math.min(1, 0.4 + 0.5 * strength);
+  ctx.globalAlpha = Math.min(0.95, 0.5 + 0.7 * strength);
   ctx.drawImage(wrap, 0, 0, w, h);
   ctx.restore();
+}
+
+// src's shape filled with one colour.
+function tintedMask(src, color) {
+  const c = document.createElement('canvas');
+  c.width = src.width; c.height = src.height;
+  const x = c.getContext('2d');
+  x.drawImage(src, 0, 0);
+  x.globalCompositeOperation = 'source-in';
+  x.fillStyle = color; x.fillRect(0, 0, c.width, c.height);
+  return c;
 }
 
 // A soft copy of src blurred by about r px: down to a few pixels and back up, twice.
