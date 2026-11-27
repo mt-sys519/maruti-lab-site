@@ -429,8 +429,8 @@ function filmBleed(ctx, W, L, glow, strength) {
 // orange mask, its edge print exposed in dark. clear: a clear base (black-and-white film), dark print.
 const FILM_BASES = {
   black: {}, // the print is light through the film: see printGlow
-  brown: { rgb: [226, 120, 70], ink: 'rgb(92,36,12)' },
-  clear: { rgb: [214, 214, 222], ink: 'rgb(62,62,60)' }, // a B&W negative's base (Konica Pan 100 on a light box: 218,218,222 against 238), cooler and darker than the box, so the holes show
+  brown: { rgb: [226, 120, 70], ink: [92, 36, 12] },
+  clear: { rgb: [214, 214, 222], ink: [62, 62, 60] }, // a B&W negative's base (Konica Pan 100 on a light box: 218,218,222 against 238), cooler and darker than the box, so the holes show
 };
 
 // The light box behind the strip is not perfectly even: brighter in the middle, a soft mottle from its
@@ -553,7 +553,14 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     bars(fx + mm * 1.5 + w1, dxBits(dx.product, dx.specifier, text.frame || 0, false));
     bars(fx + half + mm * 1.5 + w2, dxBits(dx.product, dx.specifier, text.frame || 0, true));
   };
-  if (!dark) { printWrap(ctx, len, wid, p, strength, edgePrint, fb.ink, baseLight(fb.rgb, strength, kind === 'brown')); return; }
+  if (!dark) {
+    // the print is dense, not black: it lets a little of the same light through, so it lightens with the
+    // base as the light grows (its colour at the default light, 60, is the measured one)
+    const glow = kind === 'brown', at = (v, s) => baseLight([v], s, glow)[0];
+    const ink = fb.ink.map((v) => Math.min(255, Math.round(v * at(v, strength) / Math.max(1, at(v, 0.6)))));
+    printWrap(ctx, len, wid, p, strength, edgePrint, `rgb(${ink.join(',')})`, baseLight(fb.rgb, strength, glow));
+    return;
+  }
   printGlow(ctx, len, wid, mm, p, strength, edgePrint);
 }
 
@@ -616,7 +623,7 @@ function printWrap(ctx, len, wid, p, strength, draw, ink, baseRGB) {
   ctx.save();
   // the same spread of light as round the black film's print, here as the dense print's shadow softened
   // into the base: a blurred copy under the sharp print
-  ctx.globalAlpha = Math.min(1, 0.3 + 0.35 * strength);
+  ctx.globalAlpha = Math.max(0, 0.66 - 0.25 * strength); // the stronger the light, the less the shadow holds
   ctx.drawImage(blurred(tintedMask(mask, ink), p * (0.9 + 0.9 * strength)), 0, 0, w, h);
   ctx.globalAlpha = 1;
   ctx.fillStyle = ink;
