@@ -1415,7 +1415,7 @@ function boot() {
   engine.onRestored = onContextRestored;
   window.__filmea = { engine, get presets() { return presets; } };
   initUI();
-  // the rendered slide mounts; the picture's crop changes with them, so lay out again once they are in
+  // a rendered slide mount, loaded when first shown; the picture's crop changes with it, so lay out again
   loadMountArt(() => { layout(); refreshTiles(); });
   fallbackScene();
   loadPresets();

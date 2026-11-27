@@ -102,7 +102,7 @@ export function frameLayout(style, pw, ph, trim = TRIM0) {
     const win = { x: (SLIDE.size - w) / 2 * u, y: (SLIDE.size - h) / 2 * u, w: w * u, h: h * u };
     // The window's cut edge shows as a thin shade round the picture, the same width on all four sides.
     // A rendered mount has its own edge in the window, so the picture fills the window there.
-    const rim = MOUNT_ART[`${style}-${wide ? 'wide' : 'upright'}`] ? 0 : RIM;
+    const rim = wantMountArt(`${style}-${wide ? 'wide' : 'upright'}`) ? 0 : RIM;
     const [t, r, b, l] = [rim, rim, rim, rim].map((v) => v * u);
     const pic = { x: win.x + l, y: win.y + t, w: win.w - l - r, h: win.h - t - b };
     return { style, wide, mm: u, ratio: 1, ...pic, win, crop: cropTo(pic.w / pic.h) };
@@ -239,25 +239,28 @@ function setFont(ctx, px, track) {
 // The slide mounts as real things: modelled and rendered in Blender (filmea-blender/mount.py, outside
 // the site) on the light box, white plastic and card, for a wide and an upright window. Each is the
 // mount with its window left transparent, and the shade its window's edge throws on the film behind it
-// (black, as alpha). Loaded on first use; until then the mounts are drawn as below. The service worker
+// (black, as alpha). Each is loaded when first shown; until then the mount is drawn as below. The service worker
 // keeps these files forever under their names, so a new render gets a new ART_V.
 const ART_V = 4; // 4: the black one's window bevels alike on all four sides; 3: the outer edge chamfered like the window's, square corners (2 had a plain cut edge, 1 rounded corners)
+// Only the mount in use is loaded: each is 2400 px square, about 23 MB once decoded, and with all of
+// them held at once an Android phone drops the installed app while its photo picker is open, so the
+// chosen photo never arrives and the app starts over.
 const MOUNT_ART = {};
-let mountArtWaiting = null;
-export function loadMountArt(onReady) {
-  if (mountArtWaiting) { mountArtWaiting.push(onReady); return; }
-  mountArtWaiting = [onReady];
-  const jobs = [];
-  for (const style of MOUNT_STYLES) {
-    for (const o of ['wide', 'upright']) {
-      const load = (name) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `frames/${name}-v${ART_V}.webp`; });
-      jobs.push(Promise.all([load(`${style}-${o}`), load(`${style}-${o}-shade`)]).then(([mount, shade]) => { MOUNT_ART[`${style}-${o}`] = { mount, shade }; }));
-    }
-  }
-  Promise.allSettled(jobs).then(() => { for (const f of mountArtWaiting) f?.(); });
+const mountArtAsked = new Set();
+let mountArtReady = null;
+// what to run when a mount's art has come in (the picture's crop changes with it)
+export function loadMountArt(onReady) { mountArtReady = onReady; }
+function wantMountArt(key) {
+  if (MOUNT_ART[key] || mountArtAsked.has(key)) return MOUNT_ART[key];
+  mountArtAsked.add(key);
+  const load = (name) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `frames/${name}-v${ART_V}.webp`; });
+  Promise.all([load(key), load(`${key}-shade`)])
+    .then(([mount, shade]) => { MOUNT_ART[key] = { mount, shade }; mountArtReady?.(); })
+    .catch(() => {}); // the mount stays drawn
+  return undefined;
 }
 function mountArt(L) {
-  return MOUNT_ART[`${L.style}-${L.wide ? 'wide' : 'upright'}`];
+  return wantMountArt(`${L.style}-${L.wide ? 'wide' : 'upright'}`);
 }
 
 // Over the picture, under the light's glow: the shade of a mount's window, or on the film strip the light
