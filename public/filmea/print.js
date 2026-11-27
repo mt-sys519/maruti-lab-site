@@ -428,7 +428,7 @@ function filmBleed(ctx, W, L, glow, strength) {
 const FILM_BASES = {
   black: {}, // the print is light through the film: see printGlow
   brown: { rgb: [226, 120, 70], ink: 'rgb(92,36,12)' },
-  clear: { rgb: [228, 230, 228], ink: 'rgb(62,62,60)' },
+  clear: { rgb: [214, 214, 222], ink: 'rgb(62,62,60)' }, // a B&W negative's base (Konica Pan 100 on a light box: 218,218,222 against 238), cooler and darker than the box, so the holes show
 };
 
 // The light box behind the strip is not perfectly even: brighter in the middle, a soft mottle from its
@@ -493,16 +493,9 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     // a light base is where the light comes through (the print is the dense part): it glows with the
     // box behind it, deeper at a weak light and washing toward white at a strong one, as the pale peach
     // of a negative's mask looks on a light box
-    const k = 0.8 + 0.35 * strength, white = Math.max(0, strength - 0.2) * 0.6;
-    ctx.fillStyle = `rgb(${fb.rgb.map((v) => Math.min(255, Math.round(v * k + (255 - v) * white))).join(',')})`;
+    ctx.fillStyle = `rgb(${baseLight(fb.rgb, strength, kind === 'brown').join(',')})`;
   }
   ctx.fillRect(0, 0, len, wid);
-  // the strip's cut ends fall away a little from the middle of the light box
-  for (const [x0, x1] of [[0, len * 0.16], [len, len * 0.84]]) {
-    const fall = ctx.createLinearGradient(x0, 0, x1, 0);
-    fall.addColorStop(0, `rgba(0,0,0,${(0.18 + 0.14 * strength) * (dark ? 1 : 0.5)})`); fall.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = fall; ctx.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), wid);
-  }
   speckle(ctx, 0, 0, len, wid, Math.max(1, mm * 0.06), 0.03, dark);
   // the long cut edges: on dark film they catch the light as a thin bright line; on a light base the cut
   // bends the light away and shows as a thin dark one
@@ -529,13 +522,6 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
       ctx.fillStyle = '#fbfaf6';
       roundRect(ctx, x, y, pl, ps, pr); ctx.fill();
       ctx.restore();
-      if (!dark) {
-        // the hole's cut wall bends the light away: a thin dark outline, how a hole shows in clear film
-        ctx.save();
-        ctx.strokeStyle = 'rgba(40,30,20,0.28)'; ctx.lineWidth = Math.max(0.6, mm * 0.06);
-        roundRect(ctx, x, y, pl, ps, pr); ctx.stroke();
-        ctx.restore();
-      }
     }
   }
   // edge print between the perforations and the film's edge: dark on a light base; on the black rebate it
@@ -565,6 +551,7 @@ function filmUnder(ctx, W, L, text, strength = 0.6) {
     bars(fx + mm * 1.5 + w1, dxBits(dx.product, dx.specifier, text.frame || 0, false));
     bars(fx + half + mm * 1.5 + w2, dxBits(dx.product, dx.specifier, text.frame || 0, true));
   };
+  if (kind === 'brown') { printWrap(ctx, len, wid, p, strength, edgePrint, fb.ink, baseLight(fb.rgb, strength, true)); return; }
   if (!dark) { ctx.fillStyle = fb.ink; edgePrint(ctx); return; }
   printGlow(ctx, len, wid, mm, p, strength, edgePrint);
 }
@@ -605,6 +592,41 @@ function printGlow(ctx, len, wid, mm, p, strength, draw) {
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
   ctx.drawImage(tinted(mask, core), 0, 0, w, h);
+  ctx.restore();
+}
+
+// A light base with the light box behind it: deeper at a weak light, washing toward white at a strong one.
+// The negative's orange mask is lit a step brighter, keeping its colour, so it reads as light coming
+// through rather than as painted card.
+function baseLight(rgb, strength, glow) {
+  const k = glow ? 0.86 + 0.38 * strength : 0.8 + 0.35 * strength, white = Math.max(0, strength - 0.2) * 0.6;
+  return rgb.map((v) => Math.min(255, Math.round(v * k + (255 - v) * white)));
+}
+
+// On the negative the print is dense and the base is what the light comes through: the base's light
+// spreads over the print's edges, so the dark lettering and bars sit in the glow, their middles dark.
+function printWrap(ctx, len, wid, p, strength, draw, ink, baseRGB) {
+  const w = Math.max(1, Math.ceil(len)), h = Math.max(1, Math.ceil(wid));
+  const mask = document.createElement('canvas');
+  mask.width = w; mask.height = h;
+  const mx = mask.getContext('2d');
+  mx.fillStyle = '#fff';
+  draw(mx);
+  ctx.save();
+  ctx.fillStyle = ink;
+  draw(ctx);
+  // the base's light, less of it the deeper inside the print: a blurred copy of the print cut out of it,
+  // then kept only on the print
+  const wrap = document.createElement('canvas');
+  wrap.width = w; wrap.height = h;
+  const wx = wrap.getContext('2d');
+  wx.fillStyle = `rgb(${baseRGB.join(',')})`; wx.fillRect(0, 0, w, h);
+  wx.globalCompositeOperation = 'destination-out';
+  wx.drawImage(blurred(mask, p * (0.35 + 0.35 * strength)), 0, 0);
+  wx.globalCompositeOperation = 'destination-in';
+  wx.drawImage(mask, 0, 0);
+  ctx.globalAlpha = Math.min(1, 0.4 + 0.5 * strength);
+  ctx.drawImage(wrap, 0, 0, w, h);
   ctx.restore();
 }
 
