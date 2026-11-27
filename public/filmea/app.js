@@ -10,6 +10,7 @@ const SAMPLES = [
   { label: '街', url: 'photos/street.jpg' },
   { label: '赤', url: 'photos/red.jpg' },
   { label: '陰影', url: 'photos/shade.jpg' },
+  { label: '食べ物', url: 'photos/macarons.jpg' },
 ];
 
 // The date on the mount, in the amber of a film's edge printing (deeper on white so it still reads).
